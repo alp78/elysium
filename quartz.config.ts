@@ -34,26 +34,26 @@ const config: QuartzConfig = {
         code: "JetBrains Mono",       // ← matches your vault
       },
       colors: {
-        lightMode: {                  // ← keep as-is or customize
-          light: "#faf8f8",
-          lightgray: "#e5e5e5",
-          gray: "#b8b8b8",
-          darkgray: "#4e4e4e",
-          dark: "#2b2b2b",
-          secondary: "#284b63",
-          tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
-          textHighlight: "#fff23688",
+        lightMode: {
+          light: "#f0f0f2",           // warm off-white background
+          lightgray: "#e0dfe4",       // sidebar/borders — less harsh
+          gray: "#9a96a6",            // muted text
+          darkgray: "#3b3950",        // body text — deep purple-gray
+          dark: "#1e1b2e",            // headings — near-black purple
+          secondary: "#5a4fcf",       // links — muted indigo (not blue)
+          tertiary: "#7c6dd8",        // hover — lighter indigo
+          highlight: "rgba(90, 79, 207, 0.08)",  // subtle indigo tint
+          textHighlight: "#e0af6833",
         },
-        darkMode: {                   // ← Tokyo Night colors
-          light: "#1a1b26",           // main background
-          lightgray: "#24283b",       // sidebar/borders
+        darkMode: {
+          light: "#1a1b26",           // Tokyo Night background
+          lightgray: "#1f2133",       // sidebar — slightly lighter than bg
           gray: "#565f89",            // muted text
           darkgray: "#a9b1d6",        // body text
           dark: "#c0caf5",            // headings
-          secondary: "#7aa2f7",       // links
-          tertiary: "#bb9af7",        // hover/accent
-          highlight: "rgba(122, 162, 247, 0.12)",
+          secondary: "#7aa2f7",       // links — Tokyo Night blue
+          tertiary: "#bb9af7",        // hover — Tokyo Night purple
+          highlight: "rgba(122, 162, 247, 0.08)",
           textHighlight: "#e0af6833",
         },
       },

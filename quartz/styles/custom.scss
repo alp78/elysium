@@ -20,41 +20,34 @@ code, pre code {
   font-size: 12.5px !important;
 }
 
-/* ── Headings: Tokyo Night color cascade ─────────────────────── */
-h1 {
+/* ── Headings: Tokyo Night (dark only) ────────────────────────── */
+[saved-theme="dark"] h1 {
   color: #7aa2f7 !important;
   font-weight: 700 !important;
   border-bottom: 1px solid #29344a;
   padding-bottom: 0.3em;
 }
+[saved-theme="dark"] h2 { color: #bb9af7 !important; font-weight: 600 !important; }
+[saved-theme="dark"] h3 { color: #7dcfff !important; font-weight: 600 !important; }
+[saved-theme="dark"] h4 { color: #9ece6a !important; font-weight: 500 !important; }
+[saved-theme="dark"] h5 { color: #e0af68 !important; font-weight: 500 !important; }
+[saved-theme="dark"] h6 { color: #ff9e64 !important; font-weight: 500 !important; }
 
-h2 {
-  color: #bb9af7 !important;
-  font-weight: 600 !important;
+/* ── Headings: Light mode ────────────────────────────────────── */
+[saved-theme="light"] h1 {
+  color: #2d2a5e !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid #d0cdd8;
+  padding-bottom: 0.3em;
 }
+[saved-theme="light"] h2 { color: #5a3e8a !important; font-weight: 600 !important; }
+[saved-theme="light"] h3 { color: #2e6b8a !important; font-weight: 600 !important; }
+[saved-theme="light"] h4 { color: #4a7a3e !important; font-weight: 500 !important; }
+[saved-theme="light"] h5 { color: #8a6d2e !important; font-weight: 500 !important; }
+[saved-theme="light"] h6 { color: #9a5a2e !important; font-weight: 500 !important; }
 
-h3 {
-  color: #7dcfff !important;
-  font-weight: 600 !important;
-}
-
-h4 {
-  color: #9ece6a !important;
-  font-weight: 500 !important;
-}
-
-h5 {
-  color: #e0af68 !important;
-  font-weight: 500 !important;
-}
-
-h6 {
-  color: #ff9e64 !important;
-  font-weight: 500 !important;
-}
-
-/* ── Code blocks ─────────────────────────────────────────────── */
-pre {
+/* ── Code blocks (dark) ──────────────────────────────────────── */
+[saved-theme="dark"] pre {
   background-color: #13131e !important;
   border: 1px solid #29344a !important;
   border-radius: 6px !important;
@@ -63,10 +56,26 @@ pre {
   margin-bottom: 4px !important;
 }
 
-/* Inline code */
-:not(pre) > code {
+[saved-theme="dark"] :not(pre) > code {
   background-color: #1a1b2e !important;
   color: #c0caf5 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+/* ── Code blocks (light) — reduced contrast ─────────────────── */
+[saved-theme="light"] pre {
+  background-color: #e8e6ed !important;
+  border: 1px solid #d0cdd8 !important;
+  border-radius: 6px !important;
+  padding: 1em !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+}
+
+[saved-theme="light"] :not(pre) > code {
+  background-color: #e4e2ea !important;
+  color: #3b3950 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
@@ -97,7 +106,7 @@ table {
   border-collapse: collapse;
 }
 
-th {
+[saved-theme="dark"] th {
   background-color: #292e42 !important;
   color: #7aa2f7 !important;
   font-weight: 600 !important;
@@ -107,10 +116,25 @@ th {
   border: 1px solid #3b4261 !important;
 }
 
-td {
+[saved-theme="dark"] td {
   font-size: 10.5px !important;
   padding: 3px 6px !important;
   border: 1px solid #29344a !important;
+}
+
+[saved-theme="light"] th {
+  background-color: #e0dfe4 !important;
+  color: #2d2a5e !important;
+  font-weight: 600 !important;
+  font-size: 10.5px !important;
+  padding: 3px 6px !important;
+  border: 1px solid #d0cdd8 !important;
+}
+
+[saved-theme="light"] td {
+  font-size: 10.5px !important;
+  padding: 3px 6px !important;
+  border: 1px solid #d0cdd8 !important;
 }
 
 td code {
@@ -126,12 +150,12 @@ tr:hover {
 }
 
 /* ── Bold, italic, marks ─────────────────────────────────────── */
-strong, b {
+[saved-theme="dark"] strong, [saved-theme="dark"] b {
   color: #c0caf5 !important;
   font-weight: 600;
 }
 
-em, i {
+[saved-theme="dark"] em, [saved-theme="dark"] i {
   color: #bb9af7 !important;
 }
 
@@ -143,10 +167,16 @@ mark {
 }
 
 /* ── Blockquotes ─────────────────────────────────────────────── */
-blockquote {
+[saved-theme="dark"] blockquote {
   border-left: 3px solid #3d59a1 !important;
   background-color: rgba(31, 35, 53, 0.5);
   color: #9aa5ce;
+}
+
+[saved-theme="light"] blockquote {
+  border-left: 3px solid #5a4fcf !important;
+  background-color: rgba(90, 79, 207, 0.04);
+  color: #4e4a6a;
 }
 
 /* ── Horizontal rules ────────────────────────────────────────── */
