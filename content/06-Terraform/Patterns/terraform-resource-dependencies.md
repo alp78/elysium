@@ -4,7 +4,7 @@ category: infrastructure
 technology: [terraform]
 tags: [terraform, patterns, dependencies, dependency-graph, resource-references]
 aliases: [terraform dependencies, terraform dependency graph, depends_on, terraform parallelism, resource references]
-keywords: [dependency graph, implicit dependency, explicit dependency, depends_on, resource reference, parallel creation, terraform plan order, .id, .name, .email, network_interface[0]]
+keywords: [dependency graph, implicit dependency, explicit dependency, depends_on, resource reference, parallel creation, terraform plan order, ".id", ".name", ".email", "network_interface[0]"]
 description: "How Terraform builds and resolves the resource dependency graph — implicit dependencies from resource references, explicit depends_on, and how parallelism works during apply."
 related:
   - "[[terraform-resource-dependencies]]"
