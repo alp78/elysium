@@ -4,7 +4,7 @@ category: sql-server
 technology: [sql-server]
 tags: [concept, sql-server, t-sql, data-loading, etl, upsert, merge, transactions, scd]
 aliases: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD Type 2, truncate and reload, delete and insert, fast_executemany]
-keywords: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD, SCD2, Slowly Changing Dimension, truncate reload, delete insert, fast_executemany, pyodbc, NORECOVERY, XACT_ABORT, @@ROWCOUNT, @@ERROR, @@TRANCOUNT, XACT_STATE, TRY CATCH, savepoint, SAVE TRAN, RCSI, version store, U lock, X lock, phantom insert, race condition, atomic, idempotent, bronze silver gold, medallion]
+keywords: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD, SCD2, Slowly Changing Dimension, truncate reload, delete insert, fast_executemany, pyodbc, NORECOVERY, XACT_ABORT, "@@ROWCOUNT", "@@ERROR", "@@TRANCOUNT", XACT_STATE, TRY CATCH, savepoint, SAVE TRAN, RCSI, version store, U lock, X lock, phantom insert, race condition, atomic, idempotent, bronze silver gold, medallion]
 description: "MERGE statement patterns and upsert strategies for the bronze→silver→gold medallion pipeline: truncate-reload for snapshots, merge for OHLCV corrections, SCD Type 2 close-and-insert for dimensions, and delete-and-insert for gold. Includes transaction management, @@ROWCOUNT guards, and XACT_ABORT best practices."
 related: [sargable-queries, storage-internals, blocking-and-locking, deadlock-detection-and-prevention, race-conditions, medallion-architecture, silver-transforms, gold-transforms]
 created: 2026-03-22
