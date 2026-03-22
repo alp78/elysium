@@ -407,7 +407,6 @@ WHERE r.rn = 1          -- most recent date only
 | ASML.AS | 685.20 | 702.15 | -0.012 | 0.034 | 0.087 |
 | MC.PA | 835.40 | 812.90 | 0.005 | -0.008 | 0.045 |
 
-*In plain English:* "For each stock, compute the 30 and 90-day moving averages using SQL window functions. Also compute how much the price changed today, over 5 days, and since January 1st. The CTE approach keeps everything in a single query — no temp tables needed."
 
 ### Step 4: Write to gold.scores_daily
 
@@ -478,7 +477,6 @@ WHERE q.as_of_date = (
 )
 ```
 
-*In plain English:* "For each stock, grab its most recent quarterly data. We use a correlated subquery because different stocks may report on different dates — ASML might report Q4 on Feb 1, while MC.PA reports on Jan 25."
 
 ### Step 2: Get Latest Market Cap and Beta from Daily Signals
 
@@ -588,7 +586,6 @@ INSERT INTO gold.index_performance (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
-*In plain English:* "Compute the daily return of the entire index by weighting each stock's return by its market cap. Also compute rolling 30/90-day returns, YTD, and annualized volatility. Only process new dates to avoid recomputing the entire history."
 
 ---
 
@@ -629,7 +626,6 @@ INNER JOIN (
 ORDER BY p._index
 ```
 
-*In plain English:* "For each index, give me the most recent row — daily return, YTD, volatility, avg PE, etc. This powers the snapshot cards at the top of the dashboard."
 
 ### Historical Performance Time Series (Line Charts)
 
@@ -706,7 +702,6 @@ INNER JOIN max_dates md
 ORDER BY sd._index, sd.index_weight DESC
 ```
 
-*In plain English:* "Give me the latest factor scores for every stock in the index. The dashboard uses these to build the radar chart (breadth across 5 dimensions), the daily signal tables (ranked by composite score), and the donut chart (index weight allocation)."
 
 ### Latest Quarterly Scores (Quality & Governance)
 
@@ -746,7 +741,6 @@ WHERE rn = 1
 ORDER BY _index, quality_rank
 ```
 
-*In plain English:* "For each stock, give me its latest quarterly scores. ROW_NUMBER partitioned by stock ensures we get exactly one row per stock — the most recent quarter."
 
 ### OHLCV Chart with Server-Side Moving Averages (Stock Explorer)
 
@@ -801,7 +795,6 @@ WHERE (@From IS NULL OR date >= @From)
 ORDER BY date
 ```
 
-*In plain English:* "Get a stock's full price history with split-adjusted OHLC values and server-computed moving averages. The CTE computes over the entire history, then the outer query filters by the requested date range — this ensures MA values at the start of the range are correct (they look back beyond the filter)."
 
 ---
 

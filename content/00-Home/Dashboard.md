@@ -60,12 +60,20 @@ Welcome to Elysium, a structured knowledge base for practicing data engineers co
 | 13 | **Financial Domain** | Metrics, scoring, financial encyclopedia, market analysis | [[financial-domain-index]] |
 | 14 | **AI and Prompts** | Prompt engineering, model-specific patterns, LLM pipelines | [[ai-and-prompts-index]] |
 | 15 | **Engineering Practice** | Leadership, DataOps, data team organization, self-service platforms | [[engineering-practice-index]] |
+| 16 | **Runbooks** | On-call guide, incident response, 10 operational runbooks | [[runbooks-index]] |
+| 17 | **dbt** | SQL transformation layer: modeling, testing, CI/CD, adapters | [[dbt-index]] |
 
 ---
 
+## Start Here
+
+- [[common-tasks]] — "How do I...?" quick routing guide
+- [[on-call-guide]] — On-call first responder guide
+- [[golden-rules-of-data-engineering]] — Decision-making principles
+
 ## Quick Access — Cheat Sheets
 
-- [[gcloud-cheat-sheet]] | [[sql-server-cheat-sheet]] | [[terraform-cheat-sheet]] | [[docker-cheat-sheet]] | [[git-cheat-sheet]]
+- [[gcloud-cheat-sheet]] | [[sql-server-cheat-sheet]] | [[terraform-cheat-sheet]] | [[docker-cheat-sheet]] | [[git-cheat-sheet]] | [[dbt-cheat-sheet]]
 
 ---
 
@@ -73,47 +81,46 @@ Welcome to Elysium, a structured knowledge base for practicing data engineers co
 
 - [[moc-data-pipeline-lifecycle]] — Ingestion → transformation → orchestration → monitoring
 - [[moc-infrastructure-as-code]] — Terraform + GCP + CI/CD woven together
+- [[moc-patterns]] — Every reusable pattern in the vault, grouped by concern
+- [[adr-index]] — Architecture Decision Records
 
 ---
 
-## Dynamic Queries (Dataview)
+## Quick Access
 
-### Notes Needing Review
+> The Dataview queries below work in Obsidian with the Dataview plugin. On the Quartz site, use the static tables.
 
-```dataview
-TABLE technology, type, updated
-FROM ""
-WHERE contains(tags, "#needs-review")
-SORT updated DESC
-```
+### Runbooks
 
-### Recent How-To Guides
+See [[runbooks-index]] for the complete list. Key runbooks:
 
-```dataview
-TABLE technology, description
-FROM ""
-WHERE type = "how-to"
-SORT updated DESC
-LIMIT 10
-```
+| Runbook | Severity | Trigger |
+|---------|----------|---------|
+| [[index-calculation-failure]] | Sev1 | Pipeline fails before publication |
+| [[esg-circuit-breaker-fired]] | Sev2 | ESG quality gate halts publication |
+| [[sql-server-disk-full]] | Sev1 | VM disk at >95% |
+| [[data-restatement-procedure]] | Sev1 | Published values need correction |
+| [[on-call-guide]] | — | First-responder guide |
 
-### All Runbooks
+### How-To Guides
 
-```dataview
-TABLE technology, severity, description
-FROM ""
-WHERE type = "runbook"
-SORT severity DESC
-```
+| Guide | Description |
+|-------|-------------|
+| [[common-tasks]] | Task-oriented routing to detailed notes |
+| [[secrets-management]] | GCP Secret Manager, rotation, Airflow integration |
+| [[scenario-based-decision-guide]] | "I need to X — use this" |
 
-### All Troubleshooting Notes
+### Architecture Decisions
 
-```dataview
-TABLE technology, description
-FROM ""
-WHERE type = "troubleshooting"
-SORT updated DESC
-```
+See [[adr-index]] for all ADRs.
+
+### Troubleshooting
+
+| Note | Technology |
+|------|-----------|
+| [[datadog-troubleshooting]] | Datadog agent and APM |
+| [[airflow-troubleshooting]] | Airflow scheduler and DAGs |
+| [[troubleshooting-flowcharts]] | SQL Server diagnostic flowcharts |
 
 ---
 

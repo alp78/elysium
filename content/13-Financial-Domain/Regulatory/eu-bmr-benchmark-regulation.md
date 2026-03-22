@@ -1,0 +1,82 @@
+---
+tags: [reference, financial-domain, regulatory, eu-bmr, compliance, audit]
+type: reference
+technology: [sql-server, bigquery, gcp]
+status: stable
+updated: 2026-03-23
+---
+
+# EU BMR — Benchmark Regulation
+
+> [!abstract] What a Data Engineer Needs to Know
+> EU Regulation 2016/1011 (Benchmark Regulation) governs the provision of benchmarks. As a data engineer at an index provider, you must ensure: complete audit trails, 5-year data retention, reproducible calculations, and documented methodology. This note focuses on the technical requirements, not legal theory.
+
+## Administrator Obligations (Articles 5-16)
+
+### Input Data Requirements (Article 11)
+
+- All input data must be **traceable to its source** (vendor file, API call, manual entry)
+- Input data must be **verifiable and auditable** — keep the raw files
+- Procedures for dealing with **errors in input data** must be documented
+- Internal review at least **annually**
+
+**What this means for the pipeline:**
+- Bronze layer in GCS must be immutable (never overwrite raw files)
+- Every pipeline run records source file path and SHA-256 hash in [[pit-integrity-logic|lineage metadata]]
+- Quality gates at each medallion layer catch errors before publication
+
+### Methodology Documentation (Article 12)
+
+- The methodology must be **published and freely available**
+- Changes must follow a **defined consultation process**
+- The methodology document must include: calculation formula, data sources, weighting scheme, rebalancing rules, corporate action treatment
+
+**What this means for the pipeline:**
+- Methodology parameters stored as version-controlled YAML (see [[dataops-for-indices|methodology-as-code]])
+- Every calculation uses the methodology version that was active on that date
+- Changes tracked via Git history and ADRs
+
+### Record Keeping (Article 8)
+
+| Record Type | Minimum Retention | Storage Recommendation |
+|-------------|-------------------|----------------------|
+| All input data | 5 years | GCS Coldline/Archive |
+| Calculation results | 5 years | SQL Server + BigQuery |
+| Pipeline lineage | 5 years | SQL Server |
+| Methodology versions | 5 years after last use | Git + document archive |
+| Corporate action decisions | 5 years | SQL Server audit table |
+| Complaints and resolutions | 5 years | Document management |
+| Oversight function minutes | 5 years | Document management |
+
+### Oversight Function (Article 5)
+
+- Independent oversight of the benchmark provision process
+- Reviews methodology, data quality, and operational integrity
+- Must have access to all calculation data and audit trails
+
+### Restatement and Cessation (Article 13-14)
+
+- If a published benchmark value is materially incorrect: **restate and notify**
+- Document the error, correction, and notification in the audit trail
+- See [[data-restatement-procedure]] for the operational runbook
+- If cessation is planned: 6-month notice to users
+
+## Technical Compliance Checklist
+
+- [ ] Raw input data retained for 5 years (GCS lifecycle policy)
+- [ ] Pipeline lineage table records every run with source hash
+- [ ] Reproducibility test can re-derive any published value
+- [ ] Corporate action audit log captures every adjustment
+- [ ] Weight validation (sum = 1.0) runs before every publication
+- [ ] Methodology YAML version-controlled in Git
+- [ ] Annual internal review conducted and documented
+- [ ] Restatement procedure documented and tested
+- [ ] Oversight function has read access to all data and audit tables
+
+## Related
+
+- [[compliance-and-auditability]] — Implementation details for lineage and audit
+- [[pit-integrity-logic]] — Point-in-time data integrity and weight validation
+- [[data-restatement-procedure]] — Restatement runbook
+- [[sfdr-data-requirements]] — SFDR data pipeline requirements
+- [[iosco-benchmark-principles]] — International benchmark standards

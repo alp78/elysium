@@ -67,7 +67,6 @@ except Exception:
 > [!warning] Missing Transaction = Empty Table on Crash
 > If the process crashes between DELETE and INSERT without a transaction, the table is left empty. The explicit `conn.commit()` after both operations ensures all-or-nothing behavior. Never delete without having the INSERT in the same transaction.
 
-*In plain English:* "Wipe everything for this index, then reload fresh from the JSON file. This works because bronze only holds the current snapshot — we don't need history here."
 
 ---
 
@@ -113,7 +112,6 @@ SET [open] = ?, high = ?, low = ?, [close] = ?,
 WHERE symbol = ? AND date = ?
 ```
 
-*In plain English:* "For OHLCV, we can't wipe and reload — we'd lose years of history. Instead, we only insert missing dates and fix rows where the volume was zero (stale data from after-hours snapshots)."
 
 ---
 
@@ -185,7 +183,6 @@ INSERT INTO silver.index_dim (
 | market_index | ASML.AS | Technology | 2024-01-15 | 2025-06-01 | 0 |
 | market_index | ASML.AS | Semiconductors | 2025-06-01 | NULL | 1 |
 
-*In plain English:* "If a company's sector, name, or other attribute changes, we don't overwrite. We close the old version with a timestamp and create a new version. This preserves history — we can always look back and see what the data looked like at any point in time."
 
 > [!tip] SCD Type 2 Key Design
 > The `is_current = 1` flag is the critical filter for all downstream queries. Every JOIN to `silver.index_dim` must include `AND d.is_current = 1` to avoid double-counting historical versions. The `valid_to IS NULL` condition is equivalent but the flag is faster with a filtered index.
@@ -256,7 +253,6 @@ WHERE _index = ? AND symbol = ? AND signal_date = ?
 records_inserted=50  records_updated=45  records_unchanged=5
 ```
 
-*In plain English:* "Bronze only has today's data. Silver has every day's data. We compare today's snapshot against silver — new dates get inserted, changed values get updated, unchanged rows are skipped."
 
 ---
 

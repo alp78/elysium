@@ -22,22 +22,22 @@ Paired Python and C# references covering 16 topics. Each note was converted from
 
 | # | Topic | Python | C# |
 |---|-------|--------|-----|
-| 01 | Basics (variables, types, operators, I/O) | [[01_Basics\|Python]] | [[01_Basics\|C#]] |
-| 02 | Strings (manipulation, formatting, regex) | [[02_Strings\|Python]] | [[02_Strings\|C#]] |
-| 03 | Control Flow (if/else, loops, pattern matching) | [[03_Control_Flow\|Python]] | [[03_Control_Flow\|C#]] |
-| 04 | Functions (lambdas, closures, decorators/delegates) | [[04_Functions\|Python]] | [[04_Functions\|C#]] |
-| 05 | Collections (lists, dicts, sets, LINQ) | [[05_Collections\|Python]] | [[05_Collections\|C#]] |
-| 06 | OOP (classes, inheritance, polymorphism) | [[06_OOP\|Python]] | [[06_OOP\|C#]] |
-| 07 | Generics and LINQ / Comprehensions | [[07_Generics_LINQ\|Python]] | [[07_Generics_LINQ\|C#]] |
-| 08 | Error Handling (exceptions, try/catch) | [[08_ErrorHandling\|Python]] | [[08_ErrorHandling\|C#]] |
-| 09 | File I/O and Serialization (JSON, CSV) | [[09_FileIO_Serialization\|Python]] | [[09_FileIO_Serialization\|C#]] |
-| 10 | DateTime, Math, and Utilities | [[10_DateTimeMathUtils\|Python]] | [[10_DateTimeMathUtils\|C#]] |
-| 11 | Async and Concurrency | [[11_AsyncConcurrency\|Python]] | [[11_AsyncConcurrency\|C#]] |
-| 12 | Testing (unit tests, mocking) | [[12_Testing\|Python]] | [[12_Testing\|C#]] |
-| 13 | Web APIs (HTTP clients and servers) | [[13_WebAPIs\|Python]] | [[13_WebAPIs\|C#]] |
-| 14 | Database Access (SQL, ORM, connections) | [[14_Database\|Python]] | [[14_Database\|C#]] |
-| 15 | GCP (BigQuery, GCS, Pub/Sub) | [[15_GCP\|Python]] | [[15_GCP\|C#]] |
-| 16 | Design Patterns (singleton, factory, observer) | [[16_DesignPatterns\|Python]] | [[16_DesignPatterns\|C#]] |
+| 01 | Basics (variables, types, operators, I/O) | [Python](Python/01_Basics.md) | [C#](CSharp/01_Basics.md) |
+| 02 | Strings (manipulation, formatting, regex) | [Python](Python/02_Strings.md) | [C#](CSharp/02_Strings.md) |
+| 03 | Control Flow (if/else, loops, pattern matching) | [Python](Python/03_Control_Flow.md) | [C#](CSharp/03_Control_Flow.md) |
+| 04 | Functions (lambdas, closures, decorators/delegates) | [Python](Python/04_Functions.md) | [C#](CSharp/04_Functions.md) |
+| 05 | Collections (lists, dicts, sets, LINQ) | [Python](Python/05_Collections.md) | [C#](CSharp/05_Collections.md) |
+| 06 | OOP (classes, inheritance, polymorphism) | [Python](Python/06_OOP.md) | [C#](CSharp/06_OOP.md) |
+| 07 | Generics and LINQ / Comprehensions | [Python](Python/07_Generics_LINQ.md) | [C#](CSharp/07_Generics_LINQ.md) |
+| 08 | Error Handling (exceptions, try/catch) | [Python](Python/08_ErrorHandling.md) | [C#](CSharp/08_ErrorHandling.md) |
+| 09 | File I/O and Serialization (JSON, CSV) | [Python](Python/09_FileIO_Serialization.md) | [C#](CSharp/09_FileIO_Serialization.md) |
+| 10 | DateTime, Math, and Utilities | [Python](Python/10_DateTimeMathUtils.md) | [C#](CSharp/10_DateTimeMathUtils.md) |
+| 11 | Async and Concurrency | [Python](Python/11_AsyncConcurrency.md) | [C#](CSharp/11_AsyncConcurrency.md) |
+| 12 | Testing (unit tests, mocking) | [Python](Python/12_Testing.md) | [C#](CSharp/12_Testing.md) |
+| 13 | Web APIs (HTTP clients and servers) | [Python](Python/13_WebAPIs.md) | [C#](CSharp/13_WebAPIs.md) |
+| 14 | Database Access (SQL, ORM, connections) | [Python](Python/14_Database.md) | [C#](CSharp/14_Database.md) |
+| 15 | GCP (BigQuery, GCS, Pub/Sub) | [Python](Python/15_GCP.md) | [C#](CSharp/15_GCP.md) |
+| 16 | Design Patterns (singleton, factory, observer) | [Python](Python/16_DesignPatterns.md) | [C#](CSharp/16_DesignPatterns.md) |
 
 ## How These Notes Work
 

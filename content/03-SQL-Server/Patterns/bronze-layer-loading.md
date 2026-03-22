@@ -45,7 +45,6 @@ IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bronze')
 GO
 ```
 
-*In plain English:* "Create the database and the bronze schema if they don't already exist. Safe to run multiple times."
 
 ### Connection Helper (`utils/db.py`)
 
@@ -101,7 +100,6 @@ WHERE _index = ?          -- parameterized: e.g. 'market_index'
 | MC.PA | 2021-01-04 |
 | SAP.DE | 2021-01-04 |
 
-*In plain English:* "Give me every stock in this index and when its price history starts." Used by fetchers to know which symbols to download data for.
 
 ---
 
@@ -166,7 +164,6 @@ CREATE INDEX IX_bronze_index_dim_index
 GO
 ```
 
-*In plain English:* "This table stores everything we know about each stock — name, sector, country, exchange. It's our company directory."
 
 ### bronze.signals_daily — Daily Trading Signals
 
@@ -222,7 +219,6 @@ CREATE INDEX IX_bronze_signals_daily_index_symbol
 GO
 ```
 
-*In plain English:* "Every time the pipeline runs, it fetches the latest price metrics, momentum data, and analyst opinions for each stock. This table holds the raw snapshot."
 
 ### bronze.signals_quarterly — Quarterly Fundamentals
 
@@ -393,7 +389,6 @@ CREATE INDEX IX_bronze_trading_calendar_exchange
 GO
 ```
 
-*In plain English:* "A complete calendar of trading days for each exchange. Used to detect gaps in OHLCV data — if the exchange was open but we have no price, that's a gap to forward-fill."
 
 ---
 
@@ -465,7 +460,6 @@ CREATE UNIQUE INDEX UX_silver_{ohlcv_table}
     ON silver.{ohlcv_table} (symbol, date);   -- UNIQUE: one price per stock per day
 ```
 
-*In plain English:* "Each index has its own OHLCV table because price histories are large. The silver version adds an `is_filled` flag to mark rows that were forward-filled to cover trading day gaps."
 
 ---
 
@@ -477,7 +471,6 @@ Loaders read JSON files produced by fetchers and write to bronze tables. Two str
 
 Used by: `index_dim`, `signals_daily`, `signals_quarterly`, `pulse`, `pulse_tickers`
 
-*In plain English:* "Wipe everything for this index, then reload fresh from the JSON file. This works because bronze only holds the current snapshot — we don't need history here."
 
 **Step 1 — Delete all existing rows for this index:**
 
@@ -518,7 +511,6 @@ conn.commit()                    # commit the transaction (or rollback on error)
 
 OHLCV data is append-only (new dates) with volume corrections (updates). Used by: `load_ohlcv.py`
 
-*In plain English:* "For OHLCV, we can't wipe and reload — we'd lose years of history. Instead, we only insert missing dates and fix rows where the volume was zero (stale data from after-hours snapshots)."
 
 **Step 1 — Read existing bronze data to build a lookup map:**
 

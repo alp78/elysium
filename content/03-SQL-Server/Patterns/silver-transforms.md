@@ -72,7 +72,6 @@ CREATE UNIQUE INDEX UX_silver_index_dim_current
 GO
 ```
 
-*In plain English:* "If ASML moves from 'Technology' to 'Semiconductors' sector, we don't overwrite — we close the old row and create a new one. This lets us track changes over time."
 
 **Example silver.index_dim state after an SCD2 attribute change:**
 
@@ -197,7 +196,6 @@ INSERT INTO silver.index_dim (
 -- DEFAULT: valid_from = SYSUTCDATETIME(), is_current = 1
 ```
 
-*In plain English:* "If a company's sector, name, or other attribute changes, we don't overwrite. We close the old version with a timestamp and create a new version. This preserves history — we can always look back and see what the data looked like at any point in time."
 
 ---
 
@@ -263,7 +261,6 @@ WHERE _index = ? AND symbol = ? AND signal_date = ?
 records_inserted=50  records_updated=45  records_unchanged=5
 ```
 
-*In plain English:* "Bronze only has today's data. Silver has every day's data. We compare today's snapshot against silver — new dates get inserted, changed values get updated, unchanged rows are skipped."
 
 ---
 
