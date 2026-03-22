@@ -237,6 +237,34 @@ a.tag-link:hover {
   background-color: rgba(187, 154, 247, 0.05) !important;
 }
 
+/* ── Page and article titles ─────────────────────────────────── */
+[saved-theme="dark"] .article-title {
+  color: #7aa2f7 !important;
+}
+
+[saved-theme="dark"] .page-title {
+  color: #7aa2f7 !important;
+}
+
+/* ── Explorer sidebar — brighter text ────────────────────────── */
+[saved-theme="dark"] .explorer ul li a,
+[saved-theme="dark"] .sidebar a {
+  color: #a9b1d6 !important;
+}
+
+[saved-theme="dark"] .folder-title {
+  color: #c0caf5 !important;
+}
+
+/* ── Breadcrumbs ─────────────────────────────────────────────── */
+[saved-theme="dark"] .breadcrumb-element a {
+  color: #565f89 !important;
+}
+
+[saved-theme="dark"] .breadcrumb-element a:hover {
+  color: #7aa2f7 !important;
+}
+
 /* ── Hover effects ───────────────────────────────────────────── */
 .folder-title:hover,
 .folder-title:hover .folder-icon {
