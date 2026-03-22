@@ -1,0 +1,181 @@
+---
+type: how-to
+category: observability
+technology: [datadog, sql-server, ubuntu, gcp]
+tags: [datadog, sql-server, monitoring, data-pipeline, ubuntu, systemd]
+aliases: [DD Agent SQL VM, Datadog SQL Server VM, datadog-agent systemd]
+keywords: [datadog agent, sql server vm, ubuntu, systemd, install_script_agent7, datadog.yaml, dd_agent login, sql server integration, manual install, bootstrap, startup script, odbc]
+description: "How to set up the Datadog Agent as a systemd service on the example SQL Server VM (Ubuntu 22.04), covering automated bootstrap, manual install steps, and the dd_agent SQL login."
+related:
+  - datadog-architecture-overview
+  - datadog-sql-server-integration
+  - datadog-custom-queries
+  - datadog-log-management
+  - datadog-troubleshooting
+  - server-configuration
+  - essential-dba-queries
+created: 2026-03-22
+updated: 2026-03-22
+status: complete
+---
+
+# Datadog Agent Setup — SQL Server VM (systemd on Ubuntu)
+
+The SQL VM runs Ubuntu 22.04, so the Datadog Agent is installed as a system package managed by systemd — not Docker. This is the standard Linux installation method and gives the agent access to OS-level metrics, SQL Server integration checks, and file tailing for the errorlog.
+
+---
+
+## Automated Setup (via Startup Script)
+
+The startup script (`infra/scripts/sql-startup.sh`) installs the agent on first boot:
+
+**Install the Datadog Agent 7:**
+
+```bash
+DD_API_KEY="${DD_API_KEY}" DD_SITE="datadoghq.eu" \
+  bash -c "$(curl -fsSL https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)"
+```
+
+**Write the main agent config:**
+
+```yaml
+# /etc/datadog-agent/datadog.yaml
+api_key: <API_KEY>
+site: datadoghq.eu
+hostname: data-pipeline-sql
+tags:
+  - env:prod
+  - service:data-pipeline-sql
+logs_enabled: true
+process_config:
+  process_collection:
+    enabled: true
+```
+
+**Create the `dd_agent` SQL Server login with read-only permissions:**
+
+```sql
+CREATE LOGIN dd_agent WITH PASSWORD = 'Dd@g3nt!Monitor';
+GRANT VIEW SERVER STATE TO dd_agent;
+GRANT VIEW ANY DEFINITION TO dd_agent;
+```
+
+> [!info] Minimal Permissions
+> `VIEW SERVER STATE` grants access to DMVs like `sys.dm_exec_sessions`, `sys.dm_os_performance_counters`, and `sys.dm_os_wait_stats`. `VIEW ANY DEFINITION` allows reading object metadata. No write permissions are granted.
+
+**Write the SQL Server integration config to:**
+`/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` — see [[datadog-sql-server-integration]] for the full config.
+
+---
+
+## Manual Install (if missed during bootstrap)
+
+If the Datadog Agent was not installed during VM bootstrap (e.g., `dd-api-key` metadata was not set at first boot), install it manually:
+
+```bash
+# 1. SSH into the SQL VM
+gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
+
+# 2. Set your Datadog API key
+export DD_API_KEY="<your-datadog-api-key>"
+
+# 3. Install the agent
+DD_API_KEY="$DD_API_KEY" DD_SITE="datadoghq.eu" \
+  bash -c "$(curl -fsSL https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)"
+
+# 4. Write agent config
+sudo tee /etc/datadog-agent/datadog.yaml <<EOF
+api_key: ${DD_API_KEY}
+site: datadoghq.eu
+hostname: data-pipeline-sql
+tags:
+  - env:prod
+  - service:data-pipeline-sql
+logs_enabled: true
+process_config:
+  process_collection:
+    enabled: true
+EOF
+
+# 5. Create dd_agent SQL login
+SA_PWD=$(curl -s -H "Metadata-Flavor: Google" \
+  "http://metadata.google.internal/computeMetadata/v1/instance/attributes/sa-password")
+
+/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PWD" -C -Q "
+  IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'dd_agent')
+  BEGIN
+    CREATE LOGIN dd_agent WITH PASSWORD = 'Dd@g3nt!Monitor';
+    GRANT VIEW SERVER STATE TO dd_agent;
+    GRANT VIEW ANY DEFINITION TO dd_agent;
+  END
+"
+
+# 6. Configure SQL Server integration
+sudo mkdir -p /etc/datadog-agent/conf.d/sqlserver.d
+sudo tee /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml <<EOF
+init_config:
+
+instances:
+  - host: localhost,1433
+    username: dd_agent
+    password: 'Dd@g3nt!Monitor'
+    connector: odbc
+    driver: '{ODBC Driver 18 for SQL Server}'
+    connection_string: 'TrustServerCertificate=yes'
+    tags:
+      - env:prod
+      - service:data-pipeline-sql
+EOF
+
+# 7. Fix permissions and start
+sudo usermod -aG root dd-agent
+sudo systemctl enable datadog-agent
+sudo systemctl restart datadog-agent
+
+# 8. Verify
+sudo datadog-agent status
+```
+
+> [!tip] Persist API Key in Metadata
+> After manual install, run `terraform apply` to persist `dd-api-key` in the VM metadata for future reboots. Without this, the key won't be available on next boot and the agent won't auto-configure.
+
+---
+
+## Config File Locations
+
+| File | Purpose |
+|------|---------|
+| `/etc/datadog-agent/datadog.yaml` | Main agent config (API key, hostname, tags) |
+| `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` | SQL Server integration (connection, custom queries) |
+| `/etc/datadog-agent/conf.d/sqlserver.d/logs.yaml` | SQL Server log collection |
+
+---
+
+## Agent Management Commands
+
+SSH into the VM first:
+
+```powershell
+gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
+```
+
+| Task | Command |
+|------|---------|
+| Full agent status | `sudo datadog-agent status` |
+| Check SQL Server integration | `sudo datadog-agent check sqlserver` |
+| View agent logs | `sudo journalctl -u datadog-agent --no-pager -n 50` |
+| Restart agent | `sudo systemctl restart datadog-agent` |
+| Stop agent | `sudo systemctl stop datadog-agent` |
+| Start agent | `sudo systemctl start datadog-agent` |
+
+---
+
+## Related
+
+- [[datadog-architecture-overview]] — Full observability topology
+- [[datadog-sql-server-integration]] — SQL Server integration config detail
+- [[datadog-custom-queries]] — Custom DMV metric queries
+- [[datadog-log-management]] — Errorlog collection configuration
+- [[datadog-troubleshooting]] — Common issues including missing agent after bootstrap
+- [[server-configuration]] — SQL Server VM configuration reference
+- [[essential-dba-queries]] — DMV queries useful for debugging SQL Server health

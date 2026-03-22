@@ -8,27 +8,33 @@ import * as Plugin from "./quartz/plugins"
  */
 const config: QuartzConfig = {
   configuration: {
-    pageTitle: "Quartz 4",
-    pageTitleSuffix: "",
+    pageTitle: "Elysium",                    // ← your vault name
+    pageTitleSuffix: " — Data Engineering",  // ← appears in browser tab
     enableSPA: true,
     enablePopovers: true,
-    analytics: {
-      provider: "plausible",
-    },
+    analytics: null,                         // ← remove plausible unless you have an account
     locale: "en-US",
-    baseUrl: "quartz.jzhao.xyz",
-    ignorePatterns: ["private", "templates", ".obsidian"],
+    baseUrl: "alp78.github.io/elysium", // ← your GitHub Pages URL or custom domain
+    ignorePatterns: [
+      "_workspace",        // ← internal planning docs
+      "_archive",          // ← archived out-of-scope content
+      "_scripts",          // ← build scripts
+      "_quartz-config",    // ← quartz config copies
+      "_attachments",      // ← attachment files
+      "Templates",         // ← obsidian templates
+      ".obsidian",         // ← keep this one
+    ],
     defaultDateType: "modified",
     theme: {
       fontOrigin: "googleFonts",
       cdnCaching: true,
       typography: {
-        header: "Schibsted Grotesk",
-        body: "Source Sans Pro",
-        code: "IBM Plex Mono",
+        header: "Inter",              // ← matches your vault
+        body: "Inter",                // ← clean screen font
+        code: "JetBrains Mono",       // ← matches your vault
       },
       colors: {
-        lightMode: {
+        lightMode: {                  // ← keep as-is or customize
           light: "#faf8f8",
           lightgray: "#e5e5e5",
           gray: "#b8b8b8",
@@ -39,16 +45,16 @@ const config: QuartzConfig = {
           highlight: "rgba(143, 159, 169, 0.15)",
           textHighlight: "#fff23688",
         },
-        darkMode: {
-          light: "#161618",
-          lightgray: "#393639",
-          gray: "#646464",
-          darkgray: "#d4d4d4",
-          dark: "#ebebec",
-          secondary: "#7b97aa",
-          tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
-          textHighlight: "#b3aa0288",
+        darkMode: {                   // ← Tokyo Night colors
+          light: "#1a1b26",           // main background
+          lightgray: "#24283b",       // sidebar/borders
+          gray: "#565f89",            // muted text
+          darkgray: "#a9b1d6",        // body text
+          dark: "#c0caf5",            // headings
+          secondary: "#7aa2f7",       // links
+          tertiary: "#bb9af7",        // hover/accent
+          highlight: "rgba(122, 162, 247, 0.12)",
+          textHighlight: "#e0af6833",
         },
       },
     },
@@ -62,7 +68,7 @@ const config: QuartzConfig = {
       Plugin.SyntaxHighlighting({
         theme: {
           light: "github-light",
-          dark: "github-dark",
+          dark: "tokyo-night",         // ← match your theme
         },
         keepBackground: false,
       }),
@@ -88,10 +94,10 @@ const config: QuartzConfig = {
       Plugin.Static(),
       Plugin.Favicon(),
       Plugin.NotFoundPage(),
-      // Comment out CustomOgImages to speed up build time
-      Plugin.CustomOgImages(),
+      // Plugin.CustomOgImages(),     // ← comment out to speed up builds
     ],
   },
 }
+
 
 export default config
