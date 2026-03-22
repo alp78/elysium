@@ -1,3 +1,48 @@
 @use "./base.scss";
 
-// put your custom CSS here!
+// Sidebar / explorer menu hover
+.folder-title:hover,
+.folder-title:hover .folder-icon {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+// Explorer file links hover
+.explorer ul li a:hover,
+.sidebar a:hover {
+  color: var(--secondary) !important;
+  background-color: var(--highlight) !important;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+// Table of contents hover
+.toc a:hover {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+// Backlinks hover
+.backlinks a:hover {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
+
+// Tag hover
+a.tag-link:hover {
+  background-color: var(--secondary) !important;
+  color: var(--light) !important;
+  transition: all 0.15s ease;
+}
+
+// General content links hover
+article a:hover {
+  color: var(--tertiary) !important;
+  transition: color 0.15s ease;
+}
+
+// Breadcrumb hover
+.breadcrumb-element a:hover {
+  color: var(--secondary) !important;
+  transition: color 0.15s ease;
+}
