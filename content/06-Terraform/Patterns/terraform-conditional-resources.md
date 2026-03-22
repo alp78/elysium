@@ -4,7 +4,7 @@ category: infrastructure
 technology: [terraform]
 tags: [terraform, patterns, conditional, count, for_each, infrastructure-as-code]
 aliases: [terraform conditional, terraform count, terraform for_each, optional resources terraform, terraform ternary]
-keywords: [count, for_each, conditional resource creation, ternary operator, optional resources, count = 0, count = 1, conditional index notation, resource[0], compact, concat, terraform functions, dynamic blocks]
+keywords: [count, for_each, conditional resource creation, ternary operator, optional resources, "count = 0", "count = 1", conditional index notation, "resource[0]", compact, concat, terraform functions, dynamic blocks]
 description: "How Terraform uses count and for_each to conditionally create resources or create multiple instances, enabling optional integrations (like Datadog) and parameterized infrastructure."
 related:
   - "[[terraform-variables-and-outputs]]"
