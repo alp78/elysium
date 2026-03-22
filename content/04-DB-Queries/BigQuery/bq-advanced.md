@@ -48,7 +48,7 @@ Topics covered:
 %sql bigquery://bq-wh-nb
 ```
 
-<span style="None">Connecting to &#x27;bigquery://bq-wh-nb&#x27;</span>
+Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 
 ## 1. Advanced Window Functions
@@ -74,7 +74,7 @@ ORDER BY `close` DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -175,7 +175,7 @@ ORDER BY composite_rank
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -330,7 +330,7 @@ ORDER BY date DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -474,7 +474,7 @@ ORDER BY date DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -619,7 +619,7 @@ ORDER BY date DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -747,7 +747,7 @@ ORDER BY d.dt
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -885,7 +885,7 @@ ORDER BY s.symbol, c.date
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -999,7 +999,7 @@ LIMIT 15
 
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1146,7 +1146,7 @@ LIMIT 15
 
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1304,7 +1304,7 @@ PIVOT (AVG(`close`) FOR mo IN (1 AS Jan, 2 AS Feb, 3 AS Mar, 4 AS Apr, 5 AS May)
 
 ```
 
-<span style="color: green">1 rows affected.</span>
+1 rows affected.
 
 <table>
     <thead>
@@ -1353,7 +1353,7 @@ WHERE symbol = 'ASML.AS' AND EXTRACT(YEAR FROM date) = 2025
 GROUP BY symbol
 ```
 
-<span style="color: green">1 rows affected.</span>
+1 rows affected.
 
 <table>
     <thead>
@@ -1403,7 +1403,7 @@ LIMIT 15
 
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1524,7 +1524,7 @@ SELECT 'DEMO.XX', DATE '2026-03-21', 102.5, 1200000
 
 ```
 
-<span style="color: green">2 rows affected.</span>
+2 rows affected.
 
 <table>
     <thead>
@@ -1575,7 +1575,7 @@ ORDER BY d.symbol
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1686,7 +1686,7 @@ ORDER BY d.symbol
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1806,7 +1806,7 @@ ORDER BY GROUPING(d.sector), GROUPING(d.country), avg_score DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1936,7 +1936,7 @@ ORDER BY GROUPING(d.sector), total_volume DESC
 LIMIT 15
 ```
 
-<span style="color: green">11 rows affected.</span>
+11 rows affected.
 
 <table>
     <thead>
@@ -2041,7 +2041,7 @@ ORDER BY stocks DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -2126,7 +2126,7 @@ ORDER BY symbol
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -2237,7 +2237,7 @@ ORDER BY forward_pe
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -2359,7 +2359,7 @@ ORDER BY symbol
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -2441,7 +2441,7 @@ ORDER BY trading_days DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>

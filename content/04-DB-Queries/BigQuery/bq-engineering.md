@@ -53,7 +53,7 @@ Topics covered:
 %sql bigquery://bq-wh-nb
 ```
 
-<span style="None">Connecting to &#x27;bigquery://bq-wh-nb&#x27;</span>
+Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 
 
@@ -122,7 +122,7 @@ SELECT * FROM bq-wh-nb.stoxx_gold.v_latest_prices ORDER BY `close` DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -292,7 +292,7 @@ ORDER BY `rank`
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -492,7 +492,7 @@ ORDER BY s.composite_rank
 LIMIT 5
 ```
 
-<span style="color: green">5 rows affected.</span>
+5 rows affected.
 
 <table>
     <thead>
@@ -575,7 +575,7 @@ EXCEPTION WHEN ERROR THEN
 END
 ```
 
-<span style="color: green">1 rows affected.</span>
+1 rows affected.
 
 <table>
     <thead>
@@ -636,7 +636,7 @@ ORDER BY date DESC
 LIMIT 15
 ```
 
-<span style="color: green">9 rows affected.</span>
+9 rows affected.
 
 <table>
     <thead>
@@ -765,7 +765,7 @@ LIMIT 15
 
 ```
 
-<span style="color: green">12 rows affected.</span>
+12 rows affected.
 
 <table>
     <thead>
@@ -876,7 +876,7 @@ ORDER BY symbol
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -985,7 +985,7 @@ ORDER BY symbol, valid_from
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -1108,7 +1108,7 @@ ORDER BY date DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -1233,7 +1233,7 @@ ORDER BY date DESC, rn
 LIMIT 10
 ```
 
-<span style="color: green">2 rows affected.</span>
+2 rows affected.
 
 <table>
     <thead>
@@ -1296,7 +1296,7 @@ SELECT
      WHERE date >= '2025-01-01' AND date < '2026-01-01') AS good_sargable
 ```
 
-<span style="color: green">1 rows affected.</span>
+1 rows affected.
 
 <table>
     <thead>
@@ -1375,7 +1375,7 @@ WHERE _index = 'euro_stoxx_50'
 ORDER BY last_update DESC
 ```
 
-<span style="color: green">4 rows affected.</span>
+4 rows affected.
 
 <table>
     <thead>

@@ -44,7 +44,7 @@ Topics covered:
 %sql bigquery://bq-wh-nb
 ```
 
-<span style="None">Connecting to &#x27;bigquery://bq-wh-nb&#x27;</span>
+Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 
 ## 1. Schema Exploration
@@ -273,7 +273,7 @@ ORDER BY ordinal_position
 
 ```
 
-<span style="color: green">12 rows affected.</span>
+12 rows affected.
 
 <table>
     <thead>
@@ -374,7 +374,7 @@ ORDER BY date DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -507,7 +507,7 @@ ORDER BY ABS((`close` - `open`) / `open`) DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -654,7 +654,7 @@ ORDER BY avg_volume DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -777,7 +777,7 @@ ORDER BY yr, mo
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -965,7 +965,7 @@ ORDER BY p.`close` DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1147,7 +1147,7 @@ ORDER BY s.composite_rank
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1385,7 +1385,7 @@ ORDER BY date DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1541,7 +1541,7 @@ ORDER BY date DESC
 LIMIT 15
 ```
 
-<span style="color: green">15 rows affected.</span>
+15 rows affected.
 
 <table>
     <thead>
@@ -1720,7 +1720,7 @@ ORDER BY rank_best
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -1846,7 +1846,7 @@ SELECT * FROM sector_stats
 ORDER BY avg_score DESC
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -1986,7 +1986,7 @@ WHERE p.rn = 1
 ORDER BY ytd_pct DESC
 ```
 
-<span style="color: green">4 rows affected.</span>
+4 rows affected.
 
 <table>
     <thead>
@@ -2102,7 +2102,7 @@ SELECT 'days_since_update',
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 ```
 
-<span style="color: green">5 rows affected.</span>
+5 rows affected.
 
 <table>
     <thead>
@@ -2163,7 +2163,7 @@ ORDER BY date DESC
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>
@@ -2278,7 +2278,7 @@ ORDER BY `rank`
 LIMIT 10
 ```
 
-<span style="color: green">10 rows affected.</span>
+10 rows affected.
 
 <table>
     <thead>

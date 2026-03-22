@@ -49,7 +49,7 @@ Topics covered:
 %sql mssql+pyodbc://sa:EsgDev2026Pass1@localhost:1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&MARS_Connection=yes
 ```
 
-<span style="None">Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;</span>
+Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
 
 
 ## 1. Advanced Window Functions
@@ -1506,7 +1506,7 @@ DROP TABLE #staging
 DROP TABLE #target
 ```
 
-<span style="color: green">2 rows affected.</span>
+2 rows affected.
 
 <table>
     <thead>

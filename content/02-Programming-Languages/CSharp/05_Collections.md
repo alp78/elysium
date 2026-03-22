@@ -173,112 +173,218 @@ Console.WriteLine("Python: nums[::2]    -> C#: NO equivalent (use .Where with in
 ```
 
 
-
-<div>
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-    </div>
-    <script type='text/javascript'>
-async function probeAddresses(probingAddresses) {
-    function timeout(ms, promise) {
-        return new Promise(function (resolve, reject) {
-            setTimeout(function () {
-                reject(new Error('timeout'))
-            }, ms)
-            promise.then(resolve, reject)
-        })
-    }
-
-    if (Array.isArray(probingAddresses)) {
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-            let rootUrl = probingAddresses[i];
-
-            if (!rootUrl.endsWith('/')) {
-                rootUrl = `${rootUrl}/`;
-            }
-
-            try {
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-                    method: 'POST',
-                    cache: 'no-cache',
-                    mode: 'cors',
-                    timeout: 1000,
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    },
-                    body: probingAddresses[i]
-                }));
-
-                if (response.status == 200) {
-                    return rootUrl;
-                }
-            }
-            catch (e) { }
-        }
-    }
-}
-
-function loadDotnetInteractiveApi() {
-    probeAddresses(["http://2a02:8308:718a:f200::280b:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:9c70:c598:8ab4:ea30:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/"])
-        .then((root) => {
-        // use probing to find host url and api resources
-        // load interactive helpers and language services
-        let dotnetInteractiveRequire = require.config({
-        context: '22872.Microsoft.DotNet.Interactive.Http.HttpPort',
-                paths:
-            {
-                'dotnet-interactive': `${root}resources`
-                }
-        }) || require;
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-                let paths = {};
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-                
-                let internalRequire = require.config({
-                    context: extensionCacheBuster,
-                    paths: paths,
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-                    }) || require;
-
-                return internalRequire
-            };
-        
-            dotnetInteractiveRequire([
-                    'dotnet-interactive/dotnet-interactive'
-                ],
-                function (dotnet) {
-                    dotnet.init(window);
-                },
-                function (error) {
-                    console.log(error);
-                }
-            );
-        })
-        .catch(error => {console.log(error);});
-    }
-
-// ensure `require` is available globally
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-    let require_script = document.createElement('script');
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-    require_script.setAttribute('type', 'text/javascript');
-    
-    
-    require_script.onload = function() {
-        loadDotnetInteractiveApi();
-    };
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-}
-else {
-    loadDotnetInteractiveApi();
-}
-
-    </script>
+
+
+<div>
+
+    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
+
+        The below script needs to be able to find the current output cell; this is an easy method to get it.
+
+    </div>
+
+    <script type='text/javascript'>
+
+async function probeAddresses(probingAddresses) {
+
+    function timeout(ms, promise) {
+
+        return new Promise(function (resolve, reject) {
+
+            setTimeout(function () {
+
+                reject(new Error('timeout'))
+
+            }, ms)
+
+            promise.then(resolve, reject)
+
+        })
+
+    }
+
+
+
+    if (Array.isArray(probingAddresses)) {
+
+        for (let i = 0; i < probingAddresses.length; i++) {
+
+
+
+            let rootUrl = probingAddresses[i];
+
+
+
+            if (!rootUrl.endsWith('/')) {
+
+                rootUrl = `${rootUrl}/`;
+
+            }
+
+
+
+            try {
+
+                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
+
+                    method: 'POST',
+
+                    cache: 'no-cache',
+
+                    mode: 'cors',
+
+                    timeout: 1000,
+
+                    headers: {
+
+                        'Content-Type': 'text/plain'
+
+                    },
+
+                    body: probingAddresses[i]
+
+                }));
+
+
+
+                if (response.status == 200) {
+
+                    return rootUrl;
+
+                }
+
+            }
+
+            catch (e) { }
+
+        }
+
+    }
+
+}
+
+
+
+function loadDotnetInteractiveApi() {
+
+    probeAddresses(["http://2a02:8308:718a:f200::280b:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:9c70:c598:8ab4:ea30:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/"])
+
+        .then((root) => {
+
+        // use probing to find host url and api resources
+
+        // load interactive helpers and language services
+
+        let dotnetInteractiveRequire = require.config({
+
+        context: '22872.Microsoft.DotNet.Interactive.Http.HttpPort',
+
+                paths:
+
+            {
+
+                'dotnet-interactive': `${root}resources`
+
+                }
+
+        }) || require;
+
+
+
+            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
+
+
+
+            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
+
+                let paths = {};
+
+                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
+
+                
+
+                let internalRequire = require.config({
+
+                    context: extensionCacheBuster,
+
+                    paths: paths,
+
+                    urlArgs: `cacheBuster=${extensionCacheBuster}`
+
+                    }) || require;
+
+
+
+                return internalRequire
+
+            };
+
+        
+
+            dotnetInteractiveRequire([
+
+                    'dotnet-interactive/dotnet-interactive'
+
+                ],
+
+                function (dotnet) {
+
+                    dotnet.init(window);
+
+                },
+
+                function (error) {
+
+                    console.log(error);
+
+                }
+
+            );
+
+        })
+
+        .catch(error => {console.log(error);});
+
+    }
+
+
+
+// ensure `require` is available globally
+
+if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
+
+    let require_script = document.createElement('script');
+
+    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
+
+    require_script.setAttribute('type', 'text/javascript');
+
+    
+
+    
+
+    require_script.onload = function() {
+
+        loadDotnetInteractiveApi();
+
+    };
+
+
+
+    document.getElementsByTagName('head')[0].appendChild(require_script);
+
+}
+
+else {
+
+    loadDotnetInteractiveApi();
+
+}
+
+
+
+    </script>
+
 </div>
 
 

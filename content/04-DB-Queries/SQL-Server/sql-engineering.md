@@ -53,7 +53,7 @@ Topics covered:
 %sql mssql+pyodbc://sa:EsgDev2026Pass1@localhost:1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&MARS_Connection=yes
 ```
 
-<span style="None">Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;</span>
+Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
 
 
 
@@ -805,11 +805,11 @@ UPDATE #scd_demo SET sector = 'Information Technology' WHERE symbol = 'ASML.AS';
 SELECT * FROM #scd_demo
 ```
 
-<span style="color: green">5 rows affected.</span>
+5 rows affected.
 
 
 
-<span style="color: green">1 rows affected.</span>
+1 rows affected.
 
 <table>
     <thead>
