@@ -74,7 +74,7 @@ description: >
   stack architecture with cost comparison vs Datadog.
 related:
   - "[[gcp-cloud-monitoring-and-alerting]]"
-  - "[[gcp-ops-agent-and-custom-metrics]]"
+  - "[[cloud-monitoring-metrics|custom metrics]]"
   - "[[observability-index]]"
   - "[[firestore-pipeline-state-store]]"
   - "[[cloud-run-data-pipelines]]"
@@ -1359,7 +1359,7 @@ Data Pipeline (Cloud Run Job)
 
 #### Step 1: Metrics
 
-- Install Ops Agent on all VMs (see [[gcp-ops-agent-and-custom-metrics]])
+- Install Ops Agent on all VMs (see [[cloud-monitoring-metrics|custom metrics]])
 - Cloud Run metrics are automatic (no Ops Agent needed)
 - Write custom metrics for business KPIs using `google-cloud-monitoring` Python library
 - Create log-based metrics for error counts
@@ -1521,4 +1521,4 @@ with tracer.start_as_current_span("my-span", attributes={"key": "value"}) as spa
 
 ---
 
-*See also: [[gcp-cloud-monitoring-and-alerting]] | [[gcp-ops-agent-and-custom-metrics]] | [[observability-index]] | [[firestore-pipeline-state-store]]*
+*See also: [[gcp-cloud-monitoring-and-alerting]] | [[cloud-monitoring-metrics|custom metrics]] | [[observability-index]] | [[firestore-pipeline-state-store]]*

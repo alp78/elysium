@@ -71,7 +71,7 @@ description: >
   comprehensive feature-parity comparison with Datadog — using only GCP-native tools.
 related:
   - "[[gcp-cloud-trace-and-logging]]"
-  - "[[gcp-pubsub-deep-dive]]"
+  - "[[pubsub-messaging|Pub/Sub]]"
   - "[[gcp-bigquery-deep-dive]]"
   - "[[gcp-cloud-run-deep-dive]]"
   - "[[observability-index]]"

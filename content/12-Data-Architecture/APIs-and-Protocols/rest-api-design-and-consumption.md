@@ -82,8 +82,8 @@ related:
   - "[[fastapi-and-polars]]"
   - "[[data-architecture-index]]"
   - "[[moc-data-pipeline-lifecycle]]"
-  - "[[python-requests-and-http]]"
-  - "[[shell-scripting-and-curl]]"
+  - "[[rest-api-design-and-consumption|Python HTTP requests]]"
+  - "[[http-requests-and-apis|curl and HTTP]]"
   - "[[gcp-auth-and-service-accounts]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -1888,4 +1888,4 @@ If-None-Match: {etag}                X-Request-Id (for support tickets)
 
 ---
 
-*See also: [[fastapi-and-polars]] | [[shell-scripting-and-curl]] | [[gcp-auth-and-service-accounts]] | [[moc-data-pipeline-lifecycle]]*
+*See also: [[fastapi-and-polars]] | [[http-requests-and-apis|curl and HTTP]] | [[gcp-auth-and-service-accounts]] | [[moc-data-pipeline-lifecycle]]*

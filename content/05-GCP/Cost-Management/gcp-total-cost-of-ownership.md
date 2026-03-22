@@ -56,10 +56,10 @@ description: Concrete TCO calculations for classic data engineering pipeline arc
 related:
   - "[[gcp-index]]"
   - "[[bigquery-cost-optimization]]"
-  - "[[cloud-run-jobs]]"
+  - "[[cloud-run-jobs-vs-services|Cloud Run]]"
   - "[[compute-engine-overview]]"
-  - "[[gcp-logging]]"
-  - "[[gcp-secret-manager]]"
+  - "[[cloud-logging]]"
+  - "[[tf-iam-secrets-serverless|Secret Manager]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

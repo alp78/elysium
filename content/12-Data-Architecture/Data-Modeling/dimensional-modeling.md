@@ -77,10 +77,10 @@ description: >
   in a financial index provider domain with full DDL and concrete SQL examples.
 related:
   - "[[data-warehouse-architecture]]"
-  - "[[star-schema-vs-snowflake]]"
-  - "[[slowly-changing-dimensions]]"
+  - "[[dimensional-modeling|star vs snowflake schema]]"
+  - "[[data-warehouse-architecture|SCD patterns]]"
   - "[[dbt-modeling-patterns]]"
-  - "[[sql-server-columnstore]]"
+  - "[[index-types-and-strategy|columnstore indexes]]"
   - "[[bigquery-partitioning]]"
   - "[[data-pipeline-lifecycle]]"
   - "[[five-pillars-of-data-engineering]]"

@@ -158,7 +158,7 @@ For each key metric M in each pipeline P:
   5. Periodically re-baseline as business naturally evolves
 ```
 
-This is the foundation behind tools like [[Monte Carlo Data]], [[Bigeye]], and the anomaly detection features in [[dbt]] and [[Great Expectations]].
+This is the foundation behind tools like [[Monte Carlo Data]], [[Bigeye]], and the anomaly detection features in [[dbt-transformation-layer|dbt]] and [[Great Expectations]].
 
 > [!warning] SPC Requires Stability First
 > SPC only works on a **stable process**. If your pipelines are constantly being rewritten, your baselines will be meaningless. Stabilize your architecture before adding SPC-style monitoring.
@@ -239,7 +239,7 @@ Manual processes are the enemy of reliability and speed. Every manual step is a 
 | Environment refresh | "Copy prod to staging" ticket | Automated refresh job on schedule |
 | Documentation | Wiki page, always stale | Generated from code (dbt docs, Data Catalog) |
 
-**Orchestration** is the coordination layer — ensuring pipelines run in the right order, with proper dependencies, retries, and alerting. See [[orchestration-tools-comparison]] for a full breakdown of Airflow, Prefect, Dagster, and others.
+**Orchestration** is the coordination layer — ensuring pipelines run in the right order, with proper dependencies, retries, and alerting. See [[technology-selection-matrices|orchestration selection]] for a full breakdown of Airflow, Prefect, Dagster, and others.
 
 ### Pillar 2: Agile Iteration
 
@@ -582,5 +582,5 @@ Run the improvements as a time-boxed project. Re-measure after 90 days. Repeat.
 - [[golden-rules-of-data-engineering]] — principles that align with DataOps philosophy
 - [[data-team-organization]] — how to structure a team to execute DataOps practices effectively
 - [[self-service-data-platform]] — the platform-level manifestation of DataOps maturity
-- [[orchestration-tools-comparison]] — choosing the right orchestration tool for your CI/CD pipelines
-- [[data-quality-frameworks]] — detailed look at shift-left testing tools and strategies
+- [[technology-selection-matrices|orchestration selection]] — choosing the right orchestration tool for your CI/CD pipelines
+- [[dataops-principles-and-practices|data quality]] — detailed look at shift-left testing tools and strategies

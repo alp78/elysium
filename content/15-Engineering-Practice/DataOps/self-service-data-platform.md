@@ -636,5 +636,5 @@ Building a self-service platform is a multi-quarter investment. A pragmatic sequ
 - [[data-team-organization]] — how team structure must evolve to support self-service
 - [[data-mesh-architecture]] — the federated organizational pattern that self-service platforms enable
 - [[dbt-transformation-layer]] — the transformation and semantic layer that sits at the heart of the platform
-- [[data-quality-frameworks]] — detailed breakdown of quality tools and testing strategies
-- [[orchestration-tools-comparison]] — orchestration layer that keeps data products fresh
+- [[dataops-principles-and-practices|data quality]] — detailed breakdown of quality tools and testing strategies
+- [[technology-selection-matrices|orchestration selection]] — orchestration layer that keeps data products fresh

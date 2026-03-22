@@ -12,7 +12,7 @@ related:
   - "[[technical-indicators]]"
   - "[[valuation-ratios]]"
   - "[[data-sources-and-refresh]]"
-  - "[[z-score-methodology]]"
+  - "[[scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

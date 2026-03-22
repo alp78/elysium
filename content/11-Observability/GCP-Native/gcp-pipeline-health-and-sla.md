@@ -62,7 +62,7 @@ description: >
   and measurement, alerting triage decision trees, on-call procedures, and
   self-healing automation patterns — no third-party APM required.
 related:
-  - "[[gcp-structured-logging]]"
+  - "[[cloud-logging|structured logging]]"
   - "[[gcp-custom-metrics]]"
   - "[[gcp-alerting-policies]]"
   - "[[gcp-cloud-run-jobs]]"

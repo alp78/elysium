@@ -11,7 +11,7 @@ related:
   - "[[scoring-methodology]]"
   - "[[valuation-ratios]]"
   - "[[data-sources-and-refresh]]"
-  - "[[yfinance-data-pipeline]]"
+  - "[[data-sources-and-refresh|yfinance pipeline]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
