@@ -461,10 +461,17 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   function animate() {
     if (stopAnimation) return
 
-    // Update node positions + smooth alpha/scale
+    // Update node positions (clamped to viewport) + smooth alpha/scale
+    const pad = 15
     for (const nr of nodeRenders) {
-      const { x, y } = nr.sim
+      let { x, y } = nr.sim
       if (!x || !y) continue
+      const r = getNodeRadius(nr.sim)
+      // Clamp to keep nodes inside the graph box
+      x = Math.max(pad + r, Math.min(width - pad - r, x))
+      y = Math.max(pad + r, Math.min(height - pad - r, y))
+      nr.sim.x = x
+      nr.sim.y = y
       nr.gfx.position.set(x, y)
       nr.label.position.set(x, y)
 

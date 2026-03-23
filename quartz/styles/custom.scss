@@ -365,6 +365,11 @@ article a:hover {
   background: #3b4261;
 }
 
+/* ── Hide darkmode toggle (dark-only theme) ─────────────────── */
+button.darkmode {
+  display: none !important;
+}
+
 /* ── Mermaid diagrams ────────────────────────────────────────── */
 .mermaid {
   background-color: transparent !important;
