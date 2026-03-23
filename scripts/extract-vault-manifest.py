@@ -18,7 +18,7 @@ from collections import Counter
 from pathlib import Path
 
 CONTENT_DIR = Path(__file__).parent.parent / "content"
-OUTPUT_FILE = Path(__file__).parent.parent / "static" / "vault-manifest.json"
+OUTPUT_FILE = Path(__file__).parent.parent / "quartz" / "static" / "vault-manifest.json"
 BASE_URL = "/elysium"
 
 

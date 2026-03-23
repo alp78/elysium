@@ -176,6 +176,13 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .force("link", forceLink(graphData.links).distance(linkDistance).strength(0.8))
     .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 1).iterations(3))
 
+  // Precompute link counts per node for label priority
+  for (const n of graphData.nodes) {
+    ;(n as any).__linkCount = graphData.links.filter(
+      (l: any) => (l.source?.id ?? l.source) === n.id || (l.target?.id ?? l.target) === n.id,
+    ).length
+  }
+
   const radius = (Math.min(width, height) / 2) * 0.8
   if (enableRadial) simulation.force("radial", forceRadial(radius).strength(0.2))
 
@@ -553,9 +560,34 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           let scaleOpacity = Math.max((scale - 1) / 3.75, 0)
           const activeNodes = nodeRenderData.filter((n) => n.active).flatMap((n) => n.label)
 
-          for (const label of labelsContainer.children) {
-            if (!activeNodes.includes(label)) {
-              label.alpha = scaleOpacity
+          // Label collision avoidance: only show labels that don't overlap
+          // Sort nodes by link count (most connected first = higher priority)
+          const sortedNodes = [...nodeRenderData].sort(
+            (a, b) => (b.simulationData as any).__linkCount - (a.simulationData as any).__linkCount,
+          )
+          const minLabelDist = 60 / transform.k // minimum pixel distance between visible labels
+          const visibleLabelPositions: { x: number; y: number }[] = []
+
+          for (const n of sortedNodes) {
+            const sx = (n.simulationData.x ?? 0) * transform.k + transform.x
+            const sy = (n.simulationData.y ?? 0) * transform.k + transform.y
+
+            if (activeNodes.includes(n.label)) {
+              // Always show hovered/active labels
+              visibleLabelPositions.push({ x: sx, y: sy })
+              continue
+            }
+
+            // Check if this label would overlap any already-visible label
+            const tooClose = visibleLabelPositions.some(
+              (p) => Math.abs(sx - p.x) < minLabelDist && Math.abs(sy - p.y) < minLabelDist * 0.5,
+            )
+
+            if (tooClose || scaleOpacity === 0) {
+              n.label.alpha = 0
+            } else {
+              n.label.alpha = scaleOpacity
+              visibleLabelPositions.push({ x: sx, y: sy })
             }
           }
         }),

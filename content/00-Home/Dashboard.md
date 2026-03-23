@@ -134,5 +134,7 @@ See [[adr-index]] for all ADRs.
 
 ---
 
-## Vault Info
+## Vault Analytics
+
+[Open Interactive Dashboard](https://alp78.github.io/elysium/static/vault-analytics.html) — Charts, filters, tag browser, section heatmap, and vault health scorecard.
 
