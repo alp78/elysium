@@ -267,11 +267,18 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     }
   }
 
+  // precompute link counts for performance
+  const linkCounts = new Map<string, number>()
+  for (const l of graphData.links) {
+    linkCounts.set(l.source as unknown as string, (linkCounts.get(l.source as unknown as string) ?? 0) + 1)
+    linkCounts.set(l.target as unknown as string, (linkCounts.get(l.target as unknown as string) ?? 0) + 1)
+  }
+
   function nodeRadius(d: NodeData) {
-    const numLinks = graphData.links.filter(
-      (l) => l.source.id === d.id || l.target.id === d.id,
-    ).length
-    return 2 + Math.sqrt(numLinks)
+    const numLinks = linkCounts.get(d.id) ?? 0
+    // Obsidian-like scaling: leaf nodes small (2.5), hubs large (up to ~12)
+    if (numLinks === 0) return 2.5
+    return 2.5 + Math.pow(numLinks, 0.6)
   }
 
   let hoveredNodeId: string | null = null
