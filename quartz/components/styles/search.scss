@@ -1,240 +1,357 @@
 @use "../../styles/variables.scss" as *;
 
-.search {
-  min-width: fit-content;
-  max-width: 14rem;
-  @media all and ($mobile) {
-    flex-grow: 0.3;
-  }
+// ============================================================
+//  Search panel — sidebar-embedded (Obsidian-style)
+// ============================================================
 
-  & > .search-button {
-    background-color: transparent;
-    border: 1px var(--lightgray) solid;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: inherit;
-    height: 2rem;
-    padding: 0 1rem 0 0;
+.search {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  // ── Input row ──────────────────────────────────────────────
+  .search-input-wrap {
     display: flex;
     align-items: center;
-    text-align: inherit;
-    cursor: pointer;
-    white-space: nowrap;
-    width: 100%;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--lightgray);
+    border-radius: 6px;
+    background: var(--light);
+    cursor: text;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
 
-    & > p {
-      display: inline;
-      color: var(--gray);
-      text-wrap: unset;
+    &:focus-within {
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--secondary) 20%, transparent);
     }
 
-    & svg {
-      cursor: pointer;
-      width: 18px;
-      min-width: 18px;
-      margin: 0 0.5rem;
+    .search-icon {
+      width: 14px;
+      min-width: 14px;
+      height: 14px;
+      stroke: var(--gray);
+      flex-shrink: 0;
+    }
 
-      .search-path {
-        stroke: var(--darkgray);
-        stroke-width: 1.5px;
-        transition: stroke 0.5s ease;
+    .search-bar {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      font-family: var(--bodyFont);
+      font-size: 0.875rem;
+      color: var(--dark);
+      outline: none;
+      padding: 0;
+
+      &::placeholder {
+        color: var(--gray);
+        font-size: 0.8rem;
+      }
+    }
+
+    .search-hint {
+      flex-shrink: 0;
+      font-size: 0.6rem;
+      color: var(--gray);
+      background: var(--lightgray);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: var(--bodyFont);
+      letter-spacing: 0.02em;
+      user-select: none;
+
+      @media all and ($mobile) {
+        display: none;
       }
     }
   }
 
-  & > .search-container {
-    position: fixed;
-    contain: layout;
-    z-index: 999;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow-y: auto;
+  // ── Active filter chips (shown above results) ───────────────
+  .search-filter-bar {
     display: none;
-    backdrop-filter: blur(4px);
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding-top: 0.4rem;
 
-    &.active {
-      display: inline-block;
+    &.has-filters {
+      display: flex;
+    }
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    font-family: var(--bodyFont);
+    border-radius: 4px;
+    padding: 2px 6px 2px 8px;
+    font-weight: $semiBoldWeight;
+    line-height: 1.5;
+
+    &.chip-include {
+      background: color-mix(in srgb, var(--secondary) 15%, transparent);
+      color: var(--secondary);
+      border: 1px solid color-mix(in srgb, var(--secondary) 35%, transparent);
     }
 
-    & > .search-space {
-      width: 65%;
-      margin-top: 12vh;
-      margin-left: auto;
-      margin-right: auto;
+    &.chip-exclude {
+      background: color-mix(in srgb, #e06c75 15%, transparent);
+      color: #c0404d;
+      border: 1px solid color-mix(in srgb, #e06c75 35%, transparent);
+    }
 
-      @media all and not ($desktop) {
-        width: 90%;
+    .chip-remove {
+      background: none;
+      border: none;
+      padding: 0 1px;
+      margin: 0;
+      cursor: pointer;
+      font-size: 0.85rem;
+      line-height: 1;
+      color: inherit;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  // ── Results panel ───────────────────────────────────────────
+  .search-results {
+    display: none;
+    flex-direction: column;
+    margin-top: 0.4rem;
+    border: 1px solid var(--lightgray);
+    border-radius: 6px;
+    background: var(--light);
+    overflow-y: auto;
+    max-height: 55vh;
+
+    &.active {
+      display: flex;
+    }
+
+    .search-empty {
+      padding: 1rem;
+      color: var(--gray);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    // ── Result group (by folder) ──
+    .result-group {
+      & + .result-group {
+        border-top: 1px solid var(--lightgray);
+      }
+    }
+
+    .result-group-header {
+      padding: 0.3rem 0.75rem;
+      font-size: 0.65rem;
+      font-weight: $boldWeight;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--gray);
+      background: color-mix(in srgb, var(--lightgray) 40%, transparent);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    // ── Individual result ──
+    .result-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      padding: 0.55rem 0.75rem;
+      text-decoration: none;
+      border-bottom: 1px solid color-mix(in srgb, var(--lightgray) 60%, transparent);
+      transition: background 0.12s ease;
+      cursor: pointer;
+
+      &:last-child {
+        border-bottom: none;
       }
 
-      & > * {
-        width: 100%;
-        border-radius: 7px;
-        background: var(--light);
-        box-shadow:
-          0 14px 50px rgba(27, 33, 48, 0.12),
-          0 10px 30px rgba(27, 33, 48, 0.16);
-        margin-bottom: 2em;
+      &:hover,
+      &:focus {
+        background: var(--highlight);
+        outline: none;
       }
 
-      & > input {
-        box-sizing: border-box;
-        padding: 0.5em 1em;
-        font-family: var(--bodyFont);
+      .result-title {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: $semiBoldWeight;
         color: var(--dark);
-        font-size: 1.1em;
-        border: 1px solid var(--lightgray);
+        line-height: 1.35;
 
-        &:focus {
-          outline: none;
+        mark {
+          background: var(--textHighlight);
+          color: inherit;
+          border-radius: 2px;
+          padding: 0 1px;
         }
       }
 
-      & > .search-layout {
+      .result-snippet {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--gray);
+        line-height: 1.5;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+
+        mark {
+          background: var(--textHighlight);
+          color: var(--darkgray);
+          border-radius: 2px;
+          padding: 0 1px;
+        }
+      }
+
+      .result-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.2rem;
+        margin-top: 0.1rem;
+      }
+
+      .result-tag {
+        font-size: 0.65rem;
+        color: var(--secondary);
+        background: var(--highlight);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-weight: $semiBoldWeight;
+
+        &.active-tag {
+          color: var(--tertiary);
+          background: color-mix(in srgb, var(--tertiary) 15%, transparent);
+        }
+      }
+    }
+  }
+
+  // ── Tag browser ─────────────────────────────────────────────
+  .tag-browser {
+    margin-top: 0.6rem;
+    border: 1px solid var(--lightgray);
+    border-radius: 6px;
+    overflow: hidden;
+
+    .tag-browser-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.8rem;
+      font-weight: $semiBoldWeight;
+      color: var(--darkgray);
+      list-style: none;
+      background: color-mix(in srgb, var(--lightgray) 30%, transparent);
+      transition: background 0.12s ease;
+
+      // hide default marker
+      &::-webkit-details-marker {
         display: none;
-        flex-direction: row;
-        border: 1px solid var(--lightgray);
-        flex: 0 0 100%;
-        box-sizing: border-box;
+      }
+      &::marker {
+        display: none;
+      }
 
-        &.display-results {
-          display: flex;
+      &:hover {
+        background: color-mix(in srgb, var(--lightgray) 55%, transparent);
+      }
+
+      .tag-icon {
+        width: 13px;
+        height: 13px;
+        stroke: var(--gray);
+        flex-shrink: 0;
+      }
+
+      .tag-browser-label {
+        flex: 1;
+      }
+
+      .tag-count-badge {
+        font-size: 0.68rem;
+        font-weight: $boldWeight;
+        color: var(--gray);
+        background: var(--lightgray);
+        border-radius: 10px;
+        padding: 1px 7px;
+        min-width: 1.6rem;
+        text-align: center;
+      }
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      padding: 0.5rem 0.65rem 0.65rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.72rem;
+      font-family: var(--bodyFont);
+      color: var(--secondary);
+      background: var(--highlight);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition:
+        background 0.12s ease,
+        color 0.12s ease,
+        border-color 0.12s ease;
+      line-height: 1.5;
+
+      &:hover {
+        background: color-mix(in srgb, var(--secondary) 18%, transparent);
+        border-color: color-mix(in srgb, var(--secondary) 30%, transparent);
+      }
+
+      // Include state (green-ish — use secondary which is already indigo)
+      &.tag-include {
+        background: color-mix(in srgb, var(--secondary) 18%, transparent);
+        border-color: color-mix(in srgb, var(--secondary) 50%, transparent);
+        color: var(--secondary);
+        font-weight: $semiBoldWeight;
+
+        &::before {
+          content: "+ ";
+          opacity: 0.7;
         }
+      }
 
-        &[data-preview] > .results-container {
-          flex: 0 0 min(30%, 450px);
-        }
+      // Exclude state (red)
+      &.tag-exclude {
+        background: color-mix(in srgb, #e06c75 15%, transparent);
+        border-color: color-mix(in srgb, #e06c75 40%, transparent);
+        color: #c0404d;
+        font-weight: $semiBoldWeight;
 
-        @media all and not ($mobile) {
-          &[data-preview] {
-            & .result-card > p.preview {
-              display: none;
-            }
-
-            & > div {
-              &:first-child {
-                border-right: 1px solid var(--lightgray);
-                border-top-right-radius: unset;
-                border-bottom-right-radius: unset;
-              }
-
-              &:last-child {
-                border-top-left-radius: unset;
-                border-bottom-left-radius: unset;
-              }
-            }
-          }
-        }
-
-        & > div {
-          height: calc(75vh - 12vh);
-          border-radius: 5px;
-        }
-
-        @media all and ($mobile) {
-          flex-direction: column;
-
-          & > .preview-container {
-            display: none !important;
-          }
-
-          &[data-preview] > .results-container {
-            width: 100%;
-            height: auto;
-            flex: 0 0 100%;
-          }
-        }
-
-        & .highlight {
-          background: color-mix(in srgb, var(--tertiary) 60%, rgba(255, 255, 255, 0));
-          border-radius: 5px;
-          scroll-margin-top: 2rem;
-        }
-
-        & > .preview-container {
-          flex-grow: 1;
-          display: block;
-          overflow: hidden;
-          font-family: inherit;
-          color: var(--dark);
-          line-height: 1.5em;
-          font-weight: $normalWeight;
-          overflow-y: auto;
-          padding: 0 2rem;
-
-          & .preview-inner {
-            margin: 0 auto;
-            width: min($pageWidth, 100%);
-          }
-
-          a[role="anchor"] {
-            background-color: transparent;
-          }
-        }
-
-        & > .results-container {
-          overflow-y: auto;
-
-          & .result-card {
-            overflow: hidden;
-            padding: 1em;
-            cursor: pointer;
-            transition: background 0.2s ease;
-            border-bottom: 1px solid var(--lightgray);
-            width: 100%;
-            display: block;
-            box-sizing: border-box;
-
-            // normalize card props
-            font-family: inherit;
-            font-size: 100%;
-            line-height: 1.15;
-            margin: 0;
-            text-transform: none;
-            text-align: left;
-            outline: none;
-            font-weight: inherit;
-
-            &:hover,
-            &:focus,
-            &.focus {
-              background: var(--lightgray);
-            }
-
-            & > h3 {
-              margin: 0;
-            }
-
-            @media all and not ($mobile) {
-              & > p.card-description {
-                display: none;
-              }
-            }
-
-            & > ul.tags {
-              margin-top: 0.45rem;
-              margin-bottom: 0;
-            }
-
-            & > ul > li > p {
-              border-radius: 8px;
-              background-color: var(--highlight);
-              padding: 0.2rem 0.4rem;
-              margin: 0 0.1rem;
-              line-height: 1.4rem;
-              font-weight: $boldWeight;
-              color: var(--secondary);
-
-              &.match-tag {
-                color: var(--tertiary);
-              }
-            }
-
-            & > p {
-              margin-bottom: 0;
-            }
-          }
+        &::before {
+          content: "− ";
+          opacity: 0.8;
         }
       }
     }
