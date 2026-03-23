@@ -71,13 +71,13 @@ function getSectionColor(id: string): number {
 }
 
 // --- Node sizing: clamped log scale, max 3:1 ratio ---
-const NODE_MIN_RADIUS = 2.5
-const NODE_MAX_RADIUS = 24
-const NODE_SCALE = 5.0
+const NODE_MIN_RADIUS = 2
+const NODE_MAX_RADIUS = 18
+const NODE_SCALE = 3.2
 
 function getNodeRadius(node: { linkCount: number }): number {
   const lc = node.linkCount ?? 0
-  if (lc === 0) return NODE_MIN_RADIUS
+  if (lc <= 1) return NODE_MIN_RADIUS + 1  // 3px for minimal nodes
   return Math.min(NODE_MAX_RADIUS, NODE_MIN_RADIUS + Math.sqrt(lc) * NODE_SCALE)
 }
 
@@ -179,24 +179,24 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .force(
       "charge",
       forceManyBody<NodeData>()
-        .strength(-80 * repelForce)
+        .strength(-200)
         .distanceMin(20)
-        .distanceMax(400)
+        .distanceMax(500)
         .theta(0.9),
     )
     .force(
       "link",
       forceLink<NodeData, LinkData>(graphLinks)
-        .distance(linkDistance * 2)
+        .distance(90)
         .strength(0.3),
     )
-    .force("center", forceCenter(width / 2, height / 2).strength(centerForce * 0.05))
+    .force("center", forceCenter(width / 2, height / 2).strength(0.015))
     .force(
       "collide",
       forceCollide<NodeData>()
-        .radius((d) => getNodeRadius(d) + 15)
-        .strength(0.8)
-        .iterations(3),
+        .radius((d) => getNodeRadius(d) + 25)
+        .strength(1.0)
+        .iterations(4),
     )
     .force(
       "radial",
@@ -206,6 +206,10 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .alphaDecay(0.005)
     .alphaMin(0.001)
     .alpha(1)
+
+  // Pre-settle: run 150 physics ticks silently before rendering
+  for (let i = 0; i < 150; i++) simulation.tick()
+  simulation.alpha(0.15)  // gentle remaining settling the user will see
 
   // ========== CSS Vars ==========
   const cssVars = [
@@ -353,7 +357,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         .container(() => app.canvas)
         .subject(() => nodes.find((n) => n.id === hoveredId))
         .on("start", function (event) {
-          if (!event.active) simulation.alphaTarget(0.05).restart()
+          if (!event.active) simulation.alphaTarget(0.03).restart()
           event.subject.fx = event.subject.x
           event.subject.fy = event.subject.y
           event.subject.__initDrag = { x: event.subject.x, y: event.subject.y }
