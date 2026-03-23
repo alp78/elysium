@@ -461,17 +461,10 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   function animate() {
     if (stopAnimation) return
 
-    // Update node positions (clamped to viewport) + smooth alpha/scale
-    const pad = 15
+    // Update node positions + smooth alpha/scale
     for (const nr of nodeRenders) {
-      let { x, y } = nr.sim
+      const { x, y } = nr.sim
       if (!x || !y) continue
-      const r = getNodeRadius(nr.sim)
-      // Clamp to keep nodes inside the graph box
-      x = Math.max(pad + r, Math.min(width - pad - r, x))
-      y = Math.max(pad + r, Math.min(height - pad - r, y))
-      nr.sim.x = x
-      nr.sim.y = y
       nr.gfx.position.set(x, y)
       nr.label.position.set(x, y)
 
@@ -529,8 +522,34 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     requestAnimationFrame(animate)
   }
 
-  // Center the stage initially (nodes position around 0,0; stage offset = center)
-  stage.position.set(0, 0)
+  // Auto-fit: zoom/pan the stage so all nodes are visible inside the box
+  {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const n of nodes) {
+      const r = getNodeRadius(n)
+      if (n.x !== undefined && n.y !== undefined) {
+        minX = Math.min(minX, n.x - r)
+        minY = Math.min(minY, n.y - r)
+        maxX = Math.max(maxX, n.x + r)
+        maxY = Math.max(maxY, n.y + r)
+      }
+    }
+    const graphW = maxX - minX
+    const graphH = maxY - minY
+    if (graphW > 0 && graphH > 0) {
+      const pad = 20
+      const scaleX = (width - pad * 2) / graphW
+      const scaleY = (height - pad * 2) / graphH
+      const fitScale = Math.min(scaleX, scaleY, 1) // never zoom in beyond 1:1
+      const cx = (minX + maxX) / 2
+      const cy = (minY + maxY) / 2
+      stage.scale.set(fitScale)
+      stage.position.set(
+        width / 2 - cx * fitScale,
+        height / 2 - cy * fitScale,
+      )
+    }
+  }
 
   requestAnimationFrame(animate)
   return () => {
