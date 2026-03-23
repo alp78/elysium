@@ -21,8 +21,8 @@ Paired Python and C# references covering 16 topics. Each note was converted from
 
 ## Topic Map
 
-| # | Topic | Python | C# |
-|---|-------|--------|-----|
+| # | Topic | Python | C\# |
+|---|-------|--------|------|
 | 01 | Basics (variables, types, operators, I/O) | [[01_Basics|Python]] | [[cs-01_Basics|C#]] |
 | 02 | Strings (manipulation, formatting, regex) | [[02_Strings|Python]] | [[cs-02_Strings|C#]] |
 | 03 | Control Flow (if/else, loops, pattern matching) | [[03_Control_Flow|Python]] | [[cs-03_Control_Flow|C#]] |
