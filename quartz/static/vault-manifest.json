@@ -1,7 +1,7 @@
 {
   "generated": "extract-vault-manifest.py",
   "total_notes": 341,
-  "total_words": 416300,
+  "total_words": 416310,
   "notes_by_section": {
     "02-Programming-Languages": 42,
     "03-SQL-Server": 36,
@@ -1117,7 +1117,7 @@
       "technology": "",
       "status": "complete",
       "updated": "2026-03-22",
-      "word_count": 505,
+      "word_count": 515,
       "has_code": false,
       "has_related": false,
       "outgoing_links": 46,
