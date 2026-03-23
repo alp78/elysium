@@ -1,5 +1,5 @@
 ---
-tags: [reference, github-actions, troubleshooting, security, ci-cd, team-collaboration]
+tags: [ci-cd, github-actions]
 type: reference
 technology: github-actions
 status: stable

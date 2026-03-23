@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server, python]
-tags: [reference, financial-domain, metrics, signals, quarterly, scoring, z-score, governance]
+tags: [python, sql, financial]
 aliases: [Quarterly Signals, Quality Score, Moat Score, Health Warnings, Governance Risk Score]
 keywords: [quarterly signals, quality score, moat score, gross margin, ROE, operating margin, leverage, debt-to-equity, FCF yield, free cash flow, health warnings, liquidity flag, leverage flag, cash burn, revenue decline, governance risk, audit risk, board risk, compensation risk, shareholder rights, ISS]
 description: "Quarterly earnings-based scores in the financial data platform dashboard: quality/moat score, binary health warning flags, and ISS-style governance risk score with component breakdowns."

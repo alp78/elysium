@@ -6,13 +6,7 @@ technology:
   - firestore
   - nosql
   - python
-tags:
-  - reference
-  - gcp
-  - firestore
-  - nosql
-  - document-database
-  - real-time
+tags: [data-modeling, infrastructure, python, gcp, firestore]
 aliases:
   - Firestore
   - Cloud Firestore

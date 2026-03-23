@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, sql-server]
-tags: [datadog, sql-server, monitoring, data-pipeline, integration]
+tags: [observability, sql, datadog]
 aliases: [SQL Server Integration, sqlserver check, Datadog SQL integration]
 keywords: [datadog, sql server integration, sqlserver check, odbc, odbc driver 18, conf.yaml, dd_agent, connections, buffer pool, waits, batch requests, page life expectancy, DMV, TrustServerCertificate, custom_queries]
 description: "Complete configuration reference for the Datadog SQL Server integration on the example SQL VM — connection setup, ODBC driver, and the full conf.yaml with custom queries."

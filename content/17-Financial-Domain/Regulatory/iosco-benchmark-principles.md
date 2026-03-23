@@ -1,5 +1,5 @@
 ---
-tags: [reference, financial-domain, regulatory, iosco, benchmark, governance]
+tags: [financial, regulatory]
 type: reference
 technology: []
 status: stable

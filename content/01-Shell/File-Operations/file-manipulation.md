@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [concept, foundations, bash, filesystem, linux]
+tags: [shell, bash]
 aliases: [cp, mv, rm, chmod, chown, mkdir, file permissions, safe delete, file ownership]
 keywords: [cp, mv, rm, chmod, chown, mkdir, rsync, file copy, file move, delete, permissions, ownership, octal permissions, safe delete, trash, archive mode, disk usage, docker permissions, airflow uid]
 description: "Safe file copying, moving, and deletion patterns for production environments. Covers rsync archive mode, chmod octal notation, chown for Docker/Airflow containers, and the safe delete pattern using a trash directory."

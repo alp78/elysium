@@ -1,5 +1,5 @@
 ---
-tags: [reference, financial-domain, regulatory, sfdr, esg, pai]
+tags: [python, sql, bigquery, financial, regulatory, esg]
 type: reference
 technology: [python, bigquery, sql-server]
 status: stable

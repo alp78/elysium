@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, strings]
+tags: [csharp]
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 keywords: [string, StringBuilder, interpolation, Regex, Split, Join, Trim, Replace, Span, Format]
 description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [[02_Strings]] for the Python equivalent."

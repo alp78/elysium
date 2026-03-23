@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [how-to, git, merge-conflicts, conflict-resolution]
+tags: [git]
 aliases: [merge conflict, conflict markers, resolve conflicts, git merge abort, conflict resolution, git mergetool, rebase conflict, three-way merge, accept incoming, accept current]
 keywords: [merge conflict, conflict markers, resolve conflict, git merge abort, git mergetool, rebase continue, rebase abort, conflict resolution, three-way merge, HEAD, incoming changes, stash pop conflict, VS Code merge tool, accept current, accept incoming, prevent merge conflicts, conflict markers explanation]
 description: "How to understand, resolve, and prevent git merge conflicts — including conflict marker syntax, step-by-step resolution, git mergetool with VS Code, and rebase conflict resolution with a real-world case study."

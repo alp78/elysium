@@ -2,7 +2,7 @@
 type: index
 category: ai-and-prompts
 technology: []
-tags: [index, prompt-engineering, ai, llm]
+tags: [ai]
 aliases: [AI and Prompts Index, Prompt Engineering Index]
 keywords: [ai, prompt engineering, llm, claude, gpt, gemini, prompts, structured prompts, model-specific, rag, embeddings, vector database]
 description: "Index for the AI and Prompts section — prompt engineering foundations, architecture, model-specific patterns, applied prompting, and AI-augmented data engineering."

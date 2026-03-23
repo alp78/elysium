@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, esg, sustainability, green-finance, renewable-energy, reference, encyclopedia]
+tags: [financial, esg]
 aliases: [ESG glossary, sustainable finance terms, green bond glossary, net-zero terms, sustainability glossary]
 keywords: [ESG, environmental social governance, sustainable finance, net-zero, green bonds, carbon emissions, impact investing, sustainability-linked loans, renewable energy, carbon capture, green hydrogen, climate risk]
 description: "Encyclopedia definitions for ESG and sustainability terms covering environmental, social, and governance criteria, sustainable finance instruments, and net-zero concepts, drawn from the example Index universe."

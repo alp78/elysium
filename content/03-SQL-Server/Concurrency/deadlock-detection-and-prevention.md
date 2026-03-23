@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server, csharp]
-tags: [concept, sql-server, concurrency, deadlocks, troubleshooting]
+tags: [csharp, sql]
 aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadlock monitor, deadlock retry]
 keywords: [deadlock, detection, prevention, monitoring, error 1205, circular wait, RCSI, read committed snapshot isolation, extended events, blocking, lock, exclusive lock, shared lock, deadlock graph, retry logic, back-off]
 description: "SQL Server deadlock detection, prevention, and monitoring — what causes deadlocks, how to detect them with DMVs and Extended Events, RCSI as the primary prevention, and application-level retry logic."

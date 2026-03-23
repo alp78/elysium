@@ -1,5 +1,5 @@
 ---
-tags: [concept, data-architecture, data-quality, testing, anomaly-detection, medallion]
+tags: [architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery]
 type: concept
 technology: [sql-server, bigquery, airflow, python]
 status: stable

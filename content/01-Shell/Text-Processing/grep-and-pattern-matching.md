@@ -2,7 +2,7 @@
 type: reference
 category: shell
 technology: [bash, powershell, grep]
-tags: [reference, shell, grep, regex, text-processing, pattern-matching]
+tags: [shell, bash]
 aliases:
   - grep
   - egrep

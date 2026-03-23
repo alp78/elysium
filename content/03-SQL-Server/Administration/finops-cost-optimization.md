@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server, gcp]
-tags: [how-to, sql-server, gcp, finops, cost-optimization, snapshots, CUD, committed-use-discount, spot-instances, right-sizing]
+tags: [performance, cost, sql, gcp]
 aliases: [SQL Server cost optimization, FinOps SQL Server, GCP disk snapshots, committed use discount, spot instances, application-consistent snapshot, right-sizing SQL Server]
 keywords: [finops, cost optimization, disk snapshot, committed use discount, CUD, spot instance, preemptible VM, right-sizing, GCP Recommender, billing export, BigQuery billing, SUSPEND_FOR_SNAPSHOT_BACKUP, DBCC FREEZEIO, DBCC THAWIO, Nearline, Coldline, pd-balanced, pd-ssd, Cloud Scheduler, snapshot schedule, gcloud compute resource-policies, PITR, application-consistent, crash-consistent, on-demand]
 description: "Cost optimization strategies for SQL Server on GCP: disk snapshot schedules, application-consistent snapshot technique with SQL Server 2022 SUSPEND_FOR_SNAPSHOT_BACKUP, committed use discounts vs spot instances, and right-sizing the VM using GCP Recommender."

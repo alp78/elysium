@@ -6,15 +6,7 @@ technology:
   - cloud-logging
   - cloud-trace
   - python
-tags:
-  - reference
-  - observability
-  - gcp
-  - logging
-  - tracing
-  - distributed-tracing
-  - log-analytics
-  - audit-logs
+tags: [observability, python, gcp]
 aliases:
   - Cloud Logging
   - Cloud Trace

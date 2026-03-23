@@ -1,5 +1,5 @@
 ---
-tags: [runbook, airflow, sql-server, bigquery]
+tags: [airflow]
 type: runbook
 severity: sev1
 technology: airflow

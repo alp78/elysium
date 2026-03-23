@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [sql-server, bigquery, snowflake]
-tags: [concept, data-architecture, data-warehouse, dimensional-modeling, star-schema, olap, kimball, inmon, data-vault, scd]
+tags: [architecture, sql, bigquery]
 aliases: [data warehouse, DWH, dimensional modeling, star schema, snowflake schema, Kimball, Inmon, fact table, dimension table, OLAP, OLTP, data mart, conformed dimension, degenerate dimension, junk dimension, SCD, slowly changing dimensions, SCD Type 2, SCD Type 1, accumulating snapshot, periodic snapshot, transactional fact, enterprise data warehouse, EDW]
 keywords: [data warehouse, DWH, OLAP, OLTP, dimensional modeling, Kimball, Inmon, star schema, snowflake schema, fact table, dimension table, conformed dimensions, degenerate dimensions, junk dimensions, slowly changing dimensions, SCD, SCD Type 1, SCD Type 2, SCD Type 3, SCD Type 4, SCD Type 6, mini-dimension, data vault, hub, link, satellite, transactional fact, periodic snapshot, accumulating snapshot, BigQuery, Snowflake, Redshift, Azure Synapse, materialized views, aggregation tables, ELT, ETL, data mart, enterprise data warehouse, 3NF, normalization, surrogate key, business key, grain, conformed calendar, cost optimization, partitioning]
 description: "Comprehensive reference on data warehouse architecture covering the Kimball dimensional modeling methodology (star schema, fact and dimension table types, all SCD variants), the Inmon 3NF top-down approach, Data Vault 2.0, cloud DWH comparisons (BigQuery, Snowflake, Redshift, Synapse), and ELT/ETL positioning."

@@ -1,5 +1,5 @@
 ---
-tags: [reference, sql-server, troubleshooting, performance, data-engineering, production]
+tags: [sql]
 type: reference
 technology: sql-server
 status: stable

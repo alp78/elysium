@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [concept, shell, bash, powershell, command-history]
+tags: [shell, bash]
 aliases: [command history, shell history, history recall, reverse search, Ctrl+R]
 keywords: [command history, history, reverse search, Ctrl+R, bash history, HISTSIZE, HISTCONTROL, recall, re-run command, bang bang, exclamation, PSReadLine, predictive intellisense]
 description: "How to search, recall, and re-run previous shell commands in bash and PowerShell, including history configuration for data engineers and incident response."

@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [firestore, python, gcp]
-tags: [reference, db-queries, firestore, python, nosql, document-database, real-time]
+tags: [python, sql, gcp, firestore]
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
 keywords: [firestore, python, google-cloud-firestore, document, collection, query, where, order_by, limit, batch, transaction, real-time, on_snapshot, subcollection, array_contains, composite index]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."

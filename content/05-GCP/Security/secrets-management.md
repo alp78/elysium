@@ -1,5 +1,5 @@
 ---
-tags: [reference, gcp, security, secrets, iam, terraform, airflow, github-actions]
+tags: [security, infrastructure, terraform, airflow, gcp, github-actions]
 type: reference
 technology: [gcp, terraform, airflow, github-actions]
 status: stable

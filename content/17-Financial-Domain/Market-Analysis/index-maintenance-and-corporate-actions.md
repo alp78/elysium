@@ -2,7 +2,7 @@
 type: concept
 category: financial-domain
 technology: [sql-server, python, bigquery]
-tags: [financial-domain, index-calculation, corporate-actions, data-engineering, etl, data-modeling, sql-server, python]
+tags: [python, sql, bigquery, financial]
 aliases: [corporate actions processing, index maintenance, financial index engineering, stock split adjustment, free-float methodology, index divisor, reconstitution pipeline, ESG data integration, point-in-time data, bi-temporal modeling]
 keywords: [financial index, corporate actions, stock split, dividend, merger, spinoff, free-float, index divisor, index reconstitution, weight capping, total return, price return, net return, withholding tax, point-in-time, look-ahead bias, SCD type 2, bi-temporal, ESG, SFDR, BMR, European equity index, MSCI, rebalancing, buffer rules, index calculation, benchmark regulation]
 description: "Comprehensive guide to financial index maintenance: corporate actions processing (splits, dividends, mergers, spinoffs), free-float methodology, weight capping, quarterly reconstitution, and ESG data integration. Covers the index divisor, point-in-time (PIT) temporal data, bi-temporal modeling, and EU regulatory requirements (BMR, SFDR). Essential for data engineers at financial index providers."

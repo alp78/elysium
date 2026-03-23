@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-monitoring, observability]
-tags: [concept, gcp, cloud-monitoring, observability, metrics]
+tags: [observability, infrastructure, gcp]
 aliases: [Cloud Monitoring, GCP metrics, time series, gcloud monitoring, VM CPU metrics, Cloud Monitoring metrics descriptors, BigQuery metrics]
 keywords: [cloud monitoring, metrics, time series, gcloud monitoring time-series list, metrics descriptors, CPU utilization, disk read, disk write, network, cloud run job completions, pubsub backlog, bigquery slot usage, capacity planning, right-sizing, monitoring time-series, interval-start-time, doubleValue]
 description: "How to query Cloud Monitoring time-series metrics using the gcloud CLI — listing available metric types and reading historical metric data for capacity planning, right-sizing, and pipeline health monitoring."

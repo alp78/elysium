@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [concept, foundations, bash, filesystem, linux]
+tags: [shell, bash]
 aliases: [gzip, zstd, tar, compress, decompress, archive, zip, snappy]
 keywords: [gzip, zstd, tar, compression, decompress, archive, zip, snappy, compress data, tar.gz, tar.zst, gz, compression algorithm, compression level, pipeline compression strategy, 7zip, GZipStream, Compress-Archive]
 description: "Compression tools and strategies for data engineering: gzip for compatibility, zstd for performance, tar for directory archiving. Includes a compression strategy matrix for pipeline intermediate files, archives, Parquet, and database backups."

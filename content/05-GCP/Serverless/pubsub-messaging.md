@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, pubsub]
-tags: [concept, gcp, pubsub, messaging, event-driven]
+tags: [infrastructure, gcp]
 aliases: [Pub/Sub publish, Pub/Sub consume, Pub/Sub pull, gcloud pubsub publish, message attributes, Pub/Sub backlog, ordering keys, exactly-once, idempotent]
 keywords: [pubsub, publish, consume, pull, auto-ack, attributes, message ordering, ordering keys, exactly-once delivery, at-least-once, idempotent, backlog, num_undelivered_messages, pipeline lag, MERGE upsert]
 description: "How to publish messages to Pub/Sub topics and consume them from subscriptions — including attributes, ordering keys, backlog monitoring, and the idempotency requirements of at-least-once delivery."

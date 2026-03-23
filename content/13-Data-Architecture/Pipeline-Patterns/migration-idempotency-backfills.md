@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [sql-server, python, bigquery, gcp, airflow, terraform]
-tags: [data-architecture, idempotency, backfill, migration, etl, pipeline-patterns, sql-server, python, bigquery, airflow, streaming, finops, data-contracts]
+tags: [architecture, pipeline, python, sql, terraform, airflow, bigquery, gcp]
 aliases: [idempotency patterns, backfill strategies, migration playbook, data architect playbook, strangler fig pattern, schema evolution, expand-and-contract, event-driven architecture, data contracts, schema registry, FinOps, cloud cost optimization, streaming windowing, Dataflow pipeline, exactly-once processing]
 keywords: [idempotency, backfill, migration, strangler fig, re-platform, re-architect, lift-and-shift, shadow comparison, MERGE, upsert, delete-insert, SCD type 2, truncate-reload, schema evolution, expand-and-contract, event-driven, Pub/Sub, Cloud Functions, Cloud Run, Dataflow, Apache Beam, windowing, tumbling window, sliding window, watermark, late data, data contracts, Protobuf, Avro, schema registry, FinOps, BigQuery cost, reservations, on-demand, partition pruning, clustering, GCS lifecycle, exactly-once, idempotency key, technical debt]
 description: "The data architect's playbook covering migration patterns (lift-and-shift through re-architecture, strangler fig), idempotency deep dive (truncate-reload, upsert, delete-insert, SCD Type 2), backfill strategies, exactly-once processing, schema evolution without downtime, event-driven architecture on GCP (Pub/Sub + Cloud Functions + Dataflow), data contracts (Protobuf, Avro, Schema Registry), FinOps for BigQuery, and advanced streaming patterns with Apache Beam. Includes all code examples and diagrams."

@@ -2,7 +2,7 @@
 type: reference
 category: shell
 technology: [bash, powershell, sed]
-tags: [reference, shell, sed, text-processing, stream-editing, find-replace]
+tags: [shell, bash]
 aliases: [sed, stream editor, find and replace, text substitution, in-place editing, -i flag]
 keywords:
   - sed

@@ -1,5 +1,5 @@
 ---
-tags: [reference, dbt]
+tags: [pipeline, dbt, bigquery]
 type: reference
 technology: [dbt, bigquery]
 status: stable

@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [git, github, pull-requests, code-review, gh-cli, workflow]
+tags: [git]
 aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge PR, squash merge]
 keywords: [pull request, PR, code review, gh pr create, gh pr merge, squash merge, rebase merge, draft PR, branch protection, auto-merge, force-with-lease, merge conflict, PR workflow, github cli, gh pr checkout]
 description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, and resolving 'not mergeable' errors."

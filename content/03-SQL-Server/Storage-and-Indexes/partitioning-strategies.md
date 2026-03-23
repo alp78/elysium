@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, performance, storage, partitioning, partition-elimination, SWITCH, archiving, date-partitioning]
+tags: [sql]
 aliases: [SQL Server partitioning, table partitioning, partition function, partition scheme, partition elimination, SWITCH partition, horizontal partitioning, date-based partitioning]
 keywords: [partitioning, partition function, partition scheme, partition elimination, SWITCH, partition boundary, trade_date, monthly partitioning, yearly partitioning, FILEGROUP, sys.partitions, sys.partition_functions, sys.partition_schemes, partition_number, archiving, sliding window, columnstore partition, partition key, RIGHT vs LEFT partition function]
 description: "SQL Server table partitioning by date: partition functions, partition schemes, creating partitioned clustered indexes, partition elimination for query performance, SWITCH for fast archiving and loading, and the sliding window pattern for ongoing pipelines."

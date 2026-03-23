@@ -4,16 +4,7 @@ category: terraform
 technology:
   - terraform
   - gcp
-tags:
-  - reference
-  - terraform
-  - gcp
-  - iam
-  - secrets
-  - cloud-run
-  - cloud-functions
-  - cloud-scheduler
-  - pubsub
+tags: [security, infrastructure, terraform, gcp]
 aliases:
   - terraform iam blocks
   - terraform gcp iam

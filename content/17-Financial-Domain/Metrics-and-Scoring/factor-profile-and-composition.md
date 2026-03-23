@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
-tags: [reference, financial-domain, metrics, dashboard, visualization]
+tags: [sql, financial]
 aliases: [Factor Profile, Radar Chart, Index Composition, Donut Chart]
 keywords: [factor profile, radar chart, factor tilt, value, momentum, sentiment, quality, governance, index composition, donut chart, sector allocation, cap-weighted, cube-root scaling]
 description: "Factor profile radar chart and index composition donut chart from the financial data platform dashboard, showing five-axis factor tilts and dual-ring sector/stock weight breakdowns."

@@ -2,19 +2,19 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, testing, migration, project]
-aliases: [Pandas Polars Project Testing Migration, assert_frame_equal, migration guide, pandas to polars]
-keywords: [pandas, polars, assert_frame_equal, testing, validation, debugging, migration, translation table, anti-patterns, index, inplace, iloc, loc, real-world project, sector analysis]
-description: "Pandas vs Polars real-world project, testing, and migration — end-to-end financial analysis, assert_frame_equal, data validation, Pandas-to-Polars migration guide with translation table and anti-patterns."
+tags: [pipeline, testing, python, pandas, polars]
+aliases: [end-to-end pipeline, pytest, migration guide]
+keywords: [pipeline, testing, pytest, validation, migration, pandas to polars, best practices]
+description: "Pandas vs Polars reference 10/10 — Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[09_visualization_sql]]"
-  - "[[12_Testing]]"
-  - "[[fastapi-and-polars]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete
 ---
+
 # 10 — Real-World Project, Testing & Migration
 
 End-to-end analysis, validation, Pandas-to-Polars guide.

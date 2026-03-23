@@ -1,5 +1,5 @@
 ---
-tags: [runbook, gcp, airflow, vendor-management, sev3]
+tags: []
 type: runbook
 severity: sev3
 technology: gcp, airflow, sql-server

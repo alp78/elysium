@@ -2,7 +2,7 @@
 type: troubleshooting
 category: orchestration
 technology: [airflow, python]
-tags: [troubleshooting, orchestration, airflow, dag-errors, debugging]
+tags: [orchestration, python, airflow]
 aliases:
   - Airflow DAG import errors
   - Airflow task failure

@@ -2,7 +2,7 @@
 type: index
 category: data-architecture
 technology: [terraform, gcp, github-actions]
-tags: [index, data-architecture, moc, terraform, iac]
+tags: [architecture, terraform, gcp, github-actions]
 aliases: [Infrastructure as Code MOC, IaC MOC, Terraform MOC]
 keywords: [infrastructure as code, iac, terraform, gcp, provisioning, networking, compute, iam, cloud run, ci/cd, deployment]
 description: "Map of Content for Infrastructure as Code — Terraform fundamentals, GCP resource provisioning, patterns, and CI/CD integration."

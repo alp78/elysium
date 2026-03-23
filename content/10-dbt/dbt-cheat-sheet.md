@@ -1,5 +1,5 @@
 ---
-tags: [cheat-sheet, dbt]
+tags: [pipeline, dbt]
 type: cheat-sheet
 technology: [dbt]
 status: stable

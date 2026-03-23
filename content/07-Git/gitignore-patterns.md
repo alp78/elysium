@@ -2,7 +2,7 @@
 type: reference
 category: git
 technology: [git]
-tags: [git, gitignore, security, secrets, patterns]
+tags: [git]
 aliases: [.gitignore, gitignore, git ignore, exclude files, git rm --cached]
 keywords: [.gitignore, gitignore, patterns, exclude, secrets, .env, credentials, pyc, pycache, venv, node_modules, git rm --cached, BFG, filter-branch, stop tracking, git secrets, accidentally committed]
 description: "How to use .gitignore to exclude files from version control, patterns for Python data engineering projects, how to stop tracking already-committed files, and what to do if secrets were accidentally committed."

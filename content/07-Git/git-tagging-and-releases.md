@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [how-to, git, tagging, releases, versioning]
+tags: [git]
 aliases: [git tag, annotated tag, semantic versioning, release tags, lightweight tag, git push tags, version label, tag a release, SemVer git]
 keywords: [git tag, tagging, annotated tag, lightweight tag, release, versioning, semantic versioning, semver, v1.0.0, git push tags, push tag to github, list tags, mark release, tag message, tag annotation, production release, git tag -a]
 description: "How to create lightweight and annotated git tags, push them to GitHub, and use semantic versioning to mark production releases."

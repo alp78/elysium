@@ -1,5 +1,5 @@
 ---
-tags: [reference, data-architecture, moc, patterns]
+tags: [architecture]
 type: reference
 technology: []
 status: stable

@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, python]
-tags: [reference, financial-domain, technical-analysis, market-analysis, metrics]
+tags: [python, financial]
 aliases: [Technical Indicators, technical analysis, RSI, MACD, Bollinger Bands, ADX, Golden Cross, Death Cross, moving averages]
 keywords: [technical indicators, RSI, relative strength index, MACD, moving average convergence divergence, Bollinger Bands, ADX, average directional index, Golden Cross, Death Cross, SMA, EMA, overbought, oversold, momentum, trend, technical analysis]
 description: "Standard technical analysis indicators for equity index analysis — RSI, MACD, Bollinger Bands, ADX, and Golden/Death Cross patterns with formulas, thresholds, and trading interpretation."

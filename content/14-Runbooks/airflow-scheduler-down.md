@@ -1,5 +1,5 @@
 ---
-tags: [runbook, airflow, docker, sev1, scheduler, pipeline]
+tags: [orchestration, airflow]
 type: runbook
 severity: sev1
 technology: airflow

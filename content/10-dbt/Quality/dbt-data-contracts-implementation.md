@@ -1,5 +1,5 @@
 ---
-tags: [how-to, dbt]
+tags: [pipeline, dbt]
 type: how-to
 technology: [dbt]
 status: stable

@@ -2,15 +2,14 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, dataframes, series, data-types, io]
-aliases: [Pandas Polars Foundations, DataFrame basics, Series vs DataFrame, read_csv, read_parquet]
-keywords: [pandas, polars, dataframe, series, index, dtypes, read_csv, read_parquet, to_csv, to_parquet, numpy, arrow, data types, io]
-description: "Pandas vs Polars foundations — Series, DataFrames, indexes, data types, and reading/writing CSV, Parquet, Excel, JSON files."
+tags: [pipeline, python, pandas, polars]
+aliases: [Series, DataFrames, data types, CSV, Parquet I/O]
+keywords: [Series, DataFrame, Index, data types, dtype, CSV, Parquet, read_csv, read_parquet, scan_csv]
+description: "Pandas vs Polars reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[02_explore_select_filter]]"
-  - "[[parquet-files]]"
-  - "[[data-formats-and-serialization]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete

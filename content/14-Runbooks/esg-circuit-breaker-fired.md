@@ -1,5 +1,5 @@
 ---
-tags: [runbook, airflow, esg, data-quality]
+tags: [data-quality, airflow, esg]
 type: runbook
 severity: sev2
 technology: airflow

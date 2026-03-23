@@ -2,15 +2,15 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, exploration, selection, filtering]
-aliases: [Pandas Polars Explore Select Filter, head tail describe, column selection, row filtering]
-keywords: [pandas, polars, head, tail, describe, info, dtypes, shape, select, filter, where, between, isin, contains, selectors]
-description: "Pandas vs Polars data exploration, column selection, and row filtering — head/tail, describe, dtypes, select, filter, between, isin, string contains."
+tags: [pipeline, python, pandas, polars]
+aliases: [head, tail, describe, select, filter, boolean indexing]
+keywords: [head, tail, describe, select, filter, where, isin, loc, iloc, boolean indexing]
+description: "Pandas vs Polars reference 02/10 — Explore, Select & Filter (head/tail, describe, where, isin). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[01_foundations_io]]"
   - "[[03_transforms_expressions_chaining]]"
-  - "[[05_Collections]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete

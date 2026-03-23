@@ -2,7 +2,7 @@
 type: index
 category: sql-server
 technology: [sql-server]
-tags: [index, sql-server]
+tags: [sql]
 aliases: [SQL Server Index, SQL Server Overview]
 keywords: [sql server, index, administration, t-sql, performance, storage, concurrency, security, high availability, patterns, tuning]
 description: "Index for the SQL Server section — administration, T-SQL patterns, storage internals, performance tuning, concurrency, security, high availability, and data pipeline patterns."

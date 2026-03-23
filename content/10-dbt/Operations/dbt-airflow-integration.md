@@ -1,5 +1,5 @@
 ---
-tags: [how-to, dbt]
+tags: [pipeline, orchestration, airflow, dbt]
 type: how-to
 technology: [dbt, airflow]
 status: stable

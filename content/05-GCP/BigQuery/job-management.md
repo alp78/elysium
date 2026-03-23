@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, bigquery]
-tags: [concept, gcp, bigquery, monitoring]
+tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery jobs, bq jobs, bq cancel, bq show job, BigQuery job listing]
 keywords: [bq jobs, job management, bq ls -j, bq show -j, bq cancel, job id, job errors, bytes processed, query history, cancel query, runaway query, job details]
 description: "How to list, inspect, and cancel BigQuery jobs using the bq CLI — essential for diagnosing failed queries, understanding cost history, and stopping accidental large scans."

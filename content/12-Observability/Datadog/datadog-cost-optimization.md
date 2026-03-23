@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, gcp]
-tags: [datadog, cost, monitoring, data-pipeline]
+tags: [observability, performance, cost, datadog, gcp]
 aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost]
 keywords: [datadog cost, datadog pricing, host cost, trial, infrastructure monitoring, APM pro, logs pricing, EU region, datadoghq.eu, 14-day trial, per host, dd-agent free, ram usage 350mb, disable datadog, dd_api_key empty]
 description: "Datadog pricing breakdown for the data platform — agent RAM overhead, trial vs paid costs, and how to cleanly disable all Datadog components by setting dd_api_key to empty."

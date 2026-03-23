@@ -1,5 +1,5 @@
 ---
-tags: [runbook, sql-server, corporate-actions, index-ops, sev2]
+tags: []
 type: runbook
 severity: sev2
 technology: sql-server, gcp

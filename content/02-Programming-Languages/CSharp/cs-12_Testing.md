@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, testing]
+tags: [testing, csharp]
 aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
 keywords: [xUnit, NUnit, MSTest, Moq, FluentAssertions, Theory, Fact, fixture, mock, TDD]
 description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [[12_Testing]] for the Python equivalent."

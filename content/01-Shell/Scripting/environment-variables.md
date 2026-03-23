@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [concept, shell, bash, powershell, environment-variables, security]
+tags: [shell, bash]
 aliases: [env vars, environment variables, shell variables, export, PATH variable]
 keywords: [environment variable, env var, export, PATH, bashrc, profile, credential handling, secret management, process environment, child process, variable propagation, unset, printenv]
 description: "How environment variables propagate through process hierarchies in bash and PowerShell, including secure credential handling patterns and persistence across sessions."

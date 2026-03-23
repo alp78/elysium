@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [git]
-tags: [reference, comparison, git]
+tags: [git]
 aliases: [merge vs rebase, rebase vs squash, git merge strategies]
 keywords: [merge, rebase, squash, git, merge commit, fast-forward, history, linear, clean history, comparison]
 description: "Comparison of Git merge strategies — standard merge, rebase, and squash merge — with guidance on when to use each."

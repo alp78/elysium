@@ -2,7 +2,7 @@
 type: how-to
 category: infrastructure
 technology: [terraform, gcp]
-tags: [terraform, infrastructure-as-code, workflow, plan, apply, destroy, state, import]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform workflow, terraform apply, terraform plan, terraform destroy, terraform init, terraform import]
 keywords: [terraform init, terraform plan, terraform apply, terraform destroy, terraform import, terraform state, tfplan, plan output, apply workflow, infrastructure deployment, terraform -chdir]
 description: "The core Terraform workflow: init, plan, apply, destroy, and importing existing resources into state. Includes the -chdir flag, targeted applies, and state inspection commands."

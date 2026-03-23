@@ -2,7 +2,7 @@
 type: index
 category: db-queries
 technology: [sql-server, bigquery, firestore]
-tags: [index, db-queries, sql, bigquery, firestore, t-sql, standard-sql, nosql]
+tags: [sql, bigquery, firestore]
 aliases: [DB Queries Index, Database Queries, Query Reference]
 keywords: [sql queries, bigquery queries, firestore queries, t-sql, standard sql, nosql, select, join, window functions, cte, partitioning, transactions, real-time]
 description: "Index for the DB Queries section — executable query references for SQL Server, BigQuery, and Firestore with rendered cell outputs showing actual results."

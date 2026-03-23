@@ -2,15 +2,15 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, transforms, expressions, chaining]
-aliases: [Pandas Polars Transforms, with_columns, method chaining, when then otherwise]
-keywords: [pandas, polars, with_columns, assign, apply, map, expressions, method chaining, pipe, when, then, otherwise, case, cast, astype, string operations]
-description: "Pandas vs Polars transformations — adding/replacing columns, Polars expressions, method chaining, conditional logic (when/then/otherwise), casting, and string operations."
+tags: [pipeline, python, pandas, polars]
+aliases: [with_columns, apply, pipe, method chaining]
+keywords: [with_columns, assign, apply, map_elements, when, then, otherwise, pipe, chaining]
+description: "Pandas vs Polars reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[02_explore_select_filter]]"
   - "[[04_missing_strings_datetime]]"
-  - "[[sql-python-csharp-transforms]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete

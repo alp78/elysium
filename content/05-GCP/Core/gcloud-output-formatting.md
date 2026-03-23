@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [concept, gcp, gcloud, cli]
+tags: [infrastructure, gcp]
 aliases: [gcloud format, gcloud filter, gcloud output, gcloud --format, gcloud --filter]
 keywords: [gcloud, format, filter, output formatting, value, table, csv, json, flattened, basename, server-side filter, projection, transformation, scripting, impersonation, service account impersonation]
 description: "How to use gcloud --format and --filter flags to extract structured data from GCP APIs, enabling scriptable output in table, value, CSV, JSON, and flattened formats."

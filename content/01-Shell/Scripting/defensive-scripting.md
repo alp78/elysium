@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash]
-tags: [concept, shell, bash, scripting, safety, best-practices]
+tags: [shell, bash]
 aliases: [defensive scripting, set -euo pipefail, bash strict mode, safe scripting, script safety]
 keywords: [set -e, set -u, set -o pipefail, defensive scripting, bash strict mode, trap, cleanup, exit on error, unset variable, pipeline failure, production script template, error handling]
 description: "The bash set flags (set -euo pipefail) that prevent the most dangerous scripting bugs, including exit-on-error, unset variable detection, pipeline failure propagation, and cleanup traps."

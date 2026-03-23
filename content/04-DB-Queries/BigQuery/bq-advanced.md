@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [bigquery, gcp]
-tags: [reference, db-queries, bigquery, gcp, advanced, window-functions, cte, json, geospatial]
+tags: [sql, bigquery, gcp]
 aliases: [BigQuery advanced, BigQuery window functions, BigQuery CTE, BigQuery JSON, BigQuery ML, BQML]
 keywords: [window functions, cte, analytic functions, approximate aggregation, hll_count, approx_quantiles, pivot, unpivot, json_extract, json_value, geospatial, st_geogpoint, bqml, ml.predict, scripting, declare, loop, javascript udf]
 description: "Advanced BigQuery SQL patterns with executable examples — covers window functions, approximate aggregation, scripting, JSON, geospatial, BQML, and JavaScript UDFs."

@@ -2,7 +2,7 @@
 type: index
 category: engineering-practice
 technology: [github-actions, git]
-tags: [index, engineering-practice]
+tags: [github-actions, git]
 aliases: [Engineering Practice Index]
 keywords: [engineering practice, ci/cd, security, leadership, github actions, best practices, code review, mentoring, technical writing]
 description: "Index for the Engineering Practice section — CI/CD workflows, security practices, and engineering leadership and collaboration."

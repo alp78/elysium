@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [how-to, git, remote, fetch, push]
+tags: [git]
 aliases: [git remote, git fetch, upstream, force-with-lease, fork workflow, git remote -v, git fetch origin, git fetch prune, safe force push, origin remote]
 keywords: [git remote, remote repositories, git fetch, git push, fetch prune, force-with-lease, upstream, fork, origin, remote tracking, git remote add, git remote -v, prune deleted branches, safe push, overwrite remote branch, fork workflow, synchronize fork]
 description: "How to manage git remote connections — view, add, fetch, prune, and safely force-push to remote repositories including upstream fork synchronization."

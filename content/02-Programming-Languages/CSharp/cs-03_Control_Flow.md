@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, control-flow]
+tags: [csharp]
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 keywords: [if, else, switch, for, foreach, while, break, continue, pattern matching, LINQ]
 description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [[03_Control_Flow]] for the Python equivalent."

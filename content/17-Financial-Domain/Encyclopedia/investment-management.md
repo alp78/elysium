@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, investment-management, asset-management, wealth-management, hedge-funds, private-equity, venture-capital, reference, encyclopedia]
+tags: [financial]
 aliases: [investment management terms, asset management glossary, wealth management glossary, hedge fund glossary, private equity glossary]
 keywords: [asset management, wealth management, portfolio management, hedge funds, private equity, venture capital, mutual funds, pension fund, prime brokerage, private banking, superannuation, fiduciary, brokerage, alternative investments, investment banking, wrap platform]
 description: "Encyclopedia definitions for investment management terms covering asset management, wealth management, portfolio management, hedge funds, private equity, venture capital, and related concepts drawn from the example Index universe."

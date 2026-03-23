@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, bigquery, gcs]
-tags: [concept, gcp, bigquery, etl, data-loading]
+tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery load, bq load, BigQuery export, bq extract, time travel, BigQuery GCS load, Parquet BigQuery]
 keywords: [bq load, bq extract, CSV, Parquet, AVRO, ORC, NEWLINE_DELIMITED_JSON, GCS, hive partitioning, autodetect schema, time travel, FOR SYSTEM_TIME AS OF, restore, bq cp, compression, GZIP, export, data loading, ingestion]
 description: "How to load data into BigQuery from GCS using CSV, Parquet, and other formats — including hive-partitioned layouts — and export BigQuery tables back to GCS. Also covers BigQuery time travel for querying and restoring historical data."

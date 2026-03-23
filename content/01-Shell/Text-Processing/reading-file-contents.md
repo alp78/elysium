@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [concept, foundations, bash, filesystem, linux]
+tags: [shell, bash]
 aliases: [cat, head, tail, tail -f, grep large files, log analysis, less, reading files]
 keywords: [cat, head, tail, tail -f, grep, awk, less, log file, incident response, reading files, follow log, large file, line count, wc -l, extract time window, ripgrep, rg, Select-String]
 description: "Commands for reading file contents from quick config checks to deep log file analysis during incidents. Covers tail -f for real-time log following, grep performance flags, and PowerShell Select-String."

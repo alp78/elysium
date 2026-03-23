@@ -2,7 +2,7 @@
 type: how-to
 category: performance
 technology: [sql-server]
-tags: [sql-server, performance, indexing, maintenance, fragmentation]
+tags: [sql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren]
 keywords: [index fragmentation, avg_fragmentation_in_percent, index rebuild, index reorganize, fill factor, ONLINE=ON, sys.dm_db_index_physical_stats, REORGANIZE, REBUILD, PAGE compression, DATA_COMPRESSION, columnstore reorganize, COMPRESS_ALL_ROW_GROUPS, statistics update after rebuild, index maintenance script, Ola Hallengren, maintenance window]
 description: "How to detect and fix SQL Server index fragmentation using REORGANIZE and REBUILD operations — includes fragmentation thresholds, automated maintenance script, fill factor guidance, and a recommended maintenance schedule for data pipeline workloads."

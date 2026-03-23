@@ -2,7 +2,7 @@
 type: index
 category: docker
 technology: [docker]
-tags: [index, docker, containers]
+tags: [docker]
 aliases: [Docker Index, Docker Section, Containers Index]
 keywords: [docker, containers, docker compose, image management, container lifecycle, dockerfile, multi-stage build, artifact registry]
 description: "Index for all Docker notes covering container lifecycle management, Docker Compose orchestration, and image building and registry operations."

@@ -1,5 +1,5 @@
 ---
-tags: [concept, dbt]
+tags: [pipeline, sql, dbt, bigquery]
 type: concept
 technology: [dbt, sql-server, bigquery]
 status: stable

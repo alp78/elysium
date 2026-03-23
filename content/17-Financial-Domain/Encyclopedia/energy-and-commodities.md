@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, energy, commodities, oil-gas, renewables, reference, encyclopedia]
+tags: [financial]
 aliases: [energy terms, commodities glossary, oil gas glossary, upstream midstream downstream, LNG glossary, renewables glossary]
 keywords: [upstream, midstream, downstream, LNG, liquefied natural gas, renewables, green hydrogen, carbon capture, cogeneration, energy storage, pipeline energy, refining, petrochemicals, commodity trading, FPSO, integrated energy]
 description: "Encyclopedia definitions for energy and commodities terms covering upstream, midstream, downstream, LNG, renewables, green hydrogen, carbon capture, and commodity trading drawn from the example Index universe."

@@ -2,7 +2,7 @@
 type: index
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [index, programming-languages, python, pandas, polars, dataframes]
+tags: [pipeline, python, pandas, polars]
 aliases: [Pandas Polars Index, Pandas vs Polars, DataFrame Reference]
 keywords: [pandas, polars, dataframe, series, data analysis, data engineering, python data, side-by-side comparison, lazy evaluation, arrow]
 description: "Index for the Pandas vs Polars reference series — 10 notebooks covering foundations through real-world projects, each with side-by-side Pandas and Polars examples and cell outputs."

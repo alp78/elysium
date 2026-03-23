@@ -2,19 +2,20 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, joins, concat, pivot, melt, reshape]
-aliases: [Pandas Polars Combining Reshaping, join merge concat, pivot melt unpivot, explode]
-keywords: [pandas, polars, join, merge, inner, left, anti, semi, cross, concat, vstack, hstack, diagonal, pivot, melt, unpivot, explode, implode, transpose, one-hot encoding, get_dummies, to_dummies]
-description: "Pandas vs Polars combining and reshaping — joins (inner/left/anti/semi/cross), concat, pivot, melt/unpivot, explode, implode, transpose, one-hot encoding."
+tags: [pipeline, api, python, pandas, polars]
+aliases: [join, merge, concat, pivot, melt, explode]
+keywords: [join, merge, concat, vstack, hstack, pivot, melt, unpivot, explode, cross join]
+description: "Pandas vs Polars reference 06/10 — Combining & Reshaping (joins, concat, pivot, melt, explode). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[05_grouping_windows]]"
   - "[[07_lazy_performance]]"
-  - "[[sql-python-csharp-transforms]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete
 ---
+
 # 06 — Combining & Reshaping DataFrames
 
 Join, concat, pivot, melt, explode.

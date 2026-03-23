@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
-tags: [reference, financial-domain, metrics, dashboard, charts]
+tags: [sql, financial]
 aliases: [Chart Metrics, Dashboard Charts, Time Series Charts]
 keywords: [chart metrics, synthetic portfolio return, rolling return, drawdown, peak to trough, volatility, Sharpe ratio, risk-adjusted return, annualized volatility, bear market, correction]
 description: "Five synchronized time-series charts in the financial data platform dashboard: portfolio return, rolling 30d return, drawdown from peak, annualized volatility, and rolling Sharpe ratio."

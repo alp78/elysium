@@ -1,5 +1,5 @@
 ---
-tags: [reference, airflow, troubleshooting, production, orchestration, data-engineering]
+tags: [orchestration, airflow]
 type: reference
 technology: airflow
 status: stable

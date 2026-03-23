@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [terraform, gcp, networking, vpc, subnet, nat, firewall, cloud-nat, iap]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform VPC, terraform networking, GCP VPC terraform, firewall rules terraform, Cloud NAT terraform]
 keywords: [VPC, subnet, Cloud NAT, firewall, IAP, Identity-Aware Proxy, google_compute_network, google_compute_subnetwork, google_compute_router_nat, google_compute_firewall, CIDR, ingress, egress, network topology, private IP]
 description: "Terraform configuration for GCP networking: VPC, subnet, Cloud Router, Cloud NAT, and firewall rules for SQL Server, Airflow UI, APM, IAP SSH, and deny-all ingress."

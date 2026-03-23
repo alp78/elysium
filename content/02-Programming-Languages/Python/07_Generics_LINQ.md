@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, generics]
+tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 keywords: [generics, TypeVar, Generic, Protocol, map, filter, reduce, itertools, functools, comprehension]
 description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [[cs-07_Generics_LINQ]] for the C# equivalent."

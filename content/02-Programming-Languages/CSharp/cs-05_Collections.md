@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, collections]
+tags: [csharp]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 keywords: [List, Dictionary, HashSet, Queue, Stack, IEnumerable, LINQ, array, SortedDictionary, ConcurrentDictionary]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [[05_Collections]] for the Python equivalent."

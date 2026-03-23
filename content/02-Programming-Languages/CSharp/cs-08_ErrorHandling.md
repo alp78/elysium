@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, error-handling]
+tags: [csharp]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 keywords: [try, catch, finally, throw, Exception, custom exception, when filter, IDisposable, using, Result]
 description: "C# error handling reference with executable examples and cell outputs — covers try/catch/finally, exception hierarchy, custom exceptions, exception filters, and IDisposable/using. See [[08_ErrorHandling]] for the Python equivalent."

@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github, gcp]
-tags: [git, github, ci-cd, github-actions, workflows, automation]
+tags: [ci-cd, gcp, git]
 aliases: [GitHub Actions, CI/CD, workflow, gh run, workflow_dispatch, matrix testing, secrets management]
 keywords: [GitHub Actions, workflow, YAML, trigger, push, pull_request, schedule, workflow_dispatch, matrix, secrets, GCP_SA_KEY, gh run, gh workflow run, deploy, Cloud Run, Artifact Registry, google-github-actions/auth]
 description: "GitHub Actions CI/CD workflows for data engineering teams — triggers, matrix testing, secrets management, GCP authentication, and monitoring workflow runs with the GitHub CLI."

@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, web-apis]
+tags: [api, python]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
 keywords: [requests, FastAPI, Flask, httpx, REST, HTTP, JSON, authentication, middleware, routing]
 description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [[cs-13_WebAPIs]] for the C# equivalent."

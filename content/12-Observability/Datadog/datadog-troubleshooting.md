@@ -2,7 +2,7 @@
 type: troubleshooting
 category: observability
 technology: [datadog, docker, gcp, sql-server, terraform]
-tags: [datadog, data-pipeline, troubleshooting, agent, apm, logs, cos, ghost-hosts]
+tags: [observability, sql, terraform, docker, datadog, gcp]
 aliases: [Datadog Troubleshooting, DD Agent Troubleshooting, Datadog Common Issues]
 keywords: [agent not appearing, invalid API key, APM traces missing, no logs, COS filesystem, read-only opt, ghost hosts, ghost host, INACTIVE host, Windows line endings, CRLF, bash\r, terraform apply metadata, VM reset, dd-api-key missing, Airflow VM, startup script, Cloud Run metrics not showing, pipeline logs not in Datadog, Cloud Logging]
 description: "Troubleshooting guide for Datadog agent issues on the data platform — covering agent not appearing, missing APM traces, no logs, COS filesystem constraints, ghost hosts, and Windows line ending issues."

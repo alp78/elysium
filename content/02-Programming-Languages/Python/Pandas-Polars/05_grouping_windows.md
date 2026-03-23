@@ -2,15 +2,15 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, groupby, aggregation, window-functions]
-aliases: [Pandas Polars Grouping Windows, groupby agg, over, rolling, shift lag]
-keywords: [pandas, polars, groupby, group_by, agg, aggregate, named_agg, over, window, partition_by, order_by, shift, lag, rolling, cumsum, rank]
-description: "Pandas vs Polars grouping, aggregation, and window functions — groupby/agg, multi-column groupby, Polars over/partition_by, shift/lag, rolling windows."
+tags: [pipeline, python, pandas, polars]
+aliases: [groupby, aggregation, window functions, rolling]
+keywords: [groupby, group_by, agg, over, rolling, shift, rank, window functions, cumsum]
+description: "Pandas vs Polars reference 05/10 — Grouping, Aggregation & Windows (groupby, over, rolling, shift). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[04_missing_strings_datetime]]"
   - "[[06_combining_reshaping]]"
-  - "[[07_Generics_LINQ]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete

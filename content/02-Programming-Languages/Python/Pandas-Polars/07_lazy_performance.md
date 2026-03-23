@@ -2,19 +2,20 @@
 type: reference
 category: programming-languages
 technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, lazy-evaluation, performance, optimization]
-aliases: [Pandas Polars Lazy Performance, lazy collect, query plan, predicate pushdown, benchmark]
-keywords: [pandas, polars, lazy, eager, collect, explain, query plan, predicate pushdown, projection pushdown, streaming, profile, benchmark, vectorized, apply, memory usage, performance]
-description: "Polars lazy API and performance — eager vs lazy execution, collect, query plan, predicate/projection pushdown, streaming, profiling, benchmarks vs Pandas."
+tags: [pipeline, performance, python, pandas, polars]
+aliases: [LazyFrame, query plan, streaming, benchmarks]
+keywords: [LazyFrame, lazy, collect, query plan, streaming, sink, benchmark, memory, scan]
+description: "Pandas vs Polars reference 07/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[06_combining_reshaping]]"
   - "[[08_types_interop]]"
-  - "[[fastapi-and-polars]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete
 ---
+
 # 07 — Lazy API & Performance
 
 Polars lazy execution, optimization, benchmarks.

@@ -2,7 +2,7 @@
 type: concept
 category: financial-domain
 technology: [python, sql-server, numpy]
-tags: [concept, financial-domain, scoring, z-score, statistics, methodology]
+tags: [python, sql, financial]
 aliases: [Scoring Methodology, z-score methodology, z-score calculation, composite scores, dense ranking, cap-weighting]
 keywords: [scoring methodology, z-score, cross-sectional, composite score, dense rank, cap-weighted, standardization, normalization, ranking, mean, standard deviation, inverted z-score, sign inversion]
 description: "Z-score calculation methodology, composite scoring, dense ranking, and cap-weighting formulas used across all financial data platform dashboard signals and metrics."

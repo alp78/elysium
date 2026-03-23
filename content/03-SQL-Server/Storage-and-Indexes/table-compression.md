@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, performance, storage, compression, page-compression, row-compression, columnstore]
+tags: [sql]
 aliases: [SQL Server compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, table compression]
 keywords: [compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, REBUILD, ALTER INDEX, buffer pool, disk space, cold tables, gold layer, archival, financial time-series, prefix compression, dictionary compression, columnstore compression, ONLINE rebuild, compression savings]
 description: "How SQL Server page and row compression works, when to apply each type, how to estimate savings before committing, and how to apply compression with minimal blocking using ONLINE rebuilds. Includes data pipeline guidance for gold-layer tables."

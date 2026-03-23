@@ -2,7 +2,7 @@
 type: concept
 category: python
 technology: [python]
-tags: [concept, python, environment, pip, venv]
+tags: [pipeline, python]
 aliases: [venv, virtual environment, pip, requirements.txt, pip-compile, pip-tools, Python environment]
 keywords: [python, virtual environment, venv, pip, requirements.txt, pip freeze, pip-compile, pip-tools, package management, isolation, dependencies, reproducible builds]
 description: "Python virtual environment management — creating isolated environments with venv, installing dependencies, pinning versions with pip-compile, and ensuring reproducible builds."

@@ -2,7 +2,7 @@
 type: reference
 category: sql-server
 technology: [sql-server]
-tags: [reference, sql-server, performance, diagnostics, monitoring, wait-stats]
+tags: [performance, sql]
 aliases: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH, WRITELOG, LCK_M, CXPACKET, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, wait type interpretation]
 keywords: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH_SH, PAGEIOLATCH_EX, WRITELOG, PAGELATCH, LCK_M_X, LCK_M_S, CXPACKET, CXCONSUMER, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, ASYNC_NETWORK_IO, signal wait, resource wait, idle waits, benign waits, DBCC SQLPERF, wait type, performance diagnosis, query plan, page life expectancy, buffer pool, I/O latency, disk throughput]
 description: "How to read SQL Server wait statistics (sys.dm_os_wait_stats) to diagnose performance problems: the complete filtered wait query, signal vs. resource wait interpretation, common wait type meanings for pipeline workloads, I/O latency benchmarks, and Query Store setup for regression detection."

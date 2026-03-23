@@ -7,15 +7,7 @@ technology:
   - cloud-logging
   - python
   - bash
-tags:
-  - reference
-  - observability
-  - gcp
-  - pipeline-health
-  - sla
-  - data-freshness
-  - alerting
-  - runbook
+tags: [pipeline, observability, python, bash, gcp]
 aliases:
   - pipeline health
   - SLA monitoring

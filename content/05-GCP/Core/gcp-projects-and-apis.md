@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [concept, gcp, gcloud, projects, apis]
+tags: [infrastructure, api, gcp]
 aliases: [GCP projects, GCP APIs, gcloud services, enable API, project listing]
 keywords: [gcp projects, project list, gcloud projects list, enable API, gcloud services enable, bigquery API, cloud run API, pubsub API, compute API, service activation, API enablement, data engineering APIs]
 description: "How to list GCP projects, inspect project metadata, and enable or verify the APIs required for data engineering workloads including BigQuery, Cloud Run, Pub/Sub, and Compute Engine."

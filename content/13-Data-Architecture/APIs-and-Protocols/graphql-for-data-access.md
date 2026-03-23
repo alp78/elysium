@@ -4,14 +4,7 @@ category: data-architecture
 technology:
   - python
   - graphql
-tags:
-  - reference
-  - data-architecture
-  - graphql
-  - query-language
-  - api
-  - schema
-  - resolver
+tags: [architecture, api, python]
 aliases:
   - GraphQL
   - GQL

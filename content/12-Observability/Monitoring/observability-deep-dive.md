@@ -2,7 +2,7 @@
 type: concept
 category: observability
 technology: [datadog, python, sql-server, great-expectations, polars]
-tags: [observability, monitoring, datadog, data-lineage, data-catalog, data-quality, drift-detection, concept]
+tags: [observability, python, sql, datadog, polars]
 aliases: [DataDog pipeline monitoring, data lineage, data catalog, data quality framework, schema drift, data drift, entitlement, Great Expectations, data freshness]
 keywords: [datadog, observability, metrics, logs, traces, APM, statsd, data freshness, data lineage, data catalog, data quality, schema drift, data drift, kolmogorov-smirnov, KS test, great expectations, OpenMetadata, DataHub, Google Data Catalog, Unity Catalog, data entitlement, RBAC, pipeline SLA, monitoring, alerting, completeness, accuracy, uniqueness, validity, consistency, drift detection, pipeline health, SQL Server monitoring]
 description: "Observability deep dive for data engineering: DataDog custom metrics and APM traces for pipeline health, data freshness tracking, data lineage implementation, data catalog tooling, data quality frameworks (Great Expectations + SQL checks), and automated schema and statistical drift detection for financial pipelines."

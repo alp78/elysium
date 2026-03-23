@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, iam, security]
-tags: [concept, gcp, iam, security, service-accounts]
+tags: [security, infrastructure, gcp]
 aliases: [GCP service accounts, IAM bindings, GCP IAM roles, least privilege GCP, service account keys, Workload Identity, IAM policy, gcloud iam]
 keywords: [service account, IAM, identity and access management, least privilege, roles, bindings, gcloud iam service-accounts create, gcloud projects add-iam-policy-binding, roles/bigquery.dataEditor, roles/storage.objectAdmin, roles/run.invoker, key file, Workload Identity, custom roles, service account email, roles/bigquery.jobUser, test permissions, remove role]
 description: "How to create GCP service accounts, generate and rotate keys, grant minimum IAM roles for data pipeline workloads, and verify permissions — implementing least-privilege access as the baseline security standard."

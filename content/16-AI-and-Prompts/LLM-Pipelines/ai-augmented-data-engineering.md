@@ -2,7 +2,7 @@
 type: concept
 category: ai-and-prompts
 technology: [python, bigquery, gcp]
-tags: [ai, llm, rag, embeddings, vector-databases, python, data-engineering, prompt-engineering]
+tags: [ai, python, bigquery, gcp]
 aliases: [LLM data pipelines, RAG architecture, retrieval augmented generation, vector database, embeddings, AI-assisted development, Claude Code, GitHub Copilot, AI data engineering, LLM pipeline, corporate actions parsing with LLM, ESG extraction LLM, anomaly explanation LLM, Apache Iceberg AI, pgvector, ChromaDB, Pinecone, token budgeting]
 keywords: [LLM, RAG, retrieval augmented generation, embeddings, vector database, pgvector, ChromaDB, Pinecone, Weaviate, Qdrant, AlloyDB AI, langchain, VertexAI, text-embedding, Claude, Anthropic, GitHub Copilot, AI-assisted, corporate actions, press release parsing, anomaly explanation, data quality, schema documentation, SQL generation, token cost, daily budget, Iceberg, Apache Iceberg, structured unstructured, semantic search, AI productivity, hallucination, code review AI]
 description: "AI-augmented data engineering: practical LLM use cases (corporate actions parsing, anomaly explanation, schema documentation), RAG architecture for financial document retrieval, vector database comparison (pgvector, ChromaDB, Pinecone, Weaviate, Qdrant, AlloyDB AI), cost management and token budgeting, Apache Iceberg + AI hybrid architecture, and AI-assisted development workflow with Claude Code and GitHub Copilot. Includes all code examples."

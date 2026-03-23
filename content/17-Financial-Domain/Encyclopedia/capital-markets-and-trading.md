@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, capital-markets, trading, equities, fixed-income, derivatives, reference, encyclopedia]
+tags: [api, financial]
 aliases: [capital markets terms, equities glossary, derivatives glossary, trading terms, IPO glossary]
 keywords: [capital markets, equities, stocks, shares, fixed income, bonds, derivatives, futures, options, IPO, listing, bond underwriting, equity underwriting, brokerage, market-making, securities, debt capital markets, exchange, index, dual-listed, stock connect]
 description: "Encyclopedia definitions for capital markets and trading terms covering equities, fixed income, derivatives, futures, market-making, IPOs, listings, and exchange operations drawn from the example Index universe."

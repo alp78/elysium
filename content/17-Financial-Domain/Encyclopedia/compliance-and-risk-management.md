@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, compliance, risk-management, regulatory, intellectual-property, reference, encyclopedia]
+tags: [financial]
 aliases: [compliance terms, risk management glossary, regulatory terms, IP terms, patent glossary, royalties glossary]
 keywords: [compliance, risk management, regulatory approval, intellectual property, IP, patents, royalties, licensing, KYC, AML, anti-money laundering, know your customer, FDA approval, EMA approval, PMDA, fiduciary duty, derivatives hedging, foreign exchange risk, operational risk, counterparty risk, regtech]
 description: "Encyclopedia definitions for compliance, risk management, regulatory approval, intellectual property, patents, and royalties terms from the example Index universe, covering how firms manage legal, regulatory, and IP-related obligations and risks."

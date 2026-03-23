@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, python, sql-server, airflow]
-tags: [reference, financial-domain, data-sources, pipeline, yfinance]
+tags: [python, sql, airflow, financial]
 aliases: [Data Sources and Refresh, yfinance data sources, data refresh, pipeline schedule, yfinance data pipeline]
 keywords: [data sources, refresh cadence, yfinance, pipeline schedule, price data, volume, market cap, forward PE, analyst target, recommendation, dividend yield, quarterly financials, governance, ticker membership, pulse, intraday]
 description: "Data sources, refresh cadences, and pipeline schedule for the financial data platform dashboard — yfinance data feeds, update frequencies, and the relationship between data freshness and scoring accuracy."

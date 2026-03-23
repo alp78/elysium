@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, basics]
+tags: [csharp]
 aliases: [variables, data types, type conversion, operators, console IO]
 keywords: [variables, data types, type conversion, operators, Console.WriteLine, int, double, bool, string, var]
 description: "C# basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [[01_Basics]] for the Python equivalent."

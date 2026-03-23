@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, datetime]
+tags: [csharp]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 keywords: [DateTime, DateOnly, TimeOnly, TimeZoneInfo, TimeSpan, Math, Random, Guid, DateTimeOffset]
 description: "C# date, time, math and utilities reference with executable examples and cell outputs — covers DateTime, DateOnly, TimeSpan, timezones, Math, Random, and Guid. See [[10_DateTimeMathUtils]] for the Python equivalent."

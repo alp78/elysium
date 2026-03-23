@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [powershell, windows]
-tags: [reference, orchestration, scheduling, windows, task-scheduler, powershell]
+tags: [orchestration]
 aliases:
   - Task Scheduler
   - schtasks

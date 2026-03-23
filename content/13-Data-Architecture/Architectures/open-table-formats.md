@@ -2,7 +2,7 @@
 type: concept
 category: lakehouse-architecture
 technology: [iceberg, delta-lake, apache-hudi, spark, bigquery, gcp]
-tags: [lakehouse, iceberg, delta-lake, hudi, open-table-formats, parquet, medallion-architecture, GDPR, time-travel, schema-evolution, concept]
+tags: [architecture, bigquery, gcp]
 aliases: [Apache Iceberg, Delta Lake, Apache Hudi, open table format, lakehouse, data lakehouse, BigLake, ACID transactions on data lake, table format comparison]
 keywords: [iceberg, delta lake, hudi, open table format, lakehouse, parquet, ACID, time travel, snapshot isolation, schema evolution, partition evolution, hidden partitioning, merge-on-read, copy-on-write, compaction, medallion architecture, bronze silver gold, GDPR deletion, right to be forgotten, BigLake Metastore, Nessie catalog, manifest file, snapshot, BigQuery Iceberg, GCS, S3, PII registry, data privacy, Databricks, Spark]
 description: "Open table formats (Apache Iceberg, Delta Lake, Apache Hudi) add a metadata layer on top of Parquet files on cloud storage to provide ACID transactions, snapshot isolation, time travel, schema evolution, and partition evolution. Covers the metadata tree, Iceberg vs Delta Lake vs Hudi comparison, BigQuery/GCP integration, table maintenance, medallion architecture mapping, and GDPR deletion patterns."

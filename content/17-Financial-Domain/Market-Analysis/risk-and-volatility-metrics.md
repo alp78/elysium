@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, python]
-tags: [reference, financial-domain, risk, volatility, market-analysis, metrics]
+tags: [python, financial]
 aliases: [Risk and Volatility Metrics, risk metrics, volatility, Beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, Value at Risk, VaR]
 keywords: [risk metrics, volatility, beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, Value at Risk, VaR, Sharpe ratio, risk-adjusted return, downside deviation, tail risk, implied volatility]
 description: "Risk and volatility metrics for equity index analysis — Beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, and Value at Risk with formulas, thresholds, and interpretation."

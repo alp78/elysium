@@ -1,5 +1,5 @@
 ---
-tags: [reference, financial-domain, regulatory, eu-bmr, compliance, audit]
+tags: [sql, bigquery, gcp, financial, regulatory]
 type: reference
 technology: [sql-server, bigquery, gcp]
 status: stable

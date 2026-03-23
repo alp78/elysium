@@ -2,7 +2,7 @@
 type: reference
 category: data-formats
 technology: [python, kafka, protobuf, avro]
-tags: [reference, data-formats, etl, concept, python]
+tags: [architecture, pipeline, python]
 aliases: [serialization, data formats comparison, format decision matrix, JSON vs Parquet, Avro vs Protobuf, MessagePack, Pickle, compression codecs, Snappy, Zstd, Gzip, LZ4]
 keywords: [serialization, json, yaml, csv, parquet, avro, protobuf, messagepack, pickle, compression, snappy, zstd, gzip, lz4, schema, binary format, text format, kafka, gRPC, data lake, format comparison, encoding, decoding, schema evolution, cross-language]
 description: "Comprehensive comparison of every serialization format a data engineer encounters — JSON, YAML, CSV, MessagePack, Protobuf, Avro, Parquet, and Pickle — with a format decision matrix and compression codec comparison (Snappy, LZ4, Zstd, Gzip)."

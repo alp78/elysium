@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, exchanges, market-infrastructure, capital-markets, reference, encyclopedia]
+tags: [financial]
 aliases: [exchange terms, market infrastructure glossary, stock exchange terms, clearing house glossary, securities infrastructure]
 keywords: [stock exchange, futures exchange, clearing house, clearinghouse, custodian, custodian services, market making, prime brokerage, listing, securities clearing, stock transfer agency, dual-listed, settlement, depository, central counterparty, CCP, HKEX, Deutsche Boerse, Xetra, Eurex, order matching, bid ask spread]
 description: "Encyclopedia definitions for exchange and market infrastructure terms from the example Index universe, covering stock and futures exchanges, clearing houses, custodian services, market-making, prime brokerage, listing, securities clearing, and stock transfer agency."

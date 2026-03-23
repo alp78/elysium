@@ -2,7 +2,7 @@
 type: index
 category: git
 technology: [git, github]
-tags: [index, git, github, version-control, ci-cd]
+tags: [git]
 aliases: [Git Index, Git Section, Version Control Index, GitHub Index]
 keywords: [git, github, version control, branching, merging, pull requests, code review, ci/cd, github actions, gitignore, tagging, remote, merge conflicts, troubleshooting]
 description: "Index for all Git and GitHub notes covering setup, daily workflow, branching, merging, pull requests, CI/CD, conflict resolution, error troubleshooting, and release management."

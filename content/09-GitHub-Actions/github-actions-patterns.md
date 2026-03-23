@@ -7,15 +7,7 @@ technology:
   - docker
   - terraform
   - gcp
-tags:
-  - reference
-  - github-actions
-  - ci-cd
-  - patterns
-  - matrix
-  - reusable-workflows
-  - deployment
-  - environments
+tags: [ci-cd, terraform, docker, gcp, github-actions]
 aliases:
   - matrix builds
   - reusable workflows

@@ -7,16 +7,7 @@ technology:
   - bigquery
   - python
   - dataflow
-tags:
-  - reference
-  - observability
-  - gcp
-  - data-lineage
-  - data-catalog
-  - dataplex
-  - metadata
-  - governance
-  - data-discovery
+tags: [observability, python, bigquery, gcp]
 aliases:
   - data lineage
   - data catalog

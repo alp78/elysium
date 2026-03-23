@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-storage]
-tags: [concept, gcp, cloud-storage, data-lake]
+tags: [infrastructure, gcp]
 aliases: [GCS objects, gcloud storage, gsutil, Cloud Storage operations, GCS copy, GCS sync, GCS rsync]
 keywords: [gcloud storage, gsutil, GCS, cloud storage, ls, cp, copy, rsync, sync, mv, move, rm, delete, object metadata, parallel upload, parallel composite upload, component size, gcloud storage vs gsutil, transfer service, large file, incremental sync]
 description: "How to list, copy, sync, move, delete, and inspect metadata of Cloud Storage objects using the gcloud storage CLI — including parallel transfers for large files and incremental sync patterns."

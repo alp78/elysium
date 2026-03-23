@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, corporate-finance, M&A, restructuring, strategy, reference, encyclopedia]
+tags: [financial]
 aliases: [corporate finance terms, M&A glossary, merger acquisition glossary, restructuring glossary, spin-off glossary]
 keywords: [mergers acquisitions, M&A, divestitures, spin-off, restructuring, corporate finance advisory, holding company, subsidiaries, segments, joint venture, incorporated, financial advisory, goodwill, tender offer]
 description: "Encyclopedia definitions for corporate finance and strategy terms covering M&A, divestitures, spin-offs, restructuring, advisory, holding companies, and corporate governance drawn from the example Index universe."

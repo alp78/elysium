@@ -2,7 +2,7 @@
 type: concept
 category: git
 technology: [git]
-tags: [concept, git, version-control, branching]
+tags: [git]
 aliases: [git branch, git merge, git rebase, git checkout, branching strategy, merge strategies]
 keywords: [git, branch, merge, rebase, checkout, switch, stash, feature branch, branching strategy, merge commit, fast-forward, squash merge]
 description: "Git branching and merging strategies — creating feature branches, switching branches, stashing work, merging, rebasing, and recovery techniques."

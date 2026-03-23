@@ -1,16 +1,32 @@
 ---
 type: reference
 category: programming-languages
-technology: [python, pandas, polars]
-tags: [reference, programming-languages, python, pandas, polars, missing-data, strings, datetime]
-aliases: [Pandas Polars Missing Strings DateTime, null handling, fillna, string methods, datetime parsing]
-keywords: [pandas, polars, null, NaN, isna, isnull, fill_null, fillna, dropna, drop_nulls, str, string methods, datetime, strftime, strptime, timedelta, timezone, dt]
-description: "Pandas vs Polars handling of missing values, string manipulation, and datetime operations — null detection, fill/drop, .str namespace, datetime parsing/extraction/arithmetic, timezones."
+technology:
+  - python
+  - pandas
+  - polars
+tags: [pipeline, python, pandas, polars]
+aliases:
+  - null handling
+  - string methods
+  - datetime parsing
+  - timezones
+keywords:
+  - 
+  - NaN
+  - fillna
+  - fill_null
+  - dropna
+  - str accessor
+  - dt accessor
+  - timezone
+  - timedelta
+description: Pandas vs Polars reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Side-by-side executable examples with cell outputs.
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[03_transforms_expressions_chaining]]"
   - "[[05_grouping_windows]]"
-  - "[[10_DateTimeMathUtils]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete

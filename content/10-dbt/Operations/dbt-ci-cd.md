@@ -1,5 +1,5 @@
 ---
-tags: [how-to, dbt]
+tags: [pipeline, dbt, github-actions]
 type: how-to
 technology: [dbt, github-actions]
 status: stable

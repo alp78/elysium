@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, structured-finance, project-finance, trade-finance, securitization, reference, encyclopedia]
+tags: [financial]
 aliases: [structured finance glossary, project finance terms, trade finance glossary, securitization terms, loan syndication glossary]
 keywords: [structured finance, securitization, asset-backed securities, project finance, trade finance, factoring, loan syndication, collateral, warehouse financing, non-recourse, collateralized loan obligation, export credit, ABS, MBS]
 description: "Encyclopedia definitions for structured finance terms covering securitization, project finance, trade finance, factoring, loan syndication, collateral, and warehouse financing, drawn from the example Index universe."

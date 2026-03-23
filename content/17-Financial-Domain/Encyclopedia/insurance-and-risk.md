@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, insurance, risk-management, reference, encyclopedia]
+tags: [financial]
 aliases: [insurance terms, risk management glossary, reinsurance glossary, annuity glossary]
 keywords: [life insurance, property casualty, P&C, reinsurance, parametric insurance, annuity, endowment insurance, unit-linked insurance, insurance premium, risk management, underwriting insurance, bancassurance, natural catastrophe]
 description: "Encyclopedia definitions for insurance and risk management terms covering life insurance, property-casualty, reinsurance, parametric insurance, annuities, and risk management drawn from the example Index universe."

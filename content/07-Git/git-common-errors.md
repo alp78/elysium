@@ -2,7 +2,7 @@
 type: troubleshooting
 category: git
 technology: [git, github]
-tags: [troubleshooting, git, errors, common-errors, github-actions, ssh, merge-conflict, rebase, push-rejected]
+tags: [git]
 aliases:
   - "non-fast-forward"
   - "detached HEAD"

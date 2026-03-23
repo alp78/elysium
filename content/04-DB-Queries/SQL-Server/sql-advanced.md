@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [sql-server, t-sql]
-tags: [reference, db-queries, sql-server, t-sql, advanced, window-functions, cte, pivot, json]
+tags: [sql]
 aliases: [SQL advanced, window functions, CTE, common table expression, PIVOT, UNPIVOT, JSON, recursive CTE, ROW_NUMBER, RANK, LAG, LEAD]
 keywords: [window functions, cte, recursive cte, pivot, unpivot, json, row_number, rank, dense_rank, lag, lead, partition by, running total, moving average, ntile, percentile, cross apply, outer apply, for json, openjson]
 description: "Advanced SQL Server T-SQL patterns with executable examples — covers window functions, CTEs, PIVOT/UNPIVOT, JSON, CROSS APPLY, and recursive queries."

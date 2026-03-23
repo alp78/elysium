@@ -97,9 +97,11 @@ function parseQuery(raw: string): ParsedQuery {
     return ""
   })
 
-  text = text.replace(/(?:tag:)?#(\S+)/g, (_, t: string) => {
+  // Tag filter: #tag or tag:#tag — but NOT "c#" (# must be at word start)
+  text = text.replace(/(?:^|\s)(?:tag:)?#(\S+)/g, (match, t: string) => {
     result.tagFilters.push(t.toLowerCase())
-    return ""
+    // preserve leading whitespace that was part of the match
+    return match.startsWith(" ") ? " " : ""
   })
 
   text = text.replace(/path:(\S+)/g, (_, p: string) => {
@@ -129,10 +131,14 @@ const wordRegexCache = new Map<string, RegExp>()
 function wordRegex(term: string): RegExp {
   let re = wordRegexCache.get(term)
   if (!re) {
-    // \b works for ASCII word chars; for terms that start/end with
-    // non-word chars we fall back to a looser match.
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    re = new RegExp(`\\b${escaped}\\b`, "i")
+    // Use \b only where the term edge is a word char [a-zA-Z0-9_].
+    // For terms like "c#", the # end has no \b — use a lookahead instead.
+    const startsWord = /^\w/.test(term)
+    const endsWord = /\w$/.test(term)
+    const prefix = startsWord ? "\\b" : "(?<=\\s|^|[^\\w])"
+    const suffix = endsWord ? "\\b" : "(?=\\s|$|[^\\w])"
+    re = new RegExp(`${prefix}${escaped}${suffix}`, "i")
     wordRegexCache.set(term, re)
   }
   return re

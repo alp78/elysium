@@ -2,7 +2,7 @@
 type: concept
 category: prompt-engineering
 technology: [claude, gpt-4, gemini, grok, perplexity, llm]
-tags: [prompt-engineering, llm, ai, concept, model-specific, claude, gpt-4, gemini, grok]
+tags: [ai]
 aliases: [model differences prompting, Claude vs GPT prompting, model-specific syntax, cross-model prompting, Anthropic prompting, OpenAI prompting, Google Gemini prompting, xAI Grok prompting, Perplexity prompting, model comparison AI]
 keywords: [Claude, GPT-4, ChatGPT, Gemini, Grok, Perplexity, model-specific, XML tags, system prompt, tone, instruction following, safety, refusal, cross-model portability, model comparison, prompt portability, Anthropic, OpenAI, Google, xAI, model strengths, model weaknesses, model quirks]
 description: "Model-specific prompting strategies for Claude (Anthropic), GPT-4/ChatGPT (OpenAI), Gemini (Google), Grok (xAI), and Perplexity. Covers each model's strengths, preferred structural formats, tone response characteristics, and distinctive behavioral traits. Includes cross-model portability tips."

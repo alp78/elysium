@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, python, gcp, docker]
-tags: [datadog, data-pipeline, apm, traces, ddtrace, python, cloud-run]
+tags: [observability, python, docker, datadog, gcp]
 aliases: [Datadog APM, ddtrace, Pipeline Traces, APM Instrumentation]
 keywords: [ddtrace, ddtrace-run, APM traces, auto-instrumentation, monkey-patch, pyodbc, requests, flame graph, pipeline.step, tracer.trace, DD_TRACE_AGENT_URL, DD_SERVICE, data-pipeline-pipeline, log-to-trace correlation, dd.trace_id, dd.span_id, JSON logger, import error guard, local development, no impact SQL Server]
 description: "How ddtrace APM instrumentation works in the data pipeline — auto-instruments pyodbc and requests, creates per-step flame graphs, and injects trace IDs into logs for correlation."

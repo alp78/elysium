@@ -10,15 +10,7 @@ technology:
   - firestore
   - compute-engine
   - dataflow
-tags:
-  - reference
-  - gcp
-  - cost-management
-  - billing
-  - pricing
-  - finops
-  - budget
-  - free-tier
+tags: [cost, infrastructure, bigquery, gcp, firestore]
 aliases:
   - GCP billing
   - GCP pricing

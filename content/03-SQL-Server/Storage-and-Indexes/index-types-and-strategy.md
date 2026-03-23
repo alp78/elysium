@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, indexes, performance, query-optimization, storage]
+tags: [sql]
 aliases: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, index key, INCLUDE columns, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics]
 keywords: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, INCLUDE, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics, UPDATE STATISTICS, FULLSCAN, missing index DMV, sys.dm_db_missing_index_details, sys.dm_db_index_usage_stats, sys.dm_db_index_physical_stats, heap, GUID clustered key, NEWSEQUENTIALID, unique index, primary key, index anti-patterns, index decision tree, auto update statistics, DBCC SHOW_STATISTICS, index maintenance]
 description: "All SQL Server index types (clustered, nonclustered, covering, filtered, columnstore) with creation syntax, usage guidance, the decision tree for choosing the right type, anti-patterns, fragmentation detection and maintenance, statistics management, and the data pipeline index strategy."

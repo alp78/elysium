@@ -1,5 +1,5 @@
 ---
-tags: [runbook, sql-server, gcp, sev1, disk, storage]
+tags: [sql]
 type: runbook
 severity: sev1
 technology: sql-server

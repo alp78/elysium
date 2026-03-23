@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, design-patterns]
+tags: [csharp]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, IServiceCollection, DI container]
 description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [[16_DesignPatterns]] for the Python equivalent."

@@ -2,7 +2,7 @@
 type: concept
 category: data-transformation
 technology: [dbt, sql-server, bigquery, airflow, python]
-tags: [dbt, sql, transformation, data-modeling, elt, ci-cd, testing, scd, incremental, concept]
+tags: [architecture, pipeline, python, sql, airflow, dbt, bigquery]
 aliases: [dbt Core, dbt Cloud, Data Build Tool, dbt models, dbt snapshots, dbt macros, dbt testing, transformation layer]
 keywords: [dbt, data build tool, dbt core, dbt cloud, staging models, intermediate models, mart models, dbt test, schema tests, custom tests, snapshots, SCD type 2, slowly changing dimensions, macros, jinja, incremental models, dbt run, dbt compile, sources, ref, dbt-utils, CI/CD, slim builds, state comparison, airflow dbt integration, medallion architecture, bronze silver gold, ELT]
 description: "dbt (Data Build Tool) is the standard SQL transformation layer for modern data platforms — it implements software engineering practices (version control, testing, documentation, CI/CD) for SQL transforms already inside your warehouse. Covers project structure, staging/intermediate/mart model layers, schema and custom tests, SCD Type 2 snapshots, Jinja macros, Airflow integration, and slim CI builds."

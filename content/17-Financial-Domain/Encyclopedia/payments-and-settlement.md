@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, payments, settlement, clearing, reference, encyclopedia]
+tags: [financial]
 aliases: [payments terms, settlement glossary, payment processing glossary, acquiring issuing glossary]
 keywords: [acquiring, issuing, clearing, settlement, authorization, gateway, merchant services, payments processing, point-of-sale, tokenization, prepaid cards, virtual card, electronic money, fintech]
 description: "Encyclopedia definitions for payments and settlement terms covering acquiring, issuing, clearing, settlement, authorization, gateway, merchant services, and payment processing drawn from the example Index universe."

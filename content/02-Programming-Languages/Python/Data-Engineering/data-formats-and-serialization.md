@@ -2,7 +2,7 @@
 type: concept
 category: data-engineering
 technology: [python, sql-server]
-tags: [python, sql-server, json, csv, serialization, data-types, pyodbc, pandas, how-to]
+tags: [pipeline, python, sql]
 aliases: [Data Formats, JSON Handling, Serialization, Data Type Mapping, Python SQL Server Types, JSON Serializable, datetime serialization, pyodbc type mapping]
 keywords: [json, json.dump, json.load, JSON serializable, datetime, date, isoformat, pyodbc, data types, float, FLOAT, BIGINT, DATETIME2, VARCHAR, NVARCHAR, DATE, BIT, parameterized queries, ? placeholder, fast_executemany, executemany, pandas DataFrame, data type conversion, type mismatch, None vs NULL, NaN, math.isnan, safe_write_json, Object of type date is not JSON serializable, data-pipeline]
 description: "Python data format and serialization patterns for the data pipeline — covers JSON reading/writing with date-safe serialization, Python-to-SQL-Server type mapping, pyodbc parameterized query patterns, and common serialization pitfalls."

@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, collections]
+tags: [python]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 keywords: [list, dict, set, tuple, frozenset, deque, Counter, defaultdict, namedtuple, comprehension]
 description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [[cs-05_Collections]] for the C# equivalent."

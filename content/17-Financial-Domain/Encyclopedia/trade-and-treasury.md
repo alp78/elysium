@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, trade-finance, treasury, cash-management, working-capital, reference, encyclopedia]
+tags: [financial]
 aliases: [trade finance terms, treasury glossary, cash management terms, working capital glossary, export credit, sales financing, wholesale financing, transaction banking terms]
 keywords: [trade finance, cash management, treasury services, working capital, export credit agency, ECA, sales financing, wholesale financing, floor plan financing, dealer financing, letter of credit, documentary collection, supply chain finance, factoring, forfaiting, cash pooling, liquidity management, FX hedging, transaction banking, corporate treasury, working capital management, accounts receivable, accounts payable]
 description: "Encyclopedia definitions for trade finance, cash management, treasury services, working capital, export credit agency finance, sales financing, and wholesale financing terms from the example Index universe, covering how corporations and banks manage short-term liquidity and cross-border trade flows."

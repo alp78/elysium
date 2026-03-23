@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp, bigquery, sql-server, airflow]
-tags: [concept, foundations, networking, gcp]
+tags: [shell, bash, sql, airflow, bigquery, gcp]
 aliases: [GCP connectivity, gcloud compute ssh, bq query, Cloud Run, Airflow IAP, Datadog agent, connection matrix]
 keywords: [GCP connectivity, gcloud compute ssh, gcloud compute scp, bq query, bigquery client, Cloud Run, Airflow webserver, Datadog agent, IAP tunnel, pymssql, pyodbc, sqlcmd, SSMS, Invoke-Sqlcmd, GCS, BigQuery API, connection matrix, service account, application default credentials]
 description: "Complete guide to connecting to every GCP resource type: SSH to Compute Engine VMs, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, and Datadog agent. Includes a connection quick reference matrix."

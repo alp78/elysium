@@ -1,5 +1,5 @@
 ---
-tags: [reference, dbt]
+tags: [pipeline, observability, dbt]
 type: reference
 technology: [dbt]
 status: stable

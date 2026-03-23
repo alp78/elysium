@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, compute-engine]
-tags: [concept, gcp, compute-engine, ssh, security]
+tags: [infrastructure, gcp]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
 keywords: [gcloud compute ssh, IAP, Identity-Aware Proxy, tunnel-through-iap, scp, file transfer, remote command, secure copy, no public IP, pscp, permission denied, sudo cp, SSH into VM]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."

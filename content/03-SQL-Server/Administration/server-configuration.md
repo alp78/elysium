@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [how-to, sql-server, configuration, memory, RCSI, TempDB, recovery-model, Linux, GCP]
+tags: [sql]
 aliases: [SQL Server configuration, max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB configuration, swappiness, THP]
 keywords: [max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB files, swappiness, transparent huge pages, THP, IO scheduler, trace flags, recovery model, memory limit, buffer pool, Linux optimization, GCP]
 description: "Non-negotiable SQL Server configuration settings: max server memory, RCSI, TempDB, recovery models, and Linux OS tuning (swappiness, THP, I/O scheduler) for SQL Server on Linux GCP."

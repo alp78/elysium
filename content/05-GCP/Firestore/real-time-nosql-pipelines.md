@@ -8,14 +8,7 @@ technology:
   - cloud-functions
   - dataflow
   - python
-tags:
-  - concept
-  - gcp
-  - firestore
-  - real-time
-  - nosql
-  - event-driven
-  - streaming
+tags: [pipeline, infrastructure, python, gcp, firestore]
 aliases:
   - real-time pipeline
   - NoSQL pipeline

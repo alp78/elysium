@@ -2,7 +2,7 @@
 type: reference
 category: git
 technology: [git]
-tags: [git, history, log, diff, blame, show, inspection]
+tags: [git]
 aliases: [git log, git diff, git blame, git show, git history, inspect commits, git log graph]
 keywords: [git log, git diff, git blame, git show, oneline, graph, author, since, file history, commit history, diff staged, blame, who changed, inspect commit, show file at commit, bisect, shortlog]
 description: "Commands for viewing and inspecting Git history — git log with filters and graph views, git diff for staged/unstaged changes, git blame for authorship, and git show for individual commits."

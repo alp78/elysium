@@ -2,7 +2,7 @@
 type: concept
 category: orchestration
 technology: [airflow, python]
-tags: [concept, orchestration, airflow, dag, python]
+tags: [orchestration, python, airflow]
 aliases:
   - Apache Airflow
   - Airflow

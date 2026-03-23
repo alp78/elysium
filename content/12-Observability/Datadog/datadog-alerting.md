@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, sql-server, airflow]
-tags: [datadog, alerting, monitoring, data-pipeline, sql-server, airflow]
+tags: [observability, sql, airflow, datadog]
 aliases: [Datadog Monitors, Datadog Alerts, Deadlock Alert, Airflow Monitors]
 keywords: [datadog monitors, alerts, deadlock alert, scheduler down, airflow monitor, metric monitor, change alert, notification, email alert, P1 critical, P2 high, conditional formatting, monitor message, recovery]
 description: "Recommended Datadog monitors for the data platform — deadlock detection on SQL Server, Airflow scheduler health, task failure alerts, and pool starvation warnings."

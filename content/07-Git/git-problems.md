@@ -1,5 +1,5 @@
 ---
-tags: [reference, git, troubleshooting, team-collaboration, security, version-control]
+tags: [git]
 type: reference
 technology: git
 status: stable

@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, performance, execution-plans, query-optimization, cardinality, wait-stats, parameter-sniffing, batch-mode]
+tags: [sql]
 aliases: [query execution plan, estimated plan, actual plan, graphical plan, showplan, query plan]
 keywords: [execution plan, estimated plan, actual plan, SHOWPLAN_XML, STATISTICS XML, right-to-left, bottom-to-top, Index Seek, Index Scan, Key Lookup, Hash Match, Nested Loops, Sort, cardinality estimation, row count estimate, statistics, parameter sniffing, implicit conversion, batch mode, OPTION RECOMPILE, OPTIMIZE FOR UNKNOWN, wait stats in plan, WaitStats, plan cache, Query Store, cost percentage, operator cost, spill, memory grant, CXPACKET, PAGEIOLATCH, PhysicalOp]
 description: "How to read SQL Server execution plans in SSMS: right-to-left data flow, estimated vs actual plans, cost analysis, cardinality estimation errors, per-query wait stats, implicit conversions, parameter sniffing, and batch mode. Includes all programmatic XML queries."

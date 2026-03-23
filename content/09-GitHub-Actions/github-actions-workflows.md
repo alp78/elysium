@@ -2,7 +2,7 @@
 type: concept
 category: engineering-practice
 technology: [git, github-actions, docker]
-tags: [concept, ci-cd, github-actions, automation]
+tags: [ci-cd, docker, github-actions, git]
 aliases: [GitHub Actions, CI/CD pipelines, continuous integration, continuous deployment, GHA]
 keywords: [github actions, ci/cd, workflow, pipeline, matrix testing, deployment, docker build, artifact registry, cloud run, automated testing, pre-commit hooks]
 description: "GitHub Actions CI/CD workflow patterns for data engineering — building Docker images, running tests, deploying to Cloud Run, and managing infrastructure with Terraform."

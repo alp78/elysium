@@ -1,5 +1,5 @@
 ---
-tags: [runbook, sql-server, bigquery, compliance, sev1]
+tags: []
 type: runbook
 severity: sev1
 technology: sql-server, bigquery

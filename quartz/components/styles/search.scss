@@ -85,6 +85,95 @@
         filter: brightness(0.92);
       }
     }
+
+    // ── Help tooltip ──
+    .search-tooltip {
+      position: relative;
+      flex-shrink: 0;
+
+      .search-tooltip-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        font-size: 0.6rem;
+        font-weight: $boldWeight;
+        color: var(--gray);
+        border: 1px solid var(--lightgray);
+        cursor: help;
+        user-select: none;
+        line-height: 1;
+      }
+
+      .search-tooltip-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 100;
+        width: 280px;
+        padding: 0.65rem 0.75rem;
+        background: var(--light);
+        border: 1px solid var(--lightgray);
+        border-radius: 8px;
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.12),
+          0 2px 8px rgba(0, 0, 0, 0.08);
+        font-size: 0.72rem;
+        color: var(--darkgray);
+        line-height: 1.55;
+
+        .search-tooltip-title {
+          font-weight: $boldWeight;
+          font-size: 0.75rem;
+          margin-bottom: 0.4rem;
+          color: var(--dark);
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 0.45rem;
+
+          td {
+            padding: 0.15rem 0;
+            vertical-align: top;
+
+            &:first-child {
+              white-space: nowrap;
+              padding-right: 0.6rem;
+              font-family: var(--codeFont, monospace);
+              font-size: 0.68rem;
+              color: var(--secondary);
+            }
+
+            &:last-child {
+              color: var(--gray);
+            }
+          }
+        }
+
+        code {
+          background: var(--lightgray);
+          padding: 1px 4px;
+          border-radius: 3px;
+          font-size: 0.68rem;
+        }
+
+        .search-tooltip-note {
+          padding-top: 0.35rem;
+          border-top: 1px solid var(--lightgray);
+          color: var(--gray);
+          font-size: 0.68rem;
+        }
+      }
+
+      &:hover .search-tooltip-content {
+        display: block;
+      }
+    }
   }
 
   // ── Active filter chips (shown above results) ───────────────

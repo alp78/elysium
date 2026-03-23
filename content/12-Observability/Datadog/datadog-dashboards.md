@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, sql-server, airflow, gcp, cloud-run]
-tags: [datadog, dashboards, monitoring, data-pipeline, sql-server, airflow]
+tags: [observability, sql, airflow, datadog, gcp]
 aliases: [Pipeline Watch Dashboard, SQL Server DBA Dashboard, Datadog Dashboards, Airflow Dashboard]
 keywords: [datadog dashboard, pipeline watch, SQL server DBA dashboard, screenboard, query value, timeseries, top list, buffer cache hit ratio, page life expectancy, deadlock, connections by login, batch requests, lock waits, buffer pool, Cloud Run metrics, airflow metrics, StatsD, DAG run duration]
 description: "Step-by-step instructions for building the Pipeline Watch and SQL Server DBA dashboards in Datadog, plus the Airflow Orchestration Dashboard — covering all widgets, metrics, and layout tips."

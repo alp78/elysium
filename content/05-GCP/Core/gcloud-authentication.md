@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [concept, gcp, authentication, oauth, adc, security]
+tags: [infrastructure, gcp]
 aliases: [gcloud auth, GCP authentication, Application Default Credentials, ADC, gcloud login]
 keywords: [gcloud auth login, application-default, ADC, OAuth2, service account authentication, key file, workload identity, GOOGLE_APPLICATION_CREDENTIALS, metadata server, gcloud auth list, access token, credential search order]
 description: "How GCP authentication works with gcloud CLI: interactive login, Application Default Credentials (ADC), service account key files, and the credential search order that client libraries follow."

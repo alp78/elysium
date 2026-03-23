@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, gcp]
+tags: [csharp]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 keywords: [Google.Cloud.BigQuery, Google.Cloud.Storage, Google.Cloud.PubSub, service account, GCP, dotnet GCP]
 description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [[15_GCP]] for the Python equivalent."

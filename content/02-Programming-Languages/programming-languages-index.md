@@ -2,7 +2,7 @@
 type: index
 category: programming-languages
 technology: [python, csharp, dotnet, pandas, polars]
-tags: [index, programming-languages, python, csharp, dotnet, pandas, polars]
+tags: [python, csharp, pandas, polars]
 aliases: [Programming Languages Index, Language Reference, Python Reference, C# Reference]
 keywords: [programming languages, python, csharp, c sharp, dotnet, pandas, polars, dataframe, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
 description: "Index for the Programming Languages section — paired Python and C# references covering 16 topics from basics to design patterns, plus a 10-part Pandas vs Polars series, each with executable examples and cell outputs."

@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [terraform, gcp, compute, gce, virtual-machine, startup-script, cos, ubuntu]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform GCE, terraform VM, google_compute_instance, Container-Optimized OS, COS, startup script terraform]
 keywords: [google_compute_instance, GCE, virtual machine, startup script, machine type, e2-medium, pd-ssd, pd-balanced, Container-Optimized OS, COS, Ubuntu, OS Login, Shielded VM, boot disk, network interface, service account, ephemeral IP, no public IP]
 description: "Terraform configuration for GCE virtual machine instances: the Airflow VM (Container-Optimized OS, ephemeral public IP) and the SQL Server VM (Ubuntu, SSD, no public IP), with startup scripts, shielded instance config, and OS Login."

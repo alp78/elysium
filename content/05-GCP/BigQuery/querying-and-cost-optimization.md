@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, bigquery]
-tags: [concept, gcp, bigquery, cost-optimization, sql]
+tags: [performance, cost, infrastructure, bigquery, gcp]
 aliases: [BigQuery cost optimization, bq query, BigQuery dry run, BigQuery caching, BigQuery SELECT star cost, BQ cost]
 keywords: [bigquery, bq query, cost optimization, dry run, --dry_run, bytes processed, TB scanned, partitioning, clustering, SELECT star, columnar, parameterized query, destination table, materialized view, INFORMATION_SCHEMA, JOBS, standard SQL, legacy SQL, allow_large_results, caching]
 description: "How to run BigQuery queries efficiently using the bq CLI — including dry runs for cost estimation, parameterized queries for caching, destination tables, and the 80/20 cost optimization practices."

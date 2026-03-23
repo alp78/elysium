@@ -1,5 +1,5 @@
 ---
-tags: [reference, dbt]
+tags: [pipeline, sql, dbt]
 type: reference
 technology: [dbt, sql-server]
 status: stable

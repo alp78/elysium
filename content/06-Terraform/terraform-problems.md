@@ -1,5 +1,5 @@
 ---
-tags: [reference, terraform, troubleshooting, infrastructure, state-management, team-collaboration]
+tags: [infrastructure, terraform]
 type: reference
 technology: terraform
 status: stable

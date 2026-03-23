@@ -2,7 +2,7 @@
 type: index
 category: github-actions
 technology: [github-actions, gcp, docker, terraform, dbt]
-tags: [index, github-actions, ci-cd, automation, pipelines]
+tags: [ci-cd, terraform, docker, dbt, gcp, github-actions]
 aliases: [GitHub Actions Index, CI/CD Index, GitHub Actions Section]
 keywords: [github actions, ci/cd, workflows, automation, matrix builds, reusable workflows, deployment, cloud run, wif, workload identity, dbt, secrets, caching, runners, triggers]
 description: "Index for the GitHub Actions section — workflow anatomy, CI/CD patterns, data engineering pipelines, deployment automation, and real-world workflow examples."

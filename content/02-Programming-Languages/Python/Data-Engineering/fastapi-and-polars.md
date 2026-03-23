@@ -2,7 +2,7 @@
 type: concept
 category: python-ecosystem
 technology: [python, fastapi, polars, pydantic, cloud-run]
-tags: [python, fastapi, polars, pydantic, data-pipelines, api, performance, concept]
+tags: [pipeline, api, python, polars]
 aliases: [FastAPI data API, Polars DataFrame, modern Python data engineering, Starlette ASGI, pandas alternative]
 keywords: [fastapi, polars, pydantic, ASGI, WSGI, async, dataframe, lazy evaluation, streaming, pandas alternative, cloud run, dependency injection, lifespan, uvicorn, rolling mean, window functions, group-by, financial data, OHLCV, schema drift, data validation]
 description: "FastAPI and Polars represent the modern Python ecosystem for data engineering: FastAPI replaces Flask for high-performance async data APIs with Pydantic validation, while Polars replaces pandas for production pipeline processing at 5-10x speed with lazy evaluation and streaming."

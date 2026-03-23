@@ -8,14 +8,7 @@ technology:
   - airflow
   - cloud-run
   - terraform
-tags:
-  - reference
-  - gcp
-  - cost-management
-  - tco
-  - total-cost-of-ownership
-  - budget-planning
-  - infrastructure-cost
+tags: [cost, infrastructure, sql, terraform, airflow, bigquery, gcp]
 aliases:
   - TCO
   - total cost of ownership

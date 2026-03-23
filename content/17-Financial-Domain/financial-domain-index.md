@@ -2,7 +2,7 @@
 type: index
 category: financial-domain
 technology: [yfinance, sql-server, python]
-tags: [index, financial-domain, reference]
+tags: [python, sql, financial]
 aliases: [Financial Domain, Finance Section, Financial Knowledge Base]
 keywords: [financial domain, metrics, scoring, encyclopedia, market analysis, index maintenance, corporate actions, valuation, trading, payments, banking, insurance]
 description: "Central index for all financial domain knowledge including dashboard metrics, scoring methodology, market analysis indicators, corporate actions, and a comprehensive financial terms encyclopedia."

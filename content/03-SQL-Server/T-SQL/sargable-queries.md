@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, t-sql, performance, indexes, sargable, query-optimization]
+tags: [sql]
 aliases: [SARGable, search argument, index seek, non-sargable, predicate]
 keywords: [SARGable, search argument, index seek, index scan, predicate, WHERE clause, YEAR function, CAST, CONVERT, LEFT, LIKE, functions on columns, implicit conversion, computed column, query optimization, execution plan, scan vs seek]
 description: "SARGable query patterns that enable SQL Server index seeks vs non-SARGable patterns that force full scans. Includes a complete reference table and fix strategies."

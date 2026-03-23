@@ -9,13 +9,7 @@ technology:
   - terraform
   - dbt
   - docker
-tags:
-  - reference
-  - github-actions
-  - data-engineering
-  - ci-cd
-  - pipeline-deployment
-  - data-quality
+tags: [ci-cd, python, terraform, docker, dbt, gcp, github-actions]
 aliases:
   - data pipeline CI/CD
   - dbt CI

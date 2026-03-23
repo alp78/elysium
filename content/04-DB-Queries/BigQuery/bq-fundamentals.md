@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [bigquery, gcp]
-tags: [reference, db-queries, bigquery, gcp, sql, fundamentals, standard-sql]
+tags: [sql, bigquery, gcp]
 aliases: [BigQuery fundamentals, BigQuery SQL, Standard SQL, BQ queries, BigQuery basics]
 keywords: [bigquery, standard sql, select, join, aggregation, array, struct, unnest, date functions, string functions, cast, safe_cast, ifnull, coalesce, countif, any_value, except, replace]
 description: "BigQuery Standard SQL fundamentals with executable examples and cell outputs — covers querying, data types, arrays, structs, UNNEST, and BigQuery-specific functions."

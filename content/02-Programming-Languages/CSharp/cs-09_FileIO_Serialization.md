@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, file-io]
+tags: [csharp]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 keywords: [File, StreamReader, StreamWriter, JsonSerializer, System.Text.Json, Newtonsoft, CsvHelper, Path, Directory]
 description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [[09_FileIO_Serialization]] for the Python equivalent."

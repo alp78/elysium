@@ -2,7 +2,7 @@
 type: index
 category: terraform
 technology: [terraform, gcp]
-tags: [index, terraform, iac, gcp, infrastructure-as-code]
+tags: [infrastructure, terraform, gcp]
 aliases: [Terraform section, Terraform index, IaC section]
 keywords: [terraform, infrastructure as code, IaC, HCL, hashicorp, gcp terraform, terraform guide, terraform reference, declarative infrastructure]
 description: "Central index for all Terraform notes covering HCL fundamentals, GCP resource provisioning, state management, and infrastructure patterns used in data engineering."

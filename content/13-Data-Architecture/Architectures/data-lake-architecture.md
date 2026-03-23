@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [gcp, python, bigquery]
-tags: [concept, data-architecture, data-lake, object-storage, zones, gcs, cloud-storage, governance, data-quality]
+tags: [architecture, python, bigquery, gcp]
 aliases: [data lake, data swamp, landing zone, raw zone, curated zone, GCS data lake, S3 data lake, ADLS data lake, bronze zone, silver zone, gold zone, schema-on-read, Hive-style partitioning, object storage lake, cloud data lake]
 keywords: [data lake, data swamp, schema-on-read, schema-on-write, object storage, landing zone, raw zone, cleansed zone, curated zone, zones, GCS, S3, ADLS, Azure Data Lake Storage, cloud storage, Hive partitioning, Hive-style, partition discovery, Parquet, Avro, ORC, CSV, JSON, file format, data catalog, data lineage, data governance, PII, access control, lifecycle policy, storage class, BigQuery external tables, Dataproc, ETL, ELT, medallion architecture, data lakehouse, Apache Iceberg, Delta Lake, open table formats, cost optimization, retention policy, naming convention, file organization, compaction, small files problem]
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."

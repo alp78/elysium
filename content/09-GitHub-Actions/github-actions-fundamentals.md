@@ -5,14 +5,7 @@ technology:
   - github
   - github-actions
   - yaml
-tags:
-  - reference
-  - github-actions
-  - ci-cd
-  - workflows
-  - triggers
-  - runners
-  - secrets
+tags: [ci-cd, github-actions]
 aliases:
   - GitHub Actions
   - workflows

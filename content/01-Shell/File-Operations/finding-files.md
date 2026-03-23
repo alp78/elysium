@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [concept, foundations, bash, filesystem, linux]
+tags: [shell, bash]
 aliases: [find, fd, locate, file search, find command, xargs]
 keywords: [find, fd, locate, xargs, file search, recursive search, find by name, find by size, find by time, mtime, mmin, find and delete, empty directories, parallel processing, Get-ChildItem, Where-Object, find large files]
 description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and PowerShell equivalents."

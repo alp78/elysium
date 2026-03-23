@@ -2,7 +2,7 @@
 type: concept
 category: infrastructure
 technology: [terraform, gcp]
-tags: [terraform, infrastructure-as-code, variables, outputs, configuration]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform variables, tfvars, terraform outputs, HCL variables, input variables]
 keywords: [terraform, variables, outputs, tfvars, terraform.tfvars, variable types, sensitive, default, locals, TF_VAR, output values, terraform output command]
 description: "How to define and use Terraform input variables (variables.tf) and output values (outputs.tf), including sensitive variables, defaults, and the locals vs variables distinction."

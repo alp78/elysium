@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, functions]
+tags: [csharp]
 aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
 keywords: [method, delegate, Func, Action, lambda, closure, extension method, IEnumerable, yield, nullable]
 description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and iterators. See [[04_Functions]] for the Python equivalent."

@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, bigquery]
-tags: [concept, gcp, bigquery, data-modeling]
+tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery datasets, BigQuery tables, bq ls, bq show, bq mk, BQ schema, BigQuery table management]
 keywords: [bigquery, bq, dataset, table, schema, metadata, bq ls, bq show, bq mk, bq rm, create table, delete table, partitioning, clustering, time partitioning, location, EU, US, data residency, view, materialized view]
 description: "How to list, inspect, create, and delete BigQuery datasets and tables using the bq CLI — including schemas, metadata, partitioning, and clustering configuration."

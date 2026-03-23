@@ -2,7 +2,7 @@
 type: how-to
 category: python
 technology: [python, sql-server]
-tags: [how-to, python, sql-server, pyodbc, sqlalchemy, database]
+tags: [pipeline, python, sql]
 aliases: [pyodbc connection, SQLAlchemy SQL Server, connection pooling, python database, pyodbc connect, create_engine, read_sql, to_sql, ODBC driver, python SQL Server]
 keywords: [pyodbc, sqlalchemy, connection string, sql server, mssql, odbc driver 18, TrustServerCertificate, connection pooling, pool_size, max_overflow, pool_recycle, pandas read_sql, to_sql, create_engine, quote_plus, fast_executemany, context manager, database driver]
 description: "Python database connection patterns for SQL Server — pyodbc direct connections, SQLAlchemy with connection pooling, pandas read_sql/to_sql, environment variable secrets, and connection troubleshooting."

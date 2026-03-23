@@ -2,7 +2,7 @@
 type: reference
 category: sql-server
 technology: [sql-server]
-tags: [reference, sql-server, dba, dmv, monitoring, diagnostics]
+tags: [sql]
 aliases: [DBA queries, SQL Server diagnostics, DMV queries, sys.dm_exec_sessions, sys.dm_exec_requests]
 keywords: [DBA queries, DMV, dynamic management views, server version, database size, active connections, running queries, blocking chains, kill session, wait stats, page life expectancy, sys.dm_exec_sessions, sys.dm_exec_requests, sys.dm_os_wait_stats]
 description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, and wait statistics."

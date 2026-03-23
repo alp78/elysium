@@ -2,7 +2,7 @@
 type: concept
 category: performance
 technology: [sql-server]
-tags: [sql-server, performance, query-plans, execution-plans, query-store, parameter-sniffing, cardinality-estimation]
+tags: [performance, sql]
 aliases: [execution plans, query plans, parameter sniffing, cardinality estimation, plan cache, Query Store, SARGability, SHOWPLAN, key lookup, index seek, index scan, table scan]
 keywords: [execution plan, query plan, SSMS, estimated rows, actual rows, cardinality estimation, parameter sniffing, plan cache, Query Store, index seek, index scan, table scan, key lookup, nested loops, hash match, merge join, STATISTICS XML, SET STATISTICS TIME, SET STATISTICS IO, logical reads, plan regression, force plan, sp_query_store_force_plan, implicit conversion, plan reuse, OPTION RECOMPILE]
 description: "How to read, capture, and analyze SQL Server execution plans to identify performance problems — covers plan operators, cardinality estimation errors, parameter sniffing, Query Store setup, and plan forcing to fix regressions."

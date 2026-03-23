@@ -6,17 +6,7 @@ technology:
   - fastapi
   - bash
   - gcp
-tags:
-  - reference
-  - data-architecture
-  - api
-  - rest
-  - http
-  - json
-  - pagination
-  - rate-limiting
-  - authentication
-  - openapi
+tags: [architecture, api, python, bash, gcp]
 aliases:
   - REST API
   - RESTful

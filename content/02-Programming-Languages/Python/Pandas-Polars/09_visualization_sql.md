@@ -1,20 +1,21 @@
 ---
 type: reference
 category: programming-languages
-technology: [python, pandas, polars, matplotlib, seaborn, duckdb]
-tags: [reference, programming-languages, python, pandas, polars, visualization, sql, plotting, duckdb]
-aliases: [Pandas Polars Visualization SQL, matplotlib plots, seaborn, SQLContext, DuckDB]
-keywords: [pandas, polars, matplotlib, seaborn, plot, line, bar, histogram, scatter, SQLContext, sql, duckdb, visualization, chart]
-description: "Pandas vs Polars visualization and SQL — built-in plots, matplotlib/seaborn integration, Polars SQLContext, DuckDB integration for SQL queries on DataFrames."
+technology: [python, pandas, polars]
+tags: [pipeline, python, pandas, polars]
+aliases: [matplotlib, seaborn, SQL interface, DuckDB]
+keywords: [matplotlib, seaborn, plot, SQLContext, DuckDB, register, sql, chart, histogram]
+description: "Pandas vs Polars reference 09/10 — Visualization & SQL (matplotlib, seaborn, SQLContext, DuckDB). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[08_types_interop]]"
   - "[[10_project_testing_migration]]"
-  - "[[database-connections]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete
 ---
+
 # 09 — Visualization & SQL Interface
 
 Plotting and SQL queries against DataFrames.

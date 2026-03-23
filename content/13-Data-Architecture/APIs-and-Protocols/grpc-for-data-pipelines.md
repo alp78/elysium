@@ -5,14 +5,7 @@ technology:
   - python
   - grpc
   - protobuf
-tags:
-  - reference
-  - data-architecture
-  - grpc
-  - protobuf
-  - rpc
-  - streaming
-  - service-mesh
+tags: [architecture, pipeline, api, python]
 aliases:
   - gRPC
   - Protocol Buffers

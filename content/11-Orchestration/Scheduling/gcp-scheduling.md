@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [gcp, python]
-tags: [reference, orchestration, scheduling, gcp, cloud-scheduler, cloud-functions, cloud-run, pub-sub, workflows]
+tags: [orchestration, python, gcp]
 aliases: [Cloud Scheduler, Cloud Tasks, Cloud Workflows, Cloud Functions trigger, GCP scheduling, serverless scheduling, cron GCP, GCP cron, managed cron GCP, cloud scheduler http target, cloud scheduler pubsub]
 keywords: [cloud scheduler, cloud tasks, cloud workflows, gcloud scheduler, cron, managed cron, serverless scheduling, cloud run schedule, cloud functions trigger, pub/sub trigger, eventarc, task queue, rate limiting, retry backoff, workflow orchestration, YAML workflow, parallel branches, subworkflows, connectors, gcloud scheduler jobs create, gcloud scheduler jobs run, gcloud scheduler jobs pause, gcloud scheduler jobs resume, gcloud workflows run, gcloud tasks queues create, invoker role, scheduler service account, cost comparison, decision matrix, data pipeline schedule]
 description: "Exhaustive reference for all GCP scheduling and workflow services — Cloud Scheduler (managed cron), Cloud Tasks (task queues), Cloud Workflows (serverless orchestration), and patterns for triggering Cloud Run jobs and Cloud Functions on a schedule."

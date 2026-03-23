@@ -2,7 +2,7 @@
 type: concept
 category: docker
 technology: [docker]
-tags: [concept, docker, containers, docker-compose]
+tags: [docker]
 aliases: [Docker Compose, docker compose, docker-compose, compose, multi-container, compose file, docker-compose.yaml, docker-compose.yml]
 keywords: [docker compose, up, down, build, restart, logs, pull, prune, multi-container, orchestration, services, volumes, detached, scale, exec, run, config, healthcheck, depends_on, networks, env_file, bind mount, named volume, override, force-recreate, rolling update, docker system prune, compose lifecycle, service restart]
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."

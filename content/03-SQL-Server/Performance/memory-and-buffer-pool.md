@@ -2,7 +2,7 @@
 type: concept
 category: performance
 technology: [sql-server]
-tags: [sql-server, performance, memory, buffer-pool, monitoring]
+tags: [performance, sql]
 aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS]
 keywords: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, max server memory, memory clerks, MEMORYCLERK_SQLBUFFERPOOL, RESOURCE_SEMAPHORE, memory grant, pending memory grant, sys.dm_os_sys_memory, sys.dm_os_memory_clerks, sys.dm_os_buffer_descriptors, memory pressure, SQL Server memory, GCP VM memory sizing]
 description: "How SQL Server's buffer pool manages data pages in RAM, how to measure memory pressure using Page Life Expectancy and buffer cache hit ratio, and how to configure max server memory correctly on GCP Compute Engine VMs."

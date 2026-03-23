@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [terraform, gcp, iam, service-accounts, secret-manager, security, least-privilege]
+tags: [security, infrastructure, terraform, gcp]
 aliases: [terraform IAM, terraform service accounts, terraform Secret Manager, GCP IAM bindings terraform, google_service_account]
 keywords: [google_service_account, google_project_iam_member, google_secret_manager_secret, IAM bindings, service account, least privilege, secret manager, secret version, roles, secretAccessor, run.invoker, artifactregistry.writer, conditional resources, Datadog, count]
 description: "Terraform configuration for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. Covers the least-privilege pattern with one service account per workload, resource-level vs project-level bindings, and conditional Datadog resources."

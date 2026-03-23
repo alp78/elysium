@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [how-to, git, version-control, workflow]
+tags: [git]
 aliases: [git workflow, git status, git add, git commit, git push, git pull, conventional commits, git diff, git fetch, feature branch workflow, daily git]
 keywords: [git, status, add, commit, push, pull, rebase, diff, stage, conventional commits, feat, fix, refactor, daily workflow, version control, git add -p, interactive staging, git push -u, upstream tracking, git fetch, git pull --rebase, amend commit, unstage, git status -s, short status, git diff --staged, feature branch, squash merge, gh pr create, GitHub CLI]
 description: "The complete daily Git workflow for data engineering teams — from checking status through staging, committing, pushing, and pulling, plus the full feature branch workflow, conventional commit conventions, team rules, and a decision tree for when things go wrong."

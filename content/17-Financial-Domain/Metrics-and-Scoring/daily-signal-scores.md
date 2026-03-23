@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server, python]
-tags: [reference, financial-domain, metrics, signals, daily, scoring, z-score]
+tags: [python, sql, financial]
 aliases: [Daily Signals, Daily Scores, Momentum Score, Value Score, Sentiment Score, Divergence Alerts]
 keywords: [daily signals, momentum score, relative strength, SMA-50, SMA-200, 52-week high, divergence alert, relative value score, forward P/E, price-to-book, EV/EBITDA, dividend yield, sentiment score, analyst target, recommendation, z-score, cross-sectional, contrarian]
 description: "Daily cross-sectional z-score signals computed across index constituents: momentum score, divergence alerts, relative value score, and sentiment score with component breakdowns and interpretation."

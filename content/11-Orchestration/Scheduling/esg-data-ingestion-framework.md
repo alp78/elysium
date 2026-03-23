@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [airflow, gcp, cloud-run, terraform, python]
-tags: [reference, orchestration, esg, data-ingestion, circuit-breaker, vendor-normalization, airflow-dag, cloud-run, terraform, service-accounts, carbon-footprint, sfdr]
+tags: [orchestration, python, terraform, airflow, gcp, esg]
 aliases: [ESG ingestion, vendor normalization, circuit breaker, data quality gate, score normalization, MSCI normalization, Sustainalytics normalization, carbon footprint, WACI, SFDR, EU Taxonomy, data vendor, feed ingestion, ESG pipeline]
 keywords: [esg, environmental social governance, vendor normalization, score normalization, msci, sustainalytics, iss esg, bloomberg esg, circuit breaker, anomaly detection, data quality gate, carbon intensity, weighted average carbon intensity, WACI, SFDR, EU Taxonomy, airflow dag, cloud run job, service account segregation, read write separation, data vendor sla, freshness tracking, forward fill, coverage check, pipeline halt]
 description: "ESG data ingestion framework for index providers — covers multi-vendor score normalization (MSCI, Sustainalytics, ISS), circuit breaker patterns for anomaly detection, carbon footprint calculation (WACI/SFDR), and Terraform IAM for segregated read/write service accounts."

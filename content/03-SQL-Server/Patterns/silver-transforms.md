@@ -2,7 +2,7 @@
 type: how-to
 category: data-engineering
 technology: [sql-server, python]
-tags: [sql-server, python, etl, silver, medallion, scd-type-2, deduplication, gap-filling, upsert, how-to]
+tags: [python, sql]
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
 keywords: [silver layer, medallion architecture, SCD Type 2, slowly changing dimensions, deduplication, gap fill, forward fill, is_filled, trading calendar, upsert, unique index, filtered index, valid_from, valid_to, is_current, OHLCV transform, signals daily, signals quarterly, index_dim SCD2, upserting, insert or update, parameterized queries, silver schema]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."

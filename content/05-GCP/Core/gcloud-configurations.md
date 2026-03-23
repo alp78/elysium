@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [concept, gcp, configuration, multi-project, workflow]
+tags: [infrastructure, gcp]
 aliases: [gcloud config, gcloud configurations, GCP project switching, named configurations]
 keywords: [gcloud config configurations, gcloud config set, project switching, named configurations, multi-project, dev staging production, gcloud config list, activate configuration, environment safety, production protection]
 description: "How to use gcloud named configurations to safely manage multiple GCP projects (dev, staging, production) and switch between them without error-prone manual config changes."

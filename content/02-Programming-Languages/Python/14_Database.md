@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, database]
+tags: [python]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [pyodbc, SQLAlchemy, sqlite3, connection string, ORM, query, transaction, pandas, read_sql]
 description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [[cs-14_Database]] for the C# equivalent."

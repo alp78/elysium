@@ -2,7 +2,7 @@
 type: index
 category: data-architecture
 technology: [python, sql-server, airflow, datadog, gcp]
-tags: [index, data-architecture, moc]
+tags: [architecture, pipeline, python, sql, airflow, datadog, gcp]
 aliases: [Data Pipeline Lifecycle MOC, Pipeline Lifecycle, data pipeline overview]
 keywords: [data pipeline, lifecycle, ingestion, transformation, orchestration, monitoring, end to end, medallion, bronze, silver, gold]
 description: "Map of Content tracing a data pipeline from ingestion through transformation, loading, orchestration, and monitoring — linking all relevant vault notes along the way."

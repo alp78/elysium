@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, banking, lending, reference, encyclopedia]
+tags: [financial]
 aliases: [banking terms, lending terms, retail banking glossary, commercial banking glossary]
 keywords: [commercial banking, retail banking, wholesale banking, consumer finance, mortgage, leasing, credit cards, digital banking, bancassurance, bank holding company, credit union, non-bank lender, margin lending, factoring, working capital, transaction banking, treasury services]
 description: "Encyclopedia definitions for banking and lending terms drawn from the example Index universe, covering commercial banking, retail banking, wholesale banking, consumer finance, mortgages, leasing, and related concepts."

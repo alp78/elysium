@@ -4,18 +4,7 @@ category: data-modeling
 technology:
   - sql-server
   - bigquery
-tags:
-  - concept
-  - data-modeling
-  - dimensional-modeling
-  - star-schema
-  - snowflake-schema
-  - kimball
-  - fact-table
-  - dimension-table
-  - SCD
-  - grain
-  - bus-matrix
+tags: [architecture, data-modeling, sql, bigquery]
 aliases:
   - dimensional modeling
   - Kimball methodology

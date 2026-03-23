@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [sql-server, t-sql]
-tags: [reference, db-queries, sql-server, t-sql, engineering, performance, indexing, transactions, error-handling]
+tags: [sql]
 aliases: [SQL engineering, SQL performance, transactions, error handling, indexing, temp tables, table variables, dynamic SQL, stored procedures]
 keywords: [transactions, error handling, try catch, temp tables, table variables, dynamic sql, stored procedures, user defined functions, indexing, query hints, set statistics, execution plan, deadlock, isolation level, snapshot]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."

@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git]
-tags: [git, recovery, undo, reflog, reset, revert, stash, version-control]
+tags: [git]
 aliases: [git reset, git revert, git reflog, git stash, undo commit, recover lost commit, git undo]
 keywords: [git reset, git revert, git reflog, git restore, git stash, reset --soft, reset --hard, reset --mixed, HEAD~1, reflog, recover, undo, cherry-pick, lost commit, detached HEAD, branch deleted, merge conflict abort]
 description: "Complete guide to undoing changes in Git — safe methods (restore, revert) and destructive methods (reset --hard), using reflog to recover lost commits, and stash for temporary shelving."

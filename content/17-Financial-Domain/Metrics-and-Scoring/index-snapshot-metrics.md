@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
-tags: [reference, financial-domain, metrics, dashboard]
+tags: [sql, financial]
 aliases: [Index Snapshot, Index Aggregates, Dashboard Snapshot]
 keywords: [index snapshot, YTD return, 30d return, 90d return, volatility, P/E ratio, P/B ratio, dividend yield, cap-weighted, return interpretation, trend reversal]
 description: "Cap-weighted index-level aggregate metrics displayed in the financial data platform dashboard snapshot panel, including return periods, volatility, and valuation ratios."

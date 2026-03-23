@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [sql-server]
-tags: [reference, cheat-sheet, sql-server, t-sql]
+tags: [sql]
 aliases: [SQL Server cheat sheet, T-SQL quick reference, sqlcmd cheat sheet]
 keywords: [sql server, cheat sheet, quick reference, sqlcmd, bcp, backup, restore, performance, blocking, deadlock, index, wait stats, memory, security, concurrency, dbcc]
 description: "Exhaustive SQL Server CLI and T-SQL reference — sqlcmd, bcp, server info, space/size, active sessions, wait stats, memory, indexes, backup/restore, configuration, security, concurrency, and DBCC commands."

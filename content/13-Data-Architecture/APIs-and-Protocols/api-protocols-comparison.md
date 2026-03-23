@@ -4,20 +4,7 @@ category: data-architecture
 technology:
   - python
   - gcp
-tags:
-  - reference
-  - data-architecture
-  - api
-  - protocols
-  - rest
-  - grpc
-  - graphql
-  - websocket
-  - webhook
-  - mqtt
-  - amqp
-  - sse
-  - comparison
+tags: [architecture, api, python, gcp]
 aliases:
   - API comparison
   - protocol comparison

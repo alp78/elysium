@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, web-apis]
+tags: [api, csharp]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
 keywords: [HttpClient, ASP.NET, minimal API, controller, middleware, routing, authentication, Swagger, IHttpClientFactory]
 description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [[13_WebAPIs]] for the Python equivalent."

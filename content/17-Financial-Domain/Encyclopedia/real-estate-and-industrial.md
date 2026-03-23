@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, real-estate, industrial, logistics, supply-chain, manufacturing, reference, encyclopedia]
+tags: [financial]
 aliases: [real estate terms, industrial terms, logistics glossary, supply chain glossary, procurement glossary, OEM glossary, MRO glossary, aftermarket glossary, concessions glossary, fleet management glossary]
 keywords: [real estate, real estate investment, property development, concessions, fleet management, logistics, supply chain, procurement, OEM, original equipment manufacturer, aftermarket, MRO, maintenance repair overhaul, distributors, resellers, warehouse, distribution, toll road, motorway, airport concession, leasing fleet, telematics, GPS tracking, value-added reseller, VAR]
 description: "Encyclopedia definitions for real estate, concessions, fleet management, logistics, supply chain, procurement, OEM, aftermarket, MRO, distributors, and resellers terms from the example Index universe, covering industrial operations and physical asset management."

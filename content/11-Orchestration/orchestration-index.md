@@ -2,7 +2,7 @@
 type: index
 category: orchestration
 technology: [airflow, python, gcp, linux, powershell]
-tags: [index, orchestration, scheduling, airflow]
+tags: [orchestration, python, airflow, gcp]
 aliases: [Orchestration Index, Scheduling Index, Airflow Index, Pipeline Scheduling]
 keywords: [orchestration, airflow, cron, scheduling, DAGs, automation, task scheduler, cloud scheduler, cloud composer, systemd timer, pipeline automation, workflow, data pipeline scheduling]
 description: "Index for the Orchestration section — task scheduling on Linux (cron, systemd timers), Windows (Task Scheduler), and GCP (Cloud Scheduler, Workflows), plus comprehensive Apache Airflow coverage."

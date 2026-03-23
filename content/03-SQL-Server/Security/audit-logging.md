@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server, gcp, linux]
-tags: [how-to, sql-server, security, audit, compliance, gcp, cloud-logging]
+tags: [sql, gcp]
 aliases: [SQL Server Audit, audit logging, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection, compliance logging]
 keywords: [SQL Server Audit, server audit, audit specification, database audit specification, CREATE SERVER AUDIT, CREATE SERVER AUDIT SPECIFICATION, CREATE DATABASE AUDIT SPECIFICATION, sys.fn_get_audit_file, LGIF, LGIS, FAILED_LOGIN_GROUP, SUCCESSFUL_LOGIN_GROUP, DATABASE_PERMISSION_CHANGE_GROUP, SERVER_ROLE_MEMBER_CHANGE_GROUP, brute force detection, credential stuffing, GCP Ops Agent, Cloud Logging, Cloud Monitoring, BigQuery sink, quarterly security review, orphaned users, audit file, sqlaudit, compliance, IOSCO, ESMA, GDPR]
 description: "Step-by-step guide to setting up SQL Server Audit on Linux for compliance and threat detection: server audit target, server and database audit specifications, querying audit logs, detecting brute-force attacks, forwarding to GCP Cloud Logging and BigQuery, and running a quarterly security review."

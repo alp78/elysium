@@ -35,7 +35,7 @@ export default ((_userOpts?: Record<string, unknown>) => {
             type="text"
             spellcheck={false}
             aria-label="Search notes"
-            placeholder='Search… (use OR, "phrase", -exclude, #tag)'
+            placeholder="Search…"
           />
           <button
             class="search-mode-toggle"
@@ -46,6 +46,23 @@ export default ((_userOpts?: Record<string, unknown>) => {
           >
             AND
           </button>
+          <div class="search-tooltip">
+            <span class="search-tooltip-icon">?</span>
+            <div class="search-tooltip-content">
+              <div class="search-tooltip-title">Search syntax</div>
+              <table>
+                <tr><td><code>python datetime</code></td><td>Both words on same line (AND)</td></tr>
+                <tr><td><code>"exact phrase"</code></td><td>Exact phrase match</td></tr>
+                <tr><td><code>-exclude</code></td><td>Exclude a term</td></tr>
+                <tr><td><code>#tag</code></td><td>Filter by tag</td></tr>
+                <tr><td><code>path:folder</code></td><td>Filter by path</td></tr>
+              </table>
+              <div class="search-tooltip-note">
+                Use the <strong>AND/OR</strong> toggle to switch between
+                all-terms-on-same-line or any-term matching.
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Active filter chips (populated by JS) ── */}

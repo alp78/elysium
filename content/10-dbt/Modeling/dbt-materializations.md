@@ -1,5 +1,5 @@
 ---
-tags: [concept, dbt]
+tags: [pipeline, dbt]
 type: concept
 technology: [dbt]
 status: stable

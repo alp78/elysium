@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, technology, digital-transformation, cloud, SaaS, IoT, AI, cybersecurity, reference, encyclopedia]
+tags: [financial, technology]
 aliases: [technology terms, digital glossary, cloud computing glossary, SaaS glossary, fintech glossary]
 keywords: [cloud computing, IaaS, PaaS, SaaS, IoT, internet of things, AI, machine learning, cybersecurity, digital transformation, hybrid cloud, fintech, ERP, enterprise resource planning, B2B, B2C, e-commerce, omnichannel, platform business model, subscription model]
 description: "Encyclopedia definitions for technology and digital terms covering cloud computing, IaaS, PaaS, SaaS, IoT, AI/ML, cybersecurity, digital transformation, and fintech drawn from the example Index universe."

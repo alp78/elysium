@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, oop]
+tags: [python]
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 keywords: [class, inheritance, polymorphism, encapsulation, property, dunder, dataclass, ABC, abstractmethod, super]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [[cs-06_OOP]] for the C# equivalent."

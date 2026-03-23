@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, database]
+tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [Entity Framework, Dapper, SqlConnection, DbContext, LINQ to SQL, migrations, connection string, ORM]
 description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [[14_Database]] for the Python equivalent."

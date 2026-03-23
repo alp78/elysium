@@ -2,7 +2,7 @@
 type: reference
 category: sql-server
 technology: [sql-server]
-tags: [reference, sql-server, troubleshooting, performance, flowchart, blocking, deadlock, disk-full, indexing]
+tags: [sql]
 aliases: [SQL Server troubleshooting, why is it slow, pipeline failed, disk space emergency, should I add an index, decision tree, troubleshooting guide]
 keywords: [troubleshooting, flowchart, PAGEIOLATCH, WRITELOG, LCK_M, blocking, deadlock, disk full, slow query, pipeline failed, index decision, CXPACKET, SOS_SCHEDULER_YIELD, MEMORY_ALLOCATION_EXT, buffer pool, pd-standard, pd-ssd, mdf full, ldf full, SHRINKFILE, BACKUP LOG, connection refused, login failed, constraint violation, wait stats, dm_os_wait_stats]
 description: "Visual troubleshooting flowcharts for SQL Server: diagnosing slowness via wait stats, pipeline failure root cause analysis, the index decision tree, and disk space emergency recovery steps."

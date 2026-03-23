@@ -1,5 +1,5 @@
 ---
-tags: [troubleshooting, dbt]
+tags: [pipeline, dbt]
 type: troubleshooting
 technology: [dbt]
 status: stable

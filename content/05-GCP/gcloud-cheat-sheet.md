@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [gcp, gcloud]
-tags: [reference, cheat-sheet, gcp, gcloud]
+tags: [infrastructure, gcp]
 aliases: [gcloud cheat sheet, gcloud quick reference, GCP CLI cheat sheet]
 keywords: [gcloud, cheat sheet, quick reference, compute, bigquery, cloud run, storage, iam, pubsub, logging, gcp commands, bq, gsutil, gcloud storage, secret manager, firestore, scheduler, cloud run jobs]
 description: "Exhaustive CLI reference for gcloud, bq, and gcloud storage — the one page a senior Data Engineer bookmarks for all GCP command-line work."

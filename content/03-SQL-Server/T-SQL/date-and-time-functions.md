@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server, python, csharp]
-tags: [concept, sql-server, t-sql, dates, datetime, timezone, DST, ISO-8601, pipeline-patterns]
+tags: [python, csharp, sql]
 aliases: [SQL Server date functions, datetime types, DATETIMEOFFSET, DATETIME2, DATEADD, DATEDIFF, EOMONTH, DATETRUNC, AT TIME ZONE, ISO 8601, date arithmetic]
 keywords: [date, datetime, DATETIME2, DATETIMEOFFSET, DATE, SMALLDATETIME, DATEADD, DATEDIFF, DATEDIFF_BIG, EOMONTH, DATETRUNC, DATEFROMPARTS, DATETIME2FROMPARTS, FORMAT, CONVERT, GETDATE, GETUTCDATE, SYSUTCDATETIME, SYSDATETIMEOFFSET, ISO 8601, UTC, timezone, AT TIME ZONE, DST daylight saving, trade_date, naive datetime, aware datetime, dateutil, relativedelta, ZoneInfo, DateTimeOffset, DateOnly, pipeline date patterns]
 description: "Complete reference for date and time handling in SQL Server T-SQL, Python, and C# — covering ISO 8601 formats, data type selection, parsing/formatting, date arithmetic, timezone conversion, and DST pitfalls that break pipelines."

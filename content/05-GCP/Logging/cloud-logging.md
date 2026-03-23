@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-logging, observability]
-tags: [concept, gcp, cloud-logging, observability, monitoring]
+tags: [infrastructure, gcp]
 aliases: [Cloud Logging, gcloud logging read, GCP logs, log filter, log severity, gcloud logging tail, structured logging, audit logs]
 keywords: [cloud logging, gcloud logging read, gcloud logging tail, log filter, severity, ERROR, WARNING, INFO, timestamp, textPayload, resource.type, cloud_run_job, gce_instance, full-text search, real-time logs, audit logs, write log entry, log filter language, structured logs]
 description: "How to query, filter, and tail GCP Cloud Logging using the gcloud CLI — filtering by severity, time range, resource type, and full-text content to diagnose pipeline failures and infrastructure issues in real-time."

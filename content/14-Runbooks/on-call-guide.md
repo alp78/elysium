@@ -1,5 +1,5 @@
 ---
-tags: [runbook, operations]
+tags: []
 type: runbook
 technology: []
 status: stable

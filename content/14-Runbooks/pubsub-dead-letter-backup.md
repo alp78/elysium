@@ -1,5 +1,5 @@
 ---
-tags: [runbook, pubsub, gcp, sev2, dead-letter, messaging, pipeline]
+tags: [gcp]
 type: runbook
 severity: sev2
 technology: gcp

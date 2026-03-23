@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, error-handling]
+tags: [python]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 keywords: [try, except, finally, raise, Exception, BaseException, custom exception, logging, contextmanager]
 description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [[cs-08_ErrorHandling]] for the C# equivalent."

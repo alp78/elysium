@@ -2,7 +2,7 @@
 type: concept
 category: observability
 technology: [datadog, gcp, sql-server, airflow, cloud-run]
-tags: [datadog, observability, monitoring, data-pipeline, gcp, sql-server, airflow]
+tags: [observability, sql, airflow, datadog, gcp]
 aliases: [Datadog Overview, the data pipeline project Observability, Datadog Architecture]
 keywords: [datadog, observability, monitoring, metrics, logs, traces, APM, three pillars, data-pipeline, EU region, datadoghq.eu, agent, GCP integration, Cloud Run, infrastructure, DogStatsD]
 description: "Architecture overview of Datadog monitoring for the data platform — two agents (Airflow VM + SQL VM) plus GCP Integration cover metrics, logs, and traces across the full stack."

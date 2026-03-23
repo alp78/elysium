@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, oop]
+tags: [csharp]
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 keywords: [class, interface, abstract, inheritance, polymorphism, property, record, sealed, virtual, override]
 description: "C# OOP reference with executable examples and cell outputs — covers classes, interfaces, inheritance, polymorphism, properties, records, and encapsulation. See [[06_OOP]] for the Python equivalent."

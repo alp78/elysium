@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, python]
-tags: [reference, financial-domain, sentiment, breadth, market-analysis, metrics]
+tags: [python, financial]
 aliases: [Breadth and Sentiment Indicators, market breadth, advance decline, put call ratio, short interest, sentiment indicators]
 keywords: [breadth indicators, sentiment indicators, advance decline ratio, percent above 200 day MA, new highs new lows, put call ratio, short interest ratio, market breadth, market sentiment, contrarian, bullish, bearish]
 description: "Market breadth and sentiment indicators for equity index analysis — advance/decline ratio, percent above 200-day MA, new highs/lows, put/call ratio, and short interest with formulas and interpretation."

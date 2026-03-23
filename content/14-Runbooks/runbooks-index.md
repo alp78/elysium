@@ -1,5 +1,5 @@
 ---
-tags: [index, runbooks]
+tags: []
 type: index
 technology: []
 status: stable

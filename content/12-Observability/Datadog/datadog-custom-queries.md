@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, sql-server, t-sql]
-tags: [datadog, sql-server, monitoring, data-pipeline, custom-metrics, dmv]
+tags: [observability, sql, datadog]
 aliases: [Custom SQL Metrics, Datadog custom_queries, DMV metrics]
 keywords: [datadog custom queries, custom_queries, sqlserver, DMV, dm_exec_sessions, dm_os_performance_counters, connections by login, deadlock count, monotonic_count, gauge, tag column, metric prefix, sqlserver prefix]
 description: "How to configure custom SQL Server DMV queries in the Datadog SQL Server integration to track connections by login and deadlock counts as custom metrics."

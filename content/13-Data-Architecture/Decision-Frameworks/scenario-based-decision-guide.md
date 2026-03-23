@@ -2,7 +2,7 @@
 type: reference
 category: data-architecture
 technology: [sql-server, bigquery, gcp, python, airflow, terraform]
-tags: [reference, data-architecture, scenarios, use-cases, decision-guide, architecture-patterns, reference-architecture]
+tags: [architecture, python, sql, terraform, airflow, bigquery, gcp]
 aliases: [scenario guide, use case guide, reference architecture, solution patterns, architecture decisions, what to use when]
 keywords: [scenario-based architecture, decision guide, reference architecture, solution patterns, daily batch pipeline, streaming pipeline, data warehouse, multi-source integration, small team data platform, large team data platform, financial index calculation, machine learning feature pipeline, data migration, cost optimization, medallion architecture, star schema, ETL, ELT, BigQuery, SQL Server, Cloud Run, Airflow, Terraform, dbt, Pub/Sub, Dataflow, Firestore, GCS, Cloud Scheduler, Dataplex, data mesh, feature store, strangler fig, cost-optimized pipeline]
 description: "Practical scenario-based decision guide — 'I have THIS business need, what do I use?' — covering ten real-world data engineering scenarios with recommended stacks, Mermaid architecture diagrams, key decisions explained, cost estimates, and links to detailed vault notes."

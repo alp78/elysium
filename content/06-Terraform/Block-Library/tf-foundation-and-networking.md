@@ -2,7 +2,7 @@
 type: reference
 category: terraform
 technology: [terraform, gcp]
-tags: [reference, terraform, gcp, networking, vpc, firewall, nat, dns, load-balancer]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform block library, terraform GCP blocks, terraform networking blocks, terraform foundation blocks, GCP terraform snippets, terraform copy-paste blocks]
 keywords: [terraform, gcp, block library, google_compute_network, google_compute_subnetwork, google_compute_router, google_compute_router_nat, google_compute_firewall, google_compute_address, google_dns_managed_zone, google_dns_record_set, google_compute_network_peering, google_compute_shared_vpc_host_project, google_compute_shared_vpc_service_project, google_compute_global_address, google_service_networking_connection, VPC, subnet, Cloud NAT, firewall, IAP, Identity-Aware Proxy, CIDR, ingress, egress, static IP, DNS, private service connect, shared VPC, VPC peering, backend GCS, required_providers, terraform block, provider google, project_id, region, zone, environment, common_labels, locals, outputs, Cloud Router, health check, deny all, SQL Server, Airflow, APM, HTTP, HTTPS, SSH, compact concat, private Google access, secondary ranges, GKE pods, services range, NAT auto allocate]
 description: "Atomic Terraform block library for GCP foundation and networking resources. Every block is self-contained, heavily commented, and copy-pasteable. Covers provider/backend setup, variables, outputs, locals, VPC, subnets, Cloud NAT, firewall rules, static IPs, DNS, VPC peering, Shared VPC, and Private Service Connect."

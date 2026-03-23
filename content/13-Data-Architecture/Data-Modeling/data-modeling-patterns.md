@@ -2,7 +2,7 @@
 type: concept
 category: data-modeling
 technology: [sql-server, bigquery, firestore]
-tags: [concept, data-modeling, normalization, data-vault, wide-table, graph-model, document-model, time-series, one-big-table, activity-schema]
+tags: [architecture, data-modeling, sql, bigquery, firestore]
 aliases: [data modeling patterns, normalized model, 3NF, Data Vault, hub satellite link, wide table, OBT, one big table, activity schema, graph model, document model, time-series model, anchor modeling]
 keywords: [data modeling, normalized model, third normal form, 3NF, BCNF, Boyce-Codd, Data Vault 2.0, hub, satellite, link, hash key, hash diff, wide table, one big table, OBT, denormalized table, activity schema, event schema, graph model, document model, time-series model, narrow model, wide model, hybrid model, OHLCV, anchor modeling, star schema, snowflake schema, dimensional modeling, OLTP, OLAP, entity-relationship, EAV, entity-attribute-value, semi-structured, schemaless, Firestore, BigQuery, SQL Server, Neo4j, TimescaleDB, InfluxDB, ClickHouse, columnar storage, partitioning, clustering, materialized view]
 description: "Comprehensive reference on data modeling patterns beyond dimensional modeling — normalized (3NF), Data Vault 2.0, wide/flat (OBT), activity schema, document, graph, and time-series models. Each pattern demonstrated with full DDL, SQL examples, and concrete scenarios from a financial index provider domain. Includes a decision framework for choosing the right model per use case."

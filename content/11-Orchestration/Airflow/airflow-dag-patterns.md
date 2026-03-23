@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [airflow, python]
-tags: [reference, orchestration, airflow, dag-patterns, dynamic-dags, branching]
+tags: [orchestration, python, airflow]
 aliases:
   - Dynamic DAGs
   - Airflow dynamic tasks

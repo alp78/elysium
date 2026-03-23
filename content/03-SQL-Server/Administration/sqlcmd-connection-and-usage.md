@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [how-to, sql-server, sqlcmd, cli, connection, t-sql]
+tags: [sql]
 aliases: [sqlcmd, go-sqlcmd, mssql-tools, Invoke-Sqlcmd, sql server command line]
 keywords: [sqlcmd, sql server command line, mssql-tools18, connection flags, -S -U -P -d -C, execute query, script file, CSV export, PowerShell Invoke-Sqlcmd, go-sqlcmd, IAP tunnel, TDS, ODBC]
 description: "How to connect to SQL Server from the command line using sqlcmd, including all common flags, inline queries, script execution, and CSV export in both Linux and PowerShell."

@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, design-patterns]
+tags: [python]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, decorator pattern]
 description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [[cs-16_DesignPatterns]] for the C# equivalent."

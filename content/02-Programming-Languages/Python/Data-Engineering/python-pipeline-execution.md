@@ -2,7 +2,7 @@
 type: concept
 category: python
 technology: [python]
-tags: [concept, python, pipelines, profiling, linting]
+tags: [pipeline, python]
 aliases: [Python pipeline, cProfile, memory profiler, ruff, mypy, running pipelines]
 keywords: [python, pipeline, run, execute, profiling, cProfile, memory profiler, linting, ruff, mypy, type checking, environment variables, module execution]
 description: "Running Python data pipelines — module execution, environment variable configuration, CPU profiling with cProfile, memory profiling, and code quality with ruff and mypy."

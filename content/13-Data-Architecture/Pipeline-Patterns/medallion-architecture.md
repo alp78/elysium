@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [sql-server, python, pyodbc]
-tags: [concept, data-architecture, sql-server, medallion-architecture, etl, pipeline-patterns]
+tags: [architecture, pipeline, python, sql]
 aliases: [medallion architecture, bronze silver gold, bronze/silver/gold, data lakehouse, three layer architecture, medallion pattern]
 keywords: [medallion architecture, bronze, silver, gold, raw data, cleaned data, analytics, pipeline, schema, layers, data warehouse, data-pipeline, sql server, pyodbc, parameterized queries]
 description: "The medallion architecture (bronze/silver/gold) implemented in SQL Server — raw data landing, cleaning and deduplication, and analytics-ready aggregation across three schema layers."

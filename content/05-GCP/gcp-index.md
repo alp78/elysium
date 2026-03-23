@@ -2,7 +2,7 @@
 type: index
 category: gcp
 technology: [gcp]
-tags: [index, gcp, cloud-platform]
+tags: [infrastructure, gcp]
 aliases: [GCP Index, Google Cloud Platform, GCP Overview]
 keywords: [gcp, google cloud platform, cloud services, gcloud, compute engine, bigquery, pub/sub, cloud run, gcs, iam, logging, monitoring, firestore, nosql, real-time]
 description: "Central navigation hub for all Google Cloud Platform notes covering gcloud CLI, Compute Engine, BigQuery, Firestore, Pub/Sub, Cloud Run, Cloud Storage, IAM, and Cloud Logging."

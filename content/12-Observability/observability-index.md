@@ -2,7 +2,7 @@
 type: index
 category: observability
 technology: [datadog, sql-server, gcp]
-tags: [index, observability, monitoring]
+tags: [observability, sql, datadog, gcp]
 aliases: [Observability Index, Monitoring Index]
 keywords: [observability, monitoring, datadog, gcp, cloud-monitoring, cloud-logging, cloud-trace, APM, traces, metrics, logs, dashboards, alerting, SLA, pipeline-health, MQL, custom-metrics, log-analytics, distributed-tracing]
 description: "Index for the Observability section — Datadog setup, GCP-native monitoring (Cloud Monitoring, Cloud Logging, Cloud Trace), pipeline health, SLA tracking, dashboards, alerting, and troubleshooting."

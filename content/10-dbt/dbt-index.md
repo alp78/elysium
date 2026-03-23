@@ -1,5 +1,5 @@
 ---
-tags: [index, dbt, data-architecture]
+tags: [pipeline, sql, airflow, dbt, bigquery, github-actions]
 type: index
 technology: [dbt, sql-server, bigquery, airflow, github-actions]
 status: stable

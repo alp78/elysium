@@ -1,5 +1,5 @@
 ---
-tags: [runbook, sql-server, backup, disaster-recovery, sev3]
+tags: []
 type: runbook
 severity: sev3
 technology: sql-server, gcp

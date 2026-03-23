@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [python, gcp, spark, bigquery, databricks]
-tags: [concept, data-architecture, lakehouse, delta-lake, iceberg, data-lake, data-warehouse, medallion-architecture]
+tags: [architecture, python, bigquery, gcp]
 aliases: [lakehouse, data lakehouse, lake house, Delta Lake, Apache Iceberg, Apache Hudi, BigLake, Unity Catalog, Tabular, Databricks Lakehouse, lakehouse architecture]
 keywords: [lakehouse, data lakehouse, lake house, data lake, data warehouse, ACID transactions, object storage, schema enforcement, time travel, Delta Lake, Apache Iceberg, Apache Hudi, open table format, medallion architecture, bronze silver gold, BigLake, Unity Catalog, Tabular, Databricks, Snowflake, BigQuery, Spark, Trino, Presto, DuckDB, governance, schema evolution, partition pruning, query engine, Parquet, GCS, S3, cost optimization, lakehouse vs warehouse, lakehouse vs data lake]
 description: "The lakehouse architecture combines the low-cost flexible storage of a data lake with the transactional guarantees and governance of a data warehouse, enabled by open table formats (Delta Lake, Apache Iceberg, Apache Hudi) that add ACID transactions, time travel, and schema enforcement directly on object storage."

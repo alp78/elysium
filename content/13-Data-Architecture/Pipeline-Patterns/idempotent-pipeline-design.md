@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [sql-server, python, airflow]
-tags: [concept, data-architecture, etl, pipeline-patterns, idempotent]
+tags: [architecture, pipeline, python, sql, airflow]
 aliases: [idempotent pipelines, idempotency, idempotent loads, safe re-runs, replayable pipelines]
 keywords: [idempotent, idempotency, safe re-run, replay, backfill, data pipeline, atomic load, upsert, MERGE, delete-insert, truncate-reload, exactly-once, at-least-once]
 description: "Idempotent pipeline design ensures running a pipeline multiple times with the same input produces the same result without duplicates or corruption — the foundation of reliable data engineering."

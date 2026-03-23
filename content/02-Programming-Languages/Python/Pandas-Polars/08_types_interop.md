@@ -1,20 +1,21 @@
 ---
 type: reference
 category: programming-languages
-technology: [python, pandas, polars, pyarrow]
-tags: [reference, programming-languages, python, pandas, polars, types, interoperability, arrow]
-aliases: [Pandas Polars Types Interop, categorical enum, list struct, arrow conversion, zero-copy]
-keywords: [pandas, polars, categorical, enum, list, struct, arrow, pyarrow, numpy, to_pandas, to_numpy, to_arrow, from_arrow, zero-copy, dtype, ArrowDtype]
-description: "Pandas vs Polars advanced types and interoperability — categoricals, enums, list/struct types, Arrow-backed dtypes, conversions between Pandas/Polars/NumPy/Arrow, zero-copy."
+technology: [python, pandas, polars]
+tags: [pipeline, python, pandas, polars]
+aliases: [Categorical, Arrow, zero-copy, struct types]
+keywords: [Categorical, Enum, Arrow, zero-copy, to_arrow, from_arrow, interop, struct, nested]
+description: "Pandas vs Polars reference 08/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Side-by-side executable examples with cell outputs."
 related:
   - "[[pandas-polars-index]]"
+  - "[[programming-languages-index]]"
   - "[[07_lazy_performance]]"
   - "[[09_visualization_sql]]"
-  - "[[data-formats-and-serialization]]"
 created: 2026-03-23
 updated: 2026-03-23
 status: complete
 ---
+
 # 08 — Advanced Types & Interoperability
 
 Categoricals, nested types, library conversions.

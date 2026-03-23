@@ -1,5 +1,5 @@
 ---
-tags: [runbook, bigquery, gcp, sev2, quota, cost, slots]
+tags: [bigquery]
 type: runbook
 severity: sev2
 technology: bigquery

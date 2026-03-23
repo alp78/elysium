@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, generics]
+tags: [csharp]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 keywords: [generics, LINQ, where, select, orderby, groupby, IEnumerable, IQueryable, type constraints, variance]
 description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [[07_Generics_LINQ]] for the Python equivalent."

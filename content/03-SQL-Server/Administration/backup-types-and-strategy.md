@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, backup, disaster-recovery, operations]
+tags: [sql]
 aliases: [SQL Server backup, full backup, differential backup, transaction log backup, copy-only backup, 3-2-1 rule, backup strategy]
 keywords: [backup, full backup, differential backup, transaction log backup, copy-only backup, BACKUP DATABASE, BACKUP LOG, RESTORE VERIFYONLY, 3-2-1 rule, GCS backup, recovery model, RPO, RTO, .bak, .trn, compression, checksum, PITR, point-in-time recovery]
 description: "SQL Server backup types (full, differential, transaction log, copy-only), the 3-2-1 backup rule, recovery model selection, and an automated GCS backup script."

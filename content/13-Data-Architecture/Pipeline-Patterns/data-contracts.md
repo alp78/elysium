@@ -1,5 +1,5 @@
 ---
-tags: [concept, data-architecture, data-contracts, schema, sla, governance]
+tags: [architecture, pipeline, python, github-actions]
 type: concept
 technology: [python, github-actions, protobuf]
 status: stable

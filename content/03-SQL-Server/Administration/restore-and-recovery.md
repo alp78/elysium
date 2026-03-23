@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [how-to, sql-server, restore, recovery, disaster-recovery, PITR]
+tags: [sql]
 aliases: [SQL Server restore, point-in-time recovery, PITR, RESTORE DATABASE, NORECOVERY, STOPAT, restore to new database]
 keywords: [restore, RESTORE DATABASE, RESTORE LOG, NORECOVERY, RECOVERY, REPLACE, STOPAT, point-in-time recovery, PITR, full restore, differential restore, log restore, side-by-side restore, MOVE, disaster recovery, crash recovery]
 description: "How to restore a SQL Server database from backup including full restore, point-in-time recovery (PITR) with log replaying, and restoring to a new database for side-by-side comparison."

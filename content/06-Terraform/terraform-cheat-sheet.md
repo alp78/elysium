@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [terraform]
-tags: [reference, cheat-sheet, terraform, iac]
+tags: [infrastructure, terraform]
 aliases: [Terraform cheat sheet, tf cheat sheet, Terraform quick reference]
 keywords: [terraform, cheat sheet, quick reference, init, plan, apply, destroy, state, import, workspace, hcl]
 description: "Exhaustive CLI reference for Terraform — every command, flag, HCL function, and common pattern in one place."

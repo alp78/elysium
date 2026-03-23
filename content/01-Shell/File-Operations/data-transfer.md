@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
-tags: [concept, foundations, networking, gcp, bash, linux]
+tags: [shell, bash, gcp]
 aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, file transfer, data movement]
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run]
 description: "Complete guide to data transfer tools for data engineering: rsync for local and remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd for query-based export."

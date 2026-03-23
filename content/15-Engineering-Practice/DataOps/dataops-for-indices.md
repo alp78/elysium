@@ -7,22 +7,7 @@ technology:
   - python
   - sql-server
   - terraform
-tags:
-  - dataops
-  - backtesting
-  - shadow-calculation
-  - regression-testing
-  - index-calculation
-  - parallel-backtesting
-  - blue-green-deployment
-  - methodology-as-code
-  - incident-response
-  - calculation-validation
-  - data-quality
-  - continuous-validation
-  - workload-identity-federation
-  - cloud-run
-  - data-pipeline
+tags: [python, sql, terraform, bigquery, github-actions]
 aliases:
   - parallel backtesting
   - shadow calculation

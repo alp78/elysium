@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, testing]
+tags: [testing, python]
 aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
 keywords: [pytest, unittest, mock, patch, fixture, parametrize, assert, coverage, TDD]
 description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [[cs-12_Testing]] for the C# equivalent."

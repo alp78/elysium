@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [firestore, csharp, dotnet, gcp]
-tags: [reference, db-queries, firestore, csharp, nosql, document-database]
+tags: [csharp, sql, gcp, firestore]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 keywords: [firestore, csharp, dotnet, Google.Cloud.Firestore, DocumentReference, CollectionReference, query, where, order, limit, batch, transaction, snapshot, WriteBatch, FieldValue]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."

@@ -7,16 +7,7 @@ technology:
   - python
   - bigquery
   - firestore
-tags:
-  - concept
-  - data-architecture
-  - metadata
-  - context
-  - lineage
-  - bi-temporal
-  - data-contracts
-  - provenance
-  - governance
+tags: [architecture, python, sql, bigquery, gcp, firestore]
 aliases:
   - context store
   - metadata architecture

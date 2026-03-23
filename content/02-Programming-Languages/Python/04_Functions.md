@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, functions]
+tags: [python]
 aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
 keywords: [def, lambda, closure, decorator, args, kwargs, type hints, functools, scope, LEGB]
 description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [[cs-04_Functions]] for the C# equivalent."

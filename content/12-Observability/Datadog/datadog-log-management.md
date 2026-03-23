@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, sql-server, airflow, docker]
-tags: [datadog, logs, monitoring, data-pipeline, sql-server, airflow]
+tags: [observability, sql, docker, airflow, datadog]
 aliases: [Log Collection, SQL Server Log Collection, Datadog Logs, errorlog, log tailing]
 keywords: [datadog log collection, SQL server errorlog, log tailing, logs.yaml, file tailing, source sqlserver, dd-agent mssql group, bytes read, start_position beginning, container logs, docker autodiscovery, DD_LOGS_ENABLED, DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL, Live Tail, Log Explorer]
 description: "How to configure Datadog log collection for the data platform — SQL Server errorlog file tailing on the SQL VM and Docker container log collection on the Airflow VM."

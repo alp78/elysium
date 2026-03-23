@@ -2,7 +2,7 @@
 type: concept
 category: terraform
 technology: [terraform, gcp, gcs]
-tags: [concept, terraform, gcp, backend, state, provider]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform provider, terraform backend, GCS backend, terraform GCS, google provider, remote state backend]
 keywords: [terraform provider, hashicorp google, backend gcs, remote state, state file, tfstate, gcs bucket, pessimistic constraint, version constraint, provider configuration, terraform init]
 description: "How to configure the Terraform Google provider and GCS remote state backend — version constraints, project defaults, and why remote state matters."

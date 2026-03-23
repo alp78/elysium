@@ -2,7 +2,7 @@
 type: index
 category: shell
 technology: [bash, powershell]
-tags: [index, shell, bash, powershell, linux, cli]
+tags: [shell, bash]
 aliases: [Shell Index, Shell Section, Bash Index, CLI Reference, Command Line, Linux Commands]
 keywords: [shell, bash, powershell, linux, cli, command line, grep, awk, sed, find, rsync, ps, systemctl, curl, networking, text processing, scripting, file operations]
 description: "Index for the Shell section — text processing (grep, awk, sed), file operations, scripting fundamentals, process management, and networking commands. Every note covers both bash and PowerShell."

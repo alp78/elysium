@@ -2,7 +2,7 @@
 type: concept
 category: docker
 technology: [docker]
-tags: [concept, docker, containers, reference]
+tags: [docker]
 aliases: [container lifecycle, docker ps, docker logs, docker exec, docker stats, docker inspect, docker run, container management, docker commands, container operations]
 keywords: [docker, container, lifecycle, run, ps, start, stop, restart, pause, unpause, kill, wait, logs, exec, attach, stats, inspect, diff, top, port, rm, prune, exit code, OOM, crash loop, debugging, container management, detached, interactive, volume mount, port mapping, environment variables, restart policy, resource limits, network, env-file, SIGTERM, SIGKILL, graceful shutdown, docker cp, go template, filter, format]
 description: "Comprehensive Docker container lifecycle reference — running containers with all key flags, listing and filtering, lifecycle management (start/stop/kill/pause), logs, exec, file copying, inspection, debugging, and cleanup. Covers everything a data engineer needs to manage containers day-to-day."

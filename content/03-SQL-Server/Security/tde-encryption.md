@@ -2,7 +2,7 @@
 type: how-to
 category: security
 technology: [sql-server, gcp, linux, cloud-kms]
-tags: [sql-server, security, tde, encryption, cloud-kms, compliance, at-rest-encryption, certificate, dmk, dek]
+tags: [security, sql, gcp]
 aliases: [TDE, Transparent Data Encryption, database encryption, at-rest encryption, DEK, Database Encryption Key]
 keywords: [transparent data encryption, TDE, database encryption key, DEK, database master key, DMK, service master key, SMK, certificate, AES_256, encryption at rest, Cloud KMS, KMS keyring, analytics-keyring, analytics-sql-tde, EKM, extensible key management, mdf, ldf, tempdb, GDPR, SOC 2, compliance, backup certificate, restore certificate, percent_complete, encryption_state, AES-NI, hardware acceleration]
 description: "Step-by-step guide to enabling Transparent Data Encryption (TDE) on SQL Server 2022 Linux with GCP Cloud KMS key protection. Covers the encryption key hierarchy, certificate-based TDE setup, critical certificate backup to GCS, disaster recovery restore procedure, and performance impact benchmarks."

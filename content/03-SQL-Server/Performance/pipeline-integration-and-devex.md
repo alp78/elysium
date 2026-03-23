@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server, python, airflow]
-tags: [how-to, sql-server, devex, pipeline, airflow, monitoring, ci-cd, schema-migrations, connection-pooling, datadog]
+tags: [pipeline, python, sql, airflow]
 aliases: [pipeline integration, SQL comment tagging, Airflow SQL correlation, schema migrations, Flyway SQL Server, Liquibase SQL Server, connection pool management, developer experience]
 keywords: [query tagging, SQL comment, dag_id, task_id, run_id, dm_exec_sql_text, Query Store, schema migrations, Flyway, Liquibase, sqlpackage, dacpac, migration runner, schema_migrations table, connection pool, pymssql, sqlalchemy, ADO.NET, pool_size, max_overflow, connection count, dm_exec_sessions, Datadog tagging, pipeline observability, CI/CD SQL, GitHub Actions, PARSEONLY, idempotent migration]
 description: "Developer experience patterns for SQL Server pipeline integration: tagging queries with Airflow context for monitoring correlation, schema migration management (Flyway/Python runner), and connection pool management for pymssql and ADO.NET."

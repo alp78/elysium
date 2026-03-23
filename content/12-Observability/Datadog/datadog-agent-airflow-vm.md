@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, airflow, docker, gcp, cos]
-tags: [datadog, airflow, docker, gcp, monitoring, data-pipeline]
+tags: [orchestration, observability, docker, airflow, datadog, gcp]
 aliases: [DD Agent Airflow, Datadog Airflow VM, dd-agent COS]
 keywords: [datadog agent, airflow vm, docker, container-optimized os, COS, dd-agent, autodiscovery, docker labels, statsd, DogStatsD, port 8126, APM, startup script, airflow-net, e2-medium]
 description: "How to set up the Datadog Agent as a Docker container on the example Airflow VM (Container-Optimized OS), covering startup script, autodiscovery labels, StatsD metrics, and memory budget."

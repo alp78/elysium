@@ -2,7 +2,7 @@
 type: reference
 category: data-architecture
 technology: [sql-server, bigquery, python]
-tags: [reference, comparison, data-architecture, etl, elt]
+tags: [python, sql, bigquery]
 aliases: [ETL vs ELT, extract transform load, extract load transform, ETL comparison]
 keywords: [etl, elt, extract transform load, extract load transform, comparison, data pipeline, data warehouse, medallion architecture, bigquery, sql server]
 description: "Comparison of ETL (Extract-Transform-Load) vs ELT (Extract-Load-Transform) patterns — when to use each, trade-offs, and how they map to the medallion architecture."

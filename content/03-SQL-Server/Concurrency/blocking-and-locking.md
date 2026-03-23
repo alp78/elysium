@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [concept, sql-server, concurrency, blocking, locking, isolation-levels, RCSI, lock-escalation, deadlock]
+tags: [sql]
 aliases: [SQL Server locking, lock manager, isolation level, lock escalation, shared lock, exclusive lock, blocking chain, intent lock]
 keywords: [blocking, locking, shared lock, exclusive lock, update lock, intent lock, IX, IS, SIX, lock escalation, lock granularity, row lock, page lock, table lock, isolation level, READ COMMITTED, REPEATABLE READ, SERIALIZABLE, READ UNCOMMITTED, RCSI, Read Committed Snapshot Isolation, version store, blocking chain, head blocker, XACT_ABORT, HOLDLOCK, NOLOCK, WITH UPDLOCK, deadlock, LCK_M, sys.dm_tran_locks, lock compatibility matrix]
 description: "SQL Server lock types, lock granularity hierarchy, lock compatibility matrix, isolation levels, and RCSI. Includes blocking chain detection, lock escalation prevention, and how each CRUD operation interacts with the lock manager."

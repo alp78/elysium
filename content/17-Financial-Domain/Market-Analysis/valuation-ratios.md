@@ -2,7 +2,7 @@
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
-tags: [reference, financial-domain, valuation, market-analysis, metrics]
+tags: [sql, financial]
 aliases: [Valuation Ratios, valuation metrics, PEG ratio, CAPE, Shiller PE, EV/Sales, FCF Yield, earnings yield, price-to-earnings, P/E ratio]
 keywords: [valuation ratios, PEG ratio, CAPE, Shiller P/E, EV/Sales, free cash flow yield, FCF yield, earnings yield, price-to-earnings, P/E, price-to-book, EV/EBITDA, forward PE, trailing PE, dividend yield, valuation multiples, undervalued, overvalued]
 description: "Standard equity valuation ratios beyond P/E and P/B — PEG ratio, CAPE/Shiller P/E, EV/Sales, free cash flow yield, and earnings yield with formulas, thresholds, and interpretation guidance."

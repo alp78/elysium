@@ -2,7 +2,7 @@
 type: concept
 category: docker
 technology: [docker, gcp]
-tags: [concept, docker, containers, images]
+tags: [docker, gcp]
 aliases:
   - Docker images
   - docker build

@@ -2,7 +2,7 @@
 type: how-to
 category: orchestration
 technology: [airflow, docker, gcp]
-tags: [how-to, orchestration, airflow, deployment, docker, cloud-composer]
+tags: [orchestration, docker, airflow, gcp]
 aliases:
   - Cloud Composer
   - Cloud Composer setup

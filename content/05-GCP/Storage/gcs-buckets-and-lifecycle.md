@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-storage]
-tags: [concept, gcp, cloud-storage, cost-optimization, data-lake]
+tags: [infrastructure, gcp]
 aliases: [GCS buckets, GCS lifecycle, GCS storage classes, GCS versioning, Cloud Storage lifecycle rules, STANDARD NEARLINE COLDLINE ARCHIVE]
 keywords: [GCS bucket, cloud storage, storage class, STANDARD, NEARLINE, COLDLINE, ARCHIVE, lifecycle rules, versioning, SetStorageClass, auto-transition, auto-delete, uniform bucket level access, location, data residency, lifecycle.json, cost optimization, retrieval cost]
 description: "How to create GCS buckets with appropriate storage classes and configure lifecycle rules to automatically transition objects through STANDARD → NEARLINE → COLDLINE → ARCHIVE, reducing storage costs for aging pipeline data."

@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [python]
-tags: [reference, programming-languages, python, file-io]
+tags: [python]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 keywords: [open, read, write, json, csv, pickle, pathlib, shutil, os.path, serialization]
 description: "Python file I/O and serialization reference with executable examples and cell outputs — covers file reading/writing, JSON, CSV, pickle, and pathlib. See [[cs-09_FileIO_Serialization]] for the C# equivalent."

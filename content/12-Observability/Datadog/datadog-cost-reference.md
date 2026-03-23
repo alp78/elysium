@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog]
-tags: [datadog, data-pipeline, cost, pricing, trial]
+tags: [observability, cost, datadog]
 aliases: [Datadog Cost, Datadog Pricing, Datadog Monthly Cost]
 keywords: [Datadog EU, datadoghq.eu, 14-day trial, Infrastructure, Logs, APM Pro, 50-80 per host, dd-agent RAM, 350 MB, 250 MB, free trial, agent cost, SaaS, host count, log volume, trace volume]
 description: "Datadog cost reference for the data platform — the agents themselves are free, costs are Datadog SaaS pricing based on host count and log/trace volume, with the EU 14-day trial covering initial setup."

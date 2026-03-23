@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, business-models, commerce, e-commerce, retail, reference, encyclopedia]
+tags: [financial]
 aliases: [business model terms, commerce glossary, e-commerce glossary, B2B glossary, B2C glossary, franchise glossary, subscription model, marketplace, omnichannel, white-label, managed services, on-demand delivery, membership warehouse]
 keywords: [e-commerce, B2B, B2C, business to business, business to consumer, franchise, licensing, platform business model, subscription model, subscription, omnichannel, marketplace, white-label, white label, managed services, on-demand delivery, membership warehouse, direct to consumer, DTC, digital commerce, network effects, recurring revenue, SaaS model, franchisee, franchisor, royalties]
 description: "Encyclopedia definitions for business model and commerce terms from the example Index universe, covering e-commerce, B2B, B2C, franchise, licensing, platform models, subscriptions, omnichannel, marketplace, white-label, managed services, on-demand delivery, and membership warehouse."

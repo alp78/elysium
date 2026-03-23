@@ -4,15 +4,7 @@ category: terraform
 technology:
   - terraform
   - gcp
-tags:
-  - reference
-  - terraform
-  - gcp
-  - compute-engine
-  - gcs
-  - disks
-  - snapshots
-  - vm
+tags: [infrastructure, terraform, gcp]
 aliases:
   - terraform-compute-storage
   - gcp-terraform-blocks

@@ -2,7 +2,7 @@
 type: reference
 category: programming-languages
 technology: [csharp, dotnet]
-tags: [reference, programming-languages, csharp, dotnet, async]
+tags: [csharp]
 aliases: [async await, concurrency, parallelism, tasks, threads, asyncio, Task]
 keywords: [async, await, Task, CancellationToken, Parallel, Thread, SemaphoreSlim, Channel, IAsyncEnumerable]
 description: "C# async and concurrency reference with executable examples and cell outputs — covers async/await, Task, parallel programming, CancellationToken, and Channels. See [[11_AsyncConcurrency]] for the Python equivalent."

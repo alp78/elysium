@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial-domain, pharma, healthcare, biotech, medical-devices, reference, encyclopedia]
+tags: [financial]
 aliases: [pharma glossary, healthcare terms, biotech glossary, drug development terms, pharmaceutical glossary]
 keywords: [pharmaceutical, biotech, biosimilars, clinical trials, CDMO, generic drugs, medical devices, patent, regulatory approval, FDA, in-licensing, out-licensing, intellectual property, oncology, recombinant therapies, drug development]
 description: "Encyclopedia definitions for pharmaceutical and healthcare terms covering drug development, regulatory approval, biosimilars, CDMOs, medical devices, intellectual property, and licensing, drawn from the example Index universe."

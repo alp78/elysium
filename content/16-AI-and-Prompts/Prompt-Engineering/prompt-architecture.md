@@ -2,7 +2,7 @@
 type: concept
 category: prompt-engineering
 technology: [claude, gpt-4, gemini, llm]
-tags: [prompt-engineering, llm, ai, concept, architecture]
+tags: [ai]
 aliases: [prompt structure, 4-layer prompt, prompt layering, role goal constraints format, XML prompting, JSON schema prompting, meta-prompting, chain of thought, prompt template]
 keywords: [prompt architecture, role, goal, constraints, format, XML tags, JSON schema, paragraph form, modular prompts, layering, chain of thought, meta-prompting, structured output, prompt template, 4-layer, system prompt design, constraint types, output format]
 description: "The 4-layer prompt architecture (Role, Goal, Constraints, Format) with complete worked examples, plus modular structural formats — XML tags, JSON schemas, and paragraph form — with guidance on when to use each. Covers meta-prompting and chain-of-thought structuring."

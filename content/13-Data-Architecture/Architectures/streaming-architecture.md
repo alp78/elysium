@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [gcp, python]
-tags: [concept, data-architecture, streaming, event-driven, kafka, pub-sub, lambda-architecture, kappa-architecture, cdc, change-data-capture, flink, dataflow, spark-streaming]
+tags: [architecture, python, gcp]
 aliases: [streaming architecture, Lambda architecture, Kappa architecture, event-driven architecture, real-time pipeline, stream processing, CDC, change data capture, event streaming, micro-batch, continuous processing, stream-first architecture]
 keywords: [streaming, batch, micro-batch, Lambda architecture, Kappa architecture, event-driven, Kafka, Pub/Sub, Kinesis, Event Hubs, Spark Structured Streaming, Apache Flink, Apache Beam, Dataflow, ksqlDB, Debezium, SQL Server CDC, GCP Datastream, event sourcing, CQRS, exactly-once, at-least-once, tumbling window, sliding window, session window, watermark, late data, reprocessing, replay, real-time analytics, stream processing, CDC, change data capture, producer, consumer, broker, topic, partition, consumer group, offset, backpressure, checkpointing, state store, windowing]
 description: "Streaming architecture patterns — Lambda, Kappa, and event-driven — covering batch vs streaming trade-offs, message broker comparisons (Kafka, Pub/Sub, Kinesis), stream processing engines (Flink, Beam/Dataflow, Spark Structured Streaming), CDC tools (Debezium, GCP Datastream), and the GCP canonical streaming stack."

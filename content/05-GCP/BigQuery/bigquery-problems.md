@@ -1,5 +1,5 @@
 ---
-tags: [reference, bigquery, troubleshooting, cost-management, performance, data-engineering, gcp]
+tags: [infrastructure, bigquery, gcp]
 type: reference
 technology: bigquery
 status: stable

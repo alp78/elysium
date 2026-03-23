@@ -2,7 +2,7 @@
 type: concept
 category: infrastructure
 technology: [terraform, gcp]
-tags: [terraform, state, remote-state, gcs-backend, state-locking, infrastructure-as-code]
+tags: [infrastructure, terraform, gcp]
 aliases: [terraform state, terraform.tfstate, remote state, state locking, terraform backend, GCS backend]
 keywords: [terraform state, tfstate, remote state, state file, GCS backend, state locking, terraform state commands, terraform state list, terraform state show, terraform state mv, terraform state rm, force-unlock, backend gcs, state bucket]
 description: "How Terraform state works, why remote state in GCS is essential, how state locking prevents concurrent applies, and the terraform state subcommands for safe state manipulation."

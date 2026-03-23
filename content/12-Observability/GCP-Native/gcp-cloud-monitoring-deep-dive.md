@@ -5,16 +5,7 @@ technology:
   - gcp
   - cloud-monitoring
   - python
-tags:
-  - reference
-  - observability
-  - gcp
-  - monitoring
-  - metrics
-  - dashboards
-  - alerting
-  - uptime-checks
-  - SLO
+tags: [observability, python, gcp]
 aliases:
   - Cloud Monitoring
   - Stackdriver

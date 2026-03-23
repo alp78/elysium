@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, compute-engine]
-tags: [concept, gcp, compute-engine, virtual-machines]
+tags: [infrastructure, gcp]
 aliases: [Compute Engine VM lifecycle, VM start stop, VM resize, VM machine types, GCE lifecycle]
 keywords: [compute engine, VM, virtual machine, start, stop, reset, resize, machine type, e2, n2, c2, m2, right-sizing, scheduling, resource policy, instance schedule, cost optimization, RUNNING, STOPPED, TERMINATED]
 description: "How to manage Compute Engine VM lifecycle operations — start, stop, reset, resize machine types, schedule start/stop windows, and right-size VMs using monitoring data."

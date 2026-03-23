@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, security, vpc]
-tags: [concept, gcp, security, vpc-service-controls, data-exfiltration]
+tags: [infrastructure, gcp]
 aliases: [VPC Service Controls, VPC-SC, service perimeter, access context manager, data exfiltration prevention, GCP data perimeter]
 keywords: [VPC service controls, VPC-SC, access context manager, service perimeter, access policy, ingress policy, egress policy, access level, data exfiltration, perimeter, restricted services, violation reason, RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER, NO_MATCHING_ACCESS_LEVEL, financial data security, Terraform VPC-SC, gcloud access-context-manager]
 description: "How VPC Service Controls create a data perimeter that prevents exfiltration of BigQuery and GCS data — even for users with IAM admin permissions — and how to configure, audit, and debug VPC-SC violations."
