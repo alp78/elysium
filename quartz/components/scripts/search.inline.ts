@@ -215,53 +215,85 @@ function findAnchor(doc: SearchDoc, terms: string[]): string {
 // Search
 // ---------------------------------------------------------------------------
 
-async function runSearch(query: string): Promise<SearchDoc[]> {
-  if (!miniSearch) return []
+/** Check if a doc matches a term (case-insensitive, in title+content+tags). */
+function docContains(d: SearchDoc, term: string): boolean {
+  const t = term.toLowerCase()
+  return (
+    d.title.toLowerCase().includes(t) ||
+    d.content.toLowerCase().includes(t) ||
+    d.tags.some((tag) => tag.toLowerCase().includes(t))
+  )
+}
 
+/**
+ * Score a document for relevance. Higher = better.
+ * Title matches score highest, then content frequency.
+ */
+function scoreDoc(d: SearchDoc, terms: string[]): number {
+  let score = 0
+  const titleLower = d.title.toLowerCase()
+  const contentLower = d.content.toLowerCase()
+  for (const t of terms) {
+    if (titleLower.includes(t)) score += 100
+    // Count occurrences in content (cap at 10 to avoid huge-doc bias)
+    let idx = 0
+    let count = 0
+    while (count < 10) {
+      idx = contentLower.indexOf(t, idx)
+      if (idx === -1) break
+      count++
+      idx += t.length
+    }
+    score += count
+  }
+  return score
+}
+
+async function runSearch(query: string): Promise<SearchDoc[]> {
   const parsed = parseQuery(query)
 
   // Merge inline-typed tag filters with browser-selected ones
   const allTagInc = new Set([...tagInclude, ...parsed.tagFilters])
   const allTagExc = new Set([...tagExclude])
 
-  const hasText = parsed.terms.length > 0 || parsed.phraseFilters.length > 0
+  const allTerms = [
+    ...parsed.terms,
+    ...parsed.phraseFilters.flatMap((p) => p.split(" ")),
+  ]
+  const hasText = allTerms.length > 0
 
+  // ── Step 1: Candidate retrieval ────────────────────────────
+  // For AND: brute-force scan all docs (353 docs = instant).
+  // For OR:  use MiniSearch for fast retrieval + ranking.
   let docs: SearchDoc[]
 
-  if (hasText) {
-    // Build the term list: main terms + phrase fragments
-    const queryTerms = [
-      ...parsed.terms,
-      ...parsed.phraseFilters.flatMap((p) => p.split(" ")),
-    ]
-
-    // Always retrieve candidates with OR so we get a wide net.
-    // Strict AND/OR enforcement is done in the post-filters below.
-    const results = miniSearch.search(queryTerms.join(" "), {
-      combineWith: "OR",
-      prefix: true,
-      fuzzy: 0.1,
-      boost: { title: 4, tags: 2 },
-    })
-
-    docs = results.map((r) => docMap.get(r.id as number)!).filter(Boolean)
+  if (hasText && parsed.operator === "AND") {
+    // Direct scan: every term must appear in the doc
+    docs = [...docMap.values()].filter((d) =>
+      parsed.terms.every((t) => docContains(d, t)),
+    )
+  } else if (hasText && parsed.operator === "OR") {
+    if (miniSearch) {
+      const results = miniSearch.search(allTerms.join(" "), {
+        combineWith: "OR",
+        prefix: true,
+        fuzzy: 0.1,
+        boost: { title: 4, tags: 2 },
+      })
+      docs = results.map((r) => docMap.get(r.id as number)!).filter(Boolean)
+    } else {
+      docs = [...docMap.values()].filter((d) =>
+        parsed.terms.some((t) => docContains(d, t)),
+      )
+    }
   } else if (allTagInc.size > 0) {
-    // Tag-only filter: start from all docs
+    // Tag-only search: start from all docs
     docs = [...docMap.values()]
   } else {
     return []
   }
 
-  // ── AND enforcement ────────────────────────────────────────
-  // Every term must appear somewhere in (title + content + tags).
-  if (hasText && parsed.operator === "AND" && parsed.terms.length >= 1) {
-    docs = docs.filter((d) => {
-      const haystack = `${d.title}\n${d.content}\n${d.tags.join(" ")}`.toLowerCase()
-      return parsed.terms.every((t) => haystack.includes(t))
-    })
-  }
-
-  // Exact phrase filter (substring must appear in title or content)
+  // ── Step 2: Phrase filter ──────────────────────────────────
   for (const phrase of parsed.phraseFilters) {
     docs = docs.filter(
       (d) =>
@@ -270,12 +302,12 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
     )
   }
 
-  // Block-proximity: AND query with 2+ terms → both must live in the same paragraph
+  // ── Step 3: Block-proximity (AND + 2+ terms) ──────────────
   if (parsed.operator === "AND" && parsed.terms.length >= 2) {
     docs = docs.filter((d) => blockHasAllTerms(d.blocks, parsed.terms))
   }
 
-  // Tag include (respects tagMode AND/OR)
+  // ── Step 4: Tag filters ────────────────────────────────────
   if (allTagInc.size > 0) {
     if (tagMode === "AND") {
       docs = docs.filter((d) =>
@@ -288,27 +320,28 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
     }
   }
 
-  // Tag exclude
   if (allTagExc.size > 0) {
     docs = docs.filter(
       (d) => ![...allTagExc].some((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))),
     )
   }
 
-  // Path filter
+  // ── Step 5: Path filter ────────────────────────────────────
   if (parsed.pathFilter) {
     docs = docs.filter((d) => d.slug.toLowerCase().includes(parsed.pathFilter!))
   }
 
-  // NOT terms
-  if (parsed.excludeTerms.length > 0) {
-    docs = docs.filter((d) => {
-      const lower = `${d.title} ${d.content}`.toLowerCase()
-      return !parsed.excludeTerms.some((t) => lower.includes(t))
-    })
+  // ── Step 6: NOT terms ──────────────────────────────────────
+  for (const t of parsed.excludeTerms) {
+    docs = docs.filter((d) => !docContains(d, t))
   }
 
-  return docs.slice(0, 40)
+  // ── Step 7: Sort by relevance ──────────────────────────────
+  if (hasText) {
+    docs.sort((a, b) => scoreDoc(b, allTerms) - scoreDoc(a, allTerms))
+  }
+
+  return docs.slice(0, 50)
 }
 
 // ---------------------------------------------------------------------------
