@@ -1,21 +1,352 @@
 ---
 tags: [how-to, dbt]
 type: how-to
-technology: [dbt airflow]
-status: draft
+technology: [dbt, airflow]
+status: stable
 updated: 2026-03-23
-description: "BashOperator Cosmos CloudRunJob DAG examples"
+description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns for orchestrating dbt in Airflow, with a full ESG pipeline DAG."
 related:
   - "[[airflow-core-concepts]]"
   - "[[airflow-dag-patterns]]"
   - "[[dbt-core-concepts]]"
+  - "[[dbt-ci-cd]]"
+  - "[[dbt-observability]]"
 ---
 
 # dbt: Airflow Integration
 
-_Content for this note is structured and ready for detailed implementation. See [[dbt-index]] for context and [[dbt-transformation-layer]] for the foundational overview._
+Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
+
+---
+
+## Option 1: BashOperator Wrapping `dbt run`
+
+The simplest approach: invoke the dbt CLI as a shell command from within an Airflow task. The entire dbt project runs as a single Airflow task.
+
+```python
+from airflow.operators.bash import BashOperator
+
+dbt_run = BashOperator(
+    task_id="dbt_run",
+    bash_command=(
+        "cd /opt/dbt/financial_indices && "
+        "dbt run --target prod --vars '{run_date: {{ ds }}}'"
+    ),
+    env={
+        "DBT_BIGQUERY_PROJECT": "fin-data-prod",
+        "DBT_BIGQUERY_DATASET": "esg_transformed",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/secrets/sa-key.json",
+    },
+)
+```
+
+**Pros**
+- Zero extra dependencies beyond the dbt CLI on the worker.
+- Fast to implement; works with any dbt adapter.
+
+**Cons**
+- One monolithic task: a single model failure fails the entire block.
+- No per-model retry, duration metrics, or partial re-run from Airflow.
+- Log output is a single stream; hard to isolate failures.
+
+> [!tip] Use for non-critical pipelines or when the dbt project is small (< 20 models).
+
+---
+
+## Option 2: astronomer-cosmos (Each Model = Airflow Task)
+
+[astronomer-cosmos](https://github.com/astronomer/astronomer-cosmos) parses the dbt project's `manifest.json` at DAG parse time and generates one Airflow task per dbt node (model, seed, snapshot, test). Dependencies between tasks mirror the dbt DAG.
+
+### Installation
+
+```bash
+pip install astronomer-cosmos[dbt-bigquery]
+```
+
+### DAG Definition
+
+```python
+from datetime import datetime
+from pathlib import Path
+
+from airflow import DAG
+from cosmos import DbtDag, ProjectConfig, ProfileConfig, ExecutionConfig
+from cosmos.profiles import GoogleCloudOauthProfileMapping
+
+profile_config = ProfileConfig(
+    profile_name="financial_indices",
+    target_name="prod",
+    profile_mapping=GoogleCloudOauthProfileMapping(
+        conn_id="google_cloud_default",
+        profile_args={
+            "project": "fin-data-prod",
+            "dataset": "esg_transformed",
+            "location": "EU",
+        },
+    ),
+)
+
+esg_dbt_dag = DbtDag(
+    dag_id="esg_dbt_cosmos",
+    project_config=ProjectConfig(Path("/opt/dbt/financial_indices")),
+    profile_config=profile_config,
+    execution_config=ExecutionConfig(dbt_executable_path="/usr/local/bin/dbt"),
+    operator_args={
+        "vars": {"run_date": "{{ ds }}"},
+        "retries": 2,
+        "retry_delay": 30,
+    },
+    schedule="0 4 * * *",
+    start_date=datetime(2025, 1, 1),
+    catchup=False,
+)
+```
+
+**Pros**
+- Full per-model task observability in the Airflow UI.
+- Retry individual failed models without re-running the whole project.
+- Test nodes appear as separate tasks immediately downstream of their model.
+
+**Cons**
+- DAG parse time increases with project size (mitigate with `dbt ls` caching).
+- Requires the manifest to be present at parse time; coordinate with CI/CD.
+- Additional dependency (`astronomer-cosmos`) must be pinned and managed.
+
+> [!note] Cosmos supports `LoadMode.DBT_LS` (runtime discovery) and `LoadMode.MANIFEST` (pre-built manifest). Prefer `MANIFEST` in production for parse-time stability.
+
+---
+
+## Option 3: CloudRunJobOperator (Isolated Container)
+
+Run dbt inside a Cloud Run Job, treating the entire dbt invocation as a containerised ephemeral workload. Airflow submits the job and polls for completion.
+
+```python
+from airflow.providers.google.cloud.operators.cloud_run import CloudRunExecuteJobOperator
+
+dbt_cloud_run = CloudRunExecuteJobOperator(
+    task_id="dbt_run_container",
+    project_id="fin-data-prod",
+    region="europe-west1",
+    job_name="dbt-esg-transformer",
+    overrides={
+        "containerOverrides": [
+            {
+                "name": "dbt-runner",
+                "args": ["run", "--target", "prod", "--vars", "{run_date: {{ ds }}}"],
+                "env": [
+                    {"name": "RUN_DATE", "value": "{{ ds }}"},
+                ],
+            }
+        ]
+    },
+    gcp_conn_id="google_cloud_default",
+)
+```
+
+**Pros**
+- Complete isolation: no dbt installation on Airflow workers.
+- Independently scalable compute; Cloud Run handles cold start automatically.
+- Container image version is pinned, enabling atomic rollbacks.
+
+**Cons**
+- Cold start latency (10–30 s per invocation) adds to total pipeline duration.
+- Observability is limited to Airflow task-level (pass/fail), not per-model.
+- Cloud Run Job logs must be viewed separately in Cloud Logging.
+
+---
+
+## Comparison Table
+
+| Dimension         | BashOperator        | astronomer-cosmos          | CloudRunJobOperator      |
+|-------------------|---------------------|----------------------------|--------------------------|
+| Complexity        | Low                 | Medium                     | Medium–High              |
+| Per-model retry   | No                  | Yes                        | No                       |
+| Observability     | Stream log only     | Per-task in Airflow UI     | Job-level pass/fail      |
+| Isolation         | Shared worker env   | Shared worker env          | Dedicated container      |
+| Cost              | Minimal             | Minimal (worker CPU only)  | Cloud Run compute + egress |
+| Rollback          | Re-run DAG          | Re-run specific tasks      | Pin image version        |
+| Best for          | Small projects      | Large projects, on-call    | Regulated/isolated envs  |
+
+---
+
+## Full DAG: Extract → dbt (Cosmos) → dbt test → Publish
+
+This pattern represents a complete ESG data pipeline: raw provider data lands in GCS, dbt transforms it, tests validate quality, and a downstream publish step refreshes the index calculation API.
+
+```python
+from datetime import datetime, timedelta
+from pathlib import Path
+
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from cosmos import DbtTaskGroup, ProjectConfig, ProfileConfig, ExecutionConfig
+from cosmos.profiles import GoogleCloudOauthProfileMapping
+
+default_args = {
+    "owner": "data-engineering",
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+    "email_on_failure": True,
+    "email": ["data-oncall@example.com"],
+}
+
+profile_config = ProfileConfig(
+    profile_name="financial_indices",
+    target_name="prod",
+    profile_mapping=GoogleCloudOauthProfileMapping(
+        conn_id="google_cloud_default",
+        profile_args={
+            "project": "fin-data-prod",
+            "dataset": "esg_transformed",
+            "location": "EU",
+        },
+    ),
+)
+
+def extract_esg_provider_data(**context):
+    """Pull raw ESG scores from provider SFTP into GCS staging bucket."""
+    run_date = context["ds"]
+    # ... provider client logic omitted
+    context["ti"].xcom_push(key="raw_gcs_uri", value=f"gs://fin-raw/esg/{run_date}/")
+
+def publish_index_snapshot(**context):
+    """Notify downstream API that new index data is available."""
+    run_date = context["ds"]
+    raw_uri = context["ti"].xcom_pull(task_ids="extract_esg", key="raw_gcs_uri")
+    # ... API call or Pub/Sub publish omitted
+
+with DAG(
+    dag_id="esg_index_pipeline",
+    default_args=default_args,
+    schedule="0 5 * * 1-5",          # weekdays at 05:00 UTC
+    start_date=datetime(2025, 1, 1),
+    catchup=False,
+    tags=["esg", "dbt", "production"],
+) as dag:
+
+    extract = PythonOperator(
+        task_id="extract_esg",
+        python_callable=extract_esg_provider_data,
+    )
+
+    dbt_transform = DbtTaskGroup(
+        group_id="dbt_transform",
+        project_config=ProjectConfig(Path("/opt/dbt/financial_indices")),
+        profile_config=profile_config,
+        execution_config=ExecutionConfig(dbt_executable_path="/usr/local/bin/dbt"),
+        operator_args={
+            "vars": {"run_date": "{{ ds }}"},
+            "select": "tag:esg",          # only ESG-tagged models
+        },
+    )
+
+    dbt_test = DbtTaskGroup(
+        group_id="dbt_test",
+        project_config=ProjectConfig(Path("/opt/dbt/financial_indices")),
+        profile_config=profile_config,
+        execution_config=ExecutionConfig(dbt_executable_path="/usr/local/bin/dbt"),
+        operator_args={
+            "select": "tag:esg",
+            "store_failures": True,
+        },
+    )
+
+    publish = PythonOperator(
+        task_id="publish_index_snapshot",
+        python_callable=publish_index_snapshot,
+    )
+
+    extract >> dbt_transform >> dbt_test >> publish
+```
+
+---
+
+## Passing Variables to dbt
+
+### `--vars` flag (inline YAML)
+
+```python
+operator_args={"vars": {"run_date": "{{ ds }}", "provider": "msci"}}
+```
+
+Rendered at runtime by Airflow's Jinja engine before dbt receives the string.
+
+### Environment Variables
+
+dbt reads `env_var('KEY')` calls from `profiles.yml` and model SQL. Pass secrets as environment variables rather than embedding them in `--vars`.
+
+```yaml
+# profiles.yml
+financial_indices:
+  target: "{{ env_var('DBT_TARGET', 'dev') }}"
+  outputs:
+    prod:
+      type: bigquery
+      project: "{{ env_var('DBT_BQ_PROJECT') }}"
+      dataset: "{{ env_var('DBT_BQ_DATASET') }}"
+```
+
+```python
+env={"DBT_BQ_PROJECT": "fin-data-prod", "DBT_BQ_DATASET": "esg_transformed"}
+```
+
+### XComs to dbt via `--vars`
+
+When an upstream task computes a value (e.g., a reference date from a vendor feed), pass it into dbt via `--vars` using Airflow's template syntax:
+
+```python
+bash_command=(
+    "dbt run --vars '{cutoff_date: {{ ti.xcom_pull(task_ids=\"extract_esg\", "
+    "key=\"cutoff_date\") }}}'"
+)
+```
+
+> [!warning] XCom values pulled into `--vars` must be strings or simple scalars. Never pass secrets through XComs; use Airflow Connections or Secret Manager instead.
+
+---
+
+## Handling dbt Failures in Airflow
+
+### Failure Callback
+
+```python
+from airflow.models import TaskInstance
+
+def on_dbt_failure(context: dict):
+    ti: TaskInstance = context["task_instance"]
+    dag_id = context["dag"].dag_id
+    run_id = context["run_id"]
+    # Post to Slack, Datadog, or PagerDuty
+    send_alert(f"dbt failed in DAG {dag_id} | run {run_id} | task {ti.task_id}")
+
+default_args = {"on_failure_callback": on_dbt_failure}
+```
+
+### Partial Re-runs with Cosmos
+
+Because each model is a separate task, you can clear and re-run only failed tasks from the Airflow UI without re-executing upstream models that succeeded. This dramatically reduces re-run cost for large ESG transformation projects with hundreds of company-level models.
+
+### Exit Code Handling
+
+dbt exits with a non-zero code on test failures as well as runtime errors. Distinguish them by parsing `run_results.json` in a `TriggerRule.ALL_DONE` downstream task:
+
+```python
+from airflow.utils.trigger_rule import TriggerRule
+
+check_results = PythonOperator(
+    task_id="check_dbt_results",
+    python_callable=parse_run_results,      # reads /opt/dbt/target/run_results.json
+    trigger_rule=TriggerRule.ALL_DONE,      # runs even if dbt_run failed
+)
+```
+
+---
 
 ## Related
+
 - [[airflow-core-concepts]]
 - [[airflow-dag-patterns]]
 - [[dbt-core-concepts]]
+- [[dbt-ci-cd]]
+- [[dbt-observability]]

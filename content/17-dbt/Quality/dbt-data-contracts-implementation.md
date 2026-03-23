@@ -2,9 +2,9 @@
 tags: [how-to, dbt]
 type: how-to
 technology: [dbt]
-status: draft
+status: stable
 updated: 2026-03-23
-description: "Model contracts access levels versioning"
+description: "Model contracts, access levels, versioning, and breaking-change detection for financial data pipelines"
 related:
   - "[[dbt-testing-framework]]"
   - "[[data-contracts]]"
@@ -13,9 +13,469 @@ related:
 
 # dbt: Data Contracts Implementation
 
-_Content for this note is structured and ready for detailed implementation. See [[dbt-index]] for context and [[dbt-transformation-layer]] for the foundational overview._
+Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.
+
+---
+
+## 1. What Is a dbt Data Contract?
+
+A **data contract** is a schema declaration on a model that dbt enforces during `dbt run`. When `contract.enforced: true` is set, dbt will:
+
+1. Compile the model SQL.
+2. Introspect the actual column list and data types produced.
+3. Raise a compilation error if the output does not match the declared columns exactly.
+
+This transforms YAML schema files from documentation into active guardrails.
+
+> [!important] Contracts are compile-time, not runtime
+> Contract enforcement fires before SQL is executed in the warehouse. A mismatched column type or missing column stops the build immediately — no partial data is written.
+
+---
+
+## 2. Enabling a Contract
+
+Add the `contract` block to the model's config in YAML. The model must also declare every column with its `data_type`.
+
+```yaml
+# models/marts/finance/_finance__models.yml
+
+models:
+  - name: fct_index_performance
+    config:
+      contract:
+        enforced: true
+    description: >
+      Daily performance attribution for each index constituent.
+      This is the canonical performance fact table for reporting.
+    columns:
+      - name: performance_key
+        data_type: varchar
+        description: Surrogate key (index_id + constituent_id + price_date).
+        constraints:
+          - type: not_null
+          - type: primary_key
+
+      - name: index_id
+        data_type: varchar
+        description: Unique identifier for the benchmark index (e.g. MSCI_WORLD).
+        constraints:
+          - type: not_null
+
+      - name: constituent_id
+        data_type: varchar
+        description: ISIN or internal security identifier.
+        constraints:
+          - type: not_null
+
+      - name: price_date
+        data_type: date
+        description: Business date for this performance observation.
+        constraints:
+          - type: not_null
+
+      - name: weight_bop
+        data_type: numeric
+        description: Constituent weight at beginning of period (decimal, 0–1).
+
+      - name: total_return_local
+        data_type: numeric
+        description: Total return in local currency for the period.
+
+      - name: total_return_usd
+        data_type: numeric
+        description: Total return converted to USD using WM/Reuters 4pm fix.
+
+      - name: contribution_to_return
+        data_type: numeric
+        description: Weight × return. Sums to index total return across all rows.
+
+      - name: esg_score
+        data_type: numeric
+        description: Composite ESG score at price_date (0–100 scale).
+
+      - name: esg_provider_id
+        data_type: varchar
+        description: Source ESG data provider (MSCI, Sustainalytics, ISS).
+
+      - name: loaded_at
+        data_type: timestamp
+        description: Pipeline load timestamp (UTC).
+```
+
+> [!note] Supported data types
+> Data types must match your adapter's native types. In BigQuery use `FLOAT64` not `FLOAT`; in Snowflake use `NUMBER` or `FLOAT`. dbt normalises common aliases but is strict about array/struct types.
+
+---
+
+## 3. Model Access Levels
+
+Access levels control which other models can `ref()` a given model. They enforce a clear layered architecture without relying on naming conventions alone.
+
+| Level       | Who can `ref()` it                                 | Typical use                             |
+| ----------- | -------------------------------------------------- | --------------------------------------- |
+| `private`   | Models in the **same subdirectory / group**        | Intermediate staging helpers            |
+| `protected` | Models in the **same dbt project** (default)       | Shared intermediate models across teams |
+| `public`    | Any project, including **downstream mesh projects** | Stable mart / fact tables               |
+
+### 3.1 Declaring Access
+
+```yaml
+models:
+  - name: int_index_constituents_enriched
+    config:
+      access: private       # Only usable by models in the same group
+
+  - name: dim_security
+    config:
+      access: protected     # Available within this project only
+
+  - name: fct_index_performance
+    config:
+      access: public        # Exposed to all downstream dbt Mesh projects
+      contract:
+        enforced: true
+```
+
+### 3.2 Model Groups
+
+Groups pair with access levels to provide ownership metadata and restrict private models.
+
+```yaml
+# models/marts/finance/_groups.yml
+
+groups:
+  - name: index_analytics
+    owner:
+      name: Index Engineering
+      email: index-eng@example.com
+```
+
+```yaml
+models:
+  - name: int_cap_weight_calc
+    config:
+      group: index_analytics
+      access: private
+```
+
+Attempting to `ref('int_cap_weight_calc')` from outside the `index_analytics` group raises a compile-time error.
+
+> [!tip] Access + contracts together = dbt Mesh
+> Public + contract-enforced models are the building blocks of dbt Mesh. They let multiple dbt projects share certified data without coupling their transformation logic.
+
+---
+
+## 4. Model Versions
+
+Model versioning lets you publish a new breaking schema while keeping the old version live for existing consumers — no big-bang migrations.
+
+### 4.1 Declaring Versions
+
+```yaml
+# models/marts/finance/_finance__models.yml
+
+models:
+  - name: fct_index_performance
+    latest_version: 2
+    config:
+      contract:
+        enforced: true
+      access: public
+
+    versions:
+      - v: 1
+        config:
+          alias: fct_index_performance_v1   # Materialized under this name
+        defined_in: fct_index_performance_v1 # Points to the v1 SQL file
+
+      - v: 2
+        # Uses the default file: fct_index_performance.sql
+```
+
+dbt creates two separate materialisations: `fct_index_performance_v1` and `fct_index_performance` (the v2 current version).
+
+### 4.2 Version SQL Files
+
+```
+models/
+  marts/
+    finance/
+      fct_index_performance_v1.sql   ← v1 (legacy schema)
+      fct_index_performance.sql      ← v2 (current / latest)
+      _finance__models.yml
+```
+
+**v1 SQL** (legacy — no ESG columns):
+
+```sql
+-- models/marts/finance/fct_index_performance_v1.sql
+{{
+  config(
+    materialized = 'incremental',
+    unique_key   = 'performance_key',
+    on_schema_change = 'fail'
+  )
+}}
+
+select
+    {{ dbt_utils.generate_surrogate_key(['index_id', 'constituent_id', 'price_date']) }}
+        as performance_key,
+    index_id,
+    constituent_id,
+    price_date,
+    weight_bop,
+    total_return_local,
+    total_return_usd,
+    weight_bop * total_return_usd as contribution_to_return,
+    loaded_at
+from {{ ref('int_index_constituents_enriched') }}
+```
+
+**v2 SQL** (adds ESG columns):
+
+```sql
+-- models/marts/finance/fct_index_performance.sql
+{{
+  config(
+    materialized = 'incremental',
+    unique_key   = 'performance_key',
+    on_schema_change = 'fail'
+  )
+}}
+
+select
+    {{ dbt_utils.generate_surrogate_key(['index_id', 'constituent_id', 'price_date']) }}
+        as performance_key,
+    index_id,
+    constituent_id,
+    price_date,
+    weight_bop,
+    total_return_local,
+    total_return_usd,
+    weight_bop * total_return_usd as contribution_to_return,
+    esg.composite_score                as esg_score,
+    esg.provider_id                    as esg_provider_id,
+    p.loaded_at
+from {{ ref('int_index_constituents_enriched') }} p
+left join {{ ref('int_esg_scores_latest') }}     esg
+    using (constituent_id, price_date)
+```
+
+### 4.3 Referencing Specific Versions
+
+Consumers pin to a version to opt in to upgrades explicitly:
+
+```sql
+-- Pin to stable v1 until migration is complete
+select * from {{ ref('fct_index_performance', v=1) }}
+
+-- Opt in to v2
+select * from {{ ref('fct_index_performance', v=2) }}
+
+-- Always use latest (v=2 today)
+select * from {{ ref('fct_index_performance') }}
+```
+
+---
+
+## 5. Breaking Change Detection in CI
+
+Use `dbt state:modified` with the `--select` flag in your CI pipeline to catch contract violations before they reach production.
+
+### 5.1 CI Workflow (GitHub Actions)
+
+```yaml
+# .github/workflows/dbt-ci.yml
+
+name: dbt CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dbt
+        run: pip install dbt-bigquery==1.8.*
+
+      - name: Download production manifest
+        run: |
+          gsutil cp gs://my-dbt-artifacts/manifest.json ./prod-manifest/manifest.json
+
+      - name: dbt compile (new state)
+        run: dbt compile --target prod
+
+      - name: Check for breaking contract changes
+        run: |
+          dbt run \
+            --select "state:modified+" \
+            --defer \
+            --state ./prod-manifest \
+            --target prod \
+            --full-refresh false
+```
+
+`state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project.
+
+### 5.2 Catching Column Removals
+
+If a PR removes `esg_score` from `fct_index_performance`, the contract check fails:
+
+```
+Compilation Error in model fct_index_performance
+  Contract breach: column 'esg_score' is declared in the contract
+  but was not found in the model's SQL output.
+  Contract enforced: true
+```
+
+The PR is blocked until the column is restored or the contract YAML is updated and the version is bumped.
+
+> [!warning] Contract ≠ backward-compatible schema
+> Removing a declared column or changing its data type is always a breaking change regardless of version. To remove a column gracefully: publish a new version, deprecate the old one, give consumers a migration window, then delete the old version.
+
+### 5.3 `dbt source freshness` in CI
+
+Pair contract checks with source freshness gates so the pipeline fails before running if upstream feeds are stale:
+
+```yaml
+# sources.yml
+sources:
+  - name: index_provider_raw
+    freshness:
+      warn_after:  {count: 4,  period: hour}
+      error_after: {count: 24, period: hour}
+    loaded_at_field: _ingested_at
+    tables:
+      - name: raw_constituent_weights
+      - name: raw_esg_scores
+```
+
+```bash
+dbt source freshness --select source:index_provider_raw
+```
+
+---
+
+## 6. Full Annotated Contract: `fct_index_performance`
+
+This consolidates all concepts: contract enforcement, public access, versioning, and column-level constraints.
+
+```yaml
+models:
+  - name: fct_index_performance
+    description: >
+      Public, contract-enforced fact table for daily index constituent performance.
+      v1 is maintained for legacy consumers. v2 adds ESG columns.
+      Breaking changes require a version bump and migration notice.
+    latest_version: 2
+    config:
+      access: public
+      contract:
+        enforced: true
+      materialized: incremental
+      unique_key: performance_key
+      on_schema_change: fail
+
+    constraints:
+      - type: primary_key
+        columns: [performance_key]
+
+    versions:
+      - v: 1
+        defined_in: fct_index_performance_v1
+        config:
+          alias: fct_index_performance_v1
+      - v: 2
+
+    columns:
+      - name: performance_key
+        data_type: varchar
+        constraints: [{type: not_null}, {type: primary_key}]
+
+      - name: index_id
+        data_type: varchar
+        constraints: [{type: not_null}]
+        tests:
+          - accepted_values:
+              values: ['MSCI_WORLD', 'MSCI_EM', 'RUSSELL_1000', 'FTSE_100']
+
+      - name: constituent_id
+        data_type: varchar
+        constraints: [{type: not_null}]
+
+      - name: price_date
+        data_type: date
+        constraints: [{type: not_null}]
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= '2000-01-01'"
+
+      - name: weight_bop
+        data_type: numeric
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "between 0 and 1"
+
+      - name: total_return_local
+        data_type: numeric
+
+      - name: total_return_usd
+        data_type: numeric
+
+      - name: contribution_to_return
+        data_type: numeric
+
+      - name: esg_score
+        data_type: numeric
+        description: "Only present in v2+. Null when ESG data unavailable."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "is null or (between 0 and 100)"
+
+      - name: esg_provider_id
+        data_type: varchar
+        description: "Only present in v2+."
+        tests:
+          - accepted_values:
+              values: ['MSCI', 'SUSTAINALYTICS', 'ISS', 'REFINITIV']
+              quote: false
+              where: "esg_provider_id is not null"
+
+      - name: loaded_at
+        data_type: timestamp
+        constraints: [{type: not_null}]
+```
+
+---
+
+## 7. Deprecating a Version
+
+Once consumers have migrated away from v1, mark it deprecated before removing:
+
+```yaml
+versions:
+  - v: 1
+    defined_in: fct_index_performance_v1
+    config:
+      alias: fct_index_performance_v1
+    deprecation_date: "2026-06-30"   # dbt emits a warning after this date
+
+  - v: 2
+```
+
+dbt will print a deprecation warning for any `ref(..., v=1)` call after `2026-06-30`, giving teams a grace period before the model is physically removed.
+
+---
 
 ## Related
+
 - [[dbt-testing-framework]]
 - [[data-contracts]]
 - [[dbt-core-concepts]]
+- [[dbt-macros-and-jinja]]
+- [[dbt-packages]]

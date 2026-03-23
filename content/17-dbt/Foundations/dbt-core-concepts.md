@@ -1,10 +1,10 @@
 ---
 tags: [concept, dbt]
 type: concept
-technology: [dbt]
-status: draft
+technology: [dbt, sql-server, bigquery]
+status: stable
 updated: 2026-03-23
-description: "dbt core, compilation, DAG, materializations, profiles, packages"
+description: "What dbt is, how it compiles, the DAG, materializations, profiles, adapters, and packages."
 related:
   - "[[dbt-project-structure]]"
   - "[[dbt-cli-reference]]"
@@ -12,12 +12,237 @@ related:
   - "[[airflow-core-concepts]]"
 ---
 
-# dbt: Core Concepts
+# dbt Core Concepts
 
-_Content for this note is structured and ready for detailed implementation. See [[dbt-index]] for context and [[dbt-transformation-layer]] for the foundational overview._
+> [!abstract] When You Need This
+> You are setting up dbt for the first time, or onboarding a team member who has never used it. This note explains what dbt is, how it works internally, and the mental model for thinking about dbt projects.
+
+## What dbt Is (and Is Not)
+
+dbt is the **T** in ELT. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
+
+| dbt Does | dbt Does Not |
+|----------|-------------|
+| Compile Jinja + SQL into executable SQL | Connect to source APIs or files |
+| Execute SQL against the warehouse | Move data between systems |
+| Build a dependency graph (DAG) from ref() calls | Schedule itself (needs Airflow, cron, or CI) |
+| Run tests against data | Replace stored procedures (but can supersede them) |
+| Generate documentation and lineage | Handle real-time/streaming data |
+
+## dbt Core vs dbt Cloud
+
+| Factor | dbt Core (open source) | dbt Cloud (SaaS) |
+|--------|----------------------|------------------|
+| Cost | Free | $100+/seat/month |
+| Execution | CLI, runs anywhere | Managed cloud environment |
+| Scheduling | You provide (Airflow, cron) | Built-in scheduler |
+| IDE | Your editor + CLI | Browser-based IDE |
+| CI | You build (GitHub Actions) | Built-in slim CI |
+| State management | You manage manifest.json | Automatic |
+| Best for | Teams with Airflow, cost-conscious | Teams without orchestration |
+
+> [!tip] For This Stack
+> We use dbt Core because we already have Airflow for orchestration and GitHub Actions for CI/CD. dbt Core runs inside a Docker container triggered by Airflow.
+
+## Compilation Architecture
+
+dbt compiles before executing:
+
+```
+Your model (Jinja + SQL)
+    --> dbt compile
+Compiled SQL (pure SQL)
+    --> dbt run
+Warehouse executes the SQL
+    --> Table/view created
+```
+
+Example model `stg_daily_prices.sql`:
+
+```sql
+{{ config(materialized='view') }}
+
+SELECT
+    instrument_isin,
+    CAST(price_date AS DATE) AS price_date,
+    CAST(close_price AS DECIMAL(18,4)) AS close_price,
+    CAST(volume AS BIGINT) AS volume
+FROM {{ source('bronze', 'raw_daily_prices') }}
+WHERE close_price > 0
+```
+
+After compilation, `target/compiled/` contains pure SQL with `{{ source() }}` resolved to the actual table name.
+
+## The DAG
+
+Every dbt project is a Directed Acyclic Graph built automatically from two functions:
+
+- **ref('model_name')** — references another dbt model (creates a dependency edge)
+- **source('source_name', 'table_name')** — references an external table (entry point)
+
+```sql
+-- stg_daily_prices.sql (reads from source)
+SELECT * FROM {{ source('bronze', 'raw_daily_prices') }}
+
+-- int_daily_returns.sql (depends on stg_daily_prices)
+SELECT *,
+    (close_price - LAG(close_price) OVER (
+        PARTITION BY instrument_isin ORDER BY price_date
+    )) / NULLIF(LAG(close_price) OVER (
+        PARTITION BY instrument_isin ORDER BY price_date
+    ), 0) AS daily_return
+FROM {{ ref('stg_daily_prices') }}
+
+-- fct_index_performance.sql (depends on int_daily_returns + int_constituent_weights)
+SELECT
+    w.index_code,
+    r.price_date,
+    SUM(r.daily_return * w.weight_pct) AS weighted_return
+FROM {{ ref('int_daily_returns') }} r
+JOIN {{ ref('int_constituent_weights') }} w
+    ON r.instrument_isin = w.instrument_isin
+    AND r.price_date = w.price_date
+GROUP BY w.index_code, r.price_date
+```
+
+dbt knows to run staging first, then intermediate, then marts. You never specify execution order — ref() handles it.
+
+> [!tip] Contrast with Airflow
+> In Airflow, you explicitly define `task_a >> task_b >> task_c`. In dbt, dependencies are implicit from ref(). Airflow orchestrates *when* dbt runs; dbt manages the *order within* a run.
+
+## Materializations
+
+| Materialization | Creates | When to Use | Storage Cost |
+|----------------|---------|-------------|-------------|
+| **view** | SQL view | Staging models, light transforms | None |
+| **table** | Physical table (rebuilt each run) | Intermediate, small datasets | Moderate |
+| **incremental** | Appends/merges new rows only | Large fact tables, daily data | Lowest at scale |
+| **ephemeral** | CTE (no object) | Helper logic, no persistence needed | Zero |
+| **snapshot** | SCD Type 2 history | Tracking dimension changes | Moderate |
+
+```sql
+{{ config(
+    materialized='incremental',
+    unique_key=['instrument_isin', 'price_date']
+) }}
+
+SELECT ...
+FROM {{ ref('stg_daily_prices') }}
+
+{% if is_incremental() %}
+WHERE price_date > (SELECT MAX(price_date) FROM {{ this }})
+{% endif %}
+```
+
+See [[dbt-materializations]] for the deep dive with decision matrices.
+
+## Profiles and Targets
+
+`profiles.yml` defines where dbt connects. Each profile has multiple targets (environments):
+
+```yaml
+financial_platform:
+  target: dev
+  outputs:
+    dev:
+      type: sqlserver
+      server: localhost
+      port: 1433
+      database: analytics_db
+      schema: dbt_dev
+      user: "{{ env_var('SQL_USER') }}"
+      password: "{{ env_var('SQL_PASSWORD') }}"
+      driver: "ODBC Driver 18 for SQL Server"
+      trust_cert: true
+      threads: 4
+
+    prod:
+      type: sqlserver
+      server: sql-vm.internal
+      database: analytics_db
+      schema: gold
+      threads: 8
+
+    bigquery:
+      type: bigquery
+      method: service-account
+      project: data-platform-prod
+      dataset: analytics
+      threads: 16
+      location: EU
+```
+
+Switch targets: `dbt run --target prod` or `dbt run --target bigquery`.
+
+## Adapters
+
+| Adapter | Package | Database |
+|---------|---------|----------|
+| dbt-sqlserver | `pip install dbt-sqlserver` | SQL Server 2016+ |
+| dbt-bigquery | `pip install dbt-bigquery` | Google BigQuery |
+| dbt-postgres | `pip install dbt-postgres` | PostgreSQL |
+
+Each adapter handles SQL dialect differences. See [[dbt-sqlserver-adapter]] and [[dbt-bigquery-adapter]].
+
+## Packages
+
+Declare in `packages.yml`, install with `dbt deps`:
+
+```yaml
+packages:
+  - package: dbt-labs/dbt_utils
+    version: ">=1.0.0"
+  - package: calogica/dbt_expectations
+    version: ">=0.10.0"
+  - package: elementary-data/elementary
+    version: ">=0.15.0"
+```
+
+See [[dbt-packages]] for the full package guide.
+
+## The dbt_project.yml
+
+```yaml
+name: financial_platform
+version: '1.0.0'
+profile: financial_platform
+
+model-paths: ["models"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+vars:
+  index_universe: ['EURO_STOXX_50', 'GLOBAL_ESG_100']
+
+models:
+  financial_platform:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: gold
+```
+
+## Anti-Patterns
+
+| Anti-Pattern | Problem | Better Approach |
+|-------------|---------|----------------|
+| Business logic in staging | Staging should be 1:1 with source | Move logic to intermediate |
+| SELECT * in models | Schema changes propagate silently | Explicitly list columns |
+| No ref() (hardcoded tables) | Breaks DAG, no dependency tracking | Always use ref() and source() |
+| One giant model | Impossible to test or debug | Split into staging/intermediate/mart |
+| Running without tests | Bad data reaches production | Use dbt build (runs + tests together) |
 
 ## Related
-- [[dbt-project-structure]]
-- [[dbt-cli-reference]]
-- [[dbt-transformation-layer]]
-- [[airflow-core-concepts]]
+
+- [[dbt-project-structure]] — Directory layout and naming conventions
+- [[dbt-cli-reference]] — CLI commands and flags
+- [[dbt-transformation-layer]] — Code-heavy walkthrough
+- [[airflow-core-concepts]] — How Airflow orchestrates dbt runs
+- [[medallion-architecture]] — How bronze/silver/gold maps to staging/intermediate/marts
