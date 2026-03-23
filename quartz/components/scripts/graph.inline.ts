@@ -174,7 +174,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     )
     .force("center", forceCenter().strength(centerForce * 1.5))
     .force("link", forceLink(graphData.links).distance(linkDistance).strength(0.8))
-    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 2).iterations(4))
+    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 1).iterations(3))
 
   const radius = (Math.min(width, height) / 2) * 0.8
   if (enableRadial) simulation.force("radial", forceRadial(radius).strength(0.2))
@@ -245,9 +245,10 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     const numLinks = graphData.links.filter(
       (l) => l.source.id === d.id || l.target.id === d.id,
     ).length
-    if (numLinks <= 1) return 3
-    if (numLinks <= 5) return 4
-    return 4 + Math.pow(numLinks - 5, 0.4)
+    if (numLinks <= 1) return 2
+    if (numLinks <= 5) return 2.5
+    if (numLinks <= 15) return 3
+    return 3 + Math.pow(numLinks - 15, 0.3)
   }
 
   let hoveredNodeId: string | null = null
@@ -494,7 +495,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         .container(() => app.canvas)
         .subject(() => graphData.nodes.find((n) => n.id === hoveredNodeId))
         .on("start", function dragstarted(event) {
-          if (!event.active) simulation.alphaTarget(0.3).restart()
+          if (!event.active) simulation.alphaTarget(0.05).restart()
           event.subject.fx = event.subject.x
           event.subject.fy = event.subject.y
           event.subject.__initialDragPos = {
