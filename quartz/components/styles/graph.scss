@@ -10,7 +10,7 @@
     border-radius: 5px;
     border: 1px solid var(--lightgray);
     box-sizing: border-box;
-    height: 400px;
+    height: 250px;
     margin: 0.5em 0;
     position: relative;
     overflow: hidden;
@@ -62,8 +62,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      height: 80vh;
-      width: 80vw;
+      height: 92vh;
+      width: 92vw;
 
       @media all and not ($desktop) {
         width: 90%;
