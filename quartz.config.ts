@@ -86,10 +86,10 @@ const config: QuartzConfig = {
       Plugin.ContentPage(),
       Plugin.FolderPage(),
       Plugin.TagPage(),
-      // Plugin.ContentIndex({
-      //   enableSiteMap: true,
-      //   enableRSS: true,
-      // }),
+      Plugin.ContentIndex({
+        enableSiteMap: true,
+        enableRSS: true,
+      }),
       Plugin.Assets(),
       Plugin.Static(),
       Plugin.Favicon(),

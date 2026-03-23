@@ -1,91 +1,53 @@
 import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } from "./types"
+import style from "./styles/search.scss"
+// @ts-ignore
+import script from "./scripts/search.inline"
 import { classNames } from "../util/lang"
+import { i18n } from "../i18n"
 
-export default (() => {
-  const Search: QuartzComponent = ({ displayClass }: QuartzComponentProps) => {
+export interface SearchOptions {
+  enablePreview: boolean
+}
+
+const defaultOptions: SearchOptions = {
+  enablePreview: true,
+}
+
+export default ((userOpts?: Partial<SearchOptions>) => {
+  const Search: QuartzComponent = ({ displayClass, cfg }: QuartzComponentProps) => {
+    const opts = { ...defaultOptions, ...userOpts }
+    const searchPlaceholder = i18n(cfg.locale).components.search.searchBarPlaceholder
     return (
       <div class={classNames(displayClass, "search")}>
-        <div id="pagefind-search-container"></div>
+        <div class="search-button">
+          <svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7">
+            <title>Search</title>
+            <g class="search-path" fill="none">
+              <path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4" />
+              <circle cx="8" cy="8" r="7" />
+            </g>
+          </svg>
+          <p>{i18n(cfg.locale).components.search.title}</p>
+        </div>
+        <div class="search-container">
+          <div class="search-space">
+            <input
+              autocomplete="off"
+              id="search-bar"
+              name="search"
+              type="text"
+              aria-label={searchPlaceholder}
+              placeholder={searchPlaceholder}
+            />
+            <div id="results-container" data-preview={opts.enablePreview}></div>
+          </div>
+        </div>
       </div>
     )
   }
 
-  Search.css = `
-    #pagefind-search-container {
-      width: 100%;
-      min-width: 300px;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    /* Tokyo Night Theme Overrides for Pagefind */
-    :root {
-      --pagefind-ui-scale: 0.85;
-      --pagefind-ui-primary: #7aa2f7;
-      --pagefind-ui-text: #a9b1d6;
-      --pagefind-ui-background: #13141d;
-      --pagefind-ui-border: #1a1b26;
-      --pagefind-ui-tag: #565f89;
-      --pagefind-ui-border-width: 1px;
-      --pagefind-ui-border-radius: 6px;
-      --pagefind-ui-image-border-radius: 6px;
-      --pagefind-ui-image-box-ratio: 3 / 2;
-      --pagefind-ui-font: "Inter", sans-serif;
-    }
-    
-    .pagefind-ui__search-input {
-      background-color: #13141d !important;
-      color: #a9b1d6 !important;
-      border: 1px solid #1a1b26 !important;
-    }
-    
-    .pagefind-ui__result-link {
-      color: #7aa2f7 !important;
-    }
-    
-    .pagefind-ui__result-excerpt {
-      color: #a9b1d6 !important;
-    }
-
-    .pagefind-ui__drawer {
-      background-color: #1a1b26 !important;
-      border: 1px solid #2f334d !important;
-    }
-  `
-
-  Search.afterDOMLoaded = `
-    // Determine correct base path for GitHub Pages vs Localhost
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const basePath = isLocal ? '' : '/elysium';
-    const pagefindDir = basePath + '/_pagefind';
-
-    const loadPagefind = () => {
-      if (document.querySelector('#pagefind-search-container')) {
-        new PagefindUI({ 
-          element: '#pagefind-search-container',
-          showImages: false,
-          showSubResults: true,
-          baseUrl: basePath + '/'
-        });
-      }
-    };
-
-    if (typeof PagefindUI !== 'undefined') {
-      loadPagefind();
-    } else {
-      // Dynamically load Pagefind CSS
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = pagefindDir + '/pagefind-ui.css';
-      document.head.appendChild(link);
-
-      // Dynamically load Pagefind JS
-      const script = document.createElement('script');
-      script.src = pagefindDir + '/pagefind-ui.js';
-      script.onload = loadPagefind;
-      document.head.appendChild(script);
-    }
-  `
+  Search.afterDOMLoaded = script
+  Search.css = style
 
   return Search
 }) satisfies QuartzComponentConstructor
