@@ -49,18 +49,22 @@ export default ((_userOpts?: Record<string, unknown>) => {
           <div class="search-tooltip">
             <span class="search-tooltip-icon">?</span>
             <div class="search-tooltip-content">
-              <div class="search-tooltip-title">Search syntax</div>
-              <table>
-                <tr><td><code>python datetime</code></td><td>Both words on same line (AND)</td></tr>
-                <tr><td><code>"exact phrase"</code></td><td>Exact phrase match</td></tr>
-                <tr><td><code>-exclude</code></td><td>Exclude a term</td></tr>
-                <tr><td><code>#tag</code></td><td>Filter by tag</td></tr>
-                <tr><td><code>path:folder</code></td><td>Filter by path</td></tr>
-              </table>
-              <div class="search-tooltip-note">
-                Use the <strong>AND/OR</strong> toggle to switch between
-                all-terms-on-same-line or any-term matching.
+              <div class="search-tooltip-title">Search help</div>
+              <div class="search-tooltip-section">
+                <strong>AND</strong> (green) — all terms must appear on the
+                <em>same line</em>. Narrow, precise results.
               </div>
+              <div class="search-tooltip-section">
+                <strong>OR</strong> (blue) — pages containing <em>any</em> of
+                the terms. Broad results, union of each term.
+              </div>
+              <div class="search-tooltip-divider"></div>
+              <table>
+                <tr><td><code>"exact phrase"</code></td><td>Exact phrase match</td></tr>
+                <tr><td><code>-term</code></td><td>Exclude pages with term</td></tr>
+                <tr><td><code>#tag</code></td><td>Filter by tag</td></tr>
+                <tr><td><code>path:folder</code></td><td>Filter by folder path</td></tr>
+              </table>
             </div>
           </div>
         </div>

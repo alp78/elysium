@@ -162,11 +162,19 @@
           font-size: 0.68rem;
         }
 
-        .search-tooltip-note {
-          padding-top: 0.35rem;
+        .search-tooltip-section {
+          margin-bottom: 0.3rem;
+          font-size: 0.7rem;
+          color: var(--darkgray);
+
+          strong {
+            color: var(--dark);
+          }
+        }
+
+        .search-tooltip-divider {
           border-top: 1px solid var(--lightgray);
-          color: var(--gray);
-          font-size: 0.68rem;
+          margin: 0.4rem 0;
         }
       }
 

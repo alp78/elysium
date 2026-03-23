@@ -132,13 +132,12 @@ function wordRegex(term: string): RegExp {
   let re = wordRegexCache.get(term)
   if (!re) {
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    // Use \b only where the term edge is a word char [a-zA-Z0-9_].
-    // For terms like "c#", the # end has no \b — use a lookahead instead.
+    // Boundary at the START only — so "python" won't match inside
+    // "cpython" but "datetime" WILL match "datetimemathutils".
+    // For terms starting with non-word chars (like "#"), use lookahead.
     const startsWord = /^\w/.test(term)
-    const endsWord = /\w$/.test(term)
     const prefix = startsWord ? "\\b" : "(?<=\\s|^|[^\\w])"
-    const suffix = endsWord ? "\\b" : "(?=\\s|$|[^\\w])"
-    re = new RegExp(`${prefix}${escaped}${suffix}`, "i")
+    re = new RegExp(`${prefix}${escaped}`, "i")
     wordRegexCache.set(term, re)
   }
   return re
@@ -235,7 +234,7 @@ function runSearch(query: string): SearchDoc[] {
     })
   }
 
-  return docs.slice(0, 50)
+  return docs.slice(0, 200)
 }
 
 // ---------------------------------------------------------------------------
