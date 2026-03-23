@@ -164,12 +164,42 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   const width = graph.offsetWidth
   const height = Math.max(graph.offsetHeight, 250)
 
+  // extract section prefix for clustering
+  function getSection(id: string): string {
+    const match = id.match(/^(\d{2}-[^/]+)/)
+    return match ? match[1] : "__root"
+  }
+
+  // compute section cluster centers (evenly distributed in a circle)
+  const sections = [...new Set(graphData.nodes.map((n) => getSection(n.id)))]
+  const sectionAngle = (2 * Math.PI) / Math.max(sections.length, 1)
+  const clusterRadius = Math.min(width, height) * 0.25
+  const sectionCenters: Record<string, { x: number; y: number }> = {}
+  sections.forEach((s, i) => {
+    sectionCenters[s] = {
+      x: width / 2 + clusterRadius * Math.cos(i * sectionAngle),
+      y: height / 2 + clusterRadius * Math.sin(i * sectionAngle),
+    }
+  })
+
+  // custom clustering force: gently pull nodes toward their section center
+  function forceCluster(alpha: number) {
+    for (const d of graphData.nodes) {
+      const center = sectionCenters[getSection(d.id)]
+      if (center && d.x !== undefined && d.y !== undefined) {
+        d.vx = (d.vx ?? 0) + (center.x - d.x) * alpha * 0.15
+        d.vy = (d.vy ?? 0) + (center.y - d.y) * alpha * 0.15
+      }
+    }
+  }
+
   // we virtualize the simulation and use pixi to actually render it
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(graphData.nodes)
     .force("charge", forceManyBody().strength(-100 * repelForce))
     .force("center", forceCenter().strength(centerForce))
     .force("link", forceLink(graphData.links).distance(linkDistance))
     .force("collide", forceCollide<NodeData>((n) => nodeRadius(n)).iterations(3))
+    .force("cluster", (alpha: number) => forceCluster(alpha))
 
   const radius = (Math.min(width, height) / 2) * 0.8
   if (enableRadial) simulation.force("radial", forceRadial(radius).strength(0.2))
