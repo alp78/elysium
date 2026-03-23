@@ -169,12 +169,12 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .force(
       "charge",
       forceManyBody()
-        .strength(-80 * repelForce)
-        .distanceMax(width * 0.4),
+        .strength(-100 * repelForce)
+        .distanceMax(width * 0.3),
     )
-    .force("center", forceCenter().strength(centerForce * 1.5))
-    .force("link", forceLink(graphData.links).distance(linkDistance).strength(0.8))
-    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 1).iterations(3))
+    .force("center", forceCenter().strength(centerForce))
+    .force("link", forceLink(graphData.links).distance(linkDistance).strength(1))
+    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 1.5).iterations(3))
 
   // Precompute link counts per node for label priority
   for (const n of graphData.nodes) {
@@ -549,7 +549,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           [0, 0],
           [width, height],
         ])
-        .scaleExtent([0.25, 4])
+        .scaleExtent([0.1, 15])
         .on("zoom", ({ transform }) => {
           currentTransform = transform
           stage.scale.set(transform.k, transform.k)

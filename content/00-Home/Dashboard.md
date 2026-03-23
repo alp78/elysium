@@ -14,6 +14,8 @@ status: complete
 
 # Elysium — Data Engineering Knowledge Base
 
+[Vault Analytics Dashboard](https://alp78.github.io/elysium/static/vault-analytics.html) — Interactive charts, filters, tag browser, and vault health scorecard.
+
 Welcome to Elysium, a structured knowledge base for practicing data engineers covering SQL Server, Google Cloud Platform, Python, Terraform, Docker, Git, Airflow, Datadog, data architecture, financial domain knowledge, and AI-assisted engineering.
 
 ## Start Here
@@ -132,9 +134,4 @@ See [[adr-index]] for all ADRs.
 | [[airflow-troubleshooting]] | Airflow scheduler and DAGs |
 | [[troubleshooting-flowcharts]] | SQL Server diagnostic flowcharts |
 
----
-
-## Vault Analytics
-
-[Open Interactive Dashboard](https://alp78.github.io/elysium/static/vault-analytics.html) — Charts, filters, tag browser, section heatmap, and vault health scorecard.
 

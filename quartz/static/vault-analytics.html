@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Elysium — Vault Analytics</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" onload="window.__chartReady=true"></script>
 <style>
 :root{--light:#1a1b26;--lightgray:#24283b;--gray:#565f89;--darkgray:#a9b1d6;--dark:#c0caf5;--secondary:#7aa2f7;--tertiary:#bb9af7;--bodyFont:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{background:var(--light);color:var(--darkgray);font-family:var(--bodyFont);margin:0;padding:1rem 2rem;max-width:1200px;margin:0 auto}
@@ -16,9 +16,11 @@ a{color:var(--secondary);text-decoration:none}a:hover{text-decoration:underline}
 .vd-card-value{font-size:1.8rem;font-weight:700;color:var(--secondary)}
 .vd-card-label{font-size:.75rem;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
 .vd-chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
-.vd-chart-half{height:350px;position:relative;overflow:hidden}
-.vd-chart-wrap{position:relative;height:300px;width:100%}
-.vd-tag-wrap{position:relative;height:400px;width:100%;overflow:hidden}
+.vd-chart-half{position:relative;overflow:hidden}
+.vd-chart-wrap{position:relative;width:100%}
+.vd-chart-wrap-tall{position:relative;height:500px;width:100%}
+.vd-chart-wrap-sq{position:relative;height:350px;width:100%}
+.vd-tag-wrap{position:relative;height:500px;width:100%;overflow:hidden}
 .vd-chart-half h3,.vd-section h3,.vd-section h4{color:var(--dark);margin-bottom:.5rem;font-size:1rem}
 .vd-section{margin:1.5rem 0}
 .vd-filter-bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem}
@@ -65,6 +67,7 @@ const MANIFEST_URL=BASE+'/static/vault-manifest.json';
 const COLORS=['#32CD32','#FF8C00','#3381FF','#800080','#00CC00','#82A3FF','#FFA500','#1E90FF','#FFD700','#FFFF00','#FF00FF','#FF0096','#00FFFF','#FF0000','#999999','#CC6600','#66CCFF','#ffffff'];
 const TYPE_COLORS={reference:'#3381FF',concept:'#00CC00','how-to':'#FF8C00',runbook:'#FF0000',troubleshooting:'#FF0096',index:'#999999',adr:'#800080','cheat-sheet':'#FFD700',comparison:'#00FFFF',moc:'#82A3FF',unknown:'#666'};
 let allNotes=[],manifest=null,filters={section:null,type:null,tags:[],search:''};
+let sectionChartInst=null,typeChartInst=null;
 
 async function init(){
   try{
@@ -84,7 +87,7 @@ function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;
 
 function render(){
   const d=document.getElementById('vault-dashboard');d.innerHTML='';
-  renderScorecard(d);renderCharts(d);renderTagCloud(d);renderBrowser(d);renderInsights(d);renderHeatmap(d);
+  renderScorecard(d);renderCharts(d);renderBrowser(d);renderTagCloud(d);renderInsights(d);
   applyFilters();
 }
 
@@ -97,14 +100,17 @@ function renderScorecard(p){
 function renderCharts(p){
   const row=el('div','vd-chart-row',p);
   const bc=el('div','vd-chart-half',row);el('h3','',bc).textContent='Notes by Section';
-  const bw=el('div','vd-chart-wrap',bc);const c1=el('canvas','',bw);
+  const bw=el('div','vd-chart-wrap-tall',bc);const c1=el('canvas','',bw);
   const dc=el('div','vd-chart-half',row);el('h3','',dc).textContent='Notes by Type';
-  const dw=el('div','vd-chart-wrap',dc);const c2=el('canvas','',dw);
+  const dw=el('div','vd-chart-wrap-sq',dc);const c2=el('canvas','',dw);
   requestAnimationFrame(()=>{
     const sl=manifest.sections_list.sort((a,b)=>b.note_count-a.note_count);
-    new Chart(c1,{type:'bar',data:{labels:sl.map(s=>s.name),datasets:[{data:sl.map(s=>s.note_count),backgroundColor:sl.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' notes'}}},scales:{x:{grid:{color:'rgba(128,128,128,.15)'},ticks:{color:'#a9b1d6'}},y:{grid:{display:false},ticks:{color:'#a9b1d6',font:{size:11}}}},onClick:(_,els)=>{if(els.length){filters.section=sl[els[0].index].slug;applyFilters();}}}});
+    const baseColors=sl.map((_,i)=>COLORS[i%COLORS.length]);
+    const dimColors=baseColors.map(c=>c+'44');
+    sectionChartInst=new Chart(c1,{type:'bar',data:{labels:sl.map(s=>s.name),datasets:[{data:sl.map(s=>s.note_count),backgroundColor:baseColors.slice(),borderWidth:0,barThickness:20}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' notes'}}},scales:{x:{grid:{color:'rgba(128,128,128,.15)'},ticks:{color:'#a9b1d6'}},y:{grid:{display:false},ticks:{color:'#a9b1d6',font:{size:11},autoSkip:false}}},onClick:(_,els)=>{if(els.length){const clicked=sl[els[0].index].slug;if(filters.section===clicked){filters.section=null;}else{filters.section=clicked;}updateChartHighlights();applyFilters();}}}});
     const types=Object.entries(manifest.notes_by_type);
-    new Chart(c2,{type:'doughnut',data:{labels:types.map(t=>t[0]),datasets:[{data:types.map(t=>t[1]),backgroundColor:types.map(t=>TYPE_COLORS[t[0]]||'#666'),borderWidth:1,borderColor:'rgba(0,0,0,.2)'}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{position:'bottom',labels:{color:'#a9b1d6',font:{size:11}}},tooltip:{callbacks:{label:ctx=>{const pct=Math.round(ctx.raw/manifest.total_notes*100);return ctx.label+': '+ctx.raw+' ('+pct+'%)';}}}},onClick:(_,els)=>{if(els.length){filters.type=types[els[0].index][0];applyFilters();}}}});
+    const typeBaseColors=types.map(t=>TYPE_COLORS[t[0]]||'#666');
+    typeChartInst=new Chart(c2,{type:'doughnut',data:{labels:types.map(t=>t[0]),datasets:[{data:types.map(t=>t[1]),backgroundColor:typeBaseColors.slice(),borderWidth:2,borderColor:'rgba(0,0,0,.3)',offset:types.map(()=>0)}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{position:'bottom',labels:{color:'#a9b1d6',font:{size:11}}},tooltip:{callbacks:{label:ctx=>{const pct=Math.round(ctx.raw/manifest.total_notes*100);return ctx.label+': '+ctx.raw+' ('+pct+'%)';}}}},onClick:(_,els)=>{if(els.length){const clicked=types[els[0].index][0];if(filters.type===clicked){filters.type=null;}else{filters.type=clicked;}updateChartHighlights();applyFilters();}}}});
   });
 }
 
@@ -123,7 +129,7 @@ function renderBrowser(p){
   const si=document.createElement('input');si.type='text';si.placeholder='Search notes...';si.className='vd-search';
   let db;si.addEventListener('input',()=>{clearTimeout(db);db=setTimeout(()=>{filters.search=si.value;applyFilters();},200);});
   fb.appendChild(si);
-  const cb=el('button','vd-btn',fb);cb.textContent='Clear All';cb.onclick=()=>{filters={section:null,type:null,tags:[],search:''};si.value='';applyFilters();};
+  const cb=el('button','vd-btn',fb);cb.textContent='Clear All';cb.onclick=()=>{filters={section:null,type:null,tags:[],search:''};si.value='';updateChartHighlights();applyFilters();};
   el('div','vd-active-filters',w).id='vd-active-filters';
   el('div','vd-count',w).id='vd-count';
   const tw=el('div','vd-table-wrap',w);
@@ -145,8 +151,8 @@ function applyFilters(sortCol='section_number',sortAsc=true){
   notes.sort((a,b)=>{let va=a[sortCol],vb=b[sortCol];if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();if(va<vb)return sortAsc?-1:1;if(va>vb)return sortAsc?1:-1;return 0;});
   const af=document.getElementById('vd-active-filters');
   if(af){af.innerHTML='';
-    if(filters.section){const ch=el('span','vd-chip',af);ch.innerHTML='Section: '+filters.section+' <span class="vd-chip-x">&times;</span>';ch.onclick=()=>{filters.section=null;applyFilters();};}
-    if(filters.type){const ch=el('span','vd-chip',af);ch.innerHTML='Type: '+filters.type+' <span class="vd-chip-x">&times;</span>';ch.onclick=()=>{filters.type=null;applyFilters();};}
+    if(filters.section){const ch=el('span','vd-chip',af);ch.innerHTML='Section: '+filters.section+' <span class="vd-chip-x">&times;</span>';ch.onclick=()=>{filters.section=null;updateChartHighlights();applyFilters();};}
+    if(filters.type){const ch=el('span','vd-chip',af);ch.innerHTML='Type: '+filters.type+' <span class="vd-chip-x">&times;</span>';ch.onclick=()=>{filters.type=null;updateChartHighlights();applyFilters();};}
     filters.tags.forEach((t,i)=>{const ch=el('span','vd-chip',af);ch.innerHTML='Tag: '+t+' <span class="vd-chip-x">&times;</span>';ch.onclick=()=>{filters.tags.splice(i,1);applyFilters();};});}
   const cnt=document.getElementById('vd-count');if(cnt)cnt.textContent='Showing '+notes.length+' of '+allNotes.length+' notes';
   const tbody=document.querySelector('#vd-table tbody');if(!tbody)return;tbody.innerHTML='';
@@ -156,6 +162,30 @@ function applyFilters(sortCol='section_number',sortAsc=true){
     tbody.appendChild(tr);});
   tbody.querySelectorAll('.vd-clickable').forEach(td=>{td.onclick=()=>{filters.section=td.dataset.section;applyFilters();};});
   tbody.querySelectorAll('.vd-tag-pill').forEach(sp=>{sp.onclick=()=>{const t=sp.dataset.tag;if(!filters.tags.includes(t))filters.tags.push(t);applyFilters();};});
+}
+
+function updateChartHighlights(){
+  if(sectionChartInst){
+    const sl=manifest.sections_list.sort((a,b)=>b.note_count-a.note_count);
+    const ds=sectionChartInst.data.datasets[0];
+    ds.backgroundColor=sl.map((_,i)=>{
+      const base=COLORS[i%COLORS.length];
+      if(!filters.section)return base;
+      return sl[i].slug===filters.section?base:base+'33';
+    });
+    sectionChartInst.update('none');
+  }
+  if(typeChartInst){
+    const types=Object.entries(manifest.notes_by_type);
+    const ds=typeChartInst.data.datasets[0];
+    ds.backgroundColor=types.map(t=>{
+      const base=TYPE_COLORS[t[0]]||'#666';
+      if(!filters.type)return base;
+      return t[0]===filters.type?base:base+'33';
+    });
+    ds.offset=types.map(t=>t[0]===filters.type?15:0);
+    typeChartInst.update('none');
+  }
 }
 
 function renderInsights(p){
