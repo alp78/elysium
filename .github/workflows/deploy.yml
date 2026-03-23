@@ -39,8 +39,8 @@ jobs:
       - name: Extract vault manifest
         run: python scripts/extract-vault-manifest.py
 
-      - name: Build Quartz
-        run: npx quartz build
+      - name: Build Quartz and Pagefind
+        run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

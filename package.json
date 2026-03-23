@@ -1,6 +1,6 @@
 {
   "name": "@jackyzha0/quartz",
-  "description": "🌱 publish your digital garden and notes as a website",
+  "description": "publish your digital garden and notes as a website",
   "private": true,
   "version": "4.5.2",
   "type": "module",
@@ -13,6 +13,8 @@
   },
   "scripts": {
     "quartz": "./quartz/bootstrap-cli.mjs",
+    "dev": "npx quartz build --serve",
+    "build": "npx quartz build && npx pagefind --site public",
     "docs": "npx quartz build --serve -d docs",
     "check": "tsc --noEmit && npx prettier . --check",
     "format": "npx prettier . --write",
@@ -107,6 +109,7 @@
     "@types/ws": "^8.18.1",
     "@types/yargs": "^17.0.35",
     "esbuild": "^0.27.2",
+    "pagefind": "^1.4.0",
     "prettier": "^3.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
