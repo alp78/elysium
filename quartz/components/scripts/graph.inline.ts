@@ -193,15 +193,46 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     {} as Record<(typeof cssVars)[number], string>,
   )
 
+  // section color mapping (matches Obsidian graph groups)
+  const sectionColors: Record<string, string> = {
+    "00-Home": "#ffffff",
+    "01-Shell": "#58006a",
+    "02-Programming": "#87cb6b",
+    "03-SQL-Server": "#3381ff",
+    "04-DB-Queries": "#2cb4ff",
+    "05-GCP": "#2970ff",
+    "06-Terraform": "#82a3ff",
+    "07-Git": "#ff8c00",
+    "08-Docker": "#259bff",
+    "09-GitHub-Actions": "#ffb800",
+    "10-Orchestration": "#ffff00",
+    "11-Observability": "#ff00ff",
+    "12-Data-Architecture": "#00ffff",
+    "13-Financial": "#63ff64",
+    "14-AI": "#9a00ff",
+    "15-Engineering": "#ff6a00",
+    "16-Runbooks": "#ff0000",
+    "17-dbt": "#ff9a00",
+  }
+
+  function getSectionColor(id: string): string | null {
+    for (const [prefix, color] of Object.entries(sectionColors)) {
+      if (id.startsWith(prefix)) return color
+    }
+    return null
+  }
+
   // calculate color
   const color = (d: NodeData) => {
     const isCurrent = d.id === slug
     if (isCurrent) {
       return computedStyleMap["--secondary"]
-    } else if (visited.has(d.id) || d.id.startsWith("tags/")) {
+    } else if (d.id.startsWith("tags/")) {
       return computedStyleMap["--tertiary"]
     } else {
-      return computedStyleMap["--gray"]
+      const sectionColor = getSectionColor(d.id)
+      if (sectionColor) return sectionColor
+      return visited.has(d.id) ? computedStyleMap["--tertiary"] : computedStyleMap["--gray"]
     }
   }
 
