@@ -78,5 +78,5 @@ Every reusable pattern in the vault, grouped by concern. Use this as a starting 
 ## Related
 
 - [[data-architecture-index]] — Full architecture section index
-- [[Dashboard]] — Vault navigation hub
+- [[index|Elysium]] — Vault navigation hub
 - [[moc-data-pipeline-lifecycle]] — Pipeline lifecycle MoC

@@ -7,7 +7,7 @@ aliases: [Data Pipeline Lifecycle MOC, Pipeline Lifecycle, data pipeline overvie
 keywords: [data pipeline, lifecycle, ingestion, transformation, orchestration, monitoring, end to end, medallion, bronze, silver, gold]
 description: "Map of Content tracing a data pipeline from ingestion through transformation, loading, orchestration, and monitoring — linking all relevant vault notes along the way."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[medallion-architecture]]"
 created: 2026-03-22

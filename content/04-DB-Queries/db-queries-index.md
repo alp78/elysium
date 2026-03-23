@@ -7,7 +7,7 @@ aliases: [DB Queries Index, Database Queries, Query Reference]
 keywords: [sql queries, bigquery queries, firestore queries, t-sql, standard sql, nosql, select, join, window functions, cte, partitioning, transactions, real-time]
 description: "Index for the DB Queries section — executable query references for SQL Server, BigQuery, and Firestore with rendered cell outputs showing actual results."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[sql-server-index]]"
   - "[[gcp-index]]"
 created: 2026-03-22

@@ -7,7 +7,7 @@ aliases: [Observability Index, Monitoring Index]
 keywords: [observability, monitoring, datadog, gcp, cloud-monitoring, cloud-logging, cloud-trace, APM, traces, metrics, logs, dashboards, alerting, SLA, pipeline-health, MQL, custom-metrics, log-analytics, distributed-tracing]
 description: "Index for the Observability section — Datadog setup, GCP-native monitoring (Cloud Monitoring, Cloud Logging, Cloud Trace), pipeline health, SLA tracking, dashboards, alerting, and troubleshooting."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22

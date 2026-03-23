@@ -2447,7 +2447,7 @@ ORDER BY trading_days DESC
 
 ### Decision Guide
 
-| Feature | CTE | #Temp Table | @Table Variable |
+| Feature | CTE | \#Temp Table | @Table Variable |
 |---------|-----|-------------|----------------|
 | Materialized? | No (re-evaluated) | Yes (on disk) | Yes (in memory*) |
 | Indexes? | No | Yes | Limited |

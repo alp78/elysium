@@ -7,7 +7,7 @@ aliases: [Data Architecture Index, Architecture Index, Data Engineering Architec
 keywords: [data architecture, data warehouse, data lake, lakehouse, data mesh, streaming, medallion, star schema, dimensional modeling, Kimball, Inmon, Lambda, Kappa, event-driven, CDC, idempotent, dbt, delta lake, iceberg, pipeline patterns, ETL, ELT]
 description: "Index for the Data Architecture section — modern data architectures (warehouse, lake, lakehouse, mesh, streaming), pipeline design patterns (medallion, idempotency, dbt), and data format standards."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

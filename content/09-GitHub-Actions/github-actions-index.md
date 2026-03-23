@@ -7,7 +7,7 @@ aliases: [GitHub Actions Index, CI/CD Index, GitHub Actions Section]
 keywords: [github actions, ci/cd, workflows, automation, matrix builds, reusable workflows, deployment, cloud run, wif, workload identity, dbt, secrets, caching, runners, triggers]
 description: "Index for the GitHub Actions section — workflow anatomy, CI/CD patterns, data engineering pipelines, deployment automation, and real-world workflow examples."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[git-index]]"
   - "[[engineering-practice-index]]"
   - "[[terraform-index]]"

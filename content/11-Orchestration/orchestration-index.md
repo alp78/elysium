@@ -7,7 +7,7 @@ aliases: [Orchestration Index, Scheduling Index, Airflow Index, Pipeline Schedul
 keywords: [orchestration, airflow, cron, scheduling, DAGs, automation, task scheduler, cloud scheduler, cloud composer, systemd timer, pipeline automation, workflow, data pipeline scheduling]
 description: "Index for the Orchestration section — task scheduling on Linux (cron, systemd timers), Windows (Task Scheduler), and GCP (Cloud Scheduler, Workflows), plus comprehensive Apache Airflow coverage."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[data-architecture-index]]"
 created: 2026-03-22
 updated: 2026-03-22

@@ -7,7 +7,7 @@ aliases: [Shell Index, Shell Section, Bash Index, CLI Reference, Command Line, L
 keywords: [shell, bash, powershell, linux, cli, command line, grep, awk, sed, find, rsync, ps, systemctl, curl, networking, text processing, scripting, file operations]
 description: "Index for the Shell section — text processing (grep, awk, sed), file operations, scripting fundamentals, process management, and networking commands. Every note covers both bash and PowerShell."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[sql-server-index]]"
   - "[[gcp-index]]"
 created: 2026-03-22

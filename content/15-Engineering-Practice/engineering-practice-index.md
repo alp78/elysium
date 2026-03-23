@@ -7,7 +7,7 @@ aliases: [Engineering Practice Index]
 keywords: [engineering practice, ci/cd, security, leadership, github actions, best practices, code review, mentoring, technical writing]
 description: "Index for the Engineering Practice section — CI/CD workflows, security practices, and engineering leadership and collaboration."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22

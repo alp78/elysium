@@ -7,7 +7,7 @@ aliases: [Programming Languages Index, Language Reference, Python Reference, C# 
 keywords: [programming languages, python, csharp, c sharp, dotnet, pandas, polars, dataframe, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
 description: "Index for the Programming Languages section — paired Python and C# references covering 16 topics from basics to design patterns, plus a 10-part Pandas vs Polars series, each with executable examples and cell outputs."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[sql-python-csharp-transforms]]"
   - "[[pandas-polars-index]]"
 created: 2026-03-22

@@ -193,16 +193,16 @@ function runSearch(query: string): SearchDoc[] {
   if (allTagInc.size > 0) {
     const tags = [...allTagInc]
     if (tagMode === "AND") {
-      docs = docs.filter((d) => tags.every((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))))
+      docs = docs.filter((d) => tags.every((t) => d.tags.some((dt) => dt.toLowerCase() === t)))
     } else {
-      docs = docs.filter((d) => tags.some((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))))
+      docs = docs.filter((d) => tags.some((t) => d.tags.some((dt) => dt.toLowerCase() === t)))
     }
   }
 
   // ── Tag exclude ──────────────────────────────────────────
   if (allTagExc.size > 0) {
     const tags = [...allTagExc]
-    docs = docs.filter((d) => !tags.some((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))))
+    docs = docs.filter((d) => !tags.some((t) => d.tags.some((dt) => dt.toLowerCase() === t)))
   }
 
   // ── Path filter ──────────────────────────────────────────

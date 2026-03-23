@@ -7,7 +7,7 @@ aliases: [Docker Index, Docker Section, Containers Index]
 keywords: [docker, containers, docker compose, image management, container lifecycle, dockerfile, multi-stage build, artifact registry]
 description: "Index for all Docker notes covering container lifecycle management, Docker Compose orchestration, and image building and registry operations."
 related:
-  - "[[Dashboard]]"
+  - "[[index|Elysium]]"
   - "[[terraform-cloud-run]]"
 created: 2026-03-22
 updated: 2026-03-22
