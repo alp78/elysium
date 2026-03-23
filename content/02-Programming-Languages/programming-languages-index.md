@@ -1,16 +1,17 @@
 ---
 type: index
 category: programming-languages
-technology: [python, csharp, dotnet]
-tags: [index, programming-languages, python, csharp, dotnet]
+technology: [python, csharp, dotnet, pandas, polars]
+tags: [index, programming-languages, python, csharp, dotnet, pandas, polars]
 aliases: [Programming Languages Index, Language Reference, Python Reference, C# Reference]
-keywords: [programming languages, python, csharp, c sharp, dotnet, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
-description: "Index for the Programming Languages section — paired Python and C# references covering 16 topics from basics to design patterns, each with executable examples and cell outputs."
+keywords: [programming languages, python, csharp, c sharp, dotnet, pandas, polars, dataframe, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
+description: "Index for the Programming Languages section — paired Python and C# references covering 16 topics from basics to design patterns, plus a 10-part Pandas vs Polars series, each with executable examples and cell outputs."
 related:
   - "[[Dashboard]]"
   - "[[sql-python-csharp-transforms]]"
+  - "[[pandas-polars-index]]"
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-03-23
 status: complete
 ---
 
@@ -48,6 +49,23 @@ Each note contains:
 
 The Python and C# notes for each topic are tightly paired — they cover the same concepts, in the same order, allowing side-by-side comparison across languages.
 
+## Python — Pandas vs Polars
+
+Side-by-side Pandas and Polars references across 10 topics. Full index: [[pandas-polars-index]]
+
+| # | Topic | Note |
+|---|-------|------|
+| 01 | Foundations & I/O (Series, DataFrames, types, CSV/Parquet) | [[01_foundations_io]] |
+| 02 | Explore, Select & Filter (head/tail, describe, where, isin) | [[02_explore_select_filter]] |
+| 03 | Transforms, Expressions & Chaining (with_columns, when/then) | [[03_transforms_expressions_chaining]] |
+| 04 | Missing Data, Strings & DateTime (nulls, .str, .dt, timezones) | [[04_missing_strings_datetime]] |
+| 05 | Grouping, Aggregation & Windows (groupby, over, rolling, shift) | [[05_grouping_windows]] |
+| 06 | Combining & Reshaping (joins, concat, pivot, melt, explode) | [[06_combining_reshaping]] |
+| 07 | Lazy API & Performance (lazy/collect, query plan, benchmarks) | [[07_lazy_performance]] |
+| 08 | Advanced Types & Interop (categoricals, Arrow, zero-copy) | [[08_types_interop]] |
+| 09 | Visualization & SQL (matplotlib, seaborn, SQLContext, DuckDB) | [[09_visualization_sql]] |
+| 10 | Project, Testing & Migration (end-to-end, validation, migration guide) | [[10_project_testing_migration]] |
+
 ## Python — Data Engineering
 
 Specialized Python references for data engineering tasks. These complement the 16-topic paired notes above with deeper coverage of pipeline-specific concerns.
@@ -74,6 +92,8 @@ Side-by-side language and tool comparisons.
 ## All Notebook Notes
 
 **Python:** [[01_Basics]] | [[02_Strings]] | [[03_Control_Flow]] | [[04_Functions]] | [[05_Collections]] | [[06_OOP]] | [[07_Generics_LINQ]] | [[08_ErrorHandling]] | [[09_FileIO_Serialization]] | [[10_DateTimeMathUtils]] | [[11_AsyncConcurrency]] | [[12_Testing]] | [[13_WebAPIs]] | [[14_Database]] | [[15_GCP]] | [[16_DesignPatterns]]
+
+**Pandas vs Polars:** [[01_foundations_io]] | [[02_explore_select_filter]] | [[03_transforms_expressions_chaining]] | [[04_missing_strings_datetime]] | [[05_grouping_windows]] | [[06_combining_reshaping]] | [[07_lazy_performance]] | [[08_types_interop]] | [[09_visualization_sql]] | [[10_project_testing_migration]]
 
 **C#:** [[cs-01_Basics]] | [[cs-02_Strings]] | [[cs-03_Control_Flow]] | [[cs-04_Functions]] | [[cs-05_Collections]] | [[cs-06_OOP]] | [[cs-07_Generics_LINQ]] | [[cs-08_ErrorHandling]] | [[cs-09_FileIO_Serialization]] | [[cs-10_DateTimeMathUtils]] | [[cs-11_AsyncConcurrency]] | [[cs-12_Testing]] | [[cs-13_WebAPIs]] | [[cs-14_Database]] | [[cs-15_GCP]] | [[cs-16_DesignPatterns]]
 

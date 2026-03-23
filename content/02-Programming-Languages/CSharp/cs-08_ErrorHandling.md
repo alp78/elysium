@@ -19,7 +19,7 @@ status: complete
 ## 1. try / catch / finally — The Basics
 
 
-```C#
+```csharp
 using System.IO;
 
 // Error Handling — try/catch/finally
@@ -234,7 +234,7 @@ catch (InvalidOperationException ex)
 ## 2. Exception Types & Hierarchy
 
 
-```C#
+```csharp
 // Exception Types — what's thrown and when
 #nullable enable
 //
@@ -437,7 +437,7 @@ catch (FormatException ex)
 ## 3. Custom Exceptions
 
 
-```C#
+```csharp
 // Custom Exceptions — when built-in types aren't descriptive enough
 //
 // KEY CONCEPTS:
@@ -629,7 +629,7 @@ public class PipelineException : Exception
 ## 4. Resource Cleanup: using & IDisposable
 
 
-```C#
+```csharp
 // Resource Cleanup — using & IDisposable
 //
 // KEY CONCEPTS:
@@ -757,7 +757,7 @@ public class CsvWriter : IDisposable
 ## 5. Data Engineering: Error Accumulation & Resilience Patterns
 
 
-```C#
+```csharp
 // Data Engineering Error Patterns
 #nullable enable
 //

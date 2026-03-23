@@ -24,7 +24,7 @@ Topics covered:
 - Project Structure & Best Practices
 
 
-```C#
+```csharp
 // Suppress CS1701 assembly version warnings (NuGet packages on .NET 10).
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -262,7 +262,7 @@ else {
 ## 1. Dependency Injection
 
 
-```C#
+```csharp
 // Dependency Injection — the foundation of testable C# architecture.
 //
 // KEY CONCEPTS:
@@ -383,7 +383,7 @@ public class PipelineService
 ## 2. Design Patterns
 
 
-```C#
+```csharp
 // Singleton — exactly one instance.
 // C#: use static readonly field or Lazy<T>.
 // In DI: AddSingleton<T>() handles this automatically.
@@ -464,7 +464,7 @@ public static class StorageFactory
     
 
 
-```C#
+```csharp
 // Observer — notify multiple listeners when something happens.
 // C#: event/delegate pattern (built into the language).
 // Python equivalent: callback list or event bus.
@@ -558,7 +558,7 @@ public class StockScorer
 ## 3. Data Validation
 
 
-```C#
+```csharp
 using System.ComponentModel.DataAnnotations;
 
 // Data Validation with DataAnnotations — built into .NET.
@@ -652,7 +652,7 @@ public class OhlcvRecord : IValidatableObject
 ## 4. Reflection
 
 
-```C#
+```csharp
 using System.Reflection;
 
 // Reflection — inspect types, properties, methods at runtime.
@@ -767,7 +767,7 @@ public class TradeOrder
 ## 5. Project Structure & Best Practices
 
 
-```C#
+```csharp
 // Project Structure — how to organize a C# data pipeline / API project.
 // Python equivalent: package → module hierarchy.
 
@@ -889,7 +889,7 @@ IndexPipeline/
 ## 6. Summary
 
 
-```C#
+```csharp
 // Summary — C# Design Patterns cheat sheet
 //
 // DEPENDENCY INJECTION:

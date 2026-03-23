@@ -19,7 +19,7 @@ status: complete
 ## 1. Classes & Objects
 
 
-```C#
+```csharp
 // Classes & Objects — type declarations must be in their own cell
 //
 // KEY CONCEPTS:
@@ -305,7 +305,7 @@ else {
 
 
 
-```C#
+```csharp
 // Using Dog and Circle (run previous cell first)
 Console.WriteLine("=== Creating Objects ===");
 var dog1 = new Dog("Rex", 5);
@@ -346,7 +346,7 @@ Console.WriteLine($"New radius: {c.Radius}");
 ## 2. Inheritance & Polymorphism
 
 
-```C#
+```csharp
 // Inheritance & Polymorphism — type declarations
 //
 // KEY CONCEPTS:
@@ -402,7 +402,7 @@ class Cat : Animal
 ```
 
 
-```C#
+```csharp
 // Using inheritance (run previous cell first)
 Console.WriteLine("=== Inheritance ===");
 var dog = new Dog("Rex", "German Shepherd");
@@ -481,7 +481,7 @@ Console.WriteLine("C#:     class Duck : Animal, IFlyable, ISwimmable → one cla
 ## 3. Abstract Classes & Interfaces
 
 
-```C#
+```csharp
 // Abstract Classes & Interfaces — type declarations
 //
 // KEY CONCEPTS:
@@ -570,7 +570,7 @@ class TextBox : IDrawable                    // only IDrawable, not IResizable
 ```
 
 
-```C#
+```csharp
 // Using abstract classes & interfaces
 Console.WriteLine("=== Abstract Class ===");
 // var shape = new Shape();  // Compile error! Can't instantiate abstract class
@@ -638,7 +638,7 @@ Console.WriteLine("Use interface:   when classes share behavior contract (IDrawa
 ## 4. Encapsulation & Access Modifiers
 
 
-```C#
+```csharp
 // Encapsulation & Access Modifiers
 //
 // KEY CONCEPTS:
@@ -749,7 +749,7 @@ Console.WriteLine("C#:     private is truly private — no workaround (except re
     
 
 
-```C#
+```csharp
 // === OOP Theory: Access Modifiers & Abstract vs Interface ===
 
 // ============================================================
@@ -866,7 +866,7 @@ Console.WriteLine("C#:     private is truly private — no workaround (except re
 ## 5. Static Members
 
 
-```C#
+```csharp
 // Static Members — belong to the CLASS, not to instances
 //
 // KEY CONCEPTS:
@@ -1137,7 +1137,7 @@ else {
 
 
 
-```C#
+```csharp
 // Using static members (run previous cell first)
 Console.WriteLine("=== Static Members ===");
 var emp1 = new Employee("Alice", 95000);
@@ -1182,7 +1182,7 @@ Console.WriteLine("C# static methods don't — they always belong to the exact c
 ## 6. Records & Init-Only Properties
 
 
-```C#
+```csharp
 // WHY Records Instead of Dictionaries?
 //
 // In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored
@@ -1315,7 +1315,7 @@ Unknown/dynamic JSON schema      JsonDocument or Dictionary
     
 
 
-```C#
+```csharp
 // Records — auto-generated immutable data types (C# 9+)
 //
 // KEY CONCEPTS:
@@ -1580,7 +1580,7 @@ else {
 
 
 
-```C#
+```csharp
 // Using records (run previous cell first)
 Console.WriteLine("=== Positional Record ===");
 var p1 = new Point(3.0, 4.0);

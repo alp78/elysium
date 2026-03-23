@@ -24,7 +24,7 @@ Topics covered:
 - Test Patterns for Data Engineering
 
 
-```C#
+```csharp
 #nullable enable
 // Lightweight Assert class — same API as xUnit, zero dependencies.
 // In a real project you'd use xUnit with `dotnet test`.
@@ -139,7 +139,7 @@ public static class Assert
 ## 1. Unit Testing with xUnit
 
 
-```C#
+```csharp
 
 // Unit Testing with xUnit — the standard C# test framework
 //
@@ -243,7 +243,7 @@ RunTest("Missing key throws KeyNotFoundException", () =>
 ## 2. Assertions & Test Organization
 
 
-```C#
+```csharp
 #nullable enable
 
 
@@ -364,7 +364,7 @@ RunTest("Type checking", () =>
 ## 3. Theory & InlineData (Parametrize)
 
 
-```C#
+```csharp
 
 // [Theory] + [InlineData] — C# equivalent of @pytest.mark.parametrize.
 // [Fact] = single test case (no parameters).
@@ -472,7 +472,7 @@ foreach (var (ticker, valid) in tickerCases)
 ## 4. Mocking with Moq
 
 
-```C#
+```csharp
 #nullable enable
 using System.IO;
 
@@ -660,7 +660,7 @@ public class MockExchangeGateway : IExchangeGateway
 ## 5. Test Patterns for Data Engineering
 
 
-```C#
+```csharp
 using System.IO;
 
 // DE/Finance test patterns — testing pipelines, transforms, data quality.
@@ -860,7 +860,7 @@ public class MockIndexDataClient : IIndexDataClient
 ## 6. CI/CD — Running Tests in GitHub Actions
 
 
-```C#
+```csharp
 // GitHub Actions — automated testing on every push/PR.
 //
 // KEY CONCEPTS:
@@ -1043,7 +1043,7 @@ KEY GITHUB ACTIONS CONCEPTS:
     
 
 
-```C#
+```csharp
 // Summary — C# testing cheat sheet
 //
 // FRAMEWORK:

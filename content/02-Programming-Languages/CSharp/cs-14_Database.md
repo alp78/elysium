@@ -25,7 +25,7 @@ Topics covered:
 - Real-world Index Provider Queries (index provider)
 
 
-```C#
+```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // These are harmless — .NET unifies assemblies at runtime correctly.
 // NuGet packages compiled against .NET 8/9 trigger these on .NET 10.
@@ -55,7 +55,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 ## 1. SQLite — Lightweight Embedded Database
 
 
-```C#
+```csharp
 #r "nuget: Microsoft.Data.Sqlite"
 
 using Microsoft.Data.Sqlite;
@@ -249,7 +249,7 @@ conn.Close();
 ## 2. SQL Server — Index Data (Medallion Architecture)
 
 
-```C#
+```csharp
 #r "nuget: Microsoft.Data.SqlClient"
 
 using Microsoft.Data.SqlClient;
@@ -348,7 +348,7 @@ using (var conn = new SqlConnection(connStr))
     
 
 
-```C#
+```csharp
 #r "nuget: Microsoft.Data.SqlClient"
 
 using Microsoft.Data.SqlClient;
@@ -450,7 +450,7 @@ conn.Close();
 ## 3. ODBC Provider
 
 
-```C#
+```csharp
 #r "nuget: System.Data.Odbc"
 
 using System.Data.Odbc;
@@ -520,7 +520,7 @@ Console.WriteLine($"{"Connection string",-20} {"Server=...",-25} {"Driver=...",-
 ## 4. Dapper — Micro-ORM
 
 
-```C#
+```csharp
 // Dapper — lightweight ORM that maps SQL results to C# objects.
 //
 // NOTE: Dapper is a NuGet package — in a notebook it triggers CS1701 warnings
@@ -611,7 +611,7 @@ Console.WriteLine($"{"Python equiv",-20} {"pyodbc",-20} {"pd.read_sql()",-20} {"
 ## 5. Summary
 
 
-```C#
+```csharp
 // Summary — C# database cheat sheet
 //
 // SQLITE (Microsoft.Data.Sqlite):

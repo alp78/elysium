@@ -19,7 +19,7 @@ status: complete
 ## 1. Function Basics
 
 
-```C#
+```csharp
 // Function Basics
 //
 // KEY CONCEPTS:
@@ -326,7 +326,7 @@ else {
     
 
 
-```C#
+```csharp
 // Real-World Use Cases for Func<> and Action<>
 // Passing functions as arguments is useful when you want to pass BEHAVIOR as a parameter.
 // "Do this thing, but I'll tell you HOW."
@@ -489,7 +489,7 @@ Console.WriteLine("Sorting:      .OrderBy(e => e.Salary) — Func<T, TKey>");
 ## 2. Parameters
 
 
-```C#
+```csharp
 // Parameters — default, named, ref, out, in, params
 //
 // KEY CONCEPTS:
@@ -836,7 +836,7 @@ else {
 ## 3. Lambda Expressions
 
 
-```C#
+```csharp
 // Lambda Expressions — anonymous inline functions
 //
 // KEY CONCEPTS:
@@ -938,7 +938,7 @@ Console.WriteLine("C# advantage: statement lambdas allow multi-line (Python can'
 ## 4. Closures & Scope
 
 
-```C#
+```csharp
 // Closures & Variable Scope
 //
 // KEY CONCEPTS:
@@ -1065,7 +1065,7 @@ Console.WriteLine("Both: closures capture VARIABLES, not values (late binding)")
 ## 5. Delegates & Events
 
 
-```C#
+```csharp
 // Delegates & Events — C#'s function pointer system
 // Python has no direct equivalent — closest is passing functions as arguments.
 //
@@ -1168,7 +1168,7 @@ Console.WriteLine("Python: no events                      -> C#: events for obse
 ## 6. Method Overloading & Extension Methods
 
 
-```C#
+```csharp
 // Method Overloading & Extension Methods — C# features with no Python equivalent
 //
 // KEY CONCEPTS:

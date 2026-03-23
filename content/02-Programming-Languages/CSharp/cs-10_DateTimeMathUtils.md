@@ -23,7 +23,7 @@ Topics covered:
 - Configuration & Environment Variables
 
 
-```C#
+```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
 // Run this cell ONCE before any cells that use NuGet packages.
@@ -49,7 +49,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 Moved from 01_Basics. Full coverage: creating, parsing, formatting, timezones, arithmetic.
 
 
-```C#
+```csharp
 // Creating date and time objects
 
 // Current date and time
@@ -89,7 +89,7 @@ Console.WriteLine($"With ticks:        {dtTicks}");
     
 
 
-```C#
+```csharp
 // Accessing date/time components
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
@@ -124,7 +124,7 @@ Console.WriteLine($"Kind:        {dt.Kind}");            // Unspecified, Local, 
     
 
 
-```C#
+```csharp
 // Timestamp (Unix epoch) conversions
 
 var now = DateTime.Now;
@@ -166,7 +166,7 @@ Console.WriteLine($"\nEpoch: {epoch}");
     
 
 
-```C#
+```csharp
 // Parsing strings -> DateTime
 
 string s1 = "2024-03-15 14:30:45";
@@ -217,7 +217,7 @@ Console.WriteLine($"Auto-parsed: {auto}");
     
 
 
-```C#
+```csharp
 // Formatting DateTime -> string (ToString)
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
@@ -327,7 +327,7 @@ Console.WriteLine($"  zzz (Local):   {dtLocal.ToString("zzz")}");
     
 
 
-```C#
+```csharp
 // ISO 8601 conversions
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
@@ -368,7 +368,7 @@ Console.WriteLine($"  Offset:        {dto.Offset}");
     
 
 
-```C#
+```csharp
 // Timezone management
 
 // DateTime.Kind: Unspecified, Local, Utc
@@ -435,7 +435,7 @@ foreach (var tz in TimeZoneInfo.GetSystemTimeZones().Take(5))
     
 
 
-```C#
+```csharp
 // Date/time arithmetic with TimeSpan
 var dt = new DateTime(2024, 3, 15, 14, 30, 45);
 
@@ -711,7 +711,7 @@ else {
     
 
 
-```C#
+```csharp
 // Arithmetic on different date/time objects
 
 // === DateTime: full arithmetic with Add* methods ===
@@ -819,7 +819,7 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 ## 2. Math & Random
 
 
-```C#
+```csharp
 // Math class — static methods for common math operations.
 // Python equivalent: import math
 // All methods are static — you call Math.Sqrt(), never new Math().
@@ -1133,7 +1133,7 @@ else {
     
 
 
-```C#
+```csharp
 // Random number generation
 // System.Random is the standard RNG. NOT cryptographically secure.
 // For crypto: System.Security.Cryptography.RandomNumberGenerator.
@@ -1215,7 +1215,7 @@ for (int i = 0; i < 8; i++)
 ## 3. Logging
 
 
-```C#
+```csharp
 #r "nuget: Microsoft.Extensions.Logging.Console"
 
 // Logging in .NET — Microsoft.Extensions.Logging
@@ -1273,7 +1273,7 @@ using Microsoft.Extensions.Logging;
     
 
 
-```C#
+```csharp
 #r "nuget: Microsoft.Extensions.Logging.Console"
 
 // Structured logging — why it matters for Data Engineering
@@ -1338,7 +1338,7 @@ using Microsoft.Extensions.Logging;
 ## 4. Configuration & Environment Variables
 
 
-```C#
+```csharp
 // Environment variables — the simplest config mechanism.
 // Used everywhere: Docker, Kubernetes, CI/CD, cloud functions.
 // Python equivalent: os.environ, os.getenv()
@@ -1403,7 +1403,7 @@ Environment.SetEnvironmentVariable("PIPELINE_ENV", null);
     
 
 
-```C#
+```csharp
 #r "nuget: Microsoft.Extensions.Configuration"
 #r "nuget: Microsoft.Extensions.Configuration.Json"
 #r "nuget: Microsoft.Extensions.Configuration.EnvironmentVariables"

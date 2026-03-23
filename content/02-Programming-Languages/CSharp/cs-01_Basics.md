@@ -24,7 +24,7 @@ Topics covered:
 - Operators (arithmetic, comparison, logical, bitwise)
 
 
-```C#
+```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
 // Run this cell ONCE before any cells that use NuGet packages.
@@ -48,7 +48,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 ## 1. Environment Setup
 
 
-```C#
+```csharp
 // Check .NET version
 Console.WriteLine($".NET version: {Environment.Version}");
 Console.WriteLine($"OS: {Environment.OSVersion}");
@@ -61,7 +61,7 @@ Console.WriteLine($"Machine: {Environment.MachineName}");
     
 
 
-```C#
+```csharp
 // Check working directory
 Console.WriteLine($"Working dir: {Environment.CurrentDirectory}");
 Console.WriteLine($"User: {Environment.UserName}");
@@ -72,7 +72,7 @@ Console.WriteLine($"User: {Environment.UserName}");
     
 
 
-```C#
+```csharp
 // Load a NuGet package (this is how you add dependencies in notebooks)
 #r "nuget: Newtonsoft.Json"
 
@@ -103,7 +103,7 @@ Console.WriteLine("...");
     
 
 
-```C#
+```csharp
 // Verify key assemblies are available
 var assemblies = new[] {
     "System.Linq",
@@ -139,7 +139,7 @@ foreach (var name in assemblies)
 ## 2. Console I/O
 
 
-```C#
+```csharp
 // String concatenation in output
 Console.WriteLine("one" + " | " + "two" + " | " + "three");
 ```
@@ -148,7 +148,7 @@ Console.WriteLine("one" + " | " + "two" + " | " + "three");
     
 
 
-```C#
+```csharp
 // String formatting methods
 
 string name = "Alice";
@@ -178,7 +178,7 @@ Console.WriteLine($"Pi to 2 decimals: {3.14159:F2}");
     
 
 
-```C#
+```csharp
 // Output formatting options for Console
 
 // Console.Write vs Console.WriteLine
@@ -302,7 +302,7 @@ Console.WriteLine(num.ToString("E2"));   // "4.20E+001" (scientific)
     
 
 
-```C#
+```csharp
 // Console input - ReadLine() always returns a string
 string inputName = "Alice"; // In a real console app: Console.ReadLine()
 Console.WriteLine($"Hello, {inputName}!");
@@ -314,7 +314,7 @@ Console.WriteLine($"Type of input: {inputName.GetType()}");
     
 
 
-```C#
+```csharp
 // Reading numeric input - must convert/parse manually
 string ageStr = "30"; // In a real console app: Console.ReadLine()
 
@@ -336,7 +336,7 @@ else
     
 
 
-```C#
+```csharp
 // Reading float/double input with validation
 string priceStr = "19.99"; // In a real console app: Console.ReadLine()
 
@@ -354,7 +354,7 @@ else
     
 
 
-```C#
+```csharp
 // Input validation loop - keep asking until valid
 // In a real console app, these would use Console.ReadLine() in the loop
 
@@ -413,7 +413,7 @@ GetNonEmptyString(new[] { "", "  ", "Alice" });
 ## 3. Variables, Constants & Data Types
 
 
-```C#
+```csharp
 // Variables - statically typed, must declare type (or use var)
 int x = 10;
 double y = 3.14;
@@ -441,7 +441,7 @@ Console.WriteLine($"z = {z}, type: {z.GetType()}");
     
 
 
-```C#
+```csharp
 // Constants - C# has true constants enforced by the compiler
 
 // const: compile-time constant, must be assigned at declaration
@@ -465,7 +465,7 @@ Console.WriteLine($"ApiUrl = {ApiUrl}");
     
 
 
-```C#
+```csharp
 // Integer types - fixed size, each has a defined range
 
 // Signed integers
@@ -511,7 +511,7 @@ uint positive = 4_000_000_000U;  // U suffix for uint
     
 
 
-```C#
+```csharp
 // Floating-point types
 
 Console.WriteLine("=== Floating-Point Types ===");
@@ -575,7 +575,7 @@ Console.WriteLine($"0.1m + 0.2m = {0.1m + 0.2m}");        // decimal is precise!
     
 
 
-```C#
+```csharp
 // Complex numbers (System.Numerics)
 using System.Numerics;
 
@@ -593,7 +593,7 @@ Console.WriteLine($"Magnitude: {z.Magnitude}");
     
 
 
-```C#
+```csharp
 // Boolean (bool) - true or false only, NOT interchangeable with int
 bool a = true;
 bool b = false;
@@ -621,7 +621,7 @@ Console.WriteLine($"Convert.ToInt32(false) = {Convert.ToInt32(false)}");  // 0
     
 
 
-```C#
+```csharp
 // byte arrays and encoding
 byte[] b1 = new byte[] { 104, 101, 108, 108, 111 }; // "hello" in ASCII
 Console.WriteLine($"b1 = [{string.Join(", ", b1)}], type: {b1.GetType()}");
@@ -643,7 +643,7 @@ Console.WriteLine($"decoded back: {decoded}");
     
 
 
-```C#
+```csharp
 // null - C#'s null reference
 string s = null;           // reference types can be null
 Console.WriteLine($"s is null: {s == null}");
@@ -677,7 +677,7 @@ Console.WriteLine($"name?.Length: {name?.Length}");  // null, not exception
     
 
 
-```C#
+```csharp
 // Complete Data Type Overview
 // C# has a strict VALUE vs REFERENCE type distinction.
 //
@@ -829,7 +829,7 @@ Console.WriteLine($"record:   {"(immutable class)",20}  (ref or value)       Py:
     
 
 
-```C#
+```csharp
 // Why Value vs Reference types matter
 
 Console.WriteLine("=== Value Type: assignment COPIES the value ===");
@@ -895,7 +895,7 @@ Console.WriteLine("                 Nullable<T> (int?) wraps value types to allo
 ## 5. Operators
 
 
-```C#
+```csharp
 // Arithmetic operators
 int a = 17, b = 5;
 
@@ -943,7 +943,7 @@ Console.WriteLine($"Math.Floor(-7.0/2) = {Math.Floor(-7.0 / 2)}");  // -4
     
 
 
-```C#
+```csharp
 // Comparison operators
 int a = 10, b = 20;
 
@@ -1005,7 +1005,7 @@ Console.WriteLine($"fruits.Any(f => f.Length > 5) : {fruits.Any(f => f.Length > 
     
 
 
-```C#
+```csharp
 #nullable enable
 // Logical operators
 Console.WriteLine("=== Logical Operators ===");
@@ -1068,7 +1068,7 @@ Console.WriteLine($"val ??= \"fallback\"    : {val}");
     
 
 
-```C#
+```csharp
 // Bitwise operators
 int a = 0b1100, b = 0b1010;  // 12 and 10
 
@@ -1128,7 +1128,7 @@ Console.WriteLine($"Swapped: x={x}, y={y}");
     
 
 
-```C#
+```csharp
 // [Flags] enum definition — must be alone (no top-level code in same cell)
 // Values MUST be powers of 2 (1, 2, 4, 8...) so each has a unique bit:
 //   None    = 0b000 (0)  — no bits set
@@ -1144,7 +1144,7 @@ enum Perms { None = 0, Read = 0b100, Write = 0b010, Execute = 0b001 }
 ```
 
 
-```C#
+```csharp
 // Using [Flags] enum for bitwise flags
 var perms = Perms.Read | Perms.Write;
 Console.WriteLine($"Permissions: {perms}");                        // Read, Write
@@ -1164,7 +1164,7 @@ Console.WriteLine($"After -write:{perms}");                        // Read, Exec
     
 
 
-```C#
+```csharp
 #nullable enable
 
 // Assignment operators (compound)
@@ -1270,7 +1270,7 @@ Console.WriteLine($"arr?[0]           : {arr?[0]}");              // 10
     
 
 
-```C#
+```csharp
 // Operator precedence
 Console.WriteLine("=== Operator Precedence (highest to lowest) ===");
 var precedence = @"
@@ -1350,7 +1350,7 @@ Console.WriteLine("C# only: ++, --, ?., ??, ??=, >>>, switch expr");
 ## 7. Special Methods & Operator Overloading
 
 
-```C#
+```csharp
 // Special Methods & Operator Overloading — C# equivalents of Python's dunder methods
 // Type declarations must be in their own cell (no top-level code)
 #nullable enable
@@ -1426,7 +1426,7 @@ class Vector : IEnumerable<double>, IComparable<Vector>
 ```
 
 
-```C#
+```csharp
 // Demo — using the Vector class (run the previous cell first)
 var v1 = new Vector(3, 4);
 var v2 = new Vector(1, 2);
@@ -1521,7 +1521,7 @@ Console.WriteLine("C# requires pairs:   == must have !=, < must have >");
     
 
 
-```C#
+```csharp
 // Reflection & Attributes — C# equivalent of Python's magic attributes
 // Reflection lets you inspect types, members, and metadata at runtime
 using System.Reflection;
@@ -1879,7 +1879,7 @@ else {
 ## 8. Value vs Reference Types & Mutability Reference
 
 
-```C#
+```csharp
 // Value vs Reference Types & Mutability — Complete Reference
 //
 // C# has TWO orthogonal distinctions:

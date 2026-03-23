@@ -24,7 +24,7 @@ Topics covered:
 ## 1. Async & Await
 
 
-```C#
+```csharp
 // Async & Await — the Task-based Asynchronous Pattern (TAP)
 //
 // KEY CONCEPTS:
@@ -317,7 +317,7 @@ else {
     
 
 
-```C#
+```csharp
 // Task.WhenAll vs Task.WhenAny — waiting strategies
 //
 // Task.WhenAll(tasks): wait until ALL complete. Returns all results.
@@ -383,7 +383,7 @@ Console.WriteLine($"  First to finish: {await fastest}");
     
 
 
-```C#
+```csharp
 using System.Threading;
 using System.Diagnostics;
 // Cancellation — CancellationToken
@@ -467,7 +467,7 @@ catch (OperationCanceledException)
     
 
 
-```C#
+```csharp
 using System.Net.Http;
 // Async patterns for Data Engineering
 //
@@ -611,7 +611,7 @@ Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeco
 ## 2. Tasks & Parallelism
 
 
-```C#
+```csharp
 // Task.Run & Parallel — CPU-bound parallelism
 //
 // KEY CONCEPTS:
@@ -688,7 +688,7 @@ Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(hashResults)}");
     
 
 
-```C#
+```csharp
 // Parallel.ForEachAsync & PLINQ
 //
 // Parallel.ForEachAsync (.NET 6+): process items concurrently with async lambdas.
@@ -780,7 +780,7 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 ## 3. Threading & Concurrency
 
 
-```C#
+```csharp
 #nullable enable
 // Threading — low-level thread management
 //
@@ -839,7 +839,7 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
     
 
 
-```C#
+```csharp
 // lock & Interlocked — preventing race conditions
 //
 // Race condition: two threads read-modify-write a shared variable simultaneously,
@@ -929,7 +929,7 @@ Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operatio
     
 
 
-```C#
+```csharp
 // Concurrent collections — thread-safe data structures
 //
 // System.Collections.Concurrent provides collections designed for multi-threaded access.
@@ -1030,7 +1030,7 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
     
 
 
-```C#
+```csharp
 // Summary — choosing the right concurrency tool in C#
 //
 // ┌────────────────────────┬──────────────────┬────────────────────┬────────────────────────┐

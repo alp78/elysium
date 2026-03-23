@@ -47,7 +47,7 @@ status: complete
 - Cloud Monitoring
 
 
-```C#
+```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
 // Run this cell ONCE before any cells that use NuGet packages.
@@ -292,7 +292,7 @@ else {
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
 
-```C#
+```csharp
 #r "nuget: Google.Cloud.Storage.V1"
 #r "nuget: Google.Cloud.BigQuery.V2"
 #r "nuget: Google.Cloud.PubSub.V1"
@@ -336,7 +336,7 @@ Console.WriteLine($"Bucket:  {bucketName}");
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here.
 
 
-```C#
+```csharp
 using System.IO;
 using Google.Cloud.Storage.V1;
 using System.Text;
@@ -404,7 +404,7 @@ Console.WriteLine($"\n  Deleted: {blobName}");
 **Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
 
 
-```C#
+```csharp
 using Google.Cloud.BigQuery.V2;
 
 // BigQuery — serverless analytics warehouse.
@@ -468,7 +468,7 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture.
 
 
-```C#
+```csharp
 using Google.Cloud.PubSub.V1;
 using Google.Protobuf;
 
@@ -542,7 +542,7 @@ if (ackIds.Count > 0)
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
 
-```C#
+```csharp
 using Google.Cloud.Firestore;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -647,7 +647,7 @@ Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
     
 
 
-```C#
+```csharp
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -768,7 +768,7 @@ Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
 
 
-```C#
+```csharp
 using Google.Cloud.SecretManager.V1;
 using Google.Protobuf;
 
@@ -812,7 +812,7 @@ foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.Li
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
 
 
-```C#
+```csharp
 using Google.Cloud.Monitoring.V3;
 using Google.Api;
 using Google.Protobuf.WellKnownTypes;
@@ -886,7 +886,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 ## 8. Summary
 
 
-```C#
+```csharp
 // Summary — GCP C# cheat sheet
 //
 // AUTHENTICATION:

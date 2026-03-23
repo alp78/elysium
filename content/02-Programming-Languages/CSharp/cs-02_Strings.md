@@ -19,7 +19,7 @@ status: complete
 ## 1. String Creation & Basics
 
 
-```C#
+```csharp
 // String (string) - immutable sequence of Unicode characters
 // C# has both 'string' (alias) and 'char' (single Unicode character, 2 bytes)
 
@@ -136,7 +136,7 @@ Console.WriteLine($"Modified: {s}");
 ## 2. Indexing & Slicing
 
 
-```C#
+```csharp
 // Indexing & Slicing
 string s = "Hello, World!";
 //           0123456789...
@@ -237,7 +237,7 @@ for (int i = 0; i < 5; i++)
 ## 3. String Methods
 
 
-```C#
+```csharp
 #nullable enable
 
 // String Methods — Case, Whitespace, Checking, Searching, Replacing
@@ -396,7 +396,7 @@ Console.WriteLine($"Back:  '{System.Text.Encoding.UTF8.GetString(utf8)}'");
 ## 4. String Formatting
 
 
-```C#
+```csharp
 // String Formatting — interpolation, String.Format, and format specifiers
 // (moved from 01_Basics and extended)
 using System.Globalization;
@@ -717,7 +717,7 @@ else {
 ## 5. Efficient String Building (StringBuilder)
 
 
-```C#
+```csharp
 // StringBuilder — mutable string buffer for efficient building
 // string is IMMUTABLE — each + creates a new string object
 // StringBuilder modifies in-place, much faster for loops
@@ -805,7 +805,7 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 ## 6. Regular Expressions
 
 
-```C#
+```csharp
 // Regular Expressions — comprehensive reference
 using System.Text.RegularExpressions;
 
@@ -909,7 +909,7 @@ Console.WriteLine(phonePat.Replace(text, "REDACTED"));
     
 
 
-```C#
+```csharp
 // Regex Syntax Reference & Flags
 using System.Text.RegularExpressions;
 

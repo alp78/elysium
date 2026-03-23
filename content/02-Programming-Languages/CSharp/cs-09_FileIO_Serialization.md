@@ -17,7 +17,7 @@ status: complete
 # 09. File I/O & Serialization - C#
 
 
-```C#
+```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
 // Run this cell ONCE before any cells that use NuGet packages.
@@ -41,7 +41,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 ## 1. Read, Write, Append Files
 
 
-```C#
+```csharp
 #nullable enable
 
 using System.IO;
@@ -253,7 +253,7 @@ Console.WriteLine($"\n  Cleaned up: {tmpDir}");
 ## 2. CSV Files
 
 
-```C#
+```csharp
 #nullable enable
 
 using System.IO;
@@ -474,7 +474,7 @@ Console.WriteLine($"\n  Cleaned up: {tmpDir}");
 ## 3. Parquet Files
 
 
-```C#
+```csharp
 #r "nuget: Parquet.Net, 5.5.0"
 
 using System.IO;
@@ -733,7 +733,7 @@ public class EventRecord
 ## 4. JSON
 
 
-```C#
+```csharp
 #nullable enable
 
 using System.IO;
@@ -1035,7 +1035,7 @@ record PipelineRun(
 ## 5. YAML
 
 
-```C#
+```csharp
 // YAML — human-friendly config format used by dbt, Airflow, Kubernetes, Docker Compose
 //
 // KEY CONCEPTS:
@@ -1207,7 +1207,7 @@ Multi-document    No                      Yes (--- separator)
 ## 6. Serialization, Deserialization & Streams
 
 
-```C#
+```csharp
 #nullable enable
 
 using System.IO;

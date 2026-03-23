@@ -25,7 +25,7 @@ Topics covered:
 ## 1. HTTP Clients & REST API Calls
 
 
-```C#
+```csharp
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -155,7 +155,7 @@ catch (HttpRequestException ex)
 ## 2. REST API Patterns for Data Engineering
 
 
-```C#
+```csharp
 using System.Net.Http;
 using System.Text.Json;
 
@@ -267,7 +267,7 @@ Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty
 ## 3. Building a REST API (ASP.NET Minimal APIs)
 
 
-```C#
+```csharp
 // ASP.NET Minimal APIs — building REST APIs in C#.
 //
 // KEY CONCEPTS:
@@ -494,7 +494,7 @@ PYTHON → C# MAPPING:
 ## 4. Summary
 
 
-```C#
+```csharp
 // Summary — C# Web & APIs cheat sheet
 //
 // HTTP CLIENT:

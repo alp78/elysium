@@ -19,7 +19,7 @@ status: complete
 ## 1. Generics (Type Parameterization)
 
 
-```C#
+```csharp
 // Generics — writing code that works with ANY type, enforced at compile time
 //
 // KEY CONCEPTS:
@@ -375,7 +375,7 @@ else {
 ## 2. Advanced LINQ
 
 
-```C#
+```csharp
 // Advanced LINQ — GroupBy, Joins, Aggregations, Chaining
 // Beyond the basics from notebook 03
 //
@@ -535,7 +535,7 @@ foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
     
 
 
-```C#
+```csharp
 // SelectMany — flatten nested collections (one-to-many)
 //
 // KEY CONCEPT:
@@ -638,7 +638,7 @@ Console.WriteLine("  → df.explode('skills')  (Pandas)");
 ## 3. LINQ vs Pandas — Side-by-Side Comparison
 
 
-```C#
+```csharp
 // LINQ vs Pandas — Side-by-Side Reference
 // Both do the same thing: filter, transform, group, join, aggregate.
 // LINQ uses IEnumerable<T> (any collection), Pandas uses DataFrame (tabular data).

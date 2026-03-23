@@ -19,7 +19,7 @@ status: complete
 ## 1. Arrays & Lists
 
 
-```C#
+```csharp
 // Arrays & Lists — C# has both fixed-size arrays AND dynamic lists
 //
 // KEY CONCEPTS:
@@ -127,7 +127,7 @@ Console.WriteLine($"List:  [{string.Join(", ", listFromArr)}]");
 ```
 
 
-```C#
+```csharp
 // Range & Index operators — all variants
 // These work on arrays, strings, Span<T>, and any type with an indexer
 
@@ -425,7 +425,7 @@ else {
     
 
 
-```C#
+```csharp
 // Span<T> — a lightweight, zero-allocation view into contiguous memory
 //
 // KEY CONCEPTS:
@@ -557,7 +557,7 @@ Console.WriteLine("Rule: start with List<T>. Use Span only when profiling shows 
 ## 2. Dictionaries
 
 
-```C#
+```csharp
 // Dictionaries — key-value mapping
 //
 // KEY CONCEPTS:
@@ -713,7 +713,7 @@ foreach (var (key, value) in sorted)
 ## 3. Sets
 
 
-```C#
+```csharp
 // Sets — unordered unique elements
 //
 // KEY CONCEPTS:
@@ -822,7 +822,7 @@ Console.WriteLine($"Range [2..4]: {{{string.Join(", ", sorted.GetViewBetween(2, 
 ## 4. Tuples & Enums
 
 
-```C#
+```csharp
 // Tuples & Enums
 //
 // KEY CONCEPTS:
@@ -888,7 +888,7 @@ Console.WriteLine("  These must be defined in their own cell (type declarations)
     
 
 
-```C#
+```csharp
 // Enum (type declaration — separate cell)
 // C# enums are always integers underneath (default: int, starting at 0)
 
@@ -899,7 +899,7 @@ enum PipelineStatus { Pending, Running, Success, Failed }
 ```
 
 
-```C#
+```csharp
 // Using enums (run previous cell first)
 Console.WriteLine("=== Enum Usage ===");
 Console.WriteLine($"Color.Red:       {Color.Red}");
@@ -945,7 +945,7 @@ if (status == PipelineStatus.Running)
 ## 5. Stacks, Queues & Linked Lists
 
 
-```C#
+```csharp
 // Stacks, Queues & Linked Lists
 //
 // KEY CONCEPTS:
@@ -1062,7 +1062,7 @@ Console.WriteLine("Python: deque(maxlen=N)          -> C#: no built-in bounded q
 ## 6. Collection Comparison & Choosing the Right One
 
 
-```C#
+```csharp
 // Collection Comparison — when to use which
 //
 // Performance characteristics (Big O notation):

@@ -19,7 +19,7 @@ status: complete
 ## 1. Conditional Statements
 
 
-```C#
+```csharp
 #nullable enable 
 
 // if / else if / else — C# uses braces {}, parentheses required around condition
@@ -242,7 +242,7 @@ Console.WriteLine($"??= operator: {maybeNull}");
 ## 2. Loops
 
 
-```C#
+```csharp
 // Loops — for, foreach, while, do-while
 // C# has all 4 loop types + LINQ alternatives
 //
@@ -412,7 +412,7 @@ for (int i = 0; i < 3; i++)
 ## 3. Loop Control (break, continue, goto, return)
 
 
-```C#
+```csharp
 // Loop Control — break, continue
 
 // === break — exit loop immediately ===
@@ -484,7 +484,7 @@ for (int i = 0; i < 3; i++)
     
 
 
-```C#
+```csharp
 // === goto — break outer loop (C# has this, Python doesn't!) ===
 // Note: goto + local functions can't coexist in .NET Interactive cells
 Console.WriteLine("=== goto to break outer loop (C# only!) ===");
@@ -509,7 +509,7 @@ Console.WriteLine("  (after goto label)");
     
 
 
-```C#
+```csharp
 // === Break outer loop: function + return (same as Python) ===
 Console.WriteLine("=== Function + return to break outer loop ===");
 (int x, int y) FindPair()
@@ -556,7 +556,7 @@ Console.WriteLine("Python: walrus :=    → C#: no equivalent (use separate assi
 ## 4. Iterators & Generators (yield)
 
 
-```C#
+```csharp
 // Iterators & Generators — lazy evaluation with yield return
 //
 // KEY CONCEPTS:
@@ -719,7 +719,7 @@ Console.WriteLine("Python: itertools       → C#: System.Linq (Enumerable)");
     
 
 
-```C#
+```csharp
 // Practical alternatives to manual recursive flatten
 // In real code, use libraries or built-in methods instead of writing recursion yourself
 
@@ -774,7 +774,7 @@ Console.WriteLine("One-liner:        recursive SelectMany (still recursion, just
     
 
 
-```C#
+```csharp
 // === Method 4: System.Text.Json — for nested JSON ===
 using System.Text.Json;
 
@@ -803,7 +803,7 @@ foreach (var record in doc.RootElement.EnumerateArray())
 ## 5. LINQ & Functional Equivalents
 
 
-```C#
+```csharp
 // LINQ — C#'s equivalent of Python's comprehensions and functional tools
 //
 // KEY CONCEPTS:
