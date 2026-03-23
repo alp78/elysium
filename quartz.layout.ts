@@ -28,13 +28,6 @@ export const defaultContentPageLayout: PageLayout = {
   left: [
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
-    Component.Flex({
-      components: [
-        { Component: Component.Spacer(), grow: true },
-        { Component: Component.Darkmode() },
-        { Component: Component.ReaderMode() },
-      ],
-    }),
     Component.Explorer(),
   ],
   right: [
@@ -78,12 +71,6 @@ export const defaultListPageLayout: PageLayout = {
   left: [
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
-    Component.Flex({
-      components: [
-        { Component: Component.Spacer(), grow: true },
-        { Component: Component.Darkmode() },
-      ],
-    }),
     Component.Explorer(),
   ],
   right: [],
