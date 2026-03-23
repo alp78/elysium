@@ -140,12 +140,18 @@ function runSearch(query: string): SearchDoc[] {
   // ── Text filter ──────────────────────────────────────────
   if (hasText) {
     if (parsed.operator === "AND") {
-      // Every term must be present
-      if (parsed.terms.length > 0) {
-        docs = docs.filter((d) => parsed.terms.every((t) => docHasTerm(d, t)))
+      if (parsed.terms.length >= 2) {
+        // ALL terms must appear in the SAME block (paragraph).
+        // This is the core AND behaviour — same-block proximity.
+        docs = docs.filter((d) =>
+          d.blocks.some((b) => parsed.terms.every((t) => b.includes(t))),
+        )
+      } else if (parsed.terms.length === 1) {
+        // Single term: just check it exists anywhere
+        docs = docs.filter((d) => docHasTerm(d, parsed.terms[0]))
       }
     } else {
-      // At least one term must be present
+      // OR: at least one term must be present anywhere in the doc
       if (parsed.terms.length > 0) {
         docs = docs.filter((d) => parsed.terms.some((t) => docHasTerm(d, t)))
       }
@@ -157,13 +163,6 @@ function runSearch(query: string): SearchDoc[] {
   // ── Phrase filter ────────────────────────────────────────
   for (const phrase of parsed.phraseFilters) {
     docs = docs.filter((d) => d.contentLower.includes(phrase) || d.titleLower.includes(phrase))
-  }
-
-  // ── Block proximity (AND with 2+ terms) ──────────────────
-  if (parsed.operator === "AND" && parsed.terms.length >= 2) {
-    docs = docs.filter((d) =>
-      d.blocks.some((b) => parsed.terms.every((t) => b.includes(t))),
-    )
   }
 
   // ── Tag include ──────────────────────────────────────────
