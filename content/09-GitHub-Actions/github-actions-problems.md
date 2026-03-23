@@ -856,7 +856,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Fix procedure:**
 1. Use browser Ctrl+F in the log view for keyword search
-2. Download the raw log: `gh run view {run_id} --log > run.log && grep -n "ERROR\|FAIL\|fatal" run.log`
+2. Download the raw log: `gh run view {run_id} --log > run.log && grep -n "ERROR|FAIL|fatal" run.log`
 3. Use `gh run view {run_id} --log-failed` to show only failed step logs
 4. For recurring log noise, add `> /dev/null 2>&1` to suppress noisy commands and redirect errors only when needed
 

@@ -418,7 +418,7 @@ gcloud logging read \
   --limit=20 \
   --freshness=10m \
   --format=json \
-  | jq '.[] | .jsonPayload.message' | grep -i "processed\|success"
+  | jq '.[] | .jsonPayload.message' | grep -i "processed|success"
 
 # 3. Confirm BigQuery target tables have been updated for the affected ISINs
 # Run in BQ console:

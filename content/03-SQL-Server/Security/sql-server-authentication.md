@@ -293,7 +293,7 @@ sudo cat /var/opt/mssql/mssql.conf
 sudo systemctl restart mssql-server
 
 # Verify TLS is working from the error log
-sudo cat /var/opt/mssql/log/errorlog | grep -i "encrypt\|certificate\|TLS"
+sudo cat /var/opt/mssql/log/errorlog | grep -i "encrypt|certificate|TLS"
 # Expected lines:
 # ... Successfully loaded certificate [Thumbprint=...]
 # ... Server is listening on ... using encryption

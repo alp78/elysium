@@ -1338,7 +1338,7 @@ echo "=== Branches merged before $CUTOFF ==="
 git fetch --prune origin
 
 # List remote branches merged into main, older than cutoff
-for branch in $(git branch -r --merged origin/main | grep -v 'HEAD\|main\|release\|develop'); do
+for branch in $(git branch -r --merged origin/main | grep -v 'HEAD|main|release|develop'); do
   branch_name="${branch#origin/}"
   last_commit=$(git log -1 --format="%ci" "origin/$branch_name" 2>/dev/null | cut -d' ' -f1)
   if [[ "$last_commit" < "$CUTOFF" ]]; then
@@ -1347,7 +1347,7 @@ for branch in $(git branch -r --merged origin/main | grep -v 'HEAD\|main\|releas
 done
 
 # To delete (uncomment and run with --delete flag):
-# git branch -r --merged origin/main | grep -v 'HEAD\|main\|release\|develop' | \
+# git branch -r --merged origin/main | grep -v 'HEAD|main|release|develop' | \
 #   sed 's/origin\///' | xargs -I{} git push origin --delete {}
 ```
 

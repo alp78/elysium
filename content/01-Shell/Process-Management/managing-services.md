@@ -66,8 +66,8 @@ sudo journalctl -u mssql-server -n 50 --no-pager  # last 50 log lines
 > [!warning] OOM Kills — When Services Crash With No Error in Their Own Logs
 > If a service keeps crashing with no error in its own logs, it was probably killed by the Linux OOM killer (Out Of Memory). Check:
 > ```bash
-> dmesg | grep -i "oom\|killed process" | tail -10
-> sudo journalctl -k | grep -i "oom\|killed" | tail -10
+> dmesg | grep -i "oom|killed process" | tail -10
+> sudo journalctl -k | grep -i "oom|killed" | tail -10
 > ```
 > The OOM killer selects the process with the highest memory usage and kills it to prevent the entire system from freezing. Fix: increase VM memory, reduce SQL Server's `max server memory`, or add swap as a buffer.
 

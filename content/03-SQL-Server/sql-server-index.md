@@ -56,6 +56,7 @@ Diagnosing and resolving performance problems.
 - [[performance-audit-playbook]] — 11-phase audit: memory, IO, waits, indexes, TempDB, blocking, security
 - [[pipeline-integration-and-devex]] — Query tagging, schema migrations, connection pooling, Datadog agent config
 - [[troubleshooting-flowcharts]] — "Why slow?", "Pipeline failed", index decision tree, disk space emergency
+- [[sql-server-problems]] — Common SQL Server error scenarios and solutions
 
 ## Concurrency
 

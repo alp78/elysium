@@ -107,7 +107,7 @@ Expected: `Status: OK` with metric counts listed.
 sudo systemctl restart datadog-agent
 
 # Wait a few seconds, then verify
-sudo datadog-agent check sqlserver 2>&1 | grep -i "error\|ok\|instance"
+sudo datadog-agent check sqlserver 2>&1 | grep -i "error|ok|instance"
 ```
 
 > [!warning] YAML Tabs

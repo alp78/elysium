@@ -399,6 +399,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         ])
         .scaleExtent([0.1, 15])
         .on("zoom", ({ transform }) => {
+          autoFitLocked = true // user took control
           currentTransform = transform
           stage.scale.set(transform.k)
           stage.position.set(transform.x, transform.y)
@@ -457,9 +458,49 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   const LERP = 0.12
   const edgeColor = isDark ? 0x4a5568 : 0x94a3b8
   const edgeAlpha = isDark ? 0.40 : 0.25
+  let autoFitLocked = false // once user zooms/drags, stop auto-fitting
+
+  function fitStageToNodes() {
+    if (autoFitLocked) return
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const n of nodes) {
+      const r = getNodeRadius(n)
+      if (n.x != null && n.y != null) {
+        minX = Math.min(minX, n.x - r)
+        minY = Math.min(minY, n.y - r)
+        maxX = Math.max(maxX, n.x + r)
+        maxY = Math.max(maxY, n.y + r)
+      }
+    }
+    const gw = maxX - minX
+    const gh = maxY - minY
+    if (gw <= 0 || gh <= 0) return
+    const pad = 20
+    const fitScale = Math.min((width - pad * 2) / gw, (height - pad * 2) / gh, 1)
+    const cx = (minX + maxX) / 2
+    const cy = (minY + maxY) / 2
+    const targetX = width / 2 - cx * fitScale
+    const targetY = height / 2 - cy * fitScale
+    // Smooth lerp toward the target
+    const k = 0.15
+    stage.scale.set(stage.scale.x + (fitScale - stage.scale.x) * k)
+    stage.position.set(
+      stage.position.x + (targetX - stage.position.x) * k,
+      stage.position.y + (targetY - stage.position.y) * k,
+    )
+  }
 
   function animate() {
     if (stopAnimation) return
+
+    // Auto-fit while simulation is settling
+    if (simulation.alpha() > simulation.alphaMin()) {
+      fitStageToNodes()
+    } else if (!autoFitLocked) {
+      // One final snap fit when simulation finishes
+      fitStageToNodes()
+      autoFitLocked = true
+    }
 
     // Update node positions + smooth alpha/scale
     for (const nr of nodeRenders) {
@@ -522,34 +563,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     requestAnimationFrame(animate)
   }
 
-  // Auto-fit: zoom/pan the stage so all nodes are visible inside the box
-  {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-    for (const n of nodes) {
-      const r = getNodeRadius(n)
-      if (n.x !== undefined && n.y !== undefined) {
-        minX = Math.min(minX, n.x - r)
-        minY = Math.min(minY, n.y - r)
-        maxX = Math.max(maxX, n.x + r)
-        maxY = Math.max(maxY, n.y + r)
-      }
-    }
-    const graphW = maxX - minX
-    const graphH = maxY - minY
-    if (graphW > 0 && graphH > 0) {
-      const pad = 20
-      const scaleX = (width - pad * 2) / graphW
-      const scaleY = (height - pad * 2) / graphH
-      const fitScale = Math.min(scaleX, scaleY, 1) // never zoom in beyond 1:1
-      const cx = (minX + maxX) / 2
-      const cy = (minY + maxY) / 2
-      stage.scale.set(fitScale)
-      stage.position.set(
-        width / 2 - cx * fitScale,
-        height / 2 - cy * fitScale,
-      )
-    }
-  }
+  // (auto-fit happens inside animate loop)
 
   requestAnimationFrame(animate)
   return () => {

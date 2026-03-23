@@ -97,7 +97,7 @@ Two languages every data engineer uses daily. The question is never "which one" 
 | **Startup time** | ~5ms | ~50-100ms (interpreter + imports) |
 | **File manipulation** | Native (mv, cp, chmod, find) | os/shutil/pathlib (works but verbose) |
 | **Process management** | Native (ps, kill, nohup, &) | subprocess module (works but wraps bash) |
-| **CLI tool chaining** | Pipes are first-class (`cmd1 \| cmd2 \| cmd3`) | subprocess.Popen chains (clunky) |
+| **CLI tool chaining** | Pipes are first-class (`cmd1 | cmd2 | cmd3`) | subprocess.Popen chains (clunky) |
 | **Error handling** | `set -euo pipefail` (fragile beyond that) | try/except with full stack traces |
 | **Data structures** | Arrays only (no dicts, no objects, no nesting) | Lists, dicts, sets, classes, dataclasses |
 | **String manipulation** | Parameter expansion (`${var##*/}`) | Full string methods, regex, f-strings |

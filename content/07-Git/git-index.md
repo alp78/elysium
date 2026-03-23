@@ -58,6 +58,7 @@ Git is the version control system; GitHub is the collaboration platform. Togethe
 |------|-------------|
 | [[git-recovery-and-undo]] | Restore, revert, reset, reflog, cherry-pick, interactive rebase, recovering lost work |
 | [[git-common-errors]] | 25+ error scenarios with exact error messages, causes, and fixes |
+| [[git-problems]] | Additional Git problem scenarios and solutions |
 
 ## CI/CD
 

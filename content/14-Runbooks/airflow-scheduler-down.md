@@ -72,10 +72,10 @@ Key patterns to search for:
 docker logs airflow-scheduler --tail 200 2>&1 | grep -E "ERROR|CRITICAL|Traceback|Exception"
 
 # Scan for OOM signals
-docker logs airflow-scheduler --tail 200 2>&1 | grep -i "killed\|memory\|oom"
+docker logs airflow-scheduler --tail 200 2>&1 | grep -i "killed|memory|oom"
 
 # Scan for DB connection errors
-docker logs airflow-scheduler --tail 200 2>&1 | grep -i "connection\|psycopg2\|OperationalError\|timeout"
+docker logs airflow-scheduler --tail 200 2>&1 | grep -i "connection|psycopg2|OperationalError|timeout"
 ```
 
 ### Step 4 — Check metadata database connectivity
@@ -120,7 +120,7 @@ systemctl status docker
 free -h
 
 # OOM events in kernel log
-dmesg | grep -i "oom\|killed\|out of memory" | tail -20
+dmesg | grep -i "oom|killed|out of memory" | tail -20
 
 # Check cgroup memory limit for the scheduler container
 docker inspect airflow-scheduler | jq '.[0].HostConfig | {Memory, MemorySwap, OomKillDisable}'

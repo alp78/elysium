@@ -6,7 +6,7 @@ technology: []
 tags: []
 aliases: [Home, Main Dashboard, Start Here, Index, Elysium]
 keywords: [dashboard, home, index, navigation, start here, overview, data engineering, knowledge base]
-description: "Central dashboard and entry point for the Elysium data engineering knowledge base. Navigate to any section, browse by technology, or search."
+description: "Elysium data engineering knowledge base."
 related: []
 created: 2026-03-22
 updated: 2026-03-23

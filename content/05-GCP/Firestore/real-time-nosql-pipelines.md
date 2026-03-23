@@ -132,11 +132,11 @@ Gold scores computed in BigQuery are written to Firestore (`stocks` collection) 
 
 | Requirement | Problem with Firestore | Use Instead |
 |---|---|---|
-| Heavy analytics (aggregations, full scans) | No columnar storage, expensive per-read pricing for large result sets | [[querying-and-cost-optimization\|BigQuery]] |
+| Heavy analytics (aggregations, full scans) | No columnar storage, expensive per-read pricing for large result sets | [[querying-and-cost-optimization|BigQuery]] |
 | High-throughput time-series (millions of writes/sec) | Per-document write limit (1/sec), collection-level limits | Bigtable |
 | Complex joins and multi-table transactions | No joins; transactions limited to 500 documents | Cloud SQL / AlloyDB |
-| Message queuing, fan-out, backpressure | No queue semantics, no dead-letter native support | [[pubsub-messaging\|Pub/Sub]] |
-| Large blob storage | Documents capped at 1 MB | [[gcs-buckets-and-lifecycle\|Cloud Storage]] |
+| Message queuing, fan-out, backpressure | No queue semantics, no dead-letter native support | [[pubsub-messaging|Pub/Sub]] |
+| Large blob storage | Documents capped at 1 MB | [[gcs-buckets-and-lifecycle|Cloud Storage]] |
 | Relational integrity with foreign keys | No enforced referential integrity | Cloud SQL |
 
 > [!danger] The Expensive Anti-Pattern

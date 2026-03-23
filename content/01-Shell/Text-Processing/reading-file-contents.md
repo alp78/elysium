@@ -42,9 +42,9 @@ tail -f /var/log/pipeline/*.log
 # Use case: monitoring scheduler, worker, and database logs at the same time
 
 # Follow with grep (filter noise in real-time)
-tail -f /var/log/pipeline/run.log | grep --line-buffered "ERROR\|WARN\|DEADLOCK"
+tail -f /var/log/pipeline/run.log | grep --line-buffered "ERROR|WARN|DEADLOCK"
 # --line-buffered = flush output on every line (without this, grep buffers and you see nothing)
-# \| = OR in basic regex (or use grep -E "ERROR|WARN|DEADLOCK" for extended regex)
+# | = OR in basic regex (or use grep -E "ERROR|WARN|DEADLOCK" for extended regex)
 ```
 
 ## Production Scenario — Analyzing a Large Log File During an Incident

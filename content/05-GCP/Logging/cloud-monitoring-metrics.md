@@ -70,7 +70,7 @@ gcloud monitoring time-series list \
 | Signal type | Tool | Best for |
 |---|---|---|
 | Metrics (numeric, aggregated) | Cloud Monitoring | Trends, capacity planning, alerting thresholds, right-sizing |
-| Logs (text, events) | [[cloud-logging\|Cloud Logging]] | Root cause analysis, debugging failures, finding specific errors |
+| Logs (text, events) | [[cloud-logging|Cloud Logging]] | Root cause analysis, debugging failures, finding specific errors |
 
 Metrics tell you *how much* and *when* — they are aggregated numbers over time. Logs tell you *what happened* — they are discrete events with full context. Senior engineers use both together: metrics surface anomalies, logs explain them.
 

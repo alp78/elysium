@@ -490,7 +490,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 | SQL table → CSV file | `bcp` | `bcp table out file.csv -c -t ","` |
 | CSV file → SQL table | `bcp` | `bcp table in file.csv -c -t "," -F 2 -b 10000` |
 | SQL query → CSV file | `sqlcmd` | `sqlcmd -Q "SELECT ..." -s "," -W -o file.csv` |
-| SQL query → CSV (PowerShell) | `Invoke-Sqlcmd` | `Invoke-Sqlcmd -Query "..." \| Export-Csv` |
+| SQL query → CSV (PowerShell) | `Invoke-Sqlcmd` | `Invoke-Sqlcmd -Query "..." | Export-Csv` |
 | VM → VM (no local relay) | SSH + rsync | SSH into source VM, rsync directly to dest VM |
 | Database backup → GCS | `bcp` + `gsutil` | Export with bcp, then `gsutil cp backup.bak gs://bucket/` |
 

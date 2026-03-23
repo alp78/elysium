@@ -139,7 +139,7 @@ instances:
 sudo systemctl restart datadog-agent
 
 # Wait a few seconds, then verify queries execute without errors
-sudo datadog-agent check sqlserver 2>&1 | grep -i "deadlock\|connections"
+sudo datadog-agent check sqlserver 2>&1 | grep -i "deadlock|connections"
 
 # If custom metrics don't appear, check for YAML syntax issues
 sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40

@@ -924,7 +924,7 @@ fetch cloud_run_revision
 
 | Feature | MQL | PromQL |
 |---|---|---|
-| Syntax style | Pipe-based (`\|`) | Function-based nesting |
+| Syntax style | Pipe-based (`|`) | Function-based nesting |
 | Learning curve | Moderate | Steeper for newcomers |
 | Time range | In-query `within` | External to query |
 | Resource filtering | `filter resource.X == Y` | `{label="value"}` |

@@ -405,7 +405,7 @@ docker logs airflow-scheduler --tail 200 | grep -i error
 docker logs airflow-scheduler --tail 200 | grep -i "dag_id=my_dag"
 
 # Follow and filter simultaneously
-docker logs -f airflow-scheduler 2>&1 | grep --line-buffered "ERROR\|CRITICAL"
+docker logs -f airflow-scheduler 2>&1 | grep --line-buffered "ERROR|CRITICAL"
 # 2>&1 redirects stderr to stdout (many apps log errors to stderr)
 ```
 

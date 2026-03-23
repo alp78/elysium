@@ -393,9 +393,9 @@ Moving a dbt project from SQL Server to BigQuery involves three categories of ch
 
 ```bash
 # Find all models with T-SQL-specific functions
-grep -rn "GETDATE\|ISNULL\|DATEADD\|DATEDIFF\|CONVERT\|TOP [0-9]" models/
-grep -rn "NVARCHAR\|BIGINT\|BIT\|DATETIME2" models/
-grep -rn "sys\.\|OBJECT_ID\|INFORMATION_SCHEMA" macros/ models/
+grep -rn "GETDATE|ISNULL|DATEADD|DATEDIFF|CONVERT|TOP [0-9]" models/
+grep -rn "NVARCHAR|BIGINT|BIT|DATETIME2" models/
+grep -rn "sys\.|OBJECT_ID|INFORMATION_SCHEMA" macros/ models/
 ```
 
 Create a migration checklist from the grep output. Each hit is a conversion task.

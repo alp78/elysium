@@ -261,7 +261,7 @@ Get-ChildItem -Recurse | Select-String -Pattern 'TODO'
 
 # Recursive with directory exclusion
 Get-ChildItem -Recurse |
-    Where-Object { $_.FullName -notmatch '\\\.git\\|__pycache__' } |
+    Where-Object { $_.FullName -notmatch '\\\.git\|__pycache__' } |
     Select-String -Pattern 'secret'
 ```
 
@@ -788,7 +788,7 @@ Get-ChildItem -Recurse -Include *.sql, *.py | Select-String -Pattern 'staging_'
 
 # Exclude directories
 Get-ChildItem -Recurse -Filter *.py |
-    Where-Object { $_.FullName -notmatch '\\\.git\\|__pycache__' } |
+    Where-Object { $_.FullName -notmatch '\\\.git\|__pycache__' } |
     Select-String -Pattern 'TODO'
 
 # Exclude specific file name patterns
@@ -958,7 +958,7 @@ grep -rE 'os\.environ|os\.getenv' --include='*.py' ./
 grep -rE '\bDB_PASSWORD\b|\bDATABASE_URL\b' --include='*.py' --include='*.env.example' .
 
 # Find .env files (potential credential exposure)
-find . -name '*.env' | xargs grep -l 'password\|secret\|key' 2>/dev/null
+find . -name '*.env' | xargs grep -l 'password|secret|key' 2>/dev/null
 
 # Find hardcoded credential patterns in source code
 grep -rE '(password|secret|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' \
@@ -1099,7 +1099,7 @@ Select-String -Pattern 'ERROR' app.log |
 
 ```bash
 # Search for potential secrets across a codebase
-grep -r 'password\|secret\|api_key\|token\|private_key' \
+grep -r 'password|secret|api_key|token|private_key' \
     --include='*.py' --include='*.yaml' --include='*.json' \
     --include='*.env' --include='*.config' . | grep -v '#'   # skip comment lines
 
@@ -1279,9 +1279,9 @@ rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match
 | `-v` | Invert match | `-NotMatch` |
 | `-n` | Line numbers | Always shown via `.LineNumber` property |
 | `-c` | Count matches | `(...).Count` |
-| `-l` | Files with matches | `... \| Select-Object -ExpandProperty Filename -Unique` |
+| `-l` | Files with matches | `... | Select-Object -ExpandProperty Filename -Unique` |
 | `-L` | Files without matches | Requires set subtraction (see above) |
-| `-r` / `-R` | Recursive | `Get-ChildItem -Recurse \| Select-String` |
+| `-r` / `-R` | Recursive | `Get-ChildItem -Recurse | Select-String` |
 | `-E` | Extended regex | (default — .NET regex always supports ERE features) |
 | `-P` | Perl regex (PCRE) | (default — .NET regex supports lookahead/lookbehind) |
 | `-F` | Fixed/literal string | `-SimpleMatch` |
@@ -1290,7 +1290,7 @@ rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match
 | `-A N` | N lines after | `-Context 0,N` |
 | `-B N` | N lines before | `-Context N,0` |
 | `-C N` | N lines context | `-Context N,N` |
-| `-f file` | Patterns from file | Build combined pattern: `(Get-Content f) -join '\|'` |
+| `-f file` | Patterns from file | Build combined pattern: `(Get-Content f) -join '|'` |
 | `--include='*.py'` | Include file glob | `Get-ChildItem -Filter *.py` |
 | `--exclude-dir=d` | Exclude directory | `Where-Object { $_.FullName -notmatch 'd' }` |
 | `-h` | Suppress filenames | `.Line` property only |
@@ -1422,7 +1422,7 @@ Select-String -Pattern '\b[a-zA-Z_]\w*\.[a-zA-Z_]\w*\b' query.sql -AllMatches |
 # ── Log analysis ──────────────────────────────────────────────────────────────
 
 # Show all errors with 5 lines of context for stack traces
-grep -C 5 'ERROR\|EXCEPTION' app.log
+grep -C 5 'ERROR|EXCEPTION' app.log
 
 # Count errors by type, sorted by frequency
 grep 'ERROR' app.log | grep -oE 'ERROR [A-Za-z]+' | sort | uniq -c | sort -rn
@@ -1437,7 +1437,7 @@ grep -n 'STARTED' pipeline.log | tail -1   # last
 # ── Code archaeology ──────────────────────────────────────────────────────────
 
 # Find all TODO/FIXME/HACK comments across a project
-grep -rn 'TODO\|FIXME\|HACK\|XXX\|BUG' --include='*.py' ./
+grep -rn 'TODO|FIXME|HACK|XXX|BUG' --include='*.py' ./
 
 # Find all functions in Python that start with 'load_'
 grep -rn 'def load_' --include='*.py' ./
@@ -1465,7 +1465,7 @@ grep -rl 'password.*=.*["\x27]' --include='*.py' .
 grep -rE 'AKIA[0-9A-Z]{16}' .
 
 # Find open TODO security notes
-grep -rn 'TODO.*security\|FIXME.*auth\|HACK.*password' .
+grep -rn 'TODO.*security|FIXME.*auth|HACK.*password' .
 ```
 
 ```powershell

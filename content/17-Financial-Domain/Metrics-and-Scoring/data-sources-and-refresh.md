@@ -63,9 +63,9 @@ yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scor
 
 | Data Type | Staleness Tolerance | Impact of Stale Data |
 |-----------|--------------------|--------------------|
-| Price/volume | Minutes | [[daily-signal-scores\|Momentum scores]] lag, intraday pulse stale |
-| Analyst consensus | Hours | [[daily-signal-scores\|Sentiment scores]] slightly off |
-| Quarterly financials | Days | [[quarterly-signal-scores\|Quality scores]] use prior quarter |
+| Price/volume | Minutes | [[daily-signal-scores|Momentum scores]] lag, intraday pulse stale |
+| Analyst consensus | Hours | [[daily-signal-scores|Sentiment scores]] slightly off |
+| Quarterly financials | Days | [[quarterly-signal-scores|Quality scores]] use prior quarter |
 | Governance scores | Weeks | Slow-moving, minimal impact |
 | Index composition | Hours | Wrong constituents if not refreshed |
 

@@ -152,7 +152,7 @@ ORDER BY pages_kb DESC;
 | `CACHESTORE_SQLCP` | Plan cache (compiled query plans) | If > 20% of total, enable "optimize for ad hoc workloads" |
 | `MEMORYCLERK_SQLQUERYEXEC` | Memory grants (sort/hash operations) | If large, queries are doing big sorts — add indexes |
 | `MEMORYCLERK_SQLCLR` | CLR objects | Should be small unless using CLR assemblies |
-| `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for [[deadlock-detection-and-prevention\|blocking]] |
+| `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for [[deadlock-detection-and-prevention|blocking]] |
 
 ## Pending Memory Grants
 

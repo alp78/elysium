@@ -38,6 +38,7 @@ Apache Airflow — the industry-standard workflow orchestrator for data pipeline
 | [[airflow-dag-patterns]] | Task groups, dynamic DAGs, branching, trigger rules, idempotency, backfill, dataset scheduling |
 | [[airflow-deployment]] | Docker Compose, self-hosted, Cloud Composer, MWAA, configuration, secrets, monitoring |
 | [[airflow-troubleshooting]] | 13+ common errors with fixes, CLI debugging, log analysis, performance tuning |
+| [[airflow-problems]] | Additional Airflow error scenarios and solutions |
 
 ## Key Concepts
 

@@ -85,6 +85,7 @@ Curated, narrated link collections for cross-cutting themes.
 
 - [[moc-data-pipeline-lifecycle]] — Design → provisioning → ingestion → transformation → orchestration → monitoring
 - [[moc-infrastructure-as-code]] — Terraform foundations → GCP resources → patterns → operations → CI/CD
+- [[moc-patterns]] — Every reusable pattern in the vault, grouped by concern
 
 ## Key Concepts
 

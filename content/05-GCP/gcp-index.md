@@ -78,6 +78,7 @@ Observability tools for debugging pipeline failures and capacity planning.
 
 - [[cloud-logging]] — Filter language, severity levels, time ranges, text search, resource filtering, log tailing
 - [[cloud-monitoring-metrics]] — Metric types, CPU/disk/network monitoring, useful data engineering metrics, alerting
+- [[bigquery-problems]] — BigQuery error scenarios and solutions
 
 ## Cost Management — FinOps
 

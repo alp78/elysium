@@ -214,7 +214,7 @@ gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b --tunnel-through-
 | Full agent status | `docker exec dd-agent agent status` |
 | Quick health check | `docker exec dd-agent agent health` |
 | Restart agent | `docker restart dd-agent` |
-| Test APM port | `curl -s http://localhost:8126/info \| head -5` |
+| Test APM port | `curl -s http://localhost:8126/info | head -5` |
 
 ### SQL VM (package-based agent on Ubuntu)
 

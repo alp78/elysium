@@ -10280,7 +10280,7 @@ comparison = r"""
 |:---------------------------------|:-------------------------------------------------|:-------------------------------------------------|
 | Single boolean filter            | `df[df["col"] > x]`                             | `df.filter(pl.col("col") > x)`                   |
 | `.loc` with condition            | `df.loc[mask]`                                   | `df.filter(mask_expr)`                           |
-| AND / OR / NOT                   | `(c1) & (c2)`, `(c1) \| (c2)`, `~c`              | Same operators on expressions                    |
+| AND / OR / NOT                   | `(c1) & (c2)`, `(c1) | (c2)`, `~c`              | Same operators on expressions                    |
 | `query()`                        | `df.query("col > 5")`                            | N/A — use `filter` expressions                   |
 | `isin` / `is_in`                | `df[df["col"].isin(lst)]`                        | `df.filter(pl.col("col").is_in(lst))`             |
 | `between` / `is_between`        | `df[df["col"].between(a, b)]`                    | `df.filter(pl.col("col").is_between(a, b))`       |
@@ -10307,7 +10307,7 @@ display(Markdown(comparison))
 |:---------------------------------|:-------------------------------------------------|:-------------------------------------------------|
 | Single boolean filter            | `df[df["col"] > x]`                             | `df.filter(pl.col("col") > x)`                   |
 | `.loc` with condition            | `df.loc[mask]`                                   | `df.filter(mask_expr)`                           |
-| AND / OR / NOT                   | `(c1) & (c2)`, `(c1) \| (c2)`, `~c`              | Same operators on expressions                    |
+| AND / OR / NOT                   | `(c1) & (c2)`, `(c1) | (c2)`, `~c`              | Same operators on expressions                    |
 | `query()`                        | `df.query("col > 5")`                            | N/A — use `filter` expressions                   |
 | `isin` / `is_in`                | `df[df["col"].isin(lst)]`                        | `df.filter(pl.col("col").is_in(lst))`             |
 | `between` / `is_between`        | `df[df["col"].between(a, b)]`                    | `df.filter(pl.col("col").is_between(a, b))`       |

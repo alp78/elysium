@@ -868,7 +868,7 @@ SELECT * FROM analytics.daily_prices WHERE price_date = target_date;
 
 ```bash
 # Search dbt models for common pruning anti-patterns
-grep -rn "DATE(price_date)\|DATE(effective_date)\|TIMESTAMP_TRUNC" models/
+grep -rn "DATE(price_date)|DATE(effective_date)|TIMESTAMP_TRUNC" models/
 ```
 
 2. Replace all `DATE(partition_col) = 'X'` patterns with `partition_col = 'X'`.

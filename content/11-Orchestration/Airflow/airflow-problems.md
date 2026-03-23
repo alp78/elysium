@@ -561,7 +561,7 @@ Service account keys stored as static JSON in Airflow connections or environment
 
 1. Confirm the credential error is the root cause:
    ```bash
-   docker logs airflow-worker --tail 50 2>&1 | grep -i "401\|unauthorized\|credential\|expired"
+   docker logs airflow-worker --tail 50 2>&1 | grep -i "401|unauthorized|credential|expired"
    ```
 
 2. Test the current connection:
@@ -884,7 +884,7 @@ Airflow's DAG processor imports every Python file in `dags_folder` as a module r
 1. Identify slow-parsing DAGs:
    ```bash
    docker exec airflow-scheduler airflow dags list-import-errors
-   docker logs airflow-dag-processor --tail 200 2>&1 | grep -i "timeout\|slow\|exceeded"
+   docker logs airflow-dag-processor --tail 200 2>&1 | grep -i "timeout|slow|exceeded"
    ```
 
 2. Profile parse time per file:
@@ -1934,7 +1934,7 @@ A legacy DAG uses `SubDagOperator` to encapsulate a group of related tasks (e.g.
 
 2. Add a CI check that rejects any new use of SubDagOperator:
    ```bash
-   if grep -rn "SubDagOperator\|subdag" ./dags/ --include="*.py" | grep -v "^Binary\|#.*SubDag"; then
+   if grep -rn "SubDagOperator|subdag" ./dags/ --include="*.py" | grep -v "^Binary|#.*SubDag"; then
        echo "FAIL: SubDagOperator usage detected. Use TaskGroup instead."
        exit 1
    fi
@@ -2353,7 +2353,7 @@ This is intentional — Airflow was designed for batch data pipelines where you 
 
 1. If a DAG is querying the wrong date, identify where `execution_date` or `{{ ds }}` is used:
    ```bash
-   grep -rn "execution_date\|{{ ds }}\|{{ next_ds }}" ./dags/index_calculation_dag.py
+   grep -rn "execution_date|{{ ds }}|{{ next_ds }}" ./dags/index_calculation_dag.py
    ```
 
 2. For a manual re-run covering a specific data date, use `--execution-date` explicitly:

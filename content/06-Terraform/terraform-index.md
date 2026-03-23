@@ -58,6 +58,7 @@ Architectural patterns, dependency management, and module composition.
 | Note | Description |
 |------|-------------|
 | [[terraform-conditional-resources]] | The `use_sql_vm` / `dd_api_key` conditional pattern for opt-in resources via count |
+| [[terraform-problems]] | Terraform error scenarios and solutions |
 | [[terraform-resource-dependencies]] | How Terraform resolves implicit dependencies and the resource creation order |
 | [[terraform-module-composition]] | Module structure, input/output contracts, reusable infrastructure patterns |
 

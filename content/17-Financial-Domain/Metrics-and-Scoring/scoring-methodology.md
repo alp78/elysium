@@ -79,7 +79,7 @@ Used for P/E, P/B, dividend yield, and other [[index-snapshot-metrics|index-leve
 | Grouping | When Used | Why |
 |----------|-----------|-----|
 | **Index-level** | Default for daily signals | Compares stock to all peers in the index |
-| **Sector-level** | [[quarterly-signal-scores\|Quality/moat score]] when ≥ 3 sector peers | Compares within similar business models (more meaningful) |
+| **Sector-level** | [[quarterly-signal-scores|Quality/moat score]] when ≥ 3 sector peers | Compares within similar business models (more meaningful) |
 | **Fallback to index** | When sector has < 3 constituents | Insufficient peers for meaningful sector z-score |
 
 ## Related

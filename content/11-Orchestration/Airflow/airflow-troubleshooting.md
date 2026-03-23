@@ -84,10 +84,10 @@ A reference for diagnosing and fixing the most common Apache Airflow problems en
 airflow dags list-import-errors
 
 # Or check the scheduler log — import errors appear here as they are parsed
-journalctl -u airflow-scheduler -n 200 | grep -i "import error\|broken dag\|error loading"
+journalctl -u airflow-scheduler -n 200 | grep -i "import error|broken dag|error loading"
 
 # For Docker Compose setups
-docker compose logs airflow-scheduler | grep -i "error\|import"
+docker compose logs airflow-scheduler | grep -i "error|import"
 ```
 
 ### Root Cause 1a: Python Syntax Error
@@ -1003,7 +1003,7 @@ MyCustomOperator(
 ```bash
 # Check scheduler parsing times per DAG file
 # Look for "Processing file" lines with timing info
-docker compose logs airflow-scheduler | grep "Processing file\|finish processing file" | tail -50
+docker compose logs airflow-scheduler | grep "Processing file|finish processing file" | tail -50
 
 # Count how many DAG files are being parsed
 ls -la $AIRFLOW_HOME/dags/*.py | wc -l

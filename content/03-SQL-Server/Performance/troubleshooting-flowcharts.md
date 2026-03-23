@@ -120,10 +120,10 @@ ORDER BY wait_time_ms DESC;
 |---|---|---|
 | `PAGEIOLATCH_SH / PAGEIOLATCH_EX` | Buffer pool miss — reading from disk because data isn't cached | Add RAM; add covering indexes to reduce scan volume; move to pd-ssd |
 | `WRITELOG` | Transaction log write latency | Move .ldf to dedicated pd-ssd; reduce transaction frequency |
-| `LCK_M_S / LCK_M_X / LCK_M_IX` | Lock contention — queries blocked on each other | Enable [[blocking-and-locking#Read Committed Snapshot Isolation (RCSI)\|RCSI]]; add indexes; shorten transactions |
+| `LCK_M_S / LCK_M_X / LCK_M_IX` | Lock contention — queries blocked on each other | Enable [[blocking-and-locking#Read Committed Snapshot Isolation (RCSI)|RCSI]]; add indexes; shorten transactions |
 | `CXPACKET / CXCONSUMER` | Parallel query thread skew | Check MAXDOP setting; set to `cores/2` or use cost threshold 25-50 |
 | `SOS_SCHEDULER_YIELD` | CPU saturation | Find CPU-heavy queries via `dm_exec_query_stats`; add missing indexes |
-| `MEMORY_ALLOCATION_EXT` | Memory pressure / pending grants | Check `max server memory`; check [[memory-and-buffer-pool#Page Life Expectancy\|PLE]]; add RAM |
+| `MEMORY_ALLOCATION_EXT` | Memory pressure / pending grants | Check `max server memory`; check [[memory-and-buffer-pool#Page Life Expectancy|PLE]]; add RAM |
 | `PAGELATCH_UP` | TempDB contention on PFS/GAM/SGAM pages | Add TempDB data files = number of CPU cores |
 
 ---

@@ -8,7 +8,7 @@ keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, EN
 description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, aggregation, string functions, multi-file processing, advanced patterns, and PowerShell equivalents for every key technique."
 related:
   - "[[reading-file-contents]]"
-  - "[[01-Shell/_Index]]"
+  - "[[shell-index]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1099,10 +1099,10 @@ Get-Content data.txt | ForEach-Object { ($_ -split '\s+')[-1] }
 | Dedup rows | `!seen[$0]++` | `Select-Object -Unique` |
 | String replace | `gsub(/x/,"y")` | `-replace 'x','y'` |
 | Uppercase | `toupper($1)` | `$_.col.ToUpper()` |
-| Convert delimiters | `awk -F',' OFS='\t' '{$1=$1;print}'` | `Import-Csv \| Export-Csv -Delimiter` |
+| Convert delimiters | `awk -F',' OFS='\t' '{$1=$1;print}'` | `Import-Csv | Export-Csv -Delimiter` |
 | Run per 100 rows | `NR%100==0 {print}` | `Where-Object { $i++ % 100 -eq 0 }` |
 | Join two files | `FNR==NR` trick | `Join-Object` module or hash table lookup |
-| Write to file | `print > "out.txt"` | `\| Out-File` / `\| Set-Content` |
+| Write to file | `print > "out.txt"` | `| Out-File` / `| Set-Content` |
 
 ---
 
@@ -1171,4 +1171,4 @@ awk -F',' '!seen[$2]++ {print $2}' file
 ## Related Notes
 
 - [[reading-file-contents]] — Reading files in shell (cat, head, tail, less)
-- [[01-Shell/_Index]] — Shell scripting section index
+- [[shell-index]] — Shell scripting section index

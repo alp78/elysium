@@ -314,7 +314,7 @@ sed '1,/^$/d' report.txt
 
 ```bash
 # Delete all lines that do NOT contain 'ERROR' or 'WARN' (keep only those two)
-sed '/ERROR\|WARN/!d' app.log
+sed '/ERROR|WARN/!d' app.log
 
 # Suppress blank lines (print only non-blank lines)
 sed '/^$/d' file.txt
@@ -1055,28 +1055,28 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 | sed command | PowerShell equivalent | Notes |
 |---|---|---|
 | `sed 's/old/new/g' file` | `(GC file) -replace 'old','new'` | Both replace all occurrences |
-| `sed -i 's/old/new/g' file` | `(GC file) -replace 'old','new' \| SC file` | PowerShell: read then write |
-| `sed -i.bak 's/old/new/g' file` | `Copy-Item file file.bak; (GC file) -replace 'old','new' \| SC file` | Manual backup in PS |
+| `sed -i 's/old/new/g' file` | `(GC file) -replace 'old','new' | SC file` | PowerShell: read then write |
+| `sed -i.bak 's/old/new/g' file` | `Copy-Item file file.bak; (GC file) -replace 'old','new' | SC file` | Manual backup in PS |
 | `sed 's/old/new/gi' file` | `(GC file) -replace 'old','new'` | PS -replace is case-insensitive by default |
-| `sed 's/old/new/' file` | `(GC file) \| %{ $_ -replace 'old','new' }` | Both replace first on line (PS replaces all) |
-| `sed '/pattern/d' file` | `(GC file) \| ?{ $_ -notmatch 'pattern' }` | Where-Object filter |
-| `sed -n '/pattern/p' file` | `(GC file) \| ?{ $_ -match 'pattern' }` | Keep matching lines |
+| `sed 's/old/new/' file` | `(GC file) | %{ $_ -replace 'old','new' }` | Both replace first on line (PS replaces all) |
+| `sed '/pattern/d' file` | `(GC file) | ?{ $_ -notmatch 'pattern' }` | Where-Object filter |
+| `sed -n '/pattern/p' file` | `(GC file) | ?{ $_ -match 'pattern' }` | Keep matching lines |
 | `sed -n '5,10p' file` | `(GC file)[4..9]` | PS 0-indexed arrays |
-| `sed '1d' file` | `(GC file) \| Select-Object -Skip 1` | Skip first line |
-| `sed '$d' file` | `(GC file) \| Select-Object -SkipLast 1` | Skip last line |
+| `sed '1d' file` | `(GC file) | Select-Object -Skip 1` | Skip first line |
+| `sed '$d' file` | `(GC file) | Select-Object -SkipLast 1` | Skip last line |
 | `sed 's/\(a\)\(b\)/\2\1/' file` | `(GC file) -replace '(a)(b)','$2$1'` | PS uses $1,$2; sed uses \1,\2 |
 | `sed 's/.*/[&]/' file` | `(GC file) -replace '.*','[$0]'` | & in sed = $0 in PS |
-| `sed -E 's/(foo\|bar)/baz/' file` | `(GC file) -replace 'foo\|bar','baz'` | PS regex always ERE-equivalent |
-| `sed '/^$/d' file` | `(GC file) \| ?{ $_ -ne '' }` | Remove blank lines |
+| `sed -E 's/(foo|bar)/baz/' file` | `(GC file) -replace 'foo|bar','baz'` | PS regex always ERE-equivalent |
+| `sed '/^$/d' file` | `(GC file) | ?{ $_ -ne '' }` | Remove blank lines |
 | `sed 's/[[:space:]]*$//' file` | `(GC file) -replace '\s+$',''` | Trailing whitespace |
 | `sed 's/\r$//' file` | `(GC file -Raw) -replace "\r\n","\n"` | CRLF → LF |
-| `sed -n 's/^KEY=//p' file` | `(GC file \| SS '^KEY=').Line -replace '^KEY=',''` | Extract config value |
+| `sed -n 's/^KEY=//p' file` | `(GC file | SS '^KEY=').Line -replace '^KEY=',''` | Extract config value |
 | `sed '3i\new line' file` | Requires `[System.Collections.Generic.List[string]]` loop | No direct equivalent |
 | `sed '3a\new line' file` | Requires list insertion loop | No direct equivalent |
-| `sed '/pattern/c\replacement' file` | `(GC file) \| %{ if($_ -match 'pattern'){'replacement'}else{$_} }` | Line replacement |
-| `sed -n '=; p' file` | `(GC file) \| %{ $n++; "$n"; $_ }` | Print line numbers |
+| `sed '/pattern/c\replacement' file` | `(GC file) | %{ if($_ -match 'pattern'){'replacement'}else{$_} }` | Line replacement |
+| `sed -n '=; p' file` | `(GC file) | %{ $n++; "$n"; $_ }` | Print line numbers |
 | `sed -f script.sed file` | Script file with `ForEach-Object` blocks | No direct -f equivalent |
-| `find . -name '*.sql' \| xargs sed -i 's/a/b/g'` | `GCI -R -Filter '*.sql' \| %{ (GC $_.FullName) -replace 'a','b' \| SC $_.FullName }` | Recursive multi-file edit |
+| `find . -name '*.sql' | xargs sed -i 's/a/b/g'` | `GCI -R -Filter '*.sql' | %{ (GC $_.FullName) -replace 'a','b' | SC $_.FullName }` | Recursive multi-file edit |
 
 **Abbreviations in table:** `GC` = `Get-Content`, `SC` = `Set-Content`, `SS` = `Select-String`, `GCI` = `Get-ChildItem`, `?{` = `Where-Object {`, `%{` = `ForEach-Object {`
 
@@ -1090,7 +1090,7 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 |---|---|---|
 | `-i` in-place | `sed -i 's/a/b/' file` | `sed -i '' 's/a/b/' file` (empty suffix required) |
 | `\+` one-or-more | Supported | Not supported (use `\{1,\}` or `-E`) |
-| `\|` alternation in BRE | Supported | Not supported (use `-E`) |
+| `|` alternation in BRE | Supported | Not supported (use `-E`) |
 | `\w`, `\d` shorthand | Supported | Not supported (use `[[:alnum:]_]`, `[0-9]`) |
 | `\n` in replacement | Supported | Not supported (use `$'\n'` workaround) |
 | `\L`, `\U` case conversion | Supported | Not supported |
@@ -1100,7 +1100,7 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 > [!tip] Cross-Platform sed Scripts
 > For scripts that must run on both Linux and macOS:
 > 1. Always use `-i.bak` (or handle the suffix in a conditional)
-> 2. Prefer `-E` for extended regex instead of BRE `\+`, `\|`
+> 2. Prefer `-E` for extended regex instead of BRE `\+`, `|`
 > 3. Avoid `\w`, `\d` — use POSIX classes `[[:alpha:]]`, `[0-9]`
 > 4. Test on both platforms before automating
 
