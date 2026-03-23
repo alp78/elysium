@@ -51,9 +51,9 @@ export const defaultContentPageLayout: PageLayout = {
         showTags: false,
       },
       globalGraph: {
-        repelForce: 1.2,
-        centerForce: 0.15,
-        linkDistance: 60,
+        repelForce: 0.6,
+        centerForce: 0.4,
+        linkDistance: 30,
         fontSize: 0.35,
         opacityScale: 3,
         showTags: false,
