@@ -45,6 +45,9 @@ let searchMode: "AND" | "OR" = "AND"
 /** Tag-specific AND/OR mode toggled by the tag browser toggle */
 let tagMode: "AND" | "OR" = "AND"
 
+/** Debounce generation counter — prevents stale async results from rendering */
+let searchGeneration = 0
+
 // ---------------------------------------------------------------------------
 // Index building
 // ---------------------------------------------------------------------------
@@ -186,15 +189,20 @@ function findAnchor(doc: SearchDoc, terms: string[]): string {
   }
   if (bestScore === 0) return ""
 
-  // Approximate the character offset of this block in the original content
-  const blockText = doc.blocks[bestBlockIdx]
-  const blockOffset = doc.content.indexOf(blockText)
+  // Use the first unique substring of the best block to locate it in the
+  // raw content (blocks are whitespace-normalized so full indexOf fails).
+  const blockSnippet = doc.blocks[bestBlockIdx].slice(0, 60)
+  const contentNorm = doc.content.replace(/\s+/g, " ")
+  const blockOffset = contentNorm.indexOf(blockSnippet)
   if (blockOffset === -1) return ""
 
-  // Walk headings: find the last heading whose text appears BEFORE blockOffset
+  // Walk headings: find the last heading whose text appears BEFORE blockOffset.
+  // Content uses HTML entities (&amp;) while heading text uses raw chars (&).
+  // Encode heading text the same way for matching.
   let bestHeading: HeadingIndex | null = null
   for (const h of doc.headings) {
-    const hPos = doc.content.indexOf(h.text)
+    const hText = h.text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const hPos = contentNorm.indexOf(hText)
     if (hPos !== -1 && hPos <= blockOffset) {
       bestHeading = h
     }
@@ -227,8 +235,10 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
       ...parsed.phraseFilters.flatMap((p) => p.split(" ")),
     ]
 
+    // Always retrieve candidates with OR so we get a wide net.
+    // Strict AND/OR enforcement is done in the post-filters below.
     const results = miniSearch.search(queryTerms.join(" "), {
-      combineWith: parsed.operator === "OR" ? "OR" : "AND",
+      combineWith: "OR",
       prefix: true,
       fuzzy: 0.1,
       boost: { title: 4, tags: 2 },
@@ -242,10 +252,11 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
     return []
   }
 
-  // AND enforcement: every term must appear somewhere in the document.
-  if (parsed.operator === "AND" && parsed.terms.length >= 2) {
+  // ── AND enforcement ────────────────────────────────────────
+  // Every term must appear somewhere in (title + content + tags).
+  if (hasText && parsed.operator === "AND" && parsed.terms.length >= 1) {
     docs = docs.filter((d) => {
-      const haystack = `${d.title} ${d.content} ${d.tags.join(" ")}`.toLowerCase()
+      const haystack = `${d.title}\n${d.content}\n${d.tags.join(" ")}`.toLowerCase()
       return parsed.terms.every((t) => haystack.includes(t))
     })
   }
@@ -267,12 +278,10 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
   // Tag include (respects tagMode AND/OR)
   if (allTagInc.size > 0) {
     if (tagMode === "AND") {
-      // ALL selected tags must be present
       docs = docs.filter((d) =>
         [...allTagInc].every((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))),
       )
     } else {
-      // ANY selected tag must be present
       docs = docs.filter((d) =>
         [...allTagInc].some((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))),
       )
@@ -403,14 +412,12 @@ function renderResults(
   const useTagGroups = !hasText && tagMode === "OR" && tagInclude.size > 1
 
   if (useTagGroups) {
-    // Group by matching tag
     const groups = new Map<string, SearchDoc[]>()
     for (const doc of docs) {
       for (const activeTag of tagInclude) {
         if (doc.tags.some((dt) => dt.toLowerCase().includes(activeTag))) {
           const label = `#${activeTag}`
           if (!groups.has(label)) groups.set(label, [])
-          // avoid duplicates within a group
           const arr = groups.get(label)!
           if (!arr.some((d) => d.slug === doc.slug)) {
             arr.push(doc)
@@ -420,7 +427,6 @@ function renderResults(
     }
     renderGrouped(groups, terms, hasText, currentSlug, container)
   } else {
-    // Group by folder
     const groups = new Map<string, SearchDoc[]>()
     for (const doc of docs) {
       const folder = slugToFolder(doc.slug)
@@ -491,7 +497,6 @@ function setupTagBrowser(
   tagModeToggle: HTMLButtonElement,
   onFilterChange: () => void,
 ): void {
-  // Per-tag state: 0 = neutral, 1 = include (green), 2 = exclude (red)
   const tagStates = new Map<string, 0 | 1 | 2>()
 
   function syncGlobalSets(): void {
@@ -550,7 +555,6 @@ function setupTagBrowser(
     if (!pill) return
     const tag = pill.dataset.tag!
     const current = tagStates.get(tag) ?? 0
-    // Cycle: neutral → include → exclude → neutral
     const next = ((current + 1) % 3) as 0 | 1 | 2
     tagStates.set(tag, next)
     updatePillAppearance(tag, next)
@@ -595,6 +599,7 @@ async function setupSearch(
   const tagModeToggle = searchEl.querySelector<HTMLButtonElement>(".tag-mode-toggle")!
 
   let currentQuery = ""
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   // AND / OR toggle button for text search
   function syncToggleAppearance(): void {
@@ -622,20 +627,27 @@ async function setupSearch(
       return
     }
 
+    // Increment generation so stale async results are discarded
+    const gen = ++searchGeneration
     const docs = await runSearch(currentQuery)
+
+    // If a newer search was kicked off while we were awaiting, discard
+    if (gen !== searchGeneration) return
+
     resultsPanel.classList.add("active")
     renderResults(docs, currentQuery, currentSlug, resultsPanel)
   }
 
-  // Input handler
+  // Debounced input handler — waits 120ms after last keystroke
   const onInput = (e: Event): void => {
     currentQuery = (e.target as HTMLInputElement).value
-    refresh()
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => refresh(), 120)
   }
   bar.addEventListener("input", onInput)
   window.addCleanup(() => bar.removeEventListener("input", onInput))
 
-  // Tag browser (now also receives the tag mode toggle)
+  // Tag browser
   setupTagBrowser(tagListEl, filterBarEl, tagModeToggle, refresh)
 
   // Keyboard shortcut: Ctrl/⌘+K → focus search bar
