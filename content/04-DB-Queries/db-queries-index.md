@@ -48,20 +48,6 @@ Document database operations in both Python and C#. See [[firestore-data-model-a
 | [[firestore-python]] | Python SDK: CRUD operations, queries (where, order_by, limit), compound queries, array_contains, subcollections, batch writes, transactions, real-time listeners (on_snapshot), pagination |
 | [[firestore-csharp]] | C# SDK: CRUD with typed models, queries, DocumentReference/CollectionReference, WriteBatch, transactions, snapshots, FieldValue operations, async patterns |
 
-## Learning Path
-
-**SQL Server track:**
-1. [[sql-fundamentals]] → [[sql-advanced]] → [[sql-engineering]]
-2. Then explore: [[sargable-queries]], [[execution-plans]], [[wait-stats-analysis]]
-
-**BigQuery track:**
-1. [[bq-fundamentals]] → [[bq-advanced]] → [[bq-engineering]]
-2. Then explore: [[querying-and-cost-optimization]], [[data-loading-and-export]], [[gcp-cost-monitoring-and-budgets]]
-
-**Firestore track:**
-1. [[firestore-python]] or [[firestore-csharp]] (pick your language)
-2. Then explore: [[firestore-data-model-and-operations]], [[real-time-nosql-pipelines]]
-
 ## Cross-References
 
 - **SQL Server administration** — [[sql-server-index]] for backup, restore, security, HA
@@ -71,9 +57,4 @@ Document database operations in both Python and C#. See [[firestore-data-model-a
 - **Architecture** — [[data-warehouse-architecture]] for when to use SQL Server vs BigQuery
 - **Programming languages** — [[14_Database|Python Database]] and [[14_Database|C# Database]] for connection patterns
 
-```dataview
-TABLE type, technology, description
-FROM "04-DB-Queries"
-WHERE type != "index"
-SORT file.name ASC
-```
+> *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

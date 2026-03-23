@@ -5,9 +5,10 @@ technology: [python]
 tags: [reference, programming-languages, python, generics]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 keywords: [generics, TypeVar, Generic, Protocol, map, filter, reduce, itertools, functools, comprehension]
-description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [[07_Generics_LINQ - CSharp]] for the C# equivalent."
+description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [[cs-07_Generics_LINQ]] for the C# equivalent."
 related:
-  - "[[07_Generics_LINQ - CSharp]]"
+  - "[[programming-languages-index]]"
+  - "[[cs-07_Generics_LINQ]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

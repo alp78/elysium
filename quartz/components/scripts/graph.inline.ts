@@ -166,10 +166,15 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
 
   // we virtualize the simulation and use pixi to actually render it
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(graphData.nodes)
-    .force("charge", forceManyBody().strength(-100 * repelForce))
-    .force("center", forceCenter().strength(centerForce))
-    .force("link", forceLink(graphData.links).distance(linkDistance))
-    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n)).iterations(3))
+    .force(
+      "charge",
+      forceManyBody()
+        .strength(-80 * repelForce)
+        .distanceMax(width * 0.4),
+    )
+    .force("center", forceCenter().strength(centerForce * 1.5))
+    .force("link", forceLink(graphData.links).distance(linkDistance).strength(0.8))
+    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 2).iterations(4))
 
   const radius = (Math.min(width, height) / 2) * 0.8
   if (enableRadial) simulation.force("radial", forceRadial(radius).strength(0.2))
@@ -196,23 +201,23 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   // section color mapping (matches Obsidian graph groups)
   const sectionColors: Record<string, string> = {
     "00-Home": "#ffffff",
-    "01-Shell": "#58006a",
-    "02-Programming": "#87cb6b",
-    "03-SQL-Server": "#3381ff",
-    "04-DB-Queries": "#2cb4ff",
-    "05-GCP": "#2970ff",
-    "06-Terraform": "#82a3ff",
-    "07-Git": "#ff8c00",
-    "08-Docker": "#259bff",
-    "09-GitHub-Actions": "#ffb800",
-    "10-Orchestration": "#ffff00",
-    "11-Observability": "#ff00ff",
-    "12-Data-Architecture": "#00ffff",
-    "13-Financial": "#63ff64",
-    "14-AI": "#9a00ff",
-    "15-Engineering": "#ff6a00",
-    "16-Runbooks": "#ff0000",
-    "17-dbt": "#ff9a00",
+    "01-Shell": "#32CD32",
+    "02-Programming": "#FF8C00",
+    "03-SQL-Server": "#3381FF",
+    "04-DB-Queries": "#800080",
+    "05-GCP": "#00FF00",
+    "06-Terraform": "#82A3FF",
+    "07-Git": "#FFA500",
+    "08-Docker": "#1E90FF",
+    "09-GitHub-Actions": "#FFD700",
+    "10-dbt": "#FFFF00",
+    "11-Orchestration": "#FF00FF",
+    "12-Observability": "#FF0096",
+    "13-Data-Architecture": "#00FFFF",
+    "14-Runbooks": "#FF0000",
+    "15-Engineering": "#999999",
+    "16-AI": "#CC6600",
+    "17-Financial": "#66CCFF",
   }
 
   function getSectionColor(id: string): string | null {
@@ -241,7 +246,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       (l) => l.source.id === d.id || l.target.id === d.id,
     ).length
     if (numLinks <= 1) return 3
-    return 3 + Math.pow(numLinks, 0.65)
+    if (numLinks <= 5) return 4
+    return 4 + Math.pow(numLinks - 5, 0.4)
   }
 
   let hoveredNodeId: string | null = null

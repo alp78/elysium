@@ -26,7 +26,6 @@ export const defaultContentPageLayout: PageLayout = {
     Component.TagList(),
   ],
   left: [
-    Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [
@@ -51,9 +50,9 @@ export const defaultContentPageLayout: PageLayout = {
         showTags: false,
       },
       globalGraph: {
-        repelForce: 0.6,
-        centerForce: 0.4,
-        linkDistance: 30,
+        repelForce: 0.5,
+        centerForce: 0.5,
+        linkDistance: 25,
         fontSize: 0.35,
         opacityScale: 3,
         showTags: false,
@@ -70,7 +69,6 @@ export const defaultContentPageLayout: PageLayout = {
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.Breadcrumbs(), Component.ArticleTitle(), Component.ContentMeta()],
   left: [
-    Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Flex({
       components: [

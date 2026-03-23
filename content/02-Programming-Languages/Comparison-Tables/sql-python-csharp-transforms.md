@@ -6,7 +6,7 @@ tags: [reference, sql-server, python, csharp, data-modeling, snippet, comparison
 aliases: [SQL vs Python vs C#, data manipulation comparison, where to transform, window functions SQL Python, LINQ data transforms, ROW_NUMBER Python equivalent, pandas SQL comparison, LINQ vs SQL, data transformation reference]
 keywords: [sql, python, csharp, linq, pandas, window functions, ROW_NUMBER, RANK, LAG, LEAD, pivot, unpivot, z-score, percent change, deduplication, conditional aggregation, running total, moving average, joins, cross-database join, where to transform, data manipulation, transformation layer]
 description: "Side-by-side reference for data manipulation in SQL Server (T-SQL), Python (pandas), and C# (LINQ) — covering where to transform, window functions, pivoting, z-scores, deduplication, and the key insight for choosing the right tool in each scenario."
-related: [date-and-time-handling, json-and-csv-processing, parquet-files, serialization-formats, database-connections, idempotent-pipeline-design]
+related: [date-and-time-handling, awk-data-processing, parquet-files, serialization-formats, database-connections, idempotent-pipeline-design]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

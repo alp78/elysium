@@ -65,12 +65,12 @@ description: >
   Terraform cost controls. No project-specific references.
 related:
   - "[[gcp-index]]"
-  - "[[bigquery-architecture]]"
-  - "[[cloud-logging-reference]]"
-  - "[[gcp-iam-and-security]]"
-  - "[[compute-engine-reference]]"
-  - "[[cloud-run-reference]]"
-  - "[[cloud-storage-reference]]"
+  - "[[dataset-and-table-management|BigQuery]]"
+  - "[[cloud-logging]]"
+  - "[[service-accounts-and-iam|IAM and security]]"
+  - "[[vm-lifecycle|Compute Engine]]"
+  - "[[cloud-run-jobs-vs-services]]"
+  - "[[gcs-buckets-and-lifecycle|Cloud Storage]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

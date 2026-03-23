@@ -22,22 +22,22 @@ Paired Python and C# references covering 16 topics. Each note was converted from
 
 | # | Topic | Python | C# |
 |---|-------|--------|-----|
-| 01 | Basics (variables, types, operators, I/O) | [Python](Python/01_Basics.md) | [C#](CSharp/01_Basics.md) |
-| 02 | Strings (manipulation, formatting, regex) | [Python](Python/02_Strings.md) | [C#](CSharp/02_Strings.md) |
-| 03 | Control Flow (if/else, loops, pattern matching) | [Python](Python/03_Control_Flow.md) | [C#](CSharp/03_Control_Flow.md) |
-| 04 | Functions (lambdas, closures, decorators/delegates) | [Python](Python/04_Functions.md) | [C#](CSharp/04_Functions.md) |
-| 05 | Collections (lists, dicts, sets, LINQ) | [Python](Python/05_Collections.md) | [C#](CSharp/05_Collections.md) |
-| 06 | OOP (classes, inheritance, polymorphism) | [Python](Python/06_OOP.md) | [C#](CSharp/06_OOP.md) |
-| 07 | Generics and LINQ / Comprehensions | [Python](Python/07_Generics_LINQ.md) | [C#](CSharp/07_Generics_LINQ.md) |
-| 08 | Error Handling (exceptions, try/catch) | [Python](Python/08_ErrorHandling.md) | [C#](CSharp/08_ErrorHandling.md) |
-| 09 | File I/O and Serialization (JSON, CSV) | [Python](Python/09_FileIO_Serialization.md) | [C#](CSharp/09_FileIO_Serialization.md) |
-| 10 | DateTime, Math, and Utilities | [Python](Python/10_DateTimeMathUtils.md) | [C#](CSharp/10_DateTimeMathUtils.md) |
-| 11 | Async and Concurrency | [Python](Python/11_AsyncConcurrency.md) | [C#](CSharp/11_AsyncConcurrency.md) |
-| 12 | Testing (unit tests, mocking) | [Python](Python/12_Testing.md) | [C#](CSharp/12_Testing.md) |
-| 13 | Web APIs (HTTP clients and servers) | [Python](Python/13_WebAPIs.md) | [C#](CSharp/13_WebAPIs.md) |
-| 14 | Database Access (SQL, ORM, connections) | [Python](Python/14_Database.md) | [C#](CSharp/14_Database.md) |
-| 15 | GCP (BigQuery, GCS, Pub/Sub) | [Python](Python/15_GCP.md) | [C#](CSharp/15_GCP.md) |
-| 16 | Design Patterns (singleton, factory, observer) | [Python](Python/16_DesignPatterns.md) | [C#](CSharp/16_DesignPatterns.md) |
+| 01 | Basics (variables, types, operators, I/O) | [[01_Basics|Python]] | [[cs-01_Basics|C#]] |
+| 02 | Strings (manipulation, formatting, regex) | [[02_Strings|Python]] | [[cs-02_Strings|C#]] |
+| 03 | Control Flow (if/else, loops, pattern matching) | [[03_Control_Flow|Python]] | [[cs-03_Control_Flow|C#]] |
+| 04 | Functions (lambdas, closures, decorators/delegates) | [[04_Functions|Python]] | [[cs-04_Functions|C#]] |
+| 05 | Collections (lists, dicts, sets, LINQ) | [[05_Collections|Python]] | [[cs-05_Collections|C#]] |
+| 06 | OOP (classes, inheritance, polymorphism) | [[06_OOP|Python]] | [[cs-06_OOP|C#]] |
+| 07 | Generics and LINQ / Comprehensions | [[07_Generics_LINQ|Python]] | [[cs-07_Generics_LINQ|C#]] |
+| 08 | Error Handling (exceptions, try/catch) | [[08_ErrorHandling|Python]] | [[cs-08_ErrorHandling|C#]] |
+| 09 | File I/O and Serialization (JSON, CSV) | [[09_FileIO_Serialization|Python]] | [[cs-09_FileIO_Serialization|C#]] |
+| 10 | DateTime, Math, and Utilities | [[10_DateTimeMathUtils|Python]] | [[cs-10_DateTimeMathUtils|C#]] |
+| 11 | Async and Concurrency | [[11_AsyncConcurrency|Python]] | [[cs-11_AsyncConcurrency|C#]] |
+| 12 | Testing (unit tests, mocking) | [[12_Testing|Python]] | [[cs-12_Testing|C#]] |
+| 13 | Web APIs (HTTP clients and servers) | [[13_WebAPIs|Python]] | [[cs-13_WebAPIs|C#]] |
+| 14 | Database Access (SQL, ORM, connections) | [[14_Database|Python]] | [[cs-14_Database|C#]] |
+| 15 | GCP (BigQuery, GCS, Pub/Sub) | [[15_GCP|Python]] | [[cs-15_GCP|C#]] |
+| 16 | Design Patterns (singleton, factory, observer) | [[16_DesignPatterns|Python]] | [[cs-16_DesignPatterns|C#]] |
 
 ## How These Notes Work
 
@@ -47,27 +47,6 @@ Each note contains:
 - **Explanatory markdown** — headings, descriptions, and context between cells
 
 The Python and C# notes for each topic are tightly paired — they cover the same concepts, in the same order, allowing side-by-side comparison across languages.
-
-## Learning Paths
-
-**For Python developers learning C#:**
-1. Start with [[01_Basics|C# Basics]] — syntax differences (braces, semicolons, types)
-2. [[05_Collections|C# Collections]] — `List<T>` vs `list`, `Dictionary` vs `dict`, LINQ vs comprehensions
-3. [[06_OOP|C# OOP]] — interfaces, properties, access modifiers
-4. [[11_AsyncConcurrency|C# Async]] — `Task` vs `asyncio`, `async/await` patterns
-
-**For C# developers learning Python:**
-1. Start with [[01_Basics|Python Basics]] — dynamic typing, indentation, no semicolons
-2. [[04_Functions|Python Functions]] — first-class functions, decorators, generators
-3. [[07_Generics_LINQ|Python Comprehensions]] — list/dict/set comprehensions as LINQ equivalent
-4. [[14_Database|Python Database]] — pyodbc vs ADO.NET, SQLAlchemy vs Entity Framework
-
-**For data engineers (both languages):**
-1. [[09_FileIO_Serialization]] — JSON/CSV handling in both languages
-2. [[14_Database]] — SQL Server connections, parameterized queries, ORMs
-3. [[15_GCP]] — BigQuery, GCS, Pub/Sub client libraries
-4. [[13_WebAPIs]] — Building and consuming REST APIs
-5. [[11_AsyncConcurrency]] — Parallel data processing patterns
 
 ## Python — Data Engineering
 
@@ -92,9 +71,16 @@ Side-by-side language and tool comparisons.
 | [[etl-vs-elt]] | ETL vs ELT architectural comparison — when to transform before or after loading |
 | [[merge-vs-rebase-vs-squash]] | Git history strategies compared — merge commit, rebase, and squash merge trade-offs |
 
+## All Notebook Notes
+
+**Python:** [[01_Basics]] | [[02_Strings]] | [[03_Control_Flow]] | [[04_Functions]] | [[05_Collections]] | [[06_OOP]] | [[07_Generics_LINQ]] | [[08_ErrorHandling]] | [[09_FileIO_Serialization]] | [[10_DateTimeMathUtils]] | [[11_AsyncConcurrency]] | [[12_Testing]] | [[13_WebAPIs]] | [[14_Database]] | [[15_GCP]] | [[16_DesignPatterns]]
+
+**C#:** [[cs-01_Basics]] | [[cs-02_Strings]] | [[cs-03_Control_Flow]] | [[cs-04_Functions]] | [[cs-05_Collections]] | [[cs-06_OOP]] | [[cs-07_Generics_LINQ]] | [[cs-08_ErrorHandling]] | [[cs-09_FileIO_Serialization]] | [[cs-10_DateTimeMathUtils]] | [[cs-11_AsyncConcurrency]] | [[cs-12_Testing]] | [[cs-13_WebAPIs]] | [[cs-14_Database]] | [[cs-15_GCP]] | [[cs-16_DesignPatterns]]
+
 ## Cross-References
 
 - [[sql-python-csharp-transforms]] — Side-by-side data transformations in SQL, Python, and C#
 - [[database-connections]] — Connection string recipes for all platforms
 - [[rest-api-design-and-consumption]] — REST API patterns (language-agnostic)
 - [[data-formats-and-serialization]] — Data serialization in pipeline context
+- [[dbt-index]] — dbt uses Python for custom models and macros

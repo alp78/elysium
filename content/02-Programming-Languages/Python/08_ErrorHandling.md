@@ -5,9 +5,10 @@ technology: [python]
 tags: [reference, programming-languages, python, error-handling]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 keywords: [try, except, finally, raise, Exception, BaseException, custom exception, logging, contextmanager]
-description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [[08_ErrorHandling - CSharp]] for the C# equivalent."
+description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [[cs-08_ErrorHandling]] for the C# equivalent."
 related:
-  - "[[08_ErrorHandling - CSharp]]"
+  - "[[programming-languages-index]]"
+  - "[[cs-08_ErrorHandling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

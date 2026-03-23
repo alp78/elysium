@@ -91,13 +91,7 @@ Data pipeline patterns built on SQL Server.
 
 See also: [[sql-server-cheat-sheet]]
 
-## Learning Path
+## Cross-References - dbt
 
-1. Start with [[sqlcmd-connection-and-usage]] and [[essential-dba-queries]]
-2. Understand [[storage-internals]] and [[index-types-and-strategy]]
-3. Learn [[backup-types-and-strategy]] — your insurance policy
-4. Study [[wait-stats-analysis]] and use [[troubleshooting-flowcharts]] for production issues
-5. Read [[deadlock-detection-and-prevention]], [[blocking-and-locking]], and [[race-conditions]] for concurrency
-6. Apply [[execution-plans]] and [[performance-audit-playbook]] for systematic tuning
-7. Implement [[tde-encryption]] and [[audit-logging]] before going to production
-8. Master the [[medallion-architecture]] pipeline patterns: [[bronze-layer-loading]] → [[silver-transforms]] → [[gold-transforms]]
+- [[dbt-sqlserver-adapter]] — dbt SQL Server adapter configuration
+- [[dbt-performance-tuning]] — Tuning dbt models on SQL Server

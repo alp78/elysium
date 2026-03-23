@@ -24,6 +24,14 @@ Welcome to Elysium, a comprehensive reference for practicing data engineers.
 - [[financial-domain-index]] — Financial services domain knowledge
 - [[ai-and-prompts-index]] — AI tools for data engineering
 - [[engineering-practice-index]] — DataOps, leadership, team organization
+- [[runbooks-index]] — Incident response runbooks and on-call guide
+- [[dbt-index]] — SQL transformation layer: modeling, testing, CI/CD, adapters
+
+## Start Here
+
+- [[common-tasks]] — "How do I...?" quick routing guide
+- [[on-call-guide]] — On-call first responder guide
+- [[golden-rules-of-data-engineering]] — Decision-making principles
 
 ## Explore
 

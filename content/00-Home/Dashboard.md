@@ -41,27 +41,37 @@ Welcome to Elysium, a structured knowledge base for practicing data engineers co
 |---|---------|-------------|-------|
 | 05 | **GCP** | Compute, BigQuery, Firestore, Storage, Pub/Sub, Cloud Run, IAM, Cost Management | [[gcp-index]] |
 | 06 | **Terraform** | HCL, state, GCP resources, patterns, block library | [[terraform-index]] |
-| 07 | **Git** | Version control, branching, merging, PRs, troubleshooting | [[git-index]] |
-| 08 | **Docker** | Container lifecycle, Compose, image management | [[docker-index]] |
-| 09 | **GitHub Actions** | CI/CD workflows, deployment patterns, data engineering automation | [[github-actions-index]] |
+| 07 | **Docker** | Container lifecycle, Compose, image management | [[docker-index]] |
 
-### Pipeline Operations
+### Development Workflow
 
 | # | Section | Description | Index |
 |---|---------|-------------|-------|
-| 10 | **Orchestration** | Airflow, Linux/Windows/GCP scheduling | [[orchestration-index]] |
-| 11 | **Observability** | Datadog, GCP-native monitoring, data lineage, pipeline health | [[observability-index]] |
-| 12 | **Data Architecture** | Architectures, data modeling, pipeline patterns, APIs, decision frameworks | [[data-architecture-index]] |
+| 08 | **Git** | Version control, branching, merging, PRs, troubleshooting | [[git-index]] |
+| 09 | **GitHub Actions** | CI/CD workflows, deployment patterns, data engineering automation | [[github-actions-index]] |
+
+### Data Pipeline
+
+| # | Section | Description | Index |
+|---|---------|-------------|-------|
+| 10 | **dbt** | SQL transformation layer: modeling, testing, CI/CD, adapters | [[dbt-index]] |
+| 11 | **Orchestration** | Airflow, Linux/Windows/GCP scheduling | [[orchestration-index]] |
+| 12 | **Observability** | Datadog, GCP-native monitoring, data lineage, pipeline health | [[observability-index]] |
+| 13 | **Data Architecture** | Architectures, data modeling, pipeline patterns, APIs, decision frameworks | [[data-architecture-index]] |
+
+### Operations
+
+| # | Section | Description | Index |
+|---|---------|-------------|-------|
+| 14 | **Runbooks** | On-call guide, incident response, 10 operational runbooks | [[runbooks-index]] |
 
 ### Domain and Practice
 
 | # | Section | Description | Index |
 |---|---------|-------------|-------|
-| 13 | **Financial Domain** | Metrics, scoring, financial encyclopedia, market analysis | [[financial-domain-index]] |
-| 14 | **AI and Prompts** | Prompt engineering, model-specific patterns, LLM pipelines | [[ai-and-prompts-index]] |
 | 15 | **Engineering Practice** | Leadership, DataOps, data team organization, self-service platforms | [[engineering-practice-index]] |
-| 16 | **Runbooks** | On-call guide, incident response, 10 operational runbooks | [[runbooks-index]] |
-| 17 | **dbt** | SQL transformation layer: modeling, testing, CI/CD, adapters | [[dbt-index]] |
+| 16 | **AI and Prompts** | Prompt engineering, model-specific patterns, LLM pipelines | [[ai-and-prompts-index]] |
+| 17 | **Financial Domain** | Metrics, scoring, financial encyclopedia, market analysis | [[financial-domain-index]] |
 
 ---
 

@@ -35,14 +35,32 @@ GCP service for storing Docker images. See [[terraform-registry-and-ci]].
 
 ## B
 
+### ADR (Architecture Decision Record)
+A document that captures a significant architectural decision with context, rationale, and consequences. See [[adr-index]].
+
 ### bcp (Bulk Copy Program)
 [[sqlcmd-connection-and-usage|Command-line tool]] for high-speed bulk data transfer between SQL Server instances.
 
 ### BigQuery
 Google Cloud's serverless data warehouse. See [[dataset-and-table-management]].
 
+### Circuit Breaker
+A quality gate pattern that halts pipeline execution when data anomalies exceed a threshold. Prevents publishing bad data. See [[esg-data-ingestion-framework]].
+
+### Cosmos (astronomer-cosmos)
+An Airflow provider that converts each dbt model into an individual Airflow task, enabling granular retries and task-level SLAs. See [[dbt-airflow-integration]].
+
 ### Bronze Layer
 The first layer of the [[medallion-architecture]] — raw data as received from sources. See [[bronze-layer-loading]].
+
+### Data Contract
+A formal agreement between a data producer and consumer specifying schema, SLAs, semantics, and ownership. See [[data-contracts]].
+
+### dbt (Data Build Tool)
+The SQL transformation layer in ELT pipelines. Compiles Jinja+SQL, builds a dependency DAG from ref() calls, runs tests, and generates documentation. See [[dbt-index]].
+
+### Dispatch Macro
+A dbt macro pattern that generates different SQL depending on the target adapter (e.g., SQL Server vs BigQuery). See [[dbt-cross-adapter-patterns]].
 
 ### Buffer Pool
 SQL Server's in-memory cache for data pages. See [[memory-and-buffer-pool]].
@@ -83,11 +101,20 @@ SQL Server system views for monitoring performance. See [[essential-dba-queries]
 
 ## E
 
+### elementary
+A dbt package providing dbt-native observability: anomaly detection, schema change tracking, and test result dashboards. See [[dbt-packages]].
+
 ### ELT (Extract-Load-Transform)
 Load raw data first, then transform inside the warehouse. See [[etl-vs-elt]].
 
 ### ETL (Extract-Transform-Load)
 Transform data before loading into the warehouse. See [[etl-vs-elt]].
+
+### EU BMR (Benchmark Regulation)
+EU Regulation 2016/1011 governing benchmark administrators. Requires audit trails, 5-year data retention, reproducible calculations. See [[eu-bmr-benchmark-regulation]].
+
+### Exposure (dbt)
+A dbt resource declaring a downstream consumer (dashboard, API, data feed) that depends on a mart model. Enables lineage tracking beyond dbt. See [[dbt-documentation-and-lineage]].
 
 ### Extended Events
 SQL Server's lightweight event monitoring system. See [[deadlock-detection-and-prevention]].
@@ -96,6 +123,9 @@ SQL Server's lightweight event monitoring system. See [[deadlock-detection-and-p
 
 ### flock
 Linux utility for preventing overlapping cron job runs. See [[linux-scheduling|cron and crontab]].
+
+### IOSCO Principles
+The 19 international principles for financial benchmark governance, quality, and accountability. EU BMR is based on these. See [[iosco-benchmark-principles]].
 
 ## G
 
@@ -129,6 +159,12 @@ A pipeline that produces the same result whether run once or many times. See [[i
 
 ## M
 
+### Manifest (dbt)
+The `manifest.json` artifact produced by dbt containing the full project graph — models, tests, sources, exposures. Used for slim CI builds with `state:modified+`. See [[dbt-ci-cd]].
+
+### Materialization (dbt)
+How dbt persists a model result: view, table, incremental, ephemeral, or snapshot. See [[dbt-materializations]].
+
 ### Medallion Architecture
 Bronze/silver/gold data layering pattern. See [[medallion-architecture]].
 
@@ -142,6 +178,12 @@ Open, High, Low, Close, Volume — standard financial time-series data format.
 
 ## P
 
+### PAI (Principal Adverse Impact)
+SFDR-mandated sustainability indicators that financial products must disclose (GHG emissions, carbon footprint, board diversity, etc.). See [[sfdr-data-requirements]].
+
+### PIR (Post-Incident Review)
+A blameless review conducted after an incident to identify root causes, document timeline, and create action items. See [[on-call-guide]].
+
 ### PLE (Page Life Expectancy)
 How long a data page stays in the SQL Server buffer pool. Target: >300 seconds. See [[memory-and-buffer-pool]].
 
@@ -151,17 +193,38 @@ GCP's asynchronous messaging service. See [[pubsub-topics-and-subscriptions]].
 ### pyodbc
 Python library for connecting to SQL Server via ODBC. See [[bronze-layer-loading]].
 
+### Quarantine Pattern
+Isolating rows that fail quality validation into a separate table for investigation rather than discarding them. See [[data-quality-framework]].
+
 ## R
 
 ### RCSI (Read Committed Snapshot Isolation)
 SQL Server isolation level that eliminates reader/writer blocking. See [[server-configuration]].
 
+### ref() (dbt)
+The dbt function that references another model, creating a dependency edge in the DAG. See [[dbt-core-concepts]].
+
 ### Reflog
 Git's undo history — records every HEAD movement. See [[git-recovery-and-undo]].
+
+### Restatement
+Correcting previously published index values after an error is discovered. Requires audit trail and regulatory filing. See [[data-restatement-procedure]].
+
+### Runbook
+A step-by-step operational procedure for diagnosing and resolving a specific incident type. See [[runbooks-index]].
 
 ## S
 
 ### SARGable
+
+### SFDR (Sustainable Finance Disclosure Regulation)
+EU regulation requiring financial products to disclose sustainability risks and Principal Adverse Impact indicators. See [[sfdr-data-requirements]].
+
+### Slim CI (dbt)
+A CI strategy that only builds and tests models changed in a PR (using `state:modified+` and `--defer`), rather than the entire project. See [[dbt-ci-cd]].
+
+### source() (dbt)
+The dbt function that references an external table (not managed by dbt), declaring it as an entry point to the DAG. See [[dbt-core-concepts]].
 "Search ARGument ABLE" — queries that can use indexes effectively. See [[sargable-queries]].
 
 ### SCD Type 2 (Slowly Changing Dimensions)

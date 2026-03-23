@@ -70,6 +70,7 @@ IAM controls who can do what in GCP. These notes cover service account managemen
 
 - [[service-accounts-and-iam]] — Creating service accounts, key management, IAM bindings, roles, Workload Identity
 - [[vpc-service-controls]] — Data exfiltration prevention, perimeter setup, ingress/egress policies, debugging denials
+- [[secrets-management]] — GCP Secret Manager, Airflow integration, rotation procedures, Workload Identity Federation
 
 ## Logging — Cloud Logging and Monitoring
 
@@ -98,36 +99,12 @@ Start with these if you are new to GCP data engineering:
 4. [[querying-and-cost-optimization]] — The single most impactful cost control in GCP
 5. [[vpc-service-controls]] — Non-negotiable for financial or sensitive data
 
-## Learning Path
-
-**Week 1 — Foundations:**
-1. [[gcloud-authentication]] and [[gcloud-configurations]]
-2. [[gcloud-output-formatting]] and [[gcp-projects-and-apis]]
-3. [[service-accounts-and-iam]]
-
-**Week 2 — Compute and Storage:**
-1. [[vm-lifecycle]] and [[vm-ssh-and-file-transfer]]
-2. [[disks-and-snapshots]]
-3. [[gcs-object-operations]] and [[gcs-buckets-and-lifecycle]]
-
-**Week 3 — BigQuery:**
-1. [[dataset-and-table-management]]
-2. [[querying-and-cost-optimization]]
-3. [[data-loading-and-export]] and [[job-management]]
-
-**Week 4 — Serverless and Observability:**
-1. [[cloud-run-jobs-vs-services]]
-2. [[pubsub-topics-and-subscriptions]] and [[pubsub-messaging]]
-3. [[cloud-logging]] and [[cloud-monitoring-metrics]]
-4. [[vpc-service-controls]]
-
-**Week 5 — Firestore and Real-Time:**
-1. [[firestore-data-model-and-operations]]
-2. [[real-time-nosql-pipelines]]
-
 ## Cross-References
 
 - [[terraform-index|Terraform]] — Infrastructure-as-code for all GCP resources (see [[terraform-networking]], [[terraform-compute]])
 - [[orchestration-index|Orchestration]] — Airflow DAGs that trigger Cloud Run jobs and query BigQuery
 - [[sql-server-index|SQL Server]] — SQL Server on Compute Engine VMs, backup to GCS
 - [[observability-index|Observability]] — Datadog monitoring, dashboards, and alerting
+
+### dbt
+- [[dbt-bigquery-adapter]] — BigQuery adapter configuration and cost optimization

@@ -6,7 +6,7 @@ tags: [sql-server, python, etl, silver, medallion, scd-type-2, deduplication, ga
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
 keywords: [silver layer, medallion architecture, SCD Type 2, slowly changing dimensions, deduplication, gap fill, forward fill, is_filled, trading calendar, upsert, unique index, filtered index, valid_from, valid_to, is_current, OHLCV transform, signals daily, signals quarterly, index_dim SCD2, upserting, insert or update, parameterized queries, silver schema]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."
-related: [bronze-layer-loading, gold-transforms, medallion-architecture, slowly-changing-dimensions]
+related: [bronze-layer-loading, gold-transforms, medallion-architecture, data-warehouse-architecture]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +20,7 @@ The silver layer cleans, deduplicates, and historicizes the raw data from [[bron
 
 Key improvements silver makes over bronze:
 
-- **[[slowly-changing-dimensions|SCD Type 2]]** on dimensions — tracks attribute changes over time
+- **[[data-warehouse-architecture|SCD Type 2]]** on dimensions — tracks attribute changes over time
 - **One row per symbol per date** — deduplication via UNIQUE indexes
 - **Gap-filled OHLCV** — forward-fills missing trading days using the [[bronze-layer-loading#bronze.trading_calendar|trading calendar]]
 - **Full history retained** — silver accumulates across runs; bronze is wiped each run

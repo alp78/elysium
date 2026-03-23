@@ -5,9 +5,10 @@ technology: [python]
 tags: [reference, programming-languages, python, database]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [pyodbc, SQLAlchemy, sqlite3, connection string, ORM, query, transaction, pandas, read_sql]
-description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [[14_Database - CSharp]] for the C# equivalent."
+description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [[cs-14_Database]] for the C# equivalent."
 related:
-  - "[[14_Database - CSharp]]"
+  - "[[programming-languages-index]]"
+  - "[[cs-14_Database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

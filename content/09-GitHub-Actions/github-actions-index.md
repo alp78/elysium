@@ -52,14 +52,6 @@ GitHub Actions is the automation platform built into GitHub — it runs CI/CD pi
 - **[[github-actions-data-engineering]]** — Real pipeline CI/CD with Workload Identity Federation (no long-lived keys)
 - **[[github-actions-workflows]]** — Ready-to-use workflow templates
 
-## Learning Path
-
-1. [[github-actions-fundamentals]] — Understand workflow syntax, triggers, and runners
-2. [[github-actions-ci-cd]] — Core CI/CD patterns for any project
-3. [[github-actions-patterns]] — Matrix builds and reusable workflows for scale
-4. [[github-actions-data-engineering]] — Apply to data pipelines with WIF and Cloud Run
-5. [[github-actions-workflows]] — Reference complete workflow examples
-
 ## Cross-References
 
 - **Git** — [[git-index]] for branching strategies that feed into CI triggers
@@ -68,9 +60,4 @@ GitHub Actions is the automation platform built into GitHub — it runs CI/CD pi
 - **GCP** — [[service-accounts-and-iam]] and Workload Identity Federation for keyless auth
 - **Engineering Practice** — [[engineering-practice-index]] for broader engineering practices
 
-```dataview
-TABLE type, status, description
-FROM "09-GitHub-Actions"
-WHERE type != "index"
-SORT file.name ASC
-```
+> *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

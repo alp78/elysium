@@ -87,19 +87,6 @@ Testing connectivity, inspecting sockets, and working with HTTP APIs.
 - **[[sed-stream-editing]]** — When you need in-place file editing
 - **[[defensive-scripting]]** — Non-negotiable for any script that runs in production
 
-## Learning Path
-
-1. [[navigation-and-listing]] and [[reading-file-contents]] — Navigate and read files
-2. [[command-chaining]] and [[io-redirection]] — Connect commands with pipes and redirection
-3. [[grep-and-pattern-matching]] — Search for patterns in files and output
-4. [[finding-files]] — Locate files across the filesystem
-5. [[awk-data-processing]] — Extract and transform columnar data
-6. [[sed-stream-editing]] — Edit files from the command line
-7. [[environment-variables]] and [[defensive-scripting]] — Write production scripts
-8. [[viewing-processes]] and [[managing-services]] — Monitor and manage running systems
-9. [[connectivity-testing]] and [[http-requests-and-apis]] — Network troubleshooting
-10. [[data-transfer]] and [[compression]] — Move and compress data efficiently
-
 ## Cross-References
 
 - **SQL Server** — [[sqlcmd-connection-and-usage]] uses shell commands for database operations
@@ -108,9 +95,4 @@ Testing connectivity, inspecting sockets, and working with HTTP APIs.
 - **Python** — [[python-pipeline-execution]] runs Python from shell scripts
 - **Orchestration** — [[linux-scheduling|cron and crontab]] schedules shell commands
 
-```dataview
-TABLE type, status, description
-FROM "01-Shell"
-WHERE type != "index"
-SORT file.name ASC
-```
+> *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

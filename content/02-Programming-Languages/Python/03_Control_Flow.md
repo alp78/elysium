@@ -5,9 +5,10 @@ technology: [python]
 tags: [reference, programming-languages, python, control-flow]
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 keywords: [if, elif, else, for, while, break, continue, pass, match, case, comprehension, generator, yield]
-description: "Python control flow reference with executable examples and cell outputs — covers conditionals, loops, loop control, iterators, generators, and comprehensions. See [[03_Control_Flow - CSharp]] for the C# equivalent."
+description: "Python control flow reference with executable examples and cell outputs — covers conditionals, loops, loop control, iterators, generators, and comprehensions. See [[cs-03_Control_Flow]] for the C# equivalent."
 related:
-  - "[[03_Control_Flow - CSharp]]"
+  - "[[programming-languages-index]]"
+  - "[[cs-03_Control_Flow]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

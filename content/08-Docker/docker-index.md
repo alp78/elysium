@@ -34,12 +34,6 @@ See also: [[docker-cheat-sheet]]
 - **[[image-management]]** — Multi-stage builds are essential for keeping pipeline images small
 - **[[docker-compose]]** — The local development equivalent of Cloud Run + Airflow
 
-## Learning Path
-
-1. [[container-lifecycle]] — Start here: run, inspect, and debug containers
-2. [[image-management]] — Build production images with multi-stage Dockerfiles
-3. [[docker-compose]] — Orchestrate multi-container local environments
-
 ## Cross-References
 
 - **Terraform** — [[terraform-cloud-run]] provisions Cloud Run services that run Docker images
@@ -47,9 +41,4 @@ See also: [[docker-cheat-sheet]]
 - **the data pipeline project** — the project architecture shows how Docker containers flow through the pipeline
 - **Observability** — [[datadog-agent-airflow-vm]] runs the Datadog agent as a Docker container
 
-```dataview
-TABLE type, status, description
-FROM "08-Docker"
-WHERE type != "index"
-SORT file.name ASC
-```
+> *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

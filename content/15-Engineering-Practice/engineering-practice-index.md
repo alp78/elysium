@@ -34,7 +34,7 @@ Principles and practices for applying DevOps thinking to data pipelines — CI/C
 
 These notes live in their technology-specific sections but are relevant to engineering practice:
 
-- [[service-accounts-and-iam]] — GCP IAM and least privilege (in 03-GCP)
-- [[vpc-service-controls]] — Data exfiltration prevention (in 03-GCP)
-- [[tde-encryption]] — SQL Server encryption at rest (in 02-SQL-Server)
-- [[sql-server-authentication]] — Authentication modes and audit (in 02-SQL-Server)
+- [[service-accounts-and-iam]] — GCP IAM and least privilege (in 05-GCP)
+- [[vpc-service-controls]] — Data exfiltration prevention (in 05-GCP)
+- [[tde-encryption]] — SQL Server encryption at rest (in 03-SQL-Server)
+- [[sql-server-authentication]] — Authentication modes and audit (in 03-SQL-Server)

@@ -24,25 +24,31 @@ Browse notes by clicking any tag below. In Obsidian, click a tag to see all note
 - `#bigquery` — BigQuery SQL, optimization, administration, integration
 - `#gcp` — Google Cloud Platform core services, security, architecture
 - `#python` — Python scripting, libraries, data pipelines, testing
+- `#csharp` — C# programming, .NET, Dapper, Blazor
 - `#terraform` — Infrastructure as code, GCP resources, modules, state
 - `#docker` — Container lifecycle, Docker Compose, image management
-- `#git` — Version control, branching, PRs, GitHub Actions
+- `#git` — Version control, branching, PRs
+- `#github-actions` — CI/CD workflows, deployment automation
 - `#airflow` — Apache Airflow DAGs, operators, deployment, troubleshooting
+- `#dbt` — dbt transformation layer, modeling, testing, adapters, CI/CD
 - `#datadog` — Datadog monitoring, APM, dashboards, agent setup
 - `#bash` — Shell scripting, command-line operations
 - `#powershell` — PowerShell scripting, Windows administration
+- `#firestore` — Firestore NoSQL, real-time data, document model
+- `#grpc` — gRPC, Protocol Buffers, streaming
+- `#graphql` — GraphQL queries, schema, federation
 
 ## By Pattern
 
-`#etl` | `#elt` | `#data-modeling` | `#ci-cd` | `#monitoring` | `#security` | `#idempotent` | `#incremental-load` | `#backfill` | `#medallion-architecture` | `#scd` | `#data-quality`
+`#etl` | `#elt` | `#data-modeling` | `#ci-cd` | `#monitoring` | `#security` | `#idempotent` | `#incremental-load` | `#backfill` | `#medallion-architecture` | `#scd` | `#data-quality` | `#data-contracts` | `#circuit-breaker` | `#pit` | `#weight-normalization`
 
 ## By Domain
 
-`#financial-domain` | `#prompt-engineering` | `#observability` | `#data-pipeline-project`
+`#financial-domain` | `#esg` | `#regulatory` | `#eu-bmr` | `#sfdr` | `#prompt-engineering` | `#observability` | `#cost-management` | `#compliance`
 
 ## By Note Type
 
-`#concept` | `#how-to` | `#runbook` | `#reference` | `#snippet` | `#adr` | `#troubleshooting` | `#index`
+`#concept` | `#how-to` | `#runbook` | `#reference` | `#cheat-sheet` | `#comparison` | `#adr` | `#troubleshooting` | `#index`
 
 ## By Status
 

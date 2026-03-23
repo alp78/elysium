@@ -74,30 +74,10 @@ See also: [[git-cheat-sheet]]
 - **[[pull-requests-and-code-review]]** — How distributed data teams coordinate safely
 - **[[git-common-errors]]** — When something goes wrong, this is your first stop
 
-## Learning Path
-
-1. [[git-setup-and-config]] — Understand concepts and configure Git
-2. [[git-daily-workflow]] — Learn the daily add/commit/push cycle
-3. [[gitignore-patterns]] — Keep secrets and build artifacts out of the repo
-4. [[git-branching-and-merging]] — Work on features without breaking main
-5. [[git-merge-conflicts]] — Resolve conflicts confidently
-6. [[pull-requests-and-code-review]] — Collaborate through pull requests
-7. [[git-remote-management]] — Manage remotes, forks, and upstream repos
-8. [[git-history-and-inspection]] — Navigate and search project history
-9. [[git-recovery-and-undo]] — Undo mistakes safely
-10. [[git-tagging-and-releases]] — Tag releases for deployment
-11. [[github-actions-ci-cd]] — Automate testing and deployment
-12. [[git-common-errors]] — Reference when you hit an error
-
 ## Cross-References
 
 - **Engineering Practice** — [[github-actions-workflows]] covers workflow patterns in more depth
 - **CI/CD** — [[github-actions-ci-cd]] shows real CI/CD for data pipelines
 - **Leadership** — [[leadership-and-collaboration]] covers code review as a leadership skill
 
-```dataview
-TABLE type, status, description
-FROM "07-Git"
-WHERE type != "index"
-SORT file.name ASC
-```
+> *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

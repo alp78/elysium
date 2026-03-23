@@ -61,26 +61,6 @@ Architectural patterns, dependency management, and module composition.
 | [[terraform-resource-dependencies]] | How Terraform resolves implicit dependencies and the resource creation order |
 | [[terraform-module-composition]] | Module structure, input/output contracts, reusable infrastructure patterns |
 
-## Learning Path
-
-Suggested reading order for someone new to Terraform:
-
-1. [[hcl-syntax-basics]] — Understand the language before anything else
-2. [[terraform-providers-and-backend]] — How Terraform connects to GCP and stores state
-3. [[terraform-variables-and-outputs]] — Parameterizing your infrastructure
-4. [[terraform-plan-apply-destroy]] — The core workflow you will run every day
-5. [[terraform-state-management]] — Why state matters and how to manage it safely
-6. [[terraform-conditional-resources]] — Dynamic infrastructure with count
-7. [[terraform-networking]] — Start with the network foundation
-8. [[terraform-compute]] — Then VMs that live on the network
-9. [[terraform-iam-and-secrets]] — Identity, access, and secure credential storage
-10. [[terraform-cloud-run]] — Serverless containers connected to everything above
-11. [[terraform-registry-and-ci]] — Container images and automated deployments
-12. [[terraform-resource-dependencies]] — See how it all connects
-13. [[terraform-module-composition]] — Reusable infrastructure patterns
-
-See also: [[terraform-cheat-sheet]]
-
 ## Cross-References
 
 - **GCP** — [[gcp-projects-and-apis]], [[service-accounts-and-iam]], [[cloud-run-jobs-vs-services]]

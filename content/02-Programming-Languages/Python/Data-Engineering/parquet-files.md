@@ -6,7 +6,7 @@ tags: [concept, python, data-formats, parquet, etl, snippet, reference]
 aliases: [Parquet format, columnar storage, DuckDB Parquet, Parquet inspection, Parquet partitioning, Hive partitioning, Parquet vs CSV, Parquet compression, columnar file format]
 keywords: [parquet, duckdb, columnar, column pruning, predicate pushdown, row group, compression, snappy, zstd, hive partitioning, partition pruning, parquet-tools, parquet schema, csv to parquet, parquet to csv, merge parquet, analytical storage, data lake, file format]
 description: "Parquet is the columnar binary standard for analytical data storage. This note covers why Parquet outperforms CSV, how to inspect and convert files with DuckDB, and how to write partitioned and clustered datasets for optimal query performance."
-related: [json-and-csv-processing, serialization-formats, date-and-time-handling, sql-python-csharp-transforms]
+related: [awk-data-processing, serialization-formats, date-and-time-handling, sql-python-csharp-transforms]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

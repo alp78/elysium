@@ -158,7 +158,7 @@ For each key metric M in each pipeline P:
   5. Periodically re-baseline as business naturally evolves
 ```
 
-This is the foundation behind tools like [[Monte Carlo Data]], [[Bigeye]], and the anomaly detection features in [[dbt-transformation-layer|dbt]] and [[Great Expectations]].
+This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anomaly detection features in [[dbt-transformation-layer|dbt]] and Great Expectations.
 
 > [!warning] SPC Requires Stability First
 > SPC only works on a **stable process**. If your pipelines are constantly being rewritten, your baselines will be meaningless. Stabilize your architecture before adding SPC-style monitoring.

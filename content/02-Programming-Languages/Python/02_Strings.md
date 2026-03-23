@@ -5,9 +5,10 @@ technology: [python]
 tags: [reference, programming-languages, python, strings]
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 keywords: [str, f-string, format, regex, re, split, join, strip, replace, slice, encode]
-description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [[02_Strings - CSharp]] for the C# equivalent."
+description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [[cs-02_Strings]] for the C# equivalent."
 related:
-  - "[[02_Strings - CSharp]]"
+  - "[[programming-languages-index]]"
+  - "[[cs-02_Strings]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
