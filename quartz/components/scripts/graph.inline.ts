@@ -71,12 +71,13 @@ function getSectionColor(id: string): number {
 }
 
 // --- Node sizing: clamped log scale, max 3:1 ratio ---
-const NODE_MIN_RADIUS = 3
+const NODE_MIN_RADIUS = 2.5
 const NODE_MAX_RADIUS = 24
-const NODE_SCALE = 4.5
+const NODE_SCALE = 5.0
 
 function getNodeRadius(node: { linkCount: number }): number {
   const lc = node.linkCount ?? 0
+  if (lc === 0) return NODE_MIN_RADIUS
   return Math.min(NODE_MAX_RADIUS, NODE_MIN_RADIUS + Math.sqrt(lc) * NODE_SCALE)
 }
 
@@ -193,7 +194,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .force(
       "collide",
       forceCollide<NodeData>()
-        .radius((d) => getNodeRadius(d) + 12)
+        .radius((d) => getNodeRadius(d) + 15)
         .strength(0.8)
         .iterations(3),
     )
@@ -280,8 +281,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       alpha: 0,
       anchor: { x: 0.5, y: -0.6 },
       style: {
-        fontSize: fontSize * 12,
-        fill: isDark ? 0xbec8dc : 0x4a5568,
+        fontSize: 13,
+        fill: isDark ? 0xb0bec5 : 0x37474f,
         fontFamily: css["--bodyFont"],
         fontWeight: "400",
       },
@@ -406,7 +407,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   function updateLabels(zoomK: number) {
     const sorted = [...nodeRenders].sort((a, b) => b.sim.linkCount - a.sim.linkCount)
     const placed: Array<{ x: number; y: number; w: number; h: number }> = []
-    const minScreenR = 7 / (opacityScale || 1)
+    const minScreenR = 12
 
     for (const nr of sorted) {
       if (hoveredId === nr.sim.id) {
@@ -440,7 +441,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         nr.label.visible = false
       } else {
         nr.label.visible = true
-        nr.label.alpha = Math.min(0.85, (screenR - minScreenR) / 10)
+        const fadeProgress = Math.min(1, (screenR - minScreenR) / 6)
+        nr.label.alpha = fadeProgress * 0.9
         placed.push(bounds)
       }
     }
@@ -474,23 +476,42 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       }
     }
 
-    // Draw ALL edges in a single draw call — straight lines, very subtle
+    // Draw ALL edges — two-pass when hovering for starburst effect
     edgeGfx.clear()
-    for (const l of graphLinks) {
-      const s = l.source
-      const t = l.target
-      if (!s.x || !s.y || !t.x || !t.y) continue
 
-      // Edge alpha: dim if hovering and not connected
-      let alpha = edgeAlpha
-      if (hoveredId) {
-        const isConn = s.id === hoveredId || t.id === hoveredId
-        alpha = isConn ? 0.5 : 0.02
+    if (hoveredId) {
+      // PASS 1: Non-connected edges (nearly invisible)
+      const dimColor = isDark ? 0x2a2e3a : 0xd0d5dd
+      for (const l of graphLinks) {
+        const s = l.source
+        const t = l.target
+        if (!s.x || !s.y || !t.x || !t.y) continue
+        if (s.id === hoveredId || t.id === hoveredId) continue
+        edgeGfx.moveTo(s.x, s.y)
+        edgeGfx.lineTo(t.x, t.y)
+        edgeGfx.stroke({ width: 0.5, color: dimColor, alpha: 0.04 })
       }
-
-      edgeGfx.moveTo(s.x, s.y)
-      edgeGfx.lineTo(t.x, t.y)
-      edgeGfx.stroke({ width: 1.0, color: edgeColor, alpha })
+      // PASS 2: Connected edges (bright starburst)
+      const brightColor = isDark ? 0xa0c4ff : 0x3b82f6
+      for (const l of graphLinks) {
+        const s = l.source
+        const t = l.target
+        if (!s.x || !s.y || !t.x || !t.y) continue
+        if (s.id !== hoveredId && t.id !== hoveredId) continue
+        edgeGfx.moveTo(s.x, s.y)
+        edgeGfx.lineTo(t.x, t.y)
+        edgeGfx.stroke({ width: 1.8, color: brightColor, alpha: 0.75 })
+      }
+    } else {
+      // DEFAULT: No hover — all edges uniform
+      for (const l of graphLinks) {
+        const s = l.source
+        const t = l.target
+        if (!s.x || !s.y || !t.x || !t.y) continue
+        edgeGfx.moveTo(s.x, s.y)
+        edgeGfx.lineTo(t.x, t.y)
+        edgeGfx.stroke({ width: 1.0, color: edgeColor, alpha: edgeAlpha })
+      }
     }
 
     app.renderer.render(stage)
