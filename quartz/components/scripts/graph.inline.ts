@@ -71,12 +71,13 @@ function getSectionColor(id: string): number {
 }
 
 // --- Node sizing: clamped log scale, max 3:1 ratio ---
-const MIN_RADIUS = 5
-const MAX_RADIUS = 16
-const RADIUS_SCALE = 3
+const NODE_MIN_RADIUS = 3
+const NODE_MAX_RADIUS = 24
+const NODE_SCALE = 4.5
 
 function getNodeRadius(node: { linkCount: number }): number {
-  return Math.min(MAX_RADIUS, MIN_RADIUS + Math.log2(1 + node.linkCount) * RADIUS_SCALE)
+  const lc = node.linkCount ?? 0
+  return Math.min(NODE_MAX_RADIUS, NODE_MIN_RADIUS + Math.sqrt(lc) * NODE_SCALE)
 }
 
 // --- Main render function ---
@@ -192,7 +193,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     .force(
       "collide",
       forceCollide<NodeData>()
-        .radius((d) => getNodeRadius(d) + 18)
+        .radius((d) => getNodeRadius(d) + 12)
         .strength(0.8)
         .iterations(3),
     )
@@ -448,8 +449,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   // ========== Animation Loop ==========
   let stopAnimation = false
   const LERP = 0.12
-  const edgeColor = isDark ? 0x3a3f55 : 0xc0c5d0
-  const edgeAlpha = isDark ? 0.2 : 0.15
+  const edgeColor = isDark ? 0x4a5568 : 0x94a3b8
+  const edgeAlpha = isDark ? 0.40 : 0.25
 
   function animate() {
     if (stopAnimation) return
@@ -489,7 +490,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
 
       edgeGfx.moveTo(s.x, s.y)
       edgeGfx.lineTo(t.x, t.y)
-      edgeGfx.stroke({ width: 0.5, color: edgeColor, alpha })
+      edgeGfx.stroke({ width: 1.0, color: edgeColor, alpha })
     }
 
     app.renderer.render(stage)
