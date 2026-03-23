@@ -1,15 +1,7 @@
 ---
 type: reference
 category: engineering-practice
-tags:
-  - reference
-  - engineering-practice
-  - dataops
-  - team-organization
-  - roles
-  - career
-  - collaboration
-  - raci
+tags: []
 aliases:
   - data team
   - team topology

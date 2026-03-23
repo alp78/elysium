@@ -1,15 +1,7 @@
 ---
 type: reference
 category: engineering-practice
-tags:
-  - reference
-  - engineering-practice
-  - dataops
-  - self-service
-  - data-democratization
-  - data-products
-  - data-catalog
-  - data-contracts
+tags: []
 aliases:
   - self-service data
   - data democratization

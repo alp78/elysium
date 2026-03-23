@@ -2,15 +2,7 @@
 type: concept
 category: engineering-practice
 technology: []
-tags:
-  - concept
-  - engineering-practice
-  - dataops
-  - agile
-  - automation
-  - data-quality
-  - continuous-delivery
-  - lean
+tags: []
 aliases:
   - DataOps
   - data operations
