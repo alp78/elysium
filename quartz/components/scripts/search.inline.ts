@@ -1,5 +1,5 @@
 import MiniSearch from "minisearch"
-import { ContentDetails } from "../../plugins/emitters/contentIndex"
+import { ContentDetails, HeadingIndex } from "../../plugins/emitters/contentIndex"
 import { removeAllChildren } from "./util"
 import { FullSlug, resolveRelative } from "../../util/path"
 
@@ -15,6 +15,8 @@ interface SearchDoc {
   tags: string[]
   /** content split into paragraphs for block-level proximity */
   blocks: string[]
+  /** heading anchors from the content index */
+  headings: HeadingIndex[]
 }
 
 interface ParsedQuery {
@@ -37,6 +39,11 @@ const docMap = new Map<number, SearchDoc>()
 const tagInclude = new Set<string>()
 /** Tags the user toggled OFF in the tag browser (exclude) */
 const tagExclude = new Set<string>()
+
+/** Global search mode toggled by the AND/OR button */
+let searchMode: "AND" | "OR" = "AND"
+/** Tag-specific AND/OR mode toggled by the tag browser toggle */
+let tagMode: "AND" | "OR" = "AND"
 
 // ---------------------------------------------------------------------------
 // Index building
@@ -73,6 +80,7 @@ async function buildIndex(data: ContentIndex): Promise<void> {
       content: details.content ?? "",
       tags: details.tags ?? [],
       blocks: splitBlocks(details.content ?? ""),
+      headings: details.headings ?? [],
     }
     docs.push(doc)
     docMap.set(id, doc)
@@ -90,7 +98,7 @@ function parseQuery(raw: string): ParsedQuery {
   const result: ParsedQuery = {
     terms: [],
     excludeTerms: [],
-    operator: "AND",
+    operator: searchMode, // default from the toggle button
     tagFilters: [],
     phraseFilters: [],
     pathFilter: null,
@@ -98,10 +106,13 @@ function parseQuery(raw: string): ParsedQuery {
 
   let text = raw.trim()
 
-  // Detect OR mode (must have OR between other terms)
+  // Explicit OR/AND keywords in the query override the toggle
   if (/\bOR\b/.test(text)) {
     result.operator = "OR"
     text = text.replace(/\bOR\b/g, " ")
+  } else if (/\bAND\b/.test(text)) {
+    result.operator = "AND"
+    text = text.replace(/\bAND\b/g, " ")
   }
 
   // Quoted phrases: "foo bar"
@@ -151,6 +162,48 @@ function blockHasAllTerms(blocks: string[], terms: string[]): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// Deep-link: find the nearest heading anchor above the best matching block
+// ---------------------------------------------------------------------------
+
+/**
+ * Given a document and search terms, return the heading anchor (#id) closest
+ * to the best matching block.  Returns "" for tag-only searches or when no
+ * heading can be resolved.
+ */
+function findAnchor(doc: SearchDoc, terms: string[]): string {
+  if (terms.length === 0 || doc.headings.length === 0) return ""
+
+  // Find the best matching block (highest term-hit count)
+  let bestBlockIdx = 0
+  let bestScore = 0
+  for (let i = 0; i < doc.blocks.length; i++) {
+    const lower = doc.blocks[i].toLowerCase()
+    const score = terms.reduce((s, t) => s + (lower.includes(t) ? 1 : 0), 0)
+    if (score > bestScore) {
+      bestScore = score
+      bestBlockIdx = i
+    }
+  }
+  if (bestScore === 0) return ""
+
+  // Approximate the character offset of this block in the original content
+  const blockText = doc.blocks[bestBlockIdx]
+  const blockOffset = doc.content.indexOf(blockText)
+  if (blockOffset === -1) return ""
+
+  // Walk headings: find the last heading whose text appears BEFORE blockOffset
+  let bestHeading: HeadingIndex | null = null
+  for (const h of doc.headings) {
+    const hPos = doc.content.indexOf(h.text)
+    if (hPos !== -1 && hPos <= blockOffset) {
+      bestHeading = h
+    }
+  }
+
+  return bestHeading ? `#${bestHeading.id}` : ""
+}
+
+// ---------------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------------
 
@@ -189,6 +242,14 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
     return []
   }
 
+  // AND enforcement: every term must appear somewhere in the document.
+  if (parsed.operator === "AND" && parsed.terms.length >= 2) {
+    docs = docs.filter((d) => {
+      const haystack = `${d.title} ${d.content} ${d.tags.join(" ")}`.toLowerCase()
+      return parsed.terms.every((t) => haystack.includes(t))
+    })
+  }
+
   // Exact phrase filter (substring must appear in title or content)
   for (const phrase of parsed.phraseFilters) {
     docs = docs.filter(
@@ -203,11 +264,19 @@ async function runSearch(query: string): Promise<SearchDoc[]> {
     docs = docs.filter((d) => blockHasAllTerms(d.blocks, parsed.terms))
   }
 
-  // Tag include
+  // Tag include (respects tagMode AND/OR)
   if (allTagInc.size > 0) {
-    docs = docs.filter((d) =>
-      [...allTagInc].every((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))),
-    )
+    if (tagMode === "AND") {
+      // ALL selected tags must be present
+      docs = docs.filter((d) =>
+        [...allTagInc].every((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))),
+      )
+    } else {
+      // ANY selected tag must be present
+      docs = docs.filter((d) =>
+        [...allTagInc].some((t) => d.tags.some((dt) => dt.toLowerCase().includes(t))),
+      )
+    }
   }
 
   // Tag exclude
@@ -326,27 +395,65 @@ function renderResults(
     ...parsed.phraseFilters.flatMap((p) => p.split(" ")),
   ]
 
-  // Group by folder
-  const groups = new Map<string, SearchDoc[]>()
-  for (const doc of docs) {
-    const folder = slugToFolder(doc.slug)
-    if (!groups.has(folder)) groups.set(folder, [])
-    groups.get(folder)!.push(doc)
-  }
+  const hasText = terms.length > 0
 
-  for (const [folder, group] of groups) {
+  // Decide grouping strategy:
+  // - If tag-only search in OR mode → group by matched tag
+  // - Otherwise → group by folder
+  const useTagGroups = !hasText && tagMode === "OR" && tagInclude.size > 1
+
+  if (useTagGroups) {
+    // Group by matching tag
+    const groups = new Map<string, SearchDoc[]>()
+    for (const doc of docs) {
+      for (const activeTag of tagInclude) {
+        if (doc.tags.some((dt) => dt.toLowerCase().includes(activeTag))) {
+          const label = `#${activeTag}`
+          if (!groups.has(label)) groups.set(label, [])
+          // avoid duplicates within a group
+          const arr = groups.get(label)!
+          if (!arr.some((d) => d.slug === doc.slug)) {
+            arr.push(doc)
+          }
+        }
+      }
+    }
+    renderGrouped(groups, terms, hasText, currentSlug, container)
+  } else {
+    // Group by folder
+    const groups = new Map<string, SearchDoc[]>()
+    for (const doc of docs) {
+      const folder = slugToFolder(doc.slug)
+      if (!groups.has(folder)) groups.set(folder, [])
+      groups.get(folder)!.push(doc)
+    }
+    renderGrouped(groups, terms, hasText, currentSlug, container)
+  }
+}
+
+function renderGrouped(
+  groups: Map<string, SearchDoc[]>,
+  terms: string[],
+  hasText: boolean,
+  currentSlug: FullSlug,
+  container: HTMLElement,
+): void {
+  for (const [groupName, group] of groups) {
     const groupEl = document.createElement("div")
     groupEl.className = "result-group"
 
     const header = document.createElement("div")
     header.className = "result-group-header"
-    header.textContent = folder
+    header.textContent = groupName
     groupEl.appendChild(header)
 
     for (const doc of group) {
+      const anchor = hasText ? findAnchor(doc, terms) : ""
+      const baseUrl = resolveRelative(currentSlug, doc.slug)
+
       const a = document.createElement("a")
       a.className = "result-item"
-      a.href = resolveRelative(currentSlug, doc.slug)
+      a.href = baseUrl + anchor
 
       const snippet = getSnippet(doc, terms)
       const tagsHtml = doc.tags
@@ -381,6 +488,7 @@ function renderResults(
 function setupTagBrowser(
   tagListEl: HTMLElement,
   filterBarEl: HTMLElement,
+  tagModeToggle: HTMLButtonElement,
   onFilterChange: () => void,
 ): void {
   // Per-tag state: 0 = neutral, 1 = include (green), 2 = exclude (red)
@@ -450,6 +558,22 @@ function setupTagBrowser(
     renderFilterBar()
     onFilterChange()
   })
+
+  // Tag mode AND/OR toggle
+  function syncTagToggle(): void {
+    tagModeToggle.dataset.mode = tagMode
+    tagModeToggle.textContent = tagMode
+    tagModeToggle.setAttribute("aria-label", `Tag filter mode: ${tagMode}`)
+  }
+  syncTagToggle()
+
+  tagModeToggle.addEventListener("click", (e) => {
+    e.preventDefault()
+    e.stopPropagation() // don't toggle the <details>
+    tagMode = tagMode === "AND" ? "OR" : "AND"
+    syncTagToggle()
+    onFilterChange()
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -467,8 +591,26 @@ async function setupSearch(
   const resultsPanel = searchEl.querySelector<HTMLElement>(".search-results")!
   const filterBarEl = searchEl.querySelector<HTMLElement>(".search-filter-bar")!
   const tagListEl = searchEl.querySelector<HTMLElement>(".tag-list")!
+  const modeToggle = searchEl.querySelector<HTMLButtonElement>(".search-mode-toggle")!
+  const tagModeToggle = searchEl.querySelector<HTMLButtonElement>(".tag-mode-toggle")!
 
   let currentQuery = ""
+
+  // AND / OR toggle button for text search
+  function syncToggleAppearance(): void {
+    modeToggle.dataset.mode = searchMode
+    modeToggle.textContent = searchMode
+    modeToggle.setAttribute("aria-label", `Search mode: ${searchMode}`)
+  }
+  syncToggleAppearance()
+
+  const onToggleClick = (): void => {
+    searchMode = searchMode === "AND" ? "OR" : "AND"
+    syncToggleAppearance()
+    refresh()
+  }
+  modeToggle.addEventListener("click", onToggleClick)
+  window.addCleanup(() => modeToggle.removeEventListener("click", onToggleClick))
 
   async function refresh(): Promise<void> {
     const hasInput =
@@ -493,8 +635,8 @@ async function setupSearch(
   bar.addEventListener("input", onInput)
   window.addCleanup(() => bar.removeEventListener("input", onInput))
 
-  // Tag browser
-  setupTagBrowser(tagListEl, filterBarEl, refresh)
+  // Tag browser (now also receives the tag mode toggle)
+  setupTagBrowser(tagListEl, filterBarEl, tagModeToggle, refresh)
 
   // Keyboard shortcut: Ctrl/⌘+K → focus search bar
   const onKeydown = (e: KeyboardEvent): void => {

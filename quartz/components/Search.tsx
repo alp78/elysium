@@ -37,7 +37,15 @@ export default ((_userOpts?: Record<string, unknown>) => {
             aria-label="Search notes"
             placeholder='Search… (use OR, "phrase", -exclude, #tag)'
           />
-          <kbd class="search-hint">⌘K</kbd>
+          <button
+            class="search-mode-toggle"
+            type="button"
+            data-mode="AND"
+            title="Toggle AND / OR mode"
+            aria-label="Search mode: AND"
+          >
+            AND
+          </button>
         </div>
 
         {/* ── Active filter chips (populated by JS) ── */}
@@ -64,6 +72,15 @@ export default ((_userOpts?: Record<string, unknown>) => {
             </svg>
             <span class="tag-browser-label">Tags</span>
             <span class="tag-count-badge">{allTags.length}</span>
+            <button
+              class="tag-mode-toggle"
+              type="button"
+              data-mode="AND"
+              title="Toggle AND / OR for tag filtering"
+              aria-label="Tag filter mode: AND"
+            >
+              AND
+            </button>
           </summary>
           <div class="tag-list">
             {allTags.map((tag) => (

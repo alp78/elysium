@@ -9,6 +9,12 @@ import { write } from "./helpers"
 import { i18n } from "../../i18n"
 
 export type ContentIndexMap = Map<FullSlug, ContentDetails>
+export interface HeadingIndex {
+  text: string
+  id: string
+  depth: number
+}
+
 export type ContentDetails = {
   slug: FullSlug
   filePath: FilePath
@@ -16,6 +22,7 @@ export type ContentDetails = {
   links: SimpleSlug[]
   tags: string[]
   content: string
+  headings?: HeadingIndex[]
   richContent?: string
   date?: Date
   description?: string
@@ -103,6 +110,13 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
         const slug = file.data.slug!
         const date = getDate(ctx.cfg.configuration, file.data) ?? new Date()
         if (opts?.includeEmptyFiles || (file.data.text && file.data.text !== "")) {
+          // Extract headings with their anchor IDs for search deep-linking
+          const headings: HeadingIndex[] = (file.data.toc ?? []).map((entry) => ({
+            text: entry.text,
+            id: entry.slug,
+            depth: entry.depth,
+          }))
+
           linkIndex.set(slug, {
             slug,
             filePath: file.data.relativePath!,
@@ -110,6 +124,7 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
             links: file.data.links ?? [],
             tags: file.data.frontmatter?.tags ?? [],
             content: file.data.text ?? "",
+            headings,
             richContent: opts?.rssFullHtml
               ? escapeHTML(toHtml(tree as Root, { allowDangerousHtml: true }))
               : undefined,
