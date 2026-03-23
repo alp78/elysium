@@ -48,6 +48,7 @@ export const defaultContentPageLayout: PageLayout = {
         linkDistance: 40,
         fontSize: 0.5,
         opacityScale: 1.5,
+        showTags: false,
       },
       globalGraph: {
         repelForce: 0.4,
@@ -55,6 +56,7 @@ export const defaultContentPageLayout: PageLayout = {
         linkDistance: 35,
         fontSize: 0.5,
         opacityScale: 1.5,
+        showTags: false,
       },
     }),
     Component.DesktopOnly(Component.TableOfContents()),
