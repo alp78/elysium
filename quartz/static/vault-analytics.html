@@ -16,7 +16,9 @@ a{color:var(--secondary);text-decoration:none}a:hover{text-decoration:underline}
 .vd-card-value{font-size:1.8rem;font-weight:700;color:var(--secondary)}
 .vd-card-label{font-size:.75rem;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-top:.25rem}
 .vd-chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
-.vd-chart-half{min-height:320px}
+.vd-chart-half{height:350px;position:relative;overflow:hidden}
+.vd-chart-wrap{position:relative;height:300px;width:100%}
+.vd-tag-wrap{position:relative;height:400px;width:100%;overflow:hidden}
 .vd-chart-half h3,.vd-section h3,.vd-section h4{color:var(--dark);margin-bottom:.5rem;font-size:1rem}
 .vd-section{margin:1.5rem 0}
 .vd-filter-bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem}
@@ -95,9 +97,9 @@ function renderScorecard(p){
 function renderCharts(p){
   const row=el('div','vd-chart-row',p);
   const bc=el('div','vd-chart-half',row);el('h3','',bc).textContent='Notes by Section';
-  const c1=el('canvas','',bc);c1.height=300;
+  const bw=el('div','vd-chart-wrap',bc);const c1=el('canvas','',bw);
   const dc=el('div','vd-chart-half',row);el('h3','',dc).textContent='Notes by Type';
-  const c2=el('canvas','',dc);c2.height=300;
+  const dw=el('div','vd-chart-wrap',dc);const c2=el('canvas','',dw);
   requestAnimationFrame(()=>{
     const sl=manifest.sections_list.sort((a,b)=>b.note_count-a.note_count);
     new Chart(c1,{type:'bar',data:{labels:sl.map(s=>s.name),datasets:[{data:sl.map(s=>s.note_count),backgroundColor:sl.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' notes'}}},scales:{x:{grid:{color:'rgba(128,128,128,.15)'},ticks:{color:'#a9b1d6'}},y:{grid:{display:false},ticks:{color:'#a9b1d6',font:{size:11}}}},onClick:(_,els)=>{if(els.length){filters.section=sl[els[0].index].slug;applyFilters();}}}});
@@ -108,7 +110,7 @@ function renderCharts(p){
 
 function renderTagCloud(p){
   const w=el('div','vd-section',p);el('h3','',w).textContent='Top 30 Tags';
-  const c=el('canvas','',w);c.height=250;
+  const tw=el('div','vd-tag-wrap',w);const c=el('canvas','',tw);
   requestAnimationFrame(()=>{
     const tags=Object.entries(manifest.tag_frequency).slice(0,30);const mx=tags[0]?tags[0][1]:1;
     new Chart(c,{type:'bar',data:{labels:tags.map(t=>t[0]),datasets:[{data:tags.map(t=>t[1]),backgroundColor:tags.map(t=>{const a=.3+.7*(t[1]/mx);return'rgba(122,162,247,'+a+')';}),borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(128,128,128,.15)'},ticks:{color:'#a9b1d6'}},y:{grid:{display:false},ticks:{color:'#a9b1d6',font:{size:10}}}}},onClick:(_,els)=>{if(els.length){const t=tags[els[0].index][0];if(!filters.tags.includes(t))filters.tags.push(t);applyFilters();}}});
@@ -179,7 +181,11 @@ function renderHeatmap(p){
   tbl.innerHTML='<thead>'+hdr+'</thead><tbody>'+body+'</tbody>';w.appendChild(tbl);
 }
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+function waitForChartJS(){
+  if(typeof Chart!=='undefined'){init();}
+  else{setTimeout(waitForChartJS,100);}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForChartJS);else waitForChartJS();
 })();
 </script>
 </body>
