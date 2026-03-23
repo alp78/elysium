@@ -2530,4 +2530,4 @@ LIMIT 10
 | Best for | Readability | Reuse, large sets | Small lookups (<100 rows) |
 | Performance | Re-runs each ref | One-time compute | Fast for small sets |
 
-**Rule of thumb**: start with CTE. If the query is slow and the CTE is referenced multiple times, materialize into #temp.
+**Rule of thumb**: start with CTE. If the query is slow and the CTE is referenced multiple times, materialize into \#temp.
