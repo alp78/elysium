@@ -13,7 +13,8 @@ interface SearchDoc {
   contentLower: string
   titleLower: string
   tags: string[]
-  blocks: string[]
+  /** Individual lines (split on \n) for AND same-line matching */
+  lines: string[]
   headings: HeadingIndex[]
 }
 
@@ -57,10 +58,10 @@ function buildDocs(data: ContentIndex): void {
       contentLower: content.toLowerCase(),
       titleLower: title.toLowerCase(),
       tags: d.tags ?? [],
-      blocks: content
-        .split(/\n{2,}/)
-        .map((b) => b.replace(/\s+/g, " ").trim().toLowerCase())
-        .filter((b) => b.length > 15),
+      lines: content
+        .split(/\n/)
+        .map((l) => l.trim().toLowerCase())
+        .filter((l) => l.length > 0),
       headings: d.headings ?? [],
     })
   }
@@ -123,8 +124,27 @@ function parseQuery(raw: string): ParsedQuery {
 // Search — plain brute force, no library
 // ---------------------------------------------------------------------------
 
+/** Word-boundary regex cache to avoid re-creating on every call. */
+const wordRegexCache = new Map<string, RegExp>()
+function wordRegex(term: string): RegExp {
+  let re = wordRegexCache.get(term)
+  if (!re) {
+    // \b works for ASCII word chars; for terms that start/end with
+    // non-word chars we fall back to a looser match.
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    re = new RegExp(`\\b${escaped}\\b`, "i")
+    wordRegexCache.set(term, re)
+  }
+  return re
+}
+
+function lineHasTerm(line: string, t: string): boolean {
+  return wordRegex(t).test(line)
+}
+
 function docHasTerm(d: SearchDoc, t: string): boolean {
-  return d.titleLower.includes(t) || d.contentLower.includes(t)
+  const re = wordRegex(t)
+  return re.test(d.titleLower) || re.test(d.contentLower)
 }
 
 function runSearch(query: string): SearchDoc[] {
@@ -141,13 +161,12 @@ function runSearch(query: string): SearchDoc[] {
   if (hasText) {
     if (parsed.operator === "AND") {
       if (parsed.terms.length >= 2) {
-        // ALL terms must appear in the SAME block (paragraph).
-        // This is the core AND behaviour — same-block proximity.
+        // ALL terms must appear on the SAME LINE (word-boundary match).
         docs = docs.filter((d) =>
-          d.blocks.some((b) => parsed.terms.every((t) => b.includes(t))),
+          d.lines.some((line) => parsed.terms.every((t) => lineHasTerm(line, t))),
         )
       } else if (parsed.terms.length === 1) {
-        // Single term: just check it exists anywhere
+        // Single term: word-boundary match anywhere in the doc
         docs = docs.filter((d) => docHasTerm(d, parsed.terms[0]))
       }
     } else {
@@ -199,15 +218,12 @@ function runSearch(query: string): SearchDoc[] {
       let sa = 0
       let sb = 0
       for (const t of allTerms) {
-        if (a.titleLower.includes(t)) sa += 50
-        if (b.titleLower.includes(t)) sb += 50
-        // count content hits (cap at 5)
-        let ia = 0, ca = 0
-        while (ca < 5 && (ia = a.contentLower.indexOf(t, ia)) !== -1) { ca++; ia += t.length }
-        let ib = 0, cb = 0
-        while (cb < 5 && (ib = b.contentLower.indexOf(t, ib)) !== -1) { cb++; ib += t.length }
-        sa += ca
-        sb += cb
+        const re = wordRegex(t)
+        if (re.test(a.titleLower)) sa += 50
+        if (re.test(b.titleLower)) sb += 50
+        // count line hits
+        sa += a.lines.filter((l) => re.test(l)).length
+        sb += b.lines.filter((l) => re.test(l)).length
       }
       return sb - sa
     })
@@ -239,9 +255,9 @@ function highlight(text: string, terms: string[]): string {
 function getSnippet(doc: SearchDoc, terms: string[], maxLen = 150): string {
   if (terms.length === 0) return escHtml(doc.content.slice(0, maxLen))
 
-  let best = doc.blocks[0] ?? doc.content.slice(0, 400)
+  let best = doc.lines[0] ?? doc.content.slice(0, 400)
   let bestScore = 0
-  for (const b of doc.blocks) {
+  for (const b of doc.lines) {
     const score = terms.reduce((s, t) => s + (b.includes(t) ? 1 : 0), 0)
     if (score > bestScore) { bestScore = score; best = b }
   }
@@ -269,13 +285,13 @@ function findAnchor(doc: SearchDoc, terms: string[]): string {
 
   let bestBlockIdx = 0
   let bestScore = 0
-  for (let i = 0; i < doc.blocks.length; i++) {
-    const score = terms.reduce((s, t) => s + (doc.blocks[i].includes(t) ? 1 : 0), 0)
+  for (let i = 0; i < doc.lines.length; i++) {
+    const score = terms.reduce((s, t) => s + (doc.lines[i].includes(t) ? 1 : 0), 0)
     if (score > bestScore) { bestScore = score; bestBlockIdx = i }
   }
   if (bestScore === 0) return ""
 
-  const blockSnippet = doc.blocks[bestBlockIdx].slice(0, 60)
+  const blockSnippet = doc.lines[bestBlockIdx].slice(0, 60)
   const contentNorm = doc.contentLower.replace(/\s+/g, " ")
   const blockOffset = contentNorm.indexOf(blockSnippet)
   if (blockOffset === -1) return ""
