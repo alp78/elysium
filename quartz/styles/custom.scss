@@ -237,6 +237,26 @@ a.tag-link:hover {
   background-color: rgba(187, 154, 247, 0.05) !important;
 }
 
+/* ── Page layout — darker surround, lighter content ──────────── */
+[saved-theme="dark"] body {
+  background-color: #13141d !important;
+}
+
+[saved-theme="dark"] .page {
+  background-color: #13141d !important;
+}
+
+[saved-theme="dark"] .center > article {
+  background-color: #1a1b26;
+  border-radius: 8px;
+  padding: 1.5em 2em !important;
+}
+
+[saved-theme="dark"] .left-sidebar,
+[saved-theme="dark"] .right-sidebar {
+  background-color: transparent !important;
+}
+
 /* ── Page and article titles ─────────────────────────────────── */
 [saved-theme="dark"] .article-title {
   color: #7aa2f7 !important;
@@ -246,7 +266,24 @@ a.tag-link:hover {
   color: #7aa2f7 !important;
 }
 
-/* ── Explorer sidebar — brighter text ────────────────────────── */
+/* ── Explorer sidebar — match Obsidian style ─────────────────── */
+.explorer ul li a,
+.sidebar a {
+  font-weight: 400 !important;
+  font-size: 13.5px !important;
+  letter-spacing: 0 !important;
+}
+
+.folder-title {
+  font-weight: 400 !important;
+  font-size: 13.5px !important;
+}
+
+.folder-icon svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
 [saved-theme="dark"] .explorer ul li a,
 [saved-theme="dark"] .sidebar a {
   color: #a9b1d6 !important;

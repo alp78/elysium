@@ -46,8 +46,8 @@ const config: QuartzConfig = {
           textHighlight: "#e0af6833",
         },
         darkMode: {
-          light: "#1a1b26",           // Tokyo Night background
-          lightgray: "#1f2133",       // sidebar — slightly lighter than bg
+          light: "#13141d",           // Tokyo Night background (darker surround)
+          lightgray: "#1a1b26",       // borders/dividers
           gray: "#565f89",            // muted text
           darkgray: "#a9b1d6",        // body text
           dark: "#c0caf5",            // headings

@@ -182,23 +182,24 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     }
   })
 
-  // custom clustering force: gently pull nodes toward their section center
+  // custom clustering force: very gentle nudge toward section center
+  // low strength (0.03) so links dominate layout — avoids silo effect
   function forceCluster(alpha: number) {
     for (const d of graphData.nodes) {
       const center = sectionCenters[getSection(d.id)]
       if (center && d.x !== undefined && d.y !== undefined) {
-        d.vx = (d.vx ?? 0) + (center.x - d.x) * alpha * 0.15
-        d.vy = (d.vy ?? 0) + (center.y - d.y) * alpha * 0.15
+        d.vx = (d.vx ?? 0) + (center.x - d.x) * alpha * 0.03
+        d.vy = (d.vy ?? 0) + (center.y - d.y) * alpha * 0.03
       }
     }
   }
 
   // we virtualize the simulation and use pixi to actually render it
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(graphData.nodes)
-    .force("charge", forceManyBody().strength(-100 * repelForce))
+    .force("charge", forceManyBody().strength(-100 * repelForce).distanceMax(300))
     .force("center", forceCenter().strength(centerForce))
     .force("link", forceLink(graphData.links).distance(linkDistance))
-    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n)).iterations(3))
+    .force("collide", forceCollide<NodeData>((n) => nodeRadius(n) + 3).iterations(3))
     .force("cluster", (alpha: number) => forceCluster(alpha))
 
   const radius = (Math.min(width, height) / 2) * 0.8
@@ -440,9 +441,9 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       eventMode: "none",
       text: n.text,
       alpha: 0,
-      anchor: { x: 0.5, y: 1.2 },
+      anchor: { x: 0.5, y: 1.3 },
       style: {
-        fontSize: fontSize * 15,
+        fontSize: fontSize * 12,
         fill: computedStyleMap["--dark"],
         fontFamily: computedStyleMap["--bodyFont"],
       },
@@ -517,7 +518,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         .container(() => app.canvas)
         .subject(() => graphData.nodes.find((n) => n.id === hoveredNodeId))
         .on("start", function dragstarted(event) {
-          if (!event.active) simulation.alphaTarget(1).restart()
+          if (!event.active) simulation.alphaTarget(0.3).restart()
           event.subject.fx = event.subject.x
           event.subject.fy = event.subject.y
           event.subject.__initialDragPos = {
