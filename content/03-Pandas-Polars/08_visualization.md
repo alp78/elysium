@@ -1018,9 +1018,9 @@ fig = px.line(asml_pd, x="date", y="close", title="ASML Close Price (1Y)")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_01.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_01.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
-<iframe src="/static/plotly/viz_02.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_02.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 1.2 Multi-Series (color)
 
@@ -1032,7 +1032,7 @@ fig.update_layout(hovermode="x unified")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_03.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_03.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 1.3 Faceted Lines
 
@@ -1044,7 +1044,7 @@ fig.update_yaxes(matches=None, showticklabels=True)  # independent y-axes
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_04.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_04.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 1.4 Dual Y-Axis (Graph Objects)
 
@@ -1059,7 +1059,7 @@ fig.update_yaxes(title_text="Volume", secondary_y=True)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_05.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_05.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 1.5 Line Styles & Markers
 
@@ -1077,7 +1077,7 @@ fig.update_layout(title="ASML: Line Styles")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_06.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_06.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 2. Bar Charts
 
@@ -1097,7 +1097,7 @@ fig = px.bar(sector_avg, x="composite_score", y="sector", orientation="h",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_07.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_07.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 2.2 Grouped Bar
 
@@ -1107,11 +1107,11 @@ agg = scores_pd.groupby("sector")[["momentum_score", "relative_value_score"]].me
 fig = px.bar(agg.melt(id_vars="sector", var_name="metric", value_name="score"),
              x="sector", y="score", color="metric", barmode="group",
              title="Momentum vs Value by Sector")
-fig.update_layout(xaxis_tickangle=-45)
+fig.update_layout(xaxis_tickangle=-45, xaxis_title=None, margin=dict(b=150))
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_08.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_08.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 2.3 Stacked Bar
 
@@ -1120,11 +1120,11 @@ fig.show()
 fig = px.bar(agg.melt(id_vars="sector", var_name="metric", value_name="score"),
              x="sector", y="score", color="metric", barmode="stack",
              title="Momentum + Value Stacked by Sector")
-fig.update_layout(xaxis_tickangle=-45)
+fig.update_layout(xaxis_tickangle=-45, xaxis_title=None, margin=dict(b=150))
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_09.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_09.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 2.4 Bar with Text Labels
 
@@ -1141,9 +1141,7 @@ fig.update_layout(xaxis_tickangle=-45,
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_10.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
-
-<iframe src="/static/plotly/viz_11.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_10.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 3. Scatter Plots
 
@@ -1161,7 +1159,7 @@ fig = px.scatter(scores_pd, x="momentum_score", y="relative_value_score",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_12.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_11.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 3.2 Color, Size, Hover
 
@@ -1174,7 +1172,7 @@ fig = px.scatter(scores_pd, x="momentum_score", y="relative_value_score",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_13.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_12.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 3.3 Marginal Distributions
 
@@ -1193,7 +1191,7 @@ fig = px.scatter(scores_pd, x="momentum_score", y="relative_value_score",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_14.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_13.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 3.4 Trendline (OLS)
 
@@ -1212,7 +1210,7 @@ fig = px.scatter(scores_pd, x="momentum_score", y="relative_value_score",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_15.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_14.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 3.5 3D Scatter
 
@@ -1225,7 +1223,7 @@ fig.update_layout(height=600)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_16.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_15.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 4. Histograms & Distributions
 
@@ -1243,7 +1241,7 @@ fig = px.histogram(ohlcv_pd, x="close", nbins=80,
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_17.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_16.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 4.2 Overlaid by Category
 
@@ -1255,7 +1253,7 @@ fig = px.histogram(top5_pd, x="close", color="symbol", nbins=60,
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_18.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_17.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 4.3 Histogram with Rug/Box
 
@@ -1267,7 +1265,7 @@ fig = px.histogram(scores_pd, x="composite_score", color="sector",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_19.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_18.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 4.4 Violin Plot
 
@@ -1287,7 +1285,7 @@ fig.update_layout(xaxis_tickangle=-45, showlegend=False)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_20.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_19.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 4.5 Box Plot
 
@@ -1306,7 +1304,7 @@ fig.update_layout(xaxis_tickangle=-45, showlegend=False)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_21.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_20.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 4.6 Strip Plot
 
@@ -1324,7 +1322,7 @@ fig.update_layout(xaxis_tickangle=-45, showlegend=False)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_22.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_21.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 5. Area Charts
 
@@ -1341,7 +1339,7 @@ fig = px.area(asml_pd, x="date", y="close", title="ASML Close Price (Area)")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_23.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_22.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 5.2 Stacked Area
 
@@ -1352,7 +1350,7 @@ fig = px.area(top5_pd, x="date", y="volume", color="symbol",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_24.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_23.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 6. Pie, Sunburst & Treemap
 
@@ -1371,7 +1369,7 @@ fig = px.pie(sector_count, values="count", names="sector",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_25.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_24.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 6.2 Donut Chart
 
@@ -1383,7 +1381,7 @@ fig.update_traces(textinfo="percent+label")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_26.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_25.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 6.3 Sunburst
 
@@ -1397,7 +1395,7 @@ fig.update_layout(height=600)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_27.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_26.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 6.4 Treemap
 
@@ -1409,7 +1407,7 @@ fig.update_layout(height=600)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_28.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_27.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 7. Heatmap & Correlation
 
@@ -1438,7 +1436,7 @@ fig.update_layout(height=1000, width=1000,
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_29.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_28.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 7.2 Pivot Heatmap
 
@@ -1458,7 +1456,7 @@ fig = px.imshow(pivot, title="ASML Avg Close by Weekday × Month",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_30.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_29.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 8. Financial Charts
 
@@ -1487,7 +1485,7 @@ fig.update_layout(title="ASML Candlestick", xaxis_rangeslider_visible=False)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_31.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_30.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 8.2 OHLC
 
@@ -1509,7 +1507,7 @@ fig.update_layout(title="ASML OHLC", xaxis_rangeslider_visible=False)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_32.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_31.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 8.3 Candlestick + Volume Subplot
 
@@ -1533,7 +1531,7 @@ fig.update_layout(title="ASML: Candlestick + Volume",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_33.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_32.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 9. Subplots & Layout
 
@@ -1564,7 +1562,7 @@ fig.update_layout(title="ASML Dashboard", height=600, showlegend=False)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_34.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_33.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 9.2 Faceting with Plotly Express
 
@@ -1576,7 +1574,7 @@ fig.update_yaxes(matches=None, showticklabels=True)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_35.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_34.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 10. Geographic Charts
 
@@ -1588,7 +1586,7 @@ Choropleth maps color regions by a metric — great for showing **geographic dis
 ### 10.1 Choropleth
 
 ```python
-# Stocks per country
+# Map of Europe colored by number of index constituents per country
 country_count = dim_pd.groupby("country").size().reset_index(name="stocks")
 
 # Map country names to ISO-3 codes
@@ -1604,16 +1602,26 @@ fig = px.choropleth(country_count, locations="iso3", locationmode="ISO-3",
                     color="stocks", hover_name="country",
                     title="EuroStoxx 50: Stocks per Country",
                     color_continuous_scale="Blues")
-fig.update_layout(geo=dict(scope="europe"), height=500)
+fig.update_layout(
+    height=600, margin=dict(l=0, r=0, t=40, b=0),
+    geo=dict(scope="europe",
+             bgcolor="#1a1b26",
+             landcolor="#24283b",
+             countrycolor="#3b4261",
+             subunitcolor="#3b4261",
+             showocean=True, oceancolor="#16161e",
+             showlakes=True, lakecolor="#16161e",
+             showcoastlines=True, coastlinecolor="#3b4261",
+             lonaxis_range=[-15, 35], lataxis_range=[35, 65]))
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_36.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_35.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 10.2 Scatter Map
 
 ```python
-# Use capital city coords as proxy (simplified)
+# Bubble map — bubble size = number of stocks headquartered in each country
 city_coords = {
     "Netherlands": (52.37, 4.90), "Germany": (52.52, 13.41), "France": (48.86, 2.35),
     "Spain": (40.42, -3.70), "Italy": (41.90, 12.50), "Finland": (60.17, 24.94),
@@ -1624,13 +1632,15 @@ geo["lat"] = geo["country"].map(lambda c: city_coords.get(c, (0, 0))[0])
 geo["lon"] = geo["country"].map(lambda c: city_coords.get(c, (0, 0))[1])
 geo = geo[geo["lat"] != 0]
 
-fig = px.scatter_geo(geo, lat="lat", lon="lon", size="stocks", text="country",
+fig = px.scatter_map(geo, lat="lat", lon="lon", size="stocks", text="country",
                      title="Stocks by Country (Scatter Map)",
-                     scope="europe", size_max=30)
+                     size_max=30, zoom=3, center={"lat": 50, "lon": 10})
+fig.update_layout(height=600, margin=dict(l=0, r=0, t=40, b=0),
+                  map_style="carto-darkmatter")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_37.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_36.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 11. Animated Charts
 
@@ -1667,7 +1677,7 @@ fig.update_layout(
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_38.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_37.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 11.2 Animated Scatter (built-in)
 
@@ -1688,7 +1698,7 @@ fig.update_layout(height=600)
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_39.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_38.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 12. Styling, Templates & Themes
 
@@ -1709,14 +1719,14 @@ for tmpl in templates:
     fig = px.line(asml_pd.tail(30), x="date", y="close",
                  title=f"Template: {tmpl}", template=tmpl)
     fig.update_layout(height=280, width=400, margin=dict(l=40, r=20, t=40, b=30))
-    html_parts.append(plotly.io.to_html(fig, include_plotlyjs=False, full_html=False))
+    html_parts.append(pio.to_html(fig, include_plotlyjs=False, full_html=False))
 
 grid = "<div style='display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px'>" + "".join(html_parts) + "</div>"
 js_tag = '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
 display(HTML(js_tag + grid))
 ```
 
-<iframe src="/static/plotly/viz_40.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_39.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 12.2 Custom Styling
 
@@ -1737,7 +1747,7 @@ fig.update_layout(
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_41.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_40.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 12.3 Annotations & Shapes
 
@@ -1767,7 +1777,7 @@ fig.add_vrect(x0=asml_pd["date"].iloc[50], x1=asml_pd["date"].iloc[100],
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_42.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_41.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 13. Advanced Interactivity
 
@@ -1801,7 +1811,7 @@ fig.update_layout(title=f"{top5[0]} Close Price",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_43.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_42.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 13.2 Range Slider & Selector
 
@@ -1822,7 +1832,7 @@ fig.update_xaxes(
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_44.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_43.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ### 13.3 Custom Hover Templates
 
@@ -1844,7 +1854,7 @@ fig.update_layout(title="Custom Hover Template")
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_45.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_44.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 14. Plotly with Polars DataFrames
 
@@ -1854,7 +1864,7 @@ fig = px.line(asml_pl, x="date", y="close", title="Direct from Polars DataFrame"
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_46.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_45.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ```python
 # Scatter with Polars
@@ -1864,7 +1874,7 @@ fig = px.scatter(scores_pl, x="momentum_score", y="relative_value_score",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_47.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_46.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ```python
 # For Graph Objects, convert to lists or Pandas
@@ -1880,7 +1890,7 @@ fig.update_layout(title="Candlestick from Polars (via lists)",
 fig.show()
 ```
 
-<iframe src="/static/plotly/viz_48.html" width="100%" height="500" style="border:none; border-radius:8px;"></iframe>
+<iframe src="/static/plotly/viz_47.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 ## 15. Exporting Charts
 

@@ -1,13 +1,42 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8"/>
-<script type="module">import "https://cdn.plot.ly/plotly-3.4.0.min"</script>
-<style>body { margin: 0; background: #1a1b26; }</style>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1b26; overflow: hidden; }
+  .plotly-graph-div { width: 100% !important; height: 100% !important; }
+</style>
 </head><body>
-        <script>
-        window.PlotlyConfig = {MathJaxConfig: 'local'};
-        if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}
-        </script>
-        <script type="module">import "https://cdn.plot.ly/plotly-3.4.0.min"</script>
-        
+<div>                            
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.4.0.min.js" integrity="sha256-KEmPoupLpFyGMyGAiOsiNDbKDKAvxXAn/W+oQa0ZAfk=" crossorigin="anonymous"></script>                <div id="d6bffb27-c63a-4290-aef5-582d101ac9e2" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("d6bffb27-c63a-4290-aef5-582d101ac9e2")) {                    Plotly.newPlot(                        "d6bffb27-c63a-4290-aef5-582d101ac9e2",                        [{"hovertemplate":"sector=%{x}\u003cbr\u003ecomposite_score=%{y}\u003cbr\u003etext=%{text}\u003cextra\u003e\u003c\u002fextra\u003e","legendgroup":"","marker":{"color":"#7aa2f7","pattern":{"shape":""}},"name":"","orientation":"v","showlegend":false,"text":{"dtype":"f8","bdata":"7FG4HoXrwb+amZmZmZm5vwrXo3A9Cre\u002fexSuR+F6tL97FK5H4XqUP3sUrkfheqQ\u002fmpmZmZmZqT8K16NwPQq3Pylcj8L1KLw\u002fMzMzMzMzwz8="},"textposition":"outside","x":["Consumer Cyclical","Utilities","Financial Services","Consumer Defensive","Healthcare","Basic Materials","Communication Services","Industrials","Energy","Technology"],"xaxis":"x","y":{"dtype":"f8","bdata":"IQZgINWXwb8ECEnmxnC5vwBPD9egCbe\u002fn1j8fohHs7\u002f04pJZ7YeTP3MQqnFCBaY\u002fJOHumUBFqT\u002fjG7jPSmG2P2AsxFZ3DLs\u002fsEoXkIm2wz8="},"yaxis":"y","type":"bar"}],                        {"template":{"layout":{"colorway":["#7aa2f7","#9ece6a","#e0af68","#f7768e","#bb9af7","#7dcfff","#73daca","#ff9e64","#2ac3de","#b4f9f8"],"font":{"color":"#a9b1d6","family":"JetBrains Mono, Consolas, monospace"},"hoverlabel":{"bgcolor":"#24283b","bordercolor":"#3b4261","font":{"color":"#c0caf5"}},"legend":{"bgcolor":"rgba(0,0,0,0)","bordercolor":"#3b4261"},"paper_bgcolor":"#1a1b26","plot_bgcolor":"#1a1b26","title":{"font":{"color":"#c0caf5","size":16}},"xaxis":{"gridcolor":"#292e42","linecolor":"#3b4261","zerolinecolor":"#3b4261"},"yaxis":{"gridcolor":"#292e42","linecolor":"#3b4261","zerolinecolor":"#3b4261"}}},"xaxis":{"anchor":"y","domain":[0.0,1.0],"title":{},"tickangle":-45},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"composite_score"},"range":[0,0.17710931268736296]},"legend":{"tracegroupgap":0},"title":{"text":"Scores with Labels"},"barmode":"relative","margin":{"b":150}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('d6bffb27-c63a-4290-aef5-582d101ac9e2');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };            </script>        </div>
+<script>
+  // Force resize after load
+  window.addEventListener('load', function() {
+    window.dispatchEvent(new Event('resize'));
+  });
+</script>
 </body></html>
