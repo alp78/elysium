@@ -1,5 +1,6 @@
 ---
-tags: []
+tags:
+  - sql
 type: runbook
 severity: sev2
 technology: sql-server, gcp

@@ -12,10 +12,9 @@ created: 2026-03-22
 updated: 2026-03-23
 status: complete
 ---
-
-
-
-
+<div style="text-align: center;">
+  <img src="/static/elysium_logo.jpg" alt="Elysium" width="280" />
+</div>
 ---
 
 ## Sections

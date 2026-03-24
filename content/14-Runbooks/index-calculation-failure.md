@@ -1,5 +1,8 @@
 ---
-tags: [airflow]
+tags:
+  - airflow
+  - sql
+  - gcp
 type: runbook
 severity: sev1
 technology: airflow

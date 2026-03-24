@@ -1,5 +1,6 @@
 ---
-tags: []
+tags:
+  - sql
 type: runbook
 severity: sev1
 technology: sql-server, bigquery
