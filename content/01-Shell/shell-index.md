@@ -92,7 +92,7 @@ Testing connectivity, inspecting sockets, and working with HTTP APIs.
 - **SQL Server** — [[sqlcmd-connection-and-usage]] uses shell commands for database operations
 - **GCP** — [[gcloud-authentication]] and the entire gcloud CLI is shell-based
 - **Docker** — [[container-lifecycle]] commands are shell operations
-- **Python** — [[python-pipeline-execution]] runs Python from shell scripts
+- **Python** — python pipeline execution runs Python from shell scripts
 - **Orchestration** — [[linux-scheduling|cron and crontab]] schedules shell commands
 
 > *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

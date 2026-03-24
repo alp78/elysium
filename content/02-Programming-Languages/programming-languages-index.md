@@ -1,11 +1,11 @@
 ---
 type: index
 category: programming-languages
-technology: [python, csharp, dotnet, pandas, polars]
-tags: [python, csharp, pandas, polars]
+technology: [python, csharp, dotnet]
+tags: [python, csharp]
 aliases: [Programming Languages Index, Language Reference, Python Reference, C# Reference]
-keywords: [programming languages, python, csharp, c sharp, dotnet, pandas, polars, dataframe, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
-description: "Index for the Programming Languages section — paired Python and C# references covering 16 topics from basics to design patterns, plus a 10-part Pandas vs Polars series, each with executable examples and cell outputs."
+keywords: [programming languages, python, csharp, c sharp, dotnet, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
+description: "Index for the Programming Languages section — paired Python and C# references covering 17 topics from basics to design patterns, each with executable examples and cell outputs."
 related:
   - "[[index|Elysium]]"
   - "[[sql-python-csharp-transforms]]"
@@ -17,28 +17,29 @@ status: complete
 
 # Programming Languages
 
-Paired Python and C# references covering 16 topics. Each note was converted from an executed Jupyter notebook with cell outputs preserved — you see both the code and its result. Every Python topic has a C# counterpart covering the same concepts in that language.
+Paired Python and C# references covering 17 topics. Each note was converted from an executed Jupyter notebook with cell outputs preserved — you see both the code and its result. Every Python topic has a C# counterpart covering the same concepts in that language.
 
 ## Topic Map
 
 | # | Topic | Python | C\# |
 |---|-------|--------|------|
-| 01 | Basics (variables, types, operators, I/O) | [[01_Basics|Python]] | [[cs-01_Basics|C#]] |
-| 02 | Strings (manipulation, formatting, regex) | [[02_Strings|Python]] | [[cs-02_Strings|C#]] |
-| 03 | Control Flow (if/else, loops, pattern matching) | [[03_Control_Flow|Python]] | [[cs-03_Control_Flow|C#]] |
-| 04 | Functions (lambdas, closures, decorators/delegates) | [[04_Functions|Python]] | [[cs-04_Functions|C#]] |
-| 05 | Collections (lists, dicts, sets, LINQ) | [[05_Collections|Python]] | [[cs-05_Collections|C#]] |
-| 06 | OOP (classes, inheritance, polymorphism) | [[06_OOP|Python]] | [[cs-06_OOP|C#]] |
-| 07 | Generics and LINQ / Comprehensions | [[07_Generics_LINQ|Python]] | [[cs-07_Generics_LINQ|C#]] |
-| 08 | Error Handling (exceptions, try/catch) | [[08_ErrorHandling|Python]] | [[cs-08_ErrorHandling|C#]] |
-| 09 | File I/O and Serialization (JSON, CSV) | [[09_FileIO_Serialization|Python]] | [[cs-09_FileIO_Serialization|C#]] |
-| 10 | DateTime, Math, and Utilities | [[10_DateTimeMathUtils|Python]] | [[cs-10_DateTimeMathUtils|C#]] |
-| 11 | Async and Concurrency | [[11_AsyncConcurrency|Python]] | [[cs-11_AsyncConcurrency|C#]] |
-| 12 | Testing (unit tests, mocking) | [[12_Testing|Python]] | [[cs-12_Testing|C#]] |
-| 13 | Web APIs (HTTP clients and servers) | [[13_WebAPIs|Python]] | [[cs-13_WebAPIs|C#]] |
-| 14 | Database Access (SQL, ORM, connections) | [[14_Database|Python]] | [[cs-14_Database|C#]] |
-| 15 | GCP (BigQuery, GCS, Pub/Sub) | [[15_GCP|Python]] | [[cs-15_GCP|C#]] |
-| 16 | Design Patterns (singleton, factory, observer) | [[16_DesignPatterns|Python]] | [[cs-16_DesignPatterns|C#]] |
+| 01 | Basics (variables, types, operators, I/O) | [[01_py_basics|Python]] | [[01_cs_basics|C#]] |
+| 02 | Strings (manipulation, formatting, regex) | [[02_py_strings|Python]] | [[02_cs_strings|C#]] |
+| 03 | Control Flow (if/else, loops, pattern matching) | [[03_py_control_flow|Python]] | [[03_cs_control_flow|C#]] |
+| 04 | Functions (lambdas, closures, decorators/delegates) | [[04_py_functions|Python]] | [[04_cs_functions|C#]] |
+| 05 | Collections (lists, dicts, sets, LINQ) | [[05_py_collections|Python]] | [[05_cs_collections|C#]] |
+| 06 | OOP (classes, inheritance, polymorphism) | [[06_py_oop|Python]] | [[06_cs_oop|C#]] |
+| 07 | Generics and LINQ / Comprehensions | [[07_py_generics_linq|Python]] | [[07_cs_generics_linq|C#]] |
+| 08 | Error Handling (exceptions, try/catch) | [[08_py_errorhandling|Python]] | [[08_cs_errorhandling|C#]] |
+| 09 | File I/O and Serialization (JSON, CSV) | [[09_py_fileio_serialization|Python]] | [[09_cs_fileio_serialization|C#]] |
+| 10 | DateTime, Math, and Utilities | [[10_py_datetimemathutils|Python]] | [[10_cs_datetimemathutils|C#]] |
+| 11 | Async and Concurrency | [[11_py_asyncconcurrency|Python]] | [[11_cs_asyncconcurrency|C#]] |
+| 12 | Testing (unit tests, mocking) | [[12_py_testing|Python]] | [[12_cs_testing|C#]] |
+| 13 | Web APIs (HTTP clients and servers) | [[13_py_webapis|Python]] | [[13_cs_webapis|C#]] |
+| 14 | Database Access (SQL, ORM, connections) | [[14_py_database|Python]] | [[14_cs_database|C#]] |
+| 15 | GCP (BigQuery, GCS, Pub/Sub) | [[15_py_gcp|Python]] | [[15_cs_gcp|C#]] |
+| 16 | Design Patterns (singleton, factory, observer) | [[16_py_designpatterns|Python]] | [[16_cs_designpatterns|C#]] |
+| 17 | Performance & Code Quality (profiling, Big-O, linting) | [[17_py_performance_quality|Python]] | [[17_cs_performance_quality|C#]] |
 
 ## How These Notes Work
 
@@ -48,36 +49,6 @@ Each note contains:
 - **Explanatory markdown** — headings, descriptions, and context between cells
 
 The Python and C# notes for each topic are tightly paired — they cover the same concepts, in the same order, allowing side-by-side comparison across languages.
-
-## Python — Pandas vs Polars
-
-Side-by-side Pandas and Polars references across 10 topics. Full index: [[pandas-polars-index]]
-
-| # | Topic | Note |
-|---|-------|------|
-| 01 | Foundations & I/O (Series, DataFrames, types, CSV/Parquet) | [[01_foundations_io]] |
-| 02 | Explore, Select & Filter (head/tail, describe, where, isin) | [[02_explore_select_filter]] |
-| 03 | Transforms, Expressions & Chaining (with_columns, when/then) | [[03_transforms_expressions_chaining]] |
-| 04 | Missing Data, Strings & DateTime (nulls, .str, .dt, timezones) | [[04_missing_strings_datetime]] |
-| 05 | Grouping, Aggregation & Windows (groupby, over, rolling, shift) | [[05_grouping_windows]] |
-| 06 | Combining & Reshaping (joins, concat, pivot, melt, explode) | [[06_combining_reshaping]] |
-| 07 | Lazy API & Performance (lazy/collect, query plan, benchmarks) | [[07_lazy_performance]] |
-| 08 | Advanced Types & Interop (categoricals, Arrow, zero-copy) | [[08_types_interop]] |
-| 09 | Visualization & SQL (matplotlib, seaborn, SQLContext, DuckDB) | [[09_visualization_sql]] |
-| 10 | Project, Testing & Migration (end-to-end, validation, migration guide) | [[10_project_testing_migration]] |
-
-## Python — Data Engineering
-
-Specialized Python references for data engineering tasks. These complement the 16-topic paired notes above with deeper coverage of pipeline-specific concerns.
-
-| Note | Description |
-|------|-------------|
-| [[fastapi-and-polars]] | FastAPI for building data APIs; Polars for high-performance DataFrame operations |
-| [[parquet-files]] | Reading, writing, and partitioning Parquet files with PyArrow and pandas |
-| [[python-pipeline-execution]] | Running Python pipelines: subprocess, multiprocessing, async execution patterns |
-| [[python-virtual-environments]] | venv, virtualenv, pip, requirements.txt, pyproject.toml, dependency management |
-| [[data-formats-and-serialization]] | JSON, CSV, Parquet, Avro, Protobuf, Pickle — reading, writing, and schema evolution |
-| [[database-connections]] | Connection string recipes: pyodbc, SQLAlchemy, BigQuery client, Firestore, psycopg2 |
 
 ## Comparison Tables
 
@@ -91,16 +62,12 @@ Side-by-side language and tool comparisons.
 
 ## All Notebook Notes
 
-**Python:** [[01_Basics]] | [[02_Strings]] | [[03_Control_Flow]] | [[04_Functions]] | [[05_Collections]] | [[06_OOP]] | [[07_Generics_LINQ]] | [[08_ErrorHandling]] | [[09_FileIO_Serialization]] | [[10_DateTimeMathUtils]] | [[11_AsyncConcurrency]] | [[12_Testing]] | [[13_WebAPIs]] | [[14_Database]] | [[15_GCP]] | [[16_DesignPatterns]]
+**Python:** [[01_py_basics]] | [[02_py_strings]] | [[03_py_control_flow]] | [[04_py_functions]] | [[05_py_collections]] | [[06_py_oop]] | [[07_py_generics_linq]] | [[08_py_errorhandling]] | [[09_py_fileio_serialization]] | [[10_py_datetimemathutils]] | [[11_py_asyncconcurrency]] | [[12_py_testing]] | [[13_py_webapis]] | [[14_py_database]] | [[15_py_gcp]] | [[16_py_designpatterns]] | [[17_py_performance_quality]]
 
-**Pandas vs Polars:** [[01_foundations_io]] | [[02_explore_select_filter]] | [[03_transforms_expressions_chaining]] | [[04_missing_strings_datetime]] | [[05_grouping_windows]] | [[06_combining_reshaping]] | [[07_lazy_performance]] | [[08_types_interop]] | [[09_visualization_sql]] | [[10_project_testing_migration]]
-
-**C#:** [[cs-01_Basics]] | [[cs-02_Strings]] | [[cs-03_Control_Flow]] | [[cs-04_Functions]] | [[cs-05_Collections]] | [[cs-06_OOP]] | [[cs-07_Generics_LINQ]] | [[cs-08_ErrorHandling]] | [[cs-09_FileIO_Serialization]] | [[cs-10_DateTimeMathUtils]] | [[cs-11_AsyncConcurrency]] | [[cs-12_Testing]] | [[cs-13_WebAPIs]] | [[cs-14_Database]] | [[cs-15_GCP]] | [[cs-16_DesignPatterns]]
+**C#:** [[01_cs_basics]] | [[02_cs_strings]] | [[03_cs_control_flow]] | [[04_cs_functions]] | [[05_cs_collections]] | [[06_cs_oop]] | [[07_cs_generics_linq]] | [[08_cs_errorhandling]] | [[09_cs_fileio_serialization]] | [[10_cs_datetimemathutils]] | [[11_cs_asyncconcurrency]] | [[12_cs_testing]] | [[13_cs_webapis]] | [[14_cs_database]] | [[15_cs_gcp]] | [[16_cs_designpatterns]] | [[17_cs_performance_quality]]
 
 ## Cross-References
 
 - [[sql-python-csharp-transforms]] — Side-by-side data transformations in SQL, Python, and C#
-- [[database-connections]] — Connection string recipes for all platforms
 - [[rest-api-design-and-consumption]] — REST API patterns (language-agnostic)
-- [[data-formats-and-serialization]] — Data serialization in pipeline context
 - [[dbt-index]] — dbt uses Python for custom models and macros

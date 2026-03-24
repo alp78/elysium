@@ -33,7 +33,7 @@ The ability to express the same transformation in SQL, Python, and C# is what ma
 > Transform data as close to its source as possible, and as late as you can get away with. SQL transformations in the database are almost always faster than pulling data to Python and transforming there. But Python is necessary when crossing system boundaries (API → DB) or when using libraries that don't exist in SQL (scipy, statsmodels, scikit-learn).
 
 > [!info] Context for This Reference
-> SQL examples use SQL Server T-SQL dialect. Python examples use pandas (the standard for data engineering; see also Polars for large-scale pipelines). C# examples use LINQ, which is idiomatic for the application/dashboard layer. For [[database-connections|connection recipes]], see the database connections note.
+> SQL examples use SQL Server T-SQL dialect. Python examples use pandas (the standard for data engineering; see also Polars for large-scale pipelines). C# examples use LINQ, which is idiomatic for the application/dashboard layer. For connection recipes, see the database connections note.
 
 ## Window Functions
 
@@ -353,10 +353,10 @@ Convert.ToDecimal(obj);                 // throws on failure
 
 ## Related Notes
 
-- [[database-connections]] — Connection string recipes for pyodbc, SQLAlchemy, C# SqlClient, PowerShell, sqlcmd
+- database connections — Connection string recipes for pyodbc, SQLAlchemy, C# SqlClient, PowerShell, sqlcmd
 - [[date-and-time-handling]] — Date arithmetic, timezone conversion, SQL DATEADD/DATEDIFF in all languages
 - [[awk-data-processing]] — JSON and CSV file processing in Bash, Python, PowerShell
-- [[parquet-files]] — Writing Parquet output from Python transforms
+- parquet files — Writing Parquet output from Python transforms
 - [[serialization-formats]] — Format decision matrix for pipeline output
 - [[idempotent-pipeline-design]] — Pipeline design patterns for the transforms covered here
 
