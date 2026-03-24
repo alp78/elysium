@@ -178,7 +178,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![10_testing_migration output 1](10_testing_migration_files/output_1.png)
+![Chart](/static/pandas-polars/test_img_01.png)
 
 ---
 # Part 2: Testing & Debugging

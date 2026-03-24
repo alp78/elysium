@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<script type="module">import "https://cdn.plot.ly/plotly-3.4.0.min"</script>
+<style>body { margin: 0; background: #1a1b26; }</style>
+</head><body>
+<div>            <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script><script>if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}</script>                <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.4.0.min.js" integrity="sha256-KEmPoupLpFyGMyGAiOsiNDbKDKAvxXAn/W+oQa0ZAfk=" crossorigin="anonymous"></script>                <div id="e8b35210-21e0-4ef8-a0ef-9cc26cf23d2c" class="plotly-graph-div" style="height:525px; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("e8b35210-21e0-4ef8-a0ef-9cc26cf23d2c")) {                    Plotly.newPlot(                        "e8b35210-21e0-4ef8-a0ef-9cc26cf23d2c",                        [{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"hole":0,"hovertemplate":"sector=%{label}\u003cbr\u003ecount=%{value}\u003cextra\u003e\u003c\u002fextra\u003e","labels":["Basic Materials","Communication Services","Consumer Cyclical","Consumer Defensive","Energy","Financial Services","Healthcare","Industrials","Technology","Utilities"],"legendgroup":"","name":"","showlegend":true,"values":{"dtype":"i1","bdata":"BgwSDBggDxYaAg=="},"type":"pie"}],                        {"template":{"layout":{"colorway":["#7aa2f7","#9ece6a","#e0af68","#f7768e","#bb9af7","#7dcfff","#73daca","#ff9e64","#2ac3de","#b4f9f8"],"font":{"color":"#a9b1d6","family":"JetBrains Mono, Consolas, monospace"},"hoverlabel":{"bgcolor":"#24283b","bordercolor":"#3b4261","font":{"color":"#c0caf5"}},"legend":{"bgcolor":"rgba(0,0,0,0)","bordercolor":"#3b4261"},"paper_bgcolor":"#1a1b26","plot_bgcolor":"#1a1b26","title":{"font":{"color":"#c0caf5","size":16}},"xaxis":{"gridcolor":"#292e42","linecolor":"#3b4261","zerolinecolor":"#3b4261"},"yaxis":{"gridcolor":"#292e42","linecolor":"#3b4261","zerolinecolor":"#3b4261"}}},"legend":{"tracegroupgap":0},"title":{"text":"Stocks per Sector"}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('e8b35210-21e0-4ef8-a0ef-9cc26cf23d2c');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };            </script>        </div>
+</body></html>
