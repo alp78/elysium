@@ -4,7 +4,7 @@ type: index
 category: navigation
 technology: []
 tags: []
-aliases: [Home, Main Dashboard, Start Here, Index, Elysium]
+aliases: [Home, Main Dashboard, Start Here, Elysium]
 keywords: [dashboard, home, index, navigation, start here, overview, data engineering, knowledge base]
 description: "Elysium data engineering knowledge base."
 related: []

@@ -1,558 +1,661 @@
-import { ContentDetails, HeadingIndex } from "../../plugins/emitters/contentIndex"
-import { removeAllChildren } from "./util"
-import { FullSlug, resolveRelative } from "../../util/path"
+import FlexSearch from "flexsearch"
+import { ContentDetails } from "../../plugins/emitters/contentIndex"
+import { registerEscapeHandler, removeAllChildren } from "./util"
+import { FullSlug, normalizeRelativeURLs, resolveRelative } from "../../util/path"
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface SearchDoc {
+interface Item {
+  id: number
   slug: FullSlug
   title: string
   content: string
-  contentLower: string
-  titleLower: string
   tags: string[]
-  /** Individual lines (split on \n) for AND same-line matching */
-  lines: string[]
-  headings: HeadingIndex[]
+  [key: string]: any
 }
 
-interface ParsedQuery {
-  terms: string[]
-  excludeTerms: string[]
-  operator: "AND" | "OR"
-  tagFilters: string[]
-  phraseFilters: string[]
-  pathFilter: string | null
+type SearchType = "basic" | "tags"
+
+// ---------------------------------------------------------------------------
+// Term aliases — normalize special-character terms before indexing & querying
+// ---------------------------------------------------------------------------
+
+const TERM_ALIASES: Record<string, string> = {
+  "c#": "csharp",
+  "f#": "fsharp",
+  "c++": "cplusplus",
+  ".net": "dotnet",
 }
+
+function applyAliases(text: string): string {
+  let result = text
+  for (const [from, to] of Object.entries(TERM_ALIASES)) {
+    // Case-insensitive whole-word-ish replacement
+    const escaped = from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    result = result.replace(new RegExp(escaped, "gi"), to)
+  }
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// Encoder — technical-documentation-aware tokenizer
+// ---------------------------------------------------------------------------
+
+const encoder = (str: string): string[] => {
+  const tokens: string[] = []
+  const lower = applyAliases(str).toLowerCase()
+
+  // Split on whitespace first
+  const rawTokens = lower.split(/\s+/).filter((t) => t.length > 0)
+
+  for (const raw of rawTokens) {
+    tokens.push(raw)
+
+    // Split camelCase/PascalCase: "DataFrame" → "data", "frame"
+    const camelParts = raw
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .toLowerCase()
+      .split(" ")
+      .filter((p) => p.length > 1)
+    if (camelParts.length > 1) {
+      tokens.push(...camelParts)
+    }
+
+    // Split on technical separators: "t-sql" → "t", "sql"; "file_io" → "file", "io"
+    const subParts = raw.split(/[-_/.:]/).filter((p) => p.length > 1)
+    if (subParts.length > 1) {
+      tokens.push(...subParts)
+    }
+
+    // Handle CJK characters — each as individual token
+    for (const char of raw) {
+      const code = char.codePointAt(0)!
+      const isCJK =
+        (code >= 0x3040 && code <= 0x309f) ||
+        (code >= 0x30a0 && code <= 0x30ff) ||
+        (code >= 0x4e00 && code <= 0x9fff) ||
+        (code >= 0xac00 && code <= 0xd7af) ||
+        (code >= 0x20000 && code <= 0x2a6df)
+      if (isCJK) tokens.push(char)
+    }
+  }
+
+  // Deduplicate
+  return [...new Set(tokens)]
+}
+
+// ---------------------------------------------------------------------------
+// FlexSearch index — per-field configuration
+// ---------------------------------------------------------------------------
+
+let index = new FlexSearch.Document<Item>({
+  encode: encoder,
+  cache: 100,
+  document: {
+    id: "id",
+    tag: "tags",
+    index: [
+      {
+        field: "title",
+        tokenize: "forward",
+        resolution: 9,
+      },
+      {
+        field: "content",
+        tokenize: "forward",
+        resolution: 5,
+      },
+      {
+        field: "tags",
+        tokenize: "forward",
+        resolution: 9,
+      },
+    ],
+  },
+})
 
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
-let allDocs: SearchDoc[] = []
-let built = false
-
-const tagInclude = new Set<string>()
-const tagExclude = new Set<string>()
-
+let searchType: SearchType = "basic"
+let currentSearchTerm: string = ""
 let searchMode: "AND" | "OR" = "AND"
-let tagMode: "AND" | "OR" = "AND"
+
+const p = new DOMParser()
+const fetchContentCache: Map<FullSlug, Element[]> = new Map()
+const contextWindowWords = 30
+const numSearchResults = 12
+const numTagResults = 5
 
 // ---------------------------------------------------------------------------
-// Build
+// Cross-field AND search
 // ---------------------------------------------------------------------------
 
-function buildDocs(data: ContentIndex): void {
-  if (built) return
-  built = true
-  allDocs = []
-  for (const [slug, d] of Object.entries<ContentDetails>(data)) {
-    const content = d.content ?? ""
-    const title = d.title ?? slug
-    allDocs.push({
-      slug: slug as FullSlug,
-      title,
-      content,
-      contentLower: content.toLowerCase(),
-      titleLower: title.toLowerCase(),
-      tags: d.tags ?? [],
-      lines: content
-        .split(/\n/)
-        .map((l) => l.trim().toLowerCase())
-        .filter((l) => l.length > 0),
-      headings: d.headings ?? [],
+/**
+ * Search each term separately across all fields, then intersect IDs.
+ * This ensures "python datetime" matches even if "python" is only in the
+ * title and "datetime" is only in the content.
+ */
+async function searchCrossFieldAND(
+  terms: string[],
+  fields: string[],
+  limit: number,
+): Promise<number[]> {
+  if (terms.length === 0) return []
+
+  const perTermIds: Set<number>[] = []
+
+  for (const term of terms) {
+    const results = await index.searchAsync({
+      query: applyAliases(term),
+      limit: 10000,
+      index: fields,
     })
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Query parser
-// ---------------------------------------------------------------------------
-
-function parseQuery(raw: string): ParsedQuery {
-  const result: ParsedQuery = {
-    terms: [],
-    excludeTerms: [],
-    operator: searchMode,
-    tagFilters: [],
-    phraseFilters: [],
-    pathFilter: null,
-  }
-
-  let text = raw.trim()
-  if (!text) return result
-
-  if (/\bOR\b/.test(text)) {
-    result.operator = "OR"
-    text = text.replace(/\bOR\b/g, " ")
-  } else if (/\bAND\b/.test(text)) {
-    result.operator = "AND"
-    text = text.replace(/\bAND\b/g, " ")
-  }
-
-  text = text.replace(/"([^"]+)"/g, (_, p: string) => {
-    result.phraseFilters.push(p.toLowerCase())
-    return ""
-  })
-
-  // Tag filter: #tag or tag:#tag — but NOT "c#" (# must be at word start)
-  text = text.replace(/(?:^|\s)(?:tag:)?#(\S+)/g, (match, t: string) => {
-    result.tagFilters.push(t.toLowerCase())
-    // preserve leading whitespace that was part of the match
-    return match.startsWith(" ") ? " " : ""
-  })
-
-  text = text.replace(/path:(\S+)/g, (_, p: string) => {
-    result.pathFilter = p.toLowerCase()
-    return ""
-  })
-
-  text = text.replace(/-(\S+)/g, (_, t: string) => {
-    result.excludeTerms.push(t.toLowerCase())
-    return ""
-  })
-
-  result.terms = text
-    .split(/\s+/)
-    .map((t) => t.toLowerCase())
-    .filter((t) => t.length > 0)
-
-  return result
-}
-
-// ---------------------------------------------------------------------------
-// Search — plain brute force, no library
-// ---------------------------------------------------------------------------
-
-/** Word-boundary regex cache to avoid re-creating on every call. */
-const wordRegexCache = new Map<string, RegExp>()
-function wordRegex(term: string): RegExp {
-  let re = wordRegexCache.get(term)
-  if (!re) {
-    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    // Boundary at the START only — so "python" won't match inside
-    // "cpython" but "datetime" WILL match "datetimemathutils".
-    // For terms starting with non-word chars (like "#"), use lookahead.
-    const startsWord = /^\w/.test(term)
-    const prefix = startsWord ? "\\b" : "(?<=\\s|^|[^\\w])"
-    re = new RegExp(`${prefix}${escaped}`, "i")
-    wordRegexCache.set(term, re)
-  }
-  return re
-}
-
-function lineHasTerm(line: string, t: string): boolean {
-  return wordRegex(t).test(line)
-}
-
-function docHasTerm(d: SearchDoc, t: string): boolean {
-  const re = wordRegex(t)
-  return re.test(d.titleLower) || re.test(d.contentLower)
-}
-
-function runSearch(query: string): SearchDoc[] {
-  const parsed = parseQuery(query)
-
-  const allTagInc = new Set([...tagInclude, ...parsed.tagFilters])
-  const allTagExc = new Set([...tagExclude])
-  const hasText = parsed.terms.length > 0 || parsed.phraseFilters.length > 0
-
-  // Start from ALL docs
-  let docs = allDocs
-
-  // ── Text filter ──────────────────────────────────────────
-  if (hasText) {
-    if (parsed.operator === "AND") {
-      if (parsed.terms.length >= 2) {
-        // ALL terms must appear on the SAME LINE (word-boundary match).
-        docs = docs.filter((d) =>
-          d.lines.some((line) => parsed.terms.every((t) => lineHasTerm(line, t))),
-        )
-      } else if (parsed.terms.length === 1) {
-        // Single term: word-boundary match anywhere in the doc
-        docs = docs.filter((d) => docHasTerm(d, parsed.terms[0]))
-      }
-    } else {
-      // OR: at least one term must be present anywhere in the doc
-      if (parsed.terms.length > 0) {
-        docs = docs.filter((d) => parsed.terms.some((t) => docHasTerm(d, t)))
-      }
+    const ids = new Set<number>()
+    for (const r of results) {
+      for (const id of r.result) ids.add(id as number)
     }
-  } else if (allTagInc.size === 0 && allTagExc.size === 0) {
-    return []
+    perTermIds.push(ids)
   }
 
-  // ── Phrase filter ────────────────────────────────────────
-  for (const phrase of parsed.phraseFilters) {
-    docs = docs.filter((d) => d.contentLower.includes(phrase) || d.titleLower.includes(phrase))
+  // Intersect: only IDs present in ALL term result sets
+  if (perTermIds.length === 0) return []
+  let intersection = perTermIds[0]
+  for (let i = 1; i < perTermIds.length; i++) {
+    intersection = new Set([...intersection].filter((id) => perTermIds[i].has(id)))
   }
 
-  // ── Tag include ──────────────────────────────────────────
-  if (allTagInc.size > 0) {
-    const tags = [...allTagInc]
-    if (tagMode === "AND") {
-      docs = docs.filter((d) => tags.every((t) => d.tags.some((dt) => dt.toLowerCase() === t)))
-    } else {
-      docs = docs.filter((d) => tags.some((t) => d.tags.some((dt) => dt.toLowerCase() === t)))
+  return [...intersection].slice(0, limit)
+}
+
+/**
+ * Search with OR: merge all results from a single multi-term query.
+ */
+async function searchCrossFieldOR(
+  queryStr: string,
+  fields: string[],
+  limit: number,
+): Promise<number[]> {
+  const results = await index.searchAsync({
+    query: applyAliases(queryStr),
+    limit,
+    index: fields,
+    suggest: true,
+  })
+
+  const allIds = new Set<number>()
+  // Prioritize: title first, then content, then tags
+  const fieldOrder = ["title", "content", "tags"]
+  for (const field of fieldOrder) {
+    const fieldResult = results.find((r) => r.field === field)
+    if (fieldResult) {
+      for (const id of fieldResult.result) allIds.add(id as number)
     }
   }
 
-  // ── Tag exclude ──────────────────────────────────────────
-  if (allTagExc.size > 0) {
-    const tags = [...allTagExc]
-    docs = docs.filter((d) => !tags.some((t) => d.tags.some((dt) => dt.toLowerCase() === t)))
-  }
+  return [...allIds].slice(0, limit)
+}
 
-  // ── Path filter ──────────────────────────────────────────
-  if (parsed.pathFilter) {
-    const pf = parsed.pathFilter
-    docs = docs.filter((d) => d.slug.toLowerCase().includes(pf))
-  }
+// ---------------------------------------------------------------------------
+// Tokenize & highlight helpers
+// ---------------------------------------------------------------------------
 
-  // ── NOT terms ────────────────────────────────────────────
-  for (const t of parsed.excludeTerms) {
-    docs = docs.filter((d) => !docHasTerm(d, t))
+const tokenizeTerm = (term: string) => {
+  const tokens = term.split(/\s+/).filter((t) => t.trim() !== "")
+  const tokenLen = tokens.length
+  if (tokenLen > 1) {
+    for (let i = 1; i < tokenLen; i++) {
+      tokens.push(tokens.slice(0, i + 1).join(" "))
+    }
   }
+  return tokens.sort((a, b) => b.length - a.length)
+}
 
-  // ── Sort by relevance ────────────────────────────────────
-  if (hasText) {
-    const allTerms = [...parsed.terms, ...parsed.phraseFilters]
-    docs.sort((a, b) => {
-      let sa = 0
-      let sb = 0
-      for (const t of allTerms) {
-        const re = wordRegex(t)
-        if (re.test(a.titleLower)) sa += 50
-        if (re.test(b.titleLower)) sb += 50
-        // count line hits
-        sa += a.lines.filter((l) => re.test(l)).length
-        sb += b.lines.filter((l) => re.test(l)).length
+function highlight(searchTerm: string, text: string, trim?: boolean) {
+  const tokenizedTerms = tokenizeTerm(searchTerm)
+  let tokenizedText = text.split(/\s+/).filter((t) => t !== "")
+
+  let startIndex = 0
+  let endIndex = tokenizedText.length - 1
+  if (trim) {
+    const includesCheck = (tok: string) =>
+      tokenizedTerms.some((term) => tok.toLowerCase().startsWith(term.toLowerCase()))
+    const occurrencesIndices = tokenizedText.map(includesCheck)
+
+    let bestSum = 0
+    let bestIndex = 0
+    for (let i = 0; i < Math.max(tokenizedText.length - contextWindowWords, 0); i++) {
+      const window = occurrencesIndices.slice(i, i + contextWindowWords)
+      const windowSum = window.reduce((total, cur) => total + (cur ? 1 : 0), 0)
+      if (windowSum >= bestSum) {
+        bestSum = windowSum
+        bestIndex = i
       }
-      return sb - sa
-    })
+    }
+
+    startIndex = Math.max(bestIndex - contextWindowWords, 0)
+    endIndex = Math.min(startIndex + 2 * contextWindowWords, tokenizedText.length - 1)
+    tokenizedText = tokenizedText.slice(startIndex, endIndex)
   }
 
-  return docs.slice(0, 200)
-}
-
-// ---------------------------------------------------------------------------
-// Rendering helpers
-// ---------------------------------------------------------------------------
-
-function escHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-}
-
-function escRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
-
-function highlight(text: string, terms: string[]): string {
-  let r = escHtml(text)
-  for (const t of terms.filter((t) => t.length > 1)) {
-    r = r.replace(new RegExp(`(${escRe(escHtml(t))})`, "gi"), "<mark>$1</mark>")
-  }
-  return r
-}
-
-function getSnippet(doc: SearchDoc, terms: string[], maxLen = 150): string {
-  if (terms.length === 0) return escHtml(doc.content.slice(0, maxLen))
-
-  let best = doc.lines[0] ?? doc.content.slice(0, 400)
-  let bestScore = 0
-  for (const b of doc.lines) {
-    const score = terms.reduce((s, t) => s + (b.includes(t) ? 1 : 0), 0)
-    if (score > bestScore) { bestScore = score; best = b }
-  }
-
-  let start = 0
-  for (const t of terms) {
-    const i = best.indexOf(t)
-    if (i !== -1) { start = Math.max(0, i - 40); break }
-  }
-
-  const prefix = start > 0 ? "…" : ""
-  let snippet = prefix + best.slice(start, start + maxLen)
-  if (best.length > start + maxLen) snippet += "…"
-  return highlight(snippet, terms)
-}
-
-function slugToFolder(slug: FullSlug): string {
-  const parts = slug.split("/")
-  if (parts.length === 1) return "Notes"
-  return parts[0].replace(/^\d+-/, "").replace(/-/g, " ")
-}
-
-function findAnchor(doc: SearchDoc, terms: string[]): string {
-  if (terms.length === 0 || doc.headings.length === 0) return ""
-
-  let bestBlockIdx = 0
-  let bestScore = 0
-  for (let i = 0; i < doc.lines.length; i++) {
-    const score = terms.reduce((s, t) => s + (doc.lines[i].includes(t) ? 1 : 0), 0)
-    if (score > bestScore) { bestScore = score; bestBlockIdx = i }
-  }
-  if (bestScore === 0) return ""
-
-  const blockSnippet = doc.lines[bestBlockIdx].slice(0, 60)
-  const contentNorm = doc.contentLower.replace(/\s+/g, " ")
-  const blockOffset = contentNorm.indexOf(blockSnippet)
-  if (blockOffset === -1) return ""
-
-  let bestHeading: HeadingIndex | null = null
-  for (const h of doc.headings) {
-    const hText = h.text.toLowerCase().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    const hPos = contentNorm.indexOf(hText)
-    if (hPos !== -1 && hPos <= blockOffset) bestHeading = h
-  }
-
-  return bestHeading ? `#${bestHeading.id}` : ""
-}
-
-// ---------------------------------------------------------------------------
-// Render results
-// ---------------------------------------------------------------------------
-
-function renderResults(
-  docs: SearchDoc[],
-  query: string,
-  currentSlug: FullSlug,
-  container: HTMLElement,
-): void {
-  removeAllChildren(container)
-
-  if (docs.length === 0) {
-    const el = document.createElement("div")
-    el.className = "search-empty"
-    el.textContent = query.trim() || tagInclude.size > 0 ? "No results found" : "Start typing…"
-    container.appendChild(el)
-    return
-  }
-
-  const parsed = parseQuery(query)
-  const terms = [...parsed.terms, ...parsed.phraseFilters]
-  const hasText = terms.length > 0
-  const useTagGroups = !hasText && tagMode === "OR" && tagInclude.size > 1
-
-  // Group results
-  const groups = new Map<string, SearchDoc[]>()
-  if (useTagGroups) {
-    for (const doc of docs) {
-      for (const activeTag of tagInclude) {
-        if (doc.tags.some((dt) => dt.toLowerCase().includes(activeTag))) {
-          const label = `#${activeTag}`
-          if (!groups.has(label)) groups.set(label, [])
-          const arr = groups.get(label)!
-          if (!arr.some((d) => d.slug === doc.slug)) arr.push(doc)
+  const slice = tokenizedText
+    .map((tok) => {
+      for (const searchTok of tokenizedTerms) {
+        if (tok.toLowerCase().includes(searchTok.toLowerCase())) {
+          const regex = new RegExp(searchTok.toLowerCase(), "gi")
+          return tok.replace(regex, `<span class="highlight">$&</span>`)
         }
       }
-    }
-  } else {
-    for (const doc of docs) {
-      const folder = slugToFolder(doc.slug)
-      if (!groups.has(folder)) groups.set(folder, [])
-      groups.get(folder)!.push(doc)
-    }
-  }
+      return tok
+    })
+    .join(" ")
 
-  // Render groups
-  for (const [groupName, group] of groups) {
-    const groupEl = document.createElement("div")
-    groupEl.className = "result-group"
-
-    const header = document.createElement("div")
-    header.className = "result-group-header"
-    header.textContent = groupName
-    groupEl.appendChild(header)
-
-    for (const doc of group) {
-      const anchor = hasText ? findAnchor(doc, terms) : ""
-      const a = document.createElement("a")
-      a.className = "result-item"
-      a.href = resolveRelative(currentSlug, doc.slug) + anchor
-
-      const snippet = getSnippet(doc, terms)
-      const tagsHtml = doc.tags
-        .slice(0, 5)
-        .map((t) => `<span class="result-tag${tagInclude.has(t) ? " active-tag" : ""}">#${escHtml(t)}</span>`)
-        .join("")
-
-      a.innerHTML = `
-        <span class="result-title">${highlight(doc.title, terms)}</span>
-        ${snippet ? `<span class="result-snippet">${snippet}</span>` : ""}
-        ${tagsHtml ? `<span class="result-tags">${tagsHtml}</span>` : ""}
-      `
-      a.addEventListener("click", () => container.classList.remove("active"))
-      groupEl.appendChild(a)
-    }
-    container.appendChild(groupEl)
-  }
+  return `${startIndex === 0 ? "" : "..."}${slice}${
+    endIndex === tokenizedText.length - 1 ? "" : "..."
+  }`
 }
 
-// ---------------------------------------------------------------------------
-// Tag browser
-// ---------------------------------------------------------------------------
+function highlightHTML(searchTerm: string, el: HTMLElement) {
+  const parser = new DOMParser()
+  const tokenizedTerms = tokenizeTerm(searchTerm)
+  const html = parser.parseFromString(el.innerHTML, "text/html")
 
-function setupTagBrowser(
-  tagListEl: HTMLElement,
-  filterBarEl: HTMLElement,
-  tagModeToggle: HTMLButtonElement,
-  onFilterChange: () => void,
-): void {
-  const tagStates = new Map<string, 0 | 1 | 2>()
+  const createHighlightSpan = (text: string) => {
+    const span = document.createElement("span")
+    span.className = "highlight"
+    span.textContent = text
+    return span
+  }
 
-  function sync(): void {
-    tagInclude.clear()
-    tagExclude.clear()
-    for (const [tag, state] of tagStates) {
-      if (state === 1) tagInclude.add(tag)
-      else if (state === 2) tagExclude.add(tag)
+  const highlightTextNodes = (node: Node, term: string) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const nodeText = node.nodeValue ?? ""
+      const regex = new RegExp(term.toLowerCase(), "gi")
+      const matches = nodeText.match(regex)
+      if (!matches || matches.length === 0) return
+      const spanContainer = document.createElement("span")
+      let lastIndex = 0
+      for (const match of matches) {
+        const matchIndex = nodeText.indexOf(match, lastIndex)
+        spanContainer.appendChild(document.createTextNode(nodeText.slice(lastIndex, matchIndex)))
+        spanContainer.appendChild(createHighlightSpan(match))
+        lastIndex = matchIndex + match.length
+      }
+      spanContainer.appendChild(document.createTextNode(nodeText.slice(lastIndex)))
+      node.parentNode?.replaceChild(spanContainer, node)
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if ((node as HTMLElement).classList.contains("highlight")) return
+      Array.from(node.childNodes).forEach((child) => highlightTextNodes(child, term))
     }
   }
 
-  function renderChips(): void {
-    removeAllChildren(filterBarEl)
-    let any = false
-    for (const [tag, state] of tagStates) {
-      if (state === 0) continue
-      any = true
-      const chip = document.createElement("span")
-      chip.className = `filter-chip ${state === 1 ? "chip-include" : "chip-exclude"}`
-      const label = document.createElement("span")
-      label.className = "chip-label"
-      label.textContent = `${state === 1 ? "+" : "−"}#${tag}`
-      chip.appendChild(label)
-      const btn = document.createElement("button")
-      btn.className = "chip-remove"
-      btn.type = "button"
-      btn.textContent = "×"
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation()
-        tagStates.set(tag, 0)
-        updatePill(tag, 0)
-        sync(); renderChips(); onFilterChange()
-      })
-      chip.appendChild(btn)
-      filterBarEl.appendChild(chip)
-    }
-    filterBarEl.classList.toggle("has-filters", any)
+  for (const term of tokenizedTerms) {
+    highlightTextNodes(html.body, term)
   }
 
-  function updatePill(tag: string, state: 0 | 1 | 2): void {
-    const pill = tagListEl.querySelector<HTMLElement>(`[data-tag="${tag}"]`)
-    if (!pill) return
-    pill.classList.remove("tag-include", "tag-exclude")
-    if (state === 1) pill.classList.add("tag-include")
-    else if (state === 2) pill.classList.add("tag-exclude")
-  }
-
-  tagListEl.addEventListener("click", (e) => {
-    const pill = (e.target as Element).closest<HTMLElement>(".tag-pill")
-    if (!pill) return
-    const tag = pill.dataset.tag!
-    const cur = tagStates.get(tag) ?? 0
-    const next = ((cur + 1) % 3) as 0 | 1 | 2
-    tagStates.set(tag, next)
-    updatePill(tag, next)
-    sync(); renderChips(); onFilterChange()
-  })
-
-  function syncTagToggle(): void {
-    tagModeToggle.dataset.mode = tagMode
-    tagModeToggle.textContent = tagMode
-  }
-  syncTagToggle()
-
-  tagModeToggle.addEventListener("click", (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    tagMode = tagMode === "AND" ? "OR" : "AND"
-    syncTagToggle()
-    onFilterChange()
-  })
+  return html.body
 }
 
 // ---------------------------------------------------------------------------
 // Setup
 // ---------------------------------------------------------------------------
 
-async function setupSearch(
-  searchEl: Element,
-  currentSlug: FullSlug,
-  data: ContentIndex,
-): Promise<void> {
-  buildDocs(data)
+async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: ContentIndex) {
+  const container = searchElement.querySelector(".search-container") as HTMLElement
+  if (!container) return
 
-  const bar = searchEl.querySelector<HTMLInputElement>(".search-bar")!
-  const resultsPanel = searchEl.querySelector<HTMLElement>(".search-results")!
-  const filterBarEl = searchEl.querySelector<HTMLElement>(".search-filter-bar")!
-  const tagListEl = searchEl.querySelector<HTMLElement>(".tag-list")!
-  const modeToggle = searchEl.querySelector<HTMLButtonElement>(".search-mode-toggle")!
-  const tagModeToggle = searchEl.querySelector<HTMLButtonElement>(".tag-mode-toggle")!
+  const sidebar = container.closest(".sidebar") as HTMLElement | null
 
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null
+  const searchButton = searchElement.querySelector(".search-button") as HTMLButtonElement
+  if (!searchButton) return
 
-  function syncToggle(): void {
-    modeToggle.dataset.mode = searchMode
-    modeToggle.textContent = searchMode
+  const searchBar = searchElement.querySelector(".search-bar") as HTMLInputElement
+  if (!searchBar) return
+
+  const searchLayout = searchElement.querySelector(".search-layout") as HTMLElement
+  if (!searchLayout) return
+
+  const idDataMap = Object.keys(data) as FullSlug[]
+  const appendLayout = (el: HTMLElement) => {
+    searchLayout.appendChild(el)
   }
-  syncToggle()
 
-  function refresh(): void {
-    const query = bar.value
-    const hasInput = query.trim().length > 0 || tagInclude.size > 0 || tagExclude.size > 0
+  const enablePreview = searchLayout.dataset.preview === "true"
+  let preview: HTMLDivElement | undefined = undefined
+  let previewInner: HTMLDivElement | undefined = undefined
+  const results = document.createElement("div")
+  results.className = "results-container"
+  appendLayout(results)
 
-    if (!hasInput) {
-      removeAllChildren(resultsPanel)
-      resultsPanel.classList.remove("active")
+  if (enablePreview) {
+    preview = document.createElement("div")
+    preview.className = "preview-container"
+    appendLayout(preview)
+  }
+
+  function hideSearch() {
+    container.classList.remove("active")
+    searchBar.value = ""
+    if (sidebar) sidebar.style.zIndex = ""
+    removeAllChildren(results)
+    if (preview) {
+      removeAllChildren(preview)
+    }
+    searchLayout.classList.remove("display-results")
+    searchType = "basic"
+    searchButton.focus()
+  }
+
+  function showSearch(searchTypeNew: SearchType) {
+    searchType = searchTypeNew
+    if (sidebar) sidebar.style.zIndex = "1"
+    container.classList.add("active")
+    searchBar.focus()
+  }
+
+  let currentHover: HTMLInputElement | null = null
+  async function shortcutHandler(e: HTMLElementEventMap["keydown"]) {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      e.preventDefault()
+      const searchBarOpen = container.classList.contains("active")
+      searchBarOpen ? hideSearch() : showSearch("basic")
+      return
+    } else if (e.shiftKey && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault()
+      const searchBarOpen = container.classList.contains("active")
+      searchBarOpen ? hideSearch() : showSearch("tags")
+      searchBar.value = "#"
       return
     }
 
-    const docs = runSearch(query)
-    resultsPanel.classList.add("active")
-    renderResults(docs, query, currentSlug, resultsPanel)
-  }
+    if (currentHover) {
+      currentHover.classList.remove("focus")
+    }
 
-  const onToggleClick = (): void => {
-    searchMode = searchMode === "AND" ? "OR" : "AND"
-    syncToggle()
-    refresh()
-  }
-  modeToggle.addEventListener("click", onToggleClick)
-  window.addCleanup(() => modeToggle.removeEventListener("click", onToggleClick))
-
-  const onInput = (): void => {
-    if (debounceTimer) clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(refresh, 150)
-  }
-  bar.addEventListener("input", onInput)
-  window.addCleanup(() => bar.removeEventListener("input", onInput))
-
-  setupTagBrowser(tagListEl, filterBarEl, tagModeToggle, refresh)
-
-  const onKeydown = (e: KeyboardEvent): void => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "k" && !e.shiftKey) {
+    if (!container.classList.contains("active")) return
+    if (e.key === "Enter" && !e.isComposing) {
+      if (results.contains(document.activeElement)) {
+        const active = document.activeElement as HTMLInputElement
+        if (active.classList.contains("no-match")) return
+        await displayPreview(active)
+        active.click()
+      } else {
+        const anchor = document.getElementsByClassName("result-card")[0] as HTMLInputElement | null
+        if (!anchor || anchor.classList.contains("no-match")) return
+        await displayPreview(anchor)
+        anchor.click()
+      }
+    } else if (e.key === "ArrowUp" || (e.shiftKey && e.key === "Tab")) {
       e.preventDefault()
-      bar.focus()
-      bar.select()
-    }
-    if (e.key === "Escape") {
-      resultsPanel.classList.remove("active")
-      bar.blur()
+      if (results.contains(document.activeElement)) {
+        const currentResult = currentHover
+          ? currentHover
+          : (document.activeElement as HTMLInputElement | null)
+        const prevResult = currentResult?.previousElementSibling as HTMLInputElement | null
+        currentResult?.classList.remove("focus")
+        prevResult?.focus()
+        if (prevResult) currentHover = prevResult
+        await displayPreview(prevResult)
+      }
+    } else if (e.key === "ArrowDown" || e.key === "Tab") {
+      e.preventDefault()
+      if (document.activeElement === searchBar || currentHover !== null) {
+        const firstResult = currentHover
+          ? currentHover
+          : (document.getElementsByClassName("result-card")[0] as HTMLInputElement | null)
+        const secondResult = firstResult?.nextElementSibling as HTMLInputElement | null
+        firstResult?.classList.remove("focus")
+        secondResult?.focus()
+        if (secondResult) currentHover = secondResult
+        await displayPreview(secondResult)
+      }
     }
   }
-  document.addEventListener("keydown", onKeydown)
-  window.addCleanup(() => document.removeEventListener("keydown", onKeydown))
 
-  const onOutsideClick = (e: MouseEvent): void => {
-    if (!searchEl.contains(e.target as Node)) {
-      resultsPanel.classList.remove("active")
+  const formatForDisplay = (term: string, id: number) => {
+    const slug = idDataMap[id]
+    return {
+      id,
+      slug,
+      title: searchType === "tags" ? data[slug].title : highlight(term, data[slug].title ?? ""),
+      content: highlight(term, data[slug].content ?? "", true),
+      tags: highlightTags(term.substring(1), data[slug].tags),
     }
   }
-  document.addEventListener("click", onOutsideClick)
-  window.addCleanup(() => document.removeEventListener("click", onOutsideClick))
+
+  function highlightTags(term: string, tags: string[]) {
+    if (!tags || searchType !== "tags") {
+      return []
+    }
+
+    return tags
+      .map((tag) => {
+        if (tag.toLowerCase().includes(term.toLowerCase())) {
+          return `<li><p class="match-tag">#${tag}</p></li>`
+        } else {
+          return `<li><p>#${tag}</p></li>`
+        }
+      })
+      .slice(0, numTagResults)
+  }
+
+  function resolveUrl(slug: FullSlug): URL {
+    return new URL(resolveRelative(currentSlug, slug), location.toString())
+  }
+
+  const resultToHTML = ({ slug, title, content, tags }: Item) => {
+    const htmlTags = tags.length > 0 ? `<ul class="tags">${tags.join("")}</ul>` : ``
+    const itemTile = document.createElement("a")
+    itemTile.classList.add("result-card")
+    itemTile.id = slug
+    itemTile.href = resolveUrl(slug).toString()
+    itemTile.innerHTML = `
+      <h3 class="card-title">${title}</h3>
+      ${htmlTags}
+      <p class="card-description">${content}</p>
+    `
+    itemTile.addEventListener("click", (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      hideSearch()
+    })
+
+    const handler = (event: MouseEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      hideSearch()
+    }
+
+    async function onMouseEnter(ev: MouseEvent) {
+      if (!ev.target) return
+      const target = ev.target as HTMLInputElement
+      await displayPreview(target)
+    }
+
+    itemTile.addEventListener("mouseenter", onMouseEnter)
+    window.addCleanup(() => itemTile.removeEventListener("mouseenter", onMouseEnter))
+    itemTile.addEventListener("click", handler)
+    window.addCleanup(() => itemTile.removeEventListener("click", handler))
+
+    return itemTile
+  }
+
+  async function displayResults(finalResults: Item[]) {
+    removeAllChildren(results)
+    if (finalResults.length === 0) {
+      results.innerHTML = `<a class="result-card no-match">
+          <h3>No results.</h3>
+          <p>Try another search term?</p>
+      </a>`
+    } else {
+      results.append(...finalResults.map(resultToHTML))
+    }
+
+    if (finalResults.length === 0 && preview) {
+      removeAllChildren(preview)
+    } else {
+      const firstChild = results.firstElementChild as HTMLElement
+      firstChild.classList.add("focus")
+      currentHover = firstChild as HTMLInputElement
+      await displayPreview(firstChild)
+    }
+  }
+
+  async function fetchContent(slug: FullSlug): Promise<Element[]> {
+    if (fetchContentCache.has(slug)) {
+      return fetchContentCache.get(slug) as Element[]
+    }
+
+    const targetUrl = resolveUrl(slug).toString()
+    const contents = await fetch(targetUrl)
+      .then((res) => res.text())
+      .then((contents) => {
+        if (contents === undefined) {
+          throw new Error(`Could not fetch ${targetUrl}`)
+        }
+        const html = p.parseFromString(contents ?? "", "text/html")
+        normalizeRelativeURLs(html, targetUrl)
+        return [...html.getElementsByClassName("popover-hint")]
+      })
+
+    fetchContentCache.set(slug, contents)
+    return contents
+  }
+
+  async function displayPreview(el: HTMLElement | null) {
+    if (!searchLayout || !enablePreview || !el || !preview) return
+    const slug = el.id as FullSlug
+    const innerDiv = await fetchContent(slug).then((contents) =>
+      contents.flatMap((el) => [...highlightHTML(currentSearchTerm, el as HTMLElement).children]),
+    )
+    previewInner = document.createElement("div")
+    previewInner.classList.add("preview-inner")
+    previewInner.append(...innerDiv)
+    preview.replaceChildren(previewInner)
+
+    // scroll to longest highlight
+    const highlights = [...preview.getElementsByClassName("highlight")].sort(
+      (a, b) => b.innerHTML.length - a.innerHTML.length,
+    )
+    highlights[0]?.scrollIntoView({ block: "start" })
+  }
+
+  // ── Main search handler ─────────────────────────────────────
+
+  async function onType(e: HTMLElementEventMap["input"]) {
+    if (!searchLayout || !index) return
+    currentSearchTerm = (e.target as HTMLInputElement).value
+    searchLayout.classList.toggle("display-results", currentSearchTerm !== "")
+    searchType = currentSearchTerm.startsWith("#") ? "tags" : "basic"
+
+    let finalIds: number[]
+
+    if (searchType === "tags") {
+      currentSearchTerm = currentSearchTerm.substring(1).trim()
+      const separatorIndex = currentSearchTerm.indexOf(" ")
+      if (separatorIndex !== -1) {
+        // Tag + text search: "#python datetime" → filter by tag "python", search "datetime"
+        const tag = currentSearchTerm.substring(0, separatorIndex)
+        const query = currentSearchTerm.substring(separatorIndex + 1).trim()
+        const searchResults = await index.searchAsync({
+          query: applyAliases(query),
+          limit: Math.max(numSearchResults, 10000),
+          index: ["title", "content"],
+          tag: { tags: tag },
+        })
+        finalIds = []
+        for (const r of searchResults) {
+          for (const id of r.result) {
+            if (!finalIds.includes(id as number)) finalIds.push(id as number)
+          }
+        }
+        finalIds = finalIds.slice(0, numSearchResults)
+        searchType = "basic"
+        currentSearchTerm = query
+      } else {
+        // Pure tag search
+        const searchResults = await index.searchAsync({
+          query: applyAliases(currentSearchTerm),
+          limit: numSearchResults,
+          index: ["tags"],
+        })
+        finalIds = []
+        for (const r of searchResults) {
+          for (const id of r.result) {
+            if (!finalIds.includes(id as number)) finalIds.push(id as number)
+          }
+        }
+      }
+    } else {
+      // Basic text search — use cross-field AND or OR
+      const terms = currentSearchTerm
+        .trim()
+        .split(/\s+/)
+        .filter((t) => t.length > 0)
+
+      if (terms.length === 0) {
+        finalIds = []
+      } else if (searchMode === "AND" && terms.length > 1) {
+        // Cross-field AND: each term must match somewhere across all fields
+        finalIds = await searchCrossFieldAND(terms, ["title", "content", "tags"], numSearchResults)
+
+        // Fallback: if AND returns nothing, try with suggest (partial match)
+        if (finalIds.length === 0) {
+          finalIds = await searchCrossFieldOR(
+            currentSearchTerm,
+            ["title", "content", "tags"],
+            numSearchResults,
+          )
+        }
+      } else {
+        // OR mode or single term
+        finalIds = await searchCrossFieldOR(
+          currentSearchTerm,
+          ["title", "content", "tags"],
+          numSearchResults,
+        )
+      }
+    }
+
+    const finalResults = finalIds.map((id) => formatForDisplay(currentSearchTerm, id))
+    await displayResults(finalResults)
+  }
+
+  document.addEventListener("keydown", shortcutHandler)
+  window.addCleanup(() => document.removeEventListener("keydown", shortcutHandler))
+  searchButton.addEventListener("click", () => showSearch("basic"))
+  window.addCleanup(() => searchButton.removeEventListener("click", () => showSearch("basic")))
+  searchBar.addEventListener("input", onType)
+  window.addCleanup(() => searchBar.removeEventListener("input", onType))
+
+  registerEscapeHandler(container, hideSearch)
+  await fillDocument(data)
+}
+
+// ---------------------------------------------------------------------------
+// Fill index
+// ---------------------------------------------------------------------------
+
+let indexPopulated = false
+async function fillDocument(data: ContentIndex) {
+  if (indexPopulated) return
+  let id = 0
+  const promises: Array<Promise<unknown>> = []
+  for (const [slug, fileData] of Object.entries<ContentDetails>(data)) {
+    promises.push(
+      index.addAsync(id++, {
+        id,
+        slug: slug as FullSlug,
+        title: fileData.title,
+        content: fileData.content,
+        tags: fileData.tags,
+      }),
+    )
+  }
+
+  await Promise.all(promises)
+  indexPopulated = true
 }
 
 // ---------------------------------------------------------------------------
@@ -562,7 +665,8 @@ async function setupSearch(
 document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   const currentSlug = e.detail.url
   const data = await fetchData
-  for (const el of document.getElementsByClassName("search")) {
-    await setupSearch(el, currentSlug, data as ContentIndex)
+  const searchElement = document.getElementsByClassName("search")
+  for (const element of searchElement) {
+    await setupSearch(element, currentSlug, data)
   }
 })
