@@ -7,6 +7,8 @@ import { QuartzEmitterPlugin } from "../types"
 import { toHtml } from "hast-util-to-html"
 import { write } from "./helpers"
 import { i18n } from "../../i18n"
+import MiniSearch from "minisearch"
+import { miniSearchOptions } from "../../util/search"
 
 export type ContentIndexMap = Map<FullSlug, ContentDetails>
 export type ContentDetails = {
@@ -20,6 +22,8 @@ export type ContentDetails = {
   date?: Date
   description?: string
 }
+
+
 
 interface Options {
   enableSiteMap: boolean
@@ -153,6 +157,30 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
         ctx,
         content: JSON.stringify(simplifiedIndex),
         slug: fp,
+        ext: ".json",
+      })
+
+      // ── Pre-built MiniSearch index ──────────────────────────────
+      const ms = new MiniSearch({
+        ...miniSearchOptions,
+      })
+
+      let docId = 0
+      for (const [slug, details] of linkIndex) {
+        ms.add({
+          id: docId++,
+          slug: slug as string,
+          title: details.title ?? "",
+          content: details.content ?? "",
+          tags: (details.tags ?? []).join(" "),
+        })
+      }
+
+      const searchFp = joinSegments("static", "searchIndex") as FullSlug
+      yield write({
+        ctx,
+        content: JSON.stringify(ms),
+        slug: searchFp,
         ext: ".json",
       })
     },
