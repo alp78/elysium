@@ -70,5 +70,6 @@ export const miniSearchOptions = {
   searchOptions: {
     boost: { title: 4, titles: 1 },
     combineWith: "AND" as const,
+    prefix: true,
   },
 }

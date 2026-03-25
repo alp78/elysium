@@ -22,42 +22,30 @@ status: complete
 import os
 import csv
 import json
-import yaml
-import pickle
 import struct
 import tempfile
 import time
 import shutil
-import base64
-import hashlib
-import asyncio
-import aiofiles
-import orjson
-import fsspec
-import fastavro
-import polars as pl
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.compute as pc
 from pathlib import Path
-from io import StringIO, BytesIO
-from datetime import datetime
-from decimal import Decimal
-from dataclasses import dataclass, asdict
-from typing import Optional
-from urllib.parse import quote, unquote, quote_plus, urlencode
-from pydantic import BaseModel, Field, ValidationError
-from google.protobuf import descriptor_pb2, descriptor_pool, symbol_database
-from google.protobuf import descriptor as _descriptor
+from io import BytesIO
+from google.protobuf import descriptor_pb2, descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 
-from IPython.display import display, Markdown
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from IPython.display import display
 html_formatter = get_ipython().display_formatter.formatters['text/html'] # type: ignore
 html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
 html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 ```
+
+    <function __main__.<lambda>(s)>
 
 ## Parquet Files
 
@@ -229,9 +217,9 @@ print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
 ```
 
       Partitioned dir structure:
-        event_type=page_view\bde1ff0647104665809d44f8866df632-0.parquet (1266 bytes)
-        event_type=purchase\bde1ff0647104665809d44f8866df632-0.parquet (1274 bytes)
-        event_type=signup\bde1ff0647104665809d44f8866df632-0.parquet (1255 bytes)
+        event_type=page_view\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1266 bytes)
+        event_type=purchase\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1274 bytes)
+        event_type=signup\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1255 bytes)
     Read back: 5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
 
 <h4>Parquet in memory — <code style="font-size:0.75em">BytesIO</code></h4>
@@ -782,10 +770,8 @@ print("  All benchmarks complete.")
 #### Results — performance matrix
 
 ```python
-# Performance table — styled DataFrame with green/red color coding
+# Performance table — pandas .style with green/red coloring and bucket separators
 import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from IPython.display import display
 
 # Build DataFrame from results
@@ -797,193 +783,246 @@ df_bench["Bytes/Rec"] = df_bench["Bytes"] // df_bench["Records"]
 df_bench["Write_ms"] = df_bench["Write_ms"].round(0).astype(int)
 df_bench["Read_ms"] = df_bench["Read_ms"].round(0).astype(int)
 
-# Sort by bucket then file size
+# Build a single DataFrame sorted by bucket (large first) then Bytes/Rec
 bucket_order = {"large": 0, "medium": 1, "small": 2}
-df_out = (df_bench[["Bucket", "Format", "Records", "File_Size", "Bytes/Rec", "Write_ms", "Read_ms", "Bytes"]]
+df_out = (df_bench[["Format", "Records", "File_Size", "Bytes/Rec", "Write_ms", "Read_ms", "Bucket"]]
     .assign(_sort=df_bench["Bucket"].map(bucket_order))
-    .sort_values(["_sort", "Bytes"]).drop(columns="_sort").reset_index(drop=True))
+    .sort_values(["_sort", "Bytes/Rec"]).drop(columns="_sort").reset_index(drop=True))
 
-# Color function: green=best, red=worst per bucket
-def highlight_best_worst(df):
+# Insert separator rows between buckets
+rows = []
+prev_bucket = None
+for _, row in df_out.iterrows():
+    if row["Bucket"] != prev_bucket:
+        sep = pd.Series({c: "" for c in df_out.columns})
+        sep["Format"] = f"\u2501\u2501 {row['Records']:,} records \u2501\u2501"
+        rows.append(sep)
+        prev_bucket = row["Bucket"]
+    rows.append(row)
+
+df_display = pd.DataFrame(rows).reset_index(drop=True)
+
+# Color function: green=best, red=worst per bucket group
+def highlight(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
-    for bucket in df["Bucket"].unique():
-        mask = df["Bucket"] == bucket
+    # Find separator row indices to define groups
+    sep_idxs = df.index[df["Records"] == ""].tolist() + [len(df)]
+    for g in range(len(sep_idxs) - 1):
+        start = sep_idxs[g] + 1
+        end = sep_idxs[g + 1]
+        group = df.iloc[start:end]
         for col in ["Bytes/Rec", "Write_ms", "Read_ms"]:
-            vals = df.loc[mask, col]
-            styles.loc[vals.idxmin(), col] = "background-color: #2d5a2d; color: #90ee90"
-            styles.loc[vals.idxmax(), col] = "background-color: #5a2d2d; color: #ee9090"
+            vals = pd.to_numeric(group[col], errors="coerce")
+            positive = vals[vals > 0]
+            if len(positive) > 0:
+                styles.iloc[positive.idxmin(), styles.columns.get_loc(col)] = "background-color:#2e7d32;color:#fff"
+                styles.iloc[vals.idxmax(), styles.columns.get_loc(col)] = "background-color:#c62828;color:#fff"
+    # Bold separator rows
+    for idx in sep_idxs[:-1]:
+        for col in styles.columns:
+            styles.iloc[idx, styles.columns.get_loc(col)] = "font-weight:bold;border-top:2px solid #888"
     return styles
 
 display(
-    df_out.drop(columns="Bytes")
-    .style.apply(highlight_best_worst, axis=None)
-    .hide(subset=["Bucket"], axis="columns")
+    df_display.drop(columns="Bucket")
+    .style.apply(highlight, axis=None)
     .set_caption("Format Performance Benchmark — green = best, red = worst per bucket")
     .hide(axis="index")
 )
+```
 
-# Plotly grouped bar chart — Write ms + Read ms per format, grouped by bucket
+<style type="text/css">
+#T_6866c_row0_col0, #T_6866c_row0_col1, #T_6866c_row0_col2, #T_6866c_row0_col3, #T_6866c_row0_col4, #T_6866c_row0_col5, #T_6866c_row6_col0, #T_6866c_row6_col1, #T_6866c_row6_col2, #T_6866c_row6_col3, #T_6866c_row6_col4, #T_6866c_row6_col5, #T_6866c_row12_col0, #T_6866c_row12_col1, #T_6866c_row12_col2, #T_6866c_row12_col3, #T_6866c_row12_col4, #T_6866c_row12_col5 {
+  font-weight: bold;
+  border-top: 2px solid #888;
+}
+#T_6866c_row1_col3, #T_6866c_row1_col4, #T_6866c_row1_col5, #T_6866c_row7_col3, #T_6866c_row9_col4, #T_6866c_row10_col5, #T_6866c_row13_col3, #T_6866c_row13_col4, #T_6866c_row13_col5 {
+  background-color: #2e7d32;
+  color: #fff;
+}
+#T_6866c_row2_col5, #T_6866c_row5_col3, #T_6866c_row5_col4, #T_6866c_row8_col5, #T_6866c_row11_col3, #T_6866c_row11_col4, #T_6866c_row16_col4, #T_6866c_row17_col3, #T_6866c_row17_col5 {
+  background-color: #c62828;
+  color: #fff;
+}
+</style>
+<table id="T_6866c">
+  <caption>Format Performance Benchmark — green = best, red = worst per bucket</caption>
+  <thead>
+    <tr>
+      <th id="T_6866c_level0_col0" class="col_heading level0 col0" >Format</th>
+      <th id="T_6866c_level0_col1" class="col_heading level0 col1" >Records</th>
+      <th id="T_6866c_level0_col2" class="col_heading level0 col2" >File_Size</th>
+      <th id="T_6866c_level0_col3" class="col_heading level0 col3" >Bytes/Rec</th>
+      <th id="T_6866c_level0_col4" class="col_heading level0 col4" >Write_ms</th>
+      <th id="T_6866c_level0_col5" class="col_heading level0 col5" >Read_ms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_6866c_row0_col0" class="data row0 col0" >━━ 100,000 records ━━</td>
+      <td id="T_6866c_row0_col1" class="data row0 col1" ></td>
+      <td id="T_6866c_row0_col2" class="data row0 col2" ></td>
+      <td id="T_6866c_row0_col3" class="data row0 col3" ></td>
+      <td id="T_6866c_row0_col4" class="data row0 col4" ></td>
+      <td id="T_6866c_row0_col5" class="data row0 col5" ></td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row1_col0" class="data row1 col0" >Parquet</td>
+      <td id="T_6866c_row1_col1" class="data row1 col1" >100000</td>
+      <td id="T_6866c_row1_col2" class="data row1 col2" >1.7 MB</td>
+      <td id="T_6866c_row1_col3" class="data row1 col3" >17</td>
+      <td id="T_6866c_row1_col4" class="data row1 col4" >70</td>
+      <td id="T_6866c_row1_col5" class="data row1 col5" >8</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row2_col0" class="data row2 col0" >CSV</td>
+      <td id="T_6866c_row2_col1" class="data row2 col1" >100000</td>
+      <td id="T_6866c_row2_col2" class="data row2 col2" >5.0 MB</td>
+      <td id="T_6866c_row2_col3" class="data row2 col3" >52</td>
+      <td id="T_6866c_row2_col4" class="data row2 col4" >218</td>
+      <td id="T_6866c_row2_col5" class="data row2 col5" >115</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row3_col0" class="data row3 col0" >Avro</td>
+      <td id="T_6866c_row3_col1" class="data row3 col1" >100000</td>
+      <td id="T_6866c_row3_col2" class="data row3 col2" >5.1 MB</td>
+      <td id="T_6866c_row3_col3" class="data row3 col3" >53</td>
+      <td id="T_6866c_row3_col4" class="data row3 col4" >123</td>
+      <td id="T_6866c_row3_col5" class="data row3 col5" >102</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row4_col0" class="data row4 col0" >Protobuf</td>
+      <td id="T_6866c_row4_col1" class="data row4 col1" >100000</td>
+      <td id="T_6866c_row4_col2" class="data row4 col2" >5.9 MB</td>
+      <td id="T_6866c_row4_col3" class="data row4 col3" >61</td>
+      <td id="T_6866c_row4_col4" class="data row4 col4" >184</td>
+      <td id="T_6866c_row4_col5" class="data row4 col5" >21</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row5_col0" class="data row5 col0" >JSON</td>
+      <td id="T_6866c_row5_col1" class="data row5 col1" >100000</td>
+      <td id="T_6866c_row5_col2" class="data row5 col2" >11.9 MB</td>
+      <td id="T_6866c_row5_col3" class="data row5 col3" >124</td>
+      <td id="T_6866c_row5_col4" class="data row5 col4" >716</td>
+      <td id="T_6866c_row5_col5" class="data row5 col5" >102</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row6_col0" class="data row6 col0" >━━ 10,000 records ━━</td>
+      <td id="T_6866c_row6_col1" class="data row6 col1" ></td>
+      <td id="T_6866c_row6_col2" class="data row6 col2" ></td>
+      <td id="T_6866c_row6_col3" class="data row6 col3" ></td>
+      <td id="T_6866c_row6_col4" class="data row6 col4" ></td>
+      <td id="T_6866c_row6_col5" class="data row6 col5" ></td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row7_col0" class="data row7 col0" >Parquet</td>
+      <td id="T_6866c_row7_col1" class="data row7 col1" >10000</td>
+      <td id="T_6866c_row7_col2" class="data row7 col2" >280.9 KB</td>
+      <td id="T_6866c_row7_col3" class="data row7 col3" >28</td>
+      <td id="T_6866c_row7_col4" class="data row7 col4" >13</td>
+      <td id="T_6866c_row7_col5" class="data row7 col5" >6</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row8_col0" class="data row8 col0" >CSV</td>
+      <td id="T_6866c_row8_col1" class="data row8 col1" >10000</td>
+      <td id="T_6866c_row8_col2" class="data row8 col2" >511.7 KB</td>
+      <td id="T_6866c_row8_col3" class="data row8 col3" >52</td>
+      <td id="T_6866c_row8_col4" class="data row8 col4" >25</td>
+      <td id="T_6866c_row8_col5" class="data row8 col5" >22</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row9_col0" class="data row9 col0" >Avro</td>
+      <td id="T_6866c_row9_col1" class="data row9 col1" >10000</td>
+      <td id="T_6866c_row9_col2" class="data row9 col2" >518.5 KB</td>
+      <td id="T_6866c_row9_col3" class="data row9 col3" >53</td>
+      <td id="T_6866c_row9_col4" class="data row9 col4" >12</td>
+      <td id="T_6866c_row9_col5" class="data row9 col5" >18</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row10_col0" class="data row10 col0" >Protobuf</td>
+      <td id="T_6866c_row10_col1" class="data row10 col1" >10000</td>
+      <td id="T_6866c_row10_col2" class="data row10 col2" >605.1 KB</td>
+      <td id="T_6866c_row10_col3" class="data row10 col3" >61</td>
+      <td id="T_6866c_row10_col4" class="data row10 col4" >23</td>
+      <td id="T_6866c_row10_col5" class="data row10 col5" >5</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row11_col0" class="data row11 col0" >JSON</td>
+      <td id="T_6866c_row11_col1" class="data row11 col1" >10000</td>
+      <td id="T_6866c_row11_col2" class="data row11 col2" >1.2 MB</td>
+      <td id="T_6866c_row11_col3" class="data row11 col3" >124</td>
+      <td id="T_6866c_row11_col4" class="data row11 col4" >67</td>
+      <td id="T_6866c_row11_col5" class="data row11 col5" >13</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row12_col0" class="data row12 col0" >━━ 100 records ━━</td>
+      <td id="T_6866c_row12_col1" class="data row12 col1" ></td>
+      <td id="T_6866c_row12_col2" class="data row12 col2" ></td>
+      <td id="T_6866c_row12_col3" class="data row12 col3" ></td>
+      <td id="T_6866c_row12_col4" class="data row12 col4" ></td>
+      <td id="T_6866c_row12_col5" class="data row12 col5" ></td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row13_col0" class="data row13 col0" >CSV</td>
+      <td id="T_6866c_row13_col1" class="data row13 col1" >100</td>
+      <td id="T_6866c_row13_col2" class="data row13 col2" >5.1 KB</td>
+      <td id="T_6866c_row13_col3" class="data row13 col3" >52</td>
+      <td id="T_6866c_row13_col4" class="data row13 col4" >1</td>
+      <td id="T_6866c_row13_col5" class="data row13 col5" >1</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row14_col0" class="data row14 col0" >Avro</td>
+      <td id="T_6866c_row14_col1" class="data row14 col1" >100</td>
+      <td id="T_6866c_row14_col2" class="data row14 col2" >5.5 KB</td>
+      <td id="T_6866c_row14_col3" class="data row14 col3" >56</td>
+      <td id="T_6866c_row14_col4" class="data row14 col4" >0</td>
+      <td id="T_6866c_row14_col5" class="data row14 col5" >5</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row15_col0" class="data row15 col0" >Protobuf</td>
+      <td id="T_6866c_row15_col1" class="data row15 col1" >100</td>
+      <td id="T_6866c_row15_col2" class="data row15 col2" >6.1 KB</td>
+      <td id="T_6866c_row15_col3" class="data row15 col3" >61</td>
+      <td id="T_6866c_row15_col4" class="data row15 col4" >0</td>
+      <td id="T_6866c_row15_col5" class="data row15 col5" >1</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row16_col0" class="data row16 col0" >Parquet</td>
+      <td id="T_6866c_row16_col1" class="data row16 col1" >100</td>
+      <td id="T_6866c_row16_col2" class="data row16 col2" >8.3 KB</td>
+      <td id="T_6866c_row16_col3" class="data row16 col3" >84</td>
+      <td id="T_6866c_row16_col4" class="data row16 col4" >3</td>
+      <td id="T_6866c_row16_col5" class="data row16 col5" >5</td>
+    </tr>
+    <tr>
+      <td id="T_6866c_row17_col0" class="data row17 col0" >JSON</td>
+      <td id="T_6866c_row17_col1" class="data row17 col1" >100</td>
+      <td id="T_6866c_row17_col2" class="data row17 col2" >12.1 KB</td>
+      <td id="T_6866c_row17_col3" class="data row17 col3" >124</td>
+      <td id="T_6866c_row17_col4" class="data row17 col4" >1</td>
+      <td id="T_6866c_row17_col5" class="data row17 col5" >6</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+# Plotly grouped bar chart — Write ms + Read ms per format (large bucket)
 colors = {"CSV": "#4285F4", "JSON": "#FBBC05", "Parquet": "#34A853", "Avro": "#EA4335", "Protobuf": "#9C27B0"}
 large = df_bench[df_bench["Bucket"] == "large"].sort_values("Bytes")
 
 fig = make_subplots(rows=1, cols=2, subplot_titles=("Write Time (ms)", "Read Time (ms)"))
-
 for _, row in large.iterrows():
     fig.add_trace(go.Bar(name=row["Format"], x=[row["Format"]], y=[row["Write_ms"]],
                          marker_color=colors.get(row["Format"], "#999"), showlegend=False), row=1, col=1)
     fig.add_trace(go.Bar(name=row["Format"], x=[row["Format"]], y=[row["Read_ms"]],
                          marker_color=colors.get(row["Format"], "#999"), showlegend=False), row=1, col=2)
 
-fig.update_layout(title_text="Read/Write Performance — 100K Records (large bucket)",
+fig.update_layout(title_text="Read/Write Performance — 100K Records",
                   height=400, template="plotly_dark", bargap=0.3)
 fig.show()
 ```
 
-<style type="text/css">
-#T_cf0ec_row0_col4, #T_cf0ec_row0_col5, #T_cf0ec_row0_col6, #T_cf0ec_row5_col4, #T_cf0ec_row5_col5, #T_cf0ec_row5_col6, #T_cf0ec_row10_col4, #T_cf0ec_row10_col6, #T_cf0ec_row12_col5 {
-  background-color: #2d5a2d;
-  color: #90ee90;
-}
-#T_cf0ec_row1_col6, #T_cf0ec_row4_col4, #T_cf0ec_row4_col5, #T_cf0ec_row6_col6, #T_cf0ec_row9_col4, #T_cf0ec_row9_col5, #T_cf0ec_row13_col5, #T_cf0ec_row14_col4, #T_cf0ec_row14_col6 {
-  background-color: #5a2d2d;
-  color: #ee9090;
-}
-</style>
-<table id="T_cf0ec">
-  <caption>Format Performance Benchmark — green = best, red = worst per bucket</caption>
-  <thead>
-    <tr>
-      <th id="T_cf0ec_level0_col1" class="col_heading level0 col1" >Format</th>
-      <th id="T_cf0ec_level0_col2" class="col_heading level0 col2" >Records</th>
-      <th id="T_cf0ec_level0_col3" class="col_heading level0 col3" >File_Size</th>
-      <th id="T_cf0ec_level0_col4" class="col_heading level0 col4" >Bytes/Rec</th>
-      <th id="T_cf0ec_level0_col5" class="col_heading level0 col5" >Write_ms</th>
-      <th id="T_cf0ec_level0_col6" class="col_heading level0 col6" >Read_ms</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_cf0ec_row0_col1" class="data row0 col1" >Parquet</td>
-      <td id="T_cf0ec_row0_col2" class="data row0 col2" >100000</td>
-      <td id="T_cf0ec_row0_col3" class="data row0 col3" >1.7 MB</td>
-      <td id="T_cf0ec_row0_col4" class="data row0 col4" >17</td>
-      <td id="T_cf0ec_row0_col5" class="data row0 col5" >70</td>
-      <td id="T_cf0ec_row0_col6" class="data row0 col6" >7</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row1_col1" class="data row1 col1" >CSV</td>
-      <td id="T_cf0ec_row1_col2" class="data row1 col2" >100000</td>
-      <td id="T_cf0ec_row1_col3" class="data row1 col3" >5.0 MB</td>
-      <td id="T_cf0ec_row1_col4" class="data row1 col4" >52</td>
-      <td id="T_cf0ec_row1_col5" class="data row1 col5" >221</td>
-      <td id="T_cf0ec_row1_col6" class="data row1 col6" >101</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row2_col1" class="data row2 col1" >Avro</td>
-      <td id="T_cf0ec_row2_col2" class="data row2 col2" >100000</td>
-      <td id="T_cf0ec_row2_col3" class="data row2 col3" >5.1 MB</td>
-      <td id="T_cf0ec_row2_col4" class="data row2 col4" >53</td>
-      <td id="T_cf0ec_row2_col5" class="data row2 col5" >113</td>
-      <td id="T_cf0ec_row2_col6" class="data row2 col6" >100</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row3_col1" class="data row3 col1" >Protobuf</td>
-      <td id="T_cf0ec_row3_col2" class="data row3 col2" >100000</td>
-      <td id="T_cf0ec_row3_col3" class="data row3 col3" >5.9 MB</td>
-      <td id="T_cf0ec_row3_col4" class="data row3 col4" >61</td>
-      <td id="T_cf0ec_row3_col5" class="data row3 col5" >182</td>
-      <td id="T_cf0ec_row3_col6" class="data row3 col6" >18</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row4_col1" class="data row4 col1" >JSON</td>
-      <td id="T_cf0ec_row4_col2" class="data row4 col2" >100000</td>
-      <td id="T_cf0ec_row4_col3" class="data row4 col3" >11.9 MB</td>
-      <td id="T_cf0ec_row4_col4" class="data row4 col4" >124</td>
-      <td id="T_cf0ec_row4_col5" class="data row4 col5" >690</td>
-      <td id="T_cf0ec_row4_col6" class="data row4 col6" >99</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row5_col1" class="data row5 col1" >Parquet</td>
-      <td id="T_cf0ec_row5_col2" class="data row5 col2" >10000</td>
-      <td id="T_cf0ec_row5_col3" class="data row5 col3" >280.9 KB</td>
-      <td id="T_cf0ec_row5_col4" class="data row5 col4" >28</td>
-      <td id="T_cf0ec_row5_col5" class="data row5 col5" >11</td>
-      <td id="T_cf0ec_row5_col6" class="data row5 col6" >5</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row6_col1" class="data row6 col1" >CSV</td>
-      <td id="T_cf0ec_row6_col2" class="data row6 col2" >10000</td>
-      <td id="T_cf0ec_row6_col3" class="data row6 col3" >511.7 KB</td>
-      <td id="T_cf0ec_row6_col4" class="data row6 col4" >52</td>
-      <td id="T_cf0ec_row6_col5" class="data row6 col5" >21</td>
-      <td id="T_cf0ec_row6_col6" class="data row6 col6" >20</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row7_col1" class="data row7 col1" >Avro</td>
-      <td id="T_cf0ec_row7_col2" class="data row7 col2" >10000</td>
-      <td id="T_cf0ec_row7_col3" class="data row7 col3" >518.5 KB</td>
-      <td id="T_cf0ec_row7_col4" class="data row7 col4" >53</td>
-      <td id="T_cf0ec_row7_col5" class="data row7 col5" >12</td>
-      <td id="T_cf0ec_row7_col6" class="data row7 col6" >15</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row8_col1" class="data row8 col1" >Protobuf</td>
-      <td id="T_cf0ec_row8_col2" class="data row8 col2" >10000</td>
-      <td id="T_cf0ec_row8_col3" class="data row8 col3" >605.1 KB</td>
-      <td id="T_cf0ec_row8_col4" class="data row8 col4" >61</td>
-      <td id="T_cf0ec_row8_col5" class="data row8 col5" >23</td>
-      <td id="T_cf0ec_row8_col6" class="data row8 col6" >5</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row9_col1" class="data row9 col1" >JSON</td>
-      <td id="T_cf0ec_row9_col2" class="data row9 col2" >10000</td>
-      <td id="T_cf0ec_row9_col3" class="data row9 col3" >1.2 MB</td>
-      <td id="T_cf0ec_row9_col4" class="data row9 col4" >124</td>
-      <td id="T_cf0ec_row9_col5" class="data row9 col5" >68</td>
-      <td id="T_cf0ec_row9_col6" class="data row9 col6" >14</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row10_col1" class="data row10 col1" >CSV</td>
-      <td id="T_cf0ec_row10_col2" class="data row10 col2" >100</td>
-      <td id="T_cf0ec_row10_col3" class="data row10 col3" >5.1 KB</td>
-      <td id="T_cf0ec_row10_col4" class="data row10 col4" >52</td>
-      <td id="T_cf0ec_row10_col5" class="data row10 col5" >1</td>
-      <td id="T_cf0ec_row10_col6" class="data row10 col6" >1</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row11_col1" class="data row11 col1" >Avro</td>
-      <td id="T_cf0ec_row11_col2" class="data row11 col2" >100</td>
-      <td id="T_cf0ec_row11_col3" class="data row11 col3" >5.5 KB</td>
-      <td id="T_cf0ec_row11_col4" class="data row11 col4" >56</td>
-      <td id="T_cf0ec_row11_col5" class="data row11 col5" >1</td>
-      <td id="T_cf0ec_row11_col6" class="data row11 col6" >5</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row12_col1" class="data row12 col1" >Protobuf</td>
-      <td id="T_cf0ec_row12_col2" class="data row12 col2" >100</td>
-      <td id="T_cf0ec_row12_col3" class="data row12 col3" >6.1 KB</td>
-      <td id="T_cf0ec_row12_col4" class="data row12 col4" >61</td>
-      <td id="T_cf0ec_row12_col5" class="data row12 col5" >0</td>
-      <td id="T_cf0ec_row12_col6" class="data row12 col6" >3</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row13_col1" class="data row13 col1" >Parquet</td>
-      <td id="T_cf0ec_row13_col2" class="data row13 col2" >100</td>
-      <td id="T_cf0ec_row13_col3" class="data row13 col3" >8.3 KB</td>
-      <td id="T_cf0ec_row13_col4" class="data row13 col4" >84</td>
-      <td id="T_cf0ec_row13_col5" class="data row13 col5" >3</td>
-      <td id="T_cf0ec_row13_col6" class="data row13 col6" >5</td>
-    </tr>
-    <tr>
-      <td id="T_cf0ec_row14_col1" class="data row14 col1" >JSON</td>
-      <td id="T_cf0ec_row14_col2" class="data row14 col2" >100</td>
-      <td id="T_cf0ec_row14_col3" class="data row14 col3" >12.1 KB</td>
-      <td id="T_cf0ec_row14_col4" class="data row14 col4" >124</td>
-      <td id="T_cf0ec_row14_col5" class="data row14 col5" >1</td>
-      <td id="T_cf0ec_row14_col6" class="data row14 col6" >6</td>
-    </tr>
-  </tbody>
-</table>
+<iframe src="/static/plotly/pyser_01.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 #### Compression comparison
 
@@ -1005,7 +1044,49 @@ display(
     .set_caption("Compression vs CSV — 100K records (large bucket)")
     .hide(axis="index")
 )
+```
 
+<style type="text/css">
+</style>
+<table id="T_1b570">
+  <caption>Compression vs CSV — 100K records (large bucket)</caption>
+  <thead>
+    <tr>
+      <th id="T_1b570_level0_col0" class="col_heading level0 col0" >Format</th>
+      <th id="T_1b570_level0_col1" class="col_heading level0 col1" >File_Size</th>
+      <th id="T_1b570_level0_col2" class="col_heading level0 col2" >vs_CSV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_1b570_row0_col0" class="data row0 col0" >Parquet</td>
+      <td id="T_1b570_row0_col1" class="data row0 col1" >1.7 MB</td>
+      <td id="T_1b570_row0_col2" class="data row0 col2" >+65.9%</td>
+    </tr>
+    <tr>
+      <td id="T_1b570_row1_col0" class="data row1 col0" >CSV</td>
+      <td id="T_1b570_row1_col1" class="data row1 col1" >5.0 MB</td>
+      <td id="T_1b570_row1_col2" class="data row1 col2" >+0.0%</td>
+    </tr>
+    <tr>
+      <td id="T_1b570_row2_col0" class="data row2 col0" >Avro</td>
+      <td id="T_1b570_row2_col1" class="data row2 col1" >5.1 MB</td>
+      <td id="T_1b570_row2_col2" class="data row2 col2" >-1.3%</td>
+    </tr>
+    <tr>
+      <td id="T_1b570_row3_col0" class="data row3 col0" >Protobuf</td>
+      <td id="T_1b570_row3_col1" class="data row3 col1" >5.9 MB</td>
+      <td id="T_1b570_row3_col2" class="data row3 col2" >-18.3%</td>
+    </tr>
+    <tr>
+      <td id="T_1b570_row4_col0" class="data row4 col0" >JSON</td>
+      <td id="T_1b570_row4_col1" class="data row4 col1" >11.9 MB</td>
+      <td id="T_1b570_row4_col2" class="data row4 col2" >-137.5%</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
 # Plotly horizontal bar chart — file size per format
 colors_list = [colors.get(f, "#999") for f in comp["Format"]]
 fig2 = go.Figure(go.Bar(
@@ -1027,45 +1108,7 @@ fig2.update_layout(
 fig2.show()
 ```
 
-<style type="text/css">
-</style>
-<table id="T_89755">
-  <caption>Compression vs CSV — 100K records (large bucket)</caption>
-  <thead>
-    <tr>
-      <th id="T_89755_level0_col0" class="col_heading level0 col0" >Format</th>
-      <th id="T_89755_level0_col1" class="col_heading level0 col1" >File_Size</th>
-      <th id="T_89755_level0_col2" class="col_heading level0 col2" >vs_CSV</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_89755_row0_col0" class="data row0 col0" >Parquet</td>
-      <td id="T_89755_row0_col1" class="data row0 col1" >1.7 MB</td>
-      <td id="T_89755_row0_col2" class="data row0 col2" >+65.9%</td>
-    </tr>
-    <tr>
-      <td id="T_89755_row1_col0" class="data row1 col0" >CSV</td>
-      <td id="T_89755_row1_col1" class="data row1 col1" >5.0 MB</td>
-      <td id="T_89755_row1_col2" class="data row1 col2" >+0.0%</td>
-    </tr>
-    <tr>
-      <td id="T_89755_row2_col0" class="data row2 col0" >Avro</td>
-      <td id="T_89755_row2_col1" class="data row2 col1" >5.1 MB</td>
-      <td id="T_89755_row2_col2" class="data row2 col2" >-1.3%</td>
-    </tr>
-    <tr>
-      <td id="T_89755_row3_col0" class="data row3 col0" >Protobuf</td>
-      <td id="T_89755_row3_col1" class="data row3 col1" >5.9 MB</td>
-      <td id="T_89755_row3_col2" class="data row3 col2" >-18.3%</td>
-    </tr>
-    <tr>
-      <td id="T_89755_row4_col0" class="data row4 col0" >JSON</td>
-      <td id="T_89755_row4_col1" class="data row4 col1" >11.9 MB</td>
-      <td id="T_89755_row4_col2" class="data row4 col2" >-137.5%</td>
-    </tr>
-  </tbody>
-</table>
+<iframe src="/static/plotly/pyser_02.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
 
 #### Recommendation matrix
 

@@ -70,8 +70,6 @@ public class EventRecord
 }
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Parquet.Net, 5.5.0</span></li></ul></div></div>
-
 #### Write parquet — DataColumn API
 
 ```csharp
@@ -283,8 +281,6 @@ using Google.Protobuf.WellKnownTypes;
 Console.WriteLine("  Google.Protobuf loaded.");
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Google.Protobuf, 3.34.1</span></li></ul></div></div>
-
       Google.Protobuf loaded.
 
 #### Dynamic protobuf messages
@@ -494,8 +490,6 @@ foreach (var f in schema.Fields)
     Console.WriteLine($"    {f.Name}: {f.Schema}");
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Apache.Avro, 1.12.0</span></li></ul></div></div>
-
       Schema: StockQuote (4 fields)
         symbol: {"type":"string"}
         price: {"type":"double"}
@@ -547,7 +541,7 @@ Console.WriteLine($"  Written: {avroFile}");
 Console.WriteLine($"  Records: {records.Count}, Size: {fileSize} bytes");
 ```
 
-      Written: C:\Users\aperi\AppData\Local\Temp\avro_cs_ea0b4113\quotes.avro
+      Written: C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
       Records: 4, Size: 390 bytes
 
 #### Read Avro file
@@ -1002,137 +996,134 @@ foreach (var bucket in new[] { "large", "medium", "small" })
       ═══ LARGE (100'000 records) ═══
       Format        File Size  Bytes/Rec   Write ms    Read ms
       ──────────────────────────────────────────────────────
-      Parquet          1.8 MB       18 ✔      106          6 ✔
-      CSV              5.0 MB       52         59 ✔       13
-      Avro             5.1 MB       53        116 ✘      185
-      Protobuf         5.7 MB       59         69        n/a
-      JSON            10.5 MB      110 ✘      103        240 ✘
+      Parquet          1.8 MB       18 ✔       23 ✔        8 ✔
+      CSV              5.0 MB       52         36         14
+      Avro             5.1 MB       53         38         31
+      Protobuf         5.7 MB       59         40        n/a
+      JSON            10.5 MB      110 ✘       45 ✘       87 ✘
     
       ═══ MEDIUM (10'000 records) ═══
       Format        File Size  Bytes/Rec   Write ms    Read ms
       ──────────────────────────────────────────────────────
-      Parquet        292.1 KB       29 ✔       33 ✘        9 ✔
-      CSV            510.6 KB       52          7         17
-      Avro           517.9 KB       53         12         22
-      Protobuf       585.6 KB       59          4 ✔      n/a
-      JSON             1.1 MB      110 ✘       13         28 ✘
+      Parquet        292.1 KB       29 ✔        9 ✘        6 ✔
+      CSV            510.6 KB       52          3         16 ✘
+      Avro           517.9 KB       53          3          6 ✔
+      Protobuf       585.6 KB       59          2 ✔      n/a
+      JSON             1.1 MB      110 ✘        4         12
     
       ═══ SMALL (100 records) ═══
       Format        File Size  Bytes/Rec   Write ms    Read ms
       ──────────────────────────────────────────────────────
-      Parquet          4.1 KB       41 ✔        7 ✘        2 ✔
-      CSV              5.2 KB       53          1        n/a
-      Avro             5.5 KB       56          0 ✔        6
+      Parquet          4.1 KB       41 ✔        2 ✘      n/a
+      CSV              5.2 KB       53          0 ✔      n/a
+      Avro             5.5 KB       56          0 ✔        7 ✔
       Protobuf         5.9 KB       60          0 ✔      n/a
-      JSON            10.8 KB      110 ✘        2          7 ✘
+      JSON            10.8 KB      110 ✘        1          7 ✔
 
 #### Performance and compression charts
 
 ```csharp
-// Performance visualization using Microsoft.Data.Analysis (DataFrame) + Plotly.NET (charts)
-#r "nuget: Microsoft.Data.Analysis"
+// Load NuGet packages for DataFrame + Plotly charts
+#r "nuget: Polars.NET"
+#r "nuget: Polars.NET.Native.win-x64"
 #r "nuget: Plotly.NET, 5.1.0"
 #r "nuget: Plotly.NET.Interactive, 5.0.0"
 #r "nuget: Plotly.NET.CSharp, 0.13.0"
 
-using Microsoft.Data.Analysis;
 using Plotly.NET;
 using Plotly.NET.CSharp;
 using Plotly.NET.LayoutObjects;
 using Plotly.NET.Interactive;
-
-// Build DataFrame from benchmark results
-var formats = results.Select(r => r.Format).ToArray();
-var buckets = results.Select(r => r.Size).ToArray();
-var records = results.Select(r => (float)r.Records).ToArray();
-var writeTimes = results.Select(r => (float)r.WriteMs).ToArray();
-var readTimes = results.Select(r => (float)r.ReadMs).ToArray();
-var fileSizes = results.Select(r => (float)(r.FileBytes / 1024.0)).ToArray();
-var bytesPerRec = results.Select(r => (float)(r.FileBytes / Math.Max(r.Records, 1))).ToArray();
-
-var df = new DataFrame(
-    new StringDataFrameColumn("Format", formats),
-    new StringDataFrameColumn("Bucket", buckets),
-    new SingleDataFrameColumn("Records", records),
-    new SingleDataFrameColumn("Write_ms", writeTimes),
-    new SingleDataFrameColumn("Read_ms", readTimes),
-    new SingleDataFrameColumn("Size_KB", fileSizes),
-    new SingleDataFrameColumn("Bytes/Rec", bytesPerRec)
-);
-
-// Display the DataFrame — .NET Interactive renders it as an HTML table
-df
+using Polars.CSharp;
+using static Polars.CSharp.Polars;
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.Analysis, 0.23.0</span></li><li><span>Plotly.NET, 5.1.0</span></li><li><span>Plotly.NET.CSharp, 0.13.0</span></li><li><span>Plotly.NET.Interactive, 5.0.0</span></li></ul></div></div>
+#### Results DataFrame
 
-    Loading extensions from `C:\Users\aperi\.nuget\packages\plotly.net.interactive\5.0.0\lib\netstandard2.1\Plotly.NET.Interactive.dll`
+```csharp
+// Register styled HTML formatter for Polars DataFrame — matches pandas .style output
+using Microsoft.DotNet.Interactive.Formatting;
 
-    Loading extensions from `C:\Users\aperi\.nuget\packages\microsoft.data.analysis\0.23.0\interactive-extensions\dotnet\Microsoft.Data.Analysis.Interactive.dll`
+Formatter.Register<DataFrame>(df =>
+{
+    var cols = df.ColumnNames.ToList();
+    var data = Enumerable.Range(0, (int)df.Height)
+        .Select(r => cols.ToDictionary(c => c, c => df[cols.IndexOf(c)][r]?.ToString() ?? ""))
+        .ToList();
 
-<table id="table_639100679329305338"><thead><tr><th><i>index</i></th><th>Format</th><th>Bucket</th><th>Records</th><th>Write_ms</th><th>Read_ms</th><th>Size_KB</th><th>Bytes/Rec</th></tr></thead><tbody><tr><td><i><div class="dni-plaintext"><pre>0</pre></div></i></td><td>CSV</td><td>small</td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>1</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>5.1816406</pre></div></td><td><div class="dni-plaintext"><pre>53</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>1</pre></div></i></td><td>CSV</td><td>medium</td><td><div class="dni-plaintext"><pre>10000</pre></div></td><td><div class="dni-plaintext"><pre>7</pre></div></td><td><div class="dni-plaintext"><pre>17</pre></div></td><td><div class="dni-plaintext"><pre>510.58887</pre></div></td><td><div class="dni-plaintext"><pre>52</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>2</pre></div></i></td><td>CSV</td><td>large</td><td><div class="dni-plaintext"><pre>100000</pre></div></td><td><div class="dni-plaintext"><pre>59</pre></div></td><td><div class="dni-plaintext"><pre>13</pre></div></td><td><div class="dni-plaintext"><pre>5106.249</pre></div></td><td><div class="dni-plaintext"><pre>52</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>3</pre></div></i></td><td>JSON</td><td>small</td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td><div class="dni-plaintext"><pre>7</pre></div></td><td><div class="dni-plaintext"><pre>10.807617</pre></div></td><td><div class="dni-plaintext"><pre>110</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>4</pre></div></i></td><td>JSON</td><td>medium</td><td><div class="dni-plaintext"><pre>10000</pre></div></td><td><div class="dni-plaintext"><pre>13</pre></div></td><td><div class="dni-plaintext"><pre>28</pre></div></td><td><div class="dni-plaintext"><pre>1076.957</pre></div></td><td><div class="dni-plaintext"><pre>110</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>5</pre></div></i></td><td>JSON</td><td>large</td><td><div class="dni-plaintext"><pre>100000</pre></div></td><td><div class="dni-plaintext"><pre>103</pre></div></td><td><div class="dni-plaintext"><pre>240</pre></div></td><td><div class="dni-plaintext"><pre>10770.273</pre></div></td><td><div class="dni-plaintext"><pre>110</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>6</pre></div></i></td><td>Parquet</td><td>small</td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>7</pre></div></td><td><div class="dni-plaintext"><pre>2</pre></div></td><td><div class="dni-plaintext"><pre>4.069336</pre></div></td><td><div class="dni-plaintext"><pre>41</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>7</pre></div></i></td><td>Parquet</td><td>medium</td><td><div class="dni-plaintext"><pre>10000</pre></div></td><td><div class="dni-plaintext"><pre>33</pre></div></td><td><div class="dni-plaintext"><pre>9</pre></div></td><td><div class="dni-plaintext"><pre>292.14746</pre></div></td><td><div class="dni-plaintext"><pre>29</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>8</pre></div></i></td><td>Parquet</td><td>large</td><td><div class="dni-plaintext"><pre>100000</pre></div></td><td><div class="dni-plaintext"><pre>106</pre></div></td><td><div class="dni-plaintext"><pre>6</pre></div></td><td><div class="dni-plaintext"><pre>1822.7578</pre></div></td><td><div class="dni-plaintext"><pre>18</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>9</pre></div></i></td><td>Avro</td><td>small</td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>6</pre></div></td><td><div class="dni-plaintext"><pre>5.536133</pre></div></td><td><div class="dni-plaintext"><pre>56</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>10</pre></div></i></td><td>Avro</td><td>medium</td><td><div class="dni-plaintext"><pre>10000</pre></div></td><td><div class="dni-plaintext"><pre>12</pre></div></td><td><div class="dni-plaintext"><pre>22</pre></div></td><td><div class="dni-plaintext"><pre>517.9414</pre></div></td><td><div class="dni-plaintext"><pre>53</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>11</pre></div></i></td><td>Avro</td><td>large</td><td><div class="dni-plaintext"><pre>100000</pre></div></td><td><div class="dni-plaintext"><pre>116</pre></div></td><td><div class="dni-plaintext"><pre>185</pre></div></td><td><div class="dni-plaintext"><pre>5176.1953</pre></div></td><td><div class="dni-plaintext"><pre>53</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>12</pre></div></i></td><td>Protobuf</td><td>small</td><td><div class="dni-plaintext"><pre>100</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>5.859375</pre></div></td><td><div class="dni-plaintext"><pre>60</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>13</pre></div></i></td><td>Protobuf</td><td>medium</td><td><div class="dni-plaintext"><pre>10000</pre></div></td><td><div class="dni-plaintext"><pre>4</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>585.63477</pre></div></td><td><div class="dni-plaintext"><pre>59</pre></div></td></tr><tr><td><i><div class="dni-plaintext"><pre>14</pre></div></i></td><td>Protobuf</td><td>large</td><td><div class="dni-plaintext"><pre>100000</pre></div></td><td><div class="dni-plaintext"><pre>69</pre></div></td><td><div class="dni-plaintext"><pre>0</pre></div></td><td><div class="dni-plaintext"><pre>5856.1045</pre></div></td><td><div class="dni-plaintext"><pre>59</pre></div></td></tr></tbody></table><style>
+    // Only color these specific metric columns — NOT Records, Size_KB, or Format
+    var colorCols = new HashSet<string> { "Write_ms", "Read_ms", "Bytes_Rec" };
+    var groupCol = "Records";
 
-.dni-code-hint {
+    var html = "<table style='border-collapse:collapse'><tr>" +
+        string.Join("", cols.Select(c => $"<th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>{c}</th>")) +
+        "</tr>";
 
-    font-style: italic;
+    foreach (var grp in data.GroupBy(r => r[groupCol]).OrderByDescending(g => long.TryParse(g.Key, out var v) ? v : 0))
+    {
+        var rows = grp.OrderBy(r => long.TryParse(r.GetValueOrDefault("Bytes_Rec", "0"), out var v) ? v : 0).ToList();
 
-    overflow: hidden;
+        // Compute min/max ONLY for the color columns
+        var mins = new Dictionary<string, long>();
+        var maxs = new Dictionary<string, long>();
+        foreach (var c in colorCols)
+        {
+            var vals = rows.Select(r => long.TryParse(r.GetValueOrDefault(c, "0"), out var v) ? v : 0).Where(v => v > 0).ToList();
+            if (vals.Any()) { mins[c] = vals.Min(); maxs[c] = vals.Max(); }
+        }
 
-    white-space: nowrap;
+        // Separator row — matches pandas style: "━━ 100,000 records ━━"
+        html += $"<tr><td colspan='{cols.Count}' style='padding:6px 8px;font-weight:bold;border-top:1px solid #888;font-style:italic'>" +
+                $"\u2500\u2500\u2500\u2500 {long.Parse(grp.Key):N0} records \u2500\u2500\u2500\u2500</td></tr>";
 
-}
+        foreach (var row in rows)
+        {
+            html += "<tr>";
+            foreach (var c in cols)
+            {
+                var val = row[c];
+                var s = "padding:3px 8px;text-align:right;";
+                if (c == "Format") s = "padding:3px 8px;text-align:right;font-weight:bold;";
 
-.dni-treeview {
+                // Green/red ONLY for metric columns
+                if (colorCols.Contains(c) && long.TryParse(val, out var n) && n > 0)
+                {
+                    if (mins.ContainsKey(c) && n == mins[c]) s += "background:#2e7d32;color:#fff;";
+                    else if (maxs.ContainsKey(c) && n == maxs[c]) s += "background:#c62828;color:#fff;";
+                }
+                html += $"<td style='{s}'>{val}</td>";
+            }
+            html += "</tr>";
+        }
+    }
+    return html + "</table>";
+}, mimeType: "text/html");
 
-    white-space: nowrap;
+Console.WriteLine("  DataFrame formatter registered.");
+```
 
-}
+      DataFrame formatter registered.
 
-.dni-treeview td {
+#### Results
 
-    vertical-align: top;
+```csharp
+// Display benchmark results — same columns and order as the Python pandas table
+DataFrame.From(results.Select(r => {
+    var sz = r.FileBytes < 1024 * 1024
+        ? $"{r.FileBytes / 1024.0:F1} KB"
+        : $"{r.FileBytes / (1024.0 * 1024):F1} MB";
+    return new {
+        r.Format,
+        r.Records,
+        File_Size = sz,
+        Bytes_Rec = r.FileBytes / Math.Max(r.Records, 1),
+        Write_ms = r.WriteMs,
+        Read_ms = r.ReadMs,
+    };
+}))
+```
 
-    text-align: start;
-
-}
-
-details.dni-treeview {
-
-    padding-left: 1em;
-
-}
-
-table td {
-
-    text-align: start;
-
-}
-
-table tr { 
-
-    vertical-align: top; 
-
-    margin: 0em 0px;
-
-}
-
-table tr td pre 
-
-{ 
-
-    vertical-align: top !important; 
-
-    margin: 0em 0px !important;
-
-} 
-
-table th {
-
-    text-align: start;
-
-}
-
-</style>
+<table style='border-collapse:collapse'><tr><th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>Format</th><th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>Records</th><th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>File_Size</th><th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>Bytes_Rec</th><th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>Write_ms</th><th style='padding:6px 8px;text-align:right;border-bottom:1px solid #888'>Read_ms</th></tr><tr><td colspan='6' style='padding:6px 8px;font-weight:bold;border-top:1px solid #888;font-style:italic'>──── 100'000 records ────</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Parquet</td><td style='padding:3px 8px;text-align:right;'>100000</td><td style='padding:3px 8px;text-align:right;'>1.8 MB</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>18</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>23</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>8</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>CSV</td><td style='padding:3px 8px;text-align:right;'>100000</td><td style='padding:3px 8px;text-align:right;'>5.0 MB</td><td style='padding:3px 8px;text-align:right;'>52</td><td style='padding:3px 8px;text-align:right;'>36</td><td style='padding:3px 8px;text-align:right;'>14</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Avro</td><td style='padding:3px 8px;text-align:right;'>100000</td><td style='padding:3px 8px;text-align:right;'>5.1 MB</td><td style='padding:3px 8px;text-align:right;'>53</td><td style='padding:3px 8px;text-align:right;'>38</td><td style='padding:3px 8px;text-align:right;'>31</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Protobuf</td><td style='padding:3px 8px;text-align:right;'>100000</td><td style='padding:3px 8px;text-align:right;'>5.7 MB</td><td style='padding:3px 8px;text-align:right;'>59</td><td style='padding:3px 8px;text-align:right;'>40</td><td style='padding:3px 8px;text-align:right;'>0</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>JSON</td><td style='padding:3px 8px;text-align:right;'>100000</td><td style='padding:3px 8px;text-align:right;'>10.5 MB</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>110</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>45</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>87</td></tr><tr><td colspan='6' style='padding:6px 8px;font-weight:bold;border-top:1px solid #888;font-style:italic'>──── 10'000 records ────</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Parquet</td><td style='padding:3px 8px;text-align:right;'>10000</td><td style='padding:3px 8px;text-align:right;'>292.1 KB</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>29</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>9</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>6</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>CSV</td><td style='padding:3px 8px;text-align:right;'>10000</td><td style='padding:3px 8px;text-align:right;'>510.6 KB</td><td style='padding:3px 8px;text-align:right;'>52</td><td style='padding:3px 8px;text-align:right;'>3</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>16</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Avro</td><td style='padding:3px 8px;text-align:right;'>10000</td><td style='padding:3px 8px;text-align:right;'>517.9 KB</td><td style='padding:3px 8px;text-align:right;'>53</td><td style='padding:3px 8px;text-align:right;'>3</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>6</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Protobuf</td><td style='padding:3px 8px;text-align:right;'>10000</td><td style='padding:3px 8px;text-align:right;'>585.6 KB</td><td style='padding:3px 8px;text-align:right;'>59</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>2</td><td style='padding:3px 8px;text-align:right;'>0</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>JSON</td><td style='padding:3px 8px;text-align:right;'>10000</td><td style='padding:3px 8px;text-align:right;'>1.1 MB</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>110</td><td style='padding:3px 8px;text-align:right;'>4</td><td style='padding:3px 8px;text-align:right;'>12</td></tr><tr><td colspan='6' style='padding:6px 8px;font-weight:bold;border-top:1px solid #888;font-style:italic'>──── 100 records ────</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Parquet</td><td style='padding:3px 8px;text-align:right;'>100</td><td style='padding:3px 8px;text-align:right;'>4.1 KB</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>41</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>2</td><td style='padding:3px 8px;text-align:right;'>0</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>CSV</td><td style='padding:3px 8px;text-align:right;'>100</td><td style='padding:3px 8px;text-align:right;'>5.2 KB</td><td style='padding:3px 8px;text-align:right;'>53</td><td style='padding:3px 8px;text-align:right;'>0</td><td style='padding:3px 8px;text-align:right;'>0</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Avro</td><td style='padding:3px 8px;text-align:right;'>100</td><td style='padding:3px 8px;text-align:right;'>5.5 KB</td><td style='padding:3px 8px;text-align:right;'>56</td><td style='padding:3px 8px;text-align:right;'>0</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>7</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>Protobuf</td><td style='padding:3px 8px;text-align:right;'>100</td><td style='padding:3px 8px;text-align:right;'>5.9 KB</td><td style='padding:3px 8px;text-align:right;'>60</td><td style='padding:3px 8px;text-align:right;'>0</td><td style='padding:3px 8px;text-align:right;'>0</td></tr><tr><td style='padding:3px 8px;text-align:right;font-weight:bold;'>JSON</td><td style='padding:3px 8px;text-align:right;'>100</td><td style='padding:3px 8px;text-align:right;'>10.8 KB</td><td style='padding:3px 8px;text-align:right;background:#c62828;color:#fff;'>110</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>1</td><td style='padding:3px 8px;text-align:right;background:#2e7d32;color:#fff;'>7</td></tr></table>
 
 #### Write vs Read speed — 100K records
 
