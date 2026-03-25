@@ -16,7 +16,7 @@ status: complete
 
 # 15. GCP - Python
 
-![Pipeline Architecture](index_lab.jpg)
+![Pipeline Architecture](/static/index_lab.jpg)
 
 ## How the Pipeline Works
 
