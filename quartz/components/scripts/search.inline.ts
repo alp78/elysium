@@ -13,6 +13,10 @@ interface Item {
   title: string
   content: string
   tags: string[]
+  relevance: "high" | "mid" | "low"
+  sectionTitle: string
+  pageTitle: string
+  anchor: string
   [key: string]: any
 }
 
@@ -21,26 +25,24 @@ let searchType: SearchType = "basic"
 let currentSearchTerm: string = ""
 
 // ---------------------------------------------------------------------------
-// Load pre-built MiniSearch index
+// Load pre-built MiniSearch index (section-level)
 // ---------------------------------------------------------------------------
 
 let miniSearch: MiniSearch | null = null
-let idToSlug: FullSlug[] = [] // maps MiniSearch doc id → slug
 
 async function loadSearchIndex(): Promise<void> {
   if (miniSearch) return
 
-  // Load the pre-built search index (generated at build time)
-  const basePath = document.querySelector<HTMLScriptElement>(
-    "script[src*='postscript']",
-  )?.src.replace(/postscript\.js.*/, "") ?? "./"
+  const basePath =
+    document
+      .querySelector<HTMLScriptElement>("script[src*='postscript']")
+      ?.src.replace(/postscript\.js.*/, "") ?? "./"
 
   const indexUrl = `${basePath}static/searchIndex.json`
   const json = await fetch(indexUrl).then((r) => r.text())
 
   miniSearch = MiniSearch.loadJSON(json, {
     ...miniSearchOptions,
-    // extractField is not needed at load time — stored fields are already extracted
   })
 }
 
@@ -51,7 +53,7 @@ async function loadSearchIndex(): Promise<void> {
 const p = new DOMParser()
 const fetchContentCache: Map<FullSlug, Element[]> = new Map()
 const contextWindowWords = 30
-const numSearchResults = 12
+const numSearchResults = 15
 const numTagResults = 5
 
 const tokenizeTerm = (term: string) => {
@@ -98,11 +100,13 @@ function highlight(searchTerm: string, text: string, trim?: boolean) {
   const slice = tokenizedText
     .map((tok) => {
       for (const searchTok of tokenizedTerms) {
-        // Word-boundary match: only highlight whole-word occurrences
         const escaped = searchTok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
         const wbRegex = new RegExp(`\\b(${escaped})\\b`, "gi")
         if (wbRegex.test(tok)) {
-          return tok.replace(new RegExp(`\\b(${escaped})\\b`, "gi"), `<span class="highlight">$1</span>`)
+          return tok.replace(
+            new RegExp(`\\b(${escaped})\\b`, "gi"),
+            `<span class="highlight">$1</span>`,
+          )
         }
       }
       return tok
@@ -157,14 +161,30 @@ function highlightHTML(searchTerm: string, el: HTMLElement) {
 }
 
 // ---------------------------------------------------------------------------
+// Relevance classification from BM25 scores
+// ---------------------------------------------------------------------------
+
+function classifyResults(
+  results: Array<{ id: number; score: number; [key: string]: any }>,
+): Array<{ id: number; score: number; relevance: "high" | "mid" | "low"; [key: string]: any }> {
+  if (results.length === 0) return []
+  const maxScore = results[0].score // MiniSearch results are sorted by score desc
+  return results.map((r) => {
+    const ratio = maxScore > 0 ? r.score / maxScore : 0
+    let relevance: "high" | "mid" | "low"
+    if (ratio >= 0.6) relevance = "high"
+    else if (ratio >= 0.3) relevance = "mid"
+    else relevance = "low"
+    return { ...r, relevance }
+  })
+}
+
+// ---------------------------------------------------------------------------
 // Setup
 // ---------------------------------------------------------------------------
 
 async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: ContentIndex) {
   await loadSearchIndex()
-
-  // Build id→slug map from contentIndex data (same order as build-time)
-  idToSlug = Object.keys(data) as FullSlug[]
 
   const container = searchElement.querySelector(".search-container") as HTMLElement
   if (!container) return
@@ -276,22 +296,46 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     }
   }
 
-  const formatForDisplay = (term: string, id: number) => {
-    const slug = idToSlug[id]
+  // ── Format a search result for display ──
+
+  function formatResult(
+    term: string,
+    result: { id: number; score: number; relevance: "high" | "mid" | "low"; [key: string]: any },
+  ): Item {
+    // MiniSearch stored fields: slug (page#anchor), pageTitle, title, tags
+    const sectionSlug: string = result.slug ?? ""
+    const hashIdx = sectionSlug.indexOf("#")
+    const pageSlug = hashIdx >= 0 ? sectionSlug.slice(0, hashIdx) : sectionSlug
+    const anchor = hashIdx >= 0 ? sectionSlug.slice(hashIdx + 1) : ""
+    const sectionTitle: string = result.title ?? ""
+    const pageTitle: string = result.pageTitle ?? pageSlug
+    const tags: string[] = result.tags ? result.tags.split(" ").filter(Boolean) : []
+
+    // Get the page content from contentIndex for the snippet
+    const pageData = data[pageSlug as FullSlug]
+    const contentText = pageData?.content ?? ""
+
+    // Display title: "PageTitle > SectionHeading" (or just PageTitle if no section)
+    const displayTitle =
+      sectionTitle && sectionTitle !== pageTitle
+        ? `${pageTitle} &rsaquo; ${highlight(term, sectionTitle)}`
+        : highlight(term, pageTitle)
+
     return {
-      id,
-      slug,
-      title: searchType === "tags" ? data[slug].title : highlight(term, data[slug].title ?? ""),
-      content: highlight(term, data[slug].content ?? "", true),
-      tags: highlightTags(term.substring(1), data[slug].tags),
+      id: result.id,
+      slug: pageSlug as FullSlug,
+      title: displayTitle,
+      content: highlight(term, contentText, true),
+      tags: searchType === "tags" ? highlightTags(term.substring(1), tags) : [],
+      relevance: result.relevance,
+      sectionTitle,
+      pageTitle,
+      anchor,
     }
   }
 
   function highlightTags(term: string, tags: string[]) {
-    if (!tags || searchType !== "tags") {
-      return []
-    }
-
+    if (!tags || tags.length === 0) return []
     return tags
       .map((tag) => {
         if (tag.toLowerCase().includes(term.toLowerCase())) {
@@ -307,21 +351,21 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     return new URL(resolveRelative(currentSlug, slug), location.toString())
   }
 
-  const resultToHTML = ({ slug, title, content, tags }: Item) => {
+  const resultToHTML = ({ slug, title, content, tags, relevance, anchor }: Item) => {
     const htmlTags = tags.length > 0 ? `<ul class="tags">${tags.join("")}</ul>` : ``
     const itemTile = document.createElement("a")
     itemTile.classList.add("result-card")
+    itemTile.dataset.relevance = relevance
+    itemTile.dataset.anchor = anchor ?? ""
     itemTile.id = slug
 
-    // Append ?search=term so the target page can scroll to the match
+    // Link directly to the section anchor
     const baseUrl = resolveUrl(slug).toString()
-    const searchParam = currentSearchTerm.trim()
-    itemTile.href = searchParam
-      ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}search=${encodeURIComponent(searchParam)}`
-      : baseUrl
+    itemTile.href = anchor ? `${baseUrl}#${anchor}` : baseUrl
 
+    const relDot = `<span class="relevance-dot relevance-${relevance}"></span>`
     itemTile.innerHTML = `
-      <h3 class="card-title">${title}</h3>
+      <h3 class="card-title">${relDot}${title}</h3>
       ${htmlTags}
       <p class="card-description">${content}</p>
     `
@@ -394,6 +438,7 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
   async function displayPreview(el: HTMLElement | null) {
     if (!searchLayout || !enablePreview || !el || !preview) return
     const slug = el.id as FullSlug
+    const anchor = el.dataset.anchor ?? ""
     const innerDiv = await fetchContent(slug).then((contents) =>
       contents.flatMap((el) => [...highlightHTML(currentSearchTerm, el as HTMLElement).children]),
     )
@@ -402,11 +447,22 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     previewInner.append(...innerDiv)
     preview.replaceChildren(previewInner)
 
-    // scroll to longest highlight
-    const highlights = [...preview.getElementsByClassName("highlight")].sort(
-      (a, b) => b.innerHTML.length - a.innerHTML.length,
-    )
-    highlights[0]?.scrollIntoView({ block: "start" })
+    // Scroll to the section anchor if available, otherwise to the best highlight
+    let scrolled = false
+    if (anchor) {
+      const anchorEl = previewInner.querySelector(`[id="${CSS.escape(anchor)}"]`)
+      if (anchorEl) {
+        anchorEl.scrollIntoView({ block: "start" })
+        scrolled = true
+      }
+    }
+
+    if (!scrolled) {
+      const highlights = [...preview.getElementsByClassName("highlight")].sort(
+        (a, b) => b.innerHTML.length - a.innerHTML.length,
+      )
+      highlights[0]?.scrollIntoView({ block: "start" })
+    }
   }
 
   // ── Main search handler ─────────────────────────────────────
@@ -417,30 +473,30 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     searchLayout.classList.toggle("display-results", currentSearchTerm !== "")
     searchType = currentSearchTerm.startsWith("#") ? "tags" : "basic"
 
-    let searchResults: Array<{ id: number }>
+    let rawResults: Array<{ id: number; score: number; [key: string]: any }>
 
     if (searchType === "tags") {
       currentSearchTerm = currentSearchTerm.substring(1).trim()
       const separatorIndex = currentSearchTerm.indexOf(" ")
       if (separatorIndex !== -1) {
-        // Tag + text: "#python datetime" → filter by tag, search text
+        // Tag + text: "#python datetime"
         const tagFilter = currentSearchTerm.substring(0, separatorIndex).toLowerCase()
         const query = currentSearchTerm.substring(separatorIndex + 1).trim()
-        searchResults = miniSearch
+        rawResults = miniSearch
           .search(query, {
+            boost: { title: 4, titles: 1 },
             combineWith: "AND",
-            boost: { title: 3, tags: 2 },
             filter: (result) => {
-              const docTags: string[] = result.tags ?? []
-              return docTags.some((t: string) => t.toLowerCase() === tagFilter)
+              const t: string = result.tags ?? ""
+              return t.toLowerCase().split(" ").includes(tagFilter)
             },
           })
           .slice(0, numSearchResults)
         searchType = "basic"
         currentSearchTerm = query
       } else {
-        // Pure tag search — prefix allowed here (typing "pyt" should match "python" tag)
-        searchResults = miniSearch
+        // Pure tag search
+        rawResults = miniSearch
           .search(currentSearchTerm, {
             fields: ["tags"],
             prefix: true,
@@ -448,63 +504,59 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
           .slice(0, numSearchResults)
       }
     } else {
-      // Basic text search — exact word matching (no prefix, no fuzzy)
-      const terms = currentSearchTerm
-        .trim()
-        .split(/\s+/)
-        .filter((t) => t.length > 0)
-        .map((t) => t.toLowerCase())
-
-      if (terms.length === 0) {
-        searchResults = []
-      } else if (terms.length === 1) {
-        // Single term — exact match only
-        searchResults = miniSearch
-          .search(currentSearchTerm, {
-            boost: { title: 3, tags: 2 },
-          })
-          .slice(0, numSearchResults)
-      } else {
-        // Multi-term: exact AND results from MiniSearch, then proximity-filter
-        const broadResults = miniSearch.search(currentSearchTerm, {
+      // Basic text search — MiniSearch handles AND + BM25 scoring natively
+      rawResults = miniSearch
+        .search(currentSearchTerm, {
+          boost: { title: 4, titles: 1 },
           combineWith: "AND",
-          boost: { title: 3, tags: 2 },
         })
-
-        // Proximity filter: all terms must co-occur in the same paragraph
-        searchResults = broadResults
-          .filter((r) => {
-            const slug = idToSlug[r.id]
-            const doc = data[slug]
-            if (!doc) return false
-
-            // Word-boundary check helper
-            const hasWord = (text: string, word: string): boolean => {
-              const re = new RegExp(`(?:^|[\\s.,;:!?()\\[\\]{}"'\`/\\-_])${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:$|[\\s.,;:!?()\\[\\]{}"'\`/\\-_])`)
-              return re.test(text)
-            }
-
-            // Check title first — if all terms are in the title, it's a strong match
-            const titleLower = (doc.title ?? "").toLowerCase()
-            if (terms.every((t) => hasWord(titleLower, t))) return true
-
-            // Split content into paragraphs (double newline) and check co-occurrence
-            const paragraphs = (doc.content ?? "")
-              .split(/\n{2,}/)
-              .map((p) => p.toLowerCase())
-
-            return paragraphs.some((para) => terms.every((t) => hasWord(para, t)))
-          })
-          .slice(0, numSearchResults)
-
-        // Fallback: if proximity filter eliminated everything, show page-level AND
-        if (searchResults.length === 0) {
-          searchResults = broadResults.slice(0, numSearchResults)
-        }
-      }
+        .slice(0, numSearchResults)
     }
 
-    const finalResults = searchResults.map((r) => formatForDisplay(currentSearchTerm, r.id))
+    // Classify relevance by relative BM25 score
+    const classified = classifyResults(rawResults)
+
+    // Deduplicate: if multiple sections of the same page appear,
+    // prefer the one whose TITLE best matches the search terms (heading match > text match)
+    const terms = currentSearchTerm
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 0)
+
+    const pageMap = new Map<string, (typeof classified)[0]>()
+    for (const r of classified) {
+      const sectionSlug: string = r.slug ?? ""
+      const pageSlug = sectionSlug.includes("#") ? sectionSlug.split("#")[0] : sectionSlug
+
+      const existing = pageMap.get(pageSlug)
+      if (!existing) {
+        pageMap.set(pageSlug, r)
+        continue
+      }
+
+      // Count how many search terms appear in this section's title
+      const titleLower = (r.title ?? "").toLowerCase()
+      const existingTitleLower = (existing.title ?? "").toLowerCase()
+      const titleHits = terms.filter((t) => titleLower.includes(t)).length
+      const existingTitleHits = terms.filter((t) => existingTitleLower.includes(t)).length
+
+      if (titleHits > existingTitleHits) {
+        // More search terms in the title → better match
+        pageMap.set(pageSlug, r)
+      } else if (titleHits === existingTitleHits && titleHits > 0) {
+        // Same number of title hits → prefer shorter title (more specific heading)
+        if (titleLower.length < existingTitleLower.length) {
+          pageMap.set(pageSlug, r)
+        }
+      } else if (titleHits === 0 && existingTitleHits === 0 && r.score > existing.score) {
+        // No title hits for either → fall back to BM25 score
+        pageMap.set(pageSlug, r)
+      }
+    }
+    const deduped = [...pageMap.values()]
+
+    const finalResults = deduped.map((r) => formatResult(currentSearchTerm, r))
     await displayResults(finalResults)
   }
 
@@ -528,60 +580,5 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   const searchElement = document.getElementsByClassName("search")
   for (const element of searchElement) {
     await setupSearch(element, currentSlug, data)
-  }
-
-  // Scroll to search term if arriving from a search result click
-  const url = new URL(window.location.href)
-  const searchParam = url.searchParams.get("search")
-  if (searchParam) {
-    // Clean the URL (remove ?search= without triggering navigation)
-    url.searchParams.delete("search")
-    history.replaceState({}, "", url.toString())
-
-    // Wait for page to render, then find and scroll to the first text match
-    requestAnimationFrame(() => {
-      const terms = searchParam.toLowerCase().split(/\s+/).filter((t) => t.length > 0)
-      if (terms.length === 0) return
-
-      // Walk all text nodes in the article body to find the first occurrence
-      const article = document.querySelector(".center") ?? document.body
-      const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT)
-      let targetNode: Text | null = null
-      let bestNode: Text | null = null
-      let bestCount = 0
-
-      while (walker.nextNode()) {
-        const node = walker.currentNode as Text
-        const text = node.textContent?.toLowerCase() ?? ""
-        // Count how many search terms appear in this text node
-        const count = terms.filter((t) => {
-          const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-          return new RegExp(`\\b${escaped}\\b`).test(text)
-        }).length
-        if (count > bestCount) {
-          bestCount = count
-          bestNode = node
-        }
-        if (count === terms.length) {
-          targetNode = node
-          break
-        }
-      }
-
-      const scrollTarget = targetNode ?? bestNode
-      if (scrollTarget?.parentElement) {
-        scrollTarget.parentElement.scrollIntoView({ behavior: "smooth", block: "center" })
-        // Briefly highlight the element
-        const el = scrollTarget.parentElement
-        el.style.outline = "2px solid var(--secondary)"
-        el.style.outlineOffset = "4px"
-        el.style.borderRadius = "4px"
-        setTimeout(() => {
-          el.style.outline = ""
-          el.style.outlineOffset = ""
-          el.style.borderRadius = ""
-        }, 3000)
-      }
-    })
   }
 })

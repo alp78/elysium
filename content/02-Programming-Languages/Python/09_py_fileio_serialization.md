@@ -33,7 +33,9 @@ import asyncio
 import aiofiles
 import orjson
 import fsspec
+import fastavro
 import polars as pl
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.compute as pc
@@ -49,7 +51,14 @@ from google.protobuf import descriptor_pb2, descriptor_pool, symbol_database
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
+
+from IPython.display import display, Markdown
+html_formatter = get_ipython().display_formatter.formatters['text/html'] # type: ignore
+html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
+html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 ```
+
+    <function __main__.<lambda>(s)>
 
 ## Read, Write, Append Files
 
@@ -73,7 +82,7 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="fileio_"))
 print(f"Working dir: {tmp_dir}\n")
 ```
 
-    Working dir: C:\Users\aperi\AppData\Local\Temp\fileio_w9oxkg2g
+    Working dir: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou
 
 #### Write a file — mode 'w' (creates new or TRUNCATES existing)
 
@@ -96,7 +105,7 @@ print(f"  Size: {staging_file.stat().st_size} bytes")  # .stat() returns file me
 ```
 
     === Write file (mode='w') ===
-      Written: C:\Users\aperi\AppData\Local\Temp\fileio_w9oxkg2g\pipeline_output.txt
+      Written: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
       Size: 98 bytes
 
 #### Read entire file — mode 'r'
@@ -275,7 +284,7 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
       suffix:   .parquet
       parent:   \data\lake\raw\events\2024\01
       parts:    ('\\', 'data', 'lake', 'raw', 'events', '2024', '01', 'events.parquet')
-      Created dir: C:\Users\aperi\AppData\Local\Temp\fileio_w9oxkg2g\output
+      Created dir: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\output
       Exists: True
       Is dir: True
       Is file: True
@@ -498,236 +507,6 @@ print(f"  {csv_string.strip()}")
       event_id,event_type,timestamp
     evt_001,page_view,2024-01-15T10:30:00Z
     evt_002,purchase,2024-01-15T10:31:00Z
-
-## Parquet Files
-
-```python
-# Parquet Files — columnar storage for analytics & data lakes
-#
-# KEY CONCEPTS:
-# - Parquet: columnar binary format. Designed for analytics — read only the columns you need.
-#   Standard format in data lakes (GCS, S3, ADLS), BigQuery exports, Spark, dbt.
-# - Columnar vs row-based: CSV stores row-by-row (read entire row even for 1 column).
-#   Parquet stores column-by-column — reading 3 columns from a 100-column table is fast.
-# - Built-in compression: snappy (default, fast), gzip (smaller), zstd (best ratio).
-# - Schema is embedded: column names, types, and nullability are stored in the file metadata.
-#   No need for a separate schema file or header row.
-# - pyarrow: Apache Arrow for Python. The standard library for parquet I/O.
-#   pip install pyarrow
-
-
-tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
-```
-
-#### Write parquet from Arrow table
-
-```python
-# Write parquet from Arrow table
-print("=== Write parquet from Arrow table ===")
-# Data Engineering scenario: write pipeline output to a parquet file in a data lake.
-
-# Step 1: Define the schema (column names and types)
-# Arrow types: pa.string(), pa.int64(), pa.float64(), pa.bool_(), pa.timestamp('us'), etc.
-schema = pa.schema([
-    ("event_id", pa.string()),
-    ("event_type", pa.string()),
-    ("user_id", pa.int64()),
-    ("revenue", pa.float64()),
-    ("is_mobile", pa.bool_()),
-])
-
-# Step 2: Create an Arrow table from column arrays
-# Each column is a pa.array — typed, nullable, and efficient.
-table = pa.table({
-    "event_id":   ["evt_001", "evt_002", "evt_003", "evt_004", "evt_005"],
-    "event_type": ["page_view", "purchase", "page_view", "signup", "purchase"],
-    "user_id":    [1001, 1002, 1001, 1003, 1002],
-    "revenue":    [0.0, 49.99, 0.0, 0.0, 129.99],
-    "is_mobile":  [True, False, True, True, False],
-}, schema=schema)
-
-# Step 3: Write to parquet file
-parquet_file = tmp_dir / "events.parquet"
-pq.write_table(table, parquet_file, compression="snappy")
-#   compression options: 'snappy' (default, fast), 'gzip' (smaller), 'zstd' (best ratio), 'none'
-
-print(f"  Written: {parquet_file.name}")
-print(f"  Size: {parquet_file.stat().st_size} bytes (compressed)")
-print(f"  Rows: {table.num_rows}, Columns: {table.num_columns}")
-
-# ─────────────────────────────────────────────
-# READ PARQUET
-# ─────────────────────────────────────────────
-```
-
-    === Write parquet from Arrow table ===
-      Written: events.parquet
-      Size: 1594 bytes (compressed)
-      Rows: 5, Columns: 5
-
-#### Read entire parquet file
-
-```python
-# Read entire parquet file
-print("\n=== Read entire parquet file ===")
-
-table_read = pq.read_table(parquet_file)  # returns an Arrow table
-print(f"  Schema:\n{table_read.schema}")
-print(f"\n  Data:\n{table_read.to_pandas()}")  # convert to pandas DataFrame for display
-```
-
-    
-    === Read entire parquet file ===
-      Schema:
-    event_id: string
-    event_type: string
-    user_id: int64
-    revenue: double
-    is_mobile: bool
-    
-      Data:
-      event_id event_type  user_id  revenue  is_mobile
-    0  evt_001  page_view     1001     0.00       True
-    1  evt_002   purchase     1002    49.99      False
-    2  evt_003  page_view     1001     0.00       True
-    3  evt_004     signup     1003     0.00       True
-    4  evt_005   purchase     1002   129.99      False
-
-#### Read specific columns only (column pruning)
-
-```python
-# Read specific columns only (column pruning)
-print("\n=== Column pruning (read only selected columns) ===")
-# Data Engineering key feature: only read the columns you need.
-# On a 100-column table, this can be 50x faster than CSV.
-
-partial = pq.read_table(parquet_file, columns=["event_id", "revenue"])
-print(f"  Columns read: {partial.column_names}")
-print(f"  Revenue total: {partial.column('revenue').to_pylist()}")  # Arrow column → Python list
-print(f"  Sum: {sum(partial.column('revenue').to_pylist()):.2f}")
-```
-
-    
-    === Column pruning (read only selected columns) ===
-      Columns read: ['event_id', 'revenue']
-      Revenue total: [0.0, 49.99, 0.0, 0.0, 129.99]
-      Sum: 179.98
-
-#### Read with row filter (predicate pushdown)
-
-```python
-# Row filter (predicate pushdown) — parquet skips non-matching row groups at read time
-filtered = pq.read_table(
-    parquet_file,
-    filters=[("event_type", "==", "purchase")]
-)
-print(f"  Purchases only ({filtered.num_rows} rows):")
-print(f"  {filtered.to_pandas()}")
-
-# Metadata — read schema and row count without loading data (instant, even for huge files)
-meta = pq.read_metadata(parquet_file)
-print(f"Rows: {meta.num_rows}, Columns: {meta.num_columns}, Row groups: {meta.num_row_groups}")
-
-schema_read = pq.read_schema(parquet_file)
-print(f"  Schema:")
-for i, field in enumerate(schema_read):
-    print(f"    [{i}] {field.name}: {field.type}")
-```
-
-      Purchases only (2 rows):
-        event_id event_type  user_id  revenue  is_mobile
-    0  evt_002   purchase     1002    49.99      False
-    1  evt_005   purchase     1002   129.99      False
-    Rows: 5, Columns: 5, Row groups: 1
-      Schema:
-        [0] event_id: string
-        [1] event_type: string
-        [2] user_id: int64
-        [3] revenue: double
-        [4] is_mobile: bool
-
-#### Hive-style partitioning
-
-```python
-# Hive-style partitioning — splits files into subdirectories by column value
-# BigQuery, Spark, Athena, dbt all understand this layout
-partitioned_dir = tmp_dir / "events_partitioned"
-pq.write_to_dataset(
-    table,
-    root_path=str(partitioned_dir),
-    partition_cols=["event_type"],
-)
-
-print("  Partitioned dir structure:")
-for f in sorted(partitioned_dir.rglob("*.parquet")):
-    rel = f.relative_to(partitioned_dir)
-    print(f"    {rel} ({f.stat().st_size} bytes)")
-
-# Read back — pyarrow discovers partitions automatically
-dataset = pq.read_table(str(partitioned_dir))
-print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
-```
-
-      Partitioned dir structure:
-        event_type=page_view\3becb3c7324348d283936bf1ebc444ce-0.parquet (1266 bytes)
-        event_type=purchase\3becb3c7324348d283936bf1ebc444ce-0.parquet (1274 bytes)
-        event_type=signup\3becb3c7324348d283936bf1ebc444ce-0.parquet (1255 bytes)
-    Read back: 5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
-
-<h4>Parquet in memory — <code style="font-size:0.75em">BytesIO</code></h4>
-
-```python
-# Parquet in memory — write to BytesIO for cloud upload without temp files
-buffer = BytesIO()
-pq.write_table(table, buffer)
-print(f"  Buffer size: {buffer.tell()} bytes")
-
-# Read back from the same buffer
-buffer.seek(0)
-table_from_mem = pq.read_table(buffer)
-print(f"  Read from memory: {table_from_mem.num_rows} rows")
-```
-
-      Buffer size: 1594 bytes
-      Read from memory: 5 rows
-
-#### CSV vs Parquet comparison
-
-```python
-# CSV vs Parquet — size and feature comparison
-csv_file = tmp_dir / "events.csv"
-table.to_pandas().to_csv(csv_file, index=False)
-
-csv_size = csv_file.stat().st_size
-parquet_size = parquet_file.stat().st_size
-print(f"  CSV size:     {csv_size} bytes")
-print(f"  Parquet size: {parquet_size} bytes")
-print(f"  Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet")
-
-print("""
-Feature              CSV                         Parquet
-──────────────────────────────────────────────────────────────
-Format               Text (row-based)            Binary (columnar)
-Schema               No (header row only)        Embedded (typed, nullable)
-Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-Column pruning       No (read all columns)       Yes (read only what you need)
-Partitioning         Manual (directory naming)    Native (Hive-style)
-Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
-""")
-```
-
-      CSV size:     214 bytes
-      Parquet size: 1594 bytes
-      Ratio:        0.1x smaller with parquet
-    
-    Feature              CSV                         Parquet
-    ──────────────────────────────────────────────────────────────
-    Format               Text (row-based)            Binary (columnar)
-    Schema               No (header row only)        Embedded (typed, nullable)
-    Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-    Column pruning       No (read all columns)       Yes (read only what you need)
-    Partitioning         Manual (directory naming)    Native (Hive-style)
-    Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
 
 ## JSON
 
@@ -1696,9 +1475,9 @@ print(f"  Speedup: {std_time/orj_time:.1f}x")
     }
       Parsed: {'symbol': 'SAP.DE', 'price': 166.52, 'timestamp': '2024-03-12T14:30:00'}
     
-      json:   0.301s
-      orjson: 0.040s
-      Speedup: 7.5x
+      json:   0.299s
+      orjson: 0.038s
+      Speedup: 7.9x
 
 ## Schema Validation with Pydantic
 
@@ -1806,9 +1585,9 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
     │ SYM_2  ┆ 2024-03-03 ┆ 101.0 ┆ 2000   │
     └────────┴────────────┴───────┴────────┘
     
-      csv module: 0.063s
-      Polars:     0.014s
-      Speedup:    4.4x
+      csv module: 0.065s
+      Polars:     0.012s
+      Speedup:    5.4x
 
 ## Cloud and Object Storage
 
@@ -1860,218 +1639,3 @@ shutil.rmtree(tmp)
       fsspec.open('gs://bucket/data.csv')       # Google Cloud Storage
       fsspec.open('abfs://container/data.csv')  # Azure Blob
       fsspec.open('https://api.example.com/data') # HTTP
-
-## Enterprise Message Serialization
-
-#### Avro and Protobuf overview
-
-```python
-# Enterprise serialization — cross-language binary formats with schema evolution
-#
-# WHY NOT JSON/PICKLE:
-#   - JSON: text-based, no schema enforcement, slow to parse at scale
-#   - pickle: Python-only, insecure (arbitrary code execution), no schema
-#
-# PRODUCTION ALTERNATIVES:
-#
-# Apache Avro:
-#   - Binary format with embedded schema (self-describing)
-#   - Schema evolution: add/remove fields without breaking consumers
-#   - Standard for Kafka messages in data engineering
-#   - Python: fastavro library
-#   - Compact: ~50-70% smaller than JSON for structured data
-#
-# Protocol Buffers (Protobuf):
-#   - Binary format with separate .proto schema files
-#   - Code generation: protoc compiles .proto into Python/Java/Go/C# classes
-#   - Standard for gRPC microservices
-#   - Python: protobuf library (google.protobuf)
-#   - Compact: ~60-80% smaller than JSON
-#
-# WHEN TO USE WHAT:
-#   JSON:     human-readable APIs, config files, small payloads
-#   Avro:     Kafka events, data lake storage, schema registry
-#   Protobuf: gRPC services, high-performance IPC, mobile APIs
-#   pickle:   NEVER in production (insecure, Python-only)
-
-print("Format      Size    Speed     Schema    Cross-lang  Use case")
-print("─" * 70)
-print("JSON        Large   Slow      No        Yes         APIs, config")
-print("Avro        Small   Fast      Yes       Yes         Kafka, data lakes")
-print("Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile")
-print("pickle      Medium  Fast      No        No          NEVER in prod")
-print("struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols")
-```
-
-    Format      Size    Speed     Schema    Cross-lang  Use case
-    ──────────────────────────────────────────────────────────────────────
-    JSON        Large   Slow      No        Yes         APIs, config
-    Avro        Small   Fast      Yes       Yes         Kafka, data lakes
-    Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile
-    pickle      Medium  Fast      No        No          NEVER in prod
-    struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols
-
-#### Protobuf in Python — manual message building
-
-```python
-# Protocol Buffers (Protobuf) — cross-language binary serialization
-#
-# WHAT: Protobuf defines message schemas in .proto files. The protoc compiler
-#   generates Python/Java/Go/C# classes from the schema. You serialize instances
-#   to compact binary bytes and deserialize back with full type safety.
-#
-# HOW IT WORKS (production workflow):
-#   1. Define schema: message StockQuote { string symbol = 1; double price = 2; }
-#   2. Compile: protoc --python_out=. stock.proto → generates stock_pb2.py
-#   3. Use: quote = StockQuote(symbol="SAP.DE", price=166.52)
-#          data = quote.SerializeToString()  # bytes
-#          parsed = StockQuote.FromString(data)  # back to object
-#
-# WHY: 60-80% smaller than JSON, 10-100x faster to parse, strict schema,
-#   backward/forward compatible (add fields without breaking old consumers).
-#
-# WHEN TO USE: gRPC services, Kafka events, high-frequency data feeds,
-#   mobile APIs (bandwidth matters), inter-service communication
-#
-# In this cell we build a protobuf message MANUALLY using the descriptor API
-# (without running protoc). In production, always use protoc-generated classes.
-
-# Define the schema programmatically (normally protoc generates this)
-DESCRIPTOR = descriptor_pb2.FileDescriptorProto(
-    name="stock_quote.proto",
-    package="stoxx",
-    message_type=[
-        descriptor_pb2.DescriptorProto(
-            name="StockQuote",
-            field=[
-                descriptor_pb2.FieldDescriptorProto(
-                    name="symbol", number=1,
-                    type=descriptor_pb2.FieldDescriptorProto.TYPE_STRING,
-                    label=descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL,
-                ),
-                descriptor_pb2.FieldDescriptorProto(
-                    name="price", number=2,
-                    type=descriptor_pb2.FieldDescriptorProto.TYPE_DOUBLE,
-                    label=descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL,
-                ),
-                descriptor_pb2.FieldDescriptorProto(
-                    name="volume", number=3,
-                    type=descriptor_pb2.FieldDescriptorProto.TYPE_INT64,
-                    label=descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL,
-                ),
-            ],
-        ),
-    ],
-)
-
-# Register the descriptor and create a message class
-pool = descriptor_pool.DescriptorPool()
-file_desc = pool.Add(DESCRIPTOR)
-msg_desc = pool.FindMessageTypeByName("stoxx.StockQuote")
-
-factory = _reflection.GeneratedProtocolMessageType(
-    "StockQuote",
-    (_message.Message,),
-    {"DESCRIPTOR": msg_desc, "__module__": "__main__"},
-)
-
-# Create a message, serialize, deserialize
-quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg]  # fields are dynamic (runtime reflection)
-binary = quote.SerializeToString()  # type: ignore[attr-defined]
-print(f"  Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}")  # type: ignore[attr-defined]
-print(f"  Binary:     {len(binary)} bytes ({binary.hex()[:40]}...)")
-
-# Deserialize from bytes
-parsed = factory.FromString(binary)  # type: ignore[attr-defined]
-print(f"  Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}")  # type: ignore[attr-defined]
-
-# Compare sizes
-json_size = len(json.dumps({"symbol": "SAP.DE", "price": 166.52, "volume": 82621}).encode())
-print(f"\n  JSON size:     {json_size} bytes")
-print(f"  Protobuf size: {len(binary)} bytes")
-print(f"  Savings:       {(1 - len(binary)/json_size)*100:.0f}%")
-```
-
-      Message:    symbol=SAP.DE, price=166.52, volume=82621
-      Binary:     21 bytes (0a065341502e444511713d0ad7a3d0644018bd85...)
-      Parsed:     symbol=SAP.DE, price=166.52, volume=82621
-    
-      JSON size:     54 bytes
-      Protobuf size: 21 bytes
-      Savings:       61%
-
-#### Protobuf with protoc (production pattern)
-
-```python
-# Production protobuf workflow — how it looks with protoc-generated code
-#
-# This cell shows the PATTERN you'd use in a real project.
-# The code below is not executable without running protoc first.
-
-print("""
-  ── Step 1: Define schema (stock_quote.proto) ──
-
-  syntax = "proto3";
-  package stoxx;
-
-  message StockQuote {
-    string symbol = 1;     // field number, not default value
-    double price = 2;
-    int64  volume = 3;
-    string exchange = 4;   // added later — old consumers ignore it (forward compat)
-  }
-
-  ── Step 2: Compile ──
-
-  $ protoc --python_out=. stock_quote.proto
-  # Generates: stock_quote_pb2.py
-
-  ── Step 3: Use in Python ──
-
-  from stock_quote_pb2 import StockQuote
-
-  # Serialize
-  quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
-  data = quote.SerializeToString()  # bytes — send to Kafka, gRPC, file
-
-  # Deserialize
-  parsed = StockQuote.FromString(data)
-  print(parsed.symbol, parsed.price)
-
-  # Schema evolution: old code ignores field 4 (exchange)
-  # New code reads it if present, uses default ("") if absent
-""")
-```
-
-    
-      ── Step 1: Define schema (stock_quote.proto) ──
-    
-      syntax = "proto3";
-      package stoxx;
-    
-      message StockQuote {
-        string symbol = 1;     // field number, not default value
-        double price = 2;
-        int64  volume = 3;
-        string exchange = 4;   // added later — old consumers ignore it (forward compat)
-      }
-    
-      ── Step 2: Compile ──
-    
-      $ protoc --python_out=. stock_quote.proto
-      # Generates: stock_quote_pb2.py
-    
-      ── Step 3: Use in Python ──
-    
-      from stock_quote_pb2 import StockQuote
-    
-      # Serialize
-      quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
-      data = quote.SerializeToString()  # bytes — send to Kafka, gRPC, file
-    
-      # Deserialize
-      parsed = StockQuote.FromString(data)
-      print(parsed.symbol, parsed.price)
-    
-      # Schema evolution: old code ignores field 4 (exchange)
-      # New code reads it if present, uses default ("") if absent

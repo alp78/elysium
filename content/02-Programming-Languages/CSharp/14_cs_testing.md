@@ -5,16 +5,16 @@ technology: [csharp, dotnet]
 tags: [testing, csharp]
 aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
 keywords: [xUnit, NUnit, MSTest, Moq, FluentAssertions, Theory, Fact, fixture, mock, TDD]
-description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [[13_py_testing]] for the Python equivalent."
+description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [[15_py_testing]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[13_py_testing]]"
+  - "[[15_py_testing]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 12. Testing - C#
+# 14. Testing - C#
 
 ## Testing Philosophy
 

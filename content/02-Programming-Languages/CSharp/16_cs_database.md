@@ -5,16 +5,16 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [Entity Framework, Dapper, SqlConnection, DbContext, LINQ to SQL, migrations, connection string, ORM]
-description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [[15_py_database]] for the Python equivalent."
+description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [[17_py_database]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[15_py_database]]"
+  - "[[17_py_database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 14. Database - C#
+# 16. Database - C#
 
 Topics covered:
 - SQLite CRUD (Microsoft.Data.Sqlite)
@@ -23,7 +23,6 @@ Topics covered:
 - Parameterized Queries & SQL Injection Prevention
 - Dapper (micro-ORM, like pandas read_sql / SQLAlchemy)
 - Real-world Index Provider Queries (index provider)
-
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
@@ -50,10 +49,8 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 ```
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
-    
 
 ## 1. SQLite — Lightweight Embedded Database
-
 
 ```csharp
 #r "nuget: Microsoft.Data.Sqlite"
@@ -211,9 +208,7 @@ Console.WriteLine($"\nTotal trades: {cmd.ExecuteScalar()}");
 conn.Close();
 ```
 
-
 <div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.Sqlite, 10.0.5</span></li></ul></div></div>
-
 
     Created table: trades
     Inserted 6 trades
@@ -244,10 +239,8 @@ conn.Close();
       Transaction committed (2 trades inserted)
     
     Total trades: 7
-    
 
 ## 2. SQL Server — Index Data (Medallion Architecture)
-
 
 ```csharp
 #r "nuget: Microsoft.Data.SqlClient"
@@ -304,9 +297,7 @@ using (var conn = new SqlConnection(connStr))
 }
 ```
 
-
 <div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.SqlClient, 7.0.0</span></li></ul></div></div>
-
 
     Connected to SQL Server: stoxx database
     
@@ -345,8 +336,6 @@ using (var conn = new SqlConnection(connStr))
       oil_20               Oil & Gas 20                   $
       stoxx_asia_50        STOXX Asia/Pacific 50          
       stoxx_usa_50         STOXX USA 50                   $
-    
-
 
 ```csharp
 #r "nuget: Microsoft.Data.SqlClient"
@@ -404,9 +393,7 @@ using (var reader = cmd.ExecuteReader())
 conn.Close();
 ```
 
-
 <div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.SqlClient, 7.0.0</span></li></ul></div></div>
-
 
     Connected to SQL Server: stoxx database
     
@@ -445,10 +432,8 @@ conn.Close();
       oil_20               Oil & Gas 20                   $
       stoxx_asia_50        STOXX Asia/Pacific 50          
       stoxx_usa_50         STOXX USA 50                   $
-    
 
 ## 3. ODBC Provider
-
 
 ```csharp
 #r "nuget: System.Data.Odbc"
@@ -496,9 +481,7 @@ Console.WriteLine($"{"Python equivalent",-20} {"—",-25} {"pyodbc",-25}");
 Console.WriteLine($"{"Connection string",-20} {"Server=...",-25} {"Driver=...",-25}");
 ```
 
-
 <div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>System.Data.Odbc, 10.0.5</span></li></ul></div></div>
-
 
     === ODBC Provider (same driver as Python pyodbc) ===
       BNP.PA     BNP PARIBAS ACT.A    0.6839
@@ -514,11 +497,9 @@ Console.WriteLine($"{"Connection string",-20} {"Server=...",-25} {"Driver=...",-
     Parameters           @named                    ? positional             
     SQL Server features  Full                      Standard ODBC only       
     Python equivalent    —                         pyodbc                   
-    Connection string    Server=...                Driver=...               
-    
+    Connection string    Server=...                Driver=...
 
 ## 4. Dapper — Micro-ORM
-
 
 ```csharp
 // Dapper — lightweight ORM that maps SQL results to C# objects.
@@ -605,11 +586,9 @@ Console.WriteLine($"{"Python equiv",-20} {"pyodbc",-20} {"pd.read_sql()",-20} {"
     Performance          Fastest              ~Same as ADO.NET     Slower (tracking)   
     Boilerplate          Lots                 Minimal              Minimal             
     Best for             Notebooks, scripts   Services, APIs       Large apps, CRUD    
-    Python equiv         pyodbc               pd.read_sql()        SQLAlchemy ORM      
-    
+    Python equiv         pyodbc               pd.read_sql()        SQLAlchemy ORM
 
 ## 5. Summary
-
 
 ```csharp
 // Summary — C# database cheat sheet

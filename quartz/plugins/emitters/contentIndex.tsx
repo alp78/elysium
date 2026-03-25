@@ -1,4 +1,4 @@
-import { Root } from "hast"
+import { Root, Element, Text } from "hast"
 import { GlobalConfiguration } from "../../cfg"
 import { getDate } from "../../components/Date"
 import { escapeHTML } from "../../util/escape"
@@ -23,7 +23,121 @@ export type ContentDetails = {
   description?: string
 }
 
+// ---------------------------------------------------------------------------
+// Section extraction from HAST tree
+// ---------------------------------------------------------------------------
 
+interface Section {
+  /** The heading text for this section (empty string for the intro before any heading) */
+  heading: string
+  /** The heading's id attribute (used as anchor) */
+  anchor: string
+  /** Depth: 1=h1, 2=h2, ... 6=h6.  0 = intro (before first heading) */
+  depth: number
+  /** Plain text content of this section (between this heading and the next) */
+  text: string
+  /** Breadcrumb of ancestor heading texts */
+  titles: string[]
+}
+
+/** Extract plain text from a HAST node tree */
+function getText(node: any): string {
+  if (node.type === "text") return (node as Text).value
+  if (node.children) return node.children.map(getText).join("")
+  return ""
+}
+
+/** Get the heading depth from a tag name, or 0 if not a heading */
+function headingDepth(tagName: string): number {
+  const match = /^h([1-6])$/.exec(tagName)
+  return match ? parseInt(match[1], 10) : 0
+}
+
+/**
+ * Walk the HAST tree and split into sections at heading boundaries.
+ * Every h1–h6 starts a new section. Text between headings becomes the
+ * section body. The breadcrumb (`titles`) tracks ancestor headings.
+ */
+function extractSections(tree: Root): Section[] {
+  const sections: Section[] = []
+
+  // Heading stack for breadcrumb: [{depth, text}]
+  const headingStack: Array<{ depth: number; text: string }> = []
+
+  // Current section being accumulated
+  let currentSection: Section = {
+    heading: "",
+    anchor: "",
+    depth: 0,
+    text: "",
+    titles: [],
+  }
+
+  function flushSection() {
+    const trimmed = currentSection.text.trim()
+    // Only emit sections that have some text or a heading
+    if (trimmed.length > 0 || currentSection.heading) {
+      sections.push({ ...currentSection, text: trimmed })
+    }
+  }
+
+  function walkNode(node: any) {
+    if (node.type === "element") {
+      const el = node as Element
+      const depth = headingDepth(el.tagName)
+
+      if (depth > 0) {
+        // ── New heading found — flush current section and start new one ──
+        flushSection()
+
+        const headingText = getText(el).trim()
+        const anchor = (el.properties?.id as string) ?? ""
+
+        // Update heading stack: pop everything at this depth or deeper
+        while (headingStack.length > 0 && headingStack[headingStack.length - 1].depth >= depth) {
+          headingStack.pop()
+        }
+
+        // Build breadcrumb from remaining stack
+        const titles = headingStack.map((h) => h.text)
+
+        // Push this heading onto the stack
+        headingStack.push({ depth, text: headingText })
+
+        // Start new section
+        currentSection = {
+          heading: headingText,
+          anchor,
+          depth,
+          text: "",
+          titles,
+        }
+        return // Don't recurse into heading children (we already extracted the text)
+      }
+    }
+
+    // For text nodes, accumulate text
+    if (node.type === "text") {
+      currentSection.text += (node as Text).value
+    }
+
+    // Recurse into children
+    if (node.children) {
+      for (const child of node.children) {
+        walkNode(child)
+      }
+    }
+  }
+
+  walkNode(tree)
+  flushSection() // flush the last section
+
+  return sections
+}
+
+// ---------------------------------------------------------------------------
+// Options & helpers
+// ---------------------------------------------------------------------------
 
 interface Options {
   enableSiteMap: boolean
@@ -96,6 +210,10 @@ function generateRSSFeed(cfg: GlobalConfiguration, idx: ContentIndexMap, limit?:
   </rss>`
 }
 
+// ---------------------------------------------------------------------------
+// Emitter plugin
+// ---------------------------------------------------------------------------
+
 export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
   opts = { ...defaultOptions, ...opts }
   return {
@@ -141,12 +259,10 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
         })
       }
 
+      // ── Content index (used by graph, explorer, etc.) ──
       const fp = joinSegments("static", "contentIndex") as FullSlug
       const simplifiedIndex = Object.fromEntries(
         Array.from(linkIndex).map(([slug, content]) => {
-          // remove description and from content index as nothing downstream
-          // actually uses it. we only keep it in the index as we need it
-          // for the RSS feed
           delete content.description
           delete content.date
           return [slug, content]
@@ -160,20 +276,43 @@ export const ContentIndex: QuartzEmitterPlugin<Partial<Options>> = (opts) => {
         ext: ".json",
       })
 
-      // ── Pre-built MiniSearch index ──────────────────────────────
+      // ── Pre-built MiniSearch index — section-level ─────────────
+      // Search is restricted to headings and tags only.
+      // Each page is split at heading boundaries (h1–h6). Each section
+      // becomes one MiniSearch document with:
+      //   title:     section heading text (boosted 4×)
+      //   titles:    ancestor heading breadcrumb (boosted 1×)
+      //   tags:      page-level tags
+      //   slug:      "page-slug#anchor" for direct linking
+      //   pageTitle: page title for display
+
       const ms = new MiniSearch({
         ...miniSearchOptions,
       })
 
       let docId = 0
-      for (const [slug, details] of linkIndex) {
-        ms.add({
-          id: docId++,
-          slug: slug as string,
-          title: details.title ?? "",
-          content: details.content ?? "",
-          tags: (details.tags ?? []).join(" "),
-        })
+      for (const [tree, file] of content) {
+        const slug = file.data.slug!
+        const pageTitle = file.data.frontmatter?.title ?? slug
+        const tags = (file.data.frontmatter?.tags ?? []).join(" ")
+        const sections = extractSections(tree as Root)
+
+        for (const section of sections) {
+          const sectionSlug = section.anchor
+            ? `${slug}#${section.anchor}`
+            : slug
+
+          const titlesWithPage = [pageTitle, ...section.titles].filter(Boolean).join(" > ")
+
+          ms.add({
+            id: docId++,
+            slug: sectionSlug,
+            pageTitle,
+            title: section.heading || pageTitle,
+            titles: titlesWithPage,
+            tags,
+          })
+        }
       }
 
       const searchFp = joinSegments("static", "searchIndex") as FullSlug

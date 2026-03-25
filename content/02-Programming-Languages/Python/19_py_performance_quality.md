@@ -5,16 +5,16 @@ technology: [python]
 tags: [python, performance, testing]
 aliases: [performance profiling, code quality, timeit, cProfile, tracemalloc, ruff, mypy]
 keywords: [timeit, perf_counter, cProfile, line_profiler, tracemalloc, sys.getsizeof, Big-O, collections performance, ruff, pylint, mypy, black, bandit, type hints]
-description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [[18_cs_performance_quality]] for the C# equivalent."
+description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [[19_cs_performance_quality]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[18_cs_performance_quality]]"
+  - "[[19_cs_performance_quality]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
 ---
 
-# 17. Performance & Code Quality - Python
+# 19. Performance & Code Quality - Python
 
 Topics covered:
 - Timing & Benchmarking (timeit, perf_counter, cProfile)
@@ -30,18 +30,18 @@ Topics covered:
 
 ## 1. Timing & Benchmarking
 
-Timing & Benchmarking — measure how long code takes to run.
-
-**KEY CONCEPTS:**
-- time.perf_counter(): highest resolution timer, best for wall-clock measurement.
-- timeit: runs code many times to get a reliable average. Disables GC.
-- %%timeit: Jupyter magic that auto-calibrates iteration count.
-- Always measure AFTER warming up (first run may include JIT, imports, caching).
-- C# equivalent: BenchmarkDotNet, Stopwatch.
-
-> **Golden Rule:** Never optimize without measuring first. Gut feelings are wrong.
-
 ```python
+# Timing & Benchmarking — measure how long code takes to run.
+#
+# KEY CONCEPTS:
+# - time.perf_counter(): highest resolution timer, best for wall-clock measurement.
+# - timeit: runs code many times to get a reliable average. Disables GC.
+# - %%timeit: Jupyter magic that auto-calibrates iteration count.
+# - Always measure AFTER warming up (first run may include JIT, imports, caching).
+# - C# equivalent: BenchmarkDotNet, Stopwatch.
+#
+# GOLDEN RULE: Never optimize without measuring first. Gut feelings are wrong.
+
 import time
 import timeit
 
@@ -117,18 +117,18 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
 
 ## 2. Memory Profiling
 
-Memory Profiling — measure how much RAM your code uses.
-
-**KEY CONCEPTS:**
-- sys.getsizeof(): size of a single object (shallow, not recursive).
-- tracemalloc: built-in, tracks memory allocations line-by-line.
-- __sizeof__() vs sys.getsizeof(): the latter adds GC overhead.
-- C# equivalent: dotMemory, GC.GetTotalMemory().
-
-> **Golden Rule:** Memory is the silent killer. A 10x memory blowup is invisible
-  until your container gets OOM-killed in production.
-
 ```python
+# Memory Profiling — measure how much RAM your code uses.
+#
+# KEY CONCEPTS:
+# - sys.getsizeof(): size of a single object (shallow, not recursive).
+# - tracemalloc: built-in, tracks memory allocations line-by-line.
+# - __sizeof__() vs sys.getsizeof(): the latter adds GC overhead.
+# - C# equivalent: dotMemory, GC.GetTotalMemory().
+#
+# GOLDEN RULE: Memory is the silent killer. A 10x memory blowup is invisible
+#   until your container gets OOM-killed in production.
+
 import sys
 
 # --- sys.getsizeof (shallow) ---
@@ -250,19 +250,19 @@ del regular, slotted, list_data
 
 ## 3. CPU Profiling
 
-cProfile — built-in profiler, shows time per function.
-
-**KEY CONCEPTS:**
-- cProfile.run(): profiles a statement, prints sorted table.
-- pstats: programmatic access to profiling results.
-- tottime: time spent IN the function (excluding sub-calls).
-- cumtime: total time INCLUDING sub-calls.
-- C# equivalent: dotTrace, PerfView.
-
-> **Golden Rule:** Profile the WHOLE program first, then zoom into hotspots.
-  Don't guess where the bottleneck is.
-
 ```python
+# cProfile — built-in profiler, shows time per function.
+#
+# KEY CONCEPTS:
+# - cProfile.run(): profiles a statement, prints sorted table.
+# - pstats: programmatic access to profiling results.
+# - tottime: time spent IN the function (excluding sub-calls).
+# - cumtime: total time INCLUDING sub-calls.
+# - C# equivalent: dotTrace, PerfView.
+#
+# GOLDEN RULE: Profile the WHOLE program first, then zoom into hotspots.
+#   Don't guess where the bottleneck is.
+
 import cProfile
 import pstats
 import io
@@ -350,20 +350,20 @@ for fn in [concat_plus, concat_join, concat_io]:
 
 ## 4. Big-O Complexity & Algorithmic Thinking
 
-Big-O Complexity — how performance scales with input size.
-
-**KEY CONCEPTS:**
-- O(1): constant — dict lookup, set membership, array index.
-- O(log n): logarithmic — binary search, balanced tree operations.
-- O(n): linear — list scan, single loop, map/filter.
-- O(n log n): linearithmic — sorting (mergesort, timsort).
-- O(n²): quadratic — nested loops, bubble sort. RED FLAG for n > 10K.
-- O(2ⁿ): exponential — naive recursion. NO-GO for n > 25.
-
-> **Golden Rule:** Know the complexity of the data structures you use.
-> **Golden Rule:** If n can grow, O(n²) is a ticking time bomb.
-
 ```python
+# Big-O Complexity — how performance scales with input size.
+#
+# KEY CONCEPTS:
+# - O(1): constant — dict lookup, set membership, array index.
+# - O(log n): logarithmic — binary search, balanced tree operations.
+# - O(n): linear — list scan, single loop, map/filter.
+# - O(n log n): linearithmic — sorting (mergesort, timsort).
+# - O(n²): quadratic — nested loops, bubble sort. RED FLAG for n > 10K.
+# - O(2ⁿ): exponential — naive recursion. NO-GO for n > 25.
+#
+# GOLDEN RULE: Know the complexity of the data structures you use.
+# GOLDEN RULE: If n can grow, O(n²) is a ticking time bomb.
+
 import time
 
 def measure(fn, *args, label=""):
@@ -423,30 +423,30 @@ measure(find_dupes_linear, small, label="Linear O(n)")
 
 ## 5. Data Structure Performance Cheat Sheet
 
-Python Data Structure Performance
-
-| Operation        | list    | dict    | set     | deque   |
-|-----------------|---------|---------|---------|---------|
-| Index/Key       | O(1)    | O(1)    | -       | O(n)    |
-| Search          | O(n)    | O(1)    | O(1)    | O(n)    |
-| Insert end      | O(1)*   | O(1)    | O(1)    | O(1)    |
-| Insert front    | O(n)    | -       | -       | O(1)    |
-| Delete end      | O(1)    | O(1)    | O(1)    | O(1)    |
-| Delete front    | O(n)    | -       | -       | O(1)    |
-| Delete middle   | O(n)    | O(1)    | O(1)    | O(n)    |
-| Sort            | O(nlogn)| -       | -       | O(nlogn)|
-| Iteration       | O(n)    | O(n)    | O(n)    | O(n)    |
-| Memory          | Compact | Heavy   | Heavy   | Compact |
-
-*amortized (occasional resize is O(n))
-
-> **Golden Rule:** Use the right data structure for the access pattern.
-  - Need fast lookup? dict or set.
-  - Need ordered unique items? sorted list or SortedSet.
-  - Need FIFO queue? collections.deque, not list.
-  - Need both ends? deque.
-
 ```python
+# Python Data Structure Performance
+#
+# | Operation        | list    | dict    | set     | deque   |
+# |-----------------|---------|---------|---------|---------|
+# | Index/Key       | O(1)    | O(1)    | -       | O(n)    |
+# | Search          | O(n)    | O(1)    | O(1)    | O(n)    |
+# | Insert end      | O(1)*   | O(1)    | O(1)    | O(1)    |
+# | Insert front    | O(n)    | -       | -       | O(1)    |
+# | Delete end      | O(1)    | O(1)    | O(1)    | O(1)    |
+# | Delete front    | O(n)    | -       | -       | O(1)    |
+# | Delete middle   | O(n)    | O(1)    | O(1)    | O(n)    |
+# | Sort            | O(nlogn)| -       | -       | O(nlogn)|
+# | Iteration       | O(n)    | O(n)    | O(n)    | O(n)    |
+# | Memory          | Compact | Heavy   | Heavy   | Compact |
+#
+# *amortized (occasional resize is O(n))
+#
+# GOLDEN RULE: Use the right data structure for the access pattern.
+#   - Need fast lookup? dict or set.
+#   - Need ordered unique items? sorted list or SortedSet.
+#   - Need FIFO queue? collections.deque, not list.
+#   - Need both ends? deque.
+
 from collections import deque
 import time
 
@@ -481,51 +481,50 @@ print(f"  deque is {t_list/t_deque:.0f}x faster")
 
 ## 6. Golden Rules of Performance
 
-GOLDEN RULES OF PERFORMANCE
-
-**1. MEASURE BEFORE OPTIMIZING**
-"Premature optimization is the root of all evil" — Knuth.
-Profile first. The bottleneck is almost never where you think.
-
-**2. ALGORITHM > MICRO-OPTIMIZATION**
-Switching from O(n²) to O(n log n) beats any amount of loop unrolling.
-A bad algorithm in C is slower than a good algorithm in Python.
-
-**3. USE BUILT-IN DATA STRUCTURES**
-Python's list, dict, set are implemented in C.
-Don't build your own hash table. Don't sort manually.
-
-**4. VECTORIZE, DON'T LOOP**
-NumPy/Pandas/Polars operate on arrays in C/Rust.
-A Python for-loop over 1M rows is 100-1000x slower than vectorized code.
-
-**5. MINIMIZE COPIES**
-Every .copy(), every string concatenation, every list comprehension
-allocates memory and takes time. Prefer in-place or generator patterns.
-
-**6. I/O IS USUALLY THE BOTTLENECK**
-Network > Disk > Memory > CPU. Optimize I/O first.
-Use batch reads, connection pooling, and caching.
-
-**7. CACHE EXPENSIVE RESULTS**
-functools.lru_cache, memoization, Redis.
-If you compute the same thing twice, you're wasting time.
-
-**8. LAZY IS BETTER THAN EAGER**
-Generators, itertools, Polars lazy mode.
-Don't load 1GB into RAM if you only need 10 rows.
-
-**9. KNOW YOUR CONSTANTS**
-O(n) with a constant of 1000 is slower than O(n log n) with a constant of 1
-for n < 1M. Theory and practice diverge at small n.
-
-**10. READABLE CODE IS MAINTAINABLE CODE**
-A 10% performance gain that makes code unreadable is rarely worth it.
-Only optimize hot paths after profiling confirms the need.
-
-Example: Rule 7 — caching
-
 ```python
+# GOLDEN RULES OF PERFORMANCE
+#
+# 1. MEASURE BEFORE OPTIMIZING
+#    "Premature optimization is the root of all evil" — Knuth.
+#    Profile first. The bottleneck is almost never where you think.
+#
+# 2. ALGORITHM > MICRO-OPTIMIZATION
+#    Switching from O(n²) to O(n log n) beats any amount of loop unrolling.
+#    A bad algorithm in C is slower than a good algorithm in Python.
+#
+# 3. USE BUILT-IN DATA STRUCTURES
+#    Python's list, dict, set are implemented in C.
+#    Don't build your own hash table. Don't sort manually.
+#
+# 4. VECTORIZE, DON'T LOOP
+#    NumPy/Pandas/Polars operate on arrays in C/Rust.
+#    A Python for-loop over 1M rows is 100-1000x slower than vectorized code.
+#
+# 5. MINIMIZE COPIES
+#    Every .copy(), every string concatenation, every list comprehension
+#    allocates memory and takes time. Prefer in-place or generator patterns.
+#
+# 6. I/O IS USUALLY THE BOTTLENECK
+#    Network > Disk > Memory > CPU. Optimize I/O first.
+#    Use batch reads, connection pooling, and caching.
+#
+# 7. CACHE EXPENSIVE RESULTS
+#    functools.lru_cache, memoization, Redis.
+#    If you compute the same thing twice, you're wasting time.
+#
+# 8. LAZY IS BETTER THAN EAGER
+#    Generators, itertools, Polars lazy mode.
+#    Don't load 1GB into RAM if you only need 10 rows.
+#
+# 9. KNOW YOUR CONSTANTS
+#    O(n) with a constant of 1000 is slower than O(n log n) with a constant of 1
+#    for n < 1M. Theory and practice diverge at small n.
+#
+# 10. READABLE CODE IS MAINTAINABLE CODE
+#     A 10% performance gain that makes code unreadable is rarely worth it.
+#     Only optimize hot paths after profiling confirms the need.
+
+# Example: Rule 7 — caching
 from functools import lru_cache
 
 def fib_slow(n):
@@ -558,50 +557,49 @@ fib_cached.cache_clear()
 
 ## 7. Absolute No-Go's
 
-ABSOLUTE NO-GO'S — things that should NEVER appear in production code.
-
-**1. STRING CONCATENATION IN A LOOP**
-s += x is O(n²). Use "".join() or io.StringIO.
-
-**2. NESTED LOOPS ON LARGE DATA**
-for x in big: for y in big: → O(n²). Refactor to dict lookup or set intersection.
-
-**3. BARE except / except Exception**
-Catches KeyboardInterrupt, SystemExit, and hides real bugs.
-Always catch specific exceptions.
-
-**4. MUTABLE DEFAULT ARGUMENTS**
-def f(x=[]): → list is shared across calls. Use None sentinel.
-
-**5. GLOBAL MUTABLE STATE**
-Global variables modified by multiple functions = untraceable bugs.
-Use dependency injection or closures.
-
-**6. EVAL() / EXEC() WITH USER INPUT**
-Remote code execution vulnerability. NEVER. Use ast.literal_eval for safe parsing.
-
-**7. HARDCODED SECRETS**
-Passwords, API keys, tokens in source code → use env vars or secret managers.
-
-**8. IGNORING RETURN VALUES**
-sorted() returns a NEW list. .sort() returns None.
-df.dropna() returns a new DataFrame unless inplace=True.
-
-**9. WILDCARD IMPORTS**
-from module import * → pollutes namespace, hides dependencies, breaks linting.
-
-**10. CATCHING AND SILENCING ERRORS**
-except: pass → bugs become invisible. At minimum, log the error.
-
-**11. USING is FOR VALUE COMPARISON**
-x is 256 works by accident (int caching). Use x == 256.
-
-**12. NOT CLOSING RESOURCES**
-open() without with: → file handle leak. Same for DB connections, sockets.
-
---- Demo: Mutable default argument (NO-GO #4) ---
-
 ```python
+# ABSOLUTE NO-GO'S — things that should NEVER appear in production code.
+#
+# 1. STRING CONCATENATION IN A LOOP
+#    s += x is O(n²). Use "".join() or io.StringIO.
+#
+# 2. NESTED LOOPS ON LARGE DATA
+#    for x in big: for y in big: → O(n²). Refactor to dict lookup or set intersection.
+#
+# 3. BARE except / except Exception
+#    Catches KeyboardInterrupt, SystemExit, and hides real bugs.
+#    Always catch specific exceptions.
+#
+# 4. MUTABLE DEFAULT ARGUMENTS
+#    def f(x=[]): → list is shared across calls. Use None sentinel.
+#
+# 5. GLOBAL MUTABLE STATE
+#    Global variables modified by multiple functions = untraceable bugs.
+#    Use dependency injection or closures.
+#
+# 6. EVAL() / EXEC() WITH USER INPUT
+#    Remote code execution vulnerability. NEVER. Use ast.literal_eval for safe parsing.
+#
+# 7. HARDCODED SECRETS
+#    Passwords, API keys, tokens in source code → use env vars or secret managers.
+#
+# 8. IGNORING RETURN VALUES
+#    sorted() returns a NEW list. .sort() returns None.
+#    df.dropna() returns a new DataFrame unless inplace=True.
+#
+# 9. WILDCARD IMPORTS
+#    from module import * → pollutes namespace, hides dependencies, breaks linting.
+#
+# 10. CATCHING AND SILENCING ERRORS
+#     except: pass → bugs become invisible. At minimum, log the error.
+#
+# 11. USING is FOR VALUE COMPARISON
+#     x is 256 works by accident (int caching). Use x == 256.
+#
+# 12. NOT CLOSING RESOURCES
+#     open() without with: → file handle leak. Same for DB connections, sockets.
+
+# --- Demo: Mutable default argument (NO-GO #4) ---
 def bad_append(item, lst=[]):
     lst.append(item)
     return lst
@@ -635,38 +633,37 @@ print(f"  Call 3: {good_append(3)}")
 
 ## 8. Code Smells & Anti-Patterns
 
-CODE SMELLS — patterns that indicate deeper problems.
-
-**1. GOD FUNCTION / GOD CLASS**
-One function/class that does everything. Break into single-responsibility units.
-Rule of thumb: if a function > 30 lines, it's doing too much.
-
-**2. DEEP NESTING**
-if: if: if: for: if: → unreadable. Use early returns, guard clauses.
-
-**3. MAGIC NUMBERS**
-if x > 86400: → what is 86400? Use SECONDS_PER_DAY = 86400.
-
-**4. COPY-PASTE CODE**
-Same block in 3+ places → extract to a function.
-DRY: Don't Repeat Yourself.
-
-**5. BOOLEAN BLINDNESS**
-process(data, True, False, True) → what do the bools mean?
-Use keyword arguments or enums.
-
-**6. PREMATURE ABSTRACTION**
-Creating a StrategyFactoryBuilderInterface for code called once.
-YAGNI: You Ain't Gonna Need It. Abstract when you see the pattern 3 times.
-
-**7. COMMENTS THAT EXPLAIN "WHAT" INSTEAD OF "WHY"**
-# increment x by 1 → useless.
-# retry because API has a known race condition on first call → valuable.
-
---- Demo: Deep nesting vs guard clauses ---
-BAD
-
 ```python
+# CODE SMELLS — patterns that indicate deeper problems.
+#
+# 1. GOD FUNCTION / GOD CLASS
+#    One function/class that does everything. Break into single-responsibility units.
+#    Rule of thumb: if a function > 30 lines, it's doing too much.
+#
+# 2. DEEP NESTING
+#    if: if: if: for: if: → unreadable. Use early returns, guard clauses.
+#
+# 3. MAGIC NUMBERS
+#    if x > 86400: → what is 86400? Use SECONDS_PER_DAY = 86400.
+#
+# 4. COPY-PASTE CODE
+#    Same block in 3+ places → extract to a function.
+#    DRY: Don't Repeat Yourself.
+#
+# 5. BOOLEAN BLINDNESS
+#    process(data, True, False, True) → what do the bools mean?
+#    Use keyword arguments or enums.
+#
+# 6. PREMATURE ABSTRACTION
+#    Creating a StrategyFactoryBuilderInterface for code called once.
+#    YAGNI: You Ain't Gonna Need It. Abstract when you see the pattern 3 times.
+#
+# 7. COMMENTS THAT EXPLAIN "WHAT" INSTEAD OF "WHY"
+#    # increment x by 1 → useless.
+#    # retry because API has a known race condition on first call → valuable.
+
+# --- Demo: Deep nesting vs guard clauses ---
+# BAD
 def process_bad(user):
     if user is not None:
         if user.get("active"):
@@ -698,17 +695,17 @@ print("Guard clauses produce the same result, but are flat and readable.")
 
 ## 9. Type Safety & Static Analysis
 
-Type Hints & Static Analysis — catch bugs before runtime.
-
-**KEY CONCEPTS:**
-- Type hints: def f(x: int) -> str → documentation + tooling.
-- mypy / pyright: static type checkers, find type errors without running code.
-- Pyright: used by VS Code (Pylance), fastest, strictest.
-- C# equivalent: the language IS statically typed; Python adds this opt-in.
-
-> **Golden Rule:** Type hints are free documentation. Always use them in function signatures.
-
 ```python
+# Type Hints & Static Analysis — catch bugs before runtime.
+#
+# KEY CONCEPTS:
+# - Type hints: def f(x: int) -> str → documentation + tooling.
+# - mypy / pyright: static type checkers, find type errors without running code.
+# - Pyright: used by VS Code (Pylance), fastest, strictest.
+# - C# equivalent: the language IS statically typed; Python adds this opt-in.
+#
+# GOLDEN RULE: Type hints are free documentation. Always use them in function signatures.
+
 from typing import Optional
 
 # Without types — what does this return? what types are valid?

@@ -5,16 +5,16 @@ technology: [python]
 tags: [python]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 keywords: [datetime, timedelta, timezone, pytz, math, random, uuid, hashlib, date arithmetic]
-description: "Python date, time, math and utilities reference with executable examples and cell outputs — covers datetime, timezones, timedelta, math, random, and common utility functions. See [[10_cs_datetimemathutils]] for the C# equivalent."
+description: "Python date, time, math and utilities reference with executable examples and cell outputs — covers datetime, timezones, timedelta, math, random, and common utility functions. See [[12_cs_datetimemathutils]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[10_cs_datetimemathutils]]"
+  - "[[12_cs_datetimemathutils]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 10. Date, Time, Math & Utilities - Python
+# 11. Date, Time, Math & Utilities - Python
 
 ## Date and Time
 

@@ -5,16 +5,16 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, IServiceCollection, DI container]
-description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [[17_py_designpatterns]] for the Python equivalent."
+description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [[19_py_designpatterns]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[17_py_designpatterns]]"
+  - "[[19_py_designpatterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 16. Design Patterns & Architecture - C#
+# 18. Design Patterns & Architecture - C#
 
 Topics covered:
 - Dependency Injection
@@ -22,7 +22,6 @@ Topics covered:
 - Data Validation (DataAnnotations)
 - Reflection
 - Project Structure & Best Practices
-
 
 ```csharp
 // Suppress CS1701 assembly version warnings (NuGet packages on .NET 10).
@@ -40,227 +39,9 @@ optionsField.SetValue(csharpKernel, newOptions);
 Console.WriteLine("WarningLevel set to 0.");
 ```
 
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::655c:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:812b:542c:9d38:5803:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/","http://fe80::91de:1423:fe62:933b%45:2048/","http://172.25.64.1:2048/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '18844.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
-
     WarningLevel set to 0.
-    
 
 ## 1. Dependency Injection
-
 
 ```csharp
 // Dependency Injection — the foundation of testable C# architecture.
@@ -378,10 +159,8 @@ public class PipelineService
       Result: TEST.XX: momentum=0.85
       Saved to mock: TEST.XX
       Notifications: Pipeline done: TEST.XX scored 0.85
-    
 
 ## 2. Design Patterns
-
 
 ```csharp
 // Singleton — exactly one instance.
@@ -461,8 +240,6 @@ public static class StorageFactory
       gcs   -> gs://bucket/data.csv (100 bytes)
       s3    -> s3://bucket/data.csv (100 bytes)
       local -> file://data.csv (100 bytes)
-    
-
 
 ```csharp
 // Observer — notify multiple listeners when something happens.
@@ -553,10 +330,8 @@ public class StockScorer
     
       Momentum        score=-+0.0103
       Volatility      score=-+0.0138
-    
 
 ## 3. Data Validation
-
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -647,10 +422,8 @@ public class OhlcvRecord : IValidatableObject
         -> Price must be positive
       Symbol="X" Open=10 High=5 Vol=-1
         -> Volume cannot be negative
-    
 
 ## 4. Reflection
-
 
 ```csharp
 using System.Reflection;
@@ -762,10 +535,8 @@ public class TradeOrder
     
     === Create via Reflection ===
       Created: TradeOrder(MC.PA, SELL, 50, 890.2)
-    
 
 ## 5. Project Structure & Best Practices
-
 
 ```csharp
 // Project Structure — how to organize a C# data pipeline / API project.
@@ -826,7 +597,6 @@ IndexPipeline/
    Integration test SqlRepository against real DB.
    Python equiv: pytest + unittest.mock.
 ");
-
 ```
 
     
@@ -883,11 +653,8 @@ IndexPipeline/
        Unit test PipelineService with MockRepository.
        Integration test SqlRepository against real DB.
        Python equiv: pytest + unittest.mock.
-    
-    
 
 ## 6. Summary
-
 
 ```csharp
 // Summary — C# Design Patterns cheat sheet
@@ -935,5 +702,4 @@ IndexPipeline/
 // DataAnnotations         → Pydantic Field()
 // System.Reflection       → type(), dir(), inspect
 // GetType().Name          → type(obj).__name__
-
 ```

@@ -5,16 +5,16 @@ technology: [python]
 tags: [api, python]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
 keywords: [requests, FastAPI, Flask, httpx, REST, HTTP, JSON, authentication, middleware, routing]
-description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [[14_cs_webapis]] for the C# equivalent."
+description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [[16_cs_webapis]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[14_cs_webapis]]"
+  - "[[16_cs_webapis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 13. Web & APIs - Python
+# 15. Web & APIs - Python
 
 Topics covered:
 - HTTP Clients (requests, httpx)
@@ -23,7 +23,6 @@ Topics covered:
 - Data Engineering API Patterns
 
 ## 1. HTTP Clients & REST API Calls
-
 
 ```python
 # HTTP Clients — making API calls in Python
@@ -137,8 +136,6 @@ except requests.HTTPError as e:
       500: 500 FAILED
     
       raise_for_status() caught: 500 Server Error: INTERNAL SERVER ERROR for url: https://httpbin.org/status/500
-    
-
 
 ```python
 # httpx — modern async-capable HTTP client
@@ -244,11 +241,8 @@ C# equivalent        —                   HttpClient
     Connection pooling   Session()           Client()
     Streaming            iter_content()      stream()
     C# equivalent        —                   HttpClient
-    
-    
 
 ## 2. REST API Patterns for Data Engineering
-
 
 ```python
 # REST API patterns commonly used in DE/finance pipelines.
@@ -354,10 +348,8 @@ print(f"  Server received: {len(data['json']['trades'])} trades")
       Sent 3 trades
       Status: 200
       Server received: 3 trades
-    
 
 ## 3. Building a REST API (FastAPI)
-
 
 ```python
 # FastAPI — modern Python web framework for building REST APIs.
@@ -502,8 +494,6 @@ print(f"Run the next cells to test, then run the shutdown cell when done.")
     Swagger docs: http://127.0.0.1:8765/docs
     OpenAPI spec: http://127.0.0.1:8765/openapi.json
     Run the next cells to test, then run the shutdown cell when done.
-    
-
 
 ```python
 # ─── Test the API with httpx ───
@@ -599,8 +589,6 @@ print(f"  Remaining trades: {resp.json()['count']}")
     === DELETE /trades/TRD_001 ===
       200: {'status': 'CANCELLED', 'trade_id': 'TRD_001'}
       Remaining trades: 1
-    
-
 
 ```python
 # ─── Shutdown the FastAPI server ───
@@ -617,10 +605,8 @@ else:
 ```
 
     Server on port 8765 stopped.
-    
 
 ## 4. Summary
-
 
 ```python
 # Summary — Python Web & APIs cheat sheet

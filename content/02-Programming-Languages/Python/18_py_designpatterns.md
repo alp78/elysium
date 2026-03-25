@@ -5,16 +5,16 @@ technology: [python]
 tags: [python]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, decorator pattern]
-description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [[17_cs_designpatterns]] for the C# equivalent."
+description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [[19_cs_designpatterns]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[17_cs_designpatterns]]"
+  - "[[19_cs_designpatterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 16. Design Patterns & Architecture - Python
+# 18. Design Patterns & Architecture - Python
 
 Topics covered:
 - Dependency Injection
@@ -24,7 +24,6 @@ Topics covered:
 - Project Structure & Best Practices
 
 ## 1. Dependency Injection
-
 
 ```python
 # Dependency Injection (DI) — pass dependencies in, don't create them inside.
@@ -144,7 +143,6 @@ result = test_service.run("TEST.XX")
 print(f"  Result: {result}")
 print(f"  Saved to mock DB: {mock_repo.saved}")
 print(f"  Notifications sent: {mock_notifier.messages}")
-
 ```
 
     === Production ===
@@ -157,10 +155,8 @@ print(f"  Notifications sent: {mock_notifier.messages}")
       Result: {'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}
       Saved to mock DB: [{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
       Notifications sent: ['Pipeline done: TEST.XX scored 0.85']
-    
 
 ## 2. Design Patterns
-
 
 ```python
 # Singleton — ensure a class has exactly ONE instance.
@@ -203,15 +199,12 @@ print(f"  c1.project_id: {c1.project_id}")
 # Just create the instance at module level. Python modules are singletons.
 # _config = {"project_id": "index-lab-2", "region": "europe-west1"}
 # def get_config(): return _config
-
 ```
 
     === Singleton ===
       Config loaded (project=index-lab-2)
       c1 is c2: True
       c1.project_id: index-lab-2
-    
-
 
 ```python
 # Factory — create objects without specifying the exact class.
@@ -257,15 +250,12 @@ for provider in ["gcs", "s3", "local"]:
     client = create_storage_client(provider)
     result = client.upload("bronze/data.csv", b"OHLCV data")
     print(f"  {provider:5s} -> {result}")
-
 ```
 
     === Factory ===
       gcs   -> gs://bucket/bronze/data.csv (10 bytes)
       s3    -> s3://bucket/bronze/data.csv (10 bytes)
       local -> file://bronze/data.csv (10 bytes)
-    
-
 
 ```python
 # Observer — notify multiple listeners when something happens.
@@ -315,7 +305,6 @@ bus.subscribe("step_completed", alert_handler)
 bus.publish("step_completed", {"step": "ohlcv_load", "status": "ok", "rows": 306})
 bus.publish("step_completed", {"step": "silver_transform", "status": "ok", "rows": 306})
 bus.publish("step_completed", {"step": "gold_score", "status": "error", "message": "BQ timeout"})
-
 ```
 
     === Observer (Event Bus) ===
@@ -325,8 +314,6 @@ bus.publish("step_completed", {"step": "gold_score", "status": "error", "message
       [METRIC] rows_loaded = 306
       [LOG]   {'step': 'gold_score', 'status': 'error', 'message': 'BQ timeout'}
       [ALERT] Pipeline error: BQ timeout
-    
-
 
 ```python
 # Strategy — swap algorithms at runtime.
@@ -393,7 +380,6 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
     scorer = StockScorer(strategy)
     result = scorer.evaluate("ASML.AS", prices)
     print(f"  {result['strategy']:15s} score={result['score']:+.4f}")
-
 ```
 
     === Strategy ===
@@ -402,10 +388,8 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
       Momentum        score=-0.0103
       Volatility      score=-0.0138
       MeanReversion   score=+0.0103
-    
 
 ## 3. Data Validation
-
 
 ```python
 # Data Validation with Pydantic — type-safe data models.
@@ -486,7 +470,6 @@ for case in bad_inputs:
         print(f"  {case['label']}: PASSED (unexpected)")
     except ValidationError as e:
         print(f"  {case['label']}: CAUGHT — {e.errors()[0]['msg']}")
-
 ```
 
     === Valid Data ===
@@ -499,10 +482,8 @@ for case in bad_inputs:
       High < Low: CAUGHT — Value error, high (5.0) must be >= low (8.0)
       Empty symbol: CAUGHT — String should have at least 1 character
       Bad config name: CAUGHT — String should match pattern '^[a-z][a-z0-9_]*$'
-    
 
 ## 4. Reflection / Introspection
-
 
 ```python
 # Reflection / Introspection — inspect objects at runtime.
@@ -573,7 +554,6 @@ print(f"\n=== Constructor Signature ===")
 for name, param in sig.parameters.items():
     if name == "self": continue
     print(f"  {name}: {param.annotation.__name__ if param.annotation != inspect.Parameter.empty else 'Any'}")
-
 ```
 
     === Type Inspection ===
@@ -603,10 +583,8 @@ for name, param in sig.parameters.items():
       side: str
       quantity: int
       price: float
-    
 
 ## 5. Project Structure & Best Practices
-
 
 ```python
 # Project Structure — how to organize a Python data pipeline project.
@@ -680,7 +658,6 @@ index-pipeline/
    Transforms are pure functions — test directly.
    Loaders/fetchers touch external systems — mock them.
 """)
-
 ```
 
     
@@ -748,11 +725,8 @@ index-pipeline/
     5. TEST THE TRANSFORM, MOCK THE BOUNDARY
        Transforms are pure functions — test directly.
        Loaders/fetchers touch external systems — mock them.
-    
-    
 
 ## 6. Summary
-
 
 ```python
 # Summary — Python Design Patterns cheat sheet
@@ -799,5 +773,4 @@ index-pipeline/
 # Pydantic BaseModel      → DataAnnotations + FluentValidation
 # inspect module           → System.Reflection
 # type(obj).__name__      → obj.GetType().Name
-
 ```

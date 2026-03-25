@@ -5,16 +5,16 @@ technology: [python]
 tags: [python]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [pyodbc, SQLAlchemy, sqlite3, connection string, ORM, query, transaction, pandas, read_sql]
-description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [[15_cs_database]] for the C# equivalent."
+description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [[17_cs_database]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[15_cs_database]]"
+  - "[[17_cs_database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 14. Database - Python
+# 16. Database - Python
 
 Topics covered:
 - SQLite CRUD (built-in, zero setup)
@@ -25,7 +25,6 @@ Topics covered:
 - Real-world Index Provider Queries (index provider)
 
 ## 1. SQLite — Built-in, Zero Setup
-
 
 ```python
 # SQLite — Python's built-in embedded database.
@@ -159,10 +158,8 @@ conn.close()
       Transaction committed (2 trades inserted)
     
     Total trades: 7
-    
 
 ## 2. SQL Server — Index Data (Medallion Architecture)
-
 
 ```python
 # SQL Server with pyodbc — connecting to a real index provider database.
@@ -257,8 +254,6 @@ conn.close()
       oil_20               Oil & Gas 20                   $
       stoxx_asia_50        STOXX Asia/Pacific 50          
       stoxx_usa_50         STOXX USA 50                   $
-    
-
 
 ```python
 # ─── Real-world index provider queries ───
@@ -424,10 +419,8 @@ conn.close()
     STOXX Asia/Pacific 50        +5.45     +2.68     23.30      50    15.8
     STOXX USA 50                 +3.71     +0.60     13.32      50    20.8
     Euro Stoxx 50                -2.39     -2.08     18.06      50    14.0
-    
 
 ## 3. pandas Integration
-
 
 ```python
 # pandas + SQL — the standard way to work with database data in Python.
@@ -543,10 +536,8 @@ engine.dispose()
     Consumer Defensive           4      -0.061023 -5.551115e-17      0.401726
     Consumer Cyclical            9      -0.101304  8.635068e-17     -0.479260
     Utilities                    2      -0.101744  2.387998e-01      0.693479
-    
 
 ## 4. SQLAlchemy — ORM
-
 
 ```python
 # SQLAlchemy — Python's standard ORM and SQL toolkit.
@@ -668,11 +659,8 @@ C# equivalent        ADO.NET raw           Entity Framework
     Transaction          conn.commit()         with conn.begin()
     ORM support          No                    Yes (declarative)
     C# equivalent        ADO.NET raw           Entity Framework
-    
-    
 
 ## 5. Summary
-
 
 ```python
 # Summary — Python database cheat sheet
@@ -713,5 +701,4 @@ C# equivalent        ADO.NET raw           Entity Framework
 # Bronze: raw ingested data (latest batch, minimal transforms)
 # Silver: cleaned, deduplicated, SCD-2 tracking, full history
 # Gold:   computed scores, aggregated metrics, ready for consumption
-
 ```

@@ -207,6 +207,30 @@
               margin: 0;
               font-size: 0.9em;
               color: var(--secondary);
+              display: flex;
+              align-items: center;
+              gap: 0.4em;
+            }
+
+            .relevance-dot {
+              display: inline-block;
+              width: 8px;
+              height: 8px;
+              min-width: 8px;
+              border-radius: 50%;
+              flex-shrink: 0;
+
+              &.relevance-high {
+                background-color: #73daca; // tokyo-night green
+              }
+
+              &.relevance-mid {
+                background-color: #e0af68; // tokyo-night yellow/orange
+              }
+
+              &.relevance-low {
+                background-color: #f7768e; // tokyo-night red/pink
+              }
             }
 
             @media all and not ($mobile) {

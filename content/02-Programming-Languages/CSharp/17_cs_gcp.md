@@ -5,18 +5,18 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 keywords: [Google.Cloud.BigQuery, Google.Cloud.Storage, Google.Cloud.PubSub, service account, GCP, dotnet GCP]
-description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [[16_py_gcp]] for the Python equivalent."
+description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [[18_py_gcp]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[16_py_gcp]]"
+  - "[[18_py_gcp]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 15. GCP - C#
+# 17. GCP - C#
 
-![Pipeline Architecture](/static/index_lab.jpg)
+![Pipeline Architecture](index_lab.jpg)
 
 ## How the Pipeline Works
 
@@ -46,7 +46,6 @@ status: complete
 - Secret Manager
 - Cloud Monitoring
 
-
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -68,229 +67,11 @@ optionsField.SetValue(csharpKernel, newOptions);
 Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
 ```
 
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::655c:2050/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2050/","http://2a02:8308:718a:f200:812b:542c:9d38:5803:2050/","http://fe80::3212:d8da:d32d:4723%14:2050/","http://192.168.0.110:2050/","http://::1:2050/","http://127.0.0.1:2050/","http://fe80::91de:1423:fe62:933b%45:2050/","http://172.25.64.1:2050/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '12912.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
-
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
-    
 
 ## 1. Authentication & Setup
 
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
-
 
 ```csharp
 #r "nuget: Google.Cloud.Storage.V1"
@@ -322,19 +103,15 @@ Console.WriteLine($"Project: {projectId}");
 Console.WriteLine($"Bucket:  {bucketName}");
 ```
 
-
 <div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Google.Cloud.BigQuery.V2, 3.11.0</span></li><li><span>Google.Cloud.Firestore, 4.2.0</span></li><li><span>Google.Cloud.Monitoring.V3, 3.16.0</span></li><li><span>Google.Cloud.PubSub.V1, 3.33.0</span></li><li><span>Google.Cloud.SecretManager.V1, 2.7.0</span></li><li><span>Google.Cloud.Storage.V1, 4.14.0</span></li><li><span>Microsoft.Bcl.AsyncInterfaces, 10.0.5</span></li></ul></div></div>
-
 
     Authenticated: UserCredential
     Project: index-lab-2
     Bucket:  index-lab-2-index-data
-    
 
 ## 2. Cloud Storage (GCS)
 
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here.
-
 
 ```csharp
 using System.IO;
@@ -397,12 +174,10 @@ Console.WriteLine($"\n  Deleted: {blobName}");
         MC.PA,2026-03-20,890.20
     
       Deleted: bronze/ohlcv/20260322_test_cs.csv
-    
 
 ## 3. BigQuery
 
 **Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
-
 
 ```csharp
 using Google.Cloud.BigQuery.V2;
@@ -461,12 +236,10 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
        3. SAP.DE     close=  153.82  momentum=  -8.7%  vol=2.84
        4. MC.PA      close=  457.95  momentum= -10.9%  vol=1.97
        5. SIE.DE     close=  203.75  momentum=-13.24%  vol=2.33
-    
 
 ## 4. Pub/Sub
 
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture.
-
 
 ```csharp
 using Google.Cloud.PubSub.V1;
@@ -535,12 +308,10 @@ if (ackIds.Count > 0)
       "2026-03-22T13:37:42.973Z" | {"event": "gold_scored_cs", "source": "csharp"}
     
       Acknowledged 3 messages
-    
 
 ## 5. Firestore
 
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
-
 
 ```csharp
 using Google.Cloud.Firestore;
@@ -644,8 +415,6 @@ Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
       TTE.PA      price=     76.96  change= -+2.07%
     
       Cleaned up 3 score documents
-    
-
 
 ```csharp
 using System.Net.Http;
@@ -761,12 +530,10 @@ Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count
       [UNCHANGED] TTE.PA      price=     76.96  change= -+2.07%
     
     Polling complete. 4 polls, 5 tickers tracked.
-    
 
 ## 6. Secret Manager
 
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
-
 
 ```csharp
 using Google.Cloud.SecretManager.V1;
@@ -805,12 +572,10 @@ foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.Li
     === List Secrets ===
       index-api-key
       index-db-password
-    
 
 ## 7. Cloud Monitoring
 
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
-
 
 ```csharp
 using Google.Cloud.Monitoring.V3;
@@ -881,10 +646,8 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
     === View in GCP Console ===
       Logs:    https://console.cloud.google.com/logs?project=index-lab-2
       Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
-    
 
 ## 8. Summary
-
 
 ```csharp
 // Summary — GCP C# cheat sheet

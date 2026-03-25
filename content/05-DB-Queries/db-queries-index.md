@@ -55,6 +55,6 @@ Document database operations in both Python and C#. See [[firestore-data-model-a
 - **Data modeling** — [[dimensional-modeling]] and [[data-modeling-patterns]] for schema design
 - **Comparison** — [[sql-python-csharp-transforms]] for side-by-side transform syntax
 - **Architecture** — [[data-warehouse-architecture]] for when to use SQL Server vs BigQuery
-- **Programming languages** — [[15_py_database|Python Database]] and [[15_py_database|C# Database]] for connection patterns
+- **Programming languages** — [[16_py_database|Python Database]] and [[16_py_database|C# Database]] for connection patterns
 
 > *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

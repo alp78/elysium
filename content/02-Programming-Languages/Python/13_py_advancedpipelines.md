@@ -5,17 +5,17 @@ technology: [python]
 tags: [python, pipeline]
 aliases: [advanced pipelines, async generators, parallel ingestion, subprocess]
 keywords: [async generator, asyncio.gather, as_completed, semaphore, rate limiting, subprocess, aiohttp, parallel API, batch consumer, distributed task queue, celery, dask]
-description: "Python advanced parallel pipelines reference with executable examples and cell outputs — covers async generators, parallel API ingestion with rate limiting, async batching, subprocess execution, and distributed task queues. See [[12_cs_advancedpipelines]] for the C# equivalent."
+description: "Python advanced parallel pipelines reference with executable examples and cell outputs — covers async generators, parallel API ingestion with rate limiting, async batching, subprocess execution, and distributed task queues. See [[14_cs_advancedpipelines]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[12_cs_advancedpipelines]]"
-  - "[[11_py_asyncconcurrency]]"
+  - "[[14_cs_advancedpipelines]]"
+  - "[[13_py_asyncconcurrency]]"
 created: 2026-03-25
 updated: 2026-03-25
 status: complete
 ---
 
-# 11b. Advanced Parallel Pipelines - Python
+# 13. Advanced Parallel Pipelines - Python
 
 ```python
 # Imports and API keys from .env file

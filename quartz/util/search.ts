@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Shared MiniSearch configuration
+// Shared MiniSearch configuration — section-level indexing (VitePress pattern)
 // Used by both the build-time index generator and the client-side search.
 // This file MUST NOT import any Node.js-only modules (fs, path, etc.)
 // ---------------------------------------------------------------------------
@@ -11,9 +11,9 @@ const TERM_ALIASES: Record<string, string> = {
   ".net": "dotnet",
 }
 
-/** Tokenize text for search indexing — splits on whitespace, technical separators,
- *  and camelCase boundaries. */
-export function searchTokenize(text: string): string[] {
+/** Tokenize text for search — splits on whitespace and camelCase boundaries.
+ *  Applies term aliases before tokenizing. */
+export function searchTokenize(text: string, _fieldName?: string): string[] {
   const tokens: string[] = []
 
   // 1. Apply aliases on the original text (case-insensitive)
@@ -24,7 +24,6 @@ export function searchTokenize(text: string): string[] {
   }
 
   // 2. Insert spaces at camelCase boundaries BEFORE lowering
-  //    "DataFrame" → "Data Frame", "getElementById" → "get Element By Id"
   processed = processed.replace(/([a-z])([A-Z])/g, "$1 $2")
 
   // 3. Now lower
@@ -35,15 +34,12 @@ export function searchTokenize(text: string): string[] {
 
   for (const raw of rawTokens) {
     tokens.push(raw)
-
-    // No sub-splitting. Compound terms like "io-redirection", "file_io",
-    // "t-sql" stay as single tokens. Only whitespace and camelCase split.
   }
 
   return [...new Set(tokens)]
 }
 
-/** Process a single term — apply aliases. */
+/** Process a single term — apply aliases, discard very short terms. */
 export function searchProcessTerm(term: string): string | null {
   const lower = term.toLowerCase()
   if (lower.length < 1) return null
@@ -53,14 +49,26 @@ export function searchProcessTerm(term: string): string | null {
   return lower
 }
 
-/** The MiniSearch options object shared between build-time and client-side.
- *  Must be passed to both `new MiniSearch(opts)` and `MiniSearch.loadJSON(json, opts)`. */
+/**
+ * Section-level MiniSearch options.
+ *
+ * Each MiniSearch document represents ONE SECTION of a page (split at headings):
+ *   - id:     sequential number
+ *   - title:  the current section heading text
+ *   - titles: ancestor heading breadcrumb (joined with " > ")
+ *   - text:   the body text between this heading and the next
+ *   - tags:   page-level tags (space-separated)
+ *
+ * Boost:  title 4×, text 2×, titles 1× (matches VitePress)
+ * Stored: slug (page#anchor), pageTitle, tags — for rendering results
+ */
 export const miniSearchOptions = {
-  fields: ["title", "content", "tags"] as string[],
-  storeFields: ["title", "slug", "tags"] as string[],
+  fields: ["title", "titles", "tags"] as string[],
+  storeFields: ["slug", "pageTitle", "title", "tags"] as string[],
   tokenize: searchTokenize,
   processTerm: searchProcessTerm,
   searchOptions: {
-    boost: { title: 3, tags: 2 },
+    boost: { title: 4, titles: 1 },
+    combineWith: "AND" as const,
   },
 }

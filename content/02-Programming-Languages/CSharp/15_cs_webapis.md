@@ -5,16 +5,16 @@ technology: [csharp, dotnet]
 tags: [api, csharp]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
 keywords: [HttpClient, ASP.NET, minimal API, controller, middleware, routing, authentication, Swagger, IHttpClientFactory]
-description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [[14_py_webapis]] for the Python equivalent."
+description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [[16_py_webapis]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[14_py_webapis]]"
+  - "[[16_py_webapis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 13. Web & APIs - C#
+# 15. Web & APIs - C#
 
 Topics covered:
 - HTTP Clients (HttpClient)
@@ -23,7 +23,6 @@ Topics covered:
 - Data Engineering API Patterns
 
 ## 1. HTTP Clients & REST API Calls
-
 
 ```csharp
 using System.Net.Http;
@@ -150,10 +149,8 @@ catch (HttpRequestException ex)
       500: 500 FAILED
     
       EnsureSuccessStatusCode() caught: Response status code does not indicate success: 500 (INTERNAL SERVER ERROR).
-    
 
 ## 2. REST API Patterns for Data Engineering
-
 
 ```csharp
 using System.Net.Http;
@@ -262,10 +259,8 @@ Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty
       Sent 3 trades
       Status: 200
       Server received: 3 trades
-    
 
 ## 3. Building a REST API (ASP.NET Minimal APIs)
-
 
 ```csharp
 // ASP.NET Minimal APIs — building REST APIs in C#.
@@ -488,11 +483,8 @@ PYTHON → C# MAPPING:
       Path parameter: {id}             Route parameter: {id}
       uvicorn                          Kestrel (built-in)
       /docs (Swagger auto)             /swagger (AddSwaggerGen)
-    
-    
 
 ## 4. Summary
-
 
 ```csharp
 // Summary — C# Web & APIs cheat sheet

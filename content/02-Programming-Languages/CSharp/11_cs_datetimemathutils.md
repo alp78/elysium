@@ -5,16 +5,16 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 keywords: [DateTime, DateOnly, TimeOnly, TimeZoneInfo, TimeSpan, Math, Random, Guid, DateTimeOffset]
-description: "C# date, time, math and utilities reference with executable examples and cell outputs — covers DateTime, DateOnly, TimeSpan, timezones, Math, Random, and Guid. See [[10_py_datetimemathutils]] for the Python equivalent."
+description: "C# date, time, math and utilities reference with executable examples and cell outputs — covers DateTime, DateOnly, TimeSpan, timezones, Math, Random, and Guid. See [[12_py_datetimemathutils]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[10_py_datetimemathutils]]"
+  - "[[12_py_datetimemathutils]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
 
-# 10. Date, Time, Math & Utilities - C#
+# 11. Date, Time, Math & Utilities - C#
 
 Topics covered:
 - Date & Time (moved from 01_Basics)
