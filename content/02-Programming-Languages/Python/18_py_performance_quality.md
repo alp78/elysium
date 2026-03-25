@@ -5,10 +5,10 @@ technology: [python]
 tags: [python, performance, testing]
 aliases: [performance profiling, code quality, timeit, cProfile, tracemalloc, ruff, mypy]
 keywords: [timeit, perf_counter, cProfile, line_profiler, tracemalloc, sys.getsizeof, Big-O, collections performance, ruff, pylint, mypy, black, bandit, type hints]
-description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [[17_cs_performance_quality]] for the C# equivalent."
+description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [[18_cs_performance_quality]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[17_cs_performance_quality]]"
+  - "[[18_cs_performance_quality]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

@@ -5,10 +5,10 @@ technology: [python]
 tags: [python]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, decorator pattern]
-description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [[16_cs_designpatterns]] for the C# equivalent."
+description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [[17_cs_designpatterns]] for the C# equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[16_cs_designpatterns]]"
+  - "[[17_cs_designpatterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

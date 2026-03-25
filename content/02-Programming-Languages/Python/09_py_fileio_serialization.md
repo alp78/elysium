@@ -25,15 +25,30 @@ import yaml
 import pickle
 import struct
 import tempfile
+import time
+import shutil
+import base64
+import hashlib
+import asyncio
+import aiofiles
+import orjson
+import fsspec
+import polars as pl
+import pyarrow as pa
+import pyarrow.parquet as pq
+import pyarrow.compute as pc
 from pathlib import Path
 from io import StringIO, BytesIO
 from datetime import datetime
 from decimal import Decimal
 from dataclasses import dataclass, asdict
 from typing import Optional
-import pyarrow as pa
-import pyarrow.parquet as pq
-import pyarrow.compute as pc
+from urllib.parse import quote, unquote, quote_plus, urlencode
+from pydantic import BaseModel, Field, ValidationError
+from google.protobuf import descriptor_pb2, descriptor_pool, symbol_database
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from google.protobuf import reflection as _reflection
 ```
 
 ## Read, Write, Append Files
@@ -58,7 +73,7 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="fileio_"))
 print(f"Working dir: {tmp_dir}\n")
 ```
 
-    Working dir: C:\Users\aperi\AppData\Local\Temp\fileio__ffqjssx
+    Working dir: C:\Users\aperi\AppData\Local\Temp\fileio_w9oxkg2g
 
 #### Write a file — mode 'w' (creates new or TRUNCATES existing)
 
@@ -81,7 +96,7 @@ print(f"  Size: {staging_file.stat().st_size} bytes")  # .stat() returns file me
 ```
 
     === Write file (mode='w') ===
-      Written: C:\Users\aperi\AppData\Local\Temp\fileio__ffqjssx\pipeline_output.txt
+      Written: C:\Users\aperi\AppData\Local\Temp\fileio_w9oxkg2g\pipeline_output.txt
       Size: 98 bytes
 
 #### Read entire file — mode 'r'
@@ -260,7 +275,7 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
       suffix:   .parquet
       parent:   \data\lake\raw\events\2024\01
       parts:    ('\\', 'data', 'lake', 'raw', 'events', '2024', '01', 'events.parquet')
-      Created dir: C:\Users\aperi\AppData\Local\Temp\fileio__ffqjssx\output
+      Created dir: C:\Users\aperi\AppData\Local\Temp\fileio_w9oxkg2g\output
       Exists: True
       Is dir: True
       Is file: True
@@ -502,10 +517,6 @@ print(f"  {csv_string.strip()}")
 
 
 tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
-
-# ─────────────────────────────────────────────
-# WRITE PARQUET
-# ─────────────────────────────────────────────
 ```
 
 #### Write parquet from Arrow table
@@ -658,9 +669,9 @@ print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
 ```
 
       Partitioned dir structure:
-        event_type=page_view\22a62776a45c499187d77bcffb26a11b-0.parquet (1266 bytes)
-        event_type=purchase\22a62776a45c499187d77bcffb26a11b-0.parquet (1274 bytes)
-        event_type=signup\22a62776a45c499187d77bcffb26a11b-0.parquet (1255 bytes)
+        event_type=page_view\3becb3c7324348d283936bf1ebc444ce-0.parquet (1266 bytes)
+        event_type=purchase\3becb3c7324348d283936bf1ebc444ce-0.parquet (1274 bytes)
+        event_type=signup\3becb3c7324348d283936bf1ebc444ce-0.parquet (1255 bytes)
     Read back: 5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
 
 <h4>Parquet in memory — <code style="font-size:0.75em">BytesIO</code></h4>
@@ -1432,3 +1443,635 @@ print(f"  Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert
       Size: 17 bytes
       Packed: 2a0000000000bc41000000f23f69d94101
       Unpacked: sensor=42, value=23.5, ts=1705312200.0, alert=True
+
+## Encoding and Decoding
+
+#### Character encoding — UTF-8, ASCII, Latin-1
+
+```python
+# Character encoding — converting between strings and raw bytes
+#
+# WHAT: str.encode("utf-8") converts a Python string to bytes.
+#   bytes.decode("utf-8") converts bytes back to a string.
+#   UTF-8 is the universal standard for APIs, files, and databases.
+#
+# WHY: strings in Python are Unicode objects (abstract characters).
+#   To write to a file, send over HTTP, or hash, you need raw bytes.
+#   Without explicit encoding, you get UnicodeEncodeError or mojibake.
+#
+# WHEN TO USE: writing to binary streams, HTTP request bodies, hashing,
+#   reading files with specific encoding, interop with non-Python systems
+
+text = "Euro Stoxx 50: SAP €166.52, ASML €685.40"
+
+# UTF-8: variable-length, ASCII-compatible, the internet standard
+utf8 = text.encode("utf-8")
+print(f"  UTF-8:   {len(utf8)} bytes, roundtrip={text == utf8.decode('utf-8')}")
+
+# ASCII: 7-bit only — non-ASCII chars raise UnicodeEncodeError
+try:
+    ascii_bytes = text.encode("ascii")
+except UnicodeEncodeError as e:
+    print(f"  ASCII:   FAILED — {e}")
+
+# ASCII with replace — replaces unknown chars with ?
+ascii_safe = text.encode("ascii", errors="replace")
+print(f"  ASCII:   {ascii_safe.decode('ascii')} (€ replaced with ?)")
+
+# Latin-1 (ISO 8859-1): single-byte Western European
+# Note: € is NOT in Latin-1 (it was added in Latin-9/ISO 8859-15)
+try:
+    latin1 = text.encode("latin-1")
+except UnicodeEncodeError as e:
+    print(f"  Latin-1: FAILED — {e}")
+    latin1 = text.encode("latin-1", errors="replace")
+    print(f"  Latin-1: {len(latin1)} bytes (with replacements)")
+
+# UTF-16: 2 bytes per char (4 for supplementary) — used internally by Java/.NET
+utf16 = text.encode("utf-16")
+print(f"  UTF-16:  {len(utf16)} bytes (includes 2-byte BOM)")
+```
+
+      UTF-8:   44 bytes, roundtrip=True
+      ASCII:   FAILED — 'ascii' codec can't encode character '\u20ac' in position 19: ordinal not in range(128)
+      ASCII:   Euro Stoxx 50: SAP ?166.52, ASML ?685.40 (€ replaced with ?)
+      Latin-1: FAILED — 'latin-1' codec can't encode character '\u20ac' in position 19: ordinal not in range(256)
+      Latin-1: 40 bytes (with replacements)
+      UTF-16:  82 bytes (includes 2-byte BOM)
+
+#### Base64 encoding
+
+```python
+# Base64 — encode binary data as printable ASCII text
+#
+# WHAT: base64.b64encode(bytes) converts bytes to A-Z, a-z, 0-9, +, /, =.
+#   base64.b64decode(text) converts back. Every 3 bytes become 4 chars (33% overhead).
+#
+# WHY: binary data (images, protobuf, tokens) can't be safely embedded in JSON/XML/URLs.
+#   Base64 makes it text-safe. Common in: JWT tokens, API keys, inline images, email.
+#
+# ANTI-PATTERNS:
+#   - Base64 is NOT encryption — trivially reversible
+#   - Don't Base64-encode large files — 33% overhead, use binary transfer
+
+# Encode text as Base64
+original = "SAP.DE|2024-03-12|166.52"
+b64 = base64.b64encode(original.encode("utf-8"))
+decoded = base64.b64decode(b64).decode("utf-8")
+print(f"  Original: {original}")
+print(f"  Base64:   {b64.decode()}")
+print(f"  Decoded:  {decoded}")
+print(f"  Roundtrip: {original == decoded}")
+
+# URL-safe Base64 (replaces + and / with - and _)
+url_safe = base64.urlsafe_b64encode(original.encode("utf-8"))
+print(f"\n  Standard: {b64.decode()}")
+print(f"  URL-safe: {url_safe.decode()}")
+```
+
+      Original: SAP.DE|2024-03-12|166.52
+      Base64:   U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+      Decoded:  SAP.DE|2024-03-12|166.52
+      Roundtrip: True
+    
+      Standard: U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+      URL-safe: U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+
+#### Hexadecimal encoding
+
+```python
+# Hexadecimal — represent bytes as 0-9, a-f pairs
+#
+# WHAT: bytes.hex() converts each byte to 2 hex characters.
+#   bytes.fromhex(hex_string) converts back.
+#   Standard for: hashes (SHA-256), MAC addresses, color codes, debugging.
+
+# Encode bytes as hex
+raw = b"\xde\xad\xbe\xef\xca\xfe"
+hex_str = raw.hex()
+back = bytes.fromhex(hex_str)
+print(f"  Bytes:     {raw}")
+print(f"  Hex:       {hex_str}")
+print(f"  Roundtrip: {raw == back}")
+
+# SHA-256 hash displayed as hex (standard format)
+sha = hashlib.sha256(b"SAP.DE").hexdigest()
+print(f"\n  SHA-256:   {sha}")
+print(f"  Length:    {len(sha)} hex chars = {len(sha)//2} bytes")
+```
+
+      Bytes:     b'\xde\xad\xbe\xef\xca\xfe'
+      Hex:       deadbeefcafe
+      Roundtrip: True
+    
+      SHA-256:   a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
+      Length:    64 hex chars = 32 bytes
+
+#### URL encoding
+
+```python
+# URL encoding — escape special characters for safe use in URLs
+#
+# WHAT: urllib.parse.quote(text) converts spaces, &, =, € to %XX form.
+#   urllib.parse.unquote(encoded) decodes back.
+#   quote_plus encodes space as + (HTML form style).
+#
+# WHY: URLs have reserved characters (&, =, ?, /). Without encoding,
+#   ?query=SAP&price=166 is ambiguous — is "price" a parameter or part of "query"?
+
+raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance"
+encoded = quote(raw)
+print(f"  Raw:     {raw}")
+print(f"  Encoded: {encoded}")
+print(f"  Decoded: {unquote(encoded)}")
+
+# Build safe query string from dict
+params = {"symbol": "BRK.B", "note": "Q1 2024 earnings & revenue"}
+qs = urlencode(params)
+print(f"\n  Query string: {qs}")
+print(f"  Full URL: https://api.example.com/quote?{qs}")
+```
+
+      Raw:     SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+      Encoded: SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
+      Decoded: SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+    
+      Query string: symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
+      Full URL: https://api.example.com/quote?symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
+
+## Async File I/O
+
+<h4><code style="font-size:0.75em">aiofiles</code> — non-blocking file operations</h4>
+
+```python
+# aiofiles — async file I/O for concurrent Python applications
+#
+# WHAT: aiofiles wraps standard open() with async/await support.
+#   async with aiofiles.open(...) as f: await f.read()
+#   Releases the event loop during disk I/O instead of blocking.
+#
+# WHY: in a FastAPI server or asyncio scraper, standard open() blocks the
+#   entire event loop during disk reads. With 100 concurrent requests,
+#   one slow disk read freezes all of them. aiofiles uses a thread pool internally.
+#
+# WHEN TO USE: any async application (FastAPI, aiohttp, asyncio scripts)
+# ANTI-PATTERNS:
+#   - Don't use aiofiles in synchronous scripts — standard open() is simpler
+#   - Don't forget await — aiofiles.open() without await returns a coroutine, not a file
+
+tmp = tempfile.mkdtemp(prefix="async_py_")
+async_file = os.path.join(tmp, "data.txt")
+
+# Async write
+async with aiofiles.open(async_file, "w") as f:
+    await f.write("line1\nline2\nline3\n")
+print("  Written async")
+
+# Async read
+async with aiofiles.open(async_file, "r") as f:
+    content = await f.read()
+print(f"  Read async: {content.strip().replace(chr(10), ', ')}")
+
+# Async line-by-line
+async with aiofiles.open(async_file, "r") as f:
+    i = 0
+    async for line in f:
+        print(f"    Line {i}: {line.strip()}")
+        i += 1
+
+shutil.rmtree(tmp)
+```
+
+      Written async
+      Read async: line1, line2, line3
+        Line 0: line1
+        Line 1: line2
+        Line 2: line3
+
+## High-Performance JSON
+
+<h4><code style="font-size:0.75em">orjson</code> — fast JSON serialization</h4>
+
+```python
+# orjson — drop-in replacement for json, written in Rust, 3-10x faster
+#
+# WHAT: orjson.dumps(obj) returns bytes (not str). orjson.loads(data) parses.
+#   Handles datetime, numpy, dataclass natively — no custom encoder needed.
+#
+# WHY: the standard json module is pure Python and slow for large payloads.
+#   orjson is 3-10x faster for both serialization and deserialization.
+#   It's a drop-in replacement — same API, just faster.
+#
+# WHEN TO USE: high-throughput APIs, large JSON payloads, hot paths
+
+# orjson.dumps returns bytes, not str
+data = {"symbol": "SAP.DE", "price": 166.52, "timestamp": datetime(2024, 3, 12, 14, 30)}
+fast_json = orjson.dumps(data, option=orjson.OPT_INDENT_2)
+print(f"  orjson output (bytes): {fast_json.decode()}")
+
+# Parse back
+parsed = orjson.loads(fast_json)
+print(f"  Parsed: {parsed}")
+
+# Benchmark: orjson vs json
+big = [{"id": i, "value": i * 1.5, "name": f"item_{i}"} for i in range(10000)]
+
+start = time.perf_counter()
+for _ in range(100): json.dumps(big)
+std_time = time.perf_counter() - start
+
+start = time.perf_counter()
+for _ in range(100): orjson.dumps(big)
+orj_time = time.perf_counter() - start
+
+print(f"\n  json:   {std_time:.3f}s")
+print(f"  orjson: {orj_time:.3f}s")
+print(f"  Speedup: {std_time/orj_time:.1f}x")
+```
+
+      orjson output (bytes): {
+      "symbol": "SAP.DE",
+      "price": 166.52,
+      "timestamp": "2024-03-12T14:30:00"
+    }
+      Parsed: {'symbol': 'SAP.DE', 'price': 166.52, 'timestamp': '2024-03-12T14:30:00'}
+    
+      json:   0.301s
+      orjson: 0.040s
+      Speedup: 7.5x
+
+## Schema Validation with Pydantic
+
+<h4><code style="font-size:0.75em">pydantic</code> — typed models with validation</h4>
+
+```python
+# Pydantic — parse JSON/dict into strongly typed models with automatic validation
+#
+# WHAT: define a model class inheriting from BaseModel. Pydantic automatically:
+#   - Validates types (str where int expected → ValidationError)
+#   - Coerces compatible types ("42" → 42 if field is int)
+#   - Validates constraints (gt=0, max_length=10, regex patterns)
+#   - Generates JSON schema for API documentation
+#
+# WHY: a plain dict has no type safety. d["price"] could be str, None, or missing.
+#   Pydantic catches this at parse time, not when your model crashes 3 hours later.
+#
+# WHEN TO USE: API request/response validation, config parsing, ETL record validation
+# ANTI-PATTERNS:
+#   - Don't use for internal data that's already validated — overhead isn't worth it
+#   - Don't ignore ValidationError — log it and route to dead-letter queue
+
+# Define a model with type hints and constraints
+class StockQuote(BaseModel):
+    symbol: str = Field(min_length=1, max_length=10)
+    price: float = Field(gt=0)
+    volume: int = Field(ge=0)
+    exchange: Optional[str] = None
+
+# Valid data — parsed and validated
+quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
+print(f"  Valid: {quote}")
+print(f"  JSON:  {quote.model_dump_json()}")
+
+# Type coercion — "166.52" auto-converted to float
+coerced = StockQuote(symbol="ASML.AS", price="685.40", volume="45000")
+print(f"  Coerced: price={coerced.price} (type={type(coerced.price).__name__})")
+
+# Validation error — negative price rejected
+try:
+    bad = StockQuote(symbol="BAD", price=-5.0, volume=100)
+except ValidationError as e:
+    print(f"  Validation error: {e.errors()[0]['msg']}")
+```
+
+      Valid: symbol='SAP.DE' price=166.52 volume=82621 exchange=None
+      JSON:  {"symbol":"SAP.DE","price":166.52,"volume":82621,"exchange":null}
+      Coerced: price=685.4 (type=float)
+      Validation error: Input should be greater than 0
+
+## High-Performance CSV Parsing
+
+<h4><code style="font-size:0.75em">polars</code> and <code style="font-size:0.75em">DuckDB</code> — vectorized CSV</h4>
+
+```python
+# High-performance CSV — bypass the standard csv module for large files
+#
+# WHAT: Polars (Rust-based) and DuckDB (C++-based) parse CSV using
+#   multi-threading and SIMD vectorization. 10-100x faster than csv module.
+#
+# WHY: the standard csv module processes one row at a time in pure Python.
+#   For a 1GB CSV, that's minutes. Polars does it in seconds.
+#
+# WHEN TO USE: any CSV > 100MB, ETL pipelines, data lake ingestion
+
+# Create a sample CSV in memory
+csv_data = "symbol,date,close,volume\n"
+csv_data += "\n".join(f"SYM_{i},2024-03-{i%28+1:02d},{100+i*0.5},{1000*i}" for i in range(1000))
+
+# Polars: read CSV from string (in production: pl.read_csv("path.csv"))
+df = pl.read_csv(csv_data.encode())
+print(f"  Polars: {df.shape[0]} rows, {df.shape[1]} cols")
+print(f"  Schema: {dict(zip(df.columns, [str(t) for t in df.dtypes]))}")
+print(f"  Head:\n{df.head(3)}")
+
+# Benchmark: csv module vs Polars
+
+start = time.perf_counter()
+for _ in range(100):
+    reader = csv.DictReader(StringIO(csv_data))
+    rows = list(reader)
+csv_time = time.perf_counter() - start
+
+start = time.perf_counter()
+for _ in range(100):
+    df = pl.read_csv(csv_data.encode())
+pl_time = time.perf_counter() - start
+
+print(f"\n  csv module: {csv_time:.3f}s")
+print(f"  Polars:     {pl_time:.3f}s")
+print(f"  Speedup:    {csv_time/pl_time:.1f}x")
+```
+
+      Polars: 1000 rows, 4 cols
+      Schema: {'symbol': 'String', 'date': 'String', 'close': 'Float64', 'volume': 'Int64'}
+      Head:
+    shape: (3, 4)
+    ┌────────┬────────────┬───────┬────────┐
+    │ symbol ┆ date       ┆ close ┆ volume │
+    │ ---    ┆ ---        ┆ ---   ┆ ---    │
+    │ str    ┆ str        ┆ f64   ┆ i64    │
+    ╞════════╪════════════╪═══════╪════════╡
+    │ SYM_0  ┆ 2024-03-01 ┆ 100.0 ┆ 0      │
+    │ SYM_1  ┆ 2024-03-02 ┆ 100.5 ┆ 1000   │
+    │ SYM_2  ┆ 2024-03-03 ┆ 101.0 ┆ 2000   │
+    └────────┴────────────┴───────┴────────┘
+    
+      csv module: 0.063s
+      Polars:     0.014s
+      Speedup:    4.4x
+
+## Cloud and Object Storage
+
+<h4><code style="font-size:0.75em">fsspec</code> — unified filesystem interface</h4>
+
+```python
+# fsspec / smart_open — unified file interface for local + cloud storage
+#
+# WHAT: fsspec provides a single open() API that works with local files,
+#   S3, GCS, Azure Blob, HDFS, HTTP, and more. You change the URI, not the code.
+#   smart_open is a simpler alternative with the same concept.
+#
+# WHY: production pipelines read from cloud, not local disk.
+#   Without fsspec: boto3.client("s3").download_file(...), then open locally.
+#   With fsspec: open("s3://bucket/data.csv") — same code as local files.
+#
+# WHEN TO USE: any pipeline that reads/writes cloud storage
+#   Works with: pandas.read_csv("s3://..."), polars, pyarrow, dask
+
+# Local filesystem (always works)
+
+tmp = tempfile.mkdtemp(prefix="fsspec_")
+local_path = os.path.join(tmp, "data.csv")
+
+# fsspec write — same API for local and cloud
+with fsspec.open(local_path, "w") as f:
+    f.write("symbol,price\nSAP.DE,166.52\nASML.AS,685.40\n")
+
+# fsspec read
+with fsspec.open(local_path, "r") as f:
+    print(f"  fsspec local: {f.read().strip()}")
+
+# In production, just change the path:
+print("\n  # Cloud URIs (same API, just change the path):")
+print("  fsspec.open('s3://bucket/data.csv')       # AWS S3")
+print("  fsspec.open('gs://bucket/data.csv')       # Google Cloud Storage")
+print("  fsspec.open('abfs://container/data.csv')  # Azure Blob")
+print("  fsspec.open('https://api.example.com/data') # HTTP")
+
+shutil.rmtree(tmp)
+```
+
+      fsspec local: symbol,price
+    SAP.DE,166.52
+    ASML.AS,685.40
+    
+      # Cloud URIs (same API, just change the path):
+      fsspec.open('s3://bucket/data.csv')       # AWS S3
+      fsspec.open('gs://bucket/data.csv')       # Google Cloud Storage
+      fsspec.open('abfs://container/data.csv')  # Azure Blob
+      fsspec.open('https://api.example.com/data') # HTTP
+
+## Enterprise Message Serialization
+
+#### Avro and Protobuf overview
+
+```python
+# Enterprise serialization — cross-language binary formats with schema evolution
+#
+# WHY NOT JSON/PICKLE:
+#   - JSON: text-based, no schema enforcement, slow to parse at scale
+#   - pickle: Python-only, insecure (arbitrary code execution), no schema
+#
+# PRODUCTION ALTERNATIVES:
+#
+# Apache Avro:
+#   - Binary format with embedded schema (self-describing)
+#   - Schema evolution: add/remove fields without breaking consumers
+#   - Standard for Kafka messages in data engineering
+#   - Python: fastavro library
+#   - Compact: ~50-70% smaller than JSON for structured data
+#
+# Protocol Buffers (Protobuf):
+#   - Binary format with separate .proto schema files
+#   - Code generation: protoc compiles .proto into Python/Java/Go/C# classes
+#   - Standard for gRPC microservices
+#   - Python: protobuf library (google.protobuf)
+#   - Compact: ~60-80% smaller than JSON
+#
+# WHEN TO USE WHAT:
+#   JSON:     human-readable APIs, config files, small payloads
+#   Avro:     Kafka events, data lake storage, schema registry
+#   Protobuf: gRPC services, high-performance IPC, mobile APIs
+#   pickle:   NEVER in production (insecure, Python-only)
+
+print("Format      Size    Speed     Schema    Cross-lang  Use case")
+print("─" * 70)
+print("JSON        Large   Slow      No        Yes         APIs, config")
+print("Avro        Small   Fast      Yes       Yes         Kafka, data lakes")
+print("Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile")
+print("pickle      Medium  Fast      No        No          NEVER in prod")
+print("struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols")
+```
+
+    Format      Size    Speed     Schema    Cross-lang  Use case
+    ──────────────────────────────────────────────────────────────────────
+    JSON        Large   Slow      No        Yes         APIs, config
+    Avro        Small   Fast      Yes       Yes         Kafka, data lakes
+    Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile
+    pickle      Medium  Fast      No        No          NEVER in prod
+    struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols
+
+#### Protobuf in Python — manual message building
+
+```python
+# Protocol Buffers (Protobuf) — cross-language binary serialization
+#
+# WHAT: Protobuf defines message schemas in .proto files. The protoc compiler
+#   generates Python/Java/Go/C# classes from the schema. You serialize instances
+#   to compact binary bytes and deserialize back with full type safety.
+#
+# HOW IT WORKS (production workflow):
+#   1. Define schema: message StockQuote { string symbol = 1; double price = 2; }
+#   2. Compile: protoc --python_out=. stock.proto → generates stock_pb2.py
+#   3. Use: quote = StockQuote(symbol="SAP.DE", price=166.52)
+#          data = quote.SerializeToString()  # bytes
+#          parsed = StockQuote.FromString(data)  # back to object
+#
+# WHY: 60-80% smaller than JSON, 10-100x faster to parse, strict schema,
+#   backward/forward compatible (add fields without breaking old consumers).
+#
+# WHEN TO USE: gRPC services, Kafka events, high-frequency data feeds,
+#   mobile APIs (bandwidth matters), inter-service communication
+#
+# In this cell we build a protobuf message MANUALLY using the descriptor API
+# (without running protoc). In production, always use protoc-generated classes.
+
+# Define the schema programmatically (normally protoc generates this)
+DESCRIPTOR = descriptor_pb2.FileDescriptorProto(
+    name="stock_quote.proto",
+    package="stoxx",
+    message_type=[
+        descriptor_pb2.DescriptorProto(
+            name="StockQuote",
+            field=[
+                descriptor_pb2.FieldDescriptorProto(
+                    name="symbol", number=1,
+                    type=descriptor_pb2.FieldDescriptorProto.TYPE_STRING,
+                    label=descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL,
+                ),
+                descriptor_pb2.FieldDescriptorProto(
+                    name="price", number=2,
+                    type=descriptor_pb2.FieldDescriptorProto.TYPE_DOUBLE,
+                    label=descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL,
+                ),
+                descriptor_pb2.FieldDescriptorProto(
+                    name="volume", number=3,
+                    type=descriptor_pb2.FieldDescriptorProto.TYPE_INT64,
+                    label=descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL,
+                ),
+            ],
+        ),
+    ],
+)
+
+# Register the descriptor and create a message class
+pool = descriptor_pool.DescriptorPool()
+file_desc = pool.Add(DESCRIPTOR)
+msg_desc = pool.FindMessageTypeByName("stoxx.StockQuote")
+
+factory = _reflection.GeneratedProtocolMessageType(
+    "StockQuote",
+    (_message.Message,),
+    {"DESCRIPTOR": msg_desc, "__module__": "__main__"},
+)
+
+# Create a message, serialize, deserialize
+quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg]  # fields are dynamic (runtime reflection)
+binary = quote.SerializeToString()  # type: ignore[attr-defined]
+print(f"  Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}")  # type: ignore[attr-defined]
+print(f"  Binary:     {len(binary)} bytes ({binary.hex()[:40]}...)")
+
+# Deserialize from bytes
+parsed = factory.FromString(binary)  # type: ignore[attr-defined]
+print(f"  Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}")  # type: ignore[attr-defined]
+
+# Compare sizes
+json_size = len(json.dumps({"symbol": "SAP.DE", "price": 166.52, "volume": 82621}).encode())
+print(f"\n  JSON size:     {json_size} bytes")
+print(f"  Protobuf size: {len(binary)} bytes")
+print(f"  Savings:       {(1 - len(binary)/json_size)*100:.0f}%")
+```
+
+      Message:    symbol=SAP.DE, price=166.52, volume=82621
+      Binary:     21 bytes (0a065341502e444511713d0ad7a3d0644018bd85...)
+      Parsed:     symbol=SAP.DE, price=166.52, volume=82621
+    
+      JSON size:     54 bytes
+      Protobuf size: 21 bytes
+      Savings:       61%
+
+#### Protobuf with protoc (production pattern)
+
+```python
+# Production protobuf workflow — how it looks with protoc-generated code
+#
+# This cell shows the PATTERN you'd use in a real project.
+# The code below is not executable without running protoc first.
+
+print("""
+  ── Step 1: Define schema (stock_quote.proto) ──
+
+  syntax = "proto3";
+  package stoxx;
+
+  message StockQuote {
+    string symbol = 1;     // field number, not default value
+    double price = 2;
+    int64  volume = 3;
+    string exchange = 4;   // added later — old consumers ignore it (forward compat)
+  }
+
+  ── Step 2: Compile ──
+
+  $ protoc --python_out=. stock_quote.proto
+  # Generates: stock_quote_pb2.py
+
+  ── Step 3: Use in Python ──
+
+  from stock_quote_pb2 import StockQuote
+
+  # Serialize
+  quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
+  data = quote.SerializeToString()  # bytes — send to Kafka, gRPC, file
+
+  # Deserialize
+  parsed = StockQuote.FromString(data)
+  print(parsed.symbol, parsed.price)
+
+  # Schema evolution: old code ignores field 4 (exchange)
+  # New code reads it if present, uses default ("") if absent
+""")
+```
+
+    
+      ── Step 1: Define schema (stock_quote.proto) ──
+    
+      syntax = "proto3";
+      package stoxx;
+    
+      message StockQuote {
+        string symbol = 1;     // field number, not default value
+        double price = 2;
+        int64  volume = 3;
+        string exchange = 4;   // added later — old consumers ignore it (forward compat)
+      }
+    
+      ── Step 2: Compile ──
+    
+      $ protoc --python_out=. stock_quote.proto
+      # Generates: stock_quote_pb2.py
+    
+      ── Step 3: Use in Python ──
+    
+      from stock_quote_pb2 import StockQuote
+    
+      # Serialize
+      quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
+      data = quote.SerializeToString()  # bytes — send to Kafka, gRPC, file
+    
+      # Deserialize
+      parsed = StockQuote.FromString(data)
+      print(parsed.symbol, parsed.price)
+    
+      # Schema evolution: old code ignores field 4 (exchange)
+      # New code reads it if present, uses default ("") if absent

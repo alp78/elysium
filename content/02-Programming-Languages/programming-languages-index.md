@@ -5,7 +5,7 @@ technology: [python, csharp, dotnet]
 tags: [python, csharp]
 aliases: [Programming Languages Index, Language Reference, Python Reference, C# Reference]
 keywords: [programming languages, python, csharp, c sharp, dotnet, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
-description: "Index for the Programming Languages section — paired Python and C# references covering 17 topics from basics to design patterns, each with executable examples and cell outputs."
+description: "Index for the Programming Languages section — paired Python and C# references covering 18 topics from basics to design patterns, each with executable examples and cell outputs."
 related:
   - "[[index|Elysium]]"
   - "[[sql-python-csharp-transforms]]"
@@ -17,7 +17,7 @@ status: complete
 
 # Programming Languages
 
-Paired Python and C# references covering 17 topics. Each note was converted from an executed Jupyter notebook with cell outputs preserved — you see both the code and its result. Every Python topic has a C# counterpart covering the same concepts in that language.
+Paired Python and C# references covering 18 topics. Each note was converted from an executed Jupyter notebook with cell outputs preserved — you see both the code and its result. Every Python topic has a C# counterpart covering the same concepts in that language.
 
 ## Topic Map
 
@@ -34,12 +34,13 @@ Paired Python and C# references covering 17 topics. Each note was converted from
 | 09 | File I/O and Serialization (JSON, CSV) | [[09_py_fileio_serialization|Python]] | [[09_cs_fileio_serialization|C#]] |
 | 10 | DateTime, Math, and Utilities | [[10_py_datetimemathutils|Python]] | [[10_cs_datetimemathutils|C#]] |
 | 11 | Async and Concurrency | [[11_py_asyncconcurrency|Python]] | [[11_cs_asyncconcurrency|C#]] |
-| 12 | Testing (unit tests, mocking) | [[12_py_testing|Python]] | [[12_cs_testing|C#]] |
-| 13 | Web APIs (HTTP clients and servers) | [[13_py_webapis|Python]] | [[13_cs_webapis|C#]] |
-| 14 | Database Access (SQL, ORM, connections) | [[14_py_database|Python]] | [[14_cs_database|C#]] |
-| 15 | GCP (BigQuery, GCS, Pub/Sub) | [[15_py_gcp|Python]] | [[15_cs_gcp|C#]] |
-| 16 | Design Patterns (singleton, factory, observer) | [[16_py_designpatterns|Python]] | [[16_cs_designpatterns|C#]] |
-| 17 | Performance & Code Quality (profiling, Big-O, linting) | [[17_py_performance_quality|Python]] | [[17_cs_performance_quality|C#]] |
+| 12 | Advanced Parallel Pipelines (Dataflow, channels, rate limiting) | [[12_py_advancedpipelines|Python]] | [[12_cs_advancedpipelines|C#]] |
+| 13 | Testing (unit tests, mocking) | [[13_py_testing|Python]] | [[13_cs_testing|C#]] |
+| 14 | Web APIs (HTTP clients and servers) | [[14_py_webapis|Python]] | [[14_cs_webapis|C#]] |
+| 15 | Database Access (SQL, ORM, connections) | [[15_py_database|Python]] | [[15_cs_database|C#]] |
+| 16 | GCP (BigQuery, GCS, Pub/Sub) | [[16_py_gcp|Python]] | [[16_cs_gcp|C#]] |
+| 17 | Design Patterns (singleton, factory, observer) | [[17_py_designpatterns|Python]] | [[17_cs_designpatterns|C#]] |
+| 18 | Performance & Code Quality (profiling, Big-O, linting) | [[18_py_performance_quality|Python]] | [[18_cs_performance_quality|C#]] |
 
 ## How These Notes Work
 
@@ -62,9 +63,9 @@ Side-by-side language and tool comparisons.
 
 ## All Notebook Notes
 
-**Python:** [[01_py_basics]] | [[02_py_strings]] | [[03_py_control_flow]] | [[04_py_functions]] | [[05_py_collections]] | [[06_py_oop]] | [[07_py_generics_linq]] | [[08_py_errorhandling]] | [[09_py_fileio_serialization]] | [[10_py_datetimemathutils]] | [[11_py_asyncconcurrency]] | [[12_py_testing]] | [[13_py_webapis]] | [[14_py_database]] | [[15_py_gcp]] | [[16_py_designpatterns]] | [[17_py_performance_quality]]
+**Python:** [[01_py_basics]] | [[02_py_strings]] | [[03_py_control_flow]] | [[04_py_functions]] | [[05_py_collections]] | [[06_py_oop]] | [[07_py_generics_linq]] | [[08_py_errorhandling]] | [[09_py_fileio_serialization]] | [[10_py_datetimemathutils]] | [[11_py_asyncconcurrency]] | [[12_py_advancedpipelines]] | [[13_py_testing]] | [[14_py_webapis]] | [[15_py_database]] | [[16_py_gcp]] | [[17_py_designpatterns]] | [[18_py_performance_quality]]
 
-**C#:** [[01_cs_basics]] | [[02_cs_strings]] | [[03_cs_control_flow]] | [[04_cs_functions]] | [[05_cs_collections]] | [[06_cs_oop]] | [[07_cs_generics_linq]] | [[08_cs_errorhandling]] | [[09_cs_fileio_serialization]] | [[10_cs_datetimemathutils]] | [[11_cs_asyncconcurrency]] | [[12_cs_testing]] | [[13_cs_webapis]] | [[14_cs_database]] | [[15_cs_gcp]] | [[16_cs_designpatterns]] | [[17_cs_performance_quality]]
+**C#:** [[01_cs_basics]] | [[02_cs_strings]] | [[03_cs_control_flow]] | [[04_cs_functions]] | [[05_cs_collections]] | [[06_cs_oop]] | [[07_cs_generics_linq]] | [[08_cs_errorhandling]] | [[09_cs_fileio_serialization]] | [[10_cs_datetimemathutils]] | [[11_cs_asyncconcurrency]] | [[12_cs_advancedpipelines]] | [[13_cs_testing]] | [[14_cs_webapis]] | [[15_cs_database]] | [[16_cs_gcp]] | [[17_cs_designpatterns]] | [[18_cs_performance_quality]]
 
 ## Cross-References
 

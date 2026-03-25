@@ -16,13 +16,19 @@ status: complete
 
 # 11. Async & Concurrency - C#
 
-Topics covered:
-- Async & Await (Task-based Asynchronous Pattern)
-- Tasks & Parallelism (Task.Run, Parallel, PLINQ)
-- Threading & Concurrency (Thread, lock, concurrent collections)
+```csharp
+// Imports used throughout this notebook
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Channels;
+using System.Net.Http;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
+```
 
-## 1. Async & Await
+## Async and Await
 
+#### Async and await basics
 
 ```csharp
 // Async & Await — the Task-based Asynchronous Pattern (TAP)
@@ -31,20 +37,18 @@ Topics covered:
 // - async: marks a method as asynchronous. Returns Task or Task<T>.
 // - await: pauses the method until the awaited task completes.
 //   The thread is NOT blocked — it's released to the thread pool to do other work.
-// - Task: represents an asynchronous operation (like Python's coroutine/Future).
 // - Task<T>: an async operation that returns a value of type T.
-// - Unlike Python, C# has NO GIL — async/await is built into the runtime.
 //   The thread pool manages threads automatically.
 //
 // WHY async matters for Data Engineering:
 // - API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them.
 // - A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
-// - Python equivalent: asyncio / async def / await.
+```
 
-using System.Diagnostics;
+#### Basic async method
 
-// ─── Basic async method ───
-
+```csharp
+// Basic async method
 async Task<Dictionary<string, object>> FetchDataAsync(string source, double delaySeconds)
 {
     Console.WriteLine($"  [{DateTime.Now:HH:mm:ss}] Starting fetch: {source}");
@@ -56,9 +60,11 @@ async Task<Dictionary<string, object>> FetchDataAsync(string source, double dela
         ["rows"] = (int)(delaySeconds * 1000)
     };
 }
+```
 
-// ─── Sequential vs concurrent ───
+#### Sequential vs concurrent
 
+```csharp
 // Sequential — each fetch waits for the previous one
 Console.WriteLine("=== Sequential (one after another) ===");
 var sw = Stopwatch.StartNew();
@@ -67,7 +73,18 @@ var r2 = await FetchDataAsync("events_api", 0.8);
 var r3 = await FetchDataAsync("products_api", 0.5);
 sw.Stop();
 Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)");
+```
 
+    === Sequential (one after another) ===
+      [06:36:58] Starting fetch: users_api
+      [06:36:59] Completed fetch: users_api
+      [06:36:59] Starting fetch: events_api
+      [06:37:00] Completed fetch: events_api
+      [06:37:00] Starting fetch: products_api
+      [06:37:00] Completed fetch: products_api
+      Total: 2.32s (sum of all delays)
+
+```csharp
 // Concurrent — all fetches run at the same time
 Console.WriteLine("\n=== Concurrent (Task.WhenAll) ===");
 sw.Restart();
@@ -80,256 +97,29 @@ Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (max of all delays)")
 Console.WriteLine($"  Results: {results.Length} dictionaries");
 ```
 
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::655c:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:4d6a:f754:e291:8378:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/","http://fe80::91de:1423:fe62:933b%45:2048/","http://172.25.64.1:2048/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '19544.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
-
-    === Sequential (one after another) ===
-      [04:49:13] Starting fetch: users_api
-      [04:49:14] Completed fetch: users_api
-      [04:49:14] Starting fetch: events_api
-      [04:49:15] Completed fetch: events_api
-      [04:49:15] Starting fetch: products_api
-      [04:49:15] Completed fetch: products_api
-      Total: 2.33s (sum of all delays)
     
     === Concurrent (Task.WhenAll) ===
-      [04:49:15] Starting fetch: users_api
-      [04:49:15] Starting fetch: events_api
-      [04:49:15] Starting fetch: products_api
-      [04:49:16] Completed fetch: products_api
-      [04:49:16] Completed fetch: events_api
-      [04:49:16] Completed fetch: users_api
+      [06:37:03] Starting fetch: users_api
+      [06:37:03] Starting fetch: events_api
+      [06:37:03] Starting fetch: products_api
+      [06:37:03] Completed fetch: products_api
+      [06:37:04] Completed fetch: events_api
+      [06:37:04] Completed fetch: users_api
       Total: 1.01s (max of all delays)
       Results: 3 dictionaries
-    
 
+<h4><code style="font-size:0.75em">Task.WhenAll</code> and <code style="font-size:0.75em">Task.WhenAny</code></h4>
 
 ```csharp
 // Task.WhenAll vs Task.WhenAny — waiting strategies
 //
 // Task.WhenAll(tasks): wait until ALL complete. Returns all results.
-//   Python equivalent: asyncio.gather()
 // Task.WhenAny(tasks): wait until the FIRST one completes. Returns that task.
-//   Python equivalent: asyncio.wait(return_when=FIRST_COMPLETED)
 //
 // Error handling:
 // - Task.WhenAll unwraps AggregateException in await — only first inner exception surfaces.
 // - To get ALL errors, store the Task and check .Exception (see 08_ErrorHandling).
 
-using System.Diagnostics;
 
 async Task<string> FetchTableAsync(string name, double delay, bool fail = false)
 {
@@ -337,9 +127,12 @@ async Task<string> FetchTableAsync(string name, double delay, bool fail = false)
     if (fail) throw new InvalidOperationException($"Fetch failed: {name}");
     return $"{name}: {(int)(delay * 1000)} rows";
 }
+```
 
-// ─── Task.WhenAll with error handling ───
+#### Task.WhenAll with error handling
 
+```csharp
+// Task.WhenAll with error handling
 Console.WriteLine("=== Task.WhenAll (error handling) ===");
 var allTask = Task.WhenAll(
     FetchTableAsync("events", 0.3),
@@ -357,8 +150,14 @@ catch
     foreach (var ex in allTask.Exception!.Flatten().InnerExceptions)
         Console.WriteLine($"  ERROR: {ex.Message}");
 }
+```
 
-// ─── Task.WhenAny — first to complete wins ───
+    === Task.WhenAll (error handling) ===
+      ERROR: Fetch failed: users
+
+#### Task.WhenAny — first to complete wins
+
+```csharp
 // Scenario: query multiple replicas, use the fastest response.
 
 Console.WriteLine("\n=== Task.WhenAny (first wins) ===");
@@ -375,23 +174,18 @@ Console.WriteLine($"  First to finish: {await fastest}");
 // Use CancellationToken to cancel the rest (see next cell).
 ```
 
-    === Task.WhenAll (error handling) ===
-      ERROR: Fetch failed: users
     
     === Task.WhenAny (first wins) ===
       First to finish: replica-eu: 300 rows
-    
 
+<h4><code style="font-size:0.75em">CancellationToken</code></h4>
 
 ```csharp
-using System.Threading;
-using System.Diagnostics;
 // Cancellation — CancellationToken
 //
 // CancellationTokenSource: creates a token you can cancel.
 // CancellationToken: passed to async methods so they can check for cancellation.
 // When cancelled, the method throws OperationCanceledException.
-// Python equivalent: asyncio.Task.cancel() + CancelledError.
 //
 // Data Engineering scenario: cancel a long BigQuery export if it takes > 5s.
 
@@ -407,9 +201,12 @@ async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
     }
     return $"{table}: export complete";
 }
+```
 
-// ─── Cancel after timeout ───
+#### Cancel after timeout
 
+```csharp
+// Cancel after timeout
 Console.WriteLine("=== CancellationToken (timeout) ===");
 // CancelAfter: automatically cancel after specified time
 var cts = new CancellationTokenSource();
@@ -424,9 +221,19 @@ catch (OperationCanceledException)
 {
     Console.WriteLine("  Export cancelled after 2s timeout");
 }
+```
 
-// ─── Manual cancellation ───
+    === CancellationToken (timeout) ===
+      Starting export: huge_events
+      huge_events: chunk 1/10
+      huge_events: chunk 2/10
+      huge_events: chunk 3/10
+      Export cancelled after 2s timeout
 
+#### Manual cancellation
+
+```csharp
+// Manual cancellation
 Console.WriteLine("\n=== Manual cancellation ===");
 var cts2 = new CancellationTokenSource();
 
@@ -451,12 +258,6 @@ catch (OperationCanceledException)
 }
 ```
 
-    === CancellationToken (timeout) ===
-      Starting export: huge_events
-      huge_events: chunk 1/10
-      huge_events: chunk 2/10
-      huge_events: chunk 3/10
-      Export cancelled after 2s timeout
     
     === Manual cancellation ===
       Starting export: daily_clicks
@@ -464,21 +265,19 @@ catch (OperationCanceledException)
       daily_clicks: chunk 2/10
       [Supervisor] Cancelling export...
       Export was manually cancelled
-    
 
+#### Real-world async patterns
 
 ```csharp
-using System.Net.Http;
 // Async patterns for Data Engineering
 //
 // 1. SemaphoreSlim: limit concurrent requests (don't overwhelm an API).
 // 2. Retry with backoff: retry failed tasks with exponential delay.
-// 3. Channel<T>: async producer-consumer (like asyncio.Queue in Python).
+```
 
-using System.Diagnostics;
-using System.Threading.Channels;
+#### SemaphoreSlim — rate limiting
 
-// ─── 1. SemaphoreSlim — rate limiting ───
+```csharp
 // Scenario: API allows max 3 concurrent requests.
 
 async Task<string> FetchWithLimitAsync(SemaphoreSlim sem, string url)
@@ -508,9 +307,19 @@ Console.WriteLine($"  Fetched {results.Length} pages in {sw.Elapsed.TotalSeconds
 foreach (var r in results.Take(3))
     Console.WriteLine($"    {r}");
 Console.WriteLine($"    ... ({results.Length - 3} more)");
+```
 
-// ─── 2. Retry with exponential backoff ───
+    === SemaphoreSlim (max 3 concurrent) ===
+      Fetched 10 pages in 1.33s
+        https://api.example.com/page/0 (175ms)
+        https://api.example.com/page/1 (397ms)
+        https://api.example.com/page/2 (491ms)
+        ... (7 more)
 
+#### Retry with exponential backoff
+
+```csharp
+// Retry with exponential backoff
 var attemptCount = 0;
 
 async Task<string> FlakyApiAsync(string endpoint)
@@ -543,9 +352,17 @@ Console.WriteLine("\n=== Retry with Exponential Backoff ===");
 attemptCount = 0;
 var apiResult = await RetryWithBackoffAsync(() => FlakyApiAsync("/data/events"));
 Console.WriteLine($"  Success on attempt {attemptCount}: {apiResult}");
+```
 
-// ─── 3. Channel<T> — async producer-consumer ───
-// Channel<T> is the async equivalent of Python's asyncio.Queue.
+    
+    === Retry with Exponential Backoff ===
+      Attempt 1 failed: Connection refused (attempt 1). Retrying in 100ms...
+      Attempt 2 failed: Connection refused (attempt 2). Retrying in 200ms...
+      Success on attempt 3: /data/events: ok
+
+#### Channel<T> — async producer-consumer
+
+```csharp
 // BoundedChannel: fixed capacity (producer waits when full).
 // UnboundedChannel: unlimited capacity (producer never waits).
 
@@ -592,24 +409,129 @@ sw.Stop();
 Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeconds:F2}s with 3 workers");
 ```
 
-    === SemaphoreSlim (max 3 concurrent) ===
-      Fetched 10 pages in 1.03s
-        https://api.example.com/page/0 (330ms)
-        https://api.example.com/page/1 (429ms)
-        https://api.example.com/page/2 (416ms)
-        ... (7 more)
-    
-    === Retry with Exponential Backoff ===
-      Attempt 1 failed: Connection refused (attempt 1). Retrying in 100ms...
-      Attempt 2 failed: Connection refused (attempt 2). Retrying in 200ms...
-      Success on attempt 3: /data/events: ok
     
     === Channel<T> (async producer-consumer) ===
-      Processed 12 events in 0.74s with 3 workers
+      Processed 12 events in 0.78s with 3 workers
+
+<h4><code style="font-size:0.75em">IAsyncEnumerable&lt;T&gt;</code> — async streaming with yield</h4>
+
+```csharp
+// IAsyncEnumerable<T> — async streaming with yield return
+//
+// WHAT: an async version of IEnumerable<T>. The method yields items one at a time
+//   using "yield return" inside an async method. The consumer pulls items with "await foreach".
+//   Each yield pauses the producer until the consumer calls MoveNextAsync().
+//
+// WHY: process data as it arrives without buffering everything in memory.
+//   Paginated API: fetch page 1 → yield items → fetch page 2 → yield items → ...
+//   Only one page is in memory at a time, regardless of total dataset size.
+//
+// WHEN TO USE: paginated REST APIs, streaming DB queries, reading large files line by line
+// ANTI-PATTERNS:
+//   - Don't call .ToList() on the stream unless you need all items — defeats streaming
+//   - Don't do heavy work inside the producer — keep it to fetch + yield
+//   - Don't forget that yield return suspends the method — local variables survive across yields
+
+// Simulate a paginated API that returns pages of data
+async IAsyncEnumerable<string> FetchPagesAsync(int totalPages, int itemsPerPage)
+{
+    for (int page = 1; page <= totalPages; page++)
+    {
+        await Task.Delay(100); // simulate network latency per page
+        Console.WriteLine($"  Fetching page {page}...");
+        for (int i = 0; i < itemsPerPage; i++)
+            yield return $"page{page}_item{i + 1}"; // yield one item at a time
+    }
+}
+
+// await foreach — consumer pulls items as they become available
+var sw = Stopwatch.StartNew();
+int count = 0;
+await foreach (var item in FetchPagesAsync(3, 2))
+{
+    count++;
+    Console.WriteLine($"    Received: {item}");
+}
+Console.WriteLine($"  Total: {count} items in {sw.ElapsedMilliseconds}ms");
+```
+
+      Fetching page 1...
+        Received: page1_item1
+        Received: page1_item2
+      Fetching page 2...
+        Received: page2_item1
+        Received: page2_item2
+      Fetching page 3...
+        Received: page3_item1
+        Received: page3_item2
+      Total: 6 items in 326ms
+
+<h4><code style="font-size:0.75em">IAsyncEnumerable</code> with cancellation and LINQ</h4>
+
+```csharp
+// IAsyncEnumerable with CancellationToken — gracefully stop an infinite or long stream
+//
+// WHAT: [EnumeratorCancellation] attribute wires the token from .WithCancellation(ct)
+//   on the consumer side to the ct parameter on the producer side automatically.
+//   When the token is cancelled, the next await inside the producer throws OperationCanceledException.
+//
+// WHY: infinite generators (real-time feeds, polling loops) need a way to stop cleanly.
+//   Without cancellation, await foreach runs forever. With it, the consumer can say "stop after 5s".
+//
+// WHEN TO USE: long-running streams, polling APIs with timeout, user-cancellable operations
+// ANTI-PATTERNS:
+//   - Don't forget [EnumeratorCancellation] — .WithCancellation() silently does nothing without it
+//   - Don't catch OperationCanceledException inside the producer — let it propagate to the consumer
+using System.Runtime.CompilerServices;
+
+// Infinite generator — yields 0, 1, 2, ... forever until cancelled
+async IAsyncEnumerable<int> GenerateNumbersAsync(
+    [EnumeratorCancellation] CancellationToken ct = default)
+{
+    int n = 0;
+    while (!ct.IsCancellationRequested)
+    {
+        await Task.Delay(50, ct); // throws OperationCanceledException when cancelled
+        yield return n++;
+    }
+}
+
+// Cancel after 200ms — consumer catches the cancellation cleanly
+var cts = new CancellationTokenSource(200);
+var collected = new List<int>();
+try
+{
+    await foreach (var n in GenerateNumbersAsync().WithCancellation(cts.Token))
+        collected.Add(n);
+}
+catch (OperationCanceledException) { } // expected — not an error
+Console.WriteLine($"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]");
+
+// Early exit with break — stops fetching further pages
+Console.WriteLine("\n  First 5 from paginated source:");
+count = 0;
+await foreach (var item in FetchPagesAsync(10, 3))
+{
+    Console.WriteLine($"    {item}");
+    count++;
+    if (count >= 5) break; // break disposes the enumerator — producer stops cleanly
+}
+```
+
+      Collected 3 items before cancellation: [0, 1, 2]
     
+      First 5 from paginated source:
+      Fetching page 1...
+        page1_item1
+        page1_item2
+        page1_item3
+      Fetching page 2...
+        page2_item1
+        page2_item2
 
-## 2. Tasks & Parallelism
+## Tasks and Parallelism
 
+<h4><code style="font-size:0.75em">Task.Run</code> and <code style="font-size:0.75em">Parallel</code></h4>
 
 ```csharp
 // Task.Run & Parallel — CPU-bound parallelism
@@ -621,13 +543,12 @@ Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeco
 //   Automatically uses the thread pool. Blocks until all done.
 // - Parallel.ForEachAsync() (.NET 6+): async version of Parallel.ForEach.
 // - C# has NO GIL — multiple threads can execute code truly in parallel.
-//   Python equivalent: ProcessPoolExecutor (needs separate processes for CPU work).
+```
 
-using System.Diagnostics;
-using System.Security.Cryptography;
+#### Task.Run — offload CPU work to thread pool
 
-// ─── Task.Run — offload CPU work to thread pool ───
-
+```csharp
+// Task.Run — offload CPU work to thread pool
 string ComputeHash(byte[] data)
 {
     // CPU-bound: compute SHA-256 hash repeatedly
@@ -657,8 +578,19 @@ var parTime = sw.Elapsed;
 Console.WriteLine($"  {parHashes.Length} hashes in {parTime.TotalSeconds:F2}s");
 Console.WriteLine($"  Speedup: {seqTime / parTime:F1}x");
 Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(parHashes)}");
+```
 
-// ─── Parallel.ForEach — partition and process ───
+    === Sequential (single thread) ===
+      8 hashes in 0.00s
+    
+    === Task.Run (thread pool, 16 cores) ===
+      8 hashes in 0.00s
+      Speedup: 0.5x
+      Results match: True
+
+#### Parallel.ForEach — partition and process
+
+```csharp
 // Blocks the calling thread until all items are processed.
 
 Console.WriteLine("\n=== Parallel.ForEach ===");
@@ -674,33 +606,25 @@ Console.WriteLine($"  {hashResults.Length} hashes in {sw.Elapsed.TotalSeconds:F2
 Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(hashResults)}");
 ```
 
-    === Sequential (single thread) ===
-      8 hashes in 0.00s
-    
-    === Task.Run (thread pool, 16 cores) ===
-      8 hashes in 0.00s
-      Speedup: 1.1x
-      Results match: True
     
     === Parallel.ForEach ===
       8 hashes in 0.00s (max 4 threads)
       Results match: True
-    
 
+<h4><code style="font-size:0.75em">Parallel.ForEachAsync</code> and PLINQ</h4>
 
 ```csharp
 // Parallel.ForEachAsync & PLINQ
 //
 // Parallel.ForEachAsync (.NET 6+): process items concurrently with async lambdas.
 //   Great for I/O-bound work with controlled parallelism.
-//   Python equivalent: asyncio.Semaphore + gather (no direct equivalent).
 //
 // PLINQ (Parallel LINQ): add .AsParallel() to a LINQ query for multi-core execution.
-//   Python equivalent: multiprocessing.Pool.map() or ProcessPoolExecutor.map().
+```
 
-using System.Diagnostics;
+#### Parallel.ForEachAsync — async I/O with controlled concurrency
 
-// ─── Parallel.ForEachAsync — async I/O with controlled concurrency ───
+```csharp
 // Scenario: fetch metadata for 10 tables, max 3 concurrent.
 
 Console.WriteLine("=== Parallel.ForEachAsync (max 3 concurrent) ===");
@@ -721,8 +645,17 @@ sw.Stop();
 Console.WriteLine($"  Fetched {fetchedTables.Count} tables in {sw.Elapsed.TotalSeconds:F2}s");
 foreach (var t in fetchedTables.Take(3))
     Console.WriteLine($"    {t}");
+```
 
-// ─── PLINQ (Parallel LINQ) ───
+    === Parallel.ForEachAsync (max 3 concurrent) ===
+      Fetched 10 tables in 1.20s
+        table_08: 1841 rows
+        table_09: 6788 rows
+        table_07: 2097 rows
+
+#### PLINQ (Parallel LINQ)
+
+```csharp
 // .AsParallel() partitions the data and processes chunks on multiple threads.
 // Order is NOT guaranteed unless you add .AsOrdered().
 
@@ -765,23 +698,17 @@ sw.Stop();
 Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data");
 ```
 
-    === Parallel.ForEachAsync (max 3 concurrent) ===
-      Fetched 10 tables in 1.19s
-        table_09: 5178 rows
-        table_08: 1379 rows
-        table_07: 2759 rows
     
     === PLINQ (.AsParallel()) ===
-      Parsed 1'000'000 records -> 985'050 filtered in 0.28s
+      Parsed 1'000'000 records -> 985'050 filtered in 0.10s
       Sample: { EventId = evt_0005001, User = user_001, Value = 50.01 }
-      Sequential: 0.27s  |  PLINQ was faster on large data
-    
+      Sequential: 0.16s  |  PLINQ was faster on large data
 
-## 3. Threading & Concurrency
+## Threading and Concurrency
 
+#### Thread basics
 
 ```csharp
-#nullable enable
 // Threading — low-level thread management
 //
 // KEY CONCEPTS:
@@ -792,15 +719,16 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 // - Interlocked: atomic operations on shared variables (no lock needed).
 //   Interlocked.Increment, Interlocked.Add, Interlocked.Exchange.
 // - IsBackground: daemon thread — dies when the main thread exits.
-//   Python equivalent: threading.Thread(daemon=True).
 //
 // NOTE: in modern C#, prefer Task/async over raw threads.
 // Use threads only when you need explicit control.
+```
 
-using System.Diagnostics;
+#### Basic threading
 
-// ─── Basic threading ───
-
+```csharp
+#nullable enable
+// Basic threading
 Console.WriteLine("=== Basic Threads ===");
 var threadResults = new System.Collections.Concurrent.ConcurrentBag<string>();
 
@@ -829,25 +757,27 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
 ```
 
     === Basic Threads ===
-      [17] fetch_users starting
-      [38] fetch_products starting
-      [14] fetch_events starting
-      [38] fetch_products finished
-      [17] fetch_users finished
-      [14] fetch_events finished
+      [104] fetch_users starting
+      [102] fetch_events starting
+      [101] fetch_products starting
+      [101] fetch_products finished
+      [104] fetch_users finished
+      [102] fetch_events finished
       Results: [fetch_events done, fetch_users done, fetch_products done]
-    
 
+<h4><code style="font-size:0.75em">lock</code> and <code style="font-size:0.75em">Interlocked</code></h4>
 
 ```csharp
 // lock & Interlocked — preventing race conditions
 //
 // Race condition: two threads read-modify-write a shared variable simultaneously,
 // causing lost updates. The lock keyword prevents this.
-// Python equivalent: threading.Lock() with "with lock:" context manager.
+```
 
-// ─── Race condition demo (WITHOUT lock) ───
+#### Race condition demo (WITHOUT lock)
 
+```csharp
+// Race condition demo (WITHOUT lock)
 var unsafeCounter = 0;
 
 void IncrementUnsafe()
@@ -865,9 +795,16 @@ foreach (var t in unsafeThreads) t.Start();
 foreach (var t in unsafeThreads) t.Join();
 Console.WriteLine($"  Expected: 400,000");
 Console.WriteLine($"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ? "(WRONG — race condition!)" : "(got lucky this time)")}");
+```
 
-// ─── Fixed with lock ───
+    === Race Condition (no lock) ===
+      Expected: 400,000
+      Got:      398'731  (WRONG — race condition!)
 
+#### Fixed with lock
+
+```csharp
+// Fixed with lock
 var safeCounter = 0;
 var lockObj = new object();  // lock requires a reference type object
 
@@ -891,8 +828,16 @@ foreach (var t in safeThreads) t.Start();
 foreach (var t in safeThreads) t.Join();
 Console.WriteLine($"  Expected: 400,000");
 Console.WriteLine($"  Got:      {safeCounter:N0}  (correct — lock prevents race)");
+```
 
-// ─── Interlocked — lock-free atomic operations ───
+    
+    === With lock (safe) ===
+      Expected: 400,000
+      Got:      400'000  (correct — lock prevents race)
+
+#### Interlocked — lock-free atomic operations
+
+```csharp
 // Faster than lock for simple operations (increment, add, exchange).
 // Uses CPU-level atomic instructions — no context switching.
 
@@ -915,38 +860,29 @@ Console.WriteLine($"  Expected: 400,000");
 Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operation)");
 ```
 
-    === Race Condition (no lock) ===
-      Expected: 400,000
-      Got:      314'065  (WRONG — race condition!)
-    
-    === With lock (safe) ===
-      Expected: 400,000
-      Got:      400'000  (correct — lock prevents race)
     
     === Interlocked (lock-free) ===
       Expected: 400,000
       Got:      400'000  (correct — atomic operation)
-    
 
+#### Concurrent collections
 
 ```csharp
 // Concurrent collections — thread-safe data structures
 //
 // System.Collections.Concurrent provides collections designed for multi-threaded access.
 // No manual locking needed — the collection handles synchronization internally.
-// Python equivalent: queue.Queue (thread-safe), but Python has no ConcurrentDictionary.
 //
 // KEY TYPES:
 // - ConcurrentDictionary<K,V>: thread-safe dictionary. AddOrUpdate, GetOrAdd.
 // - ConcurrentBag<T>: unordered thread-safe collection. Good for collecting results.
 // - ConcurrentQueue<T>: thread-safe FIFO queue. TryDequeue (never blocks).
 // - BlockingCollection<T>: wraps a concurrent collection + blocks on Take() when empty.
-//   This is the C# equivalent of Python's queue.Queue (blocking get).
+```
 
-using System.Collections.Concurrent;
-using System.Diagnostics;
+#### ConcurrentDictionary — thread-safe aggregation
 
-// ─── ConcurrentDictionary — thread-safe aggregation ───
+```csharp
 // Scenario: multiple threads process events and aggregate counts by type.
 
 Console.WriteLine("=== ConcurrentDictionary (thread-safe aggregation) ===");
@@ -965,9 +901,19 @@ Console.WriteLine("  Event counts (100K events across 4 types):");
 foreach (var kvp in eventCounts.OrderBy(k => k.Key))
     Console.WriteLine($"    {kvp.Key}: {kvp.Value:N0}");
 Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");
+```
 
-// ─── BlockingCollection — producer-consumer with threads ───
-// Take() blocks until an item is available (like Python's queue.Queue.get()).
+    === ConcurrentDictionary (thread-safe aggregation) ===
+      Event counts (100K events across 4 types):
+        click: 25'000
+        purchase: 25'000
+        signup: 25'000
+        view: 25'000
+      Total: 100'000
+
+#### BlockingCollection — producer-consumer with threads
+
+```csharp
 // CompleteAdding() signals consumers that no more items will come.
 
 Console.WriteLine("\n=== BlockingCollection (producer-consumer) ===");
@@ -1014,27 +960,255 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
     Console.WriteLine($"    {g.Key}: {g.Count()} events");
 ```
 
-    === ConcurrentDictionary (thread-safe aggregation) ===
-      Event counts (100K events across 4 types):
-        click: 25'000
-        purchase: 25'000
-        signup: 25'000
-        view: 25'000
-      Total: 100'000
     
     === BlockingCollection (producer-consumer) ===
       Processed 20 events in 0.63s
-        worker-1: 6 events
-        worker-2: 8 events
+        worker-1: 7 events
+        worker-2: 7 events
         worker-3: 6 events
-    
 
+## Advanced Synchronization
+
+<h4><code style="font-size:0.75em">ReaderWriterLockSlim</code></h4>
+
+```csharp
+// ReaderWriterLockSlim — allows many concurrent readers OR one exclusive writer
+//
+// WHAT: a synchronization primitive optimized for read-heavy workloads.
+//   EnterReadLock(): multiple threads can hold read locks simultaneously.
+//   EnterWriteLock(): exclusive — blocks ALL readers AND other writers.
+//   The "Slim" variant is lighter than ReaderWriterLock (no OS kernel object).
+//
+// WHY: a plain lock blocks ALL threads (readers AND writers) even when multiple
+//   threads just want to read. ReaderWriterLockSlim lets N readers proceed in parallel.
+//   Example: 100 threads reading a config cache, 1 thread updating it every 5 minutes.
+//   With lock: 100 threads serialize. With RWLock: 100 readers run in parallel.
+//
+// WHEN TO USE: in-memory caches, lookup tables, config stores, shared dictionaries
+//   where reads vastly outnumber writes (>90% reads)
+// ANTI-PATTERNS:
+//   - Don't use for write-heavy workloads — RWLock overhead > plain lock when writes are frequent
+//   - Don't hold the lock across await — RWLockSlim is thread-affine (not async-safe)
+//   - Always use try/finally to ensure ExitReadLock/ExitWriteLock runs
+var rwLock = new ReaderWriterLockSlim();
+var cache = new Dictionary<string, string>
+{
+    ["ETL_001"] = "success",
+    ["ETL_002"] = "running",
+};
+
+// Multiple readers — all enter simultaneously, no blocking between them
+var readTasks = Enumerable.Range(0, 5).Select(i => Task.Run(() =>
+{
+    rwLock.EnterReadLock();   // multiple threads can hold this at the same time
+    try
+    {
+        var status = cache.GetValueOrDefault("ETL_001", "unknown");
+        Console.WriteLine($"  Reader {i}: ETL_001 = {status}");
+    }
+    finally { rwLock.ExitReadLock(); } // ALWAYS release in finally
+}));
+
+// Writer — gets exclusive access, blocks all readers and other writers
+var writeTask = Task.Run(() =>
+{
+    rwLock.EnterWriteLock();  // waits until ALL readers exit, then blocks new readers
+    try
+    {
+        cache["ETL_002"] = "completed";
+        Console.WriteLine("  Writer: updated ETL_002 → completed");
+    }
+    finally { rwLock.ExitWriteLock(); }
+});
+
+await Task.WhenAll(readTasks.Append(writeTask));
+Console.WriteLine($"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.Key}={kv.Value}"))}");
+```
+
+      Writer: updated ETL_002 → completed
+      Reader 3: ETL_001 = success
+      Reader 2: ETL_001 = success
+      Reader 0: ETL_001 = success
+      Reader 4: ETL_001 = success
+      Reader 1: ETL_001 = success
+      Final cache: ETL_001=success, ETL_002=completed
+
+<h4><code style="font-size:0.75em">ManualResetEventSlim</code> and <code style="font-size:0.75em">CountdownEvent</code></h4>
+
+```csharp
+// ManualResetEventSlim — a gate that threads wait at until signaled
+//
+// WHAT: starts non-signaled (gate closed). Threads calling Wait() block.
+//   Set() opens the gate — ALL waiting threads proceed. Gate stays open.
+//   Reset() closes the gate again (manual reset — you control when it closes).
+//   "Slim" = lightweight, no OS kernel object unless needed (faster for short waits).
+//
+// WHY: coordinate startup — workers wait for initialization to complete.
+//   Without signaling: workers poll a shared flag in a loop (wastes CPU).
+//   With ManualResetEvent: workers sleep efficiently until the signal arrives.
+//
+// WHEN TO USE: "everyone wait until X is ready", gate/barrier patterns, init coordination
+// ANTI-PATTERNS:
+//   - Don't forget to call Set() — waiting threads block forever
+//   - Don't use for one-at-a-time signaling — use AutoResetEvent or SemaphoreSlim instead
+var gate = new ManualResetEventSlim(false); // starts closed — threads will block
+
+var workers = Enumerable.Range(0, 3).Select(i => Task.Run(() =>
+{
+    Console.WriteLine($"  Worker {i}: waiting for signal...");
+    gate.Wait();  // blocks until gate.Set() is called — efficient OS-level wait
+    Console.WriteLine($"  Worker {i}: proceeding!");
+})).ToArray();
+
+await Task.Delay(200);  // simulate initialization work
+Console.WriteLine("  Main: initialization done, signaling workers");
+gate.Set();  // opens the gate — ALL 3 workers unblock simultaneously
+await Task.WhenAll(workers);
+
+// CountdownEvent — wait until N signals received
+//
+// WHAT: initialized with count N. Each Signal() decrements the count.
+//   Wait() blocks until count reaches 0. Like a barrier countdown.
+//
+// WHY: main thread needs to wait for N workers to finish setup before proceeding.
+//   Without CountdownEvent: track a shared counter with Interlocked + busy wait.
+//   With CountdownEvent: each worker signals, main waits — clean and efficient.
+//
+// WHEN TO USE: "wait for all N workers to report ready", phased initialization
+Console.WriteLine("\n  CountdownEvent:");
+var countdown = new CountdownEvent(3);  // wait for 3 signals
+
+var setupTasks = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
+{
+    await Task.Delay(50 * (i + 1));  // simulate setup work
+    Console.WriteLine($"  Worker {i}: setup done");
+    countdown.Signal();  // decrement count by 1
+})).ToArray();
+
+countdown.Wait();  // blocks until count reaches 0 (all 3 workers signaled)
+Console.WriteLine("  Main: all 3 workers finished setup, proceeding");
+```
+
+      Worker 0: waiting for signal...
+      Worker 1: waiting for signal...
+      Worker 2: waiting for signal...
+      Main: initialization done, signaling workers
+      Worker 2: proceeding!
+      Worker 0: proceeding!
+      Worker 1: proceeding!
+    
+      CountdownEvent:
+      Worker 0: setup done
+      Worker 1: setup done
+      Worker 2: setup done
+      Main: all 3 workers finished setup, proceeding
+
+<h4><code style="font-size:0.75em">Barrier</code> — phased synchronization</h4>
+
+```csharp
+// Barrier — phased synchronization where all participants must reach a checkpoint
+//
+// WHAT: Barrier(n, postPhaseAction) creates a synchronization point for n participants.
+//   SignalAndWait(): "I'm done with this phase — wait for everyone else."
+//   When all n participants call SignalAndWait(), the postPhaseAction runs, then all proceed.
+//   CurrentPhaseNumber increments after each phase.
+//
+// WHY: multi-phase ETL where all workers must finish phase 1 before any starts phase 2.
+//   Without Barrier: use N CountdownEvents + manual reset — complex and error-prone.
+//   With Barrier: one primitive handles multi-phase coordination automatically.
+//
+// WHEN TO USE: parallel simulations with time steps, multi-phase data processing,
+//   any algorithm where workers must synchronize between phases
+// ANTI-PATTERNS:
+//   - Don't change participant count at runtime without AddParticipant/RemoveParticipant
+//   - Don't mix Barrier with async/await — SignalAndWait is blocking (thread-affine)
+//   - Don't use for single-phase sync — CountdownEvent is simpler
+var barrier = new Barrier(
+    3, // 3 participants
+    b => Console.WriteLine($"  === All workers reached phase {b.CurrentPhaseNumber} ===")
+);
+
+var phasedWorkers = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
+{
+    // Phase 0: Extract — each worker does its own extract work
+    await Task.Delay(50 * (i + 1)); // worker 0 finishes first, worker 2 last
+    Console.WriteLine($"  Worker {i}: extract done");
+    barrier.SignalAndWait(); // blocks until all 3 call SignalAndWait
+
+    // Phase 1: Transform — no one gets here until ALL finished extract
+    await Task.Delay(30 * (i + 1));
+    Console.WriteLine($"  Worker {i}: transform done");
+    barrier.SignalAndWait(); // blocks until all 3 finish transform
+
+    Console.WriteLine($"  Worker {i}: load done");
+})).ToArray();
+
+await Task.WhenAll(phasedWorkers);
+```
+
+      Worker 0: extract done
+      Worker 1: extract done
+      Worker 2: extract done
+      === All workers reached phase 0 ===
+      Worker 0: transform done
+      Worker 1: transform done
+      Worker 2: transform done
+      === All workers reached phase 1 ===
+      Worker 2: load done
+      Worker 0: load done
+      Worker 1: load done
+
+<h4><code style="font-size:0.75em">PeriodicTimer</code> — modern scheduled polling</h4>
+
+```csharp
+// PeriodicTimer — modern .NET 6+ async-friendly timer for scheduled polling
+//
+// WHAT: PeriodicTimer(interval) ticks at fixed intervals. WaitForNextTickAsync()
+//   returns true on each tick, false if the timer is disposed. Integrates with
+//   async/await natively — no callback delegates, no thread pool threads.
+//
+// WHY: replaces legacy System.Timers.Timer and System.Threading.Timer which use
+//   callbacks on thread pool threads (risk of overlapping if tick takes > interval).
+//   PeriodicTimer waits for the consumer to finish before starting the next interval,
+//   so ticks never overlap. Supports CancellationToken for clean shutdown.
+//
+// WHEN TO USE: poll an API every N seconds, check queue depth, refresh cache,
+//   heartbeat monitoring, periodic data export
+// ANTI-PATTERNS:
+//   - Don't use Thread.Sleep in a loop — wastes a thread; PeriodicTimer is async
+//   - Don't use Task.Delay in a loop — drift accumulates; PeriodicTimer compensates for drift
+//   - Don't forget to Dispose — timer keeps running otherwise
+var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100)); // tick every 100ms
+var timerCts = new CancellationTokenSource(350); // auto-cancel after 350ms
+int ticks = 0;
+
+try
+{
+    // WaitForNextTickAsync returns true on each tick, respects cancellation
+    while (await timer.WaitForNextTickAsync(timerCts.Token))
+    {
+        ticks++;
+        Console.WriteLine($"  Tick {ticks} at {DateTime.Now:HH:mm:ss.fff}");
+        // In production: await FetchLatestDataAsync(); or await CheckQueueDepthAsync();
+    }
+}
+catch (OperationCanceledException) { } // expected — timer stopped by cancellation
+
+Console.WriteLine($"  Timer stopped after {ticks} ticks");
+timer.Dispose(); // release the timer
+```
+
+      Tick 1 at 06:36:48.456
+      Tick 2 at 06:36:48.549
+      Tick 3 at 06:36:48.642
+      Timer stopped after 3 ticks
+
+#### Choosing the right concurrency tool
 
 ```csharp
 // Summary — choosing the right concurrency tool in C#
 //
 // ┌────────────────────────┬──────────────────┬────────────────────┬────────────────────────┐
-// │ C# Tool              │ Best for         │ Model              │ Python equivalent       │
 // ├────────────────────────┼──────────────────┼────────────────────┼────────────────────────┤
 // │ async/await          │ I/O-bound        │ Thread pool        │ asyncio                │
 // │ Task.Run()           │ CPU offload       │ Thread pool        │ ThreadPoolExecutor     │
@@ -1061,224 +1235,6 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 //      - Key-value → ConcurrentDictionary
 //      - Complex state → lock
 //
-// KEY DIFFERENCE from Python:
 // C# has NO GIL. Threads execute truly in parallel on multiple cores.
-// In Python, threads are limited by the GIL for CPU work (need ProcessPoolExecutor).
 // In C#, Task.Run() and Parallel.ForEach() give real multi-core parallelism.
 ```
-
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::655c:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:812b:542c:9d38:5803:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/","http://fe80::91de:1423:fe62:933b%45:2048/","http://172.25.64.1:2048/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '16088.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
