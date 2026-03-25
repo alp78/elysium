@@ -16,63 +16,41 @@ status: complete
 
 # 06. Object-Oriented Programming - C#
 
-## 1. Classes & Objects
+## Classes & Objects
 
+#### Type declarations
 
 ```csharp
-// Classes & Objects — type declarations must be in their own cell
-//
-// KEY CONCEPTS:
-// - Class: a blueprint for creating objects. Defines fields/properties (data)
-//   and methods (behavior). Like a cookie cutter.
-// - Object (instance): a specific thing created with 'new ClassName()'.
-// - Constructor: method with same name as class — called on 'new'. Python: __init__.
-// - this: refers to the current instance. Python: self (explicit parameter).
-// - Fields: variables inside a class. Typically private (backing store).
-// - Properties: controlled access to fields with get/set. Python: @property.
-//   Auto-properties ({ get; set; }) generate the field automatically.
-// - Access modifiers: public, private, protected, internal (covered in section 4).
-// - C# classes are static — ALL fields/properties must be declared at compile time.
-//   Python classes are dynamic — can add attributes at runtime.
- 
+// Classes and objects — type declarations must be in their own cell in notebooks
+
+// Dog — basic class with auto-properties, constructor, methods, and ToString
 class Dog
 {
-    // Class-level constant (like Python class attribute)
     public const string Species = "Canis familiaris";
-
-    // Auto-properties — compiler generates backing field automatically
-    // { get; set; } = read and write
-    // { get; } = read-only (set only in constructor)
     public string Name { get; }
     public int Age { get; set; }
 
-    // Constructor — called when you write 'new Dog(...)'
     public Dog(string name, int age)
     {
-        Name = name;           // 'this' is implicit (unlike Python's explicit 'self')
+        Name = name;
         Age = age;
     }
 
-    // Method
     public string Bark() => $"{Name} says Woof!";
-
-    // Method with parameter
     public bool IsOlderThan(Dog other) => Age > other.Age;
-
-    // ToString — equivalent to Python's __str__
     public override string ToString() => $"Dog({Name}, age={Age})";
 }
 
+// Circle — property with validation prevents invalid state; computed property for Area
 class Circle
 {
-    private double _radius;        // private backing field (convention: _prefix)
+    private double _radius;
 
     public Circle(double radius)
     {
-        Radius = radius;           // goes through the setter (validates)
+        Radius = radius;
     }
 
-    // Property with validation (like Python @property + @setter)
     public double Radius
     {
         get => _radius;
@@ -83,231 +61,14 @@ class Circle
         }
     }
 
-    // Computed property — read-only (like Python @property without setter)
     public double Area => Math.PI * _radius * _radius;
 }
 ```
 
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::280b:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:9c70:c598:8ab4:ea30:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '3848.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
-
+#### Using Dog
 
 ```csharp
-// Using Dog and Circle (run previous cell first)
-Console.WriteLine("=== Creating Objects ===");
+// Using Dog — create instances, call methods, check ToString
 var dog1 = new Dog("Rex", 5);
 var dog2 = new Dog("Buddy", 3);
 
@@ -319,8 +80,18 @@ Console.WriteLine($"Older?:      {dog1.IsOlderThan(dog2)}");
 
 // Can't add attributes dynamically in C#:
 // dog1.Color = "brown";  // Compile error! No such property
+```
 
-Console.WriteLine("\n=== Properties ===");
+    dog1:        Dog(Rex, age=5)
+    dog1.Name:   Rex
+    dog1.Bark(): Rex says Woof!
+    Species:     Canis familiaris
+    Older?:      True
+
+#### Using Circle — property with validation
+
+```csharp
+// Using Circle — property validation prevents invalid state
 var c = new Circle(5);
 Console.WriteLine($"Radius: {c.Radius}");
 Console.WriteLine($"Area:   {c.Area:F2}");
@@ -330,38 +101,18 @@ Console.WriteLine($"New radius: {c.Radius}");
 // c.Area = 100;   // Compile error! No setter
 ```
 
-    === Creating Objects ===
-    dog1:        Dog(Rex, age=5)
-    dog1.Name:   Rex
-    dog1.Bark(): Rex says Woof!
-    Species:     Canis familiaris
-    Older?:      True
-    
-    === Properties ===
     Radius: 5
     Area:   78.54
     New radius: 10
-    
 
-## 2. Inheritance & Polymorphism
+## Inheritance & Polymorphism
 
+#### Type declarations
 
 ```csharp
-// Inheritance & Polymorphism — type declarations
-//
-// KEY CONCEPTS:
-// - Inheritance: class Child : Parent — child inherits all public/protected members.
-// - virtual: marks a method as OVERRIDABLE. Without virtual, child can't override it.
-//   Python: all methods are virtual by default. C#: must explicitly mark with virtual.
-// - override: child provides its own version of a virtual method.
-// - base: calls the parent's method (like Python's super()).
-// - sealed: prevents a class from being inherited, or a method from being overridden further.
-// - Polymorphism: treating Child objects as Parent type — the overridden method runs.
-// - Single inheritance only: C# allows ONE parent class (+ multiple interfaces).
-//   Python allows multiple inheritance.
-// - is: type check at runtime (like Python's isinstance).
-// - as: safe cast — returns null if the cast fails.
+// Inheritance and polymorphism — child classes extend a parent; virtual/override enable runtime dispatch
 
+// Animal — base class with a virtual method that subclasses can override
 class Animal
 {
     public string Name { get; }
@@ -373,38 +124,39 @@ class Animal
         Sound = sound;
     }
 
-    // virtual = CAN be overridden by child classes
+    // virtual — CAN be overridden by child classes
     public virtual string Speak() => $"{Name} says {Sound}!";
 
     public override string ToString() => $"{GetType().Name}({Name})";
 }
 
-class Dog : Animal                          // Dog inherits from Animal
+// Dog — inherits from Animal; adds Breed and a Dog-specific method
+class Dog : Animal
 {
     public string Breed { get; }
 
     public Dog(string name, string breed)
-        : base(name, "Woof")               // call parent constructor (like super().__init__)
+        : base(name, "Woof")               // call parent constructor
     {
         Breed = breed;
     }
 
-    public string Fetch() => $"{Name} fetches the ball!";  // Dog-specific
+    public string Fetch() => $"{Name} fetches the ball!";
 }
 
+// Cat — overrides Speak with its own behavior
 class Cat : Animal
 {
     public Cat(string name) : base(name, "Meow") { }
 
-    // override = replace parent's Speak with our own version
     public override string Speak() => $"{Name} says {Sound}... when it feels like it.";
 }
 ```
 
+#### Using inheritance
 
 ```csharp
-// Using inheritance (run previous cell first)
-Console.WriteLine("=== Inheritance ===");
+// Using inheritance — Dog and Cat extend Animal with their own Speak
 var dog = new Dog("Rex", "German Shepherd");
 var cat = new Cat("Whiskers");
 
@@ -412,9 +164,17 @@ Console.WriteLine($"dog.Speak():  {dog.Speak()}");       // inherited from Anima
 Console.WriteLine($"dog.Fetch():  {dog.Fetch()}");       // Dog-specific
 Console.WriteLine($"cat.Speak():  {cat.Speak()}");       // overridden version
 Console.WriteLine($"dog.Breed:    {dog.Breed}");
+```
 
-// === Polymorphism — same interface, different behavior ===
-Console.WriteLine("\n=== Polymorphism ===");
+    dog.Speak():  Rex says Woof!
+    dog.Fetch():  Rex fetches the ball!
+    cat.Speak():  Whiskers says Meow... when it feels like it.
+    dog.Breed:    German Shepherd
+
+#### Polymorphism — AnimalRollCall
+
+```csharp
+// Polymorphism — pass an array of Animal; each calls its own overridden Speak
 void AnimalRollCall(Animal[] animals)
 {
     foreach (var animal in animals)
@@ -423,15 +183,22 @@ void AnimalRollCall(Animal[] animals)
 
 Animal[] animals = { new Dog("Rex", "Shepherd"), new Cat("Whiskers"), new Dog("Buddy", "Lab") };
 AnimalRollCall(animals);
+```
 
-// === Type checking — is / as ===
-Console.WriteLine("\n=== Type Checking ===");
+      Dog(Rex): Rex says Woof!
+      Cat(Whiskers): Whiskers says Meow... when it feels like it.
+      Dog(Buddy): Buddy says Woof!
+
+<h4>Type checking with <code style="font-size:0.75em">is</code> and <code style="font-size:0.75em">as</code></h4>
+
+```csharp
+// Type checking — is tests type; as casts safely (returns null on failure)
 Animal a = new Dog("Rex", "Shepherd");
 Console.WriteLine($"a is Dog:    {a is Dog}");             // True
 Console.WriteLine($"a is Animal: {a is Animal}");          // True
 Console.WriteLine($"a is Cat:    {a is Cat}");             // False
 
-// 'is' with binding (like Python isinstance + variable)
+// 'is' with binding — test and cast in one step
 if (a is Dog d)
     Console.WriteLine($"It's a dog: {d.Breed}");
 
@@ -440,62 +207,28 @@ Dog? maybeDog = a as Dog;                                  // succeeds → Dog
 Cat? maybeCat = a as Cat;                                  // fails → null
 Console.WriteLine($"as Dog: {maybeDog?.Name ?? "null"}");
 Console.WriteLine($"as Cat: {maybeCat?.Name ?? "null"}");
-
-// === No multiple inheritance — use interfaces instead (section 3) ===
-Console.WriteLine("\n=== No Multiple Inheritance in C# ===");
-Console.WriteLine("Python: class Duck(Animal, Flyable, Swimmable)  → multiple parents OK");
-Console.WriteLine("C#:     class Duck : Animal, IFlyable, ISwimmable → one class + interfaces");
 ```
 
-    === Inheritance ===
-    dog.Speak():  Rex says Woof!
-    dog.Fetch():  Rex fetches the ball!
-    cat.Speak():  Whiskers says Meow... when it feels like it.
-    dog.Breed:    German Shepherd
-    
-    === Polymorphism ===
-      Dog(Rex): Rex says Woof!
-      Cat(Whiskers): Whiskers says Meow... when it feels like it.
-      Dog(Buddy): Buddy says Woof!
-    
-    === Type Checking ===
     a is Dog:    True
     a is Animal: True
     a is Cat:    False
     It's a dog: Shepherd
     as Dog: Rex
     as Cat: null
-    
-    === No Multiple Inheritance in C# ===
-    Python: class Duck(Animal, Flyable, Swimmable)  → multiple parents OK
-    C#:     class Duck : Animal, IFlyable, ISwimmable → one class + interfaces
-    
 
     
-    (34,4): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+    (12,4): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
     
-    (35,4): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-    
-    
+    (13,4): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
-## 3. Abstract Classes & Interfaces
+## Abstract Classes & Interfaces
 
+#### Abstract class
 
 ```csharp
-// Abstract Classes & Interfaces — type declarations
-//
-// KEY CONCEPTS:
-// - abstract class: can't be instantiated — only inherited. Can have both
-//   abstract methods (no body, child MUST implement) and concrete methods (with body).
-//   Python equivalent: ABC with @abstractmethod.
-// - interface: a pure contract — only method signatures, no implementation.
-//   A class can implement MULTIPLE interfaces (unlike classes: single inheritance only).
-//   Python equivalent: Protocol (but Protocol is implicit, interface is explicit).
-// - abstract method: declared with 'abstract' keyword — no body, child must override.
-// - virtual method: has a body but CAN be overridden. Abstract = must, virtual = can.
-// - interface naming convention: prefix with 'I' (IDrawable, IComparable, IEnumerable).
+// Abstract classes — can't be instantiated; define a contract with abstract methods and shared logic with concrete methods
 
-// === Abstract class ===
+// Shape — abstract base with Area/Perimeter that subclasses must implement
 abstract class Shape
 {
     public string Color { get; }
@@ -512,6 +245,7 @@ abstract class Shape
         $"{Color} {GetType().Name}: area={Area():F2}";
 }
 
+// Rectangle — implements Area and Perimeter for width × height
 class Rectangle : Shape
 {
     public double Width { get; }
@@ -523,10 +257,11 @@ class Rectangle : Shape
         Height = h;
     }
 
-    public override double Area() => Width * Height;              // MUST implement
-    public override double Perimeter() => 2 * (Width + Height);   // MUST implement
+    public override double Area() => Width * Height;
+    public override double Perimeter() => 2 * (Width + Height);
 }
 
+// CircleShape — implements Area and Perimeter for a radius
 class CircleShape : Shape
 {
     public double Radius { get; }
@@ -539,8 +274,12 @@ class CircleShape : Shape
     public override double Area() => Math.PI * Radius * Radius;
     public override double Perimeter() => 2 * Math.PI * Radius;
 }
+```
 
-// === Interface — pure contract ===
+#### Interface declarations
+
+```csharp
+// Interface declarations — a pure contract with no implementation
 interface IDrawable                          // convention: prefix with I
 {
     string Draw();                           // no body, no access modifier (always public)
@@ -550,7 +289,6 @@ interface IResizable
 {
     void Resize(double factor);
 }
-
 // A class can implement MULTIPLE interfaces (unlike single class inheritance)
 class Button : IDrawable, IResizable
 {
@@ -569,10 +307,9 @@ class TextBox : IDrawable                    // only IDrawable, not IResizable
 }
 ```
 
+#### Using abstract classes
 
 ```csharp
-// Using abstract classes & interfaces
-Console.WriteLine("=== Abstract Class ===");
 // var shape = new Shape();  // Compile error! Can't instantiate abstract class
 var rect = new Rectangle(5, 3, "red");
 var circ = new CircleShape(4, "blue");
@@ -584,9 +321,16 @@ Console.WriteLine($"circ: {circ.Describe()}");
 Shape[] shapes = { rect, circ };
 double totalArea = shapes.Sum(s => s.Area());
 Console.WriteLine($"Total area: {totalArea:F2}");
+```
 
-// === Interface usage ===
-Console.WriteLine("\n=== Interface ===");
+    rect: red Rectangle: area=15.00
+    circ: blue CircleShape: area=50.27
+    Total area: 65.27
+
+#### Using interfaces and polymorphism
+
+```csharp
+// Using interfaces — Button implements both IClickable and IDrawable
 var btn = new Button("OK", 1.0);
 var txt = new TextBox();
 
@@ -601,12 +345,17 @@ if (btn is IResizable resizable)
     resizable.Resize(2.0);
     Console.WriteLine($"  Resized button: {btn.Draw()}");
 }
-
 // TextBox is NOT IResizable
 Console.WriteLine($"  TextBox is IResizable? {txt is IResizable}");  // False
+```
 
-// === Abstract class vs Interface ===
-Console.WriteLine("\n=== Abstract Class vs Interface ===");
+      Drawing button 'OK' size=1.0
+      Drawing textbox
+      Resized button: Drawing button 'OK' size=2.0
+      TextBox is IResizable? False
+
+```csharp
+// Summary — abstract class vs interface
 Console.WriteLine("Abstract class:  can have fields, constructors, concrete methods");
 Console.WriteLine("Interface:       only method signatures (pure contract)");
 Console.WriteLine("Abstract class:  single inheritance only (one parent)");
@@ -615,35 +364,22 @@ Console.WriteLine("Use abstract:    when classes share implementation (Shape.Des
 Console.WriteLine("Use interface:   when classes share behavior contract (IDrawable.Draw())");
 ```
 
-    === Abstract Class ===
-    rect: red Rectangle: area=15.00
-    circ: blue CircleShape: area=50.27
-    Total area: 65.27
-    
-    === Interface ===
-      Drawing button 'OK' size=1.0
-      Drawing textbox
-      Resized button: Drawing button 'OK' size=2.0
-      TextBox is IResizable? False
-    
-    === Abstract Class vs Interface ===
     Abstract class:  can have fields, constructors, concrete methods
     Interface:       only method signatures (pure contract)
     Abstract class:  single inheritance only (one parent)
     Interface:       multiple implementation allowed
     Use abstract:    when classes share implementation (Shape.Describe())
     Use interface:   when classes share behavior contract (IDrawable.Draw())
-    
 
-## 4. Encapsulation & Access Modifiers
+## Encapsulation & Access Modifiers
 
+#### Access modifiers
 
 ```csharp
 // Encapsulation & Access Modifiers
 //
 // KEY CONCEPTS:
 // - Encapsulation: hiding internal data, exposing only what's necessary.
-// - C# has REAL access modifiers enforced by the compiler (unlike Python's conventions):
 //   public:             accessible everywhere
 //   private:            accessible ONLY within the defining class (default for class members)
 //   protected:          accessible in the class + its subclasses
@@ -653,7 +389,6 @@ Console.WriteLine("Use interface:   when classes share behavior contract (IDrawa
 // - Properties with private set: read from outside, write only inside the class.
 // - init-only properties: can only be set during construction ({ get; init; }).
 
-Console.WriteLine("=== Access Modifiers ===");
 Console.WriteLine(@"
 Modifier            | Same Class | Subclass | Same Assembly | Everywhere
 --------------------+------------+----------+---------------+-----------
@@ -665,8 +400,23 @@ protected internal  |     ✓      |    ✓     |      ✓        |     ✗
 private protected   |     ✓      |  ✓*      |      ✗        |     ✗
                                    * only in same assembly
 ");
+```
 
-Console.WriteLine("=== In Practice ===");
+    
+    Modifier            | Same Class | Subclass | Same Assembly | Everywhere
+    --------------------+------------+----------+---------------+-----------
+    public              |     ✓      |    ✓     |      ✓        |     ✓
+    private (default)   |     ✓      |    ✗     |      ✗        |     ✗
+    protected           |     ✓      |    ✓     |      ✗        |     ✗
+    internal            |     ✓      |    ✗     |      ✓        |     ✗
+    protected internal  |     ✓      |    ✓     |      ✓        |     ✗
+    private protected   |     ✓      |  ✓*      |      ✗        |     ✗
+                                       * only in same assembly
+
+#### Encapsulation example and property patterns
+
+```csharp
+// Encapsulation example — access modifiers control what callers can see and modify
 Console.WriteLine(@"
 class BankAccount
 {
@@ -686,35 +436,14 @@ class BankAccount
     }
 }
 ");
-
-// === Property access levels ===
-Console.WriteLine("=== Property Access Patterns ===");
 Console.WriteLine("{ get; set; }          — read/write from anywhere");
 Console.WriteLine("{ get; private set; }  — read anywhere, write only inside class");
 Console.WriteLine("{ get; protected set; }— read anywhere, write in class + subclasses");
 Console.WriteLine("{ get; init; }         — read anywhere, set ONLY during construction");
 Console.WriteLine("{ get; }               — read-only, set only in constructor");
-
-Console.WriteLine("\n=== Python vs C# ===");
-Console.WriteLine("Python: _name is a convention — anyone CAN still access it");
-Console.WriteLine("C#:     private is enforced — compiler rejects external access");
-Console.WriteLine("Python: __name uses name mangling — still accessible via _Class__name");
-Console.WriteLine("C#:     private is truly private — no workaround (except reflection)");
+Console.WriteLine("C#: private is enforced — compiler rejects external access");
 ```
 
-    === Access Modifiers ===
-    
-    Modifier            | Same Class | Subclass | Same Assembly | Everywhere
-    --------------------+------------+----------+---------------+-----------
-    public              |     ✓      |    ✓     |      ✓        |     ✓
-    private (default)   |     ✓      |    ✗     |      ✗        |     ✗
-    protected           |     ✓      |    ✓     |      ✗        |     ✗
-    internal            |     ✓      |    ✗     |      ✓        |     ✗
-    protected internal  |     ✓      |    ✓     |      ✓        |     ✗
-    private protected   |     ✓      |  ✓*      |      ✗        |     ✗
-                                       * only in same assembly
-    
-    === In Practice ===
     
     class BankAccount
     {
@@ -734,24 +463,16 @@ Console.WriteLine("C#:     private is truly private — no workaround (except re
         }
     }
     
-    === Property Access Patterns ===
     { get; set; }          — read/write from anywhere
     { get; private set; }  — read anywhere, write only inside class
     { get; protected set; }— read anywhere, write in class + subclasses
     { get; init; }         — read anywhere, set ONLY during construction
     { get; }               — read-only, set only in constructor
-    
-    === Python vs C# ===
-    Python: _name is a convention — anyone CAN still access it
-    C#:     private is enforced — compiler rejects external access
-    Python: __name uses name mangling — still accessible via _Class__name
-    C#:     private is truly private — no workaround (except reflection)
-    
+    C#: private is enforced — compiler rejects external access
 
+#### OOP theory — access modifiers and abstract vs interface
 
 ```csharp
-// === OOP Theory: Access Modifiers & Abstract vs Interface ===
-
 // ============================================================
 // ACCESS MODIFIERS — who can see what
 // ============================================================
@@ -790,8 +511,9 @@ Console.WriteLine("C#:     private is truly private — no workaround (except re
 //   { get; protected set; } public read, class + subclasses can write
 //   { get; init; }          public read, write ONLY during construction
 //   { get; }                public read, set only in constructor (truly immutable)
+```
 
-
+```csharp
 // ============================================================
 // ABSTRACT CLASS vs INTERFACE — when to use which
 // ============================================================
@@ -860,23 +582,19 @@ Console.WriteLine("C#:     private is truly private — no workaround (except re
 //     YES → abstract class (can add concrete methods without breaking children)
 //     YES → interface with default methods (C# 8+, but controversial)
 //     NO  → interface is fine
-
 ```
 
-## 5. Static Members
+## Static Members
 
+#### Type declarations
 
 ```csharp
 // Static Members — belong to the CLASS, not to instances
 //
 // KEY CONCEPTS:
 // - static field/property: shared by ALL instances. Only one copy exists.
-//   Python equivalent: class attributes.
 // - static method: called on the class, not on an instance. No 'this'.
-//   Python equivalent: @staticmethod (utility) or @classmethod (factory).
 // - static class: a class that can ONLY contain static members. Can't be instantiated.
-//   Python equivalent: a module with functions (no class needed).
-// - const: compile-time constant (always static). Python: UPPERCASE convention.
 // - C# has no @classmethod equivalent — static methods can't be overridden in subclasses.
 
 class Employee
@@ -884,7 +602,6 @@ class Employee
     // Static field — shared by ALL instances
     public static string Company { get; set; } = "Acme Corp";
     private static int _employeeCount = 0;
-
     // Instance properties
     public string Name { get; }
     public double Salary { get; private set; }
@@ -895,24 +612,20 @@ class Employee
         Salary = salary;
         _employeeCount++;
     }
-
     // Instance method — operates on this specific employee
     public double GiveRaise(double percent)
     {
         Salary *= (1 + percent / 100);
         return Salary;
     }
-
-    // Static factory method (like Python @classmethod)
+    // Static factory method
     public static Employee FromString(string data)
     {
         var parts = data.Split(',');
         return new Employee(parts[0], double.Parse(parts[1]));
     }
-
-    // Static method — no instance needed (like Python @staticmethod)
+    // Static method — no instance needed
     public static bool IsValidSalary(double salary) => salary > 0;
-
     // Static property
     public static int EmployeeCount => _employeeCount;
 
@@ -920,226 +633,10 @@ class Employee
 }
 ```
 
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::280b:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:9c70:c598:8ab4:ea30:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '8976.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
-
+#### Using static members
 
 ```csharp
-// Using static members (run previous cell first)
-Console.WriteLine("=== Static Members ===");
+// Using static members — shared state and factory methods
 var emp1 = new Employee("Alice", 95000);
 emp1.GiveRaise(10);
 Console.WriteLine($"Instance: {emp1}");
@@ -1150,63 +647,19 @@ Console.WriteLine($"Factory:  {emp2}");
 Console.WriteLine($"Static:   valid? {Employee.IsValidSalary(50000)}");
 Console.WriteLine($"Count:    {Employee.EmployeeCount}");
 Console.WriteLine($"Company:  {Employee.Company}");  // static property on CLASS
-
-// === Key Differences ===
-Console.WriteLine("\n=== Python vs C# Static ===");
-Console.WriteLine("Python @staticmethod:  no self, no cls → C#: static method");
-Console.WriteLine("Python @classmethod:   cls parameter   → C#: static method (but no cls)");
-Console.WriteLine("Python class attribute:                → C#: static field/property");
-Console.WriteLine("Python module functions:               → C#: static class with static methods");
-Console.WriteLine("");
-Console.WriteLine("Key difference: Python @classmethod receives cls and works with inheritance.");
-Console.WriteLine("C# static methods don't — they always belong to the exact class.");
 ```
 
-    === Static Members ===
     Instance: Alice @ Acme Corp: $104'500
     Factory:  Bob @ Acme Corp: $85'000
     Static:   valid? True
-    Count:    8
+    Count:    2
     Company:  Acme Corp
-    
-    === Python vs C# Static ===
-    Python @staticmethod:  no self, no cls → C#: static method
-    Python @classmethod:   cls parameter   → C#: static method (but no cls)
-    Python class attribute:                → C#: static field/property
-    Python module functions:               → C#: static class with static methods
-    
-    Key difference: Python @classmethod receives cls and works with inheritance.
-    C# static methods don't — they always belong to the exact class.
-    
 
-## 6. Records & Init-Only Properties
+## Records & Init-Only Properties
 
+#### Why records instead of dictionaries
 
 ```csharp
-// WHY Records Instead of Dictionaries?
-//
-// In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored
-// in databases. So why bother with classes for moving data around?
-//
-// SHORT ANSWER: records aren't for the DATA itself (that flows through
-// DataFrames/SQL/Entity Framework). They're for everything AROUND the data:
-// configs, metadata, API responses, pipeline state, error reports, task definitions.
-//
-// WHEN DICTIONARIES WIN:
-// - Dynamic/unknown schemas (arbitrary JSON from external API)
-// - Quick prototyping
-// - Config files with arbitrary keys
-//
-// WHEN RECORDS WIN:
-// - Production pipelines that run unattended (typos = compile errors, not 3am crashes)
-// - Shared code between team members (self-documenting)
-// - Anything that gets deployed and must not fail silently
-// - APIs (input/output contracts)
-// - Configs, metadata, pipeline orchestration state
-
-// === Problem 1: Typos become production bugs ===
-Console.WriteLine("=== Problem: Typos in dicts are silent ===");
-
 // Dictionary — typo is silent, fails at runtime:
 var record = new Dictionary<string, object>
 {
@@ -1218,24 +671,38 @@ var record = new Dictionary<string, object>
 // Record — typo is caught at COMPILE TIME:
 // record Order(int CustomerId, double Amount);
 // var order = new Order(CustomerId: 123, Amout: 99.99);  // Compile error! 'Amout' doesn't exist
+
 Console.WriteLine("Dict typo:   silent bug → KeyNotFoundException at runtime");
 Console.WriteLine("Record typo: compile error → caught before code even runs");
+```
 
-// === Problem 2: What fields does this have? ===
-Console.WriteLine("\n=== Problem: Dicts are opaque ===");
+    Dict typo:   silent bug → KeyNotFoundException at runtime
+    Record typo: compile error → caught before code even runs
+
+#### Autocomplete and refactoring
+
+```csharp
+// Autocomplete and refactoring — records give IDE support that dicts lack
 Console.WriteLine("Dictionary:  no autocomplete — must memorize string keys");
 Console.WriteLine("Record:      IDE shows all properties on '.' → full autocomplete");
 Console.WriteLine("             record Order(int CustomerId, double Amount)");
 Console.WriteLine("             order.█  →  CustomerId, Amount (IDE suggests)");
-
-// === Problem 3: Refactoring ===
-Console.WriteLine("\n=== Problem: Renaming a field ===");
 Console.WriteLine("Dictionary:  search-and-replace \"customer_id\" strings across all files");
 Console.WriteLine("             miss one? Runtime crash");
 Console.WriteLine("Record:      right-click → Rename → all usages updated automatically");
+```
 
-// === Problem 4: Type safety ===
-Console.WriteLine("\n=== Problem: Invalid data passes silently ===");
+    Dictionary:  no autocomplete — must memorize string keys
+    Record:      IDE shows all properties on '.' → full autocomplete
+                 record Order(int CustomerId, double Amount)
+                 order.█  →  CustomerId, Amount (IDE suggests)
+    Dictionary:  search-and-replace "customer_id" strings across all files
+                 miss one? Runtime crash
+    Record:      right-click → Rename → all usages updated automatically
+
+#### Type safety and equality
+
+```csharp
 // Dictionary — no type checking:
 var bad = new Dictionary<string, object>
 {
@@ -1249,15 +716,21 @@ var bad = new Dictionary<string, object>
 Console.WriteLine("Dictionary<string, object>: any garbage in, no error");
 Console.WriteLine("Record:                     wrong type = compile error");
 
-// === Problem 5: Equality ===
-Console.WriteLine("\n=== Problem: Comparing data ===");
 var dict1 = new Dictionary<string, int> { ["a"] = 1 };
 var dict2 = new Dictionary<string, int> { ["a"] = 1 };
 Console.WriteLine($"dict1 == dict2:  {dict1 == dict2}");     // False! Reference comparison
 Console.WriteLine("Records:         == compares VALUES (all fields checked automatically)");
+```
 
-// === Recommendation by use case ===
-Console.WriteLine("\n=== Recommendation ===");
+    Dictionary<string, object>: any garbage in, no error
+    Record:                     wrong type = compile error
+    dict1 == dict2:  False
+    Records:         == compares VALUES (all fields checked automatically)
+
+#### When to use what
+
+```csharp
+// When to use what — dict for dynamic keys, record for known structure
 Console.WriteLine(@"
 USE CASE                         RECOMMENDATION
 ──────────────────────────────── ──────────────────────────
@@ -1274,30 +747,6 @@ Unknown/dynamic JSON schema      JsonDocument or Dictionary
 ");
 ```
 
-    === Problem: Typos in dicts are silent ===
-    Dict typo:   silent bug → KeyNotFoundException at runtime
-    Record typo: compile error → caught before code even runs
-    
-    === Problem: Dicts are opaque ===
-    Dictionary:  no autocomplete — must memorize string keys
-    Record:      IDE shows all properties on '.' → full autocomplete
-                 record Order(int CustomerId, double Amount)
-                 order.█  →  CustomerId, Amount (IDE suggests)
-    
-    === Problem: Renaming a field ===
-    Dictionary:  search-and-replace "customer_id" strings across all files
-                 miss one? Runtime crash
-    Record:      right-click → Rename → all usages updated automatically
-    
-    === Problem: Invalid data passes silently ===
-    Dictionary<string, object>: any garbage in, no error
-    Record:                     wrong type = compile error
-    
-    === Problem: Comparing data ===
-    dict1 == dict2:  False
-    Records:         == compares VALUES (all fields checked automatically)
-    
-    === Recommendation ===
     
     USE CASE                         RECOMMENDATION
     ──────────────────────────────── ──────────────────────────
@@ -1311,51 +760,30 @@ Unknown/dynamic JSON schema      JsonDocument or Dictionary
     Logging / error reports          record
     Shared library / team code       record (self-documenting)
     Unknown/dynamic JSON schema      JsonDocument or Dictionary
-    
-    
 
+#### Record type declarations
 
 ```csharp
 // Records — auto-generated immutable data types (C# 9+)
 //
 // KEY CONCEPTS:
 // - record: a reference type with auto-generated Equals, GetHashCode, ToString, and
-//   non-destructive mutation (with expression). Python equivalent: @dataclass(frozen=True).
-// - record struct: same but as a value type (lives on stack). Python: no equivalent.
 // - Positional record: record Point(double X, double Y) — one-line declaration.
 //   Auto-generates constructor, properties, Deconstruct, ToString, Equals.
 // - with expression: creates a copy with some values changed (non-destructive).
-//   Python equivalent: dataclass._replace() or copy + modify.
 // - init-only property ({ get; init; }): can only be set during construction.
 // - In DE: records are perfect for DTOs, configuration, API responses, immutable state.
 // - DTO (Data Transfer Object): an object that only carries data, no logic.
 //   Just a container for moving data between layers (DB → API → pipeline).
-//
-// WHY RECORD INSTEAD OF DICTIONARY?
-//   Dictionary: dict["Name"] = "Alice"; dict["Emal"] = 30;  ← typo! No error, silent bug.
-//   Record:     new Customer("Alice", 30, Emal: ...)          ← Compile error! Caught immediately.
-//   - Dictionary: no autocomplete, everything is object (must cast), typos = runtime bugs
-//   - Record: full autocomplete, type-safe, typos caught at compile time, self-documenting
-//   - Dictionary: fine for dynamic/unknown structure (arbitrary JSON, config)
-//   - Record: better for known, fixed structures (DB rows, API responses, pipeline data)
 
-// === Positional record — one-line declaration ===
 record Point(double X, double Y);
-
-// === Record with defaults ===
 record Employee(string Name, string Department, double Salary = 50000);
-
-// === Record with body (additional members) ===
 record Config(string Host, int Port, bool Ssl = true)
 {
     // Computed property
     public string ConnectionString => $"{(Ssl ? "https" : "http")}://{Host}:{Port}";
 }
-
-// === Record struct (value type) ===
 record struct Version(int Major, int Minor, int Patch);
-
-// === Record with validation ===
 record PipelineRecord(string TableName, int RowCount, string Status = "pending")
 {
     public List<string> Errors { get; init; } = new();
@@ -1363,226 +791,10 @@ record PipelineRecord(string TableName, int RowCount, string Status = "pending")
 }
 ```
 
-
-
-
-<div>
-
-    <div id='dotnet-interactive-this-cell-$CACHE_BUSTER$' style='display: none'>
-
-        The below script needs to be able to find the current output cell; this is an easy method to get it.
-
-    </div>
-
-    <script type='text/javascript'>
-
-async function probeAddresses(probingAddresses) {
-
-    function timeout(ms, promise) {
-
-        return new Promise(function (resolve, reject) {
-
-            setTimeout(function () {
-
-                reject(new Error('timeout'))
-
-            }, ms)
-
-            promise.then(resolve, reject)
-
-        })
-
-    }
-
-
-
-    if (Array.isArray(probingAddresses)) {
-
-        for (let i = 0; i < probingAddresses.length; i++) {
-
-
-
-            let rootUrl = probingAddresses[i];
-
-
-
-            if (!rootUrl.endsWith('/')) {
-
-                rootUrl = `${rootUrl}/`;
-
-            }
-
-
-
-            try {
-
-                let response = await timeout(1000, fetch(`${rootUrl}discovery`, {
-
-                    method: 'POST',
-
-                    cache: 'no-cache',
-
-                    mode: 'cors',
-
-                    timeout: 1000,
-
-                    headers: {
-
-                        'Content-Type': 'text/plain'
-
-                    },
-
-                    body: probingAddresses[i]
-
-                }));
-
-
-
-                if (response.status == 200) {
-
-                    return rootUrl;
-
-                }
-
-            }
-
-            catch (e) { }
-
-        }
-
-    }
-
-}
-
-
-
-function loadDotnetInteractiveApi() {
-
-    probeAddresses(["http://2a02:8308:718a:f200::655c:2048/","http://2a02:8308:718a:f200:8bd4:d06d:33ed:be05:2048/","http://2a02:8308:718a:f200:11f1:5c2e:7e82:d4f1:2048/","http://fe80::3212:d8da:d32d:4723%14:2048/","http://192.168.0.110:2048/","http://::1:2048/","http://127.0.0.1:2048/"])
-
-        .then((root) => {
-
-        // use probing to find host url and api resources
-
-        // load interactive helpers and language services
-
-        let dotnetInteractiveRequire = require.config({
-
-        context: '16360.Microsoft.DotNet.Interactive.Http.HttpPort',
-
-                paths:
-
-            {
-
-                'dotnet-interactive': `${root}resources`
-
-                }
-
-        }) || require;
-
-
-
-            window.dotnetInteractiveRequire = dotnetInteractiveRequire;
-
-
-
-            window.configureRequireFromExtension = function(extensionName, extensionCacheBuster) {
-
-                let paths = {};
-
-                paths[extensionName] = `${root}extensions/${extensionName}/resources/`;
-
-                
-
-                let internalRequire = require.config({
-
-                    context: extensionCacheBuster,
-
-                    paths: paths,
-
-                    urlArgs: `cacheBuster=${extensionCacheBuster}`
-
-                    }) || require;
-
-
-
-                return internalRequire
-
-            };
-
-        
-
-            dotnetInteractiveRequire([
-
-                    'dotnet-interactive/dotnet-interactive'
-
-                ],
-
-                function (dotnet) {
-
-                    dotnet.init(window);
-
-                },
-
-                function (error) {
-
-                    console.log(error);
-
-                }
-
-            );
-
-        })
-
-        .catch(error => {console.log(error);});
-
-    }
-
-
-
-// ensure `require` is available globally
-
-if ((typeof(require) !==  typeof(Function)) || (typeof(require.config) !== typeof(Function))) {
-
-    let require_script = document.createElement('script');
-
-    require_script.setAttribute('src', 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js');
-
-    require_script.setAttribute('type', 'text/javascript');
-
-    
-
-    
-
-    require_script.onload = function() {
-
-        loadDotnetInteractiveApi();
-
-    };
-
-
-
-    document.getElementsByTagName('head')[0].appendChild(require_script);
-
-}
-
-else {
-
-    loadDotnetInteractiveApi();
-
-}
-
-
-
-    </script>
-
-</div>
-
-
+#### Value equality and deconstruction
 
 ```csharp
-// Using records (run previous cell first)
-Console.WriteLine("=== Positional Record ===");
+// Value equality and deconstruction — records compare by value, not reference
 var p1 = new Point(3.0, 4.0);
 var p2 = new Point(3.0, 4.0);
 var p3 = new Point(1.0, 2.0);
@@ -1594,29 +806,42 @@ Console.WriteLine($"p1 == p3:  {p1 == p3}");               // False
 // Deconstruction (auto-generated)
 var (x, y) = p1;
 Console.WriteLine($"Deconstructed: x={x}, y={y}");
+```
 
-// === 'with' expression — non-destructive mutation ===
-Console.WriteLine("\n=== 'with' expression (copy + modify) ===");
+    p1:        Point { X = 3, Y = 4 }
+    p1 == p2:  True
+    p1 == p3:  False
+    Deconstructed: x=3, y=4
+
+<h4>Non-destructive mutation — <code style="font-size:0.75em">with</code> expression</h4>
+
+```csharp
+// Non-destructive mutation — with expression creates a copy with changes
 var emp = new Employee("Alice", "Engineering", 95000);
 var promoted = emp with { Salary = 110000 };               // creates NEW record
 Console.WriteLine($"Original:  {emp}");
 Console.WriteLine($"Promoted:  {promoted}");               // different salary
 Console.WriteLine($"Same?      {emp == promoted}");        // False
 
-// === Record with computed property ===
-Console.WriteLine("\n=== Record with body ===");
 var config = new Config("localhost", 5432);
 Console.WriteLine($"Config: {config}");
 Console.WriteLine($"ConnStr: {config.ConnectionString}");
+```
 
-// === Record struct (value type, comparable) ===
-Console.WriteLine("\n=== Record struct ===");
+    Original:  Employee { Name = Alice, Department = Engineering, Salary = 95000 }
+    Promoted:  Employee { Name = Alice, Department = Engineering, Salary = 110000 }
+    Same?      False
+    Config: Config { Host = localhost, Port = 5432, Ssl = True, ConnectionString = https://localhost:5432 }
+    ConnStr: https://localhost:5432
+
+<h4>Record struct and <code style="font-size:0.75em">PipelineRecord</code></h4>
+
+```csharp
+// Record struct and PipelineRecord — value-type records for lightweight data
 var versions = new[] { new Version(2, 0, 0), new Version(1, 9, 5), new Version(2, 1, 0) };
 // record structs don't auto-implement IComparable, but have value equality
 Console.WriteLine($"v1 == v2: {new Version(1, 0, 0) == new Version(1, 0, 0)}");  // True
 
-// === DE Use Case ===
-Console.WriteLine("\n=== DE Use Case: Pipeline Record ===");
 var records = new[]
 {
     new PipelineRecord("users", 1000, "success"),
@@ -1625,49 +850,22 @@ var records = new[]
 };
 foreach (var r in records)
     Console.WriteLine($"  {r.TableName}: {r.Status} (ok={r.IsSuccess})");
+```
 
-// === record vs class vs struct ===
-Console.WriteLine("\n=== When to use what ===");
+    v1 == v2: True
+      users: success (ok=True)
+      orders: failed (ok=False)
+      products: pending (ok=False)
+
+```csharp
+// Summary — class vs record vs record struct vs struct
 Console.WriteLine("class:         mutable, identity-based equality, most OOP scenarios");
 Console.WriteLine("record:        immutable, value-based equality, DTOs, config, events");
 Console.WriteLine("record struct: same as record but value type (stack, no GC)");
 Console.WriteLine("struct:        mutable value type (use record struct instead in new code)");
-Console.WriteLine("");
-Console.WriteLine("Python: @dataclass              → C#: record");
-Console.WriteLine("Python: @dataclass(frozen=True)  → C#: record (immutable by default)");
-Console.WriteLine("Python: @dataclass(order=True)   → C#: implement IComparable manually");
 ```
 
-    === Positional Record ===
-    p1:        Point { X = 3, Y = 4 }
-    p1 == p2:  True
-    p1 == p3:  False
-    Deconstructed: x=3, y=4
-    
-    === 'with' expression (copy + modify) ===
-    Original:  Employee { Name = Alice, Department = Engineering, Salary = 95000 }
-    Promoted:  Employee { Name = Alice, Department = Engineering, Salary = 110000 }
-    Same?      False
-    
-    === Record with body ===
-    Config: Config { Host = localhost, Port = 5432, Ssl = True, ConnectionString = https://localhost:5432 }
-    ConnStr: https://localhost:5432
-    
-    === Record struct ===
-    v1 == v2: True
-    
-    === DE Use Case: Pipeline Record ===
-      users: success (ok=True)
-      orders: failed (ok=False)
-      products: pending (ok=False)
-    
-    === When to use what ===
     class:         mutable, identity-based equality, most OOP scenarios
     record:        immutable, value-based equality, DTOs, config, events
     record struct: same as record but value type (stack, no GC)
     struct:        mutable value type (use record struct instead in new code)
-    
-    Python: @dataclass              → C#: record
-    Python: @dataclass(frozen=True)  → C#: record (immutable by default)
-    Python: @dataclass(order=True)   → C#: implement IComparable manually
-    

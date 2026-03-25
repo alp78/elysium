@@ -178,7 +178,7 @@
 
           & .result-card {
             overflow: hidden;
-            padding: 1em;
+            padding: 0.65em 0.85em;
             cursor: pointer;
             transition: background 0.2s ease;
             border-bottom: 1px solid var(--lightgray);
@@ -188,13 +188,14 @@
 
             // normalize card props
             font-family: inherit;
-            font-size: 100%;
-            line-height: 1.15;
+            font-size: 0.85em;
+            line-height: 1.35;
             margin: 0;
             text-transform: none;
             text-align: left;
             outline: none;
             font-weight: inherit;
+            color: var(--gray);
 
             &:hover,
             &:focus,
@@ -204,6 +205,8 @@
 
             & > h3 {
               margin: 0;
+              font-size: 0.9em;
+              color: var(--secondary);
             }
 
             @media all and not ($mobile) {
@@ -213,26 +216,29 @@
             }
 
             & > ul.tags {
-              margin-top: 0.45rem;
+              margin-top: 0.35rem;
               margin-bottom: 0;
             }
 
             & > ul > li > p {
               border-radius: 8px;
               background-color: var(--highlight);
-              padding: 0.2rem 0.4rem;
+              padding: 0.15rem 0.35rem;
               margin: 0 0.1rem;
-              line-height: 1.4rem;
+              line-height: 1.3rem;
+              font-size: 0.8em;
               font-weight: $boldWeight;
-              color: var(--secondary);
+              color: var(--tertiary);
 
               &.match-tag {
-                color: var(--tertiary);
+                color: var(--secondary);
               }
             }
 
             & > p {
               margin-bottom: 0;
+              color: var(--gray);
+              font-size: 0.85em;
             }
           }
         }

@@ -16,8 +16,7 @@ status: complete
 
 # 03. Control Flow - Python
 
-## 1. Conditional Statements
-
+## Conditional Statements
 
 ```python
 # if / elif / else — Python uses indentation, no braces or parentheses required
@@ -29,17 +28,12 @@ status: complete
 #   you MUST put the highest/most specific threshold first. If you put >=60 first,
 #   it would catch everything including scores of 90+, and later branches would never run.
 # - Ternary expression: a one-line if/else that returns a value: `x if cond else y`
-#   (C# uses `cond ? x : y` — same concept, different syntax)
 # - Truthy/falsy: Python evaluates any value as a boolean in conditions.
 #   Falsy values: False, 0, 0.0, "", [], {}, set(), None, range(0)
-#   Everything else is truthy. C# does NOT have this — conditions must be explicit bool.
+#   Everything else is truthy.
 # - Chained comparison: Python allows `10 < x < 20` which means `10 < x and x < 20`.
-#   C# does not support this — you must write `10 < x && x < 20`.
 
-# === Basic if/elif/else ===
-print("=== if / elif / else ===")
 score = 85
-
 # Most restrictive first! >=90 before >=80 before >=70
 if score >= 90:
     grade = "A"
@@ -53,13 +47,17 @@ else:                  # catches everything else (< 60)
     grade = "F"
 print(f"Score {score} → Grade {grade}")
 
-# === Single line (simple cases only) ===
-print("\n=== Single Line ===")
 x = 10
 if x > 0: print(f"{x} is positive")
+```
 
-# === Ternary expression ===
-print("\n=== Ternary Expression ===")
+    Score 85 → Grade B
+    10 is positive
+
+#### Ternary expression
+
+```python
+# Ternary expression — single-line conditional: value_if_true if condition else value_if_false
 age = 20
 status = "adult" if age >= 18 else "minor"
 print(f"age={age} → {status}")
@@ -68,9 +66,14 @@ print(f"age={age} → {status}")
 val = 15
 label = "high" if val > 20 else "mid" if val > 10 else "low"
 print(f"val={val} → {label}")
+```
 
-# === Truthy / Falsy in conditions ===
-print("\n=== Truthy / Falsy ===")
+    age=20 → adult
+    val=15 → mid
+
+#### Truthy/falsy and chained comparisons
+
+```python
 # Python checks truthiness — no need for explicit comparisons
 items = [1, 2, 3]
 if items:                          # truthy: non-empty list
@@ -84,22 +87,24 @@ value = None
 if value is None:                  # explicit None check (preferred over falsy check)
     print("Value is None")
 
-# === Chained conditions ===
-print("\n=== Chained Conditions ===")
 x = 15
 if 10 < x < 20:                   # Python exclusive! Chained comparison
     print(f"{x} is between 10 and 20")
+```
 
-# === match/case (Python 3.10+) — structural pattern matching ===
-# Pattern matching: a way to test a value against multiple PATTERNS (not just equality).
-# Patterns can match values, types, structures (tuples, lists), and object properties.
-# Different from regex — regex matches text patterns, match/case matches data structures.
+    List has 3 items
+    Name is empty
+    Value is None
+    15 is between 10 and 20
+
+<h4><code style="font-size:0.75em">match/case</code> — pattern matching</h4>
+
+```python
+# Pattern matching: test a value against multiple PATTERNS (not just equality).
 # - Wildcard (_): matches anything, used as a default/catch-all case
 # - Guard (if ...): an extra condition on a pattern
-# - Destructuring: extracting parts of a structure into variables, e.g. (x, y) from a tuple
+# - Destructuring: extracting parts of a structure into variables
 # - Fall-through: does NOT exist in Python match/case — only one branch runs
-
-print("\n=== match/case (Python 3.10+) ===")
 command = "quit"
 match command:
     case "start":
@@ -110,8 +115,14 @@ match command:
         print(f"Going: {cmd}")
     case _:                            # wildcard: default case
         print(f"Unknown: {command}")
+```
 
-# match with destructuring — extracting parts of a tuple
+    Stopping...
+
+#### match with destructuring
+
+```python
+# match with destructuring — bind variables from tuple shape; _ is the wildcard
 point = (3, 0)
 match point:
     case (0, 0):
@@ -122,8 +133,14 @@ match point:
         print(f"On y-axis at {y}")
     case (x, y):
         print(f"Point at ({x}, {y})")
+```
 
-# match with type checking
+    On x-axis at 3
+
+#### match with type checking
+
+```python
+# match with type checking — case int(n), case str(s) bind and test the type in one step
 def describe(value):
     match value:
         case int(n) if n > 0:
@@ -141,36 +158,13 @@ for v in [42, -5, "hello", [1, 2, 3], 3.14]:
     print(f"  {str(v):12} → {describe(v)}")
 ```
 
-    === if / elif / else ===
-    Score 85 → Grade B
-    
-    === Single Line ===
-    10 is positive
-    
-    === Ternary Expression ===
-    age=20 → adult
-    val=15 → mid
-    
-    === Truthy / Falsy ===
-    List has 3 items
-    Name is empty
-    Value is None
-    
-    === Chained Conditions ===
-    15 is between 10 and 20
-    
-    === match/case (Python 3.10+) ===
-    Stopping...
-    On x-axis at 3
       42           → positive int: 42
       -5           → non-positive int: -5
       hello        → string: 'hello'
       [1, 2, 3]    → list starting with 1, 2 more
       3.14         → other: float
-    
 
-## 2. Loops
-
+## Loops
 
 ```python
 # Loops — for, while, for/else
@@ -178,26 +172,26 @@ for v in [42, -5, "hello", [1, 2, 3], 3.14]:
 #
 # KEY CONCEPTS:
 # - Iterable: any object you can loop over (list, string, dict, range, file, generator).
-#   Technically, any object with an __iter__() method.
-# - Iterator: the internal mechanism that tracks position during iteration.
-#   Created by calling iter() on an iterable, produces values via next().
-# - range(): a lazy iterable that generates numbers on demand without storing them all.
-#   range(stop), range(start, stop), range(start, stop, step)
+# - range(): a lazy iterable that generates numbers on demand.
 # - enumerate(): wraps an iterable to provide (index, value) pairs.
 # - zip(): iterates multiple iterables in parallel, stopping at the shortest.
 # - for/else: the else block runs ONLY if the loop completed without hitting break.
-#   This is Python-exclusive — C# has no equivalent (use a bool flag instead).
-# - do-while: a loop that runs at least once before checking the condition.
-#   Python doesn't have it — use `while True: ... if cond: break` as a workaround.
+# - do-while: Python doesn't have it — use `while True: ... if cond: break`.
 
-# === for loop — iterates over ANY iterable ===
-print("=== for loop ===")
 # Over a list
 for fruit in ["apple", "banana", "cherry"]:
     print(f"  {fruit}")
+```
 
-# Over a range (C#: for(int i=0; i<5; i++))
-print("\nrange(5):")
+      apple
+      banana
+      cherry
+
+<h4><code style="font-size:0.75em">range()</code></h4>
+
+```python
+# range(start, stop, step) — generates integers; stop is exclusive; step can be negative
+print("range(5):")
 for i in range(5):              # 0, 1, 2, 3, 4
     print(f"  {i}", end=" ")
 print()
@@ -216,75 +210,8 @@ print("range(10, 0, -2):")
 for i in range(10, 0, -2):     # 10, 8, 6, 4, 2 (count down)
     print(f"  {i}", end=" ")
 print()
-
-# Over a string
-print("\nOver string:")
-for ch in "Hello":
-    print(f"  '{ch}'", end=" ")
-print()
-
-# Over a dict
-print("\nOver dict:")
-d = {"name": "Alice", "age": 30, "city": "NYC"}
-for key in d:                    # iterates over keys by default
-    print(f"  {key} = {d[key]}")
-
-for key, value in d.items():     # key-value pairs
-    print(f"  {key}: {value}")
-
-# enumerate — index + value
-print("\nenumerate:")
-for i, fruit in enumerate(["apple", "banana", "cherry"]):
-    print(f"  [{i}] {fruit}")
-
-for i, fruit in enumerate(["apple", "banana"], start=1):  # custom start
-    print(f"  [{i}] {fruit}")
-
-# zip — iterate multiple sequences in parallel
-print("\nzip:")
-names = ["Alice", "Bob", "Charlie"]
-ages = [30, 25, 35]
-for name, age in zip(names, ages):
-    print(f"  {name} is {age}")
-
-# === while loop ===
-print("\n=== while loop ===")
-count = 0
-while count < 5:
-    print(f"  count = {count}")
-    count += 1
-
-# === for/else and while/else (Python exclusive!) ===
-print("\n=== for/else (Python only!) ===")
-# else block runs if loop completes WITHOUT break
-for n in [2, 4, 6, 8]:
-    if n % 3 == 0:
-        print(f"  Found multiple of 3: {n}")
-        break
-else:
-    print("  No multiple of 3 found")  # this runs — no break happened
-
-# === No do-while in Python — workaround ===
-print("\n=== do-while workaround ===")
-while True:
-    val = 42  # simulate getting input
-    print(f"  Got value: {val}")
-    if val > 0:
-        break    # exit after at least one iteration
-
-# === Nested loops ===
-print("\n=== Nested Loops ===")
-for i in range(3):
-    for j in range(3):
-        print(f"  ({i},{j})", end="")
-    print()
 ```
 
-    === for loop ===
-      apple
-      banana
-      cherry
-    
     range(5):
       0   1   2   3   4 
     range(2, 8):
@@ -292,8 +219,26 @@ for i in range(3):
     range(0, 20, 3):
       0   3   6   9   12   15   18 
     range(10, 0, -2):
-      10   8   6   4   2 
-    
+      10   8   6   4   2
+
+#### Iterating strings and dicts
+
+```python
+# Iterating strings and dicts — strings yield characters; dicts yield keys by default, .items() for pairs
+print("Over string:")
+for ch in "Hello":
+    print(f"  '{ch}'", end=" ")
+print()
+
+print("\nOver dict:")
+d = {"name": "Alice", "age": 30, "city": "NYC"}
+for key in d:                    # iterates over keys by default
+    print(f"  {key} = {d[key]}")
+
+for key, value in d.items():     # key-value pairs
+    print(f"  {key}: {value}")
+```
+
     Over string:
       'H'   'e'   'l'   'l'   'o' 
     
@@ -304,7 +249,27 @@ for i in range(3):
       name: Alice
       age: 30
       city: NYC
-    
+
+<h4><code style="font-size:0.75em">enumerate</code> and <code style="font-size:0.75em">zip</code></h4>
+
+```python
+# enumerate adds an index to any iterable
+print("enumerate:")
+for i, fruit in enumerate(["apple", "banana", "cherry"]):
+    print(f"  [{i}] {fruit}")
+
+for i, fruit in enumerate(["apple", "banana"], start=1):  # custom start
+    print(f"  [{i}] {fruit}")
+
+# zip — pairs up elements by position; stops at the shortest iterable
+# pairs elements from multiple iterables
+print("\nzip:")
+names = ["Alice", "Bob", "Charlie"]
+ages = [30, 25, 35]
+for name, age in zip(names, ages):
+    print(f"  {name} is {age}")
+```
+
     enumerate:
       [0] apple
       [1] banana
@@ -316,28 +281,55 @@ for i in range(3):
       Alice is 30
       Bob is 25
       Charlie is 35
-    
-    === while loop ===
+
+<h4><code style="font-size:0.75em">while</code> and <code style="font-size:0.75em">for/else</code></h4>
+
+```python
+# while loops repeat until condition is false; for/else runs the else block only if no break occurred
+count = 0
+while count < 5:
+    print(f"  count = {count}")
+    count += 1
+
+# else block runs if loop completes WITHOUT break
+for n in [2, 4, 6, 8]:
+    if n % 3 == 0:
+        print(f"  Found multiple of 3: {n}")
+        break
+else:
+    print("  No multiple of 3 found")  # this runs — no break happened
+```
+
       count = 0
       count = 1
       count = 2
       count = 3
       count = 4
-    
-    === for/else (Python only!) ===
       Found multiple of 3: 6
-    
-    === do-while workaround ===
+
+#### do-while workaround and nested loops
+
+```python
+# Python has no do-while — use while True + break
+while True:
+    val = 42  # simulate getting input
+    print(f"  Got value: {val}")
+    if val > 0:
+        break    # exit after at least one iteration
+
+# Nested loops — inner loop runs fully for each outer iteration
+for i in range(3):
+    for j in range(3):
+        print(f"  ({i},{j})", end="")
+    print()
+```
+
       Got value: 42
-    
-    === Nested Loops ===
       (0,0)  (0,1)  (0,2)
       (1,0)  (1,1)  (1,2)
       (2,0)  (2,1)  (2,2)
-    
 
-## 3. Loop Control (break, continue, pass)
-
+## Loop Control (break, continue, pass)
 
 ```python
 # Loop Control — break, continue, pass
@@ -345,59 +337,63 @@ for i in range(3):
 # KEY CONCEPTS:
 # - break: immediately exits the innermost loop. Does NOT exit outer loops.
 # - continue: skips the rest of the current iteration and jumps to the next one.
-# - pass: a no-op placeholder. Does nothing — used when syntax requires a body
-#   but you don't have code yet (empty class, empty function, TODO placeholder).
-#   C# has no equivalent — use {} or a comment instead.
+# - pass: a no-op placeholder — used when syntax requires a body but you don't have code yet.
 # - Walrus operator (:=): assigns a value AND returns it in a single expression.
-#   Named "walrus" because := looks like a walrus face rotated sideways.
-#   Useful in while loops and if statements to avoid computing a value twice:
-#     Without walrus: line = f.readline()  →  while line:  →  line = f.readline()
-#     With walrus:    while (line := f.readline()):   (assign + test in one step)
 
-# === break — exit loop immediately ===
-print("=== break ===")
 for i in range(10):
     if i == 5:
         print(f"  Breaking at {i}")
         break
     print(f"  {i}", end=" ")
 print()
+```
 
-# === continue — skip to next iteration ===
-print("\n=== continue ===")
+      0   1   2   3   4   Breaking at 5
+
+<h4><code style="font-size:0.75em">continue</code> and <code style="font-size:0.75em">pass</code></h4>
+
+```python
+# continue skips the rest of the current iteration; pass is a no-op placeholder for empty blocks
 for i in range(10):
     if i % 2 == 0:
         continue           # skip even numbers
     print(f"  {i}", end=" ")
 print()
 
-# === pass — do nothing (placeholder) ===
-print("\n=== pass (no-op placeholder) ===")
 for i in range(5):
     if i == 3:
-        pass               # TODO: handle this case later
+        pass               # handle this case later
     else:
         print(f"  {i}", end=" ")
 print()
 
-# pass is also used for empty classes/functions
-class NotImplementedYet:
-    pass                   # empty class body
+# pass is also used for empty class/function bodies
+class Placeholder:
+    pass
+```
 
-def todo_function():
-    pass                   # empty function body
+      1   3   5   7   9 
+      0   1   2   4
 
-# === break in nested loops — only breaks innermost ===
-print("\n=== break in nested loops ===")
+#### break only exits the innermost loop
+
+```python
+# break only exits the innermost loop — outer loops continue their next iteration
 for i in range(3):
     for j in range(3):
         if j == 2:
             break          # only breaks inner loop
         print(f"  ({i},{j})", end="")
     print()
+```
 
-# === Workaround to break outer loop ===
-print("\n=== Break outer loop (flag or function) ===")
+      (0,0)  (0,1)
+      (1,0)  (1,1)
+      (2,0)  (2,1)
+
+#### Breaking outer loops — flag or function
+
+```python
 # Method 1: flag
 found = False
 for i in range(3):
@@ -417,8 +413,14 @@ def find_pair():
                 return (i, j)
     return None
 print(f"  Found: {find_pair()}")
+```
 
-# === Walrus operator (:=) in while loop ===
+      Broke at (1,1)
+      Found: (1, 1)
+
+<h4>Walrus operator — <code style="font-size:0.75em">:=</code></h4>
+
+```python
 # Without walrus — must assign before AND inside the loop:
 #   line = f.readline()
 #   while line:
@@ -428,58 +430,28 @@ print(f"  Found: {find_pair()}")
 # With walrus — assign and test in one expression:
 #   while (line := f.readline()):
 #       process(line)           # no duplication!
-
-print("\n=== Walrus operator (:=) in while loop ===")
 import io
 reader = io.StringIO("line1\nline2\nline3\n")
 while (line := reader.readline()):    # assigns line AND checks if truthy
     print(f"  '{line.strip()}'")
 
 # Walrus in if statement
-print("\n=== Walrus in if statement ===")
 data = "Hello World"
 if (n := len(data)) > 5:             # assigns n AND checks condition
     print(f"  String has {n} chars (> 5)")
 
 # Walrus in list comprehension
-print("\n=== Walrus in comprehension ===")
 results = [y for x in range(10) if (y := x ** 2) > 20]
 print(f"  Squares > 20: {results}")
 ```
 
-    === break ===
-      0   1   2   3   4   Breaking at 5
-    
-    
-    === continue ===
-      1   3   5   7   9 
-    
-    === pass (no-op placeholder) ===
-      0   1   2   4 
-    
-    === break in nested loops ===
-      (0,0)  (0,1)
-      (1,0)  (1,1)
-      (2,0)  (2,1)
-    
-    === Break outer loop (flag or function) ===
-      Broke at (1,1)
-      Found: (1, 1)
-    
-    === Walrus operator (:=) in while loop ===
       'line1'
       'line2'
       'line3'
-    
-    === Walrus in if statement ===
       String has 11 chars (> 5)
-    
-    === Walrus in comprehension ===
       Squares > 20: [25, 36, 49, 64, 81]
-    
 
-## 4. Iterators & Generators (yield)
-
+## Iterators & Generators (yield)
 
 ```python
 # Iterators & Generators — lazy evaluation with yield
@@ -487,21 +459,13 @@ print(f"  Squares > 20: {results}")
 # KEY CONCEPTS:
 # - Generator: a function that uses 'yield' instead of 'return'. Each call to next()
 #   resumes execution from where it last yielded, preserving local state.
-#   Generators produce values ONE AT A TIME (lazy), not all at once (eager).
 # - Lazy evaluation: values are computed only when requested, not upfront.
-#   Saves memory for large/infinite sequences. Opposite of eager evaluation (lists).
-# - yield: pauses the function, returns a value, and remembers where it stopped.
-#   On the next call to next(), execution resumes right after the yield.
-# - yield from: delegates iteration to another generator/iterable, forwarding all its values.
-# - Generator expression: like a list comprehension but lazy: (x for x in ...) vs [x for x in ...]
+# - yield from: delegates iteration to another generator/iterable.
+# - Generator expression: like a list comprehension but lazy: (x for x in ...)
 # - StopIteration: the exception raised when a generator/iterator is exhausted.
 # - Iterator protocol: any object with __iter__() and __next__() methods.
-#   for loops call these automatically. Generators implement this protocol implicitly.
 # - itertools: standard library module with powerful lazy iterator utilities
-#   (chain, cycle, repeat, islice, accumulate, product, permutations, etc.)
 
-# === Generator function (uses yield instead of return) ===
-print("=== Generator Function ===")
 def countdown(n):
     print(f"  Starting countdown from {n}")
     while n > 0:
@@ -513,17 +477,30 @@ def countdown(n):
 for val in countdown(5):
     print(f"  {val}", end=" ")
 print()
+```
 
-# === Manual iteration with next() ===
-print("\n=== Manual next() ===")
+      Starting countdown from 5
+      5   4   3   2   1   Done!
+
+<h4>Manual iteration with <code style="font-size:0.75em">next()</code></h4>
+
+```python
+# next() advances a generator one step; raises StopIteration when exhausted
 gen = countdown(3)
 print(f"  next: {next(gen)}")    # 3
 print(f"  next: {next(gen)}")    # 2
 print(f"  next: {next(gen)}")    # 1
 # next(gen) would raise StopIteration
+```
 
-# === Generator expression (like list comprehension, but lazy) ===
-print("\n=== Generator Expression ===")
+      Starting countdown from 3
+      next: 3
+      next: 2
+      next: 1
+
+#### List vs generator expression
+
+```python
 # List comprehension — eager: creates ALL values in memory
 squares_list = [x**2 for x in range(10)]
 print(f"List: {squares_list}")
@@ -539,9 +516,19 @@ big_list = [x for x in range(100000)]
 big_gen = (x for x in range(100000))
 print(f"\nList size:      {sys.getsizeof(big_list):>8} bytes")
 print(f"Generator size: {sys.getsizeof(big_gen):>8} bytes")
+```
 
-# === yield from — delegate to another generator ===
-print("\n=== yield from ===")
+    List: [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    Generator: <generator object <genexpr> at 0x0000018C86002740>
+    As list:   [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    
+    List size:        800984 bytes
+    Generator size:      192 bytes
+
+<h4><code style="font-size:0.75em">yield from</code></h4>
+
+```python
+# yield from delegates to a sub-generator — equivalent to a for loop with yield for each item
 def flatten(nested):
     for item in nested:
         if isinstance(item, list):
@@ -551,39 +538,62 @@ def flatten(nested):
 
 nested = [1, [2, 3], [4, [5, 6]], 7]
 print(f"Flatten: {list(flatten(nested))}")
+```
 
-# === Infinite generators ===
-print("\n=== Infinite Generator ===")
+    Flatten: [1, 2, 3, 4, 5, 6, 7]
+
+#### Infinite generator and built-in iterators
+
+```python
+# Infinite generator produces values on demand; islice limits how many to consume
 def naturals(start=0):
     n = start
     while True:          # never ends!
         yield n
         n += 1
 
-# Take first 5 from infinite generator
 from itertools import islice
 print(f"First 5 naturals: {list(islice(naturals(), 5))}")
 print(f"From 10:          {list(islice(naturals(10), 5))}")
 
-# === Common built-in iterators ===
-print("\n=== Built-in Iterators ===")
-print(f"range(5):       {list(range(5))}")                              # lazy range
-print(f"enumerate:      {list(enumerate('abc'))}")                      # index + value
-print(f"zip:            {list(zip([1,2], ['a','b']))}")                 # parallel
-print(f"map:            {list(map(str.upper, ['a','b']))}")             # apply func to each
-print(f"filter:         {list(filter(lambda x: x > 2, [1,2,3,4]))}")    # keep matching
+# Built-in iterators — all lazy; wrap in list() to materialise
+print(f"range(5):       {list(range(5))}")
+print(f"enumerate:      {list(enumerate('abc'))}")
+print(f"zip:            {list(zip([1,2], ['a','b']))}")
+print(f"map:            {list(map(str.upper, ['a','b']))}")
+print(f"filter:         {list(filter(lambda x: x > 2, [1,2,3,4]))}")
 print(f"reversed:       {list(reversed([1,2,3]))}")
+```
 
-# itertools — powerful lazy iterators
+    First 5 naturals: [0, 1, 2, 3, 4]
+    From 10:          [10, 11, 12, 13, 14]
+    range(5):       [0, 1, 2, 3, 4]
+    enumerate:      [(0, 'a'), (1, 'b'), (2, 'c')]
+    zip:            [(1, 'a'), (2, 'b')]
+    map:            ['A', 'B']
+    filter:         [3, 4]
+    reversed:       [3, 2, 1]
+
+<h4><code style="font-size:0.75em">itertools</code></h4>
+
+```python
+# itertools — combinatorial and infinite iterators from the standard library
 from itertools import chain, cycle, repeat, accumulate, product
-print(f"chain:          {list(chain([1,2], [3,4]))}")         # concatenate iterables
-print(f"repeat:         {list(repeat('x', 3))}")              # repeat value n times
-print(f"accumulate:     {list(accumulate([1,2,3,4]))}")       # running sum
-print(f"product:        {list(product('ab', '12'))}")         # cartesian product
+print(f"chain:          {list(chain([1,2], [3,4]))}")
+print(f"repeat:         {list(repeat('x', 3))}")
+print(f"accumulate:     {list(accumulate([1,2,3,4]))}")
+print(f"product:        {list(product('ab', '12'))}")
+```
 
-# === Custom Iterator Protocol ===
+    chain:          [1, 2, 3, 4]
+    repeat:         ['x', 'x', 'x']
+    accumulate:     [1, 3, 6, 10]
+    product:        [('a', '1'), ('a', '2'), ('b', '1'), ('b', '2')]
+
+<h4>Iterator protocol — <code style="font-size:0.75em">__iter__</code> and <code style="font-size:0.75em">__next__</code></h4>
+
+```python
 # Any class with __iter__() and __next__() can be used in for loops.
-print("\n=== Custom Iterator Protocol ===")
 class Squares:
     def __init__(self, n):
         self.n = n
@@ -600,82 +610,56 @@ class Squares:
 print(f"Squares(5): {list(Squares(5))}")
 ```
 
-    === Generator Function ===
-      Starting countdown from 5
-      5   4   3   2   1   Done!
-    
-    
-    === Manual next() ===
-      Starting countdown from 3
-      next: 3
-      next: 2
-      next: 1
-    
-    === Generator Expression ===
-    List: [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    Generator: <generator object <genexpr> at 0x000002563F062DC0>
-    As list:   [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    
-    List size:        800984 bytes
-    Generator size:      192 bytes
-    
-    === yield from ===
-    Flatten: [1, 2, 3, 4, 5, 6, 7]
-    
-    === Infinite Generator ===
-    First 5 naturals: [0, 1, 2, 3, 4]
-    From 10:          [10, 11, 12, 13, 14]
-    
-    === Built-in Iterators ===
-    range(5):       [0, 1, 2, 3, 4]
-    enumerate:      [(0, 'a'), (1, 'b'), (2, 'c')]
-    zip:            [(1, 'a'), (2, 'b')]
-    map:            ['A', 'B']
-    filter:         [3, 4]
-    reversed:       [3, 2, 1]
-    chain:          [1, 2, 3, 4]
-    repeat:         ['x', 'x', 'x']
-    accumulate:     [1, 3, 6, 10]
-    product:        [('a', '1'), ('a', '2'), ('b', '1'), ('b', '2')]
-    
-    === Custom Iterator Protocol ===
     Squares(5): [0, 1, 4, 9, 16]
-    
-
 
 ```python
 # Practical alternatives to manual recursive flatten
 # In real code, use libraries instead of writing recursion yourself
 
 nested = [1, [2, 3], [4, [5, 6]], 7]
+```
 
-# === Method 1: itertools.chain — flattens ONE level only ===
+#### Flatten alternatives
+
+```python
+# chain.from_iterable flattens one level; more_itertools.collapse handles arbitrary depth
 from itertools import chain
 one_level = list(chain.from_iterable([[1, 2], [3, 4], [5, 6]]))
 print(f"chain (1 level):  {one_level}")
-# Does NOT work for deep nesting:
-# chain.from_iterable([1, [2, [3]]]) → error, because 1 is not iterable
 
-# === Method 2: more-itertools.collapse — flattens ANY depth ===
 from more_itertools import collapse
 print(f"collapse (deep):  {list(collapse(nested))}")
+```
 
-# === Method 3: simple iterative flatten (no recursion, uses a stack) ===
+    chain (1 level):  [1, 2, 3, 4, 5, 6]
+    collapse (deep):  [1, 2, 3, 4, 5, 6, 7]
+
+#### Iterative Flatten with Stack
+
+```python
+# Iterative flatten with an explicit stack — avoids recursion depth limits
 def flatten_iter(nested):
     """Flatten using an explicit stack — no recursion needed."""
-    stack = list(reversed(nested))     # put items on stack (reversed to maintain order)
+    stack = list(reversed(nested))
     result = []
     while stack:
         item = stack.pop()
         if isinstance(item, list):
-            stack.extend(reversed(item))  # push sub-items onto stack
+            stack.extend(reversed(item))
         else:
             result.append(item)
     return result
 
+nested = [1, [2, 3], [4, [5, 6]], 7]
 print(f"Iterative flatten: {flatten_iter(nested)}")
+```
 
-# === Method 4: pandas — for JSON-like nested data ===
+    Iterative flatten: [1, 2, 3, 4, 5, 6, 7]
+
+#### pandas json_normalize
+
+```python
+# pd.json_normalize flattens nested dicts in a list of records into a flat DataFrame
 import pandas as pd
 nested_records = [
     {"name": "Alice", "address": {"city": "NYC", "zip": "10001"}},
@@ -683,56 +667,38 @@ nested_records = [
 ]
 df = pd.json_normalize(nested_records)
 print(f"\npandas json_normalize:\n{df}")
+```
 
-# === Summary ===
-print("\n=== When to use what ===")
+    
+    pandas json_normalize:
+        name address.city address.zip
+    0  Alice          NYC       10001
+    1    Bob           LA       90001
+
+```python
+# Summary — choosing the right flatten approach based on depth and dependencies
 print("1 level deep:     list(chain.from_iterable(nested))")
 print("Any depth:        list(collapse(nested))  (more-itertools)")
 print("No dependencies:  iterative with stack (no recursion needed)")
 print("Nested JSON:      pd.json_normalize(records)")
 ```
 
-    chain (1 level):  [1, 2, 3, 4, 5, 6]
-    collapse (deep):  [1, 2, 3, 4, 5, 6, 7]
-    Iterative flatten: [1, 2, 3, 4, 5, 6, 7]
-    
-    pandas json_normalize:
-        name address.city address.zip
-    0  Alice          NYC       10001
-    1    Bob           LA       90001
-    
-    === When to use what ===
     1 level deep:     list(chain.from_iterable(nested))
     Any depth:        list(collapse(nested))  (more-itertools)
     No dependencies:  iterative with stack (no recursion needed)
     Nested JSON:      pd.json_normalize(records)
-    
 
-## 5. Comprehensions & Functional Tools
-
+## Comprehensions & Functional Tools
 
 ```python
 # Comprehensions — concise way to create collections from loops
 #
 # KEY CONCEPTS:
-# - Comprehension: a compact syntax to build a new collection by transforming/filtering
-#   an existing iterable in a single expression. Syntax: [expr for item in iterable if cond]
-#   Python has list, dict, set, and generator comprehensions. C# has no equivalent syntax —
-#   uses LINQ (.Select(), .Where(), .ToDictionary(), etc.) instead.
-# - Lambda: an anonymous (unnamed) function: `lambda x: x * 2` (Python) / `x => x * 2` (C#).
-#   Used as throwaway functions passed to map, filter, sorted, etc.
-# - map(): applies a function to every element. Same as [f(x) for x in lst] or .Select(f).
-# - filter(): keeps only elements where the function returns True. Same as .Where(f).
-# - reduce() (fold): accumulates all elements into a single value by applying a function
-#   repeatedly: reduce(f, [a,b,c,d]) = f(f(f(a,b),c),d). C# equivalent: .Aggregate().
-# - Method chaining: calling multiple methods in sequence on the result of the previous one:
-#   lst.Where(...).Select(...).OrderBy(...) — each returns a new lazy sequence.
-#   Python doesn't support this natively — must use nested calls or comprehensions.
-# - Cartesian product: all possible combinations of elements from two+ sets.
-#   [('a','1'), ('a','2'), ('b','1'), ('b','2')] from 'ab' × '12'.
+# - Comprehension: [expr for item in iterable if cond] — builds a new collection.
+# - Lambda: anonymous function: `lambda x: x * 2`
+# - map/filter: apply function to each element / keep matching elements.
+# - reduce (fold): accumulate all elements into one value.
 
-# === List comprehension ===
-print("=== List Comprehension ===")
 # [expression for item in iterable if condition]
 squares = [x**2 for x in range(10)]
 print(f"Squares:  {squares}")
@@ -744,7 +710,15 @@ print(f"Evens:    {evens}")
 words = ["hello", "world", "python", "is", "great"]
 long_upper = [w.upper() for w in words if len(w) > 3]
 print(f"Long upper: {long_upper}")
+```
 
+    Squares:  [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    Evens:    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    Long upper: ['HELLO', 'WORLD', 'PYTHON', 'GREAT']
+
+#### Nested comprehensions
+
+```python
 # Nested comprehension (flatten)
 matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 flat = [n for row in matrix for n in row]    # read left-to-right: for row, then for n
@@ -753,9 +727,14 @@ print(f"Flat:     {flat}")
 # Nested comprehension (create 2D)
 grid = [[(i, j) for j in range(3)] for i in range(3)]
 print(f"Grid:     {grid}")
+```
 
-# === Dict comprehension ===
-print("\n=== Dict Comprehension ===")
+    Flat:     [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    Grid:     [[(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)]]
+
+#### Dict and set comprehensions
+
+```python
 # {key: value for item in iterable if condition}
 squares_dict = {x: x**2 for x in range(6)}
 print(f"Squares dict: {squares_dict}")
@@ -770,82 +749,56 @@ scores = {"Alice": 85, "Bob": 92, "Charlie": 78, "Diana": 95}
 passed = {name: score for name, score in scores.items() if score >= 80}
 print(f"Passed:       {passed}")
 
-# === Set comprehension ===
-print("\n=== Set Comprehension ===")
 # {expression for item in iterable} — duplicates automatically removed
+words = ["hello", "world", "python", "is", "great"]
 unique_lengths = {len(w) for w in words}
 print(f"Unique lengths: {unique_lengths}")
+```
 
-# === Functional tools: map, filter, reduce ===
-print("\n=== map() — apply function to each element ===")
+    Squares dict: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+    Swapped:      {1: 'a', 2: 'b', 3: 'c'}
+    Passed:       {'Alice': 85, 'Bob': 92, 'Diana': 95}
+    Unique lengths: {2, 5, 6}
+
+<h4><code style="font-size:0.75em">map</code> and <code style="font-size:0.75em">filter</code></h4>
+
+```python
+# map applies a function to every element; filter keeps elements matching a predicate
 nums = [1, 2, 3, 4, 5]
 doubled = list(map(lambda x: x * 2, nums))    # lambda = anonymous function
 print(f"Doubled: {doubled}")
+
 # Comprehension equivalent (preferred in Python):
 doubled2 = [x * 2 for x in nums]
 print(f"Same:    {doubled2}")
 
-print("\n=== filter() — keep elements matching condition ===")
 evens = list(filter(lambda x: x % 2 == 0, nums))
 print(f"Evens:   {evens}")
-# Comprehension equivalent (preferred in Python):
-evens2 = [x for x in nums if x % 2 == 0]
-print(f"Same:    {evens2}")
+```
 
-print("\n=== reduce() — accumulate to single value ===")
+    Doubled: [2, 4, 6, 8, 10]
+    Same:    [2, 4, 6, 8, 10]
+    Evens:   [2, 4]
+
+<h4><code style="font-size:0.75em">reduce</code> and built-in aggregations</h4>
+
+```python
+# reduce folds a sequence into a single value; built-ins like sum/max/any are preferred for common cases
 from functools import reduce
-total = reduce(lambda acc, x: acc + x, nums, 0)   # 0 is the initial accumulator
+nums = [1, 2, 3, 4, 5]
+total = reduce(lambda acc, x: acc + x, nums, 0)
 print(f"Sum:     {total}")
 product = reduce(lambda acc, x: acc * x, nums, 1)
 print(f"Product: {product}")
+
 # Built-in alternatives (preferred over reduce for common cases):
 print(f"sum():   {sum(nums)}")
 print(f"max():   {max(nums)}")
 print(f"min():   {min(nums)}")
 print(f"all():   {all(x > 0 for x in nums)}")    # True if ALL match
 print(f"any():   {any(x > 3 for x in nums)}")    # True if ANY match
-
-# === sorted() with key ===
-# key: a function that extracts the comparison value from each element
-print("\n=== sorted() ===")
-names = ["Charlie", "Alice", "Bob", "Diana"]
-print(f"Alphabetical:  {sorted(names)}")
-print(f"By length:     {sorted(names, key=len)}")
-print(f"Reverse:       {sorted(names, reverse=True)}")
-print(f"By last char:  {sorted(names, key=lambda n: n[-1])}")
-
-# === When to use comprehension vs loop ===
-print("\n=== Guidelines ===")
-print("Use comprehension: simple transform/filter → new collection")
-print("Use for loop:      side effects, complex logic, multiple statements")
-print("Use map/filter:    when you already have a named function")
-print("Avoid:             nested comprehensions with >2 levels (use loops)")
 ```
 
-    === List Comprehension ===
-    Squares:  [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    Evens:    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
-    Long upper: ['HELLO', 'WORLD', 'PYTHON', 'GREAT']
-    Flat:     [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    Grid:     [[(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)]]
-    
-    === Dict Comprehension ===
-    Squares dict: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
-    Swapped:      {1: 'a', 2: 'b', 3: 'c'}
-    Passed:       {'Alice': 85, 'Bob': 92, 'Diana': 95}
-    
-    === Set Comprehension ===
-    Unique lengths: {2, 5, 6}
-    
-    === map() — apply function to each element ===
-    Doubled: [2, 4, 6, 8, 10]
-    Same:    [2, 4, 6, 8, 10]
-    
-    === filter() — keep elements matching condition ===
-    Evens:   [2, 4]
-    Same:    [2, 4]
-    
-    === reduce() — accumulate to single value ===
     Sum:     15
     Product: 120
     sum():   15
@@ -853,16 +806,32 @@ print("Avoid:             nested comprehensions with >2 levels (use loops)")
     min():   1
     all():   True
     any():   True
-    
-    === sorted() ===
+
+#### Sorting with a key function
+
+```python
+# key: a function that extracts the comparison value from each element
+names = ["Charlie", "Alice", "Bob", "Diana"]
+print(f"Alphabetical:  {sorted(names)}")
+print(f"By length:     {sorted(names, key=len)}")
+print(f"Reverse:       {sorted(names, reverse=True)}")
+print(f"By last char:  {sorted(names, key=lambda n: n[-1])}")
+```
+
     Alphabetical:  ['Alice', 'Bob', 'Charlie', 'Diana']
     By length:     ['Bob', 'Alice', 'Diana', 'Charlie']
     Reverse:       ['Diana', 'Charlie', 'Bob', 'Alice']
     By last char:  ['Diana', 'Bob', 'Charlie', 'Alice']
-    
-    === Guidelines ===
+
+```python
+# Summary — when to use comprehensions, loops, map/filter, or avoid nesting
+print("Use comprehension: simple transform/filter → new collection")
+print("Use for loop:      side effects, complex logic, multiple statements")
+print("Use map/filter:    when you already have a named function")
+print("Avoid:             nested comprehensions with >2 levels (use loops)")
+```
+
     Use comprehension: simple transform/filter → new collection
     Use for loop:      side effects, complex logic, multiple statements
     Use map/filter:    when you already have a named function
     Avoid:             nested comprehensions with >2 levels (use loops)
-    
