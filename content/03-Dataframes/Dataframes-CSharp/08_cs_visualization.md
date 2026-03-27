@@ -114,7 +114,7 @@ Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(x: dates, y: asmlClose)
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_01.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 1.2 Multi-line — overlay ASML, SAP, SIE close prices
 
@@ -141,7 +141,7 @@ Plotly.NET.CSharp.Chart.Combine(traces)
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_02.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 1.3 Dual y-axis — ASML price + volume
 
@@ -183,7 +183,7 @@ Plotly.NET.CSharp.Chart.Combine(new[] { volArea, priceLine })
     .WithLayout(layout)
 ```
 
-<iframe src="/static/plotly/df_cs_08_03.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_03.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ---
 
@@ -212,7 +212,7 @@ Plotly.NET.CSharp.Chart.Column<double, string, string>(barValues, Keys: barSymbo
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_04.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_04.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 2.2 Stacked bar — total volume by top 5 symbols
 
@@ -249,7 +249,7 @@ Plotly.NET.CSharp.Chart.Combine(new[] { upBar, downBar })
         BarMode: StyleParam.BarMode.Stack))
 ```
 
-<iframe src="/static/plotly/df_cs_08_05.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_05.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ---
 
@@ -273,7 +273,7 @@ Plotly.NET.CSharp.Chart.Point<double, double, string>(scatterVol, asmlClose)
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_06.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_06.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 3.2 Histogram — ASML daily returns distribution
 
@@ -295,7 +295,7 @@ Plotly.NET.CSharp.Chart.Histogram<double, double, string>(X: returns)
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_07.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_07.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 3.3 Box plot — close price distribution by symbol (top 5)
 
@@ -320,7 +320,7 @@ Plotly.NET.CSharp.Chart.Combine(boxTraces)
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_08.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_08.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ---
 
@@ -341,7 +341,7 @@ Plotly.NET.CSharp.Chart.Candlestick<double, string, string>(asmlOpen, asmlHigh, 
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_09.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_09.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 4.2 Candlestick + volume overlay
 
@@ -379,9 +379,9 @@ display(candle);
 volArea
 ```
 
-<iframe src="/static/plotly/df_cs_08_10.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_10.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-<iframe src="/static/plotly/df_cs_08_11.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_11.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ---
 
@@ -434,7 +434,7 @@ Plotly.NET.CSharp.Chart.Heatmap<double, string, string, string>(corrMatrix, X: c
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_12.html" width="100%" height="600" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_12.html" width="100%" height="600" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ---
 
@@ -464,7 +464,7 @@ Plotly.NET.CSharp.Chart.Pie<double, string, string>(values: pieVals, Labels: pie
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_13.html" width="100%" height="550" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_13.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### Donut chart — Trade count by exchange suffix
 
@@ -490,7 +490,7 @@ Plotly.NET.CSharp.Chart.Doughnut<double, string, string>(values: donutVals, Labe
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/df_cs_08_14.html" width="100%" height="550" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_14.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### Radar chart — Normalized metrics for top 3 symbols
 
@@ -539,7 +539,7 @@ Plotly.NET.CSharp.Chart.Combine(radarTraces)
     .WithLayout(layout)
 ```
 
-<iframe src="/static/plotly/df_cs_08_15.html" width="100%" height="600" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/df_cs_08_15.html" width="100%" height="600" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### 6.1 ScottPlot line chart — ASML close price saved as PNG
 

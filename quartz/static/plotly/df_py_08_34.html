@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1b26; overflow: hidden; }
+  .plotly-graph-div { width: 100% !important; }
+  .js-plotly-plot { width: 100% !important; }
+</style>
+</head><body>
+<div>                            
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.4.0.min.js" integrity="sha256-KEmPoupLpFyGMyGAiOsiNDbKDKAvxXAn/W+oQa0ZAfk=" crossorigin="anonymous"></script>                <div id="8cc23a50-e5d1-4cd7-b591-ac8df6b9bafd" class="plotly-graph-div" style="height:600px; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("8cc23a50-e5d1-4cd7-b591-ac8df6b9bafd")) {                    Plotly.newPlot(                        "8cc23a50-e5d1-4cd7-b591-ac8df6b9bafd",                        [{"coloraxis":"coloraxis","geo":"geo","hovertemplate":"\u003cb\u003e%{hovertext}\u003c\u002fb\u003e\u003cbr\u003e\u003cbr\u003eiso3=%{location}\u003cbr\u003estocks=%{z}\u003cextra\u003e\u003c\u002fextra\u003e","hovertext":["Australia","Belgium","Canada","China","Finland","France","Germany","Hong Kong","Italy","Japan","Netherlands","Norway","Singapore","Spain","United Kingdom","United States"],"locationmode":"ISO-3","locations":[null,"BEL",null,null,"FIN","FRA","DEU",null,"ITA",null,"NLD",null,null,"ESP",null,null],"name":"","z":{"dtype":"i1","bdata":"CwEBAgEQEAIFIQgBAQQEPw=="},"type":"choropleth"}],                        {"template":{"layout":{"colorway":["#7aa2f7","#9ece6a","#e0af68","#f7768e","#bb9af7","#7dcfff","#73daca","#ff9e64","#2ac3de","#b4f9f8"],"font":{"color":"#a9b1d6","family":"JetBrains Mono, Consolas, monospace"},"hoverlabel":{"bgcolor":"#24283b","bordercolor":"#3b4261","font":{"color":"#c0caf5"}},"legend":{"bgcolor":"rgba(0,0,0,0)","bordercolor":"#3b4261"},"paper_bgcolor":"#1a1b26","plot_bgcolor":"#1a1b26","title":{"font":{"color":"#c0caf5","size":16}},"xaxis":{"gridcolor":"#292e42","linecolor":"#3b4261","zerolinecolor":"#3b4261"},"yaxis":{"gridcolor":"#292e42","linecolor":"#3b4261","zerolinecolor":"#3b4261"}}},"geo":{"domain":{"x":[0.0,1.0],"y":[0.0,1.0]},"center":{},"lonaxis":{"range":[-15,35]},"lataxis":{"range":[35,65]},"scope":"europe","bgcolor":"#1a1b26","landcolor":"#24283b","countrycolor":"#3b4261","subunitcolor":"#3b4261","showocean":true,"oceancolor":"#16161e","showlakes":true,"lakecolor":"#16161e","showcoastlines":true,"coastlinecolor":"#3b4261"},"coloraxis":{"colorbar":{"title":{"text":"stocks"}},"colorscale":[[0.0,"rgb(247,251,255)"],[0.125,"rgb(222,235,247)"],[0.25,"rgb(198,219,239)"],[0.375,"rgb(158,202,225)"],[0.5,"rgb(107,174,214)"],[0.625,"rgb(66,146,198)"],[0.75,"rgb(33,113,181)"],[0.875,"rgb(8,81,156)"],[1.0,"rgb(8,48,107)"]]},"legend":{"tracegroupgap":0},"title":{"text":"EuroStoxx 50: Stocks per Country"},"margin":{"l":0,"r":0,"t":40,"b":0},"height":600},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('8cc23a50-e5d1-4cd7-b591-ac8df6b9bafd');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };            </script>        </div>
+<script>window.addEventListener("load", function() {
+  window.dispatchEvent(new Event("resize"));
+  document.querySelectorAll(".js-plotly-plot").forEach(function(gd) {
+    Plotly.relayout(gd, {autosize: true, width: null});
+  });
+});</script>
+</body></html>
