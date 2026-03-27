@@ -101,13 +101,18 @@ Formatter.Register<DataFrame>((df, writer) =>
     writer.Write(css + html);
 }, "text/html");
 Formatter.Register<Polars.CSharp.Series>((s, writer) =>
-    writer.Write($"<pre style='font-size:14px'>{s}</pre>"), "text/html");
+{
+    var sdf = DataFrame.FromSeries(s);
+    var shtml = sdf.ToHtml();
+    shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @">""(.+?)""<", @">$1<");
+    var scss = @"<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>";
+    writer.Write(scss + shtml);
+}, "text/html");
 
 var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
-
-    Loading extensions from `C:\Users\aperi\.nuget\packages\deedle.interactive\3.0.0\lib\netstandard2.1\Deedle.Interactive.dll`
 
     Data directory: c:\Users\aperi\DEV\LANG\data
 
@@ -130,18 +135,17 @@ prices
 
     Name: prices  |  Length: 5  |  DataType: f64
 
-<pre style='font-size:14px'>shape: (5, 1)
-┌────────┐
-│ prices │
-│ ---    │
-│ f64    │
-╞════════╡
-│ 100.0  │
-│ 102.5  │
-│ 101.8  │
-│ 103.2  │
-│ 104.1  │
-└────────┘</pre>
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>prices<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>100</td></tr><tr><td>102.5</td></tr><tr><td>101.8</td></tr><tr><td>103.2</td></tr><tr><td>104.1</td></tr></tbody></table></div>
 
 ```csharp
 // From different .NET types -- Polars maps to Arrow types automatically
@@ -167,38 +171,22 @@ prices
 
     KeyCount: 5
 
-<div>
-
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>100</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>102.5</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>101.8</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>103.2</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>104.1</td></tr>
-
-</table>
-
-<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>100</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>102.5</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>101.8</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>103.2</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>104.1</td></tr>
+</table>
+<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -213,38 +201,22 @@ var tickers = new SeriesBuilder<int, string>
 tickers
 ```
 
-<div>
-
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td></tr>
-
-</table>
-
-<p>Series of <b>3</b> items<p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td></tr>
+</table>
+<p>Series of <b>3</b> items<p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -256,38 +228,22 @@ var indexed = Enumerable.Range(0, 5)
 indexed
 ```
 
-<div>
-
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>0</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>20</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>30</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>40</td></tr>
-
-</table>
-
-<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>0</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>20</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>30</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>40</td></tr>
+</table>
+<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -304,18 +260,17 @@ s
 
     Length: 5  |  NullCount: 2
 
-<pre style='font-size:14px'>shape: (5, 1)
-┌────────────┐
-│ with_nulls │
-│ ---        │
-│ f64        │
-╞════════════╡
-│ 1.0        │
-│ null       │
-│ 3.0        │
-│ null       │
-│ 5.0        │
-└────────────┘</pre>
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>with_nulls<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>5</td></tr></tbody></table></div>
 
 #### Deedle – Represent missing values with <code style="font-size:0.75em">OptionalValue&lt;T&gt;</code>
 
@@ -337,38 +292,22 @@ withGaps
 
     KeyCount: 5
 
-<div>
-
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>1</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>3</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>5</td></tr>
-
-</table>
-
-<p>Series of <b>5</b> items<p><b>2</b> missing values</p>
-
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>1</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>3</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>5</td></tr>
+</table>
+<p>Series of <b>5</b> items<p><b>2</b> missing values</p>
 </div>
 
 ---
@@ -473,104 +412,108 @@ builder.Add("a / b", a / b);
 builder.Frame
 ```
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></thead><thead><th></th><th></th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>33</td><td>27</td><td>90</td><td>10</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></thead><thead><th></th><th></th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>33</td><td>27</td><td>90</td><td>10</td></tr>
+</table>
+<p><b>3</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
 #### Polars.NET – Compute aggregations on Series (sum, mean, std, min, max)
 
 ```csharp
-// Polars.NET
+// Polars.NET — basic aggregations as a summary DataFrame
 var s = Polars.CSharp.Series.From("vals", new[] { 10.0, 20.0, 30.0, 40.0, 50.0 });
 
-display($"Sum:  {s.Sum<double>()}");
-display($"Mean: {s.Mean<double>()}");
-display($"Std:  {s.Std():F4}");
-display($"Min:  {s.Min<double>()}");
-display($"Max:  {s.Max<double>()}");
+new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("stat", new[] { "sum", "mean", "std", "min", "max" }),
+    Polars.CSharp.Series.From("value", new[] {
+        s.Sum<double>(), s.Mean<double>(), s.Std().GetValue<double>(0),
+        s.Min<double>(), s.Max<double>()
+    })
+})
 ```
 
-    Sum:  150
-
-    Mean: 30
-
-    Std:  shape: (1, 1)
-    ┌───────────┐
-    │ vals      │
-    │ ---       │
-    │ f64       │
-    ╞═══════════╡
-    │ 15.811388 │
-    └───────────┘
-
-    Min:  10
-
-    Max:  50
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>stat<span class='pl-dtype'>utf8view</span></th><th>value<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>sum</td><td>150</td></tr><tr><td>mean</td><td>30</td></tr><tr><td>std</td><td>15.8113883</td></tr><tr><td>min</td><td>10</td></tr><tr><td>max</td><td>50</td></tr></tbody></table></div>
 
 #### Deedle – Compute aggregations on Series
 
 ```csharp
-// Deedle
+// Deedle — basic aggregations as a Deedle Frame
 var s = new[] { 10.0, 20.0, 30.0, 40.0, 50.0 }.ToOrdinalSeries();
 
-display($"Sum:    {s.Sum()}");
-display($"Mean:   {s.Mean()}");
-display($"StdDev: {s.StdDev():F4}");
-display($"Min:    {s.Min()}");
-display($"Max:    {s.Max()}");
-display($"Median: {s.Median()}");
+var stats = new[] { "sum", "mean", "stddev", "min", "max", "median" };
+var vals = new[] { s.Sum(), s.Mean(), s.StdDev(), s.Min(), s.Max(), s.Median() };
+var idx = Enumerable.Range(0, stats.Length).ToArray();
+
+var fb = new FrameBuilder.Columns<int, string>();
+fb.Add("stat", new Series<int, string>(idx, stats));
+fb.Add("value", new Series<int, double>(idx, vals));
+fb.Frame
 ```
 
-    Sum:    150
-
-    Mean:   30
-
-    StdDev: 15.8114
-
-    Min:    10
-
-    Max:    50
-
-    Median: 30
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>stat</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>sum</td><td>150</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>mean</td><td>30</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>stddev</td><td>15.811388300841896</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>min</td><td>10</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>max</td><td>50</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>median</td><td>30</td></tr>
+</table>
+<p><b>6</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+</div>
 
 ---
 #### Polars.NET – Summarise a Series with <code style="font-size:0.75em">Describe</code>
@@ -612,23 +555,40 @@ df.Describe()
 #### Deedle – Compute summary statistics manually
 
 ```csharp
-// Deedle – no built-in Series describe; use stats individually or DataFrame.Describe()
+// Deedle — no built-in Series describe; build a summary Frame
 var s = new[] { 100.0, 102.5, 101.8, 103.2, 104.1 }.ToOrdinalSeries();
 
-Console.WriteLine($"Count:  {s.KeyCount}");
-Console.WriteLine($"Mean:   {s.Mean():F2}");
-Console.WriteLine($"StdDev: {s.StdDev():F2}");
-Console.WriteLine($"Min:    {s.Min():F2}");
-Console.WriteLine($"Max:    {s.Max():F2}");
-Console.WriteLine($"Median: {s.Median():F2}");
+var stats = new[] { "count", "mean", "stddev", "min", "max", "median" };
+var vals = new[] { (double)s.KeyCount, s.Mean(), s.StdDev(), s.Min(), s.Max(), s.Median() };
+var idx = Enumerable.Range(0, stats.Length).ToArray();
+
+var fb = new FrameBuilder.Columns<int, string>();
+fb.Add("stat", new Series<int, string>(idx, stats));
+fb.Add("value", new Series<int, double>(idx, vals));
+fb.Frame
 ```
 
-    Count:  5
-    Mean:   102.32
-    StdDev: 1.55
-    Min:    100.00
-    Max:    104.10
-    Median: 102.50
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>stat</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>count</td><td>5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>mean</td><td>102.32000000000001</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>stddev</td><td>1.551450933802398</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>min</td><td>100</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>max</td><td>104.1</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>median</td><td>102.5</td></tr>
+</table>
+<p><b>6</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+</div>
 
 ---
 #### Comparison Summary – Series
@@ -749,46 +709,26 @@ df
 
     Shape: 5 rows x 3 cols
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>Symbol</th><th>Sector</th><th>Price</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr>
-
-</table>
-
-<p><b>5</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>Symbol</th><th>Sector</th><th>Price</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr>
+</table>
+<p><b>5</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -801,46 +741,26 @@ var df2 = builder.Frame;
 df2
 ```
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>Name</th><th>Age</th><th>Score</th></thead><thead><th></th><th></th><th>(string)</th><th>(int)</th><th>(float)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Bob</td><td>25</td><td>88</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Carol</td><td>35</td><td>92.3</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>Name</th><th>Age</th><th>Score</th></thead><thead><th></th><th></th><th>(string)</th><th>(int)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Bob</td><td>25</td><td>88</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Carol</td><td>35</td><td>92.3</td></tr>
+</table>
+<p><b>3</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -1053,38 +973,22 @@ var indexed = df.IndexRows<string>("Symbol");
 display(indexed.Rows["SAP.DE"]);
 ```
 
-<div>
-
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
-
-<tr><td><b>Price</b></td><td class="no-wrap">-></td><td>175.2</td></tr>
-
-</table>
-
-<p>Series of <b>1</b> items<p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>Price</b></td><td class="no-wrap">-></td><td>175.2</td></tr>
+</table>
+<p>Series of <b>1</b> items<p><b>0</b> missing values</p>
 </div>
 
 #### Deedle – Automatic index alignment when combining Series
@@ -1109,38 +1013,22 @@ var result = s1 + s2;
 result
 ```
 
-<div>
-
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
-
-<tr><td><b>ASML</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>SAP</b></td><td class="no-wrap">-></td><td>180.2</td></tr><tr><td><b>SIE</b></td><td class="no-wrap">-></td><td>172.1</td></tr><tr><td><b>TTE</b></td><td class="no-wrap">-></td><td><missing></td></tr>
-
-</table>
-
-<p>Series of <b>4</b> items<p><b>2</b> missing values</p>
-
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>ASML</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>SAP</b></td><td class="no-wrap">-></td><td>180.2</td></tr><tr><td><b>SIE</b></td><td class="no-wrap">-></td><td>172.1</td></tr><tr><td><b>TTE</b></td><td class="no-wrap">-></td><td><missing></td></tr>
+</table>
+<p>Series of <b>4</b> items<p><b>2</b> missing values</p>
 </div>
 
 ---
@@ -1177,27 +1065,43 @@ display($"Shape: {df.Shape}");
 #### Deedle – Inspect column types of a CSV-loaded frame
 
 ```csharp
-// Deedle – inspect types of a CSV-loaded frame
+// Deedle — inspect types of a CSV-loaded frame as a summary Frame
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 display($"Shape: {df.RowCount} x {df.ColumnCount}");
-foreach (var (name, type) in df.ColumnKeys.Zip(df.ColumnTypes))
-    Console.WriteLine($"  {name,-10} : {type.Name}");
+
+var colNames = df.ColumnKeys.ToArray();
+var colTypes = df.ColumnTypes.Select(t => t.Name).ToArray();
+var idx = Enumerable.Range(0, colNames.Length).ToArray();
+
+var fb = new FrameBuilder.Columns<int, string>();
+fb.Add("column", new Series<int, string>(idx, colNames));
+fb.Add("type", new Series<int, string>(idx, colTypes));
+fb.Frame
 ```
 
     Shape: 66355 x 12
 
-      id         : Int32
-      symbol     : String
-      date       : DateTime
-      open       : Decimal
-      high       : Decimal
-      low        : Decimal
-      close      : Decimal
-      adj_close  : Decimal
-      volume     : Int32
-      dividends  : Decimal
-      stock_splits : Decimal
-      is_filled  : Boolean
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>column</th><th>type</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>id</td><td>Int32</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>symbol</td><td>String</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>date</td><td>DateTime</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>open</td><td>Decimal</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>high</td><td>Decimal</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>adj_close</td><td>Decimal</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>volume</td><td>Int32</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>dividends</td><td>Decimal</td></tr><tr><td><b>10</b></td><td class="no-wrap">-></td><td>stock_splits</td><td>Decimal</td></tr><tr><td><b>11</b></td><td class="no-wrap">-></td><td>is_filled</td><td>Boolean</td></tr>
+</table>
+<p><b>12</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+</div>
 
 ---
 #### Polars.NET – Cast column types with expressions
@@ -1256,16 +1160,17 @@ var numeric = s.Cast(DataType.Int32);
 numeric
 ```
 
-<pre style='font-size:14px'>shape: (3, 1)
-┌───────┐
-│ mixed │
-│ ---   │
-│ i32   │
-╞═══════╡
-│ 1     │
-│ null  │
-│ 3     │
-└───────┘</pre>
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>mixed<span class='pl-dtype'>int32</span></th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr></tbody></table></div>
 
 ---
 ## 5 – Loading Real Data
@@ -1273,22 +1178,44 @@ numeric
 #### Polars.NET – Load data from CSV, Parquet, and JSON
 
 ```csharp
-// Polars.NET – load from CSV, Parquet, JSON
-var csvDf     = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
-                    tryParseDates: true);
+// Polars.NET — load from CSV, Parquet, JSON — compare shapes
+var csvDf     = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var parquetDf = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 var jsonDf    = DataFrame.ReadJson(Path.Combine(DATA, "eurostoxx50_ohlcv.json"));
 
-display($"CSV:     {csvDf.Shape}");
-display($"Parquet: {parquetDf.Shape}");
-display($"JSON:    {jsonDf.Shape}");
+new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("format", new[] { "CSV", "Parquet", "JSON" }),
+    Polars.CSharp.Series.From("rows", new[] { csvDf.Height, parquetDf.Height, jsonDf.Height }),
+    Polars.CSharp.Series.From("cols", new[] { csvDf.Width, parquetDf.Width, jsonDf.Width })
+})
 ```
 
-    CSV:     (66355, 12)
-
-    Parquet: (66355, 12)
-
-    JSON:    (66355, 12)
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>format<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>int64</span></th><th>cols<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>CSV</td><td>66355</td><td>12</td></tr><tr><td>Parquet</td><td>66355</td><td>12</td></tr><tr><td>JSON</td><td>66355</td><td>12</td></tr></tbody></table></div>
 
 #### Deedle – Load data from CSV (Parquet and JSON not supported)
 
@@ -1435,26 +1362,49 @@ ohlcv.Describe()
 </style><div class='pl-dim'>Polars DataFrame: <b>(9 rows, 10 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>statistic<span class='pl-dtype'>utf8view</span></th><th>id<span class='pl-dtype'>double</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>double</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>25%</td><td>16590</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991</td><td>0</td><td>0</td></tr><tr><td>50%</td><td>33178</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td></tr><tr><td>75%</td><td>49767</td><td>186</td><td>188</td><td>184</td><td>186.1</td><td>175.2609</td><td>4089463</td><td>0</td><td>0</td></tr><tr><td>max</td><td>66930</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td></tr></tbody></table></div>
 
 ```csharp
-// Null counts per column
-foreach (var col in ohlcv.Columns)
+// Null counts per column — use scores_daily which has real nulls
+var scoresNulls = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"), tryParseDates: true);
+var ncCols = scoresNulls.Columns.ToArray();
+var ncNames = new List<string>();
+var ncCounts = new List<long>();
+foreach (var col in ncCols)
 {
-    var series = ohlcv.Column(col);
-    Console.WriteLine($"  {col,-20} {series.NullCount}");
+    var nc = scoresNulls.Column(col).NullCount;
+    if (nc > 0) { ncNames.Add(col); ncCounts.Add(nc); }
 }
+
+new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("column", ncNames.ToArray()),
+    Polars.CSharp.Series.From("null_count", ncCounts.ToArray())
+})
 ```
 
-      id                   0
-      symbol               0
-      date                 0
-      open                 0
-      high                 0
-      low                  0
-      close                0
-      adj_close            0
-      volume               0
-      dividends            0
-      stock_splits         0
-      is_filled            0
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>column<span class='pl-dtype'>utf8view</span></th><th>null_count<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table></div>
 
 ```csharp
 // Estimated memory size (sum of column byte sizes)
@@ -1487,90 +1437,50 @@ display(FrameModule.TakeLast(3, ohlcv));
 
     First 3 rows:
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
+</table>
+<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
     Last 3 rows:
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-
-<tr><td><b>66352</b></td><td class="no-wrap">-></td><td>66876</td><td>WKL.AS</td><td>10-Mar-26 0:00:00</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66353</b></td><td class="no-wrap">-></td><td>66877</td><td>WKL.AS</td><td>11-Mar-26 0:00:00</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66354</b></td><td class="no-wrap">-></td><td>66929</td><td>WKL.AS</td><td>12-Mar-26 0:00:00</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
+<tr><td><b>66352</b></td><td class="no-wrap">-></td><td>66876</td><td>WKL.AS</td><td>10-Mar-26 0:00:00</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66353</b></td><td class="no-wrap">-></td><td>66877</td><td>WKL.AS</td><td>11-Mar-26 0:00:00</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66354</b></td><td class="no-wrap">-></td><td>66929</td><td>WKL.AS</td><td>12-Mar-26 0:00:00</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>False</td></tr>
+</table>
+<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -1597,46 +1507,26 @@ foreach (var (name, type) in ohlcv.ColumnKeys.Zip(ohlcv.ColumnTypes))
 ohlcv.Describe()
 ```
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(float)</th><th>(obj)</th><th>(obj)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(obj)</th></thead>
-
-<tr><td><b>unique</b></td><td class="no-wrap">-></td><td>66355</td><td><missing></td><td><missing></td><td>29671</td><td>31651</td><td>31695</td><td>31505</td><td>57739</td><td>65199</td><td>216</td><td>6</td><td><missing></td></tr><tr><td><b>mean</b></td><td class="no-wrap">-></td><td>33179.733102253034</td><td><missing></td><td><missing></td><td>197.0405202155085</td><td>199.36412400874195</td><td>194.5857815793841</td><td>197.0349003767613</td><td>190.49490887499087</td><td>5942123.6909501925</td><td>0.011756673860296897</td><td>0.000172032682241534</td><td><missing></td></tr><tr><td><b>std</b></td><td class="no-wrap">-></td><td>19158.201385287863</td><td><missing></td><td><missing></td><td>363.15048392741073</td><td>367.8738291376105</td><td>358.0116429653695</td><td>363.0520470243152</td><td>359.6353011698428</td><td>16156185.534944274</td><td>0.28314188424599934</td><td>0.022716281632449882</td><td><missing></td></tr><tr><td><b>min</b></td><td class="no-wrap">-></td><td>1</td><td><missing></td><td><missing></td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.25</b></td><td class="no-wrap">-></td><td>16589.5</td><td><missing></td><td><missing></td><td>29.789949999999997</td><td>30.09</td><td>29.47</td><td>29.78745</td><td>28.1434</td><td>509985.5</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.5</b></td><td class="no-wrap">-></td><td>33178</td><td><missing></td><td><missing></td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.75</b></td><td class="no-wrap">-></td><td>49766.5</td><td><missing></td><td><missing></td><td>185.99</td><td>188</td><td>184</td><td>186.1</td><td>175.2539</td><td>4089299</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>max</b></td><td class="no-wrap">-></td><td>66930</td><td><missing></td><td><missing></td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td><td><missing></td></tr>
-
-</table>
-
-<p><b>8</b> rows x <b>12</b> columns</p><p><b>24</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(float)</th><th>(obj)</th><th>(obj)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(obj)</th></thead>
+<tr><td><b>unique</b></td><td class="no-wrap">-></td><td>66355</td><td><missing></td><td><missing></td><td>29671</td><td>31651</td><td>31695</td><td>31505</td><td>57739</td><td>65199</td><td>216</td><td>6</td><td><missing></td></tr><tr><td><b>mean</b></td><td class="no-wrap">-></td><td>33179.733102253034</td><td><missing></td><td><missing></td><td>197.0405202155085</td><td>199.36412400874195</td><td>194.5857815793841</td><td>197.0349003767613</td><td>190.49490887499087</td><td>5942123.6909501925</td><td>0.011756673860296897</td><td>0.000172032682241534</td><td><missing></td></tr><tr><td><b>std</b></td><td class="no-wrap">-></td><td>19158.201385287863</td><td><missing></td><td><missing></td><td>363.15048392741073</td><td>367.8738291376105</td><td>358.0116429653695</td><td>363.0520470243152</td><td>359.6353011698428</td><td>16156185.534944274</td><td>0.28314188424599934</td><td>0.022716281632449882</td><td><missing></td></tr><tr><td><b>min</b></td><td class="no-wrap">-></td><td>1</td><td><missing></td><td><missing></td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.25</b></td><td class="no-wrap">-></td><td>16589.5</td><td><missing></td><td><missing></td><td>29.789949999999997</td><td>30.09</td><td>29.47</td><td>29.78745</td><td>28.1434</td><td>509985.5</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.5</b></td><td class="no-wrap">-></td><td>33178</td><td><missing></td><td><missing></td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.75</b></td><td class="no-wrap">-></td><td>49766.5</td><td><missing></td><td><missing></td><td>185.99</td><td>188</td><td>184</td><td>186.1</td><td>175.2539</td><td>4089299</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>max</b></td><td class="no-wrap">-></td><td>66930</td><td><missing></td><td><missing></td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td><td><missing></td></tr>
+</table>
+<p><b>8</b> rows x <b>12</b> columns</p><p><b>24</b> missing values</p>
 </div>
 
 ---
@@ -1669,34 +1559,78 @@ Both libraries define a `Series` type. When both `using Polars.CSharp` and `usin
 - The compiler usually resolves correctly (Polars = non-generic, Deedle = generic)
 
 ```csharp
-// Polars.NET — to_list / to .NET types
+// Polars.NET — extract values to .NET types
 var s = Polars.CSharp.Series.From("x", new[] { 1, 2, 3 });
-display($"Value at [0]: {s.GetValue<int>(0)}");
-display($"DataType: {s.DataTypeName}");
+
+// Series metadata as DataFrame
+display(new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("property", new[] { "Name", "Length", "DataType", "Value[0]" }),
+    Polars.CSharp.Series.From("value", new[] { s.Name, s.Length.ToString(), s.DataTypeName, s.GetValue<int>(0).ToString() })
+}));
 
 // Converting to .NET array
 var arr = s.ToArray<int>();
 display($"As int[]: [{string.Join(", ", arr)}]");
 
-// Iterate rows of a DataFrame
+// DataFrame row iteration
 var df = DataFrame.FromColumns(new { A = new[] { 1, 2, 3 }, B = new[] { "x", "y", "z" } });
-var colNames = df.ColumnNames.ToArray();
-for (int i = 0; i < (int)df.Height; i++)
-{
-    var pairs = colNames.Select(c => $"{c}={df[c].GetValue<object>(i)}");
-    Console.WriteLine(string.Join(", ", pairs));
-}
+df
 ```
 
-    Value at [0]: 1
-
-    DataType: i32
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(4 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>property<span class='pl-dtype'>utf8view</span></th><th>value<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>Name</td><td>x</td></tr><tr><td>Length</td><td>3</td></tr><tr><td>DataType</td><td>i32</td></tr><tr><td>Value[0]</td><td>1</td></tr></tbody></table></div>
 
     As int[]: [1, 2, 3]
 
-    A=1, B=x
-    A=2, B=y
-    A=3, B=z
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>A<span class='pl-dtype'>int32</span></th><th>B<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>1</td><td>x</td></tr><tr><td>2</td><td>y</td></tr><tr><td>3</td><td>z</td></tr></tbody></table></div>
 
 #### Deedle – Extract values, keys, and index from a Series
 
@@ -1767,12 +1701,15 @@ foreach (var f in files)
     bench_medium.parquet                             57876.7
     bench_small.csv                                   4745.0
     bench_small.parquet                               2173.2
+    compression_results_cs.json                          0.8
+    compression_results.json                             5.5
     dim_country.csv                                      2.8
     dim_country.json                                    13.0
     dim_country.parquet                                  5.0
     dim_index.csv                                        0.2
     dim_index.json                                       0.6
     dim_index.parquet                                    3.5
+    duckdb_top10_export.parquet                          1.2
     eurostoxx50_ohlcv.csv                             5162.0
     eurostoxx50_ohlcv.json                           17668.3
     eurostoxx50_ohlcv.parquet                         2426.7
@@ -1951,46 +1888,26 @@ FrameModule.Take(3, df)
 
     Shape: 66355 x 12
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
+</table>
+<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -2206,6 +2123,7 @@ foreach (var file in parquetFiles)
 
       dim_country.parquet                      (212, 2)
       dim_index.parquet                        (4, 5)
+      duckdb_top10_export.parquet              (10, 4)
       eurostoxx50_ohlcv.parquet                (66355, 12)
       index_dim.parquet                        (169, 26)
       index_performance.parquet                (5281, 15)
@@ -2256,28 +2174,55 @@ df.PrintSchema();
 Specify which strings should be interpreted as null.
 
 ```csharp
-// Polars.NET — custom null values
-var df = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
+// Polars.NET — custom null values (scores_daily has real nulls)
+var dfNulls = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"),
     nullValues: new[] { "", "NA", "N/A", "#N/A", "-", "null" },
     tryParseDates: true);
 
-// NullCount is on Series, not DataFrame — iterate columns
-foreach (var col in df.ColumnNames)
-    Console.WriteLine($"  {col,-20} {df[col].NullCount}");
+// Build a null-count summary DataFrame (only columns with nulls)
+var ncNames = new List<string>();
+var ncCounts = new List<long>();
+foreach (var col in dfNulls.Columns)
+{
+    var nc = dfNulls.Column(col).NullCount;
+    if (nc > 0) { ncNames.Add(col); ncCounts.Add(nc); }
+}
+
+display($"scores_daily: {dfNulls.Shape} — {ncNames.Count} columns with nulls");
+new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("column", ncNames.ToArray()),
+    Polars.CSharp.Series.From("null_count", ncCounts.ToArray())
+})
 ```
 
-      id                   0
-      symbol               0
-      date                 0
-      open                 0
-      high                 0
-      low                  0
-      close                0
-      adj_close            0
-      volume               0
-      dividends            0
-      stock_splits         0
-      is_filled            0
+    scores_daily: (466, 36) — 5 columns with nulls
+
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>column<span class='pl-dtype'>utf8view</span></th><th>null_count<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table></div>
 
 #### Polars.NET – Use custom column separators and delimiters
 
@@ -2362,46 +2307,26 @@ dfTsv.Rows[Enumerable.Range(0, 3)]
 
     TSV: 212 rows x 2 cols
 
-<div>
-
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
-
-<thead><th></th><th></th><th>country_name</th><th>iso_alpha2</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Afghanistan</td><td>AF</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Albania</td><td>AL</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Algeria</td><td>DZ</td></tr>
-
-</table>
-
-<p><b>3</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
-
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>country_name</th><th>iso_alpha2</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Afghanistan</td><td>AF</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Albania</td><td>AL</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Algeria</td><td>DZ</td></tr>
+</table>
+<p><b>3</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -2476,7 +2401,7 @@ sw.Stop();
 display($"Eager: {eager.Height} rows in {sw.ElapsedMilliseconds} ms");
 ```
 
-    Eager: 1331 rows in 5 ms
+    Eager: 1331 rows in 6 ms
 
 ```csharp
 // Lazy: builds a query plan, optimizes, then reads only what's needed
@@ -2515,34 +2440,62 @@ Console.WriteLine(plan);
 #### Polars.NET – Compare file sizes across CSV, JSON, and Parquet formats
 
 ```csharp
-// Compare file sizes across formats for the main dataset
+// Compare file sizes across formats as a Polars DataFrame
 var baseName = "eurostoxx50_ohlcv";
 var formats = new[] { "csv", "json", "parquet" };
+var fmtNames = new List<string>();
+var fmtSizes = new List<double>();
 
-Console.WriteLine($"{"Format",-10} {"Size (KB)",10}");
-Console.WriteLine(new string('-', 22));
 foreach (var fmt in formats)
 {
     var path = Path.Combine(DATA, $"{baseName}.{fmt}");
     if (File.Exists(path))
     {
-        var sizeKB = new FileInfo(path).Length / 1024.0;
-        Console.WriteLine($"{fmt,-10} {sizeKB,10:F1}");
+        fmtNames.Add(fmt);
+        fmtSizes.Add(Math.Round(new FileInfo(path).Length / 1024.0, 1));
     }
 }
+
+new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("format", fmtNames.ToArray()),
+    Polars.CSharp.Series.From("size_kb", fmtSizes.ToArray())
+})
 ```
 
-    Format      Size (KB)
-    ----------------------
-    csv            5162.0
-    json          17668.3
-    parquet        2426.7
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>format<span class='pl-dtype'>utf8view</span></th><th>size_kb<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>csv</td><td>5162</td></tr><tr><td>json</td><td>17668.3</td></tr><tr><td>parquet</td><td>2426.7</td></tr></tbody></table></div>
 
 #### Polars.NET – Benchmark read performance across formats
 
 ```csharp
-// Read performance comparison (Polars.NET)
+// Read performance comparison (Polars.NET) as a DataFrame
 var path = Path.Combine(DATA, "eurostoxx50_ohlcv");
+var benchFormats = new List<string>();
+var benchTimes = new List<double>();
 
 foreach (var (label, action) in new (string, Func<DataFrame>)[]
 {
@@ -2552,15 +2505,44 @@ foreach (var (label, action) in new (string, Func<DataFrame>)[]
 })
 {
     var sw = System.Diagnostics.Stopwatch.StartNew();
-    for (int i = 0; i < 5; i++) { var _ = action(); }
+    for (int j = 0; j < 5; j++) { var _ = action(); }
     sw.Stop();
-    Console.WriteLine($"{label,-10} avg: {sw.ElapsedMilliseconds / 5.0:F1} ms");
+    benchFormats.Add(label);
+    benchTimes.Add(Math.Round(sw.ElapsedMilliseconds / 5.0, 1));
 }
+
+new DataFrame(new Polars.CSharp.Series[]
+{
+    Polars.CSharp.Series.From("format", benchFormats.ToArray()),
+    Polars.CSharp.Series.From("avg_ms", benchTimes.ToArray())
+})
 ```
 
-    CSV        avg: 4.8 ms
-    JSON       avg: 48.2 ms
-    Parquet    avg: 3.8 ms
+<style>
+.pl-dataframe, .pl-dataframe * {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: var(--vscode-editor-foreground, inherit) !important;
+}
+.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
+.pl-dataframe td, .pl-dataframe th {
+    padding: 6px 12px !important;
+    text-align: left;
+    border: 1px solid var(--vscode-panel-border, #555) !important;
+}
+.pl-dataframe th { font-weight: bold; }
+.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
+</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>format<span class='pl-dtype'>utf8view</span></th><th>avg_ms<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>CSV</td><td>5.2</td></tr><tr><td>JSON</td><td>41.8</td></tr><tr><td>Parquet</td><td>4</td></tr></tbody></table></div>
 
 ---
 ## 10 – Gotchas & Tips
