@@ -38,7 +38,7 @@ if (outputEl) {{
 <script>window.addEventListener("load", function() {
   window.dispatchEvent(new Event("resize"));
   document.querySelectorAll(".js-plotly-plot").forEach(function(gd) {
-    Plotly.relayout(gd, {autosize: true, width: null});
+    Plotly.relayout(gd, {autosize: true});
   });
 });</script>
 </body></html>
