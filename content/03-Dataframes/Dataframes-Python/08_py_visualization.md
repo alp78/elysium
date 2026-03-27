@@ -112,7 +112,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_01.png)
 
 ### 1.2 Multi-Series
 
@@ -128,7 +128,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_02.png)
 
 ### 1.3 Line Styles & Markers
 
@@ -145,7 +145,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_03.png)
 
 ### 1.4 Fill Between
 
@@ -160,7 +160,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_04.png)
 
 ### 1.5 Dual Y-Axis
 
@@ -179,7 +179,7 @@ fig.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 2 Axes>
+![chart](/static/img/df_py_08/viz_05.png)
 
 ## 2. Bar Charts
 
@@ -198,7 +198,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_06.png)
 
 ### 2.2 Vertical Bar
 
@@ -211,7 +211,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_07.png)
 
 ### 2.3 Grouped Bar
 
@@ -226,7 +226,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_08.png)
 
 ### 2.4 Stacked Bar
 
@@ -239,7 +239,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_09.png)
 
 ### 2.5 Bar with Error Bars
 
@@ -253,7 +253,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_10.png)
 
 ## 3. Histograms
 
@@ -272,7 +272,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_11.png)
 
 ### 3.2 Overlaid Histograms
 
@@ -288,7 +288,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_12.png)
 
 ### 3.3 Histogram + KDE
 
@@ -303,7 +303,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_13.png)
 
 ### 3.4 2D Histogram (hexbin)
 
@@ -320,7 +320,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x600 with 2 Axes>
+![chart](/static/img/df_py_08/viz_14.png)
 
 ## 4. Scatter Plots
 
@@ -339,7 +339,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x600 with 1 Axes>
+![chart](/static/img/df_py_08/viz_15.png)
 
 ### 4.2 Color-Mapped Scatter
 
@@ -356,7 +356,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x600 with 2 Axes>
+![chart](/static/img/df_py_08/viz_16.png)
 
 ### 4.3 Bubble Chart (size + color)
 
@@ -374,7 +374,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x600 with 2 Axes>
+![chart](/static/img/df_py_08/viz_17.png)
 
 ## 5. Area Charts
 
@@ -393,7 +393,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_18.png)
 
 ### 5.2 Stacked Area
 
@@ -407,7 +407,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_19.png)
 
 ## 6. Pie & Donut
 
@@ -435,7 +435,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x800 with 1 Axes>
+![chart](/static/img/df_py_08/viz_20.png)
 
 ### 6.2 Donut Chart
 
@@ -457,7 +457,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x800 with 1 Axes>
+![chart](/static/img/df_py_08/viz_21.png)
 
 ## 7. Seaborn — Statistical Plots
 
@@ -486,7 +486,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_22.png)
 
 ### 7.2 Violin Plot
 
@@ -507,7 +507,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_23.png)
 
 ### 7.3 Strip Plot
 
@@ -528,7 +528,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_24.png)
 
 ### 7.4 Swarm Plot
 
@@ -549,7 +549,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_25.png)
 
 ### 7.5 Heatmap
 
@@ -573,7 +573,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1200x1000 with 2 Axes>
+![chart](/static/img/df_py_08/viz_26.png)
 
 ### 7.6 Clustermap (hierarchical clustering)
 
@@ -593,7 +593,7 @@ g.fig.suptitle("Clustered Correlation Matrix", y=1.02)
 plt.show()
 ```
 
-    <Figure size 1200x1000 with 4 Axes>
+![chart](/static/img/df_py_08/viz_27.png)
 
 ### 7.7 Pair Plot
 
@@ -614,7 +614,7 @@ g.fig.suptitle("Pair Plot: Scores by Sector", y=1.02)
 plt.show()
 ```
 
-    <Figure size 972.25x750 with 12 Axes>
+![chart](/static/img/df_py_08/viz_28.png)
 
 ### 7.8 Joint Plot
 
@@ -634,7 +634,7 @@ g.fig.suptitle("Joint Plot: Momentum vs Value", y=1.02)
 plt.show()
 ```
 
-    <Figure size 700x700 with 3 Axes>
+![chart](/static/img/df_py_08/viz_29.png)
 
 ### 7.9 KDE Plot
 
@@ -658,7 +658,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_30.png)
 
 ### 7.10 Regression Plot
 
@@ -680,7 +680,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x600 with 1 Axes>
+![chart](/static/img/df_py_08/viz_31.png)
 
 ### 7.11 Residual Plot
 
@@ -702,7 +702,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 800x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_32.png)
 
 ### 7.12 Count Plot
 
@@ -721,7 +721,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_33.png)
 
 ### 7.13 ECDF (Empirical CDF)
 
@@ -742,7 +742,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_34.png)
 
 ### 7.14 Rug Plot
 
@@ -763,7 +763,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x300 with 1 Axes>
+![chart](/static/img/df_py_08/viz_35.png)
 
 ## 8. Matplotlib — Advanced
 
@@ -790,7 +790,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1200x800 with 4 Axes>
+![chart](/static/img/df_py_08/viz_36.png)
 
 ### 8.2 Step Plot
 
@@ -809,7 +809,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_37.png)
 
 ### 8.3 Stem Plot
 
@@ -830,7 +830,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_38.png)
 
 ### 8.4 Stackplot (matplotlib native)
 
@@ -847,7 +847,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_39.png)
 
 ### 8.5 Polar / Radar Chart
 
@@ -877,7 +877,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 600x600 with 1 Axes>
+![chart](/static/img/df_py_08/viz_40.png)
 
 ### 8.6 Error Bar Plot
 
@@ -900,7 +900,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x500 with 1 Axes>
+![chart](/static/img/df_py_08/viz_41.png)
 
 ### 8.7 Annotations & Text
 
@@ -929,7 +929,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_42.png)
 
 ## 9. Polars to Pandas for Plotting
 
@@ -942,7 +942,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-    <Figure size 1000x400 with 1 Axes>
+![chart](/static/img/df_py_08/viz_43.png)
 
 ## Matplotlib / Seaborn Summary
 
