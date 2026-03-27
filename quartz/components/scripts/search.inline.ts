@@ -53,7 +53,7 @@ async function loadSearchIndex(): Promise<void> {
 const p = new DOMParser()
 const fetchContentCache: Map<FullSlug, Element[]> = new Map()
 const contextWindowWords = 30
-const numSearchResults = 15
+const numSearchResults = 30
 const numTagResults = 5
 
 const tokenizeTerm = (term: string) => {
@@ -516,47 +516,7 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     // Classify relevance by relative BM25 score
     const classified = classifyResults(rawResults)
 
-    // Deduplicate: if multiple sections of the same page appear,
-    // prefer the one whose TITLE best matches the search terms (heading match > text match)
-    const terms = currentSearchTerm
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((t) => t.length > 0)
-
-    const pageMap = new Map<string, (typeof classified)[0]>()
-    for (const r of classified) {
-      const sectionSlug: string = r.slug ?? ""
-      const pageSlug = sectionSlug.includes("#") ? sectionSlug.split("#")[0] : sectionSlug
-
-      const existing = pageMap.get(pageSlug)
-      if (!existing) {
-        pageMap.set(pageSlug, r)
-        continue
-      }
-
-      // Count how many search terms appear in this section's title
-      const titleLower = (r.title ?? "").toLowerCase()
-      const existingTitleLower = (existing.title ?? "").toLowerCase()
-      const titleHits = terms.filter((t) => titleLower.includes(t)).length
-      const existingTitleHits = terms.filter((t) => existingTitleLower.includes(t)).length
-
-      if (titleHits > existingTitleHits) {
-        // More search terms in the title → better match
-        pageMap.set(pageSlug, r)
-      } else if (titleHits === existingTitleHits && titleHits > 0) {
-        // Same number of title hits → prefer shorter title (more specific heading)
-        if (titleLower.length < existingTitleLower.length) {
-          pageMap.set(pageSlug, r)
-        }
-      } else if (titleHits === 0 && existingTitleHits === 0 && r.score > existing.score) {
-        // No title hits for either → fall back to BM25 score
-        pageMap.set(pageSlug, r)
-      }
-    }
-    const deduped = [...pageMap.values()]
-
-    const finalResults = deduped.map((r) => formatResult(currentSearchTerm, r))
+    const finalResults = classified.map((r) => formatResult(currentSearchTerm, r))
     await displayResults(finalResults)
   }
 
