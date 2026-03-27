@@ -9,11 +9,12 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - Series, DataFrames, indexes, data types
 keywords: [Series, DataFrame, Index, dtypes, int64, float64, object, category, read_csv, read_parquet, to_csv, to_parquet]
-description: "Pandas vs Polars reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[01_cs_foundations_io]]"
   - "[[programming-languages-index]]"
-  - "[[02_explore_select_filter]]"
+  - "[[02_py_explore_select_filter]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

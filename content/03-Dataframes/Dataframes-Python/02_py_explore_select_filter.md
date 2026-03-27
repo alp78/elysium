@@ -9,12 +9,13 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - head, tail, describe, info, select, filter, isin, where
 keywords: [head, tail, describe, info, shape, dtypes, select, filter, isin, between, query, loc, iloc]
-description: "Pandas vs Polars reference 02/10 — Explore, Select & Filter (head/tail, describe, column selection, row filtering). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 02/10 — Explore, Select & Filter (head/tail, describe, column selection, row filtering). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[02_cs_explore_select_filter]]"
   - "[[programming-languages-index]]"
-  - "[[01_foundations_io]]"
-  - "[[03_transforms_expressions_chaining]]"
+  - "[[01_py_foundations_io]]"
+  - "[[03_py_transforms_expressions_chaining]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

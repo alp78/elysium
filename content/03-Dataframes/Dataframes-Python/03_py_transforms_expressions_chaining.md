@@ -9,12 +9,13 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - with_columns, assign, apply, map, when/then, method chaining
 keywords: [with_columns, assign, apply, map_elements, when, then, otherwise, pipe, method chaining, expressions]
-description: "Pandas vs Polars reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[03_cs_transforms_expressions_chaining]]"
   - "[[programming-languages-index]]"
-  - "[[02_explore_select_filter]]"
-  - "[[04_missing_strings_datetime]]"
+  - "[[02_py_explore_select_filter]]"
+  - "[[04_py_missing_strings_datetime]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

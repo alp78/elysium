@@ -9,12 +9,13 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - lazy evaluation, query plan, collect, benchmarks
 keywords: [lazy, collect, scan_parquet, scan_csv, query plan, optimization, predicate pushdown, projection pushdown, benchmark]
-description: "Pandas vs Polars reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[06_cs_lazy_performance]]"
   - "[[programming-languages-index]]"
-  - "[[05_aggregation_reshaping]]"
-  - "[[07_types_interop]]"
+  - "[[05_py_aggregation_reshaping]]"
+  - "[[07_py_types_interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

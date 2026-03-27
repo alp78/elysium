@@ -9,12 +9,13 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - groupby, agg, window functions, join, concat, pivot, melt
 keywords: [groupby, agg, over, rolling, shift, join, merge, concat, pivot, melt, explode, window functions]
-description: "Pandas vs Polars reference 05/10 — Aggregation & Reshaping (groupby, agg, window functions, joins, pivot, melt). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 05/10 — Aggregation & Reshaping (groupby, agg, window functions, joins, pivot, melt). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[05_cs_aggregation_reshaping]]"
   - "[[programming-languages-index]]"
-  - "[[04_missing_strings_datetime]]"
-  - "[[06_lazy_performance]]"
+  - "[[04_py_missing_strings_datetime]]"
+  - "[[06_py_lazy_performance]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

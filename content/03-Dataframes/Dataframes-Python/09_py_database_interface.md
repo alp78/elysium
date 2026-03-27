@@ -9,12 +9,13 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - SQLContext, DuckDB, SQL Server, database queries
 keywords: [SQLContext, DuckDB, pyodbc, sqlalchemy, read_database, SQL, register, execute]
-description: "Pandas vs Polars reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[09_cs_database_interface]]"
   - "[[programming-languages-index]]"
-  - "[[08_visualization]]"
-  - "[[10_testing_migration]]"
+  - "[[08_py_visualization]]"
+  - "[[10_py_testing_migration]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

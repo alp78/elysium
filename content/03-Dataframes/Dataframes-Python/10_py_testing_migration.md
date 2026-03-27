@@ -9,11 +9,12 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - end-to-end project, validation, migration guide
 keywords: [pytest, assert_frame_equal, testing, validation, migration, pandas to polars, refactor]
-description: "Pandas vs Polars reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
+description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
 related:
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
+  - "[[10_cs_testing_migration]]"
   - "[[programming-languages-index]]"
-  - "[[09_database_interface]]"
+  - "[[09_py_database_interface]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -178,7 +179,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![Chart](/static/pandas-polars/test_img_01.png)
+    <Figure size 1000x500 with 1 Axes>
 
 ---
 # Part 2: Testing & Debugging

@@ -24,7 +24,7 @@ status: complete
 |---|---------|-------------|-------|
 | 01 | **Shell** | Text processing (grep/awk/sed), file ops, scripting, processes, networking | [[shell-index]] |
 | 02 | **Programming Languages** | Python and C# paired references (19 topics), comparison tables | [[programming-languages-index]] |
-| 03 | **Pandas vs Polars** | Side-by-side DataFrame reference (10 topics), executable examples | [[pandas-polars-index]] |
+| 03 | **DataFrames** | Paired Python (Pandas/Polars) and C# (Polars.NET) DataFrame references (10 topics) | [[dataframes-index]] |
 | 04 | **SQL Server** | Administration, T-SQL, storage, performance, concurrency, security, HA | [[sql-server-index]] |
 | 05 | **DB Queries** | SQL Server, BigQuery, Firestore — executable query reference with outputs | [[db-queries-index]] |
 

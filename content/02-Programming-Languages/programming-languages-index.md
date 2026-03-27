@@ -9,7 +9,7 @@ description: "Index for the Programming Languages section — paired Python and 
 related:
   - "[[index|Elysium]]"
   - "[[sql-python-csharp-transforms]]"
-  - "[[pandas-polars-index]]"
+  - "[[dataframes-index]]"
 created: 2026-03-22
 updated: 2026-03-23
 status: complete
