@@ -1156,7 +1156,7 @@ Plotly.NET.CSharp.Chart.Combine(new[] {
     Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/ser_01.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/ser_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### File size comparison — 100K records
 
@@ -1177,7 +1177,7 @@ Plotly.NET.CSharp.Chart.Bar<double, string, string>(
     Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
 
-<iframe src="/static/plotly/ser_02.html" width="100%" height="500" style="border:none; border-radius:8px;" loading="lazy"></iframe>
+<iframe src="/static/plotly/ser_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### Recommendation matrix
 

@@ -77,8 +77,6 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 
-#### NuGet packages and type declarations
-
 #### Imports and test attribute stubs
 
 ```csharp
@@ -1171,8 +1169,6 @@ void AssertTest(string name, bool condition)
 Console.WriteLine("  DB connection ready.");
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.SqlClient, 7.0.0</span></li></ul></div></div>
-
       DB connection ready.
 
 #### Schema validation tests
@@ -1426,8 +1422,6 @@ class PipelineRunner : IPipelineRunner
     public void Run() => Console.WriteLine($"    Running with {_data.GetPrice("SAP")}");
 }
 ```
-
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Extensions.DependencyInjection, 10.0.5</span></li></ul></div></div>
 
         Running with SAP: 100.00
       PASS: IPipelineRunner resolved and ran successfully

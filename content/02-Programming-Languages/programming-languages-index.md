@@ -5,7 +5,7 @@ technology: [python, csharp, dotnet]
 tags: [python, csharp]
 aliases: [Programming Languages Index, Language Reference, Python Reference, C# Reference]
 keywords: [programming languages, python, csharp, c sharp, dotnet, language reference, code examples, jupyter notebooks, executable examples, side-by-side comparison]
-description: "Index for the Programming Languages section — paired Python and C# references covering 19 topics from basics to design patterns, each with executable examples and cell outputs."
+description: "Index for the Programming Languages section — paired Python and C# references covering 21 topics from basics to security operations, each with executable examples and cell outputs."
 related:
   - "[[index|Elysium]]"
   - "[[sql-python-csharp-transforms]]"
@@ -17,7 +17,7 @@ status: complete
 
 # Programming Languages
 
-Paired Python and C# references covering 19 topics. Each note was converted from an executed Jupyter notebook with cell outputs preserved — you see both the code and its result. Every Python topic has a C# counterpart covering the same concepts in that language.
+Paired Python and C# references covering 21 topics. Each note was converted from an executed Jupyter notebook with cell outputs preserved — you see both the code and its result. Every Python topic has a C# counterpart covering the same concepts in that language.
 
 ## Topic Map
 
@@ -42,6 +42,8 @@ Paired Python and C# references covering 19 topics. Each note was converted from
 | 17 | GCP (BigQuery, GCS, Pub/Sub) | [[17_py_gcp|Python]] | [[17_cs_gcp|C#]] |
 | 18 | Design Patterns (singleton, factory, observer) | [[18_py_designpatterns|Python]] | [[18_cs_designpatterns|C#]] |
 | 19 | Performance & Code Quality (profiling, Big-O, linting) | [[19_py_performance_quality|Python]] | [[19_cs_performance_quality|C#]] |
+| 20 | Security Setup (GCP infrastructure, KMS, secrets, WIF) | [[20_py_security_setup|Python]] | — |
+| 21 | Security Operations (encryption, certificates, identity) | [[21_py_security_operations|Python]] | [[21_cs_security_operations|C#]] |
 
 ## How These Notes Work
 
@@ -64,9 +66,9 @@ Side-by-side language and tool comparisons.
 
 ## All Notebook Notes
 
-**Python:** [[01_py_basics]] | [[02_py_strings]] | [[03_py_control_flow]] | [[04_py_functions]] | [[05_py_collections]] | [[06_py_oop]] | [[07_py_generics_linq]] | [[08_py_errorhandling]] | [[09_py_fileio_serialization]] | [[10_py_serialization_formats]] | [[11_py_datetimemathutils]] | [[12_py_asyncconcurrency]] | [[13_py_advancedpipelines]] | [[14_py_testing]] | [[15_py_webapis]] | [[16_py_database]] | [[17_py_gcp]] | [[18_py_designpatterns]] | [[19_py_performance_quality]]
+**Python:** [[01_py_basics]] | [[02_py_strings]] | [[03_py_control_flow]] | [[04_py_functions]] | [[05_py_collections]] | [[06_py_oop]] | [[07_py_generics_linq]] | [[08_py_errorhandling]] | [[09_py_fileio_serialization]] | [[10_py_serialization_formats]] | [[11_py_datetimemathutils]] | [[12_py_asyncconcurrency]] | [[13_py_advancedpipelines]] | [[14_py_testing]] | [[15_py_webapis]] | [[16_py_database]] | [[17_py_gcp]] | [[18_py_designpatterns]] | [[19_py_performance_quality]] | [[20_py_security_setup]] | [[21_py_security_operations]]
 
-**C#:** [[01_cs_basics]] | [[02_cs_strings]] | [[03_cs_control_flow]] | [[04_cs_functions]] | [[05_cs_collections]] | [[06_cs_oop]] | [[07_cs_generics_linq]] | [[08_cs_errorhandling]] | [[09_cs_fileio_serialization]] | [[10_cs_serialization_formats]] | [[11_cs_datetimemathutils]] | [[12_cs_asyncconcurrency]] | [[13_cs_advancedpipelines]] | [[14_cs_testing]] | [[15_cs_webapis]] | [[16_cs_database]] | [[17_cs_gcp]] | [[18_cs_designpatterns]] | [[19_cs_performance_quality]]
+**C#:** [[01_cs_basics]] | [[02_cs_strings]] | [[03_cs_control_flow]] | [[04_cs_functions]] | [[05_cs_collections]] | [[06_cs_oop]] | [[07_cs_generics_linq]] | [[08_cs_errorhandling]] | [[09_cs_fileio_serialization]] | [[10_cs_serialization_formats]] | [[11_cs_datetimemathutils]] | [[12_cs_asyncconcurrency]] | [[13_cs_advancedpipelines]] | [[14_cs_testing]] | [[15_cs_webapis]] | [[16_cs_database]] | [[17_cs_gcp]] | [[18_cs_designpatterns]] | [[19_cs_performance_quality]] | [[21_cs_security_operations]]
 
 ## Cross-References
 
