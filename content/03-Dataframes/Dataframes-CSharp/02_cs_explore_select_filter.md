@@ -15,7 +15,7 @@ related:
   - "[[programming-languages-index]]"
   - "[[02_py_explore_select_filter]]"
   - "[[01_cs_foundations_io]]"
-  - "[[03_cs_transforms_expressions_chaining]]"
+  - "[[03_cs_transforms_expressions]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

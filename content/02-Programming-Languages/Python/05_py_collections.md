@@ -53,7 +53,7 @@ print(f"nested[1][0]: {nested[1][0]}")      # 2D access: row 1, col 0
     empty:      []
     nums:       [1, 2, 3, 4, 5]
     mixed:      [1, 'hello', True, 3.14, None]
-    nested:     [[1, 2], [3, 4], [5, 6]]
+    nested:     [\[1, 2], [3, 4], [5, 6]]
     from_range: [0, 1, 2, 3, 4]
     repeated:   [0, 0, 0, 0, 0]
     nums[0]:    1
@@ -145,8 +145,8 @@ deep[0][0] = 99
 print(f"original after deep copy mutation:   {original}")   # [[1, 2], [3, 4]] — unchanged
 ```
 
-    original after shallow copy mutation: [[99, 2], [3, 4]]
-    original after deep copy mutation:   [[1, 2], [3, 4]]
+    original after shallow copy mutation: [\[99, 2], [3, 4]]
+    original after deep copy mutation:   [\[1, 2], [3, 4]]
 
 #### List as stack
 

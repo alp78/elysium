@@ -14,7 +14,7 @@ related:
   - "[[dataframes-index]]"
   - "[[programming-languages-index]]"
   - "[[04_py_missing_strings_datetime]]"
-  - "[[03_cs_transforms_expressions_chaining]]"
+  - "[[03_cs_transforms_expressions]]"
   - "[[05_cs_aggregation_reshaping]]"
 created: 2026-03-27
 updated: 2026-03-27

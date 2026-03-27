@@ -29,7 +29,7 @@ Paired Python and C# DataFrame references covering 10 topics. Each note was conv
 |---|-------|--------|------|
 | 01 | Foundations & I/O (Series, DataFrames, types, CSV/Parquet) | [[01_py_foundations_io|Python]] | [[01_cs_foundations_io|C#]] |
 | 02 | Explore, Select & Filter (head/tail, describe, where, isin) | [[02_py_explore_select_filter|Python]] | [[02_cs_explore_select_filter|C#]] |
-| 03 | Transforms, Expressions & Chaining (with_columns, when/then) | [[03_py_transforms_expressions_chaining|Python]] | [[03_cs_transforms_expressions_chaining|C#]] |
+| 03 | Transforms, Expressions & Chaining (with_columns, when/then) | [[03_py_transforms_expressions|Python]] | [[03_cs_transforms_expressions|C#]] |
 | 04 | Missing Data, Strings & DateTime (nulls, .str, .dt, timezones) | [[04_py_missing_strings_datetime|Python]] | [[04_cs_missing_strings_datetime|C#]] |
 | 05 | Aggregation & Reshaping (groupby, windows, joins, pivot, melt) | [[05_py_aggregation_reshaping|Python]] | [[05_cs_aggregation_reshaping|C#]] |
 | 06 | Lazy API & Performance (lazy/collect, query plan, benchmarks) | [[06_py_lazy_performance|Python]] | [[06_cs_lazy_performance|C#]] |
@@ -50,9 +50,9 @@ The Python and C# notes for each topic are tightly paired — they cover the sam
 
 ## All Notes
 
-**Python:** [[01_py_foundations_io]] | [[02_py_explore_select_filter]] | [[03_py_transforms_expressions_chaining]] | [[04_py_missing_strings_datetime]] | [[05_py_aggregation_reshaping]] | [[06_py_lazy_performance]] | [[07_py_types_interop]] | [[08_py_visualization]] | [[09_py_database_interface]] | [[10_py_testing_migration]]
+**Python:** [[01_py_foundations_io]] | [[02_py_explore_select_filter]] | [[03_py_transforms_expressions]] | [[04_py_missing_strings_datetime]] | [[05_py_aggregation_reshaping]] | [[06_py_lazy_performance]] | [[07_py_types_interop]] | [[08_py_visualization]] | [[09_py_database_interface]] | [[10_py_testing_migration]]
 
-**C#:** [[01_cs_foundations_io]] | [[02_cs_explore_select_filter]] | [[03_cs_transforms_expressions_chaining]] | [[04_cs_missing_strings_datetime]] | [[05_cs_aggregation_reshaping]] | [[06_cs_lazy_performance]] | [[07_cs_types_interop]] | [[08_cs_visualization]] | [[09_cs_database_interface]] | [[10_cs_testing_migration]]
+**C#:** [[01_cs_foundations_io]] | [[02_cs_explore_select_filter]] | [[03_cs_transforms_expressions]] | [[04_cs_missing_strings_datetime]] | [[05_cs_aggregation_reshaping]] | [[06_cs_lazy_performance]] | [[07_cs_types_interop]] | [[08_cs_visualization]] | [[09_cs_database_interface]] | [[10_cs_testing_migration]]
 
 ## Cross-References
 

@@ -12,7 +12,7 @@ keywords: [with_columns, assign, apply, map_elements, when, then, otherwise, pip
 description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
 related:
   - "[[dataframes-index]]"
-  - "[[03_cs_transforms_expressions_chaining]]"
+  - "[[03_cs_transforms_expressions]]"
   - "[[programming-languages-index]]"
   - "[[02_py_explore_select_filter]]"
   - "[[04_py_missing_strings_datetime]]"
@@ -2472,7 +2472,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Concept | Polars | Pandas Equivalent |
 |---|---|---|
 | Expression | pl.col("x") * 2 | No equivalent |
-| select | df.select(...) | df[[cols]] |
+| select | df.select(...) | df[\[cols]] |
 | with_columns | df.with_columns(...) | df.assign(...) |
 | filter | df.filter(expr) | df[condition] |
 | group_by.agg | df.group_by().agg(exprs) | df.groupby().agg() |

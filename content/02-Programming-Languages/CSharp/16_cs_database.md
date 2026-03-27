@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [Entity Framework, Dapper, SqlConnection, DbContext, LINQ to SQL, migrations, connection string, ORM]
-description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [[17_py_database]] for the Python equivalent."
+description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [[16_py_database]] for the Python equivalent."
 related:
   - "[[programming-languages-index]]"
-  - "[[17_py_database]]"
+  - "[[16_py_database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

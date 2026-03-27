@@ -130,7 +130,7 @@ print("Callable[[int], bool]  — function signature")
     set[str]               — typed set
     tuple[int, str]        — typed tuple
     Optional[str]          — str or None
-    Callable[[int], bool]  — function signature
+    Callable[\[int], bool]  — function signature
 
 ## Advanced Functional Data Processing
 
