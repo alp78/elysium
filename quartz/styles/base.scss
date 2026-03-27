@@ -5,7 +5,7 @@
 @use "./callouts.scss";
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   text-size-adjust: none;
   overflow-x: hidden;
   width: 100vw;

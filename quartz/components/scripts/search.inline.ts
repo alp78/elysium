@@ -130,8 +130,11 @@ function highlightHTML(searchTerm: string, el: HTMLElement) {
     return span
   }
 
-  const highlightTextNodes = (node: Node, term: string) => {
+  const headingTags = new Set(["H1", "H2", "H3", "H4", "H5", "H6"])
+
+  const highlightTextNodes = (node: Node, term: string, insideHeading: boolean) => {
     if (node.nodeType === Node.TEXT_NODE) {
+      if (!insideHeading) return // only highlight text inside headings
       const nodeText = node.nodeValue ?? ""
       const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
       const regex = new RegExp(`\\b${escaped}\\b`, "gi")
@@ -149,12 +152,13 @@ function highlightHTML(searchTerm: string, el: HTMLElement) {
       node.parentNode?.replaceChild(spanContainer, node)
     } else if (node.nodeType === Node.ELEMENT_NODE) {
       if ((node as HTMLElement).classList.contains("highlight")) return
-      Array.from(node.childNodes).forEach((child) => highlightTextNodes(child, term))
+      const inH = insideHeading || headingTags.has((node as HTMLElement).tagName)
+      Array.from(node.childNodes).forEach((child) => highlightTextNodes(child, term, inH))
     }
   }
 
   for (const term of tokenizedTerms) {
-    highlightTextNodes(html.body, term)
+    highlightTextNodes(html.body, term, false)
   }
 
   return html.body
