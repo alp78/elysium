@@ -336,16 +336,14 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
 
   // Attach hover events
   for (const nr of nodeRenders) {
-    let savedLabelAlpha = 0
     nr.gfx
       .on("pointerover", () => {
-        savedLabelAlpha = nr.label.alpha
         setHover(nr.sim.id)
-        nr.label.alpha = 1
+        updateLabels(currentTransform.k)
       })
       .on("pointerleave", () => {
         setHover(null)
-        nr.label.alpha = savedLabelAlpha
+        updateLabels(currentTransform.k)
       })
   }
 
@@ -409,17 +407,49 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   }
 
   // ========== Label visibility with collision avoidance ==========
+  const BASE_LABEL_SCALE = 1 / scale
+  const HOVER_LABEL_SCALE = 1.8 / scale // hovered node label is 1.8× bigger
+
   function updateLabels(zoomK: number) {
+    // Build set of connected nodes for hover
+    const connected = new Set<string>()
+    if (hoveredId) {
+      connected.add(hoveredId)
+      for (const l of graphLinks) {
+        if (l.source.id === hoveredId) connected.add(l.target.id)
+        if (l.target.id === hoveredId) connected.add(l.source.id)
+      }
+    }
+
     const sorted = [...nodeRenders].sort((a, b) => b.sim.linkCount - a.sim.linkCount)
     const placed: Array<{ x: number; y: number; w: number; h: number }> = []
     const minScreenR = 12
 
     for (const nr of sorted) {
-      if (hoveredId === nr.sim.id) {
+      const isHovered = hoveredId === nr.sim.id
+      const isConnected = hoveredId !== null && connected.has(nr.sim.id)
+
+      if (isHovered) {
+        // Hovered node: always visible, bigger and bold
         nr.label.visible = true
         nr.label.alpha = 1
+        nr.label.scale.set(HOVER_LABEL_SCALE)
+        nr.label.style.fontWeight = "700"
         continue
       }
+
+      if (isConnected) {
+        // Connected nodes: always visible at normal size
+        nr.label.visible = true
+        nr.label.alpha = 0.9
+        nr.label.scale.set(BASE_LABEL_SCALE)
+        nr.label.style.fontWeight = "400"
+        continue
+      }
+
+      // Reset scale/weight for non-hovered nodes
+      nr.label.scale.set(BASE_LABEL_SCALE)
+      nr.label.style.fontWeight = "400"
 
       const screenR = getNodeRadius(nr.sim) * zoomK
       if (screenR < minScreenR) {
@@ -430,8 +460,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       // Check collision with placed labels
       const lx = (nr.sim.x ?? 0)
       const ly = (nr.sim.y ?? 0) + getNodeRadius(nr.sim) + 4
-      const lw = (nr.label.width / zoomK) * (1 / scale)
-      const lh = (nr.label.height / zoomK) * (1 / scale)
+      const lw = (nr.label.width / zoomK) * BASE_LABEL_SCALE
+      const lh = (nr.label.height / zoomK) * BASE_LABEL_SCALE
       const bounds = { x: lx - lw / 2, y: ly, w: lw, h: lh }
 
       const collides = placed.some(
