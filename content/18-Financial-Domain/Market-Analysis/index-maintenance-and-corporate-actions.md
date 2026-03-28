@@ -19,13 +19,13 @@ A senior data engineer at a financial index provider is not just a technologist 
 
 A financial index is a *rules-based, transparent calculation* that measures the performance of a defined basket of securities. It is not a portfolio you can invest in directly — it is a benchmark against which portfolios are measured.
 
-**The three components of any index:**
+#### The three components of any index
 
 1. **Universe** — the pool of eligible securities (e.g., all Eurozone equities with free-float market cap > €4B)
 2. **Selection rules** — which securities enter/exit the index (ranking by market cap, liquidity thresholds, buffer rules)
 3. **Weighting methodology** — how much each constituent contributes to the index value
 
-**Common weighting schemes:**
+#### Common weighting schemes
 
 | Scheme | Formula | Example |
 |---|---|---|
@@ -35,7 +35,7 @@ A financial index is a *rules-based, transparent calculation* that measures the 
 | Factor weighted | Weight = Market cap × Factor score | MSCI Minimum Volatility, factor-weighted indices |
 | Capped | Market cap weighted with max weight limit (e.g., 10%) | DAX (10% cap), major European equity indices (10% cap) |
 
-**The index divisor — the key to continuity:**
+#### The index divisor — the key to continuity
 
 The divisor is the single most important number in index maintenance. It ensures that index-level changes (constituent additions/removals, corporate actions) do not create artificial jumps in the index value.
 
@@ -55,7 +55,7 @@ This means: the index value at market close *before* the event equals the index 
 
 Corporate actions are company-level events that change the capital structure, ownership, or trading characteristics of a security. For index engineers, each corporate action requires a specific data adjustment to maintain index accuracy.
 
-**Mandatory corporate actions (no shareholder choice):**
+#### Mandatory corporate actions (no shareholder choice)
 
 | Action | Data Adjustment | Risk Level |
 |---|---|---|
@@ -67,7 +67,7 @@ Corporate actions are company-level events that change the capital structure, ow
 | **Name/Ticker change** | Update reference data. No price adjustment. | LOW — but missed changes break downstream joins |
 | **Rights issue** | New shares issued at a discount. Adjust theoretical ex-rights price (TERP). Adjust divisor. | MEDIUM — TERP calculation is formulaic but error-prone |
 
-**Voluntary corporate actions (shareholder chooses):**
+#### Voluntary corporate actions (shareholder chooses)
 
 | Action | Data Adjustment |
 |---|---|
@@ -75,7 +75,7 @@ Corporate actions are company-level events that change the capital structure, ow
 | **Stock dividend / Scrip dividend** | Shareholder receives shares instead of cash. Adjust shares outstanding. |
 | **Convertible bond exercise** | New equity shares created. Update shares outstanding. |
 
-**The corporate actions processing pipeline:**
+#### The corporate actions processing pipeline
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
@@ -98,7 +98,7 @@ Corporate actions are company-level events that change the capital structure, ow
                                                   └─────────────────┘
 ```
 
-**Stock split processing — step by step:**
+#### Stock split processing — step by step
 
 ```sql
 -- Deutsche Telekom announces 1:4 stock split, effective 2026-03-10
@@ -153,7 +153,7 @@ WHERE c.index_key = 'target_index';
 
 Index reconstitution is the periodic review where constituents are added or removed based on the index methodology rules. For a major European equity index, this happens quarterly (March, June, September, December).
 
-**The reconstitution pipeline:**
+#### The reconstitution pipeline
 
 ```
 Week 1: Universe Screening
@@ -182,7 +182,7 @@ Week 4: Implementation
    └─▶ Updated divisor applied for the next trading day
 ```
 
-**Why buffer rules exist (the math):**
+#### Why buffer rules exist (the math)
 
 Without buffers, a stock ranked #51 today would be removed, then re-added next quarter when it's ranked #49. Each time, ETFs tracking the index must trade millions of shares — a cost passed to investors.
 
@@ -201,7 +201,7 @@ Every major index is published in three variants:
 | **Gross Total Return** | Dividends reinvested at full value | Institutional benchmarks (no tax consideration) |
 | **Net Total Return** | Dividends reinvested minus withholding tax | ETF tracking (reflects actual investor experience) |
 
-**Withholding tax rates by country (simplified):**
+#### Withholding tax rates by country (simplified)
 
 | Country | Standard Rate | Treaty Rate (typical) |
 |---|---|---|
@@ -213,7 +213,7 @@ Every major index is published in three variants:
 | Finland | 30% | 15% |
 | Ireland | 25% | 15% |
 
-**The total return calculation:**
+#### The total return calculation
 
 ```python
 # On the ex-dividend date for stock i:
@@ -230,7 +230,7 @@ net_adjustment = 1 + (dividend_per_share * (1 - withholding_rate) / close_price_
 
 Not all shares outstanding are available for trading. Shares held by founders, governments, strategic investors, or locked by regulations are excluded from the weighting calculation via the **free-float factor**.
 
-**Shares excluded from free-float:**
+#### Shares excluded from free-float
 
 - Government holdings > 5%
 - Strategic holdings by other corporations > 5%
@@ -239,7 +239,7 @@ Not all shares outstanding are available for trading. Shares held by founders, g
 - Treasury shares (company's own shares)
 - Cross-holdings between companies
 
-**Free-float factor bands (index provider methodology):**
+#### Free-float factor bands (index provider methodology)
 
 | Actual Free-Float | Assigned Factor |
 |---|---|
@@ -259,7 +259,7 @@ Not all shares outstanding are available for trading. Shares held by founders, g
 
 Most indices impose a maximum weight cap to prevent single-stock dominance. A typical European equity index caps constituents at **10%** of the index.
 
-**The capping algorithm:**
+#### The capping algorithm
 
 ```python
 import pandas as pd
@@ -315,7 +315,7 @@ Not everything happens on schedule. These events require immediate index adjustm
 
 Since the EU Benchmarks Regulation (BMR, 2018) and IOSCO Principles for Financial Benchmarks (2013), financial indices are regulated products:
 
-**What this means for data engineers:**
+#### What this means for data engineers
 
 - **Audit trail**: Every data transformation must be traceable. You must be able to explain *why* the index value was 4,521.37 on a specific date, down to the individual stock prices, weights, and corporate actions applied.
 - **Input data validation**: Benchmark administrators must verify that input data is "sufficient, accurate, and reliable" — this is not a suggestion, it is a legal requirement.
@@ -323,7 +323,7 @@ Since the EU Benchmarks Regulation (BMR, 2018) and IOSCO Principles for Financia
 - **Conflict of interest**: Personnel involved in index calculation must not have personal trading positions in constituent stocks.
 - **Record retention**: All input data, calculation logs, and methodology documents must be retained for at least 5 years (10 years in some jurisdictions).
 
-**Regulatory audit query — reconstruct index value for a specific date:**
+#### Regulatory audit query — reconstruct index value for a specific date
 
 ```sql
 SELECT
@@ -351,7 +351,7 @@ ORDER BY weight_pct DESC;
 
 Point-in-Time (PIT) data management answers the question: "What did we *know* about this index on a specific date?" This is fundamentally different from "What was the *correct* composition on that date?" — the distinction is critical for backtesting, regulatory audits, and quantitative research.
 
-**The look-ahead bias problem:**
+#### The look-ahead bias problem
 
 ```
 Timeline:
@@ -394,7 +394,7 @@ ON silver.index_constituents (index_key, effective_date, end_date)
 INCLUDE (symbol, shares_in_index, free_float_factor, cap_factor);
 ```
 
-**PIT query pattern — "What was the composition on date X?":**
+#### PIT query pattern — "What was the composition on date X?"
 
 ```sql
 -- Returns the index composition as it was known on @pit_date
@@ -418,7 +418,7 @@ WHERE c.index_key = @index_key
 ORDER BY market_cap_contribution DESC;
 ```
 
-**Bi-temporal modeling — the gold standard for regulated data:**
+#### Bi-temporal modeling — the gold standard for regulated data
 
 Bi-temporal tables track two independent time dimensions:
 1. **Valid time** (business time): when the fact was true in the real world
@@ -459,7 +459,7 @@ WHERE index_key = 'target_index' AND symbol = 'SAP.DE'
 ORDER BY valid_from, recorded_from;
 ```
 
-**PIT-correct joins for backtesting:**
+#### PIT-correct joins for backtesting
 
 ```python
 import polars as pl
@@ -499,7 +499,7 @@ pit_data = pit_join(
 
 ISS ESG is one of the world's largest providers of ESG ratings, climate data, and corporate governance assessments. Integrating this data into index calculations is a growing requirement — the EU's Sustainable Finance Disclosure Regulation (SFDR), Corporate Sustainability Reporting Directive (CSRD), and EU Taxonomy require financial products to disclose sustainability metrics.
 
-**The ESG data challenge:**
+#### The ESG data challenge
 
 | Challenge | Why It's Hard | Data Engineering Solution |
 |---|---|---|
@@ -509,7 +509,7 @@ ISS ESG is one of the world's largest providers of ESG ratings, climate data, an
 | **Subjectivity** | ESG scores involve analyst judgment, not just math | Track score + methodology version + analyst ID |
 | **Retroactive revisions** | Scores revised when new information surfaces | SCD Type 2 for all ESG scores |
 
-**ESG data model (silver layer):**
+#### ESG data model (silver layer)
 
 ```sql
 -- silver.esg_scores — company-level ESG ratings
@@ -559,7 +559,7 @@ CREATE TABLE silver.esg_controversies (
 );
 ```
 
-**Ingesting ESG data from unstructured sources (using [[ai-augmented-data-engineering|LLM pipelines]]):**
+#### Ingesting ESG data from unstructured sources (using [[ai-augmented-data-engineering|LLM pipelines]])
 
 ```python
 from anthropic import Anthropic
@@ -608,7 +608,7 @@ Return ONLY valid JSON."""
     return json.loads(response.content[0].text)
 ```
 
-**ESG-weighted index construction:**
+#### ESG-weighted index construction
 
 ```sql
 -- gold.esg_tilted_weights — tilt standard index weights by ESG score
@@ -643,7 +643,7 @@ FROM tilted
 ORDER BY esg_tilted_weight DESC;
 ```
 
-**EU regulatory requirements for ESG data:**
+#### EU regulatory requirements for ESG data
 
 | Regulation | Effective | Requirement for Index Providers |
 |---|---|---|

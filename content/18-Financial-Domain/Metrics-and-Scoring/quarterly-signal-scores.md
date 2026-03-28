@@ -25,7 +25,7 @@ Quarterly signal scores are updated with earnings reports and use the most recen
 
 The quality score (also called the moat score) measures fundamental strength across profitability, efficiency, and cash generation. Z-scores are computed within sectors when sufficient peers exist (3 or more); otherwise falls back to index-level grouping.
 
-**Component breakdown:**
+#### Component breakdown
 
 | Component | Source | Method |
 |-----------|--------|--------|
@@ -35,7 +35,7 @@ The quality score (also called the moat score) measures fundamental strength acr
 | Leverage | Debt-to-equity | Inverted z-score (lower debt = higher) |
 | FCF Yield | Free cash flow / market cap | z-score within sector |
 
-**Composite quality formula:**
+#### Composite quality formula
 
 $$\text{QualityScore} = \text{mean}(z_{\text{GM}},\ z_{\text{ROE}},\ z_{\text{OpM}},\ -z_{\text{Lev}},\ z_{\text{FCF}})$$
 
@@ -45,7 +45,7 @@ $$\text{QualityScore} = \text{mean}(z_{\text{GM}},\ z_{\text{ROE}},\ z_{\text{Op
 
 Health warnings are binary flags derived from quarterly balance sheet data. Stocks with 2 or more flags appear in the health warnings table on the dashboard.
 
-**Flag definitions:**
+#### Flag definitions
 
 | Flag | Condition | Color | Risk |
 |------|-----------|-------|------|
@@ -54,7 +54,7 @@ Health warnings are binary flags derived from quarterly balance sheet data. Stoc
 | **Cash** (Cash Burn) | Free cash flow < 0 | Red | Consuming cash, not generating it |
 | **Decl** (Decline) | Revenue AND margin both falling QoQ | Purple | Deteriorating business fundamentals |
 
-**Risk level classification:**
+#### Risk level classification
 
 | Flags | Risk Level |
 |-------|------------|
@@ -70,7 +70,7 @@ Health warnings are binary flags derived from quarterly balance sheet data. Stoc
 
 A composite of ISS-style risk dimensions sourced from yfinance quarterly data. This score measures the quality of corporate governance practices.
 
-**Sub-score breakdown:**
+#### Sub-score breakdown
 
 | Sub-Score | What it measures | Scale |
 |-----------|------------------|-------|
@@ -79,7 +79,7 @@ A composite of ISS-style risk dimensions sourced from yfinance quarterly data. T
 | Compensation Risk | Executive pay alignment with shareholders | 1 – 10 |
 | Shareholder Rights Risk | Minority shareholder protections | 1 – 10 |
 
-**Composite governance formula (inverted so higher = better):**
+#### Composite governance formula (inverted so higher = better)
 
 $$\text{GovernanceScore} = 10 - \text{mean}(\text{AuditRisk}, \text{BoardRisk}, \text{CompRisk}, \text{ShareholderRisk})$$
 

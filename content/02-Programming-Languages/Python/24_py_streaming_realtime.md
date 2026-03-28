@@ -858,7 +858,7 @@ Included as architecture reference — no runnable code.
 **What:** Dedicated gateways that handle large file transfers with multiplexing, packet-level resume,
 bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway, GoAnywhere.
 
-**When to use:**
+#### When to use
 - Regulated industries (finance, healthcare) requiring audit trails
 - Multi-partner B2B file exchange with SLA guarantees
 - Files > 100 GB where resumability is critical
@@ -870,7 +870,7 @@ bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway,
 **What:** Managed service for scheduled, recurring transfers between GCS buckets, S3, Azure,
 or HTTP endpoints. Handles retries, bandwidth throttling, and incremental sync.
 
-**When to use:**
+#### When to use
 - Scheduled cross-cloud data replication (S3 → GCS nightly)
 - Large dataset migration (TB-scale, multi-day)
 - On-prem NAS → GCS via Transfer Service for on-premises data

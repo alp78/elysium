@@ -24,7 +24,7 @@ The financial data platform dashboard includes two visualization panels that syn
 
 The factor profile radar chart displays the average factor tilt of the selected index across five axes. Raw z-scores from daily and quarterly signal calculations are normalized to a 0–100 scale for visualization.
 
-**Radar chart axes:**
+#### Radar chart axes
 
 | Axis | Source |
 |------|--------|
@@ -43,7 +43,7 @@ The factor profile radar chart displays the average factor tilt of the selected 
 
 The index composition donut chart is a dual-ring visualization showing how the index is constructed.
 
-**Ring breakdown:**
+#### Ring breakdown
 
 | Ring | What it shows |
 |------|---------------|

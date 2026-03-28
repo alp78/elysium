@@ -169,7 +169,7 @@ print(f"  Token expiry:      {credentials.expiry}")
 | **Service Account JSON key** | Long-lived private key downloaded and stored as a file | Last resort: legacy systems, local scripts with no other option | Anything running on GCP (use metadata server instead); any shared or automated environment (rotation is manual and error-prone) |
 | **Short-lived access tokens** | `generateAccessToken` issues a token valid for 1 h max | Time-boxed operations, token hand-off to untrusted code | Long-running background jobs (token expires mid-run) |
 
-**Decision flow:**
+#### Decision flow
 1. Running on GCP compute? → **Metadata server** (attach the right SA to the resource)
 2. Running in CI/CD or another cloud? → **Workload Identity Federation**
 3. Need to act as a different SA temporarily? → **Impersonation**
@@ -863,19 +863,19 @@ print('    password = cache.get("db-password")  # ← CORRECT')
 
 Cloud KMS manages cryptographic keys on Google-owned HSMs. Your application never handles the raw key material — it sends plaintext to KMS and gets back ciphertext, or vice versa.
 
-**Core concepts:**
+#### Core concepts
 - **Key ring** — logical grouping of keys, bound to a region; cannot be deleted
 - **CryptoKey** — the named key inside a ring; has a rotation schedule and purpose (ENCRYPT_DECRYPT, SIGN, MAC)
 - **Key version** — the actual key material; KMS rotates automatically and keeps old versions to decrypt legacy data
 - **Envelope encryption** — KMS encrypts a short data encryption key (DEK), not your data directly; your app encrypts data locally with the DEK and stores only the encrypted DEK alongside the ciphertext
 
-**When to use KMS:**
+#### When to use KMS
 - Encrypting sensitive fields before storing in BigQuery, GCS, or Firestore (CMEK or application-layer encryption)
 - Signing artifacts, JWTs, or release binaries where you need an auditable, non-exportable signing key
 - Key rotation with zero downtime — KMS keeps old versions active for decryption automatically
 - Compliance requirements (FIPS 140-2 Level 3, HIPAA, PCI-DSS) that mandate HSM-backed keys
 
-**Anti-patterns:**
+#### Anti-patterns
 - Encrypting large payloads directly with KMS (`encrypt` has a 64 KB limit) — use envelope encryption instead
 - Using the same key for all data across all environments — separate key rings per env (dev/staging/prod)
 - Disabling automatic rotation and rotating manually — manual rotation is forgotten and auditors flag it

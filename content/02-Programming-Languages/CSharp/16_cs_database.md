@@ -1350,7 +1350,7 @@ cmp
 Dapper sits between raw ADO.NET and full Entity Framework. You write SQL (full control),
 Dapper maps results to typed C# objects (no manual `reader.GetString(0)`).
 
-**The problem with ADO.NET:**
+#### The problem with ADO.NET
 ```csharp
 // 10 lines of boilerplate per query
 var cmd = new SqlCommand(sql, conn);
@@ -1364,7 +1364,7 @@ while (reader.Read()) {
 }
 ```
 
-**What Dapper gives you:**
+#### What Dapper gives you
 ```csharp
 // 1 line — same performance, typed result
 var rows = conn.Query<OhlcvRow>(sql, new { Symbol = "ASML.AS" });
@@ -1655,7 +1655,7 @@ EF Core is the **dominant ORM in .NET** — used by ~60-70% of .NET applications
 Unlike Dapper (you write SQL, it maps results), EF Core generates SQL from LINQ
 and manages the full object lifecycle: change tracking, migrations, relationships.
 
-**How it works:**
+#### How it works
 1. Define **entity classes** (C# classes = database tables)
 2. Define a **DbContext** (connection + table mappings + configuration)
 3. Write **LINQ queries** — EF Core translates to SQL automatically
@@ -1979,20 +1979,20 @@ Migrations are the killer feature of EF Core — schema changes are version-cont
 C# code, not ad-hoc SQL scripts. Not executable in notebooks (requires project + CLI),
 but this is the production workflow.
 
-**Setup:**
+#### Setup
 ```bash
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet tool install dotnet-ef
 ```
 
-**Workflow:**
+#### Workflow
 1. Modify entity classes (add property, change type, add table)
 2. `dotnet ef migrations add AddVolumeColumn` → generates C# migration with `Up()` and `Down()`
 3. `dotnet ef database update` → applies pending migrations
 4. `dotnet ef migrations script` → generates SQL script for DBA review
 
-**Example migration (auto-generated):**
+#### Example migration (auto-generated)
 ```csharp
 public partial class AddVolumeColumn : Migration
 {

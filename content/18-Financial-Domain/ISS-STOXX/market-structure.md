@@ -35,7 +35,7 @@ date: 2026-03-28
 > look-back period, typically three months. ADTV is a core input to liquidity
 > screening in STOXX index methodologies.
 
-In plain language, ADTV tells you how busy a stock is on a normal day. Index providers like STOXX use it to decide whether a stock trades frequently enough to be included in an index -- if daily volume is too thin, large investors cannot enter or exit positions without moving the price.
+ADTV tells you how busy a stock is on a normal day. Index providers like STOXX use it to decide whether a stock trades frequently enough to be included in an index -- if daily volume is too thin, large investors cannot enter or exit positions without moving the price.
 
 > [!tip] Related Terms
 > [[#Liquidity]] | [[#Liquidity Screening]] | [[#Trading Volume]] | [[#Turnover Velocity]]
@@ -809,18 +809,6 @@ A depositary receipt lets investors trade foreign shares on their home exchange 
 
 ---
 
-### Deutsche Borse Group
-
-> The parent company of the Frankfurt Stock Exchange, Eurex, Clearstream, and
-> Qontigo (the index and analytics arm that operates STOXX and DAX indices).
-> Deutsche Borse Group is one of the largest exchange organisations globally.
-
-Deutsche Borse Group is the corporate umbrella under which the STOXX index family lives. When you see a STOXX or DAX index, the calculation, licensing, and governance ultimately trace back to Deutsche Borse Group's subsidiary Qontigo.
-
-> [!tip] Related Terms
-> [[#Qontigo]] | [[#Frankfurt Stock Exchange]] | [[#Eurex]] | [[#Exchange]]
----
-
 ### Dual Listing
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
@@ -854,21 +842,6 @@ When a company lists on multiple exchanges, index providers must decide which li
 >
 
 ---
-
-### Dark Pool
-
-> A private, off-exchange trading venue where institutional investors can
-> execute large orders without displaying them on the public order book. Dark
-> pools reduce market impact for large trades but raise transparency concerns
-> regulated under MiFID II in Europe.
-
-Dark pools are the quiet rooms of equity trading. When an index fund needs to rebalance a large position in a STOXX constituent, it may route part of the order through a dark pool to avoid signalling its intentions and moving the price. STOXX index calculations rely on lit-market (public exchange) prices, but dark pool volume can represent a meaningful share of total trading activity.
-
-> [!tip] Related Terms
-> [[#Block Trade]] | [[#Order Book]] | [[#Exchange]] | [[#Liquidity]]
----
-
-## E
 
 ### Eurex
 
@@ -2465,32 +2438,6 @@ Small-cap stocks offer exposure to smaller, often faster-growing companies. They
 
 ---
 
-### Strategic Holding
-
-> A block of shares held by an investor (such as a founding family, government,
-> or corporate cross-holder) that is not considered available for public trading.
-> Strategic holdings are subtracted from total shares outstanding to calculate
-> free float.
-
-Strategic holdings are the shares that never really hit the open market. A founding family's 30% stake or a government's golden share are examples. STOXX identifies these holdings and excludes them from the free-float calculation so that index weights reflect only the genuinely tradable portion of each company.
-
-> [!tip] Related Terms
-> [[#Free Float]] | [[#Free-Float Shares]] | [[#Market Capitalization]]
----
-
-### Settlement Cycle (T+2)
-
-> The standardised time frame between the execution of a trade and its final
-> settlement. T+2 means the trade settles two business days after the
-> transaction date. Most major European and US equity markets operate on a
-> T+2 cycle, though some markets are moving toward T+1.
-
-The settlement cycle dictates the logistics of index rebalancing. When STOXX announces a rebalancing effective date, index-tracking funds must execute their trades early enough for settlement to complete by that date. A T+2 cycle means trades placed on the effective date would not settle until two days later, so managers typically trade on or before the effective date to align.
-
-> [!tip] Related Terms
-> [[#Settlement]] | [[#Clearing (Market)]] | [[#Custodian]] | [[#Exchange]]
----
-
 ### Short Selling
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2706,38 +2653,3 @@ Tick size determines the granularity of the order book. A stock trading at EUR 5
 >
 
 ---
-
-### Turnover Velocity
-
-> The ratio of a stock's cumulative trading volume over a period to its total
-> shares outstanding (or free-float shares), expressed as a percentage. STOXX
-> uses turnover velocity as a liquidity measure alongside ADTV to screen
-> securities for index eligibility.
-
-Turnover velocity normalises trading volume by the size of the company. A stock that trades 1 million shares a day sounds liquid, but if it has 10 billion shares outstanding, the turnover velocity is tiny. Conversely, a stock trading 100,000 shares a day with only 1 million shares outstanding has very high turnover velocity. STOXX uses this ratio to ensure that constituent stocks are liquid relative to their size.
-
-> [!tip] Related Terms
-> [[#Average Daily Trading Volume (ADTV)]] | [[#Trading Volume]] | [[#Liquidity Screening]] | [[#Free-Float Shares]]
----
-
-## V
-
-### Volatility Halt
-
-> An automatic, short-duration trading pause triggered when a security's price
-> moves beyond a dynamic or static price corridor within a defined time window.
-> Volatility halts (also called volatility interruptions on Xetra) are a form
-> of circuit breaker applied at the individual security level.
-
-A volatility halt is the exchange saying "slow down" when a stock price is moving too fast. On Xetra, the exchange calculates dynamic and static price ranges; if an incoming order would execute outside those ranges, trading pauses and an intraday auction is triggered. For STOXX index calculations, the last price before the halt is typically used until continuous trading resumes.
-
-> [!tip] Related Terms
-> [[#Circuit Breaker]] | [[#Halt (Trading)]] | [[#Crash]] | [[#Exchange]]
----
-
-> [!info] Maintenance
-> This glossary is maintained as part of the ISS-STOXX financial domain
-> knowledge base. Terms are aligned with STOXX and ISS official documentation
-> as of 2026-03-28. For updates, consult the latest
-> [STOXX Rulebooks](https://stoxx.com/rulebooks) and
-> [ISS Governance QualityScore documentation](https://www.issgovernance.com/).

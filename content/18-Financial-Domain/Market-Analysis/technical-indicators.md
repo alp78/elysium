@@ -53,7 +53,7 @@ $$\text{MACD Line} = \text{EMA}(12) - \text{EMA}(26)$$
 $$\text{Signal Line} = \text{EMA}(9\text{ of MACD Line})$$
 $$\text{Histogram} = \text{MACD Line} - \text{Signal Line}$$
 
-**Signals:**
+#### Signals
 - **Bullish crossover**: MACD crosses above signal line
 - **Bearish crossover**: MACD crosses below signal line
 - **Zero line cross**: MACD crossing zero confirms trend direction

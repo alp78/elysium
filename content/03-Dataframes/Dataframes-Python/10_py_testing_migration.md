@@ -732,7 +732,7 @@ if len(result) > 0:
 
     No nulls found in ohlcv_pd
 
-**index_dim nulls:**
+#### index_dim nulls
 
 <div>
 <style scoped>
@@ -796,7 +796,7 @@ if result.height > 0:
 
     No nulls found in ohlcv_pl
 
-**index_dim nulls:**
+#### index_dim nulls
 
 <div><style>
 .dataframe > thead > tr,
@@ -989,7 +989,7 @@ changed = both[both["val_old"] != both["val_new"]]
 print(f"Added: {len(added)}, Removed: {len(removed)}, Changed: {len(changed)}, Unchanged: {len(both) - len(changed)}")
 ```
 
-**Full diff:**
+#### Full diff
 
 <div>
 <style scoped>
@@ -1072,7 +1072,7 @@ if changed.height > 0:
 
     Added: 1, Removed: 1, Changed: 1
 
-**Changed rows:**
+#### Changed rows
 
 <div><style>
 .dataframe > thead > tr,

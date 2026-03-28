@@ -33,7 +33,7 @@ date: 2026-03-28
 
 > A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against which the performance of a portfolio, fund, or financial product is measured. When an index serves as a benchmark, it becomes the contractual reference point embedded in the terms of derivatives, ETFs, and structured products.
 
-In plain terms, a benchmark is the yardstick. When a fund manager says "we track the STOXX Europe 600," that index is the benchmark instrument — the thing every return is compared against, and the thing that determines what the fund must hold.
+a benchmark is the yardstick. When a fund manager says "we track the STOXX Europe 600," that index is the benchmark instrument — the thing every return is compared against, and the thing that determines what the fund must hold.
 
 > [!tip] Related Terms
 > - [[index-families#EURO STOXX 50]]
@@ -84,7 +84,7 @@ In plain terms, a benchmark is the yardstick. When a fund manager says "we track
 
 > A bond is a fixed-income debt instrument in which an investor lends capital to an issuer (government, corporation, or supranational entity) in exchange for periodic interest (coupon) payments and the return of principal at maturity. In the index context, bonds serve as the underlying securities for fixed-income indices published by STOXX and as the instruments evaluated by ISS ESG for labeled-debt verification.
 
-In plain terms, a bond is an IOU with a schedule. You lend money, receive regular interest, and get your money back on a set date. Bonds are the building blocks of fixed-income indices and the raw material behind products like green bonds, corporate bonds, and sovereign bonds.
+a bond is an IOU with a schedule. You lend money, receive regular interest, and get your money back on a set date. Bonds are the building blocks of fixed-income indices and the raw material behind products like green bonds, corporate bonds, and sovereign bonds.
 
 > [!tip] Related Terms
 > - See also: **Corporate Bond**, **Sovereign Bond**, **Green Bond**, **High-Yield Bond**, **Investment Grade Bond** in this file
@@ -136,7 +136,7 @@ In plain terms, a bond is an IOU with a schedule. You lend money, receive regula
 
 > A call option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the underlying index level and the strike price at expiry (for European-style contracts) or at any point before expiry (for American-style). On Eurex, call options on STOXX indices are European-style and cash-settled, and they are a core component of covered-call and volatility strategy indices.
 
-In everyday language, a call option is a bet that the index will go up. You pay a premium for the right to profit if the index rises above a set level (the strike price). If it does not, you lose only the premium you paid.
+a call option is a bet that the index will go up. You pay a premium for the right to profit if the index rises above a set level (the strike price). If it does not, you lose only the premium you paid.
 
 > [!tip] Related Terms
 > - See also: **Put Option**, **Index Option**, **Options on Indices**, **Covered Call Strategy** in this file
@@ -228,28 +228,6 @@ Think of a certificate as a simplified way to "buy" an entire index through a si
 > — [Serkan Batir joins Qontigo as Managing Director, DAX | Press releases | STOXX](https://stoxx.com/serkan-batir-joins-qontigo-as-managing-director-dax)
 >
 
----
-
-### Collateralized Debt Obligation (CDO)
-
-> A collateralized debt obligation is a structured financial product that pools together cash-flow-generating assets — such as bonds, loans, or mortgage-backed securities — and repackages them into tranches with different risk-return profiles (senior, mezzanine, equity). ISS ESG and governance frameworks assess the transparency, credit quality, and structural risks embedded in CDOs, particularly in the context of systemic risk monitoring.
-
-In plain terms, a CDO takes a pile of debts (loans, bonds, mortgages), bundles them together, and slices them into layers. The top layer gets paid first and is safest; the bottom layer absorbs losses first but earns the highest return. CDOs gained notoriety during the 2008 financial crisis.
-
-> [!tip] Related Terms
-> - See also: **Bond**, **Corporate Bond**, **Structured Product** in this file
-> - [[index-construction#Risk Assessment]]
----
-
-### Commercial Paper
-
-> Commercial paper is a short-term, unsecured debt instrument issued by corporations and financial institutions to meet immediate funding needs, typically maturing in 1 to 270 days. While not directly tracked by STOXX equity indices, commercial paper is a foundational money-market instrument that features in ISS governance assessments of corporate liquidity and short-term funding risk.
-
-Commercial paper is essentially a corporate IOU with a very short shelf life. A large company that needs cash for a few weeks or months issues commercial paper instead of drawing on a bank credit line. Investors buy it for a small yield premium over government bills.
-
-> [!tip] Related Terms
-> - See also: **Money Market Fund**, **Treasury Bill / Treasury Bond**, **Bond** in this file
-> - [[corporate-governance#Short-Term Funding]]
 ---
 
 ### Convertible Bond
@@ -361,7 +339,7 @@ A corporate bond is a loan you make to a company. The company pays you interest 
 
 > A covered call strategy on an index involves holding a long position in the index portfolio while simultaneously writing (selling) call options on that same index. The premium received from selling the calls provides additional income but caps the upside potential. STOXX publishes dedicated covered-call strategy indices, such as the EURO STOXX 50 Buywrite Index.
 
-In everyday language, you own the index and sell someone else the right to buy it above a certain price. You collect a premium for this, which boosts your income in flat or mildly rising markets, but you give up gains if the index surges past the strike price.
+you own the index and sell someone else the right to buy it above a certain price. You collect a premium for this, which boosts your income in flat or mildly rising markets, but you give up gains if the index surges past the strike price.
 
 > [!tip] Related Terms
 > - See also: **Index Option**, **Options on Indices** in this file
@@ -440,19 +418,6 @@ A credit default swap is essentially insurance against a borrower defaulting. Yo
 ---
 
 ## D
-
-### Delta-One Product
-
-> A delta-one product is a financial instrument whose price moves in exact lockstep with its underlying index — a delta of 1.0. Index futures (near expiry), index certificates, ETFs, and total return swaps are all delta-one products. They offer linear, unlevered exposure to the index.
-
-If an index goes up 2 %, a delta-one product also goes up 2 % (minus fees or funding costs). There is no optionality, no leverage multiplier, no payoff kink — just a clean, one-for-one replication of index returns.
-
-> [!tip] Related Terms
-> - See also: **Certificate**, **ETF**, **Futures Contract**, **Total Return Swap** in this file
-> - [[index-construction#Net Total Return Index]]
----
-
-## E
 
 ### Equity (as Instrument)
 
@@ -768,7 +733,7 @@ Eurex futures let you make a binding agreement today to buy or sell the value of
 
 > An index futures contract is a standardized agreement to exchange, at a predetermined future date, a cash amount equal to the difference between the agreed price and the index level at expiry. Index futures are among the most widely traded derivatives globally, and STOXX/DAX indices underlie some of the highest-volume futures contracts on Eurex.
 
-In simpler terms, an index future is a bet on where the index will be at a specific date. You never receive actual shares — everything is settled in cash. Futures are popular because they offer leverage (you post margin, not the full notional value) and high liquidity.
+an index future is a bet on where the index will be at a specific date. You never receive actual shares — everything is settled in cash. Futures are popular because they offer leverage (you post margin, not the full notional value) and high liquidity.
 
 > [!tip] Related Terms
 > - See also: **Eurex Futures**, **Delta-One Product**, **Index Option** in this file
@@ -866,19 +831,6 @@ A green bond works exactly like a regular bond (fixed coupon, maturity date, cre
 
 ---
 
-### GSSS Bond (Green, Social, Sustainability, Sustainability-Linked)
-
-> GSSS bonds are the collective category comprising Green bonds, Social bonds, Sustainability bonds, and Sustainability-linked bonds. ISS ESG tracks the GSSS market for data provision, screening, and second-party opinions. The GSSS label indicates that the instrument carries a use-of-proceeds commitment or sustainability-linked KPI targets.
-
-GSSS is the industry shorthand for the entire labeled-bond universe. Rather than listing "green, social, sustainability, and sustainability-linked" every time, market participants say "GSSS bonds" to cover the full spectrum of purpose-driven debt.
-
-> [!tip] Related Terms
-> - See also: **Green Bond**, **Social Bond**, **Sustainability Bond**, **Sustainability-Linked Bond**, **Labeled Debt** in this file
-> - [[esg-terms#GSSS Framework]]
----
-
-## H
-
 ### High-Yield Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -962,18 +914,6 @@ An index fund is the original passive investment. You give money to the fund man
 > — [Coinsquare moves into ETF business with two new funds - The Globe and Mail](https://stoxx.com/coinsquare-moves-into-etf-business-with-two-new-funds)
 >
 
----
-
-### Index-Linked Note
-
-> An index-linked note is a structured debt instrument whose redemption value or coupon payments are tied to the performance of an underlying index. The payout profile may include capital protection, participation rates, caps, or barriers. These products are typically issued by banks and sold to retail or private-banking clients.
-
-An index-linked note is a bond with a twist: instead of a fixed interest payment, your return depends on how an index performs. Many notes include a guarantee that you at least get your original investment back (capital protection), but you might give up some upside in exchange.
-
-> [!tip] Related Terms
-> - See also: **Certificate**, **Structured Product**, **Delta-One Product** in this file
-> - [[index-construction#Price Return Index]]
-> - [[index-construction#Total Return Index]]
 ---
 
 ### Index License
@@ -1106,30 +1046,6 @@ An interest rate swap is a deal where two parties trade interest payments. One p
 
 ---
 
-### Inverse ETF
-
-> An inverse ETF is an exchange-traded fund designed to deliver the opposite (negative) daily return of a specified index. If the underlying index falls 1 % on a given day, the inverse ETF aims to rise 1 %, and vice versa. Inverse ETFs on STOXX indices use derivatives (swaps, futures) to achieve this inverse exposure and are intended as short-term tactical tools, not long-term holdings, due to the compounding effects of daily rebalancing.
-
-An inverse ETF lets you profit when the market goes down without short-selling stocks directly. It flips the daily index return — if the index drops, you gain. However, because the inverse relationship resets daily, holding it for weeks or months can produce returns that diverge significantly from a simple negative of the index's cumulative return.
-
-> [!tip] Related Terms
-> - See also: **Leveraged ETF**, **ETF**, **Futures Contract** in this file
-> - [[index-families#STOXX Strategy Indices]]
----
-
-### Investment Grade Bond
-
-> An investment grade bond is a fixed-income instrument rated BBB- or higher (by S&P/Fitch) or Baa3 or higher (by Moody's), indicating a relatively low risk of default. Investment grade bonds form the core of most fixed-income benchmarks published by STOXX and are the predominant universe for ISS ESG fixed-income screening and labeled-debt verification.
-
-An investment grade bond is the "safe" end of the credit spectrum. These are bonds issued by governments and corporations with strong balance sheets and reliable cash flows. Because the default risk is low, they pay lower interest than high-yield bonds — but investors accept that trade-off for stability.
-
-> [!tip] Related Terms
-> - See also: **Bond**, **Corporate Bond**, **High-Yield Bond**, **Sovereign Bond** in this file
-> - [[index-families#STOXX Investment Grade Indices]]
----
-
-## L
-
 ### Labeled Debt
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1154,19 +1070,6 @@ An investment grade bond is the "safe" end of the credit spectrum. These are bon
 >
 
 ---
-
-### Leveraged ETF
-
-> A leveraged ETF is an exchange-traded fund that uses financial derivatives (swaps, futures, options) and debt to amplify the daily return of an underlying index by a specified multiple — commonly 2x or 3x. STOXX indices serve as the reference for leveraged ETFs in the European market. Like inverse ETFs, leveraged ETFs reset daily, meaning their long-term performance can deviate substantially from the expected multiple of the index's cumulative return.
-
-A leveraged ETF turbocharges daily index moves. A 2x leveraged ETF on the EURO STOXX 50 aims to deliver twice the daily return — if the index rises 1 %, the ETF targets a 2 % gain; if it falls 1 %, the ETF drops 2 %. This daily reset makes leveraged ETFs powerful short-term trading tools but unreliable for buy-and-hold investors.
-
-> [!tip] Related Terms
-> - See also: **Inverse ETF**, **ETF**, **Futures Contract**, **Delta-One Product** in this file
-> - [[index-families#STOXX Leveraged Indices]]
----
-
-## M
 
 ### Money Market Fund
 
@@ -1224,20 +1127,6 @@ A municipal bond is a loan to a local government. The city or state uses the mon
 ---
 
 ## O
-
-### Options on Indices
-
-> Options on indices are exchange-traded or OTC derivatives contracts that derive their value from an underlying equity index. On Eurex, options on the EURO STOXX 50, STOXX Europe 600, and DAX indices are among the most actively traded contracts. They are typically European-style and cash-settled.
-
-This is the broad category covering any option whose underlying is an index. Whether it is a standard vanilla call/put or part of a complex volatility strategy, if the underlying reference is an index level, it falls under "options on indices."
-
-> [!tip] Related Terms
-> - See also: **Index Option**, **Covered Call Strategy**, **Eurex Futures** in this file
-> - [[index-families#EURO STOXX 50]]
-> - [[index-families#DAX]]
----
-
-## P
 
 ### Passive Investment
 
@@ -1743,19 +1632,6 @@ A transition bond is for companies that cannot credibly issue a green bond becau
 >
 
 ---
-
-### Treasury Bill / Treasury Bond
-
-> A treasury bill (T-bill) is a short-term government debt instrument (maturity of one year or less) sold at a discount and redeemed at face value, while a treasury bond (T-bond) is a long-term government debt instrument (maturity of 10 years or more) that pays a fixed coupon. Together, they form the core of sovereign yield curves. STOXX treasury indices track the performance of government debt by maturity bucket, and ISS ESG evaluates sovereign issuers for country-level ESG risk.
-
-Treasury bills and bonds are the purest forms of government borrowing. A T-bill is short-term — you buy it below face value and get the full amount back when it matures (the difference is your return). A T-bond is long-term and pays regular interest. Both are considered virtually risk-free for major economies, making them the baseline against which all other fixed-income instruments are priced.
-
-> [!tip] Related Terms
-> - See also: **Sovereign Bond**, **Bond**, **Money Market Fund**, **Investment Grade Bond** in this file
-> - [[index-families#STOXX Government Bond Indices]]
----
-
-## W
 
 ### Warrant
 

@@ -307,7 +307,7 @@ A broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines. Wor
 | **Redis Queue (RQ)** | Simpler alternative to Celery. Less config. | Small/medium workloads |
 | **Dask** | Parallel computing, scales from laptop to cluster. Integrates with pandas/numpy. | Large DataFrame processing, ML pipelines |
 
-**Evolution path:**
+#### Evolution path
 1. `asyncio.gather` → single process, concurrent I/O
 2. `ProcessPoolExecutor` → single machine, multiple cores
 3. Celery/RQ → multiple machines, distributed workers

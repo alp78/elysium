@@ -32,9 +32,9 @@ date: 2026-03-28
 
 > A stock market index composed of shares in the largest, most liquid, and most financially stable companies within a given market or region. Blue-chip indices serve as headline benchmarks and are widely used as underlyings for financial products including ETFs, futures, and options.
 
-In plain terms, a blue-chip index is a list of the biggest, most well-known companies in a market. When financial news reports that "the market is up," they are usually referring to a blue-chip index such as the DAX or the EURO STOXX 50.
+a blue-chip index is a list of the biggest, most well-known companies in a market. When financial news reports that "the market is up," they are usually referring to a blue-chip index such as the DAX or the EURO STOXX 50.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Varies by index (national, regional, or global)
 - **Number of constituents:** Typically 20-50 of the largest companies
@@ -92,7 +92,7 @@ In plain terms, a blue-chip index is a list of the biggest, most well-known comp
 
 The DAX is Germany's most important stock market index. It functions like a scoreboard for the health of the German economy, tracking the 40 biggest publicly listed companies in the country, including names such as SAP, Siemens, and Allianz.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Number of constituents:** 40
@@ -149,7 +149,7 @@ The DAX is Germany's most important stock market index. It functions like a scor
 
 Think of the DAX 50 ESG as a filtered version of the broader German stock market. It starts with the biggest German companies, removes those involved in activities many investors consider harmful, and then ranks the remaining companies partly by their ESG scores to arrive at the final 50.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Number of constituents:** 50
@@ -205,9 +205,9 @@ Think of the DAX 50 ESG as a filtered version of the broader German stock market
 
 > The DAX ESG Target index is derived from the DAX universe and applies a best-in-class ESG optimisation approach. The index aims to achieve a significantly improved aggregate ESG score relative to the parent DAX index while maintaining similar risk and return characteristics. It uses an optimisation framework that maximises the ESG score subject to constraints on tracking error, sector weights, and individual stock weights.
 
-In everyday language, the DAX ESG Target takes the standard DAX and reweights its companies so that the overall portfolio tilts toward companies with better ESG practices. The goal is to look a lot like the regular DAX in terms of financial performance while being measurably "greener" and more responsible.
+the DAX ESG Target takes the standard DAX and reweights its companies so that the overall portfolio tilts toward companies with better ESG practices. The goal is to look a lot like the regular DAX in terms of financial performance while being measurably "greener" and more responsible.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Number of constituents:** Derived from DAX (up to 40)
@@ -268,7 +268,7 @@ In everyday language, the DAX ESG Target takes the standard DAX and reweights it
 
 The eb.rexx indices measure how German government bonds are performing. Unlike many bond indices that rely on estimated prices, eb.rexx uses actual tradeable prices from the Eurex electronic platform, making the indices highly transparent and reliable. They are the bond-market equivalent of the DAX for fixed income.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Asset class:** Government bonds (sovereign fixed income)
@@ -312,7 +312,7 @@ The eb.rexx indices measure how German government bonds are performing. Unlike m
 
 The EURO STOXX 50 is the benchmark most people think of when they talk about European stock markets. It captures the 50 biggest companies across Eurozone nations -- France, Germany, the Netherlands, Spain, Italy, and others that use the euro. It is the underlying for some of the most heavily traded futures and options contracts in the world.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Eurozone (countries using the euro)
 - **Number of constituents:** 50
@@ -374,7 +374,7 @@ The EURO STOXX 50 is the benchmark most people think of when they talk about Eur
 
 While the headline VSTOXX captures 30-day implied volatility, the subindices show what the market expects at different time horizons. Plotting them together reveals the "volatility term structure" -- whether markets expect turbulence to be short-lived (higher short-term volatility) or prolonged (higher long-term volatility). This information is valuable for options traders and risk managers.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Underlying:** EURO STOXX 50 options
 - **Maturities covered:** 30, 60, 90, 120, 150, 180, 210, 240, 300, 330, and 360 calendar days
@@ -436,7 +436,7 @@ While the headline VSTOXX captures 30-day implied volatility, the subindices sho
 
 This index is a focused lens on Eurozone banks. If you want to know how the big European banks -- such as BNP Paribas, Deutsche Bank, or Santander -- are performing collectively, this is the index to watch. It tends to be more volatile than the broader EURO STOXX 50 because banking stocks are sensitive to interest rate changes and economic cycles.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Eurozone
 - **Number of constituents:** Variable (typically 20-30)
@@ -495,7 +495,7 @@ This index is a focused lens on Eurozone banks. If you want to know how the big 
 
 This is a dividend-hunter's index. Instead of picking companies by size (like the EURO STOXX 50 does), it picks the 30 Eurozone companies that pay the most generous dividends relative to their share price. It also weights them by dividend yield, so the highest-yielding stocks matter the most. It is popular with income-focused investors.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Eurozone
 - **Number of constituents:** 30
@@ -549,7 +549,7 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 
 The EUROGOV indices are the Eurozone equivalent of tracking how well government bonds from countries like Germany, France, Italy, and Spain are doing. They break the bond universe down by how long until the bonds mature, making it easy for investors to target specific parts of the yield curve.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Eurozone sovereign issuers
 - **Asset class:** Government bonds (euro-denominated)
@@ -592,7 +592,7 @@ The EUROGOV indices are the Eurozone equivalent of tracking how well government 
 
 These indices are designed for investors who want their portfolios to account for biodiversity risk. They systematically underweight or exclude companies whose operations damage ecosystems -- for example, through deforestation or chemical runoff -- and overweight companies that contribute to biodiversity preservation or restoration.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global (multiple regional variants)
 - **Number of constituents:** Varies by variant
@@ -654,7 +654,7 @@ These indices are designed for investors who want their portfolios to account fo
 
 In simple terms, these indices reweight the stock market to favour companies that are reducing their carbon footprint and penalise those that are not. They are built to meet strict EU rules about what qualifies as a "climate-friendly" benchmark, making them suitable for funds that want to market themselves as aligned with the Paris Agreement goals.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global, European, and regional variants
 - **Number of constituents:** Varies by parent index
@@ -718,7 +718,7 @@ In simple terms, these indices reweight the stock market to favour companies tha
 
 The MDAX is where you find Germany's mid-sized listed companies -- firms that are large and well-established but not quite big enough to make it into the DAX. It is often considered a better gauge of the domestic German economy than the DAX because its companies tend to earn a larger share of revenue within Germany.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Number of constituents:** 50
@@ -776,7 +776,7 @@ The MDAX is where you find Germany's mid-sized listed companies -- firms that ar
 
 The SDAX covers the next layer of German companies below the MDAX. These are smaller firms that are still big enough to be meaningfully traded on the stock exchange. The index often includes fast-growing companies that may eventually graduate into the MDAX or even the DAX.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Number of constituents:** 70
@@ -834,7 +834,7 @@ The SDAX covers the next layer of German companies below the MDAX. These are sma
 
 This index is a way to invest in the AI theme across the entire global stock market. Rather than just picking the obvious big tech names, it uses data-driven methods -- including analysis of patents and company filings -- to find companies genuinely involved in AI, from chipmakers to software companies to firms deploying AI in their operations.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global (developed and emerging markets)
 - **Number of constituents:** Variable (typically 80-200)
@@ -884,26 +884,6 @@ This index is a way to invest in the AI theme across the entire global stock mar
 
 ---
 
-### STOXX All Europe 800
-
-
-> The STOXX All Europe 800 index covers 800 companies across European developed and emerging markets, extending the geographic reach beyond the STOXX Europe 600 to include countries in Central and Eastern Europe. The index combines the STOXX Europe 600 constituents with an additional 200 stocks from markets such as Poland, Hungary, the Czech Republic, Romania, and other European emerging-market countries.
-
-The STOXX All Europe 800 is a wider version of the STOXX Europe 600 that adds companies from Central and Eastern European markets. For investors who want exposure not only to Western European blue chips but also to the growth economies further east, this index provides a single, comprehensive benchmark.
-
-**Key characteristics:**
-
-- **Geographic coverage:** European developed and emerging markets
-- **Number of constituents:** 800
-- **Weighting method:** Free-float market capitalisation
-- **Review frequency:** Quarterly
-- **Relationship to STOXX Europe 600:** Superset; includes all 600 constituents plus 200 additional
-- **Additional countries:** Poland, Hungary, Czech Republic, Romania, and others
-
-> [!tip] Related terms
-> [[#STOXX Europe 600]] | [[#STOXX Emerging Markets]] | [[#STOXX Global 1800]] | [[index-construction#Free-Float Market Capitalisation]]
----
-
 ### STOXX Asia/Pacific 600
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
@@ -913,7 +893,7 @@ The STOXX All Europe 800 is a wider version of the STOXX Europe 600 that adds co
 
 This is STOXX's main index for the Asia/Pacific region's developed stock markets. It covers 600 companies across countries like Japan, Australia, Hong Kong, and Singapore. Together with the STOXX Europe 600 and STOXX North America 600, it forms the STOXX Global 1800.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Asia/Pacific developed markets (Japan, Australia, Hong Kong, New Zealand, Singapore)
 - **Number of constituents:** 600
@@ -973,7 +953,7 @@ This is STOXX's main index for the Asia/Pacific region's developed stock markets
 
 These indices bring the same methodological rigour that STOXX applies to traditional stock indices into the world of cryptocurrencies and digital assets. They aggregate price data from multiple exchanges, apply safeguards against price manipulation, and filter for liquidity, making them suitable as benchmarks for institutional investment products.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Asset class:** Digital assets and cryptocurrencies
 - **Coverage:** Bitcoin, Ethereum, and broader digital asset baskets
@@ -1006,7 +986,7 @@ These indices bring the same methodological rigour that STOXX applies to traditi
 
 These indices cover stock markets in developing economies -- countries like China, India, Brazil, South Korea, Taiwan, South Africa, and Mexico. They give investors a systematic way to access the growth potential of emerging markets using STOXX's standardised methodology, making performance directly comparable to STOXX's developed-market benchmarks.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Emerging markets globally (Asia, Latin America, EMEA)
 - **Number of constituents:** Variable (typically 800+)
@@ -1066,7 +1046,7 @@ These indices cover stock markets in developing economies -- countries like Chin
 
 The STOXX Europe 600 is the go-to index for a broad view of European stock markets. It spans 600 companies across 17 countries -- not just the Eurozone but also the UK, Switzerland, Sweden, and others. Because it covers large, medium, and small companies, it offers a more complete picture of European equities than narrower indices like the EURO STOXX 50.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** 17 European countries (including non-Eurozone)
 - **Number of constituents:** 600
@@ -1129,7 +1109,7 @@ The STOXX Europe 600 is the go-to index for a broad view of European stock marke
 
 This index captures the biggest companies in Europe -- the top third of the STOXX Europe 600 by market value. These are multinational giants like Nestle, ASML, Shell, and Novo Nordisk. Because large caps dominate the market-cap-weighted STOXX Europe 600, the Large 200 behaves quite similarly to the full 600 but with slightly lower volatility and higher liquidity.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** 17 European countries (same as STOXX Europe 600)
 - **Number of constituents:** 200
@@ -1175,27 +1155,6 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 
 ---
 
-### STOXX Europe Mid 200
-
-
-> The STOXX Europe Mid 200 index comprises the 200 mid-sized constituents of the STOXX Europe 600, ranked between positions 201 and 400 by free-float market capitalisation. It represents the mid-cap segment of the pan-European equity market.
-
-The Mid 200 captures Europe's middle tier of listed companies -- firms that are substantial and well-established but not among the very largest. Mid-cap stocks often offer a balance between the stability of large caps and the growth potential of small caps, and this index provides a clean way to isolate that segment across 17 European countries.
-
-**Key characteristics:**
-
-- **Geographic coverage:** 17 European countries (same as STOXX Europe 600)
-- **Number of constituents:** 200
-- **Weighting method:** Free-float market capitalisation
-- **Review frequency:** Quarterly (aligned with STOXX Europe 600)
-- **Size segment:** Mid cap (ranks 201-400 of STOXX Europe 600)
-- **Base date:** 31 December 1991
-- **Base value:** 100
-
-> [!tip] Related terms
-> [[#STOXX Europe 600]] | [[#STOXX Europe Large 200]] | [[#STOXX Europe Small 200]] | [[index-construction#Size Segment]] | [[index-construction#Mid-Cap]]
----
-
 ### STOXX Europe Small 200
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1205,7 +1164,7 @@ The Mid 200 captures Europe's middle tier of listed companies -- firms that are 
 
 The Small 200 is the bottom third of the STOXX Europe 600 by company size. These are still sizeable firms by most standards, but they are smaller and often more domestically focused than the large-cap names. Small-cap indices tend to offer higher long-term growth potential but also greater volatility and lower liquidity.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** 17 European countries (same as STOXX Europe 600)
 - **Number of constituents:** 200
@@ -1239,7 +1198,7 @@ The Small 200 is the bottom third of the STOXX Europe 600 by company size. These
 
 Think of this as the "everything" index for European stocks. While the STOXX Europe 600 selects 600 companies from across Europe, the Total Market index captures nearly the full investable universe. It is primarily used as the selection pool and as a benchmark for funds that want exposure to the entire European market, including micro-caps that fall outside the Europe 600.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** European developed markets
 - **Number of constituents:** Variable (typically 1,000+)
@@ -1300,7 +1259,7 @@ Think of this as the "everything" index for European stocks. While the STOXX Eur
 
 The STOXX Global 1800 is a straightforward way to track the global developed-market stock universe. It combines three regional indices of equal size -- 600 from Europe, 600 from North America, and 600 from Asia/Pacific -- into one global benchmark. This structure makes it easy to decompose global performance into regional contributions.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global developed markets (Europe, North America, Asia/Pacific)
 - **Number of constituents:** 1,800 (600 per region)
@@ -1360,7 +1319,7 @@ The STOXX Global 1800 is a straightforward way to track the global developed-mar
 
 This thematic index tracks companies building or enabling the "metaverse" -- the convergence of virtual reality, augmented reality, gaming, digital economies, and related technologies. It casts a wide net across hardware manufacturers, software platforms, content creators, and infrastructure providers.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global (developed and emerging markets)
 - **Number of constituents:** Variable (typically 50-100)
@@ -1419,7 +1378,7 @@ This thematic index tracks companies building or enabling the "metaverse" -- the
 
 This is the global version of the STOXX Select Dividend family. It combines the highest-yielding stocks from Europe, North America, and Asia/Pacific into one worldwide income-focused index. Like its regional siblings, it weights stocks by dividend yield rather than market cap, making it a distinctly income-oriented benchmark.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global developed markets (Europe, North America, Asia/Pacific)
 - **Number of constituents:** 100
@@ -1474,7 +1433,7 @@ This is the global version of the STOXX Select Dividend family. It combines the 
 
 These indices extend ESG and sustainability principles into the bond market. While most ESG indices focus on stocks, this family applies similar screening and scoring to bonds -- both corporate and government. Partnering with ICE (a major bond data provider) ensures broad, accurate fixed income coverage, and ISS ESG provides the sustainability data layer.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Asset class:** Fixed income (corporate bonds, government bonds)
 - **Geographic coverage:** Global, European, and US variants
@@ -1522,7 +1481,7 @@ These indices extend ESG and sustainability principles into the bond market. Whi
 
 Factor investing is about targeting specific characteristics -- like buying cheap stocks (value) or stocks with rising prices (momentum). These indices do exactly that, but with an important twist: they keep sector allocations neutral. This means when the value index outperforms, you know it is because of the value factor, not because value stocks happened to cluster in a hot sector.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global, European, US, and regional variants
 - **Number of constituents:** Varies by parent index
@@ -1575,7 +1534,7 @@ Factor investing is about targeting specific characteristics -- like buying chea
 
 These indices are built for investors who want stock market exposure with reduced volatility. Instead of weighting stocks by market cap, the index uses mathematical optimisation to find the combination of weights that historically produces the smoothest ride. Constraints prevent the optimiser from producing extreme or impractical portfolios.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global, European, US, and regional variants
 - **Number of constituents:** Derived from parent index (e.g., STOXX Europe 600)
@@ -1634,7 +1593,7 @@ These indices are built for investors who want stock market exposure with reduce
 
 This is STOXX's comprehensive index for North American stocks, covering 600 companies from the US and Canada. It pairs with the STOXX Europe 600 and STOXX Asia/Pacific 600 to form the STOXX Global 1800, ensuring that each of the three main developed-market regions is represented by the same number of constituents.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** United States and Canada
 - **Number of constituents:** 600
@@ -1697,7 +1656,7 @@ This is STOXX's comprehensive index for North American stocks, covering 600 comp
 
 The Select Dividend family is a set of indices for income-seeking investors across different regions. Each index screens for companies that pay generous, growing dividends without stretching their finances too thin. By weighting stocks by dividend yield rather than company size, these indices prioritise the highest-yielding opportunities.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Regional variants (Europe, North America, Asia/Pacific, Global)
 - **Number of constituents:** Varies by region (30, 40, or 50)
@@ -1744,7 +1703,7 @@ The Select Dividend family is a set of indices for income-seeking investors acro
 
 The STOXX USA 500 is STOXX's benchmark for the US stock market, covering the 500 biggest American companies. It serves a similar role to other well-known US large-cap indices but uses STOXX's standardised methodology, making it directly comparable to the STOXX Europe 600 and other STOXX regional indices.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** United States
 - **Number of constituents:** 500
@@ -1802,7 +1761,7 @@ The STOXX USA 500 is STOXX's benchmark for the US stock market, covering the 500
 
 This is STOXX's widest-reaching equity index family, covering stocks from virtually every investable market on the planet -- developed and emerging alike. It is the starting point for investors who want a truly global equity benchmark, and it is the universe from which many narrower STOXX indices and thematic strategies are derived.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global (developed and emerging markets)
 - **Number of constituents:** Variable (typically 3,000+ for All Countries variant)
@@ -1864,7 +1823,7 @@ This is STOXX's widest-reaching equity index family, covering stocks from virtua
 
 The TecDAX is Germany's answer to a technology-focused index. It tracks the 30 biggest tech companies listed in Frankfurt. Since 2018, companies can be in both the TecDAX and the DAX or MDAX at the same time, so large tech companies like SAP appear in both the DAX and TecDAX.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany
 - **Number of constituents:** 30
@@ -1926,7 +1885,7 @@ The TecDAX is Germany's answer to a technology-focused index. It tracks the 30 b
 
 The VSTOXX is Europe's "fear gauge." When investors are nervous about the future and rush to buy options to protect their portfolios, option prices rise and the VSTOXX goes up. When markets are calm and complacent, the VSTOXX falls. A VSTOXX reading of 20, for example, implies that the market expects the EURO STOXX 50 to fluctuate by roughly 20% over the next year (annualised).
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Underlying:** EURO STOXX 50 options
 - **Measurement:** 30-day implied volatility (annualised)
@@ -1988,7 +1947,7 @@ The VSTOXX is Europe's "fear gauge." When investors are nervous about the future
 
 This is the broader European counterpart to the EURO STOXX 50. While the EURO STOXX 50 is limited to Eurozone countries, the STOXX Europe 50 includes heavyweights from the UK, Switzerland, and Scandinavia, providing a pan-European blue-chip view.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** 17 European developed-market countries
 - **Number of constituents:** 50
@@ -2047,7 +2006,7 @@ This is the broader European counterpart to the EURO STOXX 50. While the EURO ST
 
 These are sub-indices of the STOXX Europe 600, each tracking a specific sector -- banks, healthcare, technology, energy, and so on. They allow investors to isolate the performance of individual industries within the broader European market.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** 17 European countries (same as STOXX Europe 600)
 - **Number of constituents:** Variable by sector
@@ -2091,7 +2050,7 @@ These are sub-indices of the STOXX Europe 600, each tracking a specific sector -
 
 ESG-X indices are the simplest form of ESG integration: they take a standard STOXX benchmark and remove companies that fail basic ethical screens. There is no fancy ESG scoring or optimisation -- just straightforward exclusion of the most controversial business activities. This makes them a low-tracking-error, easy-to-implement ESG option.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Mirrors parent index (Europe 600, Global 1800, etc.)
 - **Number of constituents:** Parent index minus exclusions (typically 2-5% removed)
@@ -2152,7 +2111,7 @@ ESG-X indices are the simplest form of ESG integration: they take a standard STO
 
 Most indices assign a company to a country based on where its headquarters or listing is. True Exposure indices flip this logic: they look at where a company actually makes its money. This matters because many European-listed multinationals generate the bulk of their revenues in the US or Asia, meaning their stock prices behave more like US or Asian equities.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global
 - **Number of constituents:** Derived from parent index
@@ -2185,7 +2144,7 @@ Most indices assign a company to a country based on where its headquarters or li
 
 The STOXX Sustainability indices represent a middle ground in ESG indexing -- stricter than simple exclusion-only approaches (like ESG-X) but less complex than full optimisation-based methods. They first exclude controversial companies, then rank the rest by ESG performance within each sector and keep the leaders.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** European and global variants
 - **Number of constituents:** Approximately 50% of parent index retained
@@ -2231,7 +2190,7 @@ The STOXX Sustainability indices represent a middle ground in ESG indexing -- st
 
 The iSTOXX brand is where STOXX puts its more specialised, product-oriented indices. If a bank needs a custom index for a structured product -- for example, one that caps volatility at a certain level or deducts a fixed annual amount -- it will typically be an iSTOXX index. These indices are more exotic than the standard STOXX benchmarks.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Varies (global, regional, or single-country)
 - **Number of constituents:** Varies by design
@@ -2277,7 +2236,7 @@ The iSTOXX brand is where STOXX puts its more specialised, product-oriented indi
 
 Unlike most dividend indices that look at what companies have paid in the past, this index uses dividend futures -- financial contracts that price what the market expects companies to pay in the future. This forward-looking approach can identify dividend opportunities that backward-looking screens would miss.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global developed markets (STOXX Global 1800 universe)
 - **Number of constituents:** 40
@@ -2327,7 +2286,7 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 
 Risk control indices are like an autopilot for managing market turbulence. When the DAX becomes volatile, the index automatically shifts money out of stocks and into cash to dampen swings. When markets calm down, it shifts back into stocks. The result is an index that aims to deliver more predictable volatility over time.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Germany (DAX as underlying)
 - **Mechanism:** Dynamic allocation between DAX and cash
@@ -2367,7 +2326,7 @@ Risk control indices are like an autopilot for managing market turbulence. When 
 
 This index identifies global ESG leaders by evaluating companies across three separate pillars -- environment, social, and governance -- rather than relying on a single blended ESG score. A company must rank well in at least one pillar to be included, and the sector-relative approach prevents any single industry from dominating.
 
-**Key characteristics:**
+#### Key characteristics
 
 - **Geographic coverage:** Global developed markets (STOXX Global 1800 universe)
 - **Number of constituents:** ~300-400

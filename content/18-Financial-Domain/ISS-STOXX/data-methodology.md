@@ -282,18 +282,6 @@ Think of the coverage universe as the broadest possible "long list." For STOXX, 
 
 ---
 
-### Cross-Sectional Data
-
-> A dataset that captures observations across multiple entities (e.g., companies, securities) at a single point in time, as opposed to tracking a single entity across multiple time periods.
-
-Cross-sectional data is what you get when you take a "snapshot" of every company's market capitalisation, ESG score, or governance rating on a given date. Index reviews and rebalancing decisions are fundamentally cross-sectional exercises — comparing all eligible securities against one another at the review cut-off date.
-
-> [!tip] Related Terms
-> [[#Panel Data]], [[#Time Series Data]], [[#Point-in-Time Data]]
----
-
-## D
-
 ### Data Feed
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
@@ -342,36 +330,6 @@ Data feeds are the pipes through which institutional investors receive index and
 > — [Dax Strategy Index Guide (PDF), p. 38](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
 >
 
----
-
-### Data Imputation
-
-> The process of replacing missing or unavailable data values with substituted estimates derived from statistical models, peer-group averages, or other systematic techniques, so that downstream calculations can proceed on a complete dataset.
-
-Data imputation is what happens when a company simply does not report a data point that an index or rating methodology requires — for example, Scope 3 carbon emissions or board-diversity percentages. ISS and STOXX ESG methodologies document which fields may be imputed, the imputation technique used (e.g., sector-median fill, regression-based prediction), and how imputed values are flagged so that end users can distinguish reported from estimated figures. Imputation is closely related to but distinct from estimation modelling: imputation fills discrete gaps, while estimation models may construct entire derived metrics.
-
-> [!tip] Related Terms
-> [[#Estimation Model]], [[#Disclosure Rate]], [[#Coverage Universe]], [[#Quality Assurance (Data)]]
----
-
-### Data Normalization
-
-> The process of transforming raw data values onto a common scale or into a standard format so that metrics from different sources, reporting frameworks, currencies, or units of measurement can be meaningfully compared.
-
-Raw ESG and financial data arrives in wildly inconsistent forms — carbon emissions in metric tonnes vs. short tons, revenue in local currencies, governance scores on different rating scales. Data normalisation converts these heterogeneous inputs into comparable units. STOXX normalises financial data to a common currency and adjusts for free float; ISS normalises ESG indicators to z-scores or percentile ranks within industry peer groups so that a mining company's environmental performance can be compared against other miners, not against software firms.
-
-> [!tip] Related Terms
-> [[#Data Imputation]], [[#Cross-Sectional Data]], [[#Estimation Model]], [[#Quality Assurance (Data)]]
----
-
-### Data Pipeline
-
-> The end-to-end sequence of automated steps — ingestion, validation, transformation, enrichment, and loading — through which raw data flows from its original source to its final destination in a production database, index calculation engine, or client-facing platform.
-
-A data pipeline is the plumbing behind every index level and ESG score. For STOXX, the pipeline begins with exchange feeds and corporate-action notices, passes through validation and corporate-action-adjustment engines, and ends with the publication of official index values. For ISS, the pipeline ingests company filings, third-party databases, and analyst inputs, routes them through scoring models and QA checks, and delivers final ratings to DataDesk, the Sustainability Gateway, and Snowflake. Pipeline reliability is a core operational risk — a failure at any stage can delay or corrupt data delivery.
-
-> [!tip] Related Terms
-> [[#Data Feed]], [[#API (Application Programming Interface)]], [[#Quality Assurance (Data)]], [[#Snowflake Delivery]]
 ---
 
 ### Data Vendor
@@ -549,16 +507,6 @@ Disclosure rate is a key quality-of-data metric. A high disclosure rate means th
 
 ## E
 
-### End-of-Day Data
-
-> Index values, component lists, weights, and related analytics calculated and published after the close of trading on a given business day, representing the final official figures for that session.
-
-End-of-day (EOD) data is the definitive record of an index for each trading day. STOXX publishes EOD files that include closing index levels, component weights, divisor values, and corporate action adjustments. Most passive fund NAV calculations, compliance checks, and performance attribution processes rely on EOD data rather than intraday snapshots.
-
-> [!tip] Related Terms
-> [[#Data Feed]], [[#Time Series Data]], [[#Back-Testing]]
----
-
 ### Estimation Model
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -635,18 +583,6 @@ Factsheets are the "business card" of an index. STOXX publishes monthly factshee
 ---
 
 ## H
-
-### Historical Simulation
-
-> The process of reconstructing the performance of an index or strategy over a past time period using archived market data and a defined set of rules, applied as if the rules had been in effect throughout that period.
-
-Historical simulation is closely related to back-testing but carries a slightly broader connotation — it may involve scenario analysis, stress testing, or "what-if" variations of methodology parameters, not just a single retrospective track record. STOXX simulation files allow clients to replicate historical index compositions and verify calculations independently.
-
-> [!tip] Related Terms
-> [[#Back-Testing]], [[#Simulation File]], [[#Look-Ahead Bias]], [[#Survivorship Bias]]
----
-
-## I
 
 ### Index Administrator
 
@@ -751,30 +687,6 @@ ISINs are the universal passport number for financial instruments. Every constit
 
 ## L
 
-### Look-Ahead Bias
-
-> A methodological error that occurs when a back-test or simulation incorporates information that would not have been available to market participants at the historical point in time being modelled.
-
-Look-ahead bias is one of the most dangerous pitfalls in index design and quantitative research. For example, if a back-test uses annual carbon-emissions data published in April to make a "January" portfolio decision, it is using future information. STOXX and ISS mitigate this by documenting data availability lags and enforcing point-in-time data usage in their methodologies.
-
-> [!tip] Related Terms
-> [[#Point-in-Time Data]], [[#Back-Testing]], [[#Survivorship Bias]], [[#Historical Simulation]]
----
-
-## M
-
-### Methodology Consultation
-
-> A formal, time-bound process in which an index administrator publicly solicits feedback from stakeholders — licensees, market participants, regulators, and advisory committees — before implementing material changes to an index methodology.
-
-Under the EU Benchmarks Regulation, STOXX is required to consult on any proposed methodology change that would materially affect the benchmark's representativeness or the value of financial products referencing it. Consultation papers describe the proposed change, provide impact analysis, and invite written responses during a defined comment period (typically 30 to 60 days). STOXX publishes a summary of feedback received and a final decision notice. ISS follows a similar consultation model for its benchmark voting policies, issuing draft policy updates each autumn for client comment before the next proxy season.
-
-> [!tip] Related Terms
-> [[#Benchmark Administration]], [[#Benchmark Statement]], [[#Rulebook]], [[#Oversight Function]]
----
-
-## O
-
 ### Oversight Function
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
@@ -828,26 +740,6 @@ The oversight function is the governance watchdog inside an index provider. For 
 ---
 
 ## P
-
-### Pro-Forma Data
-
-> Hypothetical or adjusted data that shows what an index's composition, weights, or performance would look like if a proposed methodology change, corporate action, or rebalancing had already been applied, before the change takes effect.
-
-Pro-forma data is the "preview" of an index change. When STOXX announces a quarterly rebalancing, it often publishes pro-forma constituent lists and weights several days before the effective date, giving passive fund managers time to prepare their trades. Similarly, when a methodology consultation proposes new screening criteria, STOXX may provide pro-forma back-tests showing how the index would have behaved under the proposed rules. ISS uses pro-forma analyses when evaluating the impact of governance policy changes on voting recommendations.
-
-> [!tip] Related Terms
-> [[#Review Report]], [[#Selection List]], [[#Back-Testing]], [[#Methodology Consultation]]
----
-
-### Panel Data
-
-> A dataset that combines cross-sectional and time-series dimensions, tracking multiple entities across multiple time periods so that each observation is identified by both an entity and a date.
-
-Panel data is the gold standard for empirical research in finance. If you have ESG scores for 3,000 companies observed quarterly over ten years, that is a panel. ISS's historical ESG and governance databases are structured as panels, enabling clients to study how governance quality evolves over time and across peer groups.
-
-> [!tip] Related Terms
-> [[#Cross-Sectional Data]], [[#Time Series Data]], [[#Point-in-Time Data]]
----
 
 ### Point-in-Time Data
 
@@ -1173,37 +1065,6 @@ The selection list is the output of the review process — the names that "made 
 
 ---
 
-### Simulation File
-
-
-> A structured data file provided by an index administrator that contains the full historical composition, weights, and corporate actions of an index, enabling clients to independently replicate past index calculations.
-
-Simulation files are the raw material for back-testing and audit. STOXX offers simulation files as part of its data services, allowing licensees — ETF providers, structured-product issuers, and quantitative researchers — to verify that their replication of the index matches STOXX's official values. These files are typically delivered in CSV or XML format and include daily constituent snapshots.
-
-> [!tip] Related Terms
-> [[#Back-Testing]], [[#Historical Simulation]], [[#End-of-Day Data]]
----
-
-### Snowflake Delivery
-
-> A data distribution method in which a provider makes datasets available through Snowflake's cloud data platform, enabling clients to access live, query-ready data directly within their own Snowflake environment without file transfers.
-
-Snowflake delivery represents the modern evolution of data distribution. Instead of downloading CSV files or polling an FTP server, clients can access ISS and STOXX datasets as shared tables in Snowflake, running SQL queries against always-current data. This eliminates ETL overhead, reduces latency, and ensures that all consumers are working from the same version of the data.
-
-> [!tip] Related Terms
-> [[#Data Feed]], [[#DataDesk (ISS Platform)]], [[#End-of-Day Data]]
----
-
-### Survivorship Bias
-
-> A systematic distortion in historical analysis that arises when only currently existing entities (e.g., companies still listed) are included in a dataset, while entities that have been delisted, merged, or bankrupted are excluded.
-
-Survivorship bias makes past performance look better than it actually was because the "losers" — companies that failed — disappear from the dataset. A back-test of a stock-selection strategy that only uses today's listed companies will overstate returns because it ignores companies that went bankrupt along the way. STOXX and ISS mitigate survivorship bias by maintaining records of delisted constituents in their historical databases.
-
-> [!tip] Related Terms
-> [[#Look-Ahead Bias]], [[#Back-Testing]], [[#Point-in-Time Data]], [[#Historical Simulation]]
----
-
 ### Sustainability Gateway (ISS Platform)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
@@ -1241,41 +1102,3 @@ The Sustainability Gateway (sometimes referred to as ISS ESG Gateway) is the ESG
 ---
 
 ## T
-
-### Time Series Data
-
-> A sequence of data points recorded at successive, equally spaced intervals over time for a single entity or variable, such as daily closing index levels or monthly ESG scores.
-
-Time series data is the backbone of performance measurement and trend analysis. The daily closing values of the EURO STOXX 50 from 1998 to today form a time series. STOXX provides time series data for all its indices going back to each index's base date (or earlier, for back-tested periods). Analysts use time series to compute volatility, drawdowns, correlations, and other risk metrics.
-
-> [!tip] Related Terms
-> [[#Cross-Sectional Data]], [[#Panel Data]], [[#End-of-Day Data]]
----
-
-## U
-
-### Universe Construction
-
-> The systematic process by which an index administrator defines the broadest eligible set of securities for an index, applying geographic, listing, liquidity, and regulatory filters to a starting population.
-
-Universe construction is the very first step in building any index. STOXX starts with all securities in a given region's regulated exchanges, then applies minimum free-float market-cap thresholds, liquidity screens, and listing-venue requirements. The result is the coverage universe from which specific indices draw their constituents. Changes to universe construction rules are among the most impactful methodology decisions and are subject to formal consultation.
-
-> [!tip] Related Terms
-> [[#Coverage Universe]], [[#Selection List]], [[#Rulebook]], [[#Benchmark Administration]]
----
-
-## V
-
-### Vendor Reconciliation
-
-> The process of comparing data received from two or more independent vendors — or from a vendor against an internal source — to identify and resolve discrepancies in values, identifiers, timestamps, or coverage.
-
-Vendor reconciliation is a daily operational discipline for index providers and asset managers. STOXX reconciles market data received from exchanges and data vendors to ensure that prices, shares outstanding, and corporate-action flags are consistent before they enter the index calculation engine. ISS reconciles company-reported ESG data against third-party sources to flag inconsistencies for analyst review. When discrepancies arise, the reconciliation process determines which source is authoritative and documents the resolution — a key audit-trail requirement under the EU Benchmarks Regulation.
-
-> [!tip] Related Terms
-> [[#Quality Assurance (Data)]], [[#Data Vendor]], [[#Data Pipeline]], [[#Restatement]]
----
-
-> [!info] Navigation
-> Return to the main [[ISS-STOXX]] index or explore related glossaries in the
-> [[18-Financial-Domain]] section.

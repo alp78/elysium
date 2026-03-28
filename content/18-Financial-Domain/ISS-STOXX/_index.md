@@ -12,11 +12,12 @@ date: 2026-03-28
 # ISS & STOXX Financial Domain Glossary
 
 > [!abstract]
-> A comprehensive reference covering **400+ terms** across 12 domains, extracted
+> A comprehensive reference covering **505 terms** across 12 domains, extracted
 > from official STOXX and ISS Governance documentation including methodology
 > guides, rulebooks, factsheets, product pages, and research publications.
+> Every term is verified against crawled source content with real excerpts.
 >
-> **Sources crawled:** 40+ web pages and documentation resources across
+> **Sources crawled:** 5,775 pages (5,024 web + 751 PDFs) across
 > [stoxx.com](https://stoxx.com/) and
 > [issgovernance.com](https://www.issgovernance.com/).
 
@@ -24,18 +25,18 @@ date: 2026-03-28
 
 | Domain | Terms | Description |
 |---|---|---|
-| [[index-construction\|Index Construction]] | 43 | Index methodology, weighting, rebalancing, divisors, calculation formulas |
-| [[index-families\|Index Families]] | 36 | STOXX, DAX, EURO STOXX index families and benchmarks |
-| [[esg-ratings\|ESG Ratings]] | 36 | ESG risk ratings, QualityScore, controversy levels, scoring methodologies |
-| [[esg-frameworks\|ESG Frameworks]] | 24 | Reporting standards, taxonomies, international sustainability initiatives |
-| [[sustainability-themes\|Sustainability Themes]] | 34 | Climate metrics, Net Zero, carbon intensity, biodiversity, water risk |
-| [[corporate-governance\|Corporate Governance]] | 41 | Board structure, proxy voting, executive compensation, governance scores |
-| [[financial-instruments\|Financial Instruments]] | 27 | Derivatives, ETFs, structured products, green bonds on indices |
-| [[financial-metrics\|Financial Metrics]] | 35 | Return calculations, risk metrics, volatility, factor exposures |
-| [[data-methodology\|Data Methodology]] | 27 | Data collection, quality, coverage, estimation, back-testing |
-| [[regulatory\|Regulatory]] | 26 | SFDR, EU BMR, MiFID II, Paris-aligned benchmarks, taxonomy regulation |
-| [[market-structure\|Market Structure]] | 31 | Exchanges, sectors, liquidity, classification systems (ICB/GICS) |
-| [[smart-beta-factors\|Smart Beta & Factors]] | 33 | Factor investing, smart beta strategies, risk premia |
+| [[index-construction\|Index Construction]] | 48 | Index methodology, weighting, rebalancing, divisors, calculation formulas |
+| [[index-families\|Index Families]] | 43 | STOXX, DAX, EURO STOXX index families and benchmarks |
+| [[esg-ratings\|ESG Ratings]] | 46 | ESG risk ratings, QualityScore, controversy levels, scoring methodologies |
+| [[esg-frameworks\|ESG Frameworks]] | 27 | Reporting standards, taxonomies, international sustainability initiatives |
+| [[sustainability-themes\|Sustainability Themes]] | 45 | Climate metrics, Net Zero, carbon intensity, biodiversity, water risk |
+| [[corporate-governance\|Corporate Governance]] | 62 | Board structure, proxy voting, executive compensation, governance scores |
+| [[financial-instruments\|Financial Instruments]] | 37 | Derivatives, ETFs, structured products, green bonds on indices |
+| [[financial-metrics\|Financial Metrics]] | 53 | Return calculations, risk metrics, volatility, factor exposures |
+| [[data-methodology\|Data Methodology]] | 23 | Data collection, quality, coverage, estimation, back-testing |
+| [[regulatory\|Regulatory]] | 28 | SFDR, EU BMR, MiFID II, Paris-aligned benchmarks, taxonomy regulation |
+| [[market-structure\|Market Structure]] | 54 | Exchanges, sectors, liquidity, classification systems (ICB/GICS) |
+| [[smart-beta-factors\|Smart Beta & Factors]] | 39 | Factor investing, smart beta strategies, risk premia |
 
 ## How to Use This Glossary
 

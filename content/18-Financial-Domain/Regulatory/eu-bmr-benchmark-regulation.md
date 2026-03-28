@@ -20,7 +20,7 @@ updated: 2026-03-23
 - Procedures for dealing with **errors in input data** must be documented — the [[compliance-and-auditability]] framework provides the audit trail implementation that satisfies this requirement
 - Internal review at least **annually**
 
-**What this means for the pipeline:**
+#### What this means for the pipeline
 - Bronze layer in GCS must be immutable (never overwrite raw files)
 - Every pipeline run records source file path and SHA-256 hash in [[pit-integrity-logic|lineage metadata]]
 - Quality gates at each medallion layer catch errors before publication
@@ -31,7 +31,7 @@ updated: 2026-03-23
 - Changes must follow a **defined consultation process**
 - The methodology document must include: calculation formula, data sources, weighting scheme, rebalancing rules, corporate action treatment
 
-**What this means for the pipeline:**
+#### What this means for the pipeline
 - Methodology parameters stored as version-controlled YAML (see [[dataops-for-indices|methodology-as-code]])
 - Every calculation uses the methodology version that was active on that date
 - Changes tracked via Git history and ADRs

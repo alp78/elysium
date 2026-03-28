@@ -75,7 +75,7 @@ display(Markdown("**First 5 rows (head):**"))
 display(ohlcv_pd.head())
 ```
 
-**First 5 rows (head):**
+#### First 5 rows (head)
 
 <table border="1" class="dataframe">
   <thead>
@@ -179,7 +179,7 @@ display(Markdown("**Last 5 rows (tail):**"))
 display(ohlcv_pd.tail())
 ```
 
-**Last 5 rows (tail):**
+#### Last 5 rows (tail)
 
 <table border="1" class="dataframe">
   <thead>
@@ -285,7 +285,7 @@ display(Markdown("**Random sample of 5 rows:**"))
 display(ohlcv_pd.sample(5, random_state=42))
 ```
 
-**Random sample of 5 rows:**
+#### Random sample of 5 rows
 
 <table border="1" class="dataframe">
   <thead>
@@ -393,7 +393,7 @@ display(Markdown("**First 5 rows (head):**"))
 display(ohlcv_pl.head())
 ```
 
-**First 5 rows (head):**
+#### First 5 rows (head)
 
 <div><style>
 .dataframe > thead > tr,
@@ -409,7 +409,7 @@ display(Markdown("**Last 5 rows (tail):**"))
 display(ohlcv_pl.tail())
 ```
 
-**Last 5 rows (tail):**
+#### Last 5 rows (tail)
 
 <div><style>
 .dataframe > thead > tr,
@@ -427,7 +427,7 @@ display(Markdown("**Random sample of 5 rows:**"))
 display(ohlcv_pl.sample(5, seed=42))
 ```
 
-**Random sample of 5 rows:**
+#### Random sample of 5 rows
 
 <div><style>
 .dataframe > thead > tr,
@@ -452,7 +452,7 @@ for line in ohlcv_pl.glimpse(return_type="string").strip().split("\n"):
 display(ohlcv_pl.head())
 ```
 
-**Glimpse (transposed summary):**
+#### Glimpse (transposed summary)
 
 <div><style>
 .dataframe > thead > tr,
@@ -486,7 +486,7 @@ display(Markdown("**Numeric summary:**"))
 display(ohlcv_pd.describe())
 ```
 
-**Numeric summary:**
+#### Numeric summary
 
 <table border="1" class="dataframe">
   <thead>
@@ -608,7 +608,7 @@ display(Markdown("**Include all dtypes:**"))
 display(ohlcv_pd.describe(include="all"))
 ```
 
-**Include all dtypes:**
+#### Include all dtypes
 
 <table border="1" class="dataframe">
   <thead>
@@ -980,7 +980,7 @@ display(Markdown("**Polars describe (all columns):**"))
 display(ohlcv_pl.describe())
 ```
 
-**Polars describe (all columns):**
+#### Polars describe (all columns)
 
 <div><style>
 .dataframe > thead > tr,
@@ -999,7 +999,7 @@ for col_name, dtype in ohlcv_pl.schema.items():
     print(f"  {col_name:<20s} {dtype}")
 ```
 
-**Schema dict:**
+#### Schema dict
 
       id                   Int64
       symbol               String
@@ -1019,7 +1019,7 @@ display(Markdown("**dtypes list:**"))
 print(ohlcv_pl.dtypes)
 ```
 
-**dtypes list:**
+#### dtypes list
 
     [Int64, String, Date, Float64, Float64, Float64, Float64, Float64, Int64, Float64, Float64, Boolean]
 
@@ -1036,7 +1036,7 @@ display(Markdown("**Top 10 tickers by row count:**"))
 display(ohlcv_pd["symbol"].value_counts().head(10))
 ```
 
-**Top 10 tickers by row count:**
+#### Top 10 tickers by row count
 
 <table border="1" class="dataframe">
   <thead>
@@ -1100,7 +1100,7 @@ display(Markdown("**Number of unique values per column:**"))
 display(ohlcv_pd.nunique())
 ```
 
-**Number of unique values per column:**
+#### Number of unique values per column
 
 <table border="1" class="dataframe">
   <thead>
@@ -1166,7 +1166,7 @@ display(Markdown("**Unique tickers (first 10):**"))
 print(ohlcv_pd["symbol"].unique()[:10])
 ```
 
-**Unique tickers (first 10):**
+#### Unique tickers (first 10)
 
     ['ABI.BR' 'AD.AS' 'ADS.DE' 'ADYEN.AS' 'AI.PA' 'AIR.PA' 'ALV.DE' 'ARGX.BR'
      'ASML.AS' 'BAS.DE']
@@ -1187,7 +1187,7 @@ display(
 )
 ```
 
-**Top 10 tickers by row count:**
+#### Top 10 tickers by row count
 
 <div><style>
 .dataframe > thead > tr,
@@ -1210,7 +1210,7 @@ display(
 )
 ```
 
-**n_unique per column:**
+#### n_unique per column
 
 <div><style>
 .dataframe > thead > tr,
@@ -1226,7 +1226,7 @@ display(Markdown("**Unique tickers (first 10):**"))
 print(ohlcv_pl.get_column("symbol").unique().sort().head(10).to_list())
 ```
 
-**Unique tickers (first 10):**
+#### Unique tickers (first 10)
 
     ['ABI.BR', 'AD.AS', 'ADS.DE', 'ADYEN.AS', 'AI.PA', 'AIR.PA', 'ALV.DE', 'ARGX.BR', 'ASML.AS', 'BAS.DE']
 
@@ -1240,7 +1240,7 @@ display(Markdown("**Null counts per column:**"))
 display(scores_pd.isnull().sum())
 ```
 
-**Null counts per column:**
+#### Null counts per column
 
 <table border="1" class="dataframe">
   <thead>
@@ -1403,7 +1403,7 @@ null_pct = (scores_pd.isnull().sum() / len(scores_pd) * 100).round(2)
 display(null_pct[null_pct > 0])
 ```
 
-**Null percentage per column:**
+#### Null percentage per column
 
 <table border="1" class="dataframe">
   <thead>
@@ -1699,7 +1699,7 @@ display(Markdown("**Null counts per column (Polars):**"))
 display(scores_pl.null_count())
 ```
 
-**Null counts per column (Polars):**
+#### Null counts per column (Polars)
 
 <div><style>
 .dataframe > thead > tr,
@@ -1719,7 +1719,7 @@ display(
 )
 ```
 
-**Null percentage per column (Polars):**
+#### Null percentage per column (Polars)
 
 <div><style>
 .dataframe > thead > tr,
@@ -1767,7 +1767,7 @@ display(Markdown("**scores_daily — head:**"))
 display(scores_pd.head())
 ```
 
-**scores_daily — head:**
+#### scores_daily — head
 
 <table border="1" class="dataframe">
   <thead>
@@ -2015,7 +2015,7 @@ display(Markdown("**scores_daily — describe:**"))
 display(scores_pd.describe(include="all"))
 ```
 
-**scores_daily — describe:**
+#### scores_daily — describe
 
 <table border="1" class="dataframe">
   <thead>
@@ -2497,7 +2497,7 @@ display(Markdown("**scores_daily — null counts:**"))
 display(scores_pd.isnull().sum())
 ```
 
-**scores_daily — null counts:**
+#### scores_daily — null counts
 
 <table border="1" class="dataframe">
   <thead>
@@ -2663,7 +2663,7 @@ display(Markdown("**scores_daily — head (Polars):**"))
 display(scores_pl.head())
 ```
 
-**scores_daily — head (Polars):**
+#### scores_daily — head (Polars)
 
 <div><style>
 .dataframe > thead > tr,
@@ -2679,7 +2679,7 @@ display(Markdown("**scores_daily — describe (Polars):**"))
 display(scores_pl.describe())
 ```
 
-**scores_daily — describe (Polars):**
+#### scores_daily — describe (Polars)
 
 <div><style>
 .dataframe > thead > tr,
@@ -2695,7 +2695,7 @@ display(Markdown("**scores_daily — null counts (Polars):**"))
 display(scores_pl.null_count())
 ```
 
-**scores_daily — null counts (Polars):**
+#### scores_daily — null counts (Polars)
 
 <div><style>
 .dataframe > thead > tr,
@@ -2714,7 +2714,7 @@ display(Markdown("**index_dim — Pandas:**"))
 display(dim_pd.drop(columns="long_business_summary").head())
 ```
 
-**index_dim — Pandas:**
+#### index_dim — Pandas
 
 <table border="1" class="dataframe">
   <thead>
@@ -2896,7 +2896,7 @@ display(Markdown("**index_dim — Polars:**"))
 display(dim_pl.head())
 ```
 
-**index_dim — Polars:**
+#### index_dim — Polars
 
 <div><style>
 .dataframe > thead > tr,
@@ -2912,7 +2912,7 @@ display(Markdown("**index_dim — dtypes (Pandas):**"))
 display(dim_pd.dtypes)
 ```
 
-**index_dim — dtypes (Pandas):**
+#### index_dim — dtypes (Pandas)
 
 <table border="1" class="dataframe">
   <thead>
@@ -3035,7 +3035,7 @@ for col_name, dtype in dim_pl.schema.items():
     print(f"  {col_name:<25s} {dtype}")
 ```
 
-**index_dim — schema (Polars):**
+#### index_dim — schema (Polars)
 
       id                        Int64
       _index                    String
@@ -3093,7 +3093,7 @@ display(Markdown("**OHLCV profile (Pandas):**"))
 display(profile_pd(ohlcv_pd))
 ```
 
-**OHLCV profile (Pandas):**
+#### OHLCV profile (Pandas)
 
 <table border="1" class="dataframe">
   <thead>
@@ -3246,7 +3246,7 @@ display(Markdown("**OHLCV profile (Polars):**"))
 display(profile_pl(ohlcv_pl))
 ```
 
-**OHLCV profile (Polars):**
+#### OHLCV profile (Polars)
 
 <div><style>
 .dataframe > thead > tr,
@@ -3651,7 +3651,7 @@ display(ohlcv_pd.head(3))
 display(dim_pd.drop(columns="long_business_summary").head(3))
 ```
 
-**Quick look at both datasets:**
+#### Quick look at both datasets
 
 <table border="1" class="dataframe">
   <thead>
@@ -3849,7 +3849,7 @@ display(Markdown("**Pandas — single row as Series:**"))
 display(ohlcv_pd.iloc[0])
 ```
 
-**Pandas — single row as Series:**
+#### Pandas — single row as Series
 
 <table border="1" class="dataframe">
   <thead>
@@ -3919,11 +3919,11 @@ display(Markdown("**Polars — single row as DataFrame:**"))
 display(ohlcv_pl.slice(0, 1))
 ```
 
-**Polars — single row as tuple:**
+#### Polars — single row as tuple
 
     (21160, 'ABI.BR', datetime.date(2021, 1, 4), 58.15, 58.85, 56.78, 57.21, 53.5761, 1513937, 0.0, 0.0, False)
 
-**Polars — single row as DataFrame:**
+#### Polars — single row as DataFrame
 
 <div><style>
 .dataframe > thead > tr,
@@ -3942,7 +3942,7 @@ display(Markdown("**Pandas — rows at positions 0, 10, 100:**"))
 display(ohlcv_pd.iloc[[0, 10, 100]])
 ```
 
-**Pandas — rows at positions 0, 10, 100:**
+#### Pandas — rows at positions 0, 10, 100
 
 <table border="1" class="dataframe">
   <thead>
@@ -4017,7 +4017,7 @@ display(Markdown("**Polars — rows at positions 0, 10, 100:**"))
 display(ohlcv_pl[[0, 10, 100]])
 ```
 
-**Polars — rows at positions 0, 10, 100:**
+#### Polars — rows at positions 0, 10, 100
 
 <div><style>
 .dataframe > thead > tr,
@@ -4036,7 +4036,7 @@ display(Markdown("**Pandas — rows 10 to 14:**"))
 display(ohlcv_pd.iloc[10:15])
 ```
 
-**Pandas — rows 10 to 14:**
+#### Pandas — rows 10 to 14
 
 <table border="1" class="dataframe">
   <thead>
@@ -4141,7 +4141,7 @@ display(Markdown("**Polars — rows 10 to 14:**"))
 display(ohlcv_pl.slice(10, 5))
 ```
 
-**Polars — rows 10 to 14:**
+#### Polars — rows 10 to 14
 
 <div><style>
 .dataframe > thead > tr,
@@ -4165,7 +4165,7 @@ display(Markdown("**Pandas — loc with label index:**"))
 display(dim_indexed.loc[["ASML.AS", "SAP.DE"]])
 ```
 
-**Pandas — loc with label index:**
+#### Pandas — loc with label index
 
 <table border="1" class="dataframe">
   <thead>
@@ -4288,7 +4288,7 @@ display(Markdown("**Polars — filter as label equivalent:**"))
 display(dim_pl.filter(pl.col("symbol").is_in(["ASML.AS", "SAP.DE"])).drop("long_business_summary"))
 ```
 
-**Polars — filter as label equivalent:**
+#### Polars — filter as label equivalent
 
 <div><style>
 .dataframe > thead > tr,
@@ -4309,7 +4309,7 @@ display(Markdown("**Pandas — rows 0-4, columns 2-5:**"))
 display(ohlcv_pd.iloc[:5, 2:6])
 ```
 
-**Pandas — rows 0-4, columns 2-5:**
+#### Pandas — rows 0-4, columns 2-5
 
 <table border="1" class="dataframe">
   <thead>
@@ -4367,7 +4367,7 @@ cols = ohlcv_pl.columns[2:6]
 display(ohlcv_pl.slice(0, 5).select(cols))
 ```
 
-**Polars — rows 0-4, columns date through close:**
+#### Polars — rows 0-4, columns date through close
 
 <div><style>
 .dataframe > thead > tr,
@@ -4386,7 +4386,7 @@ display(Markdown("**Pandas — ASML rows, selected columns:**"))
 display(ohlcv_pd.loc[ohlcv_pd["symbol"] == "ASML.AS", ["date", "close", "volume"]].head())
 ```
 
-**Pandas — ASML rows, selected columns:**
+#### Pandas — ASML rows, selected columns
 
 <table border="1" class="dataframe">
   <thead>
@@ -4442,7 +4442,7 @@ display(
 )
 ```
 
-**Polars — ASML rows, selected columns:**
+#### Polars — ASML rows, selected columns
 
 <div><style>
 .dataframe > thead > tr,
@@ -4461,7 +4461,7 @@ display(Markdown("**Pandas:**"))
 display(dim_pd.iloc[:5][["symbol", "long_name", "sector", "country"]])
 ```
 
-**Pandas:**
+#### Pandas
 
 <table border="1" class="dataframe">
   <thead>
@@ -4518,7 +4518,7 @@ display(Markdown("**Polars:**"))
 display(dim_pl.slice(0, 5).select("symbol", "long_name", "sector", "country"))
 ```
 
-**Polars:**
+#### Polars
 
 <div><style>
 .dataframe > thead > tr,
@@ -4691,7 +4691,7 @@ display(Markdown("**Select specific columns with `loc`:**"))
 display(ohlcv_pd.loc[:, ["symbol", "open", "close"]].head())
 ```
 
-**Select specific columns with `loc`:**
+#### Select specific columns with `loc`
 
 <table border="1" class="dataframe">
   <thead>
@@ -4741,7 +4741,7 @@ display(Markdown("**Slice columns with `loc` (label range):**"))
 display(ohlcv_pd.loc[:, "open":"close"].head())
 ```
 
-**Slice columns with `loc` (label range):**
+#### Slice columns with `loc` (label range)
 
 <table border="1" class="dataframe">
   <thead>
@@ -4817,7 +4817,7 @@ display(Markdown("**First three columns by position:**"))
 display(ohlcv_pd.iloc[:, :3].head())
 ```
 
-**First three columns by position:**
+#### First three columns by position
 
 <table border="1" class="dataframe">
   <thead>
@@ -4867,7 +4867,7 @@ display(Markdown("**Columns at positions 0, 2, 4:**"))
 display(ohlcv_pd.iloc[:, [0, 2, 4]].head())
 ```
 
-**Columns at positions 0, 2, 4:**
+#### Columns at positions 0, 2, 4
 
 <table border="1" class="dataframe">
   <thead>
@@ -4923,7 +4923,7 @@ display(Markdown("**Columns at positions 0, 2, 4:**"))
 display(ohlcv_pl.select([ohlcv_pl.columns[i] for i in [0, 2, 4]]).head())
 ```
 
-**First three columns by position:**
+#### First three columns by position
 
 <div><style>
 .dataframe > thead > tr,
@@ -4934,7 +4934,7 @@ display(ohlcv_pl.select([ohlcv_pl.columns[i] for i in [0, 2, 4]]).head())
 </style>
 <small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th></tr><tr><td>i64</td><td>str</td><td>date</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td></tr></tbody></table></div>
 
-**Columns at positions 0, 2, 4:**
+#### Columns at positions 0, 2, 4
 
 <div><style>
 .dataframe > thead > tr,
@@ -4971,7 +4971,7 @@ display(Markdown("**All columns except volume:**"))
 display(ohlcv_pl.select(pl.exclude("volume")).head())
 ```
 
-**All columns except volume:**
+#### All columns except volume
 
 <div><style>
 .dataframe > thead > tr,
@@ -4987,7 +4987,7 @@ display(Markdown("**Exclude multiple columns:**"))
 display(ohlcv_pl.select(pl.exclude(["volume", "symbol"])).head())
 ```
 
-**Exclude multiple columns:**
+#### Exclude multiple columns
 
 <div><style>
 .dataframe > thead > tr,
@@ -5008,7 +5008,7 @@ display(Markdown("**Numeric columns only:**"))
 display(ohlcv_pd.select_dtypes(include="number").head())
 ```
 
-**Numeric columns only:**
+#### Numeric columns only
 
 <table border="1" class="dataframe">
   <thead>
@@ -5094,7 +5094,7 @@ display(Markdown("**Object / string columns only:**"))
 display(ohlcv_pd.select_dtypes(include="object").head())
 ```
 
-**Object / string columns only:**
+#### Object / string columns only
 
 <table border="1" class="dataframe">
   <thead>
@@ -5179,7 +5179,7 @@ display(Markdown("**Float64 columns only:**"))
 display(ohlcv_pl.select(cs.by_dtype(pl.Float64)).head())
 ```
 
-**Float64 columns only:**
+#### Float64 columns only
 
 <div><style>
 .dataframe > thead > tr,
@@ -5195,7 +5195,7 @@ display(Markdown("**Int64 columns only:**"))
 display(ohlcv_pl.select(cs.by_dtype(pl.Int64)).head())
 ```
 
-**Int64 columns only:**
+#### Int64 columns only
 
 <div><style>
 .dataframe > thead > tr,
@@ -5216,7 +5216,7 @@ display(Markdown("**Columns matching regex (contains 'o'):**"))
 display(ohlcv_pd.filter(regex="o").head())
 ```
 
-**Columns matching regex (contains 'o'):**
+#### Columns matching regex (contains 'o')
 
 <table border="1" class="dataframe">
   <thead>
@@ -5290,7 +5290,7 @@ display(Markdown("**Columns starting with 'c':**"))
 display(ohlcv_pd.filter(regex="^c").head())
 ```
 
-**Columns starting with 'c':**
+#### Columns starting with 'c'
 
 <table border="1" class="dataframe">
   <thead>
@@ -5328,7 +5328,7 @@ display(Markdown("**Columns whose name contains 'e':**"))
 display(ohlcv_pd.filter(regex="e").head())
 ```
 
-**Columns whose name contains 'e':**
+#### Columns whose name contains 'e'
 
 <table border="1" class="dataframe">
   <thead>
@@ -5417,7 +5417,7 @@ display(Markdown("**Columns whose name starts with 'c' or 'o' (regex):**"))
 display(ohlcv_pl.select(pl.col("^(c|o).*$")).head())
 ```
 
-**Columns whose name starts with 'c' or 'o' (regex):**
+#### Columns whose name starts with 'c' or 'o' (regex)
 
 <div><style>
 .dataframe > thead > tr,
@@ -5433,7 +5433,7 @@ display(Markdown("**Columns ending with 'e':**"))
 display(ohlcv_pl.select(pl.col("^.*e$")).head())
 ```
 
-**Columns ending with 'e':**
+#### Columns ending with 'e'
 
 <div><style>
 .dataframe > thead > tr,
@@ -5454,7 +5454,7 @@ display(Markdown("**Numeric BUT NOT Int64:**"))
 display(ohlcv_pl.select(cs.numeric() - cs.by_dtype(pl.Int64)).head())
 ```
 
-**Numeric BUT NOT Int64:**
+#### Numeric BUT NOT Int64
 
 <div><style>
 .dataframe > thead > tr,
@@ -5470,7 +5470,7 @@ display(Markdown("**Numeric OR temporal:**"))
 display(ohlcv_pl.select(cs.numeric() | cs.temporal()).head())
 ```
 
-**Numeric OR temporal:**
+#### Numeric OR temporal
 
 <div><style>
 .dataframe > thead > tr,
@@ -5486,7 +5486,7 @@ display(Markdown("**Invert a selector (everything NOT numeric):**"))
 display(ohlcv_pl.select(~cs.numeric()).head())
 ```
 
-**Invert a selector (everything NOT numeric):**
+#### Invert a selector (everything NOT numeric)
 
 <div><style>
 .dataframe > thead > tr,
@@ -5638,7 +5638,7 @@ display(
 )
 ```
 
-**Add prefix to numeric columns:**
+#### Add prefix to numeric columns
 
 <div><style>
 .dataframe > thead > tr,
@@ -5656,7 +5656,7 @@ display(
 )
 ```
 
-**Add suffix to all columns:**
+#### Add suffix to all columns
 
 <div><style>
 .dataframe > thead > tr,
@@ -5845,7 +5845,7 @@ display(Markdown("**Drop multiple columns:**"))
 display(ohlcv_pd.drop(columns=["volume", "open"]).head(3))
 ```
 
-**Drop multiple columns:**
+#### Drop multiple columns
 
 <table border="1" class="dataframe">
   <thead>
@@ -5928,7 +5928,7 @@ display(Markdown("**Drop multiple columns:**"))
 display(ohlcv_pl.drop("volume", "open").head(3))
 ```
 
-**Drop multiple columns:**
+#### Drop multiple columns
 
 <div><style>
 .dataframe > thead > tr,
@@ -5948,7 +5948,7 @@ print("Pandas:\n", dim_pd.columns.tolist())
 print("\nPolars:\n", dim_pl.columns)
 ```
 
-**Dimension table columns:**
+#### Dimension table columns
 
     Pandas:
      ['id', '_index', 'symbol', 'long_name', 'short_name', 'sector', 'sector_key', 'industry', 'industry_key', 'country', 'city', 'website', 'long_business_summary', 'exchange', 'full_exchange_name', 'exchange_timezone_name', 'exchange_timezone_short', 'currency', 'financial_currency', 'quote_type', 'market', 'range_start', 'price_data_start', 'valid_from', 'valid_to', 'is_current']
@@ -5961,7 +5961,7 @@ display(Markdown("**Pandas — select string columns:**"))
 display(dim_pd.select_dtypes(include="object").drop(columns="long_business_summary").head())
 ```
 
-**Pandas — select string columns:**
+#### Pandas — select string columns
 
 <table border="1" class="dataframe">
   <thead>
@@ -6125,7 +6125,7 @@ display(Markdown("**Polars — select string columns with cs.string():**"))
 display(dim_pl.select(cs.string()).head())
 ```
 
-**Polars — select string columns with cs.string():**
+#### Polars — select string columns with cs.string()
 
 <div><style>
 .dataframe > thead > tr,
@@ -6141,7 +6141,7 @@ display(Markdown("**Polars — select with cs.matches() regex:**"))
 display(dim_pl.select(cs.matches(".*name.*|.*id.*")).head())
 ```
 
-**Polars — select with cs.matches() regex:**
+#### Polars — select with cs.matches() regex
 
 <div><style>
 .dataframe > thead > tr,

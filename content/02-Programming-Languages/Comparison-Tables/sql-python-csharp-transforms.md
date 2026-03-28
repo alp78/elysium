@@ -41,7 +41,7 @@ Window functions compute values across a "window" of related rows without collap
 
 ### ROW_NUMBER — Assign Sequential Row Numbers
 
-**Row number within a partition (e.g., rank instruments per index by score):**
+#### Row number within a partition (e.g., rank instruments per index by score)
 
 ```sql
 -- SQL Server: ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)
@@ -87,7 +87,7 @@ df['dense_rank']     = df['composite_score'].rank(method='dense', ascending=Fals
 
 ### LAG and LEAD — Prior and Next Row Values
 
-**Compute day-over-day change (LAG = previous row's value):**
+#### Compute day-over-day change (LAG = previous row's value)
 
 ```sql
 -- SQL Server: LAG/LEAD with optional offset and default value

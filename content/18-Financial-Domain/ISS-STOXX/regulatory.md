@@ -26,18 +26,6 @@ date: 2026-03-28
 
 ## A
 
-### AIFMD (Alternative Investment Fund Managers Directive)
-
-> The Alternative Investment Fund Managers Directive (Directive 2011/61/EU) is the EU regulatory framework governing managers of alternative investment funds (AIFs) — including hedge funds, private equity funds, real estate funds, and other non-UCITS collective investment vehicles. AIFMD establishes requirements for authorisation, operating conditions, transparency, leverage monitoring, and depositary oversight. The 2024 AIFMD II revision (Directive (EU) 2024/927) introduced updates on liquidity risk management, delegation rules, and enhanced supervisory reporting.
-
-In plain terms, AIFMD is the EU rulebook for investment fund managers that do not fall under the UCITS framework — meaning those managing funds for professional or institutional investors rather than retail. It ensures that hedge funds, private equity managers, and similar entities are regulated, transparent, and subject to capital and governance requirements. For ISS and STOXX, AIFMD matters because many ESG-focused alternative funds (e.g., climate infrastructure funds) must comply with both AIFMD and SFDR simultaneously.
-
-> [!tip] Related Terms
-> - [[#UCITS]] — the parallel EU framework for retail investment funds
-> - [[#SFDR (Sustainable Finance Disclosure Regulation)]] — sustainability disclosure applies to AIFMs alongside AIFMD
-> - [[#MiFID II]] — governs the distribution and advisory layer for AIF products
----
-
 ### Article 173 (French Energy Transition Law)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -45,7 +33,7 @@ In plain terms, AIFMD is the EU rulebook for investment fund managers that do no
 
 > Article 173 of the French Energy Transition for Green Growth Act (2015) requires institutional investors — including insurance companies, pension funds, and asset managers — to disclose how they integrate ESG criteria and carbon-related risks into their investment policies. It was one of the earliest mandatory climate-risk disclosure requirements for financial institutions globally.
 
-In plain terms, this French law told large investors: "You must publicly explain how climate change and environmental issues affect your investment decisions." It paved the way for later EU-wide rules like SFDR and CSRD by proving that mandatory ESG disclosure was workable.
+this French law told large investors: "You must publicly explain how climate change and environmental issues affect your investment decisions." It paved the way for later EU-wide rules like SFDR and CSRD by proving that mandatory ESG disclosure was workable.
 
 > [!tip] Related Terms
 > - [[esg-frameworks#sfdr|SFDR]] — the EU-wide successor regime for sustainability disclosure
@@ -114,33 +102,6 @@ An Article 8 fund is not required to have sustainability as its core objective, 
 > — [Lyxor’s Scheehl: switch of Europe 600 ETF’s index will cater to growing pool ...](https://stoxx.com/lyxors-scheehl-switch-of-europe-600-etfs-index-will-cater-to-growing-pool-of-esg-minded-investors)
 >
 
----
-
-### Article 9 Fund (SFDR)
-
-
-> An Article 9 fund — often called a "dark green" fund — has sustainable investment as its explicit objective. Under SFDR, the fund must demonstrate that each investment contributes to an environmental or social objective, that it does no significant harm (DNSH) to other objectives, and that the investee companies follow good governance practices. If a reference benchmark is used, Article 9 also mandates disclosure of how that benchmark is aligned with the sustainable objective.
-
-Article 9 is the highest sustainability classification under SFDR. Fund managers claiming this label must prove that every holding actively contributes to a sustainability goal — it is not enough to merely exclude harmful sectors. This carries the most demanding disclosure and reporting burden.
-
-> [!tip] Related Terms
-> - [[#Article 8 Fund (SFDR)]] — the less stringent "light green" classification
-> - [[#DNSH (Do No Significant Harm)]] — a key test Article 9 funds must satisfy
-> - [[#PAI (Principal Adverse Impact)]] — adverse impact indicators Article 9 funds must report
----
-
-## B
-
-### Basel III
-
-> Basel III is the comprehensive set of reform measures developed by the Basel Committee on Banking Supervision (BCBS) to strengthen the regulation, supervision, and risk management of the banking sector. Finalised progressively from 2010 to 2017 (with implementation extending into 2028), Basel III introduced higher minimum capital requirements, a leverage ratio, liquidity coverage ratios (LCR and NSFR), and the Fundamental Review of the Trading Book (FRTB). In the EU, Basel III is transposed through the Capital Requirements Regulation (CRR) and Capital Requirements Directive (CRD). Basel III is increasingly intersecting with ESG through the inclusion of climate-related financial risks in Pillar 2 supervisory processes and Pillar 3 disclosure requirements.
-
-In plain terms, Basel III is the global rulebook that tells banks how much capital they must hold to stay safe. After the 2008 financial crisis showed that banks were dangerously undercapitalised, Basel III raised the bar significantly. For STOXX and ISS, Basel III matters because bank stress testing and capital adequacy now incorporate climate risk scenarios, and Pillar 3 ESG disclosure requirements create new data streams for financial analysis.
-
-> [!tip] Related Terms
-> - [[#Pillar Three Disclosure]] — the transparency arm of Basel III now covering ESG risks
-> - [[#Solvency II]] — the parallel prudential regime for insurers
-> - [[#CSRD]] — corporate sustainability data feeds into bank-level climate risk assessments
 ---
 
 ### Benchmark Administrator
@@ -248,18 +209,6 @@ The EU BMR was introduced after scandals like the LIBOR manipulation showed that
 
 ## C
 
-### Carbon Border Adjustment Mechanism (CBAM)
-
-> The Carbon Border Adjustment Mechanism (Regulation (EU) 2023/956) is an EU policy instrument that puts a carbon price on imports of selected carbon-intensive products — including cement, iron and steel, aluminium, fertilisers, electricity, and hydrogen. CBAM is designed to prevent "carbon leakage," where EU manufacturers lose competitiveness because non-EU producers face no equivalent carbon pricing. Importers must purchase CBAM certificates corresponding to the embedded emissions in their goods, mirroring the carbon price paid by EU producers under the EU Emissions Trading System (ETS). The transitional reporting phase began in October 2023, with the definitive regime starting in January 2026.
-
-In plain language, CBAM is a carbon tariff. It says: "If you want to sell carbon-intensive goods into the EU, you pay the same carbon price that EU factories pay." This prevents companies from simply moving polluting production abroad to avoid EU climate rules. For STOXX and ISS, CBAM matters because it creates material financial risks for companies with carbon-intensive supply chains and affects sector weightings in climate-aligned indices.
-
-> [!tip] Related Terms
-> - [[esg-frameworks#eu-ets|EU ETS]] — the emissions trading system CBAM mirrors for imports
-> - [[#EU Green Deal]] — CBAM is a key instrument within the EU Green Deal package
-> - [[#EU Taxonomy Alignment]] — CBAM-affected sectors overlap heavily with taxonomy-eligible activities
----
-
 ### Climate Transition Benchmark (CTB)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="140 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 140</span>
@@ -320,7 +269,7 @@ A CTB is a stock market index specifically designed to put a portfolio on a path
 
 > A Corporate Governance Code is a set of principles, standards, and best practices for the governance of listed companies, typically issued by a national regulatory body or stock exchange. Most codes follow the "comply or explain" model — companies must either comply with each provision or publicly explain why they deviate. Key topics include board composition and independence, executive remuneration, shareholder rights, audit committee oversight, and risk management. Influential examples include the UK Corporate Governance Code (issued by the Financial Reporting Council), the German Corporate Governance Code (DCGK), and the OECD/G20 Principles of Corporate Governance. ISS Governance evaluates companies' adherence to applicable governance codes as a core component of its proxy advisory and governance quality assessments.
 
-In plain terms, a corporate governance code is a country's playbook for how listed companies should be run — covering topics like how independent the board should be, how executives get paid, and how shareholders get a voice. Companies must follow the code or publicly explain why they chose not to. ISS uses compliance with these codes as a central input when advising institutional investors on proxy voting and governance risk.
+a corporate governance code is a country's playbook for how listed companies should be run — covering topics like how independent the board should be, how executives get paid, and how shareholders get a voice. Companies must follow the code or publicly explain why they chose not to. ISS uses compliance with these codes as a central input when advising institutional investors on proxy voting and governance risk.
 
 > [!tip] Related Terms
 > - [[#Stewardship Code]] — the investor-side counterpart to corporate governance codes
@@ -627,7 +576,7 @@ This is an alternative name. Refer to the full entry under **Benchmark Regulatio
 
 > The European Green Deal is the European Commission's flagship policy agenda, adopted in December 2019, committing the EU to become climate-neutral by 2050. It is not a single regulation but an overarching strategic framework that encompasses legislative packages including the European Climate Law (Regulation (EU) 2021/1119), the Fit for 55 package, the EU Taxonomy, CSRD, SFDR, CBAM, the Sustainable Finance Action Plan, and revisions to the EU ETS. The Green Deal covers climate, energy, transport, biodiversity, agriculture, circular economy, and pollution, aiming to decouple economic growth from resource use.
 
-In plain terms, the EU Green Deal is Europe's master plan to fight climate change and environmental degradation while maintaining economic competitiveness. Nearly every EU sustainable finance regulation — from SFDR to the Taxonomy to CBAM — traces back to the Green Deal as its strategic origin. For STOXX and ISS, the Green Deal defines the regulatory direction: it signals which sectors face transition risks, which activities will be taxonomy-eligible, and where future disclosure mandates will emerge.
+the EU Green Deal is Europe's master plan to fight climate change and environmental degradation while maintaining economic competitiveness. Nearly every EU sustainable finance regulation — from SFDR to the Taxonomy to CBAM — traces back to the Green Deal as its strategic origin. For STOXX and ISS, the Green Deal defines the regulatory direction: it signals which sectors face transition risks, which activities will be taxonomy-eligible, and where future disclosure mandates will emerge.
 
 > [!tip] Related Terms
 > - [[#Sustainable Finance Action Plan]] — the financial sector pillar of the Green Deal
@@ -645,26 +594,6 @@ In plain terms, the EU Green Deal is Europe's master plan to fight climate chang
 > — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy)
 >
 
----
-
-### EU Taxonomy Environmental Objectives
-
-> The EU Taxonomy Regulation (EU 2020/852) defines six environmental objectives against which economic activities are assessed for substantial contribution and DNSH compliance. The six objectives are:
-> 1. **Climate change mitigation** — reducing or preventing GHG emissions, including through renewable energy, energy efficiency, and carbon capture.
-> 2. **Climate change adaptation** — reducing or preventing the current and expected adverse impacts of climate change on the activity itself or on people, nature, and assets.
-> 3. **Sustainable use and protection of water and marine resources** — protecting water bodies, ensuring sustainable water use, and safeguarding marine ecosystems.
-> 4. **Transition to a circular economy** — including waste prevention, reuse, recycling, and designing products for durability and recyclability.
-> 5. **Pollution prevention and control** — preventing or reducing pollutant emissions to air, water, and soil beyond what is required by existing EU law.
-> 6. **Protection and restoration of biodiversity and ecosystems** — conserving habitats, preventing species decline, and restoring degraded ecosystems.
-> Technical Screening Criteria for objectives 1 and 2 were adopted in the Climate Delegated Act (2021); criteria for objectives 3–6 were adopted in the Environmental Delegated Act (2023).
-
-These six objectives form the backbone of the EU Taxonomy. Every economic activity that wants to be labelled "taxonomy-aligned" must substantially contribute to at least one of these six goals while doing no significant harm to the other five. STOXX uses these objectives to classify index constituents, and ISS ESG maps company activities to all six objectives in its taxonomy alignment analytics.
-
-> [!tip] Related Terms
-> - [[#EU Taxonomy Alignment]] — the overall alignment concept built on these six objectives
-> - [[#Substantial Contribution]] — the positive test measured against each objective
-> - [[#DNSH (Do No Significant Harm)]] — the negative test applied across the other five objectives
-> - [[#Technical Screening Criteria]] — the specific thresholds for each objective
 ---
 
 ### EU Taxonomy Alignment
@@ -775,36 +704,6 @@ Financial materiality asks: "Does this ESG issue affect the company's bottom lin
 
 ## G
 
-### Green MiFID
-
-> "Green MiFID" is the informal name for the August 2022 amendments to the MiFID II Delegated Regulation (EU) 2017/565 that require investment firms providing portfolio management or investment advice to collect and integrate clients' sustainability preferences into the suitability assessment process. Under the amendments, sustainability preferences are defined across three dimensions: (a) a minimum proportion of taxonomy-aligned investments, (b) a minimum proportion of "sustainable investments" as defined by SFDR Article 2(17), and/or (c) consideration of principal adverse impacts (PAIs) on sustainability factors. Firms must match recommended products to the client's expressed preferences.
-
-In plain terms, Green MiFID is the rule that forces financial advisors to ask every client: "Do you have sustainability preferences for your investments?" and then match the product recommendations accordingly. It turned ESG from a nice-to-have marketing angle into a mandatory part of the advisory process. For ISS and STOXX, Green MiFID dramatically increased demand for granular taxonomy alignment data and SFDR classification data, because advisors need this information to match products to client preferences.
-
-> [!tip] Related Terms
-> - [[#MiFID II]] — the parent directive that Green MiFID amends
-> - [[#EU Taxonomy Alignment]] — one of the three sustainability preference categories
-> - [[#SFDR (Sustainable Finance Disclosure Regulation)]] — defines "sustainable investment" referenced by Green MiFID
-> - [[#PAI (Principal Adverse Impact)]] — the third category of sustainability preference
----
-
-## I
-
-### IFRS S1 / IFRS S2
-
-> IFRS S1 (General Requirements for Disclosure of Sustainability-related Financial Information) and IFRS S2 (Climate-related Disclosures) are the inaugural standards issued by the International Sustainability Standards Board (ISSB) in June 2023. IFRS S1 establishes the general framework for disclosing material sustainability-related risks and opportunities across governance, strategy, risk management, and metrics/targets — mirroring the TCFD's four-pillar structure. IFRS S2 provides specific requirements for climate-related disclosures, including Scope 1, 2, and 3 GHG emissions, climate-related transition plans, and scenario analysis. The standards are designed for adoption by individual jurisdictions and serve as the global baseline for sustainability disclosure, complementing (not replacing) jurisdiction-specific standards like ESRS.
-
-In plain language, IFRS S1 and S2 are the first global sustainability reporting standards — the sustainability equivalent of IFRS accounting standards. They tell companies worldwide how to disclose the sustainability risks and opportunities that could affect their financial performance. While the EU has its own ESRS standards under CSRD, many non-EU jurisdictions (including the UK, Australia, Japan, and others) are adopting IFRS S1/S2 directly. ISS ESG uses data aligned with both ISSB and ESRS standards, and STOXX indices increasingly rely on ISSB-compatible climate data for global benchmarks.
-
-> [!tip] Related Terms
-> - [[esg-frameworks#tcfd|TCFD]] — the voluntary framework that IFRS S1/S2 build upon and supersede
-> - [[#CSRD]] — the EU's parallel (and interoperable) mandatory reporting regime using ESRS
-> - [[esg-frameworks#esrs|ESRS]] — the EU-specific standards designed for interoperability with ISSB standards
-> - [[#UK SDR (Sustainability Disclosure Requirements)]] — the UK regime expected to reference IFRS S1/S2
----
-
-## M
-
 ### MiFID II
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
@@ -896,31 +795,6 @@ Minimum safeguards ensure that a "green" activity is not built on labour exploit
 ---
 
 ## N
-
-### NACE Code
-
-> NACE (Nomenclature statistique des Activités économiques dans la Communauté Européenne) is the statistical classification system used by the European Union to categorise economic activities. The EU Taxonomy Regulation references NACE codes to define which economic activities are eligible for taxonomy assessment. Each activity listed in the Taxonomy's delegated acts is mapped to one or more NACE codes (e.g., NACE code D35.11 for electricity generation). The current version, NACE Rev. 2.1, is maintained by Eurostat and provides a hierarchical structure from broad sectors (single-letter sections) down to specific activities (four-digit classes).
-
-In plain terms, NACE codes are the EU's standardised way of classifying what a company does — similar to SIC codes in the US. They matter for the Taxonomy because the Taxonomy uses NACE codes to specify exactly which business activities are covered. When ISS ESG assesses whether a company's revenue is taxonomy-eligible, it maps the company's activities to NACE codes and then checks whether those codes appear in the Taxonomy's delegated acts.
-
-> [!tip] Related Terms
-> - [[#Taxonomy Eligibility]] — NACE codes determine which activities are eligible
-> - [[#Technical Screening Criteria]] — TSC are organised by NACE-mapped activities
-> - [[#EU Taxonomy Environmental Objectives]] — the six objectives that NACE-classified activities are assessed against
----
-
-### Nationally Determined Contribution (NDC)
-
-
-> A Nationally Determined Contribution (NDC) is a climate action plan submitted by each party to the United Nations Framework Convention on Climate Change (UNFCCC) under the Paris Agreement. NDCs outline each country's commitments to reduce greenhouse gas emissions, adapt to climate impacts, and (for developed countries) provide financial support to developing nations. Parties must update their NDCs every five years, with each successive NDC expected to represent a progression beyond the previous one (the "ratchet mechanism"). NDCs collectively determine whether the world is on track to meet the Paris Agreement's goals of limiting warming to well below 2°C and pursuing 1.5°C.
-
-In plain terms, an NDC is a country's climate pledge — its promise to the world about how much it will cut emissions and by when. These pledges matter for financial markets because they signal the policy direction for entire economies: stricter NDCs mean tighter carbon regulations, faster energy transitions, and greater stranded-asset risk for fossil fuel companies. STOXX climate benchmarks and ISS ESG climate analytics incorporate NDC trajectory analysis to assess whether portfolio alignment matches national and global climate commitments.
-
-> [!tip] Related Terms
-> - [[esg-frameworks#paris-agreement|Paris Agreement]] — the international treaty under which NDCs are submitted
-> - [[#Climate Transition Benchmark (CTB)]] — CTBs reference Paris-aligned decarbonisation trajectories informed by NDCs
-> - [[#PAB (Paris-Aligned Benchmark)]] — PABs are designed around the 1.5°C goal that NDCs collectively target
----
 
 ### NFRD
 
@@ -1079,20 +953,6 @@ PAI indicators are the specific data points investors must collect and report. T
 
 ---
 
-### Pillar Three Disclosure
-
-> Pillar Three Disclosure refers to the market discipline component of the Basel framework, requiring banks and investment firms to publicly disclose information about their risk exposures, capital adequacy, and risk management practices. In the EU, Pillar 3 requirements are codified in the Capital Requirements Regulation (CRR). Since 2022, the European Banking Authority (EBA) has introduced mandatory Pillar 3 ESG risk disclosures under its Implementing Technical Standards (ITS), requiring large listed institutions to publish quantitative data on climate-related transition risk, physical risk, and green asset ratios (taxonomy-aligned exposures), as well as qualitative information on ESG governance and strategy.
-
-In plain terms, Pillar 3 is the part of banking regulation that says: "Banks must publicly reveal their risks so the market can judge them." The ESG extension means banks now have to show how exposed they are to climate-related risks — including which loans go to carbon-intensive sectors and how much of their portfolio is taxonomy-aligned. For ISS and STOXX, Pillar 3 ESG disclosures create a rich new source of standardised bank-level climate data useful for financial sector indices and risk analytics.
-
-> [!tip] Related Terms
-> - [[#Basel III]] — the overarching framework Pillar 3 belongs to
-> - [[#EU Taxonomy Alignment]] — the Green Asset Ratio in Pillar 3 is based on taxonomy alignment
-> - [[#CSRD]] — Pillar 3 ESG disclosures complement CSRD corporate reporting
----
-
-## S
-
 ### SFDR (Sustainable Finance Disclosure Regulation)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="173 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 173</span>
@@ -1171,18 +1031,6 @@ ISS built this product specifically to help fund managers comply with SFDR's PAI
 
 ---
 
-### Solvency II
-
-> Solvency II (Directive 2009/138/EC) is the EU's prudential regulatory framework for insurance and reinsurance undertakings. It establishes risk-based capital requirements across three pillars: Pillar 1 (quantitative requirements — technical provisions and capital), Pillar 2 (qualitative requirements — governance, risk management, and the Own Risk and Solvency Assessment / ORSA), and Pillar 3 (supervisory reporting and public disclosure). In 2022–2023, the European Insurance and Occupational Pensions Authority (EIOPA) and the Commission introduced amendments integrating sustainability risks into Solvency II, including requirements for insurers to consider climate change scenarios in their ORSA and to disclose sustainability-related information.
-
-In plain terms, Solvency II is the insurance industry's equivalent of Basel III for banks — it sets the rules for how much capital insurers must hold and how they manage risk. The sustainability amendments mean insurers must now model how climate change (physical risks like floods; transition risks like stranded assets) could threaten their solvency. For ISS and STOXX, this drives demand for climate risk analytics and ESG data from insurance-sector clients needing to meet Solvency II ESG requirements.
-
-> [!tip] Related Terms
-> - [[#Basel III]] — the banking equivalent of Solvency II
-> - [[#SFDR (Sustainable Finance Disclosure Regulation)]] — insurers offering investment products must also comply with SFDR
-> - [[#EU Taxonomy Alignment]] — insurers must consider taxonomy alignment in their underwriting and investment portfolios
----
-
 ### Stewardship Code
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
@@ -1190,7 +1038,7 @@ In plain terms, Solvency II is the insurance industry's equivalent of Basel III 
 
 > A Stewardship Code is a set of principles or guidelines directed at institutional investors, establishing expectations for responsible ownership and engagement with investee companies. Stewardship codes typically cover areas such as monitoring investee companies, engaging on ESG and strategy issues, exercising voting rights, managing conflicts of interest, and reporting on stewardship activities. The UK Stewardship Code (issued by the Financial Reporting Council, most recently revised in 2020) is the global reference model, requiring signatories to report annually on their stewardship activities with a focus on outcomes. Other jurisdictions — including Japan, the Netherlands, and South Africa — have adopted similar codes. The EU Shareholder Rights Directive II (SRD II) also contains stewardship-related requirements for institutional investors.
 
-In plain terms, while a corporate governance code tells companies how to govern themselves, a stewardship code tells investors how to be responsible owners — by actively monitoring companies, voting their shares, and engaging on issues like climate strategy and board quality. ISS Governance is deeply involved in stewardship through its proxy voting advisory services, voting analytics, and engagement solutions that help institutional investors meet their stewardship code obligations.
+while a corporate governance code tells companies how to govern themselves, a stewardship code tells investors how to be responsible owners — by actively monitoring companies, voting their shares, and engaging on issues like climate strategy and board quality. ISS Governance is deeply involved in stewardship through its proxy voting advisory services, voting analytics, and engagement solutions that help institutional investors meet their stewardship code obligations.
 
 > [!tip] Related Terms
 > - [[#Corporate Governance Code]] — the company-side counterpart to stewardship codes
@@ -1281,7 +1129,7 @@ Substantial contribution is the positive environmental performance test in the T
 
 > The EU Sustainable Finance Action Plan, first published by the European Commission in March 2018 and renewed in July 2021, is the strategic roadmap for redirecting capital flows toward sustainable investment, managing financial risks from climate change and environmental degradation, and fostering transparency in financial and economic activity. The 2018 plan introduced ten key actions, leading directly to the creation of the EU Taxonomy Regulation, SFDR, the Low Carbon Benchmarks Regulation, the EU Green Bond Standard, and amendments to MiFID II and Solvency II for sustainability integration. The 2021 Renewed Sustainable Finance Strategy added actions on transition finance, SME inclusion, financial system resilience, and global ambition.
 
-In plain terms, the Sustainable Finance Action Plan is the EU's master to-do list for greening the financial system. Nearly every major EU sustainable finance regulation — Taxonomy, SFDR, CSRD, Green MiFID, climate benchmarks — originated from this plan. For STOXX and ISS, the Action Plan is the strategic compass: understanding it means understanding where EU sustainable finance regulation is heading next and what data and index products will be in demand.
+the Sustainable Finance Action Plan is the EU's master to-do list for greening the financial system. Nearly every major EU sustainable finance regulation — Taxonomy, SFDR, CSRD, Green MiFID, climate benchmarks — originated from this plan. For STOXX and ISS, the Action Plan is the strategic compass: understanding it means understanding where EU sustainable finance regulation is heading next and what data and index products will be in demand.
 
 > [!tip] Related Terms
 > - [[#EU Green Deal]] — the broader political framework the Action Plan supports
@@ -1365,18 +1213,6 @@ This is a shorthand term. See the full entry under **EU Taxonomy Alignment** for
 > — [European ESG Template | ISS](https://www.issgovernance.com/sustainability/regulatory/european-esg-template)
 >
 
----
-
-### Taxonomy Eligibility
-
-> Taxonomy eligibility refers to whether an economic activity is described in — and therefore covered by — the EU Taxonomy's delegated acts, regardless of whether it meets the performance thresholds (Technical Screening Criteria) for alignment. An activity is taxonomy-eligible if it appears in the list of activities for any of the six environmental objectives. Eligibility is a precondition for alignment: an activity that is not eligible cannot be aligned.
-
-Taxonomy eligibility is the first filter. It asks: "Is this type of economic activity even mentioned in the Taxonomy?" For example, cement manufacturing is taxonomy-eligible because the Taxonomy includes criteria for it. A law firm's advisory services are not taxonomy-eligible because legal services are not covered. An eligible activity then needs to pass further tests (substantial contribution, DNSH, minimum safeguards) to become taxonomy-aligned.
-
-> [!tip] Related Terms
-> - [[#EU Taxonomy Alignment]] — the next step after eligibility
-> - [[#Technical Screening Criteria]] — the thresholds eligible activities must meet to become aligned
-> - [[#CSRD]] — companies subject to CSRD must report both eligibility and alignment
 ---
 
 ### Technical Screening Criteria
@@ -1465,21 +1301,3 @@ UCITS is the standard wrapper for investment funds sold to ordinary retail inves
 >
 
 ---
-
-### UK SDR (Sustainability Disclosure Requirements)
-
-
-> The UK Sustainability Disclosure Requirements (SDR) is the United Kingdom's post-Brexit framework for sustainability-related disclosures and investment product labelling. Finalised by the Financial Conduct Authority (FCA) in November 2023 (Policy Statement PS23/16), SDR introduces: (1) an anti-greenwashing rule applying to all FCA-authorised firms, (2) four voluntary sustainability labels for investment products — Sustainability Focus, Sustainability Improvers, Sustainability Impact, and Sustainability Mixed Goals, (3) consumer-facing and detailed product-level disclosures, and (4) naming and marketing restrictions for funds using sustainability-related terms. SDR is distinct from but broadly analogous to the EU's SFDR, with the UK taking a more prescriptive labelling approach. The UK is also adopting IFRS S1/S2-based disclosure standards for listed companies through UK-endorsed ISSB standards.
-
-In plain terms, UK SDR is Britain's answer to the EU's SFDR — it creates labels and disclosure rules for investment funds claiming to be sustainable, and bans misleading sustainability claims across the financial sector. However, SDR uses a different labelling structure (four labels rather than SFDR's Article 6/8/9 classification). For ISS and STOXX, UK SDR creates a parallel compliance market: UK-domiciled or UK-marketed funds need separate classification, labelling, and disclosure support that differs from EU requirements.
-
-> [!tip] Related Terms
-> - [[#SFDR (Sustainable Finance Disclosure Regulation)]] — the EU's parallel (but structurally different) disclosure regime
-> - [[#IFRS S1 / IFRS S2]] — the ISSB standards the UK is adopting for corporate-level disclosure
-> - [[#ESMA Fund Naming Guidelines]] — the EU's equivalent to SDR's naming and marketing restrictions
-> - [[#Stewardship Code]] — the UK Stewardship Code complements SDR's investor-facing requirements
----
-
-> [!note] Maintenance
-> This glossary is maintained as part of the ISS & STOXX financial domain knowledge base.
-> Last updated: 2026-03-28.

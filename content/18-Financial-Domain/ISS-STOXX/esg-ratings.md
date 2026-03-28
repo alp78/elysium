@@ -33,7 +33,7 @@ date: 2026-03-28
 
 > A responsible investment strategy in which investors use their rights and influence as shareholders to drive improvements in ESG performance at portfolio companies. Active Ownership encompasses proxy voting, filing shareholder resolutions, direct engagement with management and boards, and collaborative engagement through investor coalitions. ISS ESG supports Active Ownership through its proxy voting advisory services and engagement data.
 
-In plain terms, Active Ownership means investors do not simply buy shares and hope for the best. They actively push companies to improve by voting at shareholder meetings, meeting with executives to discuss ESG concerns, and sometimes joining forces with other investors to amplify their influence. It is the opposite of passive investing from a stewardship perspective.
+Active Ownership means investors do not simply buy shares and hope for the best. They actively push companies to improve by voting at shareholder meetings, meeting with executives to discuss ESG concerns, and sometimes joining forces with other investors to amplify their influence. It is the opposite of passive investing from a stewardship perspective.
 
 > [!tip] Related terms
 > [[#Engagement Escalation]], [[#Norm-Based Research]], [[#ESG Integration]]
@@ -86,7 +86,7 @@ In plain terms, Active Ownership means investors do not simply buy shares and ho
 
 > A positive screening methodology that identifies companies with superior ESG performance relative to their industry peers. Rather than excluding entire sectors, Best-in-Class selects the top-performing companies within each sector based on ESG criteria, enabling diversified portfolios that still reward strong sustainability practices.
 
-In plain terms, Best-in-Class screening does not ban entire industries outright. Instead, it ranks every company against others in the same industry on ESG metrics and picks only the leaders. An oil company with best-in-class environmental practices might still qualify, while a poorly managed renewable energy firm might not.
+Best-in-Class screening does not ban entire industries outright. Instead, it ranks every company against others in the same industry on ESG metrics and picks only the leaders. An oil company with best-in-class environmental practices might still qualify, while a poorly managed renewable energy firm might not.
 
 **Typical thresholds:** Companies are ranked within their sector; those in the top quartile (or top decile, depending on the index methodology) are selected. STOXX ESG-X indices often use a top-percentile cutoff relative to sector peers.
 
@@ -166,7 +166,7 @@ In simple terms, BIAT measures how much damage (or benefit) a company causes to 
 
 > A quantitative assessment of a company's exposure to and management of carbon-related financial risks, including transition risks (policy, technology, market shifts) and physical risks (extreme weather, resource scarcity). ISS ESG evaluates companies on their carbon footprint intensity, emissions reduction targets, fossil fuel reserves, and alignment with Paris Agreement pathways.
 
-In everyday language, the Carbon Risk Rating tells investors how vulnerable a company is to the costs and disruptions of the global shift away from fossil fuels. A high-risk rating means the company faces significant financial exposure from carbon regulation, shifting energy markets, or physical climate impacts and is not doing enough to manage those risks.
+the Carbon Risk Rating tells investors how vulnerable a company is to the costs and disruptions of the global shift away from fossil fuels. A high-risk rating means the company faces significant financial exposure from carbon regulation, shifting energy markets, or physical climate impacts and is not doing enough to manage those risks.
 
 **Score range:** ISS ESG typically rates carbon risk on a scale that ranges from negligible to severe. Companies receive performance grades (A+ to D-) on their carbon management, and a numerical risk exposure score contextualises the grade.
 
@@ -348,18 +348,6 @@ Controversy Level is the "headline summary" of a company's controversy profile. 
 
 ---
 
-### Controversy-Adjusted Score
-
-> An ESG score that has been modified downward to reflect the severity and recurrence of a company's involvement in ESG-related controversies. ISS ESG applies controversy adjustments to its corporate ratings to ensure that companies with significant unresolved incidents are not rated solely on their policies and disclosures but also on their real-world conduct.
-
-In everyday language, a Controversy-Adjusted Score is an ESG rating with a penalty applied. A company might have excellent ESG policies on paper, but if it has been caught polluting a river or violating labour laws, its score gets knocked down. The adjustment ensures that the rating reflects actual behaviour, not just stated intentions.
-
-**Score range:** The adjustment reduces the overall ESG rating or score, typically within the existing scale (e.g., A+ to D-). The magnitude of the adjustment depends on the severity and number of active controversies.
-
-> [!tip] Related terms
-> [[#Controversy Rating]], [[#Controversy Level]], [[#Corporate Rating (ISS ESG)]]
----
-
 ### Corporate Rating (ISS ESG)
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,349 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,349</span>
@@ -458,19 +446,6 @@ Country Ratings work like corporate ESG ratings but applied to governments. They
 > — [oekom research AG to Join Institutional Shareholder Services | ISS](https://www.issgovernance.com/oekom-research-ag-join-institutional-shareholder-services)
 >
 
----
-
-### Custom ESG Ratings
-
-
-> Bespoke ESG scoring frameworks that ISS ESG constructs for institutional clients, allowing them to apply proprietary weightings, materiality definitions, exclusion criteria, and thematic overlays to the underlying ISS ESG data universe. Custom ratings enable investors to reflect their own values, regulatory requirements, or investment beliefs within a rigorous quantitative framework.
-
-Some investors want ESG ratings tailored to their own priorities. A European pension fund might weight climate metrics heavily; a faith-based investor might prioritise social criteria. Custom ESG Ratings let institutions use ISS ESG's raw data and analytical infrastructure while applying their own rules to produce a score that matches their investment philosophy.
-
-**Score range:** Defined by the client. Outputs may be letter grades, numerical scores, percentile ranks, or pass/fail flags, depending on the engagement.
-
-> [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#ESG Scorecard]], [[#Best-in-Class Screening]]
 ---
 
 ### Cyber Risk Score
@@ -608,16 +583,6 @@ Decile-Based Scoring converts raw ESG numbers into a simple 1-to-10 rank within 
 
 ---
 
-### Disclosure-Based Assessment
-
-> An ESG evaluation approach that scores companies primarily on the quality, completeness, and transparency of their public ESG disclosures rather than on estimated or modelled performance data. ISS ESG incorporates disclosure quality as a factor in its Corporate Rating, rewarding companies that provide comprehensive, audited sustainability reporting aligned with recognised frameworks such as GRI, SASB, TCFD, and CSRD.
-
-In plain terms, a Disclosure-Based Assessment rewards companies for being open about their ESG data. If a company publishes detailed emissions figures, workforce diversity statistics, and governance structures in a verifiable way, it scores higher than a peer that provides vague or incomplete information. The rationale is that transparency is a precondition for accountability.
-
-> [!tip] Related terms
-> [[#ESG Transparency Level]], [[#ESG Disclosure]], [[#Data Verification]]
----
-
 ### Double Materiality
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -671,16 +636,6 @@ In simple terms, traditional materiality asks: "Does climate change hurt this co
 ---
 
 ## E
-
-### Engagement Escalation
-
-> A structured process within Active Ownership whereby investors progressively intensify their engagement actions with a company that fails to respond adequately to initial ESG concerns. Escalation steps typically progress from private dialogue, to formal letter-writing, to filing shareholder resolutions, to co-filing with other investors, to voting against directors, and ultimately to divestment. ISS ESG provides data and research that supports each stage of the escalation ladder.
-
-In everyday language, Engagement Escalation is the "raising the pressure" playbook. An investor starts politely by asking a company to improve its ESG practices. If the company ignores the request, the investor turns up the heat, perhaps voting against board members, publicly supporting shareholder resolutions, or joining a coalition of investors demanding change. Divestment is the last resort.
-
-> [!tip] Related terms
-> [[#Active Ownership]], [[#Watchlist Status]], [[#Norm-Based Research]]
----
 
 ### ESG (Environmental, Social, Governance)
 
@@ -907,28 +862,6 @@ ESG Integration means treating ESG data the same way you treat financial data: a
 
 ---
 
-### ESG Prime Status
-
-> A designation awarded by ISS ESG to companies that achieve an ESG Corporate Rating at or above a sector-specific threshold, typically C+ or higher. Prime Status signals that a company meets or exceeds the minimum ESG performance standards considered acceptable for its industry, making it eligible for inclusion in ESG-screened indices and responsible investment portfolios.
-
-In plain terms, Prime Status is the ESG seal of approval. It means a company has been evaluated against all the relevant ESG criteria for its industry and has passed the bar. Not every company with a decent ESG rating qualifies, because the Prime threshold is calibrated per sector to reflect what constitutes genuine leadership. A company without Prime Status has not demonstrated sufficient ESG performance for its industry.
-
-**Threshold:** Typically C+ or above on the ISS ESG Corporate Rating scale (A+ to D-), though the exact threshold may vary by sector to account for differences in ESG maturity and data availability.
-
-> [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#ESG Corporate Rating]], [[#Best-in-Class Screening]]
----
-
-### ESG Risk Categories
-
-> The classification framework that groups material ESG issues into distinct risk types, such as environmental risk (emissions, waste, resource depletion), social risk (labour, health and safety, supply chain), and governance risk (board effectiveness, ethics, transparency). ISS ESG maps each industry to the most material risk categories to ensure that ratings reflect sector-specific realities.
-
-ESG Risk Categories are the buckets into which all possible sustainability risks are sorted. Not every risk matters equally in every industry. For a mining company, environmental risk dominates; for a financial services firm, governance risk is paramount. The category framework ensures that the right risks receive the right weight.
-
-> [!tip] Related terms
-> [[#Materiality]], [[#ESG Risk Rating]], [[#Exposure Score]]
----
-
 ### ESG Risk Rating
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="137 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 137</span>
@@ -1004,18 +937,6 @@ The ESG Scorecard is the report card. It takes all the detailed analysis behind 
 > — [ESG Scorecard | ISS](https://www.issgovernance.com/sustainability/ratings/esg-scorecard)
 >
 
----
-
-### ESG Transparency Level
-
-> A classification that indicates the degree of openness and detail in a company's ESG-related disclosures, assessed independently from ESG performance. ISS ESG evaluates transparency across dimensions such as the completeness of sustainability reporting, participation in voluntary disclosure frameworks (CDP, GRI, SASB), responsiveness to data verification requests, and the availability of quantitative ESG metrics.
-
-ESG Transparency Level answers a simple question: "How much does this company tell us about its ESG practices?" A company can have excellent transparency but mediocre performance (it honestly reports poor results), or vice versa. Transparency is valued because it enables informed investment decisions and signals a willingness to be held accountable.
-
-**Typical levels:** ISS ESG may classify transparency as High, Medium, or Low, or integrate it as a factor within the broader Corporate Rating methodology.
-
-> [!tip] Related terms
-> [[#ESG Disclosure]], [[#Disclosure-Based Assessment]], [[#Data Verification]]
 ---
 
 ### Environmental Pillar
@@ -1121,17 +1042,6 @@ Fund Rating is the umbrella term for scoring an entire investment fund on ESG cr
 ---
 
 ## G
-
-### Governance Pillar
-
-
-> The "G" component of the ESG framework, covering the systems, structures, and processes through which a company is directed and controlled. Key themes include board composition and independence, executive compensation, shareholder rights, audit quality, business ethics, anti-corruption, tax transparency, and regulatory compliance.
-
-The Governance Pillar examines whether a company is run properly. It asks questions such as: Is the board independent from management? Are executives paid fairly relative to performance? Are shareholders treated equitably? Is the company transparent in its financial reporting? Poor governance is often the root cause of environmental and social failures.
-
-> [!tip] Related terms
-> [[#Governance QualityScore]], [[#Environmental Pillar]], [[#Social Pillar]], [[#ISS QualityScore]]
----
 
 ### Governance QualityScore
 
@@ -1385,18 +1295,6 @@ ISS QualityScore is a risk-focused scoring tool. Unlike the ESG Corporate Rating
 ---
 
 ## K
-
-### Key Issue Weighting
-
-> The methodology by which ISS ESG assigns relative importance to individual ESG issues within a sector-specific rating framework. Key Issue Weighting determines what percentage of the overall Corporate Rating is driven by each material topic (e.g., carbon emissions might receive 15% weight for an energy company but only 3% for a financial services firm). Weightings are derived from materiality analysis and reflect the financial relevance and stakeholder significance of each issue for a given industry.
-
-In plain terms, Key Issue Weighting is the behind-the-scenes formula that decides which ESG topics matter most for each industry. It prevents a one-size-fits-all approach by ensuring that a mining company is judged primarily on environmental management and worker safety, while a bank is judged primarily on governance, lending practices, and financial inclusion. The weights directly shape the final rating.
-
-> [!tip] Related terms
-> [[#Materiality]], [[#Corporate Rating (ISS ESG)]], [[#Sector-Relative Scoring]]
----
-
-## M
 
 ### Management Score
 
@@ -1824,16 +1722,6 @@ Peer Group Comparison answers the question: "Is this company good at ESG relativ
 
 ---
 
-### Performance-Based Assessment
-
-> An ESG evaluation approach that focuses on measurable outcomes and demonstrated results rather than on the existence of policies, commitments, or management systems. ISS ESG's Corporate Rating methodology incorporates performance-based indicators such as actual emissions reductions achieved, workplace injury rates, diversity metrics, and verified environmental certifications alongside disclosure and policy assessments.
-
-In plain terms, a Performance-Based Assessment cares about what a company actually achieves, not just what it promises. A company might have a beautiful climate strategy document, but if its emissions have increased every year for a decade, the performance assessment will reflect that reality. This approach complements disclosure-based assessment by adding the "show me the results" dimension.
-
-> [!tip] Related terms
-> [[#Disclosure-Based Assessment]], [[#Management Score]], [[#Corporate Rating (ISS ESG)]]
----
-
 ### Positive Screening
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -2046,16 +1934,6 @@ The SDG Impact Rating connects corporate behaviour to the UN's 17 global goals. 
 
 ---
 
-### Sector-Relative Scoring
-
-> A scoring methodology in which a company's ESG performance is evaluated relative to other companies within the same industry sector rather than against an absolute standard. ISS ESG and STOXX employ sector-relative scoring in index construction and peer benchmarking, ensuring that companies are compared against the most relevant peers and that sector-specific ESG challenges are appropriately contextualised.
-
-Sector-Relative Scoring recognises that different industries face fundamentally different ESG challenges. Comparing a coal mining company to a software company on absolute emissions is meaningless. Instead, the coal mining company is compared to other mining companies, and the software company to other technology firms. This approach rewards genuine effort and leadership within each sector rather than penalising inherently high-impact industries.
-
-> [!tip] Related terms
-> [[#Peer Group Comparison]], [[#Decile-Based Scoring]], [[#Best-in-Class Screening]]
----
-
 ### Social Pillar
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2217,18 +2095,3 @@ The Water Risk Rating measures whether a company is likely to face water-related
 >
 
 ---
-
-### Watchlist Status
-
-> A designation applied to companies that are under heightened scrutiny due to emerging, ongoing, or unresolved ESG controversies, norm violations, or governance concerns. ISS ESG assigns Watchlist Status to companies where the severity of an issue is significant enough to warrant monitoring but has not yet reached the threshold for a full Non-Compliant designation or exclusion recommendation. Watchlist Status triggers enhanced monitoring and may prompt investor engagement.
-
-Watchlist Status is the yellow flag before the red card. When a company is involved in a serious controversy, such as an environmental disaster, corruption scandal, or human rights allegation, but the facts are still emerging or the company is taking corrective action, it is placed on the watchlist rather than immediately excluded. Investors are alerted to monitor the situation and may initiate engagement to push for resolution.
-
-**Typical progression:** Compliant -> Watchlist -> Non-Compliant. Companies can move back to Compliant status if controversies are adequately resolved.
-
-> [!tip] Related terms
-> [[#Norm-Based Research]], [[#Controversy Rating]], [[#Engagement Escalation]]
----
-
-> [!info] Disclaimer
-> This glossary is compiled for educational and reference purposes. Definitions are based on publicly available methodology documents from ISS Governance and STOXX as of the date indicated above. For the most current definitions, scoring methodologies, and coverage details, consult the official ISS ESG and STOXX documentation directly.

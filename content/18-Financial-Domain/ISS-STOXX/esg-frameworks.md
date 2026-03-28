@@ -26,21 +26,6 @@ date: 2026-03-28
 
 ## B
 
-### Biological Weapons Convention (BWC)
-
-> The Biological Weapons Convention (formally the Convention on the Prohibition of the Development, Production and Stockpiling of Bacteriological (Biological) and Toxin Weapons and on their Destruction) is a multilateral disarmament treaty that opened for signature in 1972 and entered into force in 1975. It was the first multilateral treaty to ban an entire category of weapons. The BWC prohibits the development, production, acquisition, transfer, stockpiling, and use of biological and toxin weapons. It currently has over 180 states parties.
-
-The BWC is central to norms-based screening in ESG investing. ISS ESG and STOXX exclusion-based indices routinely screen for company involvement in biological weapons, as any connection to these weapons constitutes a violation of widely accepted international norms. Companies found to be involved in the development or production of biological weapons agents for offensive purposes face automatic exclusion from most ESG and sustainability indices. The convention is one of several weapons-related treaties referenced in controversial weapons screening frameworks.
-
-> [!tip] Related terms
-> - [[#Chemical Weapons Convention (CWC)]] — a parallel treaty banning chemical weapons
-> - [[#Convention on Cluster Munitions]] — another weapons convention used in ESG exclusion screens
-> - [[#Ottawa Treaty (Mine Ban Convention)]] — bans anti-personnel landmines
-> - [[#UN Global Compact]] — UNGC principles underpin norms-based weapons screening
----
-
-## C
-
 ### CDP (Carbon Disclosure Project)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="217 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 217</span>
@@ -91,19 +76,6 @@ CDP matters because it provides one of the largest standardized datasets on corp
 > — [Istoxx Index Guide (PDF), p. 744](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
 
----
-
-### Chemical Weapons Convention (CWC)
-
-> The Chemical Weapons Convention (formally the Convention on the Prohibition of the Development, Production, Stockpiling and Use of Chemical Weapons and on their Destruction) is a multilateral arms control treaty that entered into force in 1997. Administered by the Organisation for the Prohibition of Chemical Weapons (OPCW), the CWC prohibits the development, production, stockpiling, transfer, and use of chemical weapons. It is one of the most widely adhered-to arms control agreements, with 193 states parties covering approximately 98% of the global population and chemical industry.
-
-The CWC is a cornerstone of controversial weapons screening in ESG investing. ISS ESG norms-based research flags companies involved in chemical weapons-related activities, and STOXX ESG indices apply CWC-derived exclusion criteria when constructing sustainability benchmarks. The convention is routinely referenced alongside the BWC, the Convention on Cluster Munitions, and the Ottawa Treaty in ESG screening policies. Any company involvement in chemical weapons production or development results in exclusion from virtually all responsible investment indices.
-
-> [!tip] Related terms
-> - [[#Biological Weapons Convention (BWC)]] — a parallel treaty banning biological weapons
-> - [[#Convention on Cluster Munitions]] — another weapons treaty used in ESG exclusion screens
-> - [[#Ottawa Treaty (Mine Ban Convention)]] — bans anti-personnel landmines
-> - [[#UN Global Compact]] — UNGC norms underpin controversial weapons screening
 ---
 
 ### Convention on Cluster Munitions
@@ -394,19 +366,6 @@ ESRS standardizes sustainability reporting across the EU in a way that earlier v
 
 ---
 
-### EU Green Bond Standard
-
-> The EU Green Bond Standard (EU GBS) is a voluntary standard established by Regulation (EU) 2023/2631, adopted in November 2023, that sets requirements for issuers of bonds wishing to use the designation "European green bond." The standard requires that proceeds be allocated to economic activities aligned with the EU Taxonomy, mandates detailed allocation and impact reporting, and requires external review by registered reviewers supervised by ESMA. It builds upon and goes beyond the voluntary ICMA Green Bond Principles by introducing a direct link to the EU Taxonomy and regulatory oversight of verifiers.
-
-The EU Green Bond Standard addresses concerns about greenwashing in the bond market by tying green bond proceeds directly to taxonomy-aligned activities. For ISS ESG, which provides second-party opinions and green bond assessments, the EU GBS introduces a regulatory benchmark against which green bond frameworks can be evaluated. STOXX green bond indices may distinguish between bonds issued under the EU GBS and those following other frameworks. For investors, the EU GBS provides the highest level of assurance that proceeds genuinely fund environmentally sustainable activities as defined by EU law.
-
-> [!tip] Related terms
-> - [[#ICMA Green Bond Principles]] — the voluntary market-led framework the EU GBS builds upon
-> - [[#EU Taxonomy]] — EU GBS requires proceeds to be allocated to taxonomy-aligned activities
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — CSRD disclosures provide data for verifying green bond use of proceeds
-> - [[#Do No Significant Harm (DNSH)]] — taxonomy alignment under EU GBS requires DNSH compliance
----
-
 ### EU Taxonomy
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
@@ -537,19 +496,6 @@ The GHG Protocol's scope classification is the universal language of carbon acco
 
 ---
 
-### Glasgow Climate Pact
-
-> The Glasgow Climate Pact is the outcome document adopted at COP26 in Glasgow in November 2021. It was the first COP decision to explicitly reference the phase-down of unabated coal power and the phase-out of inefficient fossil fuel subsidies. The Pact urged parties to revisit and strengthen their 2030 emissions reduction targets by end of 2022 to align with the Paris Agreement temperature goal, and it finalized the Paris Agreement rulebook, including rules for international carbon markets under Article 6. The Pact also established a work program on loss and damage and doubled the collective finance goal for adaptation.
-
-The Glasgow Climate Pact is significant for ESG investing because its explicit coal and fossil fuel language accelerated the expectation that companies and investors address fossil fuel exposure. ISS ESG climate assessments reference the trajectory expectations set at COP26, and STOXX climate transition and Paris-aligned benchmarks incorporate the strengthened ambition from Glasgow. The Pact's Article 6 outcomes also created a framework for voluntary carbon markets, which ISS and other data providers monitor for integrity and credibility in corporate net-zero strategies.
-
-> [!tip] Related terms
-> - [[#Paris Agreement]] — the Glasgow Climate Pact operationalizes and strengthens Paris Agreement commitments
-> - [[#Science Based Targets Initiative (SBTi)]] — the Pact's ambition influenced SBTi's shift to 1.5-degree-only target validation
-> - [[#International Sustainability Standards Board (ISSB)]] — the ISSB was launched at COP26 in Glasgow
-> - [[#GHG Protocol]] — emissions accounting underlying the Pact's ambition statements
----
-
 ### Global Reporting Initiative (GRI)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
@@ -657,18 +603,6 @@ Good governance is the social floor beneath the EU Taxonomy's environmental ceil
 
 ## I
 
-### ICMA Green Bond Principles
-
-> The Green Bond Principles (GBP) are voluntary process guidelines published by the International Capital Market Association (ICMA) that recommend transparency and disclosure, and promote integrity in the development of the green bond market. First issued in 2014 and updated regularly, the GBP provide guidance on four core components: use of proceeds, process for project evaluation and selection, management of proceeds, and reporting. They also recommend external review (e.g., second-party opinions, verification, certification, or green bond scoring).
-
-The GBP are the market standard for labeling a bond as "green." ISS ESG provides second-party opinions (SPOs) on green bond frameworks, assessing alignment with the GBP. STOXX and other index providers use GBP-aligned data when constructing green bond indices. For investors, a bond issued under the GBP framework provides greater confidence that proceeds are directed toward genuine environmental projects.
-
-> [!tip] Related terms
-> - [[#EU Taxonomy]] — the EU Green Bond Standard builds on the GBP with mandatory taxonomy alignment
-> - [[#Paris Agreement]] — many green bond frameworks reference Paris-aligned climate goals
-> - [[#CDP (Carbon Disclosure Project)]] — green bond issuers often reference CDP data to demonstrate environmental credibility
----
-
 ### ILO Conventions
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -769,21 +703,6 @@ The ISSB represents the push toward a single global baseline for sustainability 
 
 ## M
 
-### Montreal Protocol
-
-> The Montreal Protocol on Substances that Deplete the Ozone Layer is an international environmental treaty adopted in 1987 and entered into force in 1989. It is widely regarded as the most successful environmental agreement in history, having achieved universal ratification by all 198 UN member states. The Protocol mandates the phase-out of the production and consumption of ozone-depleting substances (ODS), including chlorofluorocarbons (CFCs), halons, and hydrochlorofluorocarbons (HCFCs). The Kigali Amendment (2016) extended the Protocol to include the phase-down of hydrofluorocarbons (HFCs), which are potent greenhouse gases.
-
-The Montreal Protocol is relevant to ESG investing because it established binding restrictions on specific industrial chemicals that companies must comply with. ISS ESG screens for violations of international environmental conventions, including the Montreal Protocol, as part of norms-based research. The Kigali Amendment's HFC phase-down has particular significance for climate-aware investing, as HFCs have global warming potentials thousands of times greater than CO2. Companies in refrigeration, air conditioning, and aerosol sectors face transition risks tied to HFC regulations. STOXX climate indices may consider Montreal Protocol compliance in environmental risk assessments.
-
-> [!tip] Related terms
-> - [[#Paris Agreement]] — the Kigali Amendment to the Montreal Protocol complements Paris climate goals
-> - [[#GHG Protocol]] — HFC emissions fall under GHG Protocol scope definitions
-> - [[#EU Taxonomy]] — the Taxonomy's pollution prevention objective references phase-out of harmful substances
-> - [[#UN Global Compact]] — environmental principles (7-9) encompass treaty compliance
----
-
-## N
-
 ### NFRD (Non-Financial Reporting Directive)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -865,21 +784,6 @@ The OECD Guidelines are a foundational normative framework in ESG investing. ISS
 >
 
 ---
-
-### Ottawa Treaty (Mine Ban Convention)
-
-> The Ottawa Treaty (formally the Convention on the Prohibition of the Use, Stockpiling, Production and Transfer of Anti-Personnel Mines and on their Destruction) is an international agreement that bans anti-personnel landmines. Opened for signature in 1997 and entered into force in 1999, the treaty prohibits the use, stockpiling, production, and transfer of anti-personnel mines and requires the destruction of existing stockpiles. Over 160 states are party to the convention. Anti-personnel mines are considered indiscriminate weapons because they cannot distinguish between combatants and civilians and continue to kill and maim long after conflicts end.
-
-The Ottawa Treaty is one of the core weapons conventions referenced in ESG controversial weapons screening. ISS ESG identifies companies involved in the production of anti-personnel mines or key components, and STOXX ESG indices systematically exclude these companies from sustainability benchmarks. Along with the Convention on Cluster Munitions, the BWC, and the CWC, the Ottawa Treaty forms the group of weapons treaties whose violation constitutes one of the most severe norms-based exclusion triggers in responsible investing.
-
-> [!tip] Related terms
-> - [[#Convention on Cluster Munitions]] — a closely related treaty on indiscriminate weapons
-> - [[#Biological Weapons Convention (BWC)]] — another weapons treaty used in ESG screening
-> - [[#Chemical Weapons Convention (CWC)]] — bans chemical weapons
-> - [[#UN Global Compact]] — UNGC norms underpin controversial weapons screening frameworks
----
-
-## P
 
 ### Paris Agreement
 
@@ -1145,19 +1049,6 @@ SDGs provide a universal language for linking investment activities to real-worl
 
 ---
 
-### Sendai Framework
-
-> The Sendai Framework for Disaster Risk Reduction 2015-2030 is a voluntary, non-binding agreement adopted at the Third UN World Conference on Disaster Risk Reduction in Sendai, Japan, in March 2015. It is the successor to the Hyogo Framework for Action (2005-2015) and sets seven global targets and four priorities for action: understanding disaster risk, strengthening disaster risk governance, investing in disaster risk reduction for resilience, and enhancing disaster preparedness for effective response. The framework covers natural and human-made hazards, as well as related environmental, technological, and biological hazards and risks.
-
-The Sendai Framework is relevant to ESG investing because it establishes the global standard for assessing and managing disaster risk, which is increasingly material to investment portfolios. Climate change amplifies disaster risk exposure, and companies with poor disaster preparedness face greater operational, financial, and reputational losses. ISS ESG climate adaptation assessments consider corporate resilience to physical climate risks, which aligns with Sendai Framework principles. STOXX climate indices that incorporate physical risk metrics draw on concepts consistent with the Sendai Framework's emphasis on understanding and reducing disaster vulnerability.
-
-> [!tip] Related terms
-> - [[#Paris Agreement]] — the Sendai Framework and Paris Agreement were both adopted in 2015 and are mutually reinforcing
-> - [[#SDGs (Sustainable Development Goals)]] — disaster risk reduction is embedded across multiple SDGs
-> - [[#Task Force on Climate-related Financial Disclosures (TCFD)]] — TCFD physical risk assessment aligns with Sendai principles
-> - [[#UN 2030 Agenda]] — the Sendai Framework is one of four key agreements underpinning the 2030 Agenda
----
-
 ### SRD II (Shareholder Rights Directive II)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
@@ -1353,19 +1244,6 @@ TNFD extends the climate disclosure paradigm to the broader biodiversity and nat
 ---
 
 ## U
-
-### UN 2030 Agenda
-
-> The 2030 Agenda for Sustainable Development is a resolution adopted by the United Nations General Assembly in September 2015 (A/RES/70/1) that provides a shared blueprint for peace and prosperity for people and the planet. Its centrepiece is the 17 Sustainable Development Goals (SDGs) and their 169 targets, but the Agenda is broader than the SDGs alone — it integrates the economic, social, and environmental dimensions of sustainable development and calls on all countries, developed and developing, to act in collaborative partnership. The 2030 Agenda explicitly links to other landmark 2015 agreements, including the Paris Agreement, the Sendai Framework, and the Addis Ababa Action Agenda on financing for development.
-
-The UN 2030 Agenda provides the overarching policy context within which much of ESG investing operates. While the SDGs are the most operationalized component, the 2030 Agenda's broader vision of integrated sustainable development informs the design of ESG frameworks, index methodologies, and regulatory initiatives. ISS ESG SDG impact assessments and STOXX SDG-aligned indices are ultimately grounded in the 2030 Agenda's ambition. For investors, understanding that the SDGs sit within this larger framework helps contextualize how individual ESG metrics connect to systemic global development priorities.
-
-> [!tip] Related terms
-> - [[#SDGs (Sustainable Development Goals)]] — the 17 goals are the operational core of the 2030 Agenda
-> - [[#Paris Agreement]] — adopted the same year and explicitly linked to the 2030 Agenda
-> - [[#Sendai Framework]] — one of the four key agreements underpinning the 2030 Agenda
-> - [[#PRI (Principles for Responsible Investment)]] — PRI's strategy references the 2030 Agenda's goals
----
 
 ### UN Global Compact
 

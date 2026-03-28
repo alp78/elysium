@@ -40,7 +40,7 @@ $$\text{Composite} = \frac{1}{n}\sum_{i=1}^{n} z_i$$
 
 Some components are sign-inverted before averaging (e.g., P/E: lower is better, so −z is used).
 
-**Sign inversion examples:**
+#### Sign inversion examples
 - [[daily-signal-scores|Relative Value Score]]: Forward P/E, Price/Book, EV/EBITDA are inverted (−z) because lower valuations are better
 - [[daily-signal-scores|Sentiment Score]]: Recommendation is inverted (−z) because lower numeric rating = more bullish
 - [[quarterly-signal-scores|Quality Score]]: Leverage (debt/equity) is inverted (−z) because lower debt is better

@@ -208,6 +208,14 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     searchLayout.appendChild(el)
   }
 
+  // Path bar — shows the full path of the currently focused result
+  let pathBar = searchLayout.parentElement?.querySelector(".search-path-bar") as HTMLElement | null
+  if (!pathBar) {
+    pathBar = document.createElement("div")
+    pathBar.className = "search-path-bar"
+    searchLayout.parentElement?.insertBefore(pathBar, searchLayout)
+  }
+
   const enablePreview = searchLayout.dataset.preview === "true"
   let preview: HTMLDivElement | undefined = undefined
   let previewInner: HTMLDivElement | undefined = undefined
@@ -229,6 +237,7 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     if (preview) {
       removeAllChildren(preview)
     }
+    if (pathBar) pathBar.textContent = ""
     searchLayout.classList.remove("display-results")
     searchType = "basic"
     searchButton.focus()
@@ -319,13 +328,9 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     const pageData = data[pageSlug as FullSlug]
     const contentText = pageData?.content ?? ""
 
-    // Build breadcrumb path and heading separately
-    const breadcrumb = sectionTitle && sectionTitle !== pageTitle
-      ? `${pageSlug.replace(/\//g, " › ")}`
-      : ""
-    const heading = sectionTitle
-      ? highlight(term, sectionTitle)
-      : highlight(term, pageTitle)
+    // Build breadcrumb path and heading separately (no highlighting in result list)
+    const breadcrumb = pageSlug.replace(/\//g, " › ")
+    const heading = sectionTitle || pageTitle
 
     return {
       id: result.id,
@@ -370,12 +375,10 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     const baseUrl = resolveUrl(slug).toString()
     itemTile.href = anchor ? `${baseUrl}#${anchor}` : baseUrl
 
+    itemTile.dataset.breadcrumb = breadcrumb ?? ""
+
     const relDot = `<span class="relevance-dot relevance-${relevance}"></span>`
-    const breadcrumbHtml = breadcrumb
-      ? `<span class="card-breadcrumb">${breadcrumb}</span>`
-      : ""
     itemTile.innerHTML = `
-      ${breadcrumbHtml}
       <h3 class="card-title">${relDot}${title}</h3>
       ${htmlTags}
     `
@@ -446,6 +449,11 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
   }
 
   async function displayPreview(el: HTMLElement | null) {
+    // Update path bar with the focused result's breadcrumb
+    if (pathBar) {
+      pathBar.textContent = el?.dataset.breadcrumb ?? ""
+    }
+
     if (!searchLayout || !enablePreview || !el || !preview) return
     const slug = el.id as FullSlug
     const anchor = el.dataset.anchor ?? ""

@@ -2427,7 +2427,7 @@ display(comparison)
 <small>shape: (20, 3)</small><table border="1" class="dataframe"><thead><tr><th>Feature</th><th>Pandas</th><th>Polars</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;1-D data structure&quot;</td><td>&quot;pd.Series (indexed)&quot;</td><td>&quot;pl.Series (named, no index)&quot;</td></tr><tr><td>&quot;2-D data structure&quot;</td><td>&quot;pd.DataFrame (indexed)&quot;</td><td>&quot;pl.DataFrame (no index)&quot;</td></tr><tr><td>&quot;Row index&quot;</td><td>&quot;Yes — RangeIndex, named, Multi&quot;</td><td>&quot;No — all data lives in columns&quot;</td></tr><tr><td>&quot;Missing values&quot;</td><td>&quot;NaN (float) or pd.NA&quot;</td><td>&quot;null (Arrow bitmask)&quot;</td></tr><tr><td>&quot;Default int type&quot;</td><td>&quot;int64&quot;</td><td>&quot;Int64&quot;</td></tr><tr><td>&quot;Default float type&quot;</td><td>&quot;float64&quot;</td><td>&quot;Float64&quot;</td></tr><tr><td>&quot;Default string type&quot;</td><td>&quot;object (or StringDtype)&quot;</td><td>&quot;String (Utf8)&quot;</td></tr><tr><td>&quot;Type safety&quot;</td><td>&quot;Low — object dtype is a catch-…</td><td>&quot;High — strict type checking&quot;</td></tr><tr><td>&quot;Duplicate column names&quot;</td><td>&quot;Allowed (bug-prone)&quot;</td><td>&quot;Rejected (error)&quot;</td></tr><tr><td>&quot;Memory layout&quot;</td><td>&quot;Column-major (BlockManager)&quot;</td><td>&quot;Column-major (Arrow arrays)&quot;</td></tr><tr><td>&quot;Lazy evaluation&quot;</td><td>&quot;No (eager only)&quot;</td><td>&quot;Yes — pl.LazyFrame&quot;</td></tr><tr><td>&quot;MultiIndex&quot;</td><td>&quot;Yes — pd.MultiIndex&quot;</td><td>&quot;No — use regular columns&quot;</td></tr><tr><td>&quot;Create from dict&quot;</td><td>&quot;pd.DataFrame(dict)&quot;</td><td>&quot;pl.DataFrame(dict)&quot;</td></tr><tr><td>&quot;Create from numpy&quot;</td><td>&quot;pd.DataFrame(arr, columns=…)&quot;</td><td>&quot;pl.DataFrame({&#x27;col&#x27;: arr})&quot;</td></tr><tr><td>&quot;Create from records&quot;</td><td>&quot;pd.DataFrame(list_of_dicts)&quot;</td><td>&quot;pl.DataFrame(list_of_dicts)&quot;</td></tr><tr><td>&quot;Shape attribute&quot;</td><td>&quot;.shape → (rows, cols)&quot;</td><td>&quot;.shape → (rows, cols)&quot;</td></tr><tr><td>&quot;Height / width attrs&quot;</td><td>&quot;No&quot;</td><td>&quot;Yes — .height, .width&quot;</td></tr><tr><td>&quot;Null counting&quot;</td><td>&quot;df.isnull().sum()&quot;</td><td>&quot;df.null_count()&quot;</td></tr><tr><td>&quot;Memory estimation&quot;</td><td>&quot;df.memory_usage(deep=True)&quot;</td><td>&quot;df.estimated_size()&quot;</td></tr><tr><td>&quot;Type casting&quot;</td><td>&quot;.astype() / pd.to_datetime()&quot;</td><td>&quot;.cast() / .str.to_date()&quot;</td></tr></tbody></table></div>
 
 ---
-**Key takeaways:**
+#### Key takeaways
 - Polars has **no index** — this eliminates a whole class of alignment bugs.
 - Polars uses **Arrow-native nulls** — no NaN-induced type promotion.
 - Polars is **stricter** with types — catches errors earlier.
@@ -4699,7 +4699,7 @@ display(comp_df.style.set_properties(**{"text-align": "left"}).hide(axis="index"
 
 ---
 
-**Key takeaways:**
+#### Key takeaways
 
 1. **Parquet** is the best format for analytical workloads: smallest files,
    fastest reads, native schema preservation.

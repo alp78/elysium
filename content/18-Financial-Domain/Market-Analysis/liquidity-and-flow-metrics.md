@@ -76,7 +76,7 @@ A cumulative indicator that adds volume on up days and subtracts volume on down 
 
 $$\text{OBV}_t = \text{OBV}_{t-1} + \begin{cases} +V_t & \text{if } P_t > P_{t-1} \\ -V_t & \text{if } P_t < P_{t-1} \\ 0 & \text{if } P_t = P_{t-1} \end{cases}$$
 
-**Key signals:**
+#### Key signals
 - **OBV rising while price flat**: Accumulation — smart money buying before price moves
 - **OBV falling while price flat**: Distribution — selling before price drops
 - **OBV confirms price trend**: Trend is healthy and likely to continue

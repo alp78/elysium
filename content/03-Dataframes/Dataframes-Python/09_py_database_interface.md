@@ -3600,7 +3600,7 @@ display(Markdown("**Top 10 stocks by avg close (stored procedure):**"))
 display(df)
 ```
 
-**Top 10 stocks by avg close (stored procedure):**
+#### Top 10 stocks by avg close (stored procedure)
 
 <table border="1" class="dataframe">
   <thead>

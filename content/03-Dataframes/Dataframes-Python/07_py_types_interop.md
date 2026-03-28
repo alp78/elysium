@@ -1864,7 +1864,7 @@ lf = pl.scan_ndjson(TMP / "out.ndjson")
 print(f"\nLazy schema: {lf.collect_schema()}")
 ```
 
-**Pandas:**
+#### Pandas
 
 <table border="1" class="dataframe">
   <thead>
@@ -1893,7 +1893,7 @@ print(f"\nLazy schema: {lf.collect_schema()}")
   </tbody>
 </table>
 
-**Polars:**
+#### Polars
 
 <div><style>
 .dataframe > thead > tr,
@@ -2050,7 +2050,7 @@ display(Markdown("**Polars infer_schema_length=None:**"))
 display(df)
 ```
 
-**Pandas with dtype:**
+#### Pandas with dtype
 
 <table border="1" class="dataframe">
   <thead>
@@ -2071,7 +2071,7 @@ display(df)
   </tbody>
 </table>
 
-**Polars with schema_overrides (keep as String, cast after):**
+#### Polars with schema_overrides (keep as String, cast after)
 
 <div><style>
 .dataframe > thead > tr,
@@ -2082,7 +2082,7 @@ display(df)
 </style>
 <small>shape: (2, 2)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>val</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>1</td><td>3.14</td></tr><tr><td>2</td><td>2.72</td></tr></tbody></table></div>
 
-**Polars infer_schema_length=None:**
+#### Polars infer_schema_length=None
 
 <div><style>
 .dataframe > thead > tr,
@@ -2392,17 +2392,17 @@ display(Markdown("**Polars lazy — filtered scan:**"))
 display(result.head(3))
 ```
 
-**Pandas — read partitioned:**
+#### Pandas — read partitioned
 
     Shape: (300, 12), symbols: ['ASML.AS']
     Categories (1, object): ['ASML.AS']
     Filtered: (300, 12)
 
-**Polars — read partitioned:**
+#### Polars — read partitioned
 
     Shape: (300, 12), symbols: ['ASML.AS']
 
-**Polars lazy — filtered scan:**
+#### Polars lazy — filtered scan
 
 <div><style>
 .dataframe > thead > tr,
@@ -2583,7 +2583,7 @@ print("\nFor CSV export:")
 print(df_csv.write_csv())
 ```
 
-**Pandas with base64:**
+#### Pandas with base64
 
 <table border="1" class="dataframe">
   <thead>
@@ -2614,7 +2614,7 @@ print(df_csv.write_csv())
 
     Round-trip OK
 
-**Polars with Binary dtype:**
+#### Polars with Binary dtype
 
 <div><style>
 .dataframe > thead > tr,

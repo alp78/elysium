@@ -1394,7 +1394,7 @@ Console.WriteLine(workflow);
 >
 > **Python equivalents:** `Assert.Equal` → `assert x == y` | `Moq` → `unittest.mock` | constructor → `@pytest.fixture` | `IDisposable` → `yield` in fixture
 
-**Typical project layout:**
+#### Typical project layout
 ```
 TradingPipeline/
 ├── src/TradingPipeline/

@@ -115,10 +115,10 @@ $$\text{VaR}_{95\%} = \mu - 1.645 \times \sigma$$
 
 The [[chart-metrics|dashboard]] displays two volatility visualizations:
 
-**30d Annualized Volatility:**
+#### 30d Annualized Volatility
 $$\sigma_{30d} = \text{std}(r_{t-29}, \ldots, r_t) \times \sqrt{252} \times 100$$
 
-**Rolling 30d Sharpe Ratio:**
+#### Rolling 30d Sharpe Ratio
 $$\text{Sharpe}_{30d} = \frac{\text{Rolling30dReturn}}{\text{Rolling30dVolatility}}$$
 
 ## Related

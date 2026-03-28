@@ -24,7 +24,7 @@ Five time-series charts are stacked vertically with synchronized zoom/pan in the
 
 Equal-weight portfolio holding all index constituents, rebased to 0% at period start.
 
-**Formula for cumulative portfolio return:**
+#### Formula for cumulative portfolio return
 
 $$\text{Return}_t = \left(\frac{\text{CumulativeFactor}_t}{\text{CumulativeFactor}_{\text{start}}} - 1\right) \times 100$$
 
@@ -40,13 +40,13 @@ Trailing 30-day cumulative return, plotted daily. Uses a baseline series (green 
 
 Distance from the running all-time high of the cumulative factor. This metric is always less than or equal to zero.
 
-**Formula for drawdown:**
+#### Formula for drawdown
 
 $$\text{Drawdown}_t = \left(\frac{\text{CumulativeFactor}_t}{\max_{s \le t}(\text{CumulativeFactor}_s)} - 1\right) \times 100$$
 
 **Interpretation**: Depth shows tail risk. Recovery time (from trough back to 0%) measures market resilience.
 
-**Drawdown severity classification:**
+#### Drawdown severity classification
 
 | Drawdown | Severity |
 |----------|----------|
@@ -59,13 +59,13 @@ $$\text{Drawdown}_t = \left(\frac{\text{CumulativeFactor}_t}{\max_{s \le t}(\tex
 
 Rolling 30-day standard deviation of daily returns, annualized by multiplying by the square root of 252 trading days.
 
-**Formula for annualized 30-day volatility:**
+#### Formula for annualized 30-day volatility
 
 $$\sigma_{30d} = \text{std}(r_{t-29}, \ldots, r_t) \times \sqrt{252} \times 100$$
 
 A horizontal dashed line marks the historical average for the selected index.
 
-**Volatility regime classification:**
+#### Volatility regime classification
 
 | Volatility | Regime |
 |------------|--------|
@@ -78,11 +78,11 @@ A horizontal dashed line marks the historical average for the selected index.
 
 Risk-adjusted return: rolling return divided by rolling volatility. This measures how much return the index generates per unit of risk.
 
-**Formula for rolling 30-day Sharpe ratio:**
+#### Formula for rolling 30-day Sharpe ratio
 
 $$\text{Sharpe}_{30d} = \frac{\text{Rolling30dReturn}}{\text{Rolling30dVolatility}}$$
 
-**Sharpe ratio interpretation:**
+#### Sharpe ratio interpretation
 
 | Sharpe | Interpretation |
 |--------|----------------|

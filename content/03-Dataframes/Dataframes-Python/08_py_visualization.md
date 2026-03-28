@@ -469,7 +469,7 @@ Seaborn provides high-level functions for **statistical visualization** — dist
 ### Box Plot
 
 
-**How to read:**
+#### How to read
 - **Box** = interquartile range (IQR): middle 50% of data (Q1 to Q3)
 - **Line inside box** = median (Q2)
 - **Whiskers** = extend to the farthest point within 1.5×IQR from the box edges
@@ -491,7 +491,7 @@ plt.show()
 ### Violin Plot
 
 
-**How to read:**
+#### How to read
 - **Width** = density estimate (wider = more data points at that value)
 - **Inner box/lines** = quartiles (same as box plot: Q1, median, Q3)
 - **Shape** = full distribution — symmetric = normal; multiple bulges = multimodal; long tail = skewed
@@ -512,7 +512,7 @@ plt.show()
 ### Strip Plot
 
 
-**How to read:**
+#### How to read
 - **Each dot** = one data point (one stock)
 - **Jitter** = small random horizontal offset to prevent dots from stacking on top of each other
 - **Dense clusters** = many values near that level; isolated dots = outliers
@@ -533,7 +533,7 @@ plt.show()
 ### Swarm Plot
 
 
-**How to read:**
+#### How to read
 - Like strip plot, but dots are algorithmically spread so **no two overlap**
 - **Width of the swarm** at a given y-value reflects how many points are near that value (like a violin)
 - Gives exact count — every point is visible and countable
@@ -554,7 +554,7 @@ plt.show()
 ### Heatmap
 
 
-**How to read:**
+#### How to read
 - **Color intensity** = magnitude of the value in each cell
 - **Diverging scale (RdBu):** red = strong positive, white = zero, blue = strong negative
 - **Diagonal** (in correlation matrix) = always 1.0 (variable correlated with itself)
@@ -578,7 +578,7 @@ plt.show()
 ### Clustermap (hierarchical clustering)
 
 
-**How to read:**
+#### How to read
 - Same as heatmap, but rows and columns are **reordered by hierarchical clustering**
 - **Dendrograms** (tree diagrams on the sides) show which variables are most similar
 - Variables that merge early in the tree are more correlated with each other
@@ -598,7 +598,7 @@ plt.show()
 ### Pair Plot
 
 
-**How to read:**
+#### How to read
 - **Grid of scatter plots**: every pair of numeric columns plotted against each other
 - **Diagonal** = distribution of each variable (KDE or histogram)
 - **Off-diagonal** = scatter of row-variable (y) vs column-variable (x)
@@ -619,7 +619,7 @@ plt.show()
 ### Joint Plot
 
 
-**How to read:**
+#### How to read
 - **Center** = scatter (or hexbin/KDE) of two variables
 - **Top margin** = distribution of the x-variable
 - **Right margin** = distribution of the y-variable
@@ -639,7 +639,7 @@ plt.show()
 ### KDE Plot
 
 
-**How to read:**
+#### How to read
 - **Curve height** = estimated probability density (not count)
 - **Peaks** = modes — values where data concentrates
 - **Width/spread** = variance — wider curve = more dispersed data
@@ -663,7 +663,7 @@ plt.show()
 ### Regression Plot
 
 
-**How to read:**
+#### How to read
 - **Dots** = individual data points
 - **Line** = OLS (ordinary least squares) best-fit line
 - **Shaded band** = 95% confidence interval around the regression line
@@ -685,7 +685,7 @@ plt.show()
 ### Residual Plot
 
 
-**How to read:**
+#### How to read
 - **Each dot** = residual (actual value minus predicted value from linear fit)
 - **Ideal pattern**: random scatter around zero — no visible structure
 - **Funnel shape** = heteroscedasticity (variance changes with x)
@@ -707,7 +707,7 @@ plt.show()
 ### Count Plot
 
 
-**How to read:**
+#### How to read
 - **Bar length** = number of observations in each category
 - Essentially a histogram for categorical data
 - Ordered by count to quickly identify the most/least populated categories
@@ -726,7 +726,7 @@ plt.show()
 ### ECDF (Empirical CDF)
 
 
-**How to read:**
+#### How to read
 - **X-axis** = variable values; **Y-axis** = cumulative proportion (0 to 1)
 - Read as: "what fraction of data falls below this value?"
 - **Steep section** = many values concentrated in a narrow range
@@ -747,7 +747,7 @@ plt.show()
 ### Rug Plot
 
 
-**How to read:**
+#### How to read
 - **Short ticks on the axis** = exact position of each data point
 - Combined with KDE, it grounds the smooth curve in actual observations
 - **Dense ticks** = cluster of values; **gaps** = sparse regions
@@ -795,7 +795,7 @@ plt.show()
 ### Step Plot
 
 
-**How to read:**
+#### How to read
 - Value stays **flat** between changes, then jumps vertically
 - Emphasizes that the value is constant between updates (unlike a line chart which implies interpolation)
 - Best for discrete-step data: interest rates, pricing tiers, digital signals
@@ -814,7 +814,7 @@ plt.show()
 ### Stem Plot
 
 
-**How to read:**
+#### How to read
 - **Vertical line** from baseline (zero) to the value — length = magnitude
 - **Dot at tip** = the actual value
 - Lines above zero = positive; below = negative
@@ -852,7 +852,7 @@ plt.show()
 ### Polar / Radar Chart
 
 
-**How to read:**
+#### How to read
 - Each **spoke** = one dimension/metric (e.g., momentum, value, sentiment, composite)
 - **Distance from center** = score magnitude on that dimension
 - **Shape** reveals the profile: balanced (regular polygon) vs specialized (elongated toward one spoke)
@@ -882,7 +882,7 @@ plt.show()
 ### Error Bar Plot
 
 
-**How to read:**
+#### How to read
 - **Dot** = point estimate (mean)
 - **Bars** = uncertainty range (here: ±1 standard deviation)
 - **Short bars** = low dispersion (consistent values); **long bars** = high dispersion
@@ -1182,7 +1182,7 @@ fig.show()
 ### Marginal Distributions
 
 
-**How to read:**
+#### How to read
 - **Center** = main scatter plot showing the relationship
 - **Top margin** = histogram of the x-variable's distribution
 - **Right margin** = box plot of the y-variable's distribution
@@ -1201,7 +1201,7 @@ fig.show()
 ### Trendline (OLS)
 
 
-**How to read:**
+#### How to read
 - **Red line** = best-fit linear regression
 - **Slope direction** = positive or negative correlation
 - **Scatter tightness** around line = strength of relationship (R²)
@@ -1275,7 +1275,7 @@ fig.show()
 ### Violin Plot
 
 
-**How to read:**
+#### How to read
 - **Width** = density (wider = more data at that level)
 - **Internal box** = Q1, median, Q3 (same as box plot)
 - **Points** = individual observations (when enabled)
@@ -1295,7 +1295,7 @@ fig.show()
 ### Box Plot
 
 
-**How to read:**
+#### How to read
 - **Box** = IQR (Q1 to Q3, middle 50%); **line** = median
 - **Whiskers** = up to 1.5×IQR; **dots** = outliers beyond whiskers
 - **Notch** = 95% CI for median; non-overlapping notches ≈ significant difference
@@ -1314,7 +1314,7 @@ fig.show()
 ### Strip Plot
 
 
-**How to read:**
+#### How to read
 - **Each dot** = one observation, jittered horizontally
 - Hover to identify individual points by name
 - Best for small datasets where you want to see every value
@@ -1424,7 +1424,7 @@ Heatmaps encode a **matrix of values** as colors, ideal for correlation matrices
 ### Correlation Matrix
 
 
-**How to read:**
+#### How to read
 - **+1.0 (dark red)** = perfect positive correlation (both move together)
 - **-1.0 (dark blue)** = perfect negative correlation (one goes up, other goes down)
 - **0.0 (white)** = no linear relationship
@@ -1475,7 +1475,7 @@ Candlestick and OHLC charts are standard for **price action analysis**. Each bar
 ### Candlestick
 
 
-**How to read:**
+#### How to read
 - **Body** = range between open and close (filled/green = close > open = bullish; hollow/red = bearish)
 - **Upper wick** = high of the day above the body
 - **Lower wick** = low of the day below the body
@@ -1497,7 +1497,7 @@ fig.show()
 ### OHLC
 
 
-**How to read:**
+#### How to read
 - **Vertical line** = high-to-low range for the period
 - **Left tick** = opening price
 - **Right tick** = closing price

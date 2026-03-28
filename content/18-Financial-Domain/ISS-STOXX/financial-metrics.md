@@ -33,7 +33,7 @@ date: 2026-03-28
 
 > The difference between a portfolio's return and its benchmark return over a given period, representing the value added (or lost) by active management decisions.
 
-In plain terms, active return tells you how much better or worse a fund did compared to the index it tracks. If a portfolio gained 12% and the benchmark gained 10%, the active return is +2%.
+active return tells you how much better or worse a fund did compared to the index it tracks. If a portfolio gained 12% and the benchmark gained 10%, the active return is +2%.
 
 $$
 R_{\text{active}} = R_{\text{portfolio}} - R_{\text{benchmark}}
@@ -324,20 +324,6 @@ $$
 ---
 
 ## C
-
-### Calmar Ratio
-
-> The ratio of a portfolio's annualized return to its maximum drawdown over a specified period (typically three years). It measures the return earned per unit of worst-case downside risk.
-
-The Calmar ratio rewards strategies that deliver strong returns without stomach-churning drops. A ratio above 3.0 is generally considered excellent. It is particularly popular in evaluating hedge fund and managed futures performance.
-
-$$
-\text{Calmar Ratio} = \frac{R_{\text{ann}}}{\left|\text{Maximum Drawdown}\right|}
-$$
-
-> [!tip] Related terms
-> [[#Maximum Drawdown]], [[#Sharpe Ratio]], [[#Sortino Ratio]], [[#Drawdown]]
----
 
 ### Cash Flow Yield
 
@@ -1612,22 +1598,6 @@ $$
 
 ---
 
-### Market Premium
-
-> The realized or expected excess return of the broad equity market over the risk-free rate for a given period. It is synonymous with the equity risk premium when expressed as an expectation, and with the market excess return when measured historically.
-
-Market premium is the compensation investors actually received (or expect to receive) for choosing equities over risk-free government bonds. It is a core input to CAPM and drives cost-of-equity estimates throughout STOXX and ISS analytics.
-
-$$
-\text{Market Premium} = R_m - R_f
-$$
-
-Where $R_m$ is the market return and $R_f$ is the risk-free rate.
-
-> [!tip] Related terms
-> [[#Equity Risk Premium]], [[#Risk-Free Rate]], [[#Alpha]], [[#Beta]]
----
-
 ### Momentum (Price Momentum)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
@@ -1796,21 +1766,6 @@ $$
 
 ---
 
-### Net Operating Profit After Tax (NOPAT)
-
-
-> A company's after-tax operating profit, excluding the effects of capital structure (i.e., interest expense). NOPAT isolates the profitability of core business operations and is the starting point for EVA calculation.
-
-NOPAT strips out how a company is financed and focuses purely on what the business earns from operations after tax. It is the numerator of the value creation equation in the ISS EVA framework.
-
-$$
-\text{NOPAT} = \text{Operating Profit} \times (1 - \text{Tax Rate})
-$$
-
-> [!tip] Related terms
-> [[#Economic Value Added (EVA)]], [[#EVA Margin]], [[#Gross Profitability]]
----
-
 ### Operating Margin
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1958,22 +1913,6 @@ Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 > — [An Index Solution for Dispersion Trading | Blog posts | STOXX](https://stoxx.com/an-index-solution-dispersion-trading)
 >
 
----
-
-### Return Attribution
-
-> The decomposition of a portfolio's or index's return into contributions from various sources such as asset allocation, security selection, currency effects, and factor exposures.
-
-Return attribution breaks a result into its ingredients. It answers questions like: "Did the fund outperform because it picked the right sectors, or because it picked the right stocks within those sectors?"
-
-$$
-R_{\text{total}} = \sum_{s=1}^{S} w_s \cdot R_s = \underbrace{\sum_{s} (w_s - W_s) \cdot R_{B,s}}_{\text{Allocation}} + \underbrace{\sum_{s} W_s \cdot (R_s - R_{B,s})}_{\text{Selection}} + \text{Interaction}
-$$
-
-Where $w_s$ and $W_s$ are portfolio and benchmark weights for sector $s$.
-
-> [!tip] Related terms
-> [[#Active Return]], [[#Factor Exposure]], [[#Factor Return]]
 ---
 
 ### Return on Assets (ROA)
@@ -2249,26 +2188,6 @@ $$
 
 ---
 
-### Risk-Return Tradeoff
-
-> The principle that potential return rises with an increase in risk. It states that investors must accept higher uncertainty (volatility) if they seek higher expected returns, and that low-risk investments tend to offer lower returns.
-
-The risk-return tradeoff is the foundational concept behind portfolio construction. It explains why equities historically outperform bonds (higher risk, higher reward) and why the efficient frontier exists. STOXX risk-controlled indices explicitly optimize along this tradeoff.
-
-There is no single formula for the tradeoff itself, but it is embodied in frameworks like CAPM:
-
-$$
-E(R_i) = R_f + \beta_i \cdot (E(R_m) - R_f)
-$$
-
-Higher $\beta$ (risk) corresponds to higher expected return $E(R_i)$.
-
-> [!tip] Related terms
-> [[#Sharpe Ratio]], [[#Volatility]], [[#Risk-Adjusted Return]], [[#Equity Risk Premium]]
----
-
-## S
-
 ### Sharpe Ratio
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
@@ -2318,22 +2237,6 @@ $$
 > — [Charting innovation: digital asset edition | New index launches | Blog posts ...](https://stoxx.com/charting-innovation-digital-asset-edition)
 >
 
----
-
-### Sortino Ratio
-
-> A modification of the Sharpe ratio that uses downside deviation instead of total standard deviation as the risk measure. It penalizes only harmful volatility (returns below a target), not overall variability.
-
-The Sortino ratio recognizes that upside volatility is desirable. By focusing only on bad surprises, it gives a more investor-relevant picture of risk-adjusted performance than the Sharpe ratio.
-
-$$
-\text{Sortino} = \frac{R_p - R_f}{\sigma_{\text{downside}}}
-$$
-
-Where $\sigma_{\text{downside}} = \sqrt{\frac{1}{n}\sum_{t=1}^{n}\min(r_t - R_f,\, 0)^2}$.
-
-> [!tip] Related terms
-> [[#Sharpe Ratio]], [[#Maximum Drawdown]], [[#Standard Deviation]], [[#Risk-Adjusted Return]]
 ---
 
 ### Standard Deviation

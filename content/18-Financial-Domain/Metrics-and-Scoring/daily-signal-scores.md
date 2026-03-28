@@ -26,7 +26,7 @@ Daily signal scores are cross-sectional z-scores computed daily across all index
 
 The momentum score measures sustained price trend strength across four dimensions.
 
-**Component breakdown:**
+#### Component breakdown
 
 | Component | Source | Method |
 |-----------|--------|--------|
@@ -35,7 +35,7 @@ The momentum score measures sustained price trend strength across four dimension
 | SMA-200 Ratio | Price / 200-day moving average | z-score within index |
 | 52-Week High Proximity | (Price − 52w high) / 52w high | Inverted z-score (closer to peak = higher) |
 
-**Composite momentum formula:**
+#### Composite momentum formula
 
 $$\text{MomentumScore} = \text{mean}(z_{\text{RS}},\ z_{\text{SMA50}},\ z_{\text{SMA200}},\ z_{\text{52wHigh}})$$
 
@@ -48,14 +48,14 @@ $$\text{MomentumScore} = \text{mean}(z_{\text{RS}},\ z_{\text{SMA50}},\ z_{\text
 
 Divergence alerts are contrarian signals that fire when price is falling but analysts still rate the stock a buy. This can indicate either a market overreaction (opportunity) or a value trap (analysts lagging reality).
 
-**Trigger conditions (both must be true simultaneously):**
+#### Trigger conditions (both must be true simultaneously)
 
 | Condition | Criteria |
 |-----------|----------|
 | Price falling | 52-week change < −10% |
 | Analysts bullish | Recommendation mean ≤ 2.5 and implied upside > 0 |
 
-**Alert columns:**
+#### Alert columns
 
 - **Upside** — (analyst target price / current price) − 1
 - **Rec** — consensus recommendation (1.0 = Strong Buy → 5.0 = Strong Sell)
@@ -67,7 +67,7 @@ Divergence alerts are contrarian signals that fire when price is falling but ana
 
 The relative value score measures how cheaply a stock trades relative to its index peers. All valuation multiples are inverted (lower = better) except dividend yield.
 
-**Component breakdown:**
+#### Component breakdown
 
 | Component | Source | Method |
 |-----------|--------|--------|
@@ -76,7 +76,7 @@ The relative value score measures how cheaply a stock trades relative to its ind
 | EV/EBITDA | yfinance `enterpriseToEbitda` | Inverted z-score within index |
 | Dividend Yield | yfinance `dividendYield` | z-score within index (higher yield = higher score) |
 
-**Composite value formula:**
+#### Composite value formula
 
 $$\text{ValueScore} = \text{mean}(-z_{\text{PE}},\ -z_{\text{PB}},\ -z_{\text{EV}},\ z_{\text{Yield}})$$
 
@@ -89,18 +89,18 @@ $$\text{ValueScore} = \text{mean}(-z_{\text{PE}},\ -z_{\text{PB}},\ -z_{\text{EV
 
 The sentiment score combines analyst upside with consensus recommendation strength to measure the direction and intensity of Wall Street sentiment.
 
-**Component breakdown:**
+#### Component breakdown
 
 | Component | Source | Method |
 |-----------|--------|--------|
 | Implied Upside | (Target price / current) − 1 | z-score within index |
 | Recommendation | Consensus analyst rating | Inverted z-score (lower mean = more bullish) |
 
-**Composite sentiment formula:**
+#### Composite sentiment formula
 
 $$\text{SentimentScore} = \text{mean}(z_{\text{Upside}},\ -z_{\text{Rec}})$$
 
-**Recommendation scale reference:**
+#### Recommendation scale reference
 
 1.0 (Strong Buy) → 2.0 (Buy) → 3.0 (Hold) → 4.0 (Sell) → 5.0 (Strong Sell)
 
