@@ -576,17 +576,17 @@ These rules sometimes pull in different directions. That is by design — engine
 
 These rules, taken together, express a philosophy of data engineering that can be summarized in three statements:
 
-### 1. Data Engineering Is a Service Discipline
+### Data Engineering Is a Service Discipline
 
 You exist to serve the people and systems that consume data. Your aesthetic preferences, your technology interests, your desire for intellectual challenge — these are valid human motivations, but they are not architectural requirements. The system that best serves its consumers is the right system, regardless of how it looks on a resume or how interesting it was to build.
 
-### 2. The Best System Is the One Nobody Thinks About
+### The Best System Is the One Nobody Thinks About
 
 A truly well-engineered data platform is invisible. Data arrives on time. Dashboards are fresh. Reports are accurate. Queries are fast. Nobody pages the data team. Nobody asks "is this data right?" Nobody maintains a parallel spreadsheet.
 
 This invisibility is the highest compliment. It means every rule was followed: the technology serves the business (Rule 1), the stack is maintainable (Rule 2), the architecture absorbs change (Rule 3), decisions were well-calibrated (Rule 4), raw data is safe (Rule 5), the system is appropriately simple (Rule 6), costs are proportionate (Rule 7), deployments are safe (Rule 8), processes are automated (Rule 9), and failures are detected before anyone notices (Rule 10).
 
-### 3. Every Decision Is a Trade-Off
+### Every Decision Is a Trade-Off
 
 There are no perfect architectures. There are no universally correct technology choices. There are only trade-offs — and the quality of an engineer is measured by how well they understand, communicate, and manage those trade-offs.
 

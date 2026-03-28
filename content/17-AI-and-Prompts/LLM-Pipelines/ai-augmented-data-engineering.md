@@ -15,11 +15,11 @@ status: complete
 
 By 2026, senior data engineers are expected to transition from "builders" to "strategists" who integrate AI capabilities into data platforms. This does not mean becoming a machine learning engineer — it means understanding how to build the data infrastructure that powers LLM applications and how to use LLMs as tools within data pipelines.
 
-## 34.1 Where LLMs Fit in Data Engineering
+## Where LLMs Fit in Data Engineering
 
 LLMs are not replacements for SQL transforms or Airflow DAGs. They are specialized tools for tasks where rules-based logic fails — natural language understanding, unstructured data classification, and intelligent data quality explanations.
 
-**Practical LLM use cases for financial data engineers:**
+#### Practical LLM use cases for financial data engineers
 
 | Use Case | Input | LLM Task | Output |
 |---|---|---|---|
@@ -30,7 +30,7 @@ LLMs are not replacements for SQL transforms or Airflow DAGs. They are specializ
 | **Schema documentation** | Table DDL + sample data | Generate column descriptions | Auto-populated data catalog entries |
 | **Query generation** | Natural language question | Generate SQL | Validated SQL query |
 
-## 34.2 RAG Architecture: Retrieval-Augmented Generation
+## RAG Architecture: Retrieval-Augmented Generation
 
 RAG is the pattern of combining a retrieval system (search over your own documents/data) with an LLM (generation). It is how you give an LLM access to your internal documentation, pipeline logs, and data catalog without fine-tuning.
 
@@ -57,7 +57,7 @@ RAG is the pattern of combining a retrieval system (search over your own documen
                                                 the index weight..."
 ```
 
-**The data engineering pipeline for RAG:**
+#### The data engineering pipeline for RAG
 
 ```python
 # Step 1: Document ingestion (data engineer's job)
@@ -99,9 +99,9 @@ collection.add(
 )
 ```
 
-## 34.3 Using LLMs in Data Pipelines
+## Using LLMs in Data Pipelines
 
-**Corporate actions extraction from press releases:**
+#### Corporate actions extraction from press releases
 
 ```python
 from anthropic import Anthropic
@@ -152,7 +152,7 @@ on the same date.
 #           "ratio_numerator": 1, "ratio_denominator": 4, ...}
 ```
 
-**Data quality anomaly explanation:**
+#### Data quality anomaly explanation
 
 ```python
 def explain_anomaly(symbol: str, metric: str, value: float, expected_range: tuple,
@@ -184,7 +184,7 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
     return response.content[0].text
 ```
 
-## 34.4 Vector Databases for Financial Data
+## Vector Databases for Financial Data
 
 | Database | Type | Best For | Deployment |
 |---|---|---|---|
@@ -198,11 +198,11 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
 > [!tip] GCP Vector Database Recommendation
 > For a financial data platform on GCP: Start with pgvector (if you already run PostgreSQL for Airflow metadata) or AlloyDB AI (managed, GCP-native). Move to Pinecone or Weaviate when you need >10M vectors or sub-10ms latency.
 
-## 34.5 Cost Management and Token Budgeting
+## Cost Management and Token Budgeting
 
 LLM API calls cost real money. A pipeline that processes 1,000 corporate action filings per day at $0.003/1K input tokens can run up significant costs if not managed.
 
-**Cost control patterns:**
+#### Cost control patterns
 
 ```python
 import tiktoken
@@ -238,7 +238,7 @@ def call_llm_with_budget(text: str) -> str:
     return response.content[0].text
 ```
 
-**When NOT to use LLMs:**
+#### When NOT to use LLMs
 
 | Task | Use LLM? | Better Alternative |
 |---|---|---|
@@ -250,7 +250,7 @@ def call_llm_with_budget(text: str) -> str:
 | Generating natural language summaries | **Yes** | LLM excels here |
 | Understanding press releases | **Yes** | LLM excels here |
 
-## 34.6 Apache Iceberg + AI: The Emerging Pattern
+## Apache Iceberg + AI: The Emerging Pattern
 
 The combination of Iceberg (structured data) and vector databases (unstructured data) is the emerging architecture for AI-augmented data platforms:
 
@@ -278,11 +278,11 @@ A query like "What factors contributed to the Euro market index underperforming 
 2. Unstructured data: earnings call transcripts, analyst reports (vector search)
 3. Generation: combine both into a coherent narrative (LLM)
 
-## 34.7 AI-Assisted Workflow: Senior Productivity with Claude Code and GitHub Copilot
+## AI-Assisted Workflow: Senior Productivity with Claude Code and GitHub Copilot
 
 AI coding assistants are not a replacement for engineering skill — they are a force multiplier that lets senior engineers focus on architecture and decisions while delegating routine implementation. By 2026, engineers who use AI tools effectively are 30-50% more productive than those who do not.
 
-**The productivity spectrum — where AI helps most:**
+#### The productivity spectrum — where AI helps most
 
 | Task | AI Assistance Level | Tool | Time Saved |
 |---|---|---|---|
@@ -347,7 +347,7 @@ and suggest optimizations:
 Don't change the output schema."
 ```
 
-**GitHub Copilot — inline code completion for data engineering:**
+#### GitHub Copilot — inline code completion for data engineering
 
 Copilot excels at repetitive, pattern-following code. In data engineering, this means:
 
@@ -373,7 +373,7 @@ def validate_index_weights(weights: pd.Series, index_key: str,
     # Copilot completes: return abs(weights.sum() - 1.0) < tolerance
 ```
 
-**When AI coding tools fail — and how to catch it:**
+#### When AI coding tools fail — and how to catch it
 
 | Failure Mode | Example | Mitigation |
 |---|---|---|
@@ -383,7 +383,7 @@ def validate_index_weights(weights: pd.Series, index_key: str,
 | **Security issues** | Generates SQL with string formatting instead of parameterized queries | Security-focused code review; use linters (bandit, semgrep) |
 | **Over-engineering** | Creates abstract factory pattern for a simple data transform | Review for simplicity; specify "keep it simple" in prompts |
 
-**The AI-assisted development workflow:**
+#### The AI-assisted development workflow
 
 ```
 1. DESIGN    → Human architects the solution (what tables, what transforms)

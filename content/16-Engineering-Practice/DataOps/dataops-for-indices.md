@@ -57,7 +57,7 @@ Operational reference covering the full DataOps lifecycle for stock index calcul
 
 ---
 
-## 1. Parallel Backtesting Architecture
+## Parallel Backtesting Architecture
 
 ### The Problem
 
@@ -432,7 +432,7 @@ LIMIT 50;
 
 ---
 
-## 2. Continuous Validation
+## Continuous Validation
 
 End-of-day validation runs automatically after market close. It catches issues that the parallel backtest cannot — price feed gaps, stale ESG scores, weight drift caused by upstream data changes rather than code changes.
 
@@ -720,7 +720,7 @@ ORDER BY days_stale DESC;
 
 ---
 
-## 3. Blue-Green Data Deployment
+## Blue-Green Data Deployment
 
 The blue-green pattern for data avoids downtime and provides instant rollback during schema migrations, backfill operations, or ETL engine swaps. The production alias always points to either the blue or green physical table; the swap is atomic.
 
@@ -836,7 +836,7 @@ TRUNCATE TABLE dbo.index_levels_blue;
 
 ---
 
-## 4. Methodology-as-Code
+## Methodology-as-Code
 
 Index methodology is as much a software artifact as the calculation engine. Storing it in version control alongside the code that implements it ensures that any drift between documented methodology and actual behavior is detectable and auditable.
 
@@ -987,7 +987,7 @@ GO
 
 ---
 
-## 5. Incident Response for Calculation Errors
+## Incident Response for Calculation Errors
 
 ### Severity Classification
 

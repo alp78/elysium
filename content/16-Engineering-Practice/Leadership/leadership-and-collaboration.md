@@ -15,11 +15,11 @@ status: complete
 
 A senior data engineer at a large financial data company operates at the "Individual Contributor Lead" or "Director" level. The role demands more than technical excellence — it requires the ability to influence architecture decisions, mentor engineers, manage stakeholder expectations, and navigate complex organizational dynamics. This note covers the non-technical skills that determine whether a senior engineer advances or plateaus.
 
-## 35.1 The Code Review as a Teaching Tool
+## The Code Review as a Teaching Tool
 
 Code reviews are not quality gates — they are the primary mechanism through which engineering standards propagate across a team. A senior engineer's review should leave the author better equipped for their next PR.
 
-**The review pyramid (what to focus on, in order):**
+#### The review pyramid (what to focus on, in order)
 
 ```
                     ┌─────────────┐
@@ -37,7 +37,7 @@ Code reviews are not quality gates — they are the primary mechanism through wh
                └───────────────────────┘
 ```
 
-**What senior reviewers look for in data pipeline PRs:**
+#### What senior reviewers look for in data pipeline PRs
 
 | Check | Good | Bad |
 |---|---|---|
@@ -50,7 +50,7 @@ Code reviews are not quality gates — they are the primary mechanism through wh
 | SQL safety | Parameterized queries, explicit column lists | `SELECT *`, string-concatenated SQL |
 | Test coverage | Unit tests for business logic, integration test for pipeline | No tests — "I tested manually" |
 
-**How to give good review feedback:**
+#### How to give good review feedback
 
 ```markdown
 # Bad review comment:
@@ -62,71 +62,71 @@ Consider using a MERGE or wrapping in a delete-insert transaction.
 See our silver layer pattern in dags/common/sql_helpers.py:42 for an example."
 ```
 
-**Principles:**
+#### Principles
 - Comment on the *code*, never the *person*
 - Suggest alternatives, don't just point out problems
 - Use "we" language: "We prefer MERGE here because..." not "You should use MERGE"
 - Approve with comments for minor issues; block only for correctness or safety
 - Review within 24 hours — stale PRs kill velocity (see [[pull-requests-and-code-review]] for the full review workflow and PR template)
 
-## 35.2 Technical Design Documents
+## Technical Design Documents
 
 Before building a significant feature (> 1 week of work), write a design doc. This prevents wasted effort, surfaces disagreements early, and creates a record of architectural decisions.
 
-**Template for data engineering design docs:**
+#### Template for data engineering design docs
 
 ```markdown
 # Design Doc: [Feature Name]
 **Author:** [Name] | **Date:** [Date] | **Status:** Draft → Review → Approved → Implemented
 
-## 1. Context and Problem Statement
+## Context and Problem Statement
 What business need or technical problem does this solve?
 Why is the current approach insufficient?
 
-## 2. Goals and Non-Goals
-**Goals:**
+## Goals and Non-Goals
+#### Goals
 - [Specific, measurable outcomes]
 
-**Non-Goals (explicitly out of scope):**
+#### Non-Goals (explicitly out of scope)
 - [What this design will NOT do]
 
-## 3. Proposed Solution
+## Proposed Solution
 Architecture diagram (ASCII or image).
 Data flow: source → ingestion → transform → storage → consumption.
 Key design decisions and trade-offs.
 
-## 4. Alternatives Considered
+## Alternatives Considered
 | Option | Pros | Cons | Why Not |
 |---|---|---|---|
 
-## 5. Data Model Changes
+## Data Model Changes
 New tables, modified columns, migration plan.
 Impact on downstream consumers.
 
-## 6. Operational Considerations
+## Operational Considerations
 - Deployment plan (zero-downtime? Blue-green?)
 - Monitoring: what metrics/alerts are needed?
 - Rollback plan: how to undo if something goes wrong?
 - Performance impact: estimated load, query patterns
 
-## 7. Security and Compliance
+## Security and Compliance
 - Data classification (PII, financial, public)
 - Access control changes
 - Regulatory implications (BMR, ESMA)
 
-## 8. Timeline and Milestones
+## Timeline and Milestones
 | Week | Deliverable |
 |---|---|
 
-## 9. Open Questions
+## Open Questions
 - [Unresolved decisions that need input from reviewers]
 ```
 
-## 35.3 Managing Stakeholder Expectations
+## Managing Stakeholder Expectations
 
 As a senior engineer, you are the bridge between technical reality and business expectations. The most common failure mode is not technical — it is mismatched expectations.
 
-**The status update framework:**
+#### The status update framework
 
 | Situation | What to Communicate | When |
 |---|---|---|
@@ -135,7 +135,7 @@ As a senior engineer, you are the bridge between technical reality and business 
 | Major risk | Early warning + options: "The reconstitution pipeline needs 3 more weeks. Options: (A) delay launch, (B) manual process for Q1, (C) reduce scope" | As soon as known |
 | Incident | Facts only: "Index calculation delayed by 15 minutes due to exchange data feed outage. Resolved at 09:47 CET. No data loss." | During + post-incident review |
 
-**Rules for technical communication with non-technical stakeholders:**
+#### Rules for technical communication with non-technical stakeholders
 
 1. Lead with the business impact, not the technical details
 2. Provide options, not problems
@@ -143,11 +143,11 @@ As a senior engineer, you are the bridge between technical reality and business 
 4. Never say "it should work" — say "we verified it works" or "we need to verify"
 5. Under-promise, over-deliver on timelines (add 30% buffer to estimates)
 
-## 35.4 Mentoring Junior Engineers
+## Mentoring Junior Engineers
 
 A senior engineer who does not grow their team is a bottleneck, not a leader. Effective mentoring is not lecturing — it is creating situations where juniors develop judgment through guided experience.
 
-**The mentoring progression:**
+#### The mentoring progression
 
 ```
 Level 1: Pair programming (week 1-2)
@@ -171,7 +171,7 @@ Level 4: Delegation (month 6+)
    └─▶ They present at team meetings
 ```
 
-**What to teach first (highest ROI for a data engineering team):**
+#### What to teach first (highest ROI for a data engineering team)
 
 1. **[[migration-idempotency-backfills|Idempotency]]** — most bugs in junior-written pipelines come from non-idempotent transforms
 2. **SQL fundamentals** — window functions, CTEs, MERGE statements, execution plans
@@ -179,11 +179,11 @@ Level 4: Delegation (month 6+)
 4. **Monitoring before shipping** — "if you can't see it breaking, you can't fix it"
 5. **Reading before writing** — understand existing code before changing it
 
-## 35.5 Navigating a Matrixed Organization
+## Navigating a Matrixed Organization
 
 Large financial data companies and similar organizations operate in a **matrix structure** — you report to an engineering manager but collaborate with product managers, index analysts, compliance officers, and SREs across different teams, offices, and time zones.
 
-**How to be effective in a matrix:**
+#### How to be effective in a matrix
 
 | Challenge | Strategy |
 |---|---|
@@ -193,7 +193,7 @@ Large financial data companies and similar organizations operate in a **matrix s
 | Decision paralysis (too many approvers) | Write a design doc with a recommendation, set a decision deadline |
 | Remote/async collaboration (Frankfurt + Bangalore + NYC) | Over-communicate in writing. Assume nothing is obvious. Record decisions in Slack/Confluence, not hallways |
 
-**The RACI matrix for a data pipeline:**
+#### The RACI matrix for a data pipeline
 
 | Activity | Data Engineer | Product Manager | DBA | SRE | Compliance |
 |---|---|---|---|---|---|
@@ -207,11 +207,11 @@ Large financial data companies and similar organizations operate in a **matrix s
 > [!tip] Related pattern
 > For detailed on-call procedures and escalation paths that complement this RACI matrix, see the [[on-call-guide]]. For financial-specific incidents such as incorrect published index values, the [[data-restatement-procedure]] documents the end-to-end correction workflow.
 
-## 35.6 Architecture Decision Records (ADRs)
+## Architecture Decision Records (ADRs)
 
 When you make an architectural decision that future engineers will question ("why did we use SQL Server instead of PostgreSQL?"), write an ADR. It is a short document that captures the context, decision, and consequences.
 
-**ADR template:**
+#### ADR template
 
 ```markdown
 # ADR-007: Use SQL Server 2022 Developer Edition on GCE Instead of Cloud SQL
@@ -249,11 +249,11 @@ Deploy SQL Server 2022 Developer Edition on an e2-standard-2 GCE VM with pd-ssd.
 
 Store ADRs in `docs/adr/` in the repository. Number them sequentially. Never delete an ADR — superseded decisions are marked `Status: Superseded by ADR-XXX`.
 
-## 35.7 Managing Technical Debt: The Guide to Saying "No"
+## Managing Technical Debt: The Guide to Saying "No"
 
 Technical debt is inevitable. The question is not whether you accumulate it, but whether you manage it intentionally. A senior data engineer's most valuable skill is not writing code — it is knowing when to push back on shortcuts that will cost the team ten times more to fix later.
 
-**The four types of technical debt in data platforms:**
+#### The four types of technical debt in data platforms
 
 ```
                     Intentional                     Unintentional
@@ -295,7 +295,7 @@ GOOD response: "I can deliver this in 3 weeks with a phased approach:
   Here's an ADR documenting the tradeoffs we're accepting for the 3-week timeline."
 ```
 
-**The technical debt register — make it visible:**
+#### The technical debt register — make it visible
 
 ```markdown
 # Technical Debt Register (maintained in docs/tech-debt.md)
@@ -309,7 +309,7 @@ GOOD response: "I can deliver this in 3 weeks with a phased approach:
 | TD-005 | Corporate actions applied in pandas, not SQL | Cannot audit transformation logic | 3 days | HIGH | @alex | ADR-015 |
 ```
 
-**When to say "no" — the decision framework:**
+#### When to say "no" — the decision framework
 
 | Pressure | Question to Ask | If Yes → Say No | If No → Negotiate |
 |---|---|---|---|
@@ -319,7 +319,7 @@ GOOD response: "I can deliver this in 3 weeks with a phased approach:
 | "Copy the production database" | Does it contain PII? | Never copy PII to dev without masking | Set up a masked copy with synthetic data |
 | "Just add a column" | Is this a schema change to a shared table? | Requires contract review | Propose [[migration-idempotency-backfills|expand-and-contract migration]] |
 
-**How to escalate effectively:**
+#### How to escalate effectively
 
 ```
 1. FRAME the problem in business terms:
@@ -340,7 +340,7 @@ GOOD response: "I can deliver this in 3 weeks with a phased approach:
    "We shipped Option B. TD-007 and TD-008 are scheduled for Sprint 14."
 ```
 
-**The ratchet principle — never go backward:**
+#### The ratchet principle — never go backward
 
 Every sprint should reduce total technical debt, not increase it. Treat the tech debt register like a financial ledger:
 
@@ -352,11 +352,11 @@ Every sprint should reduce total technical debt, not increase it. Treat the tech
 > [!tip] The Political Reality of "No"
 > In a matrixed organization, saying "no" to a Product Manager or a Director requires diplomatic skill. You are not saying "no" to the business goal — you are saying "yes, but with guardrails." Frame every pushback as risk management, not obstruction. The PM's incentive is to ship fast; your incentive is to ship safely. The ADR is the artifact that bridges these incentives: it documents the decision, the risk, the alternatives rejected, and who made the call. If it goes wrong, the ADR shows you raised the concern. If it goes right, the ADR shows the team made a deliberate tradeoff. Either way, the organization learns.
 
-## 35.8 The War Room: Incident Response and Blameless Post-Mortems
+## The War Room: Incident Response and Blameless Post-Mortems
 
 A senior data engineer's career is defined not by how many incidents they prevent (that is invisible work), but by how they lead the team *during* and *after* an outage. Incident response is a skill that must be practiced deliberately — you cannot learn it the first time production breaks.
 
-**The incident timeline — what a senior engineer does at each phase:**
+#### The incident timeline — what a senior engineer does at each phase
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -382,7 +382,7 @@ A senior data engineer's career is defined not by how many incidents they preven
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**War room roles (assign immediately, even if it is a 2-person team):**
+#### War room roles (assign immediately, even if it is a 2-person team)
 
 | Role | Responsibility | Who |
 |---|---|---|
@@ -394,7 +394,7 @@ A senior data engineer's career is defined not by how many incidents they preven
 > [!warning] Never Let the Debugger Also Communicate
 > The golden rule: never let the person debugging also communicate. Debugging requires focus. Status updates require context switching. Assign different people.
 
-**Incident severity levels for a financial data platform:**
+#### Incident severity levels for a financial data platform
 
 | Severity | Definition | Response | Example |
 |---|---|---|---|
@@ -434,7 +434,7 @@ RESOLVE:
   10:00 UTC — Incident closed. Post-mortem scheduled for tomorrow 14:00 UTC.
 ```
 
-**The Blameless Post-Mortem — RCA template:**
+#### The Blameless Post-Mortem — RCA template
 
 ```markdown
 # Post-Mortem: Euro market index Incorrect Index Value (2026-03-10)
@@ -526,7 +526,7 @@ run post-hoc rather than blocking publication. The retry logic does not handle H
   logic must handle them.
 ```
 
-**The blameless principle — why it matters:**
+#### The blameless principle — why it matters
 
 ```
 BLAME-FULL post-mortem:                   BLAMELESS post-mortem:
@@ -537,7 +537,7 @@ Result: Alex feels defensive.              Result: The team discusses how to
         Same class of bug happens again.           Action items prevent recurrence.
 ```
 
-**Rules for running a blameless post-mortem:**
+#### Rules for running a blameless post-mortem
 
 1. **No "who"** — replace every instance of a person's name with "the engineer" or "the system." The RCA identifies *systemic* failures, not human error.
 2. **Everyone who was involved attends** — including the person who introduced the bug. They have the most context.

@@ -122,7 +122,7 @@ dim_product → dim_subcategory → dim_category
 
 Kimball identifies three fundamental fact table types based on the business process being modeled.
 
-### 1. Transactional Fact Table
+### Transactional Fact Table
 
 **Grain:** One row per discrete business event.
 
@@ -158,7 +158,7 @@ CREATE TABLE fact_trades (
 > [!warning] Semi-Additive Measure Trap
 > Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [[gold-transforms]] for practical patterns.
 
-### 2. Periodic Snapshot Fact Table
+### Periodic Snapshot Fact Table
 
 **Grain:** One row per entity per standard time period (day, week, month).
 
@@ -185,7 +185,7 @@ CREATE TABLE fact_account_daily (
 - Enables easy period-over-period queries: join to itself on `date_sk - 1`
 - See [[silver-transforms]] for fill-forward implementation patterns
 
-### 3. Accumulating Snapshot Fact Table
+### Accumulating Snapshot Fact Table
 
 **Grain:** One row per workflow instance (updated as the workflow progresses through milestones).
 

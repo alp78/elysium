@@ -42,7 +42,7 @@ Console.WriteLine("WarningLevel set to 0.");
 
     WarningLevel set to 0.
 
-## 1. Dependency Injection
+## Dependency Injection
 
 Interface defines the contract (what, not how). Constructor injection passes dependencies via the constructor. .NET's built-in `IServiceCollection` container offers three lifetimes: `AddTransient` (new per request), `AddScoped` (one per HTTP request), `AddSingleton` (one for the entire app). Python equivalent: just pass objects via `__init__` (no container needed).
 
@@ -152,7 +152,7 @@ public class PipelineService
       Saved to mock: TEST.XX
       Notifications: Pipeline done: TEST.XX scored 0.85
 
-## 2. Design Patterns
+## Design Patterns
 
 ```csharp
 // Singleton — exactly one instance.
@@ -323,7 +323,7 @@ public class StockScorer
       Momentum        score=-+0.0103
       Volatility      score=-+0.0138
 
-## 3. Data Validation
+## Data Validation
 
 Attribute-based validation built into .NET: `[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]`. `Validator.TryValidateObject()` validates and collects all errors. In ASP.NET, model binding auto-validates incoming requests. For complex cross-field rules, use `IValidatableObject.Validate()` or FluentValidation. Python equivalent: Pydantic `BaseModel` with `Field()` constraints.
 
@@ -406,7 +406,7 @@ public class OhlcvRecord : IValidatableObject
       Symbol="X" Open=10 High=5 Vol=-1
         -> Volume cannot be negative
 
-## 4. Reflection
+## Reflection
 
 ```csharp
 // Reflection — inspect types, properties, methods at runtime.
@@ -517,7 +517,7 @@ public class TradeOrder
     === Create via Reflection ===
       Created: TradeOrder(MC.PA, SELL, 50, 890.2)
 
-## 5. Project Structure & Best Practices
+## Project Structure & Best Practices
 
 ```csharp
 // Project Structure — how to organize a C# data pipeline / API project.
@@ -635,7 +635,7 @@ IndexPipeline/
        Integration test SqlRepository against real DB.
        Python equiv: pytest + unittest.mock.
 
-## 6. Summary
+## Summary
 
 > [!abstract]- C# Design Patterns Quick Reference
 > | Pattern | C# | Usage |

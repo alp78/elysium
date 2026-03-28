@@ -487,7 +487,7 @@ docker history data-pipeline-pipeline:latest | awk '$4 != "0B"'
 
 ## Image Size Optimization
 
-### 1. Use Slim or Alpine Base Images
+### Use Slim or Alpine Base Images
 
 ```dockerfile
 # Full Python image: ~1.0GB
@@ -503,7 +503,7 @@ FROM python:3.12-alpine
 # Test thoroughly before using alpine for data science workloads.
 ```
 
-### 2. Minimize Layers — Combine RUN Instructions
+### Minimize Layers — Combine RUN Instructions
 
 ```dockerfile
 # BAD: Three separate RUN layers, apt cache kept in layer 1
@@ -518,15 +518,15 @@ RUN apt-get update \
 # --no-install-recommends skips optional dependencies
 ```
 
-### 3. Multi-Stage Builds
+### Multi-Stage Builds
 
 See the [Multi-Stage Builds](#multi-stage-builds) section above. This is the single highest-impact optimization.
 
-### 4. .dockerignore
+### .dockerignore
 
 Excluding large directories from the build context prevents them from being accidentally COPYed. See the [.dockerignore](#dockerignore) section above.
 
-### 5. Order Instructions by Change Frequency
+### Order Instructions by Change Frequency
 
 Put the instructions that change least often (base image, system deps, pip install) at the top. Put the instructions that change most often (application source code) at the bottom. This maximizes layer cache hits.
 
@@ -541,7 +541,7 @@ COPY src/ .                             # changes: every commit
 CMD ["python", "main.py"]
 ```
 
-### 6. pip Flags for Smaller Installs
+### pip Flags for Smaller Installs
 
 ```dockerfile
 # --no-cache-dir: do not write pip's HTTP cache to disk

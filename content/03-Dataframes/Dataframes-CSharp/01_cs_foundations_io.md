@@ -25,7 +25,7 @@ status: complete
 Polars.NET vs Deedle: Series, DataFrames, and Data Types
 
 ---
-## 0 – Setup & Imports
+## Setup & Imports
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
@@ -117,7 +117,7 @@ Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
     Data directory: c:\Users\aperi\DEV\LANG\data
 
 ---
-## 1 – Series
+## Series
 
 - **Series**: A single column of typed, homogeneous data – the fundamental building block.
 - Polars.NET uses Arrow-backed memory with native null bitmaps.
@@ -171,22 +171,22 @@ prices
 
     KeyCount: 5
 
-<div>
-<style scoped>,
-  .series tbody tr th:only-of-type {
-vertical-align: middle;
-  }
-  .series tbody tr {,
-vertical-align: top
-  }
-  .no-wrap {
-white-space: nowrap;
-  }
-</style>
-<table border='1' class='series'>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>100</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>102.5</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>101.8</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>103.2</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>104.1</td></tr>
-</table>
-<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>100</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>102.5</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>101.8</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>103.2</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>104.1</td></tr>
+</table>
+<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -201,22 +201,22 @@ var tickers = new SeriesBuilder<int, string>
 tickers
 ```
 
-<div>
-<style scoped>,
-  .series tbody tr th:only-of-type {
-vertical-align: middle;
-  }
-  .series tbody tr {,
-vertical-align: top
-  }
-  .no-wrap {
-white-space: nowrap;
-  }
-</style>
-<table border='1' class='series'>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td></tr>
-</table>
-<p>Series of <b>3</b> items<p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td></tr>
+</table>
+<p>Series of <b>3</b> items<p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -228,22 +228,22 @@ var indexed = Enumerable.Range(0, 5)
 indexed
 ```
 
-<div>
-<style scoped>,
-  .series tbody tr th:only-of-type {
-vertical-align: middle;
-  }
-  .series tbody tr {,
-vertical-align: top
-  }
-  .no-wrap {
-white-space: nowrap;
-  }
-</style>
-<table border='1' class='series'>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>0</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>20</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>30</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>40</td></tr>
-</table>
-<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>0</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>20</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>30</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>40</td></tr>
+</table>
+<p>Series of <b>5</b> items<p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -292,22 +292,22 @@ withGaps
 
     KeyCount: 5
 
-<div>
-<style scoped>,
-  .series tbody tr th:only-of-type {
-vertical-align: middle;
-  }
-  .series tbody tr {,
-vertical-align: top
-  }
-  .no-wrap {
-white-space: nowrap;
-  }
-</style>
-<table border='1' class='series'>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>1</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>3</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>5</td></tr>
-</table>
-<p>Series of <b>5</b> items<p><b>2</b> missing values</p>
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>1</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>3</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>5</td></tr>
+</table>
+<p>Series of <b>5</b> items<p><b>2</b> missing values</p>
 </div>
 
 ---
@@ -412,26 +412,26 @@ builder.Add("a / b", a / b);
 builder.Frame
 ```
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></thead><thead><th></th><th></th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>33</td><td>27</td><td>90</td><td>10</td></tr>
-</table>
-<p><b>3</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></thead><thead><th></th><th></th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>33</td><td>27</td><td>90</td><td>10</td></tr>
+</table>
+<p><b>3</b> rows x <b>4</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -493,26 +493,26 @@ fb.Add("value", new Series<int, double>(idx, vals));
 fb.Frame
 ```
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>stat</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>sum</td><td>150</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>mean</td><td>30</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>stddev</td><td>15.811388300841896</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>min</td><td>10</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>max</td><td>50</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>median</td><td>30</td></tr>
-</table>
-<p><b>6</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>stat</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>sum</td><td>150</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>mean</td><td>30</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>stddev</td><td>15.811388300841896</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>min</td><td>10</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>max</td><td>50</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>median</td><td>30</td></tr>
+</table>
+<p><b>6</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -568,26 +568,26 @@ fb.Add("value", new Series<int, double>(idx, vals));
 fb.Frame
 ```
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>stat</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>count</td><td>5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>mean</td><td>102.32000000000001</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>stddev</td><td>1.551450933802398</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>min</td><td>100</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>max</td><td>104.1</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>median</td><td>102.5</td></tr>
-</table>
-<p><b>6</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>stat</th><th>value</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>count</td><td>5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>mean</td><td>102.32000000000001</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>stddev</td><td>1.551450933802398</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>min</td><td>100</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>max</td><td>104.1</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>median</td><td>102.5</td></tr>
+</table>
+<p><b>6</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -605,7 +605,7 @@ fb.Frame
 | Describe | `DataFrame.FromSeries(s).Describe()` | Manual stats or `Frame.Describe()` |
 
 ---
-## 2 – DataFrames
+## DataFrames
 
 - **DataFrame**: A collection of named, typed columns – the primary data structure.
 - Polars.NET: column-oriented, Arrow-backed, no row index.
@@ -709,26 +709,26 @@ df
 
     Shape: 5 rows x 3 cols
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>Symbol</th><th>Sector</th><th>Price</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(float)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr>
-</table>
-<p><b>5</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>Symbol</th><th>Sector</th><th>Price</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr>
+</table>
+<p><b>5</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -741,26 +741,26 @@ var df2 = builder.Frame;
 df2
 ```
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>Name</th><th>Age</th><th>Score</th></thead><thead><th></th><th></th><th>(string)</th><th>(int)</th><th>(float)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Bob</td><td>25</td><td>88</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Carol</td><td>35</td><td>92.3</td></tr>
-</table>
-<p><b>3</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>Name</th><th>Age</th><th>Score</th></thead><thead><th></th><th></th><th>(string)</th><th>(int)</th><th>(float)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Bob</td><td>25</td><td>88</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Carol</td><td>35</td><td>92.3</td></tr>
+</table>
+<p><b>3</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -881,7 +881,7 @@ display($"Shape: {empty.RowCount} x {empty.ColumnCount}");
     Shape: 0 x 0
 
 ---
-## 3 – The Index Concept
+## The Index Concept
 
 - **Polars.NET**: No row index. Rows are identified by position. This is deliberate – simpler, faster, no index alignment surprises.
 - **Deedle**: First-class `Frame<TRowKey, TColKey>` where `TRowKey` can be `int`, `DateTime`, `string`, etc. Enables label-based lookup and automatic alignment.
@@ -973,22 +973,22 @@ var indexed = df.IndexRows<string>("Symbol");
 display(indexed.Rows["SAP.DE"]);
 ```
 
-<div>
-<style scoped>,
-  .series tbody tr th:only-of-type {
-vertical-align: middle;
-  }
-  .series tbody tr {,
-vertical-align: top
-  }
-  .no-wrap {
-white-space: nowrap;
-  }
-</style>
-<table border='1' class='series'>
-<tr><td><b>Price</b></td><td class="no-wrap">-></td><td>175.2</td></tr>
-</table>
-<p>Series of <b>1</b> items<p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>Price</b></td><td class="no-wrap">-></td><td>175.2</td></tr>
+</table>
+<p>Series of <b>1</b> items<p><b>0</b> missing values</p>
 </div>
 
 #### Deedle – Automatic index alignment when combining Series
@@ -1013,26 +1013,26 @@ var result = s1 + s2;
 result
 ```
 
-<div>
-<style scoped>,
-  .series tbody tr th:only-of-type {
-vertical-align: middle;
-  }
-  .series tbody tr {,
-vertical-align: top
-  }
-  .no-wrap {
-white-space: nowrap;
-  }
-</style>
-<table border='1' class='series'>
-<tr><td><b>ASML</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>SAP</b></td><td class="no-wrap">-></td><td>180.2</td></tr><tr><td><b>SIE</b></td><td class="no-wrap">-></td><td>172.1</td></tr><tr><td><b>TTE</b></td><td class="no-wrap">-></td><td><missing></td></tr>
-</table>
-<p>Series of <b>4</b> items<p><b>2</b> missing values</p>
+<div>
+<style scoped>,
+  .series tbody tr th:only-of-type {
+vertical-align: middle;
+  }
+  .series tbody tr {,
+vertical-align: top
+  }
+  .no-wrap {
+white-space: nowrap;
+  }
+</style>
+<table border='1' class='series'>
+<tr><td><b>ASML</b></td><td class="no-wrap">-></td><td><missing></td></tr><tr><td><b>SAP</b></td><td class="no-wrap">-></td><td>180.2</td></tr><tr><td><b>SIE</b></td><td class="no-wrap">-></td><td>172.1</td></tr><tr><td><b>TTE</b></td><td class="no-wrap">-></td><td><missing></td></tr>
+</table>
+<p>Series of <b>4</b> items<p><b>2</b> missing values</p>
 </div>
 
 ---
-## 4 – Data Types Deep Dive
+## Data Types Deep Dive
 
 - Polars.NET uses **Apache Arrow** types: `Int8`..`Int64`, `UInt8`..`UInt64`, `Float32`, `Float64`, `Utf8` (String), `Date`, `Datetime`, `Duration`, `Boolean`, `Categorical`, `Enum`, `List`, `Struct`, `Binary`.
 - Deedle uses **standard .NET types**: `int`, `double`, `string`, `DateTime`, `bool`, etc. wrapped in `OptionalValue<T>` for null tracking.
@@ -1081,26 +1081,26 @@ fb.Frame
 
     Shape: 66355 x 12
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>column</th><th>type</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>id</td><td>Int32</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>symbol</td><td>String</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>date</td><td>DateTime</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>open</td><td>Decimal</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>high</td><td>Decimal</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>adj_close</td><td>Decimal</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>volume</td><td>Int32</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>dividends</td><td>Decimal</td></tr><tr><td><b>10</b></td><td class="no-wrap">-></td><td>stock_splits</td><td>Decimal</td></tr><tr><td><b>11</b></td><td class="no-wrap">-></td><td>is_filled</td><td>Boolean</td></tr>
-</table>
-<p><b>12</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>column</th><th>type</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>id</td><td>Int32</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>symbol</td><td>String</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>date</td><td>DateTime</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>open</td><td>Decimal</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>high</td><td>Decimal</td></tr><tr><td><b>:</b></td><td class="no-wrap"></td><td>...</td><td>...</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>adj_close</td><td>Decimal</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>volume</td><td>Int32</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>dividends</td><td>Decimal</td></tr><tr><td><b>10</b></td><td class="no-wrap">-></td><td>stock_splits</td><td>Decimal</td></tr><tr><td><b>11</b></td><td class="no-wrap">-></td><td>is_filled</td><td>Boolean</td></tr>
+</table>
+<p><b>12</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
@@ -1173,7 +1173,7 @@ numeric
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>mixed<span class='pl-dtype'>int32</span></th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr></tbody></table></div>
 
 ---
-## 5 – Loading Real Data
+## Loading Real Data
 
 #### Polars.NET – Load data from CSV, Parquet, and JSON
 
@@ -1231,7 +1231,7 @@ display($"CSV: {csvDf.RowCount} x {csvDf.ColumnCount}");
     CSV: 66355 x 12
 
 ---
-## 6 – Inspecting DataFrames
+## Inspecting DataFrames
 
 - `.Head(n)`, `.Tail(n)` – first/last N rows
 - `.Shape`, `.Schema`, `.Describe()` – metadata and summary statistics
@@ -1437,50 +1437,50 @@ display(FrameModule.TakeLast(3, ohlcv));
 
     First 3 rows:
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-</table>
-<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
+</table>
+<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
     Last 3 rows:
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-<tr><td><b>66352</b></td><td class="no-wrap">-></td><td>66876</td><td>WKL.AS</td><td>10-Mar-26 0:00:00</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66353</b></td><td class="no-wrap">-></td><td>66877</td><td>WKL.AS</td><td>11-Mar-26 0:00:00</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66354</b></td><td class="no-wrap">-></td><td>66929</td><td>WKL.AS</td><td>12-Mar-26 0:00:00</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-</table>
-<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
+<tr><td><b>66352</b></td><td class="no-wrap">-></td><td>66876</td><td>WKL.AS</td><td>10-Mar-26 0:00:00</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66353</b></td><td class="no-wrap">-></td><td>66877</td><td>WKL.AS</td><td>11-Mar-26 0:00:00</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>66354</b></td><td class="no-wrap">-></td><td>66929</td><td>WKL.AS</td><td>12-Mar-26 0:00:00</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>False</td></tr>
+</table>
+<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -1507,30 +1507,30 @@ foreach (var (name, type) in ohlcv.ColumnKeys.Zip(ohlcv.ColumnTypes))
 ohlcv.Describe()
 ```
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(float)</th><th>(obj)</th><th>(obj)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(obj)</th></thead>
-<tr><td><b>unique</b></td><td class="no-wrap">-></td><td>66355</td><td><missing></td><td><missing></td><td>29671</td><td>31651</td><td>31695</td><td>31505</td><td>57739</td><td>65199</td><td>216</td><td>6</td><td><missing></td></tr><tr><td><b>mean</b></td><td class="no-wrap">-></td><td>33179.733102253034</td><td><missing></td><td><missing></td><td>197.0405202155085</td><td>199.36412400874195</td><td>194.5857815793841</td><td>197.0349003767613</td><td>190.49490887499087</td><td>5942123.6909501925</td><td>0.011756673860296897</td><td>0.000172032682241534</td><td><missing></td></tr><tr><td><b>std</b></td><td class="no-wrap">-></td><td>19158.201385287863</td><td><missing></td><td><missing></td><td>363.15048392741073</td><td>367.8738291376105</td><td>358.0116429653695</td><td>363.0520470243152</td><td>359.6353011698428</td><td>16156185.534944274</td><td>0.28314188424599934</td><td>0.022716281632449882</td><td><missing></td></tr><tr><td><b>min</b></td><td class="no-wrap">-></td><td>1</td><td><missing></td><td><missing></td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.25</b></td><td class="no-wrap">-></td><td>16589.5</td><td><missing></td><td><missing></td><td>29.789949999999997</td><td>30.09</td><td>29.47</td><td>29.78745</td><td>28.1434</td><td>509985.5</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.5</b></td><td class="no-wrap">-></td><td>33178</td><td><missing></td><td><missing></td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.75</b></td><td class="no-wrap">-></td><td>49766.5</td><td><missing></td><td><missing></td><td>185.99</td><td>188</td><td>184</td><td>186.1</td><td>175.2539</td><td>4089299</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>max</b></td><td class="no-wrap">-></td><td>66930</td><td><missing></td><td><missing></td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td><td><missing></td></tr>
-</table>
-<p><b>8</b> rows x <b>12</b> columns</p><p><b>24</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(float)</th><th>(obj)</th><th>(obj)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(float)</th><th>(obj)</th></thead>
+<tr><td><b>unique</b></td><td class="no-wrap">-></td><td>66355</td><td><missing></td><td><missing></td><td>29671</td><td>31651</td><td>31695</td><td>31505</td><td>57739</td><td>65199</td><td>216</td><td>6</td><td><missing></td></tr><tr><td><b>mean</b></td><td class="no-wrap">-></td><td>33179.733102253034</td><td><missing></td><td><missing></td><td>197.0405202155085</td><td>199.36412400874195</td><td>194.5857815793841</td><td>197.0349003767613</td><td>190.49490887499087</td><td>5942123.6909501925</td><td>0.011756673860296897</td><td>0.000172032682241534</td><td><missing></td></tr><tr><td><b>std</b></td><td class="no-wrap">-></td><td>19158.201385287863</td><td><missing></td><td><missing></td><td>363.15048392741073</td><td>367.8738291376105</td><td>358.0116429653695</td><td>363.0520470243152</td><td>359.6353011698428</td><td>16156185.534944274</td><td>0.28314188424599934</td><td>0.022716281632449882</td><td><missing></td></tr><tr><td><b>min</b></td><td class="no-wrap">-></td><td>1</td><td><missing></td><td><missing></td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.25</b></td><td class="no-wrap">-></td><td>16589.5</td><td><missing></td><td><missing></td><td>29.789949999999997</td><td>30.09</td><td>29.47</td><td>29.78745</td><td>28.1434</td><td>509985.5</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.5</b></td><td class="no-wrap">-></td><td>33178</td><td><missing></td><td><missing></td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>0.75</b></td><td class="no-wrap">-></td><td>49766.5</td><td><missing></td><td><missing></td><td>185.99</td><td>188</td><td>184</td><td>186.1</td><td>175.2539</td><td>4089299</td><td>0</td><td>0</td><td><missing></td></tr><tr><td><b>max</b></td><td class="no-wrap">-></td><td>66930</td><td><missing></td><td><missing></td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td><td><missing></td></tr>
+</table>
+<p><b>8</b> rows x <b>12</b> columns</p><p><b>24</b> missing values</p>
 </div>
 
 ---
-## 7 – Edge Cases & Gotchas
+## Edge Cases & Gotchas
 
 #### Polars.NET wraps native Rust memory – types are IDisposable
 
@@ -1649,7 +1649,7 @@ display($"Keys:   [{string.Join(", ", s.Keys)}]");
     Keys:   [0, 1, 2]
 
 ---
-## 8 — Comparison Summary — Part 1
+## Comparison Summary — Part 1
 
 | Concept | Polars.NET | Deedle |
 |---|---|---|
@@ -1675,7 +1675,7 @@ display($"Keys:   [{string.Join(", ", s.Keys)}]");
 # Part 2: Reading & Writing Data
 
 ---
-## 1 – Discovering Data Files
+## Discovering Data Files
 
 #### Polars.NET – List all data files with their sizes
 
@@ -1758,7 +1758,7 @@ foreach (var f in files)
     vm_upload_results.json                               9.5
 
 ---
-## 2 – Reading CSV
+## Reading CSV
 
 #### Polars.NET – Read CSV files with <code style="font-size:0.75em">DataFrame.ReadCsv</code>
 
@@ -1888,26 +1888,26 @@ FrameModule.Take(3, df)
 
     Shape: 66355 x 12
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
-</table>
-<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>21160</td><td>ABI.BR</td><td>04-Jan-21 0:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>21161</td><td>ABI.BR</td><td>05-Jan-21 0:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>21162</td><td>ABI.BR</td><td>06-Jan-21 0:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>False</td></tr>
+</table>
+<p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ```csharp
@@ -1923,7 +1923,7 @@ display($"Shape: {df.RowCount} x {df.ColumnCount}");
     Shape: 100 x 12
 
 ---
-## 3 – Reading JSON
+## Reading JSON
 
 #### Polars.NET – Read JSON files with <code style="font-size:0.75em">DataFrame.ReadJson</code>
 
@@ -1989,7 +1989,7 @@ Console.WriteLine("Use Frame.FromRecords() with a typed class to create a Deedle
     Use Frame.FromRecords() with a typed class to create a Deedle Frame.
 
 ---
-## 4 – Reading Parquet
+## Reading Parquet
 
 #### Polars.NET – Read Parquet files with <code style="font-size:0.75em">DataFrame.ReadParquet</code>
 
@@ -2101,7 +2101,7 @@ Console.WriteLine("Deedle cannot read Parquet natively. Use Polars.NET and conve
     Deedle cannot read Parquet natively. Use Polars.NET and convert if needed.
 
 ---
-## 5 – Loading All Datasets
+## Loading All Datasets
 
 #### Polars.NET – Load all Parquet datasets from the data directory
 
@@ -2134,7 +2134,7 @@ foreach (var file in parquetFiles)
       trading_calendar.parquet                 (29335, 11)
 
 ---
-## 6 – Parameter Deep-Dives
+## Parameter Deep-Dives
 
 #### Polars.NET – Override column types at read time with schema overrides
 
@@ -2304,30 +2304,30 @@ dfTsv.Rows[Enumerable.Range(0, 3)]
 
     TSV: 212 rows x 2 cols
 
-<div>
-<style scoped>,
-  .dataframe tbody tr th:only-of-type {
-    vertical-align: middle;
-  }
-  .dataframe tbody tr th {,
-    vertical-align: top
-  }
-  .dataframe thead th {
-    text-align: right;
-  }
-  .no-wrap {
-    white-space: nowrap;
-  }
-</style>
-<table border='1' class='dataframe'>
-<thead><th></th><th></th><th>country_name</th><th>iso_alpha2</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
-<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Afghanistan</td><td>AF</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Albania</td><td>AL</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Algeria</td><td>DZ</td></tr>
-</table>
-<p><b>3</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
+<div>
+<style scoped>,
+  .dataframe tbody tr th:only-of-type {
+    vertical-align: middle;
+  }
+  .dataframe tbody tr th {,
+    vertical-align: top
+  }
+  .dataframe thead th {
+    text-align: right;
+  }
+  .no-wrap {
+    white-space: nowrap;
+  }
+</style>
+<table border='1' class='dataframe'>
+<thead><th></th><th></th><th>country_name</th><th>iso_alpha2</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
+<tr><td><b>0</b></td><td class="no-wrap">-></td><td>Afghanistan</td><td>AF</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>Albania</td><td>AL</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>Algeria</td><td>DZ</td></tr>
+</table>
+<p><b>3</b> rows x <b>2</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
 ---
-## 7 – Writing Data
+## Writing Data
 
 #### Polars.NET – Write DataFrames to CSV, Parquet, and JSON
 
@@ -2378,7 +2378,7 @@ Console.WriteLine("Cleaned up output files.");
     Cleaned up output files.
 
 ---
-## 8 – Lazy Scanning vs Eager Reading (Polars.NET only)
+## Lazy Scanning vs Eager Reading (Polars.NET only)
 
 Polars.NET's lazy API defers computation until `.Collect()` is called.
 The query optimizer can:
@@ -2432,7 +2432,7 @@ Console.WriteLine(plan);
       ESTIMATED ROWS: 66355
 
 ---
-## 9 – Format Comparison
+## Format Comparison
 
 #### Polars.NET – Compare file sizes across CSV, JSON, and Parquet formats
 
@@ -2542,7 +2542,7 @@ new DataFrame(new Polars.CSharp.Series[]
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>format<span class='pl-dtype'>utf8view</span></th><th>avg_ms<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>CSV</td><td>5.2</td></tr><tr><td>JSON</td><td>41.8</td></tr><tr><td>Parquet</td><td>4</td></tr></tbody></table></div>
 
 ---
-## 10 – Gotchas & Tips
+## Gotchas & Tips
 
 #### Polars.NET – Parse date strings into proper date types
 
@@ -2633,7 +2633,7 @@ optimized.PrintSchema();
      |-- is_filled: Boolean
 
 ---
-## 11 – Comparison Summary – Part 2
+## Comparison Summary – Part 2
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|

@@ -18,9 +18,9 @@ This note covers the diagnostic and system-level layer of prompt engineering: id
 
 ---
 
-## 4. Debugging and Optimization
+## Debugging and Optimization
 
-### 4.1 Diagnosing Weak Outputs
+### Diagnosing Weak Outputs
 
 When a model produces poor output, the problem is almost always in the prompt, not the model. Diagnose systematically:
 
@@ -40,11 +40,11 @@ When a model produces poor output, the problem is almost always in the prompt, n
 
 ---
 
-### 4.2 Intent vs. Output Misalignment
+### Intent vs. Output Misalignment
 
 The most subtle prompt failure is when the output is **technically correct but doesn't serve your goal.** This happens when you describe the task but not the purpose.
 
-**Example of intent misalignment:**
+#### Example of intent misalignment
 
 ```
 Prompt: "List the top 10 stocks by market cap in the Euro market index."
@@ -53,7 +53,7 @@ Problem: You wanted to display them in a dashboard card with flags
 and price changes — a plain list is useless.
 ```
 
-**Fix — include the downstream use:**
+#### Fix — include the downstream use — Intent vs. Output Misalignment
 
 ```
 "List the top 10 stocks by market cap in the Euro market index.
@@ -69,7 +69,7 @@ and day change %. Format as a markdown table sorted by market cap desc."
 
 ---
 
-### 4.3 Rebuilding Prompts: Phrasing, Logic Steps, Reinforcement
+### Rebuilding Prompts: Phrasing, Logic Steps, Reinforcement
 
 When a prompt isn't working, don't just add more words. Rebuild it using three techniques:
 
@@ -90,12 +90,12 @@ Models are better at some framings than others:
 
 When the model skips reasoning or jumps to conclusions, add numbered steps:
 
-**Before:**
+#### Before — Rebuilding Prompts: Phrasing, Logic Steps, Reinforcement
 ```
 Should we migrate from Cloud SQL to a self-hosted VM?
 ```
 
-**After — explicit logic steps for Cloud SQL vs VM migration analysis:**
+#### After — explicit logic steps for Cloud SQL vs VM migration analysis
 ```
 Evaluate migrating from Cloud SQL to a self-hosted SQL Server VM.
 
@@ -113,7 +113,7 @@ Step 5: Recommendation with break-even timeline
 
 When the model drifts from a constraint mid-output, reinforce the constraint at multiple points — both early and late in the prompt:
 
-**Prompt with contextual reinforcement for bug-only code review:**
+#### Prompt with contextual reinforcement for bug-only code review
 ```
 Role: You are a code reviewer. You ONLY review for bugs.
 
@@ -134,7 +134,7 @@ The last line is **contextual reinforcement** — restating a critical constrain
 
 ---
 
-### 4.4 Testing Across Models and Measuring Consistency
+### Testing Across Models and Measuring Consistency
 
 A robust prompt should produce acceptable output across multiple models. If it only works on one model, it's likely over-fitted to that model's quirks.
 
@@ -161,15 +161,15 @@ For model-specific strengths and preferred formats, see [[model-specific-prompti
 
 ---
 
-## 5. System Design Thinking
+## System Design Thinking
 
-### 5.1 Workflows, Loops, and Multi-Agent Systems
+### Workflows, Loops, and Multi-Agent Systems
 
 A single prompt handles a single task. **Prompt systems** handle workflows — sequences of tasks where the output of one prompt feeds into the next.
 
 #### Linear Workflows (Chains)
 
-**Example: Earnings newsletter generation chain:**
+#### Example: Earnings newsletter generation chain
 
 ```
 Prompt 1: "Extract all company names and tickers from this earnings calendar."
@@ -188,7 +188,7 @@ Prompt 3: "Compile these previews into a formatted newsletter with
 
 #### Loops (Iterative Refinement)
 
-**Example: Iterative product description refinement loop:**
+#### Example: Iterative product description refinement loop
 
 ```
 Prompt: "Write a product description."
@@ -229,7 +229,7 @@ In agent architectures, different prompts act as specialized workers:
 
 ---
 
-### 5.2 Memory Layering and Iterative Refinement
+### Memory Layering and Iterative Refinement
 
 In multi-turn conversations, memory management determines output quality over time. Not everything should persist equally.
 
@@ -276,7 +276,7 @@ In multi-turn conversations, memory management determines output quality over ti
 
 ---
 
-### 5.3 Feedback Integration for Scalable Results
+### Feedback Integration for Scalable Results
 
 The fastest way to improve AI output quality is a **tight feedback loop:**
 
@@ -302,9 +302,9 @@ The fastest way to improve AI output quality is a **tight feedback loop:**
 
 ---
 
-## 6. Documentation and Mastery Loop
+## Documentation and Mastery Loop
 
-### 6.1 Building a Prompt Library
+### Building a Prompt Library
 
 A prompt library is a curated collection of tested, tagged, reusable prompts. It is the highest-leverage artifact of prompt engineering.
 
@@ -363,7 +363,7 @@ prompt-library/
 
 ---
 
-### 6.2 Meta-Analysis: What Worked, What Didn't
+### Meta-Analysis: What Worked, What Didn't
 
 After each significant prompting session, run a brief retrospective:
 
@@ -390,11 +390,11 @@ After each significant prompting session, run a brief retrospective:
 
 ---
 
-### 6.3 Mastery Checklist
+### Mastery Checklist
 
 Use this checklist to evaluate any prompt before sending it:
 
-**Fundamentals:**
+#### Fundamentals — Mastery Checklist
 
 - [ ] The task is stated in the first 1-2 sentences
 - [ ] The role (if any) is specific and relevant
@@ -402,21 +402,21 @@ Use this checklist to evaluate any prompt before sending it:
 - [ ] The output format is explicitly specified
 - [ ] Length or scope is constrained
 
-**Precision:**
+#### Precision — Mastery Checklist
 
 - [ ] No ambiguous words ("good," "better," "proper," "appropriate")
 - [ ] Negative constraints are paired with positive alternatives
 - [ ] Examples are provided for complex or ambiguous formats
 - [ ] Edge cases are mentioned (empty input, missing data, etc.)
 
-**Robustness:**
+#### Robustness — Mastery Checklist
 
 - [ ] Critical constraints appear early AND are reinforced late
 - [ ] The prompt works on at least 2 different models
 - [ ] Uncertainty handling is defined ("say 'unknown' if unsure")
 - [ ] The downstream use of the output is mentioned
 
-**System Thinking:**
+#### System Thinking
 
 - [ ] The prompt is decomposed if the task has multiple independent parts
 - [ ] Evaluation criteria are separate from generation instructions

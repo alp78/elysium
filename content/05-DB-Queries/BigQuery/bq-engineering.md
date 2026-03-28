@@ -42,9 +42,6 @@ To practice these patterns against realistic scenarios, work through [[bigquery-
 > **Note**: Some sections CREATE database objects. All objects are created in a `demo` schema
 > or use temp tables to avoid modifying the production stoxx schema.
 
-## 0. Setup
-
-
 ```python
 %load_ext sql
 %config SqlMagic.displaycon = False
@@ -78,9 +75,9 @@ OPTIONS(location="europe-west1")
 
 
 
-## 1. Views
+## Views
 
-### 1a. Regular Views — Simplify Complex Queries
+### Regular Views — Simplify Complex Queries
 
 A view is a saved query. It doesn't store data — it runs the query every time you SELECT from it.
 Use case: wrap the "latest price per stock" pattern so downstream queries are simple.
@@ -230,7 +227,7 @@ LIMIT 10
 
 
 
-### 1b. View for Cross-Layer Dashboard
+### View for Cross-Layer Dashboard
 
 Join multiple tables into a single business-friendly view. Dashboards query this instead of raw tables.
 
@@ -455,12 +452,12 @@ LIMIT 10
 
 
 
-## 2. Stored Procedures
+## Stored Procedures
 
 > [!tip] Related pattern
 > Tools like [[dbt-bigquery-adapter|dbt's BigQuery adapter]] generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
 
-### 2a. Basic SP with Parameters
+### Basic SP with Parameters
 
 A stored procedure is precompiled SQL that lives in the database.
 Use case: pipeline steps as SPs — each step has consistent parameters and error handling.
@@ -540,7 +537,7 @@ LIMIT 5
 
 
 
-### 2b. SP with Error Handling (TRY/CATCH)
+### SP with Error Handling (TRY/CATCH)
 
 Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
 If anything fails, the entire operation rolls back — no partial loads.
@@ -593,9 +590,9 @@ END
 
 
 
-## 3. User-Defined Functions
+## User-Defined Functions
 
-### 3a. Inline Table-Valued Function (Best Performance)
+### Inline Table-Valued Function (Best Performance)
 
 An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
 Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
@@ -738,7 +735,7 @@ LIMIT 15
 
 
 
-## 4. Indexes
+## Indexes
 
 ### Index Types & When to Use
 
@@ -849,9 +846,9 @@ LIMIT 15
 3. **Don't over-index**: each index slows writes. Monitor with `sys.dm_db_index_usage_stats`
 4. **Filtered indexes** for hot subsets: `WHERE is_current = TRUE` on dimension tables
 
-## 5. Slowly Changing Dimensions (SCD)
+## Slowly Changing Dimensions (SCD)
 
-### 5a. SCD Type 1 — Overwrite
+### SCD Type 1 — Overwrite
 
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
 Example: fix a typo in a company name.
@@ -965,7 +962,7 @@ LIMIT 10
 
 
 
-### 5b. SCD Type 2 — History Tracking
+### SCD Type 2 — History Tracking
 
 Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
@@ -1085,9 +1082,9 @@ LIMIT 10
 
 
 
-## 6. Gap Detection & Gap Filling
+## Gap Detection & Gap Filling
 
-### 6a. Islands and Gaps
+### Islands and Gaps
 
 The classic SQL pattern: identify contiguous groups (islands) and missing periods (gaps)
 in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
@@ -1197,7 +1194,7 @@ LIMIT 10
 
 
 
-## 7. Deduplication Strategies
+## Deduplication Strategies
 
 ### ROW_NUMBER Deduplication Pattern
 
@@ -1272,7 +1269,7 @@ LIMIT 10
 
 
 
-## 8. Execution Plans & Query Optimization
+## Execution Plans & Query Optimization
 
 For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [[querying-and-cost-optimization]].
 
@@ -1318,7 +1315,7 @@ SELECT
 
 
 
-## 9. Transaction Isolation Levels
+## Transaction Isolation Levels
 
 ### Isolation Level Guide for Data Engineering
 
@@ -1332,7 +1329,7 @@ SELECT
 
 **Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
 
-## 10. Bulk Loading Patterns
+## Bulk Loading Patterns
 
 ### Bulk Loading Strategies
 
@@ -1346,7 +1343,7 @@ SELECT
 
 **Pipeline pattern**: load to staging table → validate → MERGE to target → truncate staging.
 
-## 11. Data Lineage & Audit Columns
+## Data Lineage & Audit Columns
 
 ### Standard Audit Columns
 
@@ -1409,7 +1406,7 @@ ORDER BY last_update DESC
 
 
 
-## 12. Partitioning Strategies
+## Partitioning Strategies
 
 ### When to Partition
 
@@ -1437,7 +1434,7 @@ CREATE TABLE silver.ohlcv_partitioned (
 
 </small>
 
-## 13. Cleanup
+## Cleanup
 
 
 ```python

@@ -122,7 +122,7 @@ Every piece of data flowing through a pipeline needs five types of context to be
 
 ---
 
-### 1. Run Context — Which Execution Produced This Data?
+### Run Context — Which Execution Produced This Data?
 
 Run context answers: "This row exists because pipeline X ran at time Y with parameters Z and produced N rows." It is the most fundamental form of pipeline observability.
 
@@ -432,7 +432,7 @@ def run_daily_ingest(**airflow_context):
 
 ---
 
-### 2. Provenance Context — Where Did This Data Come From?
+### Provenance Context — Where Did This Data Come From?
 
 Provenance answers: "This row was extracted from source system X, table Y, at time Z, via API version V." It creates the chain of custody from origin to destination.
 
@@ -689,7 +689,7 @@ API (market-data-api v3)
 
 ---
 
-### 3. Temporal Context — As of When Is This Data True?
+### Temporal Context — As of When Is This Data True?
 
 Temporal context is the hardest context problem. It requires distinguishing between three separate time concepts that most pipelines conflate into one.
 
@@ -946,7 +946,7 @@ WHERE rn = 1;
 
 ---
 
-### 4. Quality Context — How Trustworthy Is This Data?
+### Quality Context — How Trustworthy Is This Data?
 
 Quality context answers: "This dataset has a completeness score of 0.97, all uniqueness constraints passed, but freshness is 3 hours past SLA." It transforms quality from a binary pass/fail into a quantified signal that consumers can reason about.
 
@@ -1250,7 +1250,7 @@ class QualityGateFailure(Exception):
 
 ---
 
-### 5. Business Context — What Does This Data Mean?
+### Business Context — What Does This Data Mean?
 
 Business context answers: "This column represents the closing price adjusted for stock splits and dividends, owned by the market-data team, classified as non-PII, and refreshed daily by 6 PM UTC."
 

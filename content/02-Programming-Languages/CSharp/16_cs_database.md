@@ -117,7 +117,7 @@ DataTable QueryToTable(SqliteConnection c, string sql)
 }
 ```
 
-## 1. SQLite — Lightweight Embedded Database
+## SQLite — Lightweight Embedded Database
 
 #### SQLite — create in-memory database and trades table
 
@@ -623,7 +623,7 @@ Quick reference of all important SQLite PRAGMAs — set these right after `Open(
 >
 > **Indexing:** `CREATE INDEX idx ON t(col)` | composite: `t(col1, col2)` | unique: `CREATE UNIQUE INDEX` | check usage: `EXPLAIN QUERY PLAN SELECT ...`
 
-## 2. SQL Server
+## SQL Server
 
 #### SQL Server — connect and list schemas/tables
 
@@ -1345,7 +1345,7 @@ cmp
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Feature</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">SqlClient</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ODBC</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NuGet needed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes (Microsoft.Data.SqlClient)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">No (System.Data.Odbc built-in)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parameters</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">@named</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">? positional (like Python)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server features</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full (bulk copy, Always Encrypted)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Standard ODBC only</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Python equivalent</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pyodbc</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Connection string</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Server=host;Database=db;...</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Driver={ODBC Driver 18};Server=...</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Best for</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server-specific apps</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Cross-database portability</td></tr></tbody></table>
 
-## 4. Dapper — Micro-ORM
+## Dapper — Micro-ORM
 
 Dapper sits between raw ADO.NET and full Entity Framework. You write SQL (full control),
 Dapper maps results to typed C# objects (no manual `reader.GetString(0)`).
@@ -1649,7 +1649,7 @@ dt
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Feature</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ADO.NET (raw)</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Dapper</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">EF Core</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL control</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full — you write SQL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full — you write SQL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LINQ — auto-generated SQL</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Result type</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DataReader (untyped)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IEnumerable<T> (typed)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IQueryable<T> (tracked)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Mapping</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Manual reader.GetXxx()</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Auto by column name</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Auto + navigation props</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parameters</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">cmd.Parameters.Add()</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">new { Param = val }</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LINQ variables</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LINQ on results</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">No</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes (in-memory)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes (translated to SQL)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Fastest</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">~Same as ADO.NET</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Slower (change tracking)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Batch insert</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SqlBulkCopy</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute(sql, list)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">AddRange + SaveChanges</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Boilerplate</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Lots</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Minimal</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Minimal</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Best for</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Notebooks, scripts</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Services, APIs, pipelines</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Large apps, CRUD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Python equiv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pyodbc cursor</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pd.read_sql() → DataFrame</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQLAlchemy ORM</td></tr></tbody></table>
 
-## 5. Entity Framework Core — Full ORM
+## Entity Framework Core — Full ORM
 
 EF Core is the **dominant ORM in .NET** — used by ~60-70% of .NET applications.
 Unlike Dapper (you write SQL, it maps results), EF Core generates SQL from LINQ
@@ -2033,7 +2033,7 @@ dt
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Scenario</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Use</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Why</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CRUD app with 50 tables</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Navigation properties, migrations, change tracking</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Complex analytics query</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Window functions, CTEs, hand-tuned SQL</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Bulk insert 100K rows</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper + SqlBulkCopy</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF SaveChanges is row-by-row</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Microservice API</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Either</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper for perf, EF Core for productivity</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Schema migrations</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dotnet ef migrations — version-controlled schema</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Notebook / script</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper or ADO.NET</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">No project structure needed</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Read-only dashboard</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">AsNoTracking helps but Dapper is still faster</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Multi-table transaction</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SaveChanges wraps all changes in one transaction</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Cross-database query</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core is one DbContext per database</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Both in same project</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes — common</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF for CRUD, Dapper for reporting queries</td></tr></tbody></table>
 
-## 6. DuckDB — Embedded Analytical SQL Database
+## DuckDB — Embedded Analytical SQL Database
 
 DuckDB is an **embedded columnar database** — no server, runs in-process.
 Full SQL (window functions, CTEs, QUALIFY, PIVOT) and direct file queries.
@@ -2044,7 +2044,7 @@ This section demonstrates **all the ways to interact with DuckDB from C#**:
 - Dapper (typed query mapping)
 - Performance comparison vs SQL Server
 
-### 6.1 DuckDB with ADO.NET
+### DuckDB with ADO.NET
 
 #### DuckDB ADO.NET — open in-memory connection and CREATE TABLE with typed schema
 
@@ -2292,7 +2292,7 @@ using (var reader = dkCmd.ExecuteReader())
     │          (0.00s)          │
     └───────────────────────────┘
 
-### 6.2 DuckDB Appender — fastest bulk loader
+### DuckDB Appender — fastest bulk loader
 
 #### DuckDB Appender — INSERT rows without SQL using CreateRow and AppendValue
 
@@ -2364,7 +2364,7 @@ Console.WriteLine($"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds
 
     Appender: loaded 66355 rows in 62 ms
 
-### 6.3 DuckDB with Dapper
+### DuckDB with Dapper
 
 #### DuckDB Dapper — define record DTO for typed mapping
 
@@ -2461,7 +2461,7 @@ Console.WriteLine($"ExecuteScalar: {count} rows");
     QueryFirst: ASML.AS | 2026-03-12 | 1190.80
     ExecuteScalar: 65843 rows
 
-### 6.4 DuckDB-Specific SQL Features
+### DuckDB-Specific SQL Features
 
 #### DuckDB SQL — export query results to Parquet and CSV with COPY TO
 
@@ -2565,7 +2565,7 @@ DuckDB-specific SQL features not available in SQL Server:
 
 Also: `CREATE OR REPLACE` (idempotent DDL), `DESCRIBE`/`SUMMARIZE` (schema + profiling), `COPY FROM/TO` (bulk import/export).
 
-### 6.5 DuckDB Indexes and Tuning
+### DuckDB Indexes and Tuning
 
 #### DuckDB — CREATE INDEX (ART index for point lookups)
 
@@ -2797,7 +2797,7 @@ Quick reference of all DuckDB tuning and maintenance commands.
 > - No `UPDATE STATISTICS` — use `VACUUM ANALYZE`
 > - Memory limit instead of buffer pool — `SET memory_limit`
 
-### 6.6 DuckDB vs SQL Server Performance
+### DuckDB vs SQL Server Performance
 
 #### DuckDB vs SQL Server — benchmark GROUP BY, LAG window, full scan side by side
 
@@ -2904,7 +2904,7 @@ cmp
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Operation</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ADO.NET</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Appender</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Dapper</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SELECT rows</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteReader + DataTable</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Query<T> (typed)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Single value</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteScalar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteScalar<T></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Single row</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteReader + Read()</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">QueryFirst<T></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">INSERT 1 row</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CreateRow (overkill)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + anon obj</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Bulk INSERT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Loop + ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CreateRow loop (fastest)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + list</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">UPDATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + anon obj</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DELETE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + anon obj</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parameters</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">$1, $2 positional</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">— (no SQL)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">@Named (anon obj)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Best for</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DDL, schema ops</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Bulk loading</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Typed queries, CRUD</td></tr></tbody></table>
 
-## 7. Querying Files — DuckDB SQL vs Polars.NET DataFrame
+## Querying Files — DuckDB SQL vs Polars.NET DataFrame
 
 Both DuckDB and Polars can query Parquet, CSV, and JSON files directly.
 This section pairs each operation side by side: DuckDB (SQL) then Polars (DataFrame API).
@@ -3164,7 +3164,7 @@ results
 | Production ETL validation | DuckDB | SQL assertions on file data |
 | Both in same project | Yes | DuckDB for SQL, Polars for transforms |
 
-## 8. Summary
+## Summary
 
 > [!abstract]- C# Database Quick Reference
 > **SQLite** (`Microsoft.Data.Sqlite`)

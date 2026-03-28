@@ -96,7 +96,7 @@ display($"OHLCV: {dfP.Shape}  |  IndexDim: {dimP.Shape}");
     OHLCV: (66355, 12)  |  IndexDim: (169, 26)
 
 ---
-## 1 — Testing & Assertions
+## Testing & Assertions
 
 #### Assert DataFrame equality from two frames to a boolean result using column-by-column comparison
 
@@ -345,7 +345,7 @@ Console.WriteLine(total == 0
       PASS: All OHLC relationships are consistent.
 
 ---
-## 2 — Data Quality Pipeline
+## Data Quality Pipeline
 
 The guard functions below enforce the same quality dimensions — completeness, uniqueness, referential integrity — defined in [[data-quality-framework]]. For a declarative approach to these same checks in the dbt layer, see [[dbt-testing-framework]].
 
@@ -594,7 +594,7 @@ else
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>62326</td><td>ADS.DE</td><td>2021-12-07</td><td>255.25</td><td>255.25</td><td>255.25</td><td>255.25</td><td>246.503</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62419</td><td>ADS.DE</td><td>2022-04-21</td><td>208.05</td><td>208.05</td><td>208.05</td><td>208.05</td><td>200.9205</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62420</td><td>ADS.DE</td><td>2022-04-22</td><td>208.05</td><td>208.05</td><td>208.05</td><td>208.05</td><td>200.9205</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62423</td><td>ADS.DE</td><td>2022-04-27</td><td>188.44</td><td>188.44</td><td>188.44</td><td>188.44</td><td>181.9825</td><td>0</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62430</td><td>ADS.DE</td><td>2022-05-06</td><td>188.22</td><td>188.22</td><td>188.22</td><td>188.22</td><td>181.77</td><td>0</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## 3 — Python to C# Migration Guide
+## Python to C# Migration Guide
 
 The table below maps common **Python Polars** patterns to their **C# Polars.NET** equivalents.
 Many Python idioms do not translate 1:1 — pay close attention to the gotchas column.
@@ -693,7 +693,7 @@ display(pipeline);
 </style><div class='pl-dim'>Polars DataFrame: <b>(2 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>direction<span class='pl-dtype'>utf8view</span></th><th>avg_close<span class='pl-dtype'>double</span></th><th>total_volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>down</td><td>667.177735</td><td>468134431</td></tr><tr><td>up</td><td>675.3182551</td><td>476936289</td></tr></tbody></table></div>
 
 ---
-## 4 — Debugging & Profiling
+## Debugging & Profiling
 
 #### Inspect pipeline from each step to shape and head output using Console.WriteLine
 
@@ -1005,7 +1005,7 @@ Console.WriteLine($"  {"TOTAL",-20} {timings.Sum(t => t.Ms),6} ms");
       TOTAL                     5 ms
 
 ---
-## 5 — Summary
+## Summary
 
 #### Key lessons
 

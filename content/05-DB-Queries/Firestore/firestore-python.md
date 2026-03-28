@@ -46,7 +46,7 @@ using the `google-cloud-firestore` Python SDK.
 11. Pagination & Cursors
 12. Maintenance & Monitoring
 
-## 1. Setup & Connection
+## Setup & Connection
 
 This cell:
 
@@ -291,9 +291,9 @@ for coll in db.collections():
       watchlists               3 documents
     
 
-## 2. Read Operations
+## Read Operations
 
-### 2a. Get a Single Document
+### Get a Single Document
 
 This cell:
 
@@ -331,7 +331,7 @@ else:
       Active:      True
     
 
-### 2b. List All Documents in a Collection
+### List All Documents in a Collection
 
 This cell:
 
@@ -373,7 +373,7 @@ print(f"\nTotal: {count} documents")
     Total: 10 documents
     
 
-### 2c. Get Multiple Documents by ID
+### Get Multiple Documents by ID
 
 This cell:
 
@@ -403,9 +403,9 @@ for doc in docs:
       SAP.DE: SAP SE — 153.82
     
 
-## 3. Filtering & Ordering
+## Filtering & Ordering
 
-### 3a. Simple Equality Filter
+### Simple Equality Filter
 
 This cell:
 
@@ -444,7 +444,7 @@ for doc in docs:
       VOW.DE: VOLKSWAGEN AG — Consumer Cyclical
     
 
-### 3a-ii. Range Filter with Ordering
+### ii. Range Filter with Ordering
 
 This cell:
 
@@ -478,7 +478,7 @@ for doc in docs:
       MUV2.DE: 526.20
     
 
-### 3a-iii. Compound Filters (Multiple WHERE)
+### iii. Compound Filters (Multiple WHERE)
 
 This cell:
 
@@ -522,7 +522,7 @@ for doc in docs:
       AI.PA: AIR LIQUIDE — 168.02
     
 
-### 3b. IN and NOT-IN Filters
+### IN and NOT-IN Filters
 
 This cell:
 
@@ -555,7 +555,7 @@ for doc in results:
       DSY.PA: Technology      — 18.37
     
 
-### 3c. Array Contains
+### Array Contains
 
 This cell:
 
@@ -593,7 +593,7 @@ for doc in docs:
       VOW.DE: tags=['consumer_cyclical', 'germany', 'euro_stoxx_50']
     
 
-### 3c-ii. array_contains_any
+### ii. array_contains_any
 
 This cell:
 
@@ -641,7 +641,7 @@ for doc in docs:
       WKL.AS: Netherlands
     
 
-### 3d. Ordering and Limiting
+### Ordering and Limiting
 
 This cell:
 
@@ -674,9 +674,9 @@ for doc in docs:
       # 5 ABI.BR       score=0.3852
     
 
-## 4. Nested Fields & Arrays
+## Nested Fields & Arrays
 
-### 4a. Query on Nested Map Fields
+### Query on Nested Map Fields
 
 This cell:
 
@@ -727,7 +727,7 @@ for doc in docs:
       BBVA.MC      momentum=0.1535  composite=-0.0777
     
 
-### 4b. Read Nested Maps from Documents
+### Read Nested Maps from Documents
 
 This cell:
 
@@ -755,9 +755,9 @@ for doc in docs:
       alert_005: type=MOMENTUM_FLIP   source=manual          run=run_024
     
 
-## 5. Subcollections
+## Subcollections
 
-### 5a. Read a Subcollection
+### Read a Subcollection
 
 This cell:
 
@@ -791,7 +791,7 @@ for doc in prices:
       2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857,271
     
 
-### 5b. Query Within a Subcollection
+### Query Within a Subcollection
 
 This cell:
 
@@ -834,9 +834,9 @@ for doc in prices:
       2026-03-06: close=1147.00
     
 
-## 6. Write Operations
+## Write Operations
 
-### 6a. Set — Create or Overwrite
+### Set — Create or Overwrite
 
 This cell:
 
@@ -876,7 +876,7 @@ print(f"Result: {doc.to_dict()}") # type: ignore
     Result: {'is_public': False, 'created_at': DatetimeWithNanoseconds(2026, 3, 22, 17, 42, 43, 845306, tzinfo=datetime.timezone.utc), 'stock_count': 3, 'symbols': ['ASML.AS', 'MC.PA', 'SAP.DE'], 'owner': 'notebook_demo', 'name': 'Test Watchlist'}
     
 
-### 6b. Update — Partial Modifications
+### Update — Partial Modifications
 
 This cell:
 
@@ -916,7 +916,7 @@ print(f"Updated: symbols={d.get('symbols')}, count={d.get('stock_count')}, modif
     Updated: symbols=['ASML.AS', 'SAP.DE', 'TTE.PA'], count=4, modified=2026-03-22 17:42:46.122000+00:00
     
 
-### 6c. Delete a Document
+### Delete a Document
 
 This cell:
 
@@ -940,9 +940,9 @@ print(f"Exists: {doc.exists}") # type: ignore
     Exists: False
     
 
-## 7. Batch Operations & Transactions
+## Batch Operations & Transactions
 
-### 7a. Batch — Atomic Multi-Write
+### Batch — Atomic Multi-Write
 
 This cell:
 
@@ -985,7 +985,7 @@ print("Cleaned up batch alerts")
     Cleaned up batch alerts
     
 
-### 7b. Transaction — Conditional Read-Modify-Write
+### Transaction — Conditional Read-Modify-Write
 
 This cell:
 
@@ -1037,7 +1037,7 @@ alert_ref.update({"acknowledged": False})
       nanos: 570562000
     }
 
-## 8. Real-Time Listeners
+## Real-Time Listeners
 
 This cell:
 
@@ -1108,9 +1108,9 @@ print("\nListener stopped")
     Listener stopped
     
 
-## 9. Aggregation Queries
+## Aggregation Queries
 
-### 9a. COUNT — Server-Side
+### COUNT — Server-Side
 
 This cell:
 
@@ -1137,7 +1137,7 @@ for country in ["Germany", "France", "Netherlands", "Italy", "Spain"]:
       Spain          : 4 stocks
     
 
-### 9b. SUM and AVG — Server-Side
+### SUM and AVG — Server-Side
 
 This cell:
 
@@ -1172,9 +1172,9 @@ print(f"Total stocks: {total}")
     Total stocks: 50
     
 
-## 10. Collection Group Queries
+## Collection Group Queries
 
-### 10a. Query Across ALL Subcollections
+### Query Across ALL Subcollections
 
 This cell:
 
@@ -1231,7 +1231,7 @@ for attempt in range(12):  # retry up to 2 minutes while index builds
       RMS.PA       2026-03-11  close=   1920.50
     
 
-### 10b. Collection Group — Filter by Date
+### Collection Group — Filter by Date
 
 This cell:
 
@@ -1298,7 +1298,7 @@ for attempt in range(12):
       SAF.PA       close=    315.40  volume=     160,065
     
 
-## 11. Pagination & Cursors
+## Pagination & Cursors
 
 This cell:
 
@@ -1361,9 +1361,9 @@ print(f"\nTotal pages: {page - 1}")
     Total pages: 2
     
 
-## 12. Maintenance & Monitoring
+## Maintenance & Monitoring
 
-### 12a. List Collections & Document Counts
+### List Collections & Document Counts
 
 This cell:
 
@@ -1392,7 +1392,7 @@ for coll in db.collections():
       watchlists               3 documents
     
 
-### 12b. List Subcollections
+### List Subcollections
 
 This cell:
 
@@ -1416,7 +1416,7 @@ for sub in doc_ref.collections():
       prices: [[<Aggregation alias=field_1, value=15, readtime=2026-03-22 18:08:28.389777+00:00>]] documents
     
 
-### 12c. Find Stale Documents
+### Find Stale Documents
 
 This cell:
 
@@ -1447,7 +1447,7 @@ for doc in docs:
       run_013: status=SUCCESS  started=2026-03-20 17:02:47.233713+00:00
     
 
-### 12d. Find Failed Pipeline Runs
+### Find Failed Pipeline Runs
 
 This cell:
 
@@ -1477,7 +1477,7 @@ for doc in docs:
       run_006: failed at ['fetch_ohlcv'], rows=285
     
 
-### 12e. Unacknowledged Critical Alerts
+### Unacknowledged Critical Alerts
 
 This cell:
 
@@ -1516,7 +1516,7 @@ for doc in docs:
       alert_020: DHL.DE — DHL.DE triggered rank change alert
     
 
-### 12f. Read Application Config
+### Read Application Config
 
 This cell:
 

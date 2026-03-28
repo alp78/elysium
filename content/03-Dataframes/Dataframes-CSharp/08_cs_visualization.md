@@ -94,9 +94,9 @@ display($"ASML rows: {asmlDates.Length}");
 
 ---
 
-## 1 — Line Charts
+## Line Charts
 
-#### 1.1 Single line — ASML close price over time
+#### Single line — ASML close price over time
 
 ```csharp
 // Single-line chart — ASML closing price
@@ -114,7 +114,7 @@ Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(x: dates, y: asmlClose)
 
 <iframe src="/static/plotly/df_cs_08_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 1.2 Multi-line — overlay ASML, SAP, SIE close prices
+#### Multi-line — overlay ASML, SAP, SIE close prices
 
 ```csharp
 // Multi-line chart — compare three stocks
@@ -141,7 +141,7 @@ Plotly.NET.CSharp.Chart.Combine(traces)
 
 <iframe src="/static/plotly/df_cs_08_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 1.3 Dual y-axis — ASML price + volume
+#### Dual y-axis — ASML price + volume
 
 ```csharp
 // Price + Volume on dual y-axis — volume confined to bottom third
@@ -185,9 +185,9 @@ Plotly.NET.CSharp.Chart.Combine(new[] { volArea, priceLine })
 
 ---
 
-## 2 — Bar Charts
+## Bar Charts
 
-#### 2.1 Grouped bar — average close price by top 5 symbols
+#### Grouped bar — average close price by top 5 symbols
 
 ```csharp
 // Grouped bar — average close price for top 5 symbols by mean close
@@ -212,7 +212,7 @@ Plotly.NET.CSharp.Chart.Column<double, string, string>(barValues, Keys: barSymbo
 
 <iframe src="/static/plotly/df_cs_08_04.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 2.2 Stacked bar — total volume by top 5 symbols
+#### Stacked bar — total volume by top 5 symbols
 
 ```csharp
 // Stacked bar — split total volume into open-above-close vs close-above-open days
@@ -251,9 +251,9 @@ Plotly.NET.CSharp.Chart.Combine(new[] { upBar, downBar })
 
 ---
 
-## 3 — Scatter & Distribution
+## Scatter & Distribution
 
-#### 3.1 Scatter — close vs volume (ASML)
+#### Scatter — close vs volume (ASML)
 
 ```csharp
 // Scatter — does volume correlate with close price?
@@ -273,7 +273,7 @@ Plotly.NET.CSharp.Chart.Point<double, double, string>(scatterVol, asmlClose)
 
 <iframe src="/static/plotly/df_cs_08_06.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 3.2 Histogram — ASML daily returns distribution
+#### Histogram — ASML daily returns distribution
 
 ```csharp
 // Histogram — daily percentage returns
@@ -295,7 +295,7 @@ Plotly.NET.CSharp.Chart.Histogram<double, double, string>(X: returns)
 
 <iframe src="/static/plotly/df_cs_08_07.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 3.3 Box plot — close price distribution by symbol (top 5)
+#### Box plot — close price distribution by symbol (top 5)
 
 ```csharp
 // Box plot — close price spread for top 5 symbols
@@ -322,12 +322,12 @@ Plotly.NET.CSharp.Chart.Combine(boxTraces)
 
 ---
 
-## 4 — Financial Charts
+## Financial Charts
 
 > [!tip] Related pattern
 > The financial metrics rendered in these charts — daily returns, OHLC spreads, volume — are defined in [[chart-metrics]]. For the dashboard-level KPIs these charts feed into, see [[index-snapshot-metrics]].
 
-#### 4.1 Candlestick — ASML OHLC
+#### Candlestick — ASML OHLC
 
 ```csharp
 // Candlestick — ASML open/high/low/close
@@ -344,7 +344,7 @@ Plotly.NET.CSharp.Chart.Candlestick<double, string, string>(asmlOpen, asmlHigh, 
 
 <iframe src="/static/plotly/df_cs_08_09.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 4.2 Candlestick + volume overlay
+#### Candlestick + volume overlay
 
 ```csharp
 // Candlestick with volume area below (last 6 months for readability)
@@ -386,9 +386,9 @@ volArea
 
 ---
 
-## 5 — Heatmap
+## Heatmap
 
-#### 5.1 Correlation heatmap — OHLCV numeric columns (ASML)
+#### Correlation heatmap — OHLCV numeric columns (ASML)
 
 ```csharp
 // Correlation heatmap — Pearson correlation between OHLCV columns
@@ -439,10 +439,10 @@ Plotly.NET.CSharp.Chart.Heatmap<double, string, string, string>(corrMatrix, X: c
 
 ---
 
-## 6 — Static Export with ScottPlot
+## Static Export with ScottPlot
 
 ---
-## 6 — Pie, Donut & Radar
+## Pie, Donut & Radar
 
 #### Pie chart — Volume share by top symbols
 
@@ -542,7 +542,7 @@ Plotly.NET.CSharp.Chart.Combine(radarTraces)
 
 <iframe src="/static/plotly/df_cs_08_15.html" width="100%" height="600" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### 6.1 ScottPlot line chart — ASML close price saved as PNG
+#### ScottPlot line chart — ASML close price saved as PNG
 
 ```csharp
 // ScottPlot — static line chart exported as PNG
@@ -574,7 +574,7 @@ Console.WriteLine($"Saved: {Path.GetFullPath(pngPath)}");
 
 ---
 
-## 7 — Summary
+## Summary
 
 #### Library decision guide
 

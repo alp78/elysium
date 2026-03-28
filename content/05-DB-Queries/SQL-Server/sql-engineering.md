@@ -40,9 +40,6 @@ Topics covered:
 > **Note**: Some sections CREATE database objects. All objects are created in a `demo` schema
 > or use temp tables to avoid modifying the production stoxx schema.
 
-## 0. Setup
-
-
 ```python
 %load_ext sql
 %config SqlMagic.displaycon = False
@@ -75,9 +72,9 @@ IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'demo')
 
 
 
-## 1. Views
+## Views
 
-### 1a. Regular Views — Simplify Complex Queries
+### Regular Views — Simplify Complex Queries
 
 A view is a saved query. It doesn't store data — it runs the query every time you SELECT from it.
 Use case: wrap the "latest price per stock" pattern so downstream queries are simple.
@@ -221,7 +218,7 @@ SELECT TOP 10 * FROM demo.v_latest_prices ORDER BY [close] DESC
 
 
 
-### 1b. View for Cross-Layer Dashboard
+### View for Cross-Layer Dashboard
 
 Join multiple tables into a single business-friendly view. Dashboards query this instead of raw tables.
 
@@ -431,12 +428,12 @@ ORDER BY [rank]
 
 
 
-## 2. Stored Procedures
+## Stored Procedures
 
 > [!tip] Related pattern
 > The [[dbt-sqlserver-adapter]] generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
 
-### 2a. Basic SP with Parameters
+### Basic SP with Parameters
 
 A stored procedure is precompiled SQL that lives in the database.
 Use case: pipeline steps as SPs — each step has consistent parameters and error handling.
@@ -533,7 +530,7 @@ EXEC demo.sp_top_stocks @index_key = 'euro_stoxx_50', @top_n = 5
 
 
 
-### 2b. SP with Error Handling (TRY/CATCH)
+### SP with Error Handling (TRY/CATCH)
 
 Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
 If anything fails, the entire operation rolls back — no partial loads.
@@ -582,9 +579,9 @@ END;
 
 
 
-## 3. User-Defined Functions
+## User-Defined Functions
 
-### 3a. Inline Table-Valued Function (Best Performance)
+### Inline Table-Valued Function (Best Performance)
 
 An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
 Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
@@ -724,7 +721,7 @@ ORDER BY date DESC
 
 
 
-## 4. Indexes
+## Indexes
 
 ### Index Types & When to Use
 
@@ -787,11 +784,11 @@ ORDER BY i.type_desc
 3. **Don't over-index**: each index slows writes. Monitor with `sys.dm_db_index_usage_stats`
 4. **Filtered indexes** for hot subsets: `WHERE is_current = 1` on dimension tables
 
-## 5. Slowly Changing Dimensions (SCD)
+## Slowly Changing Dimensions (SCD)
 
 The MERGE patterns used for SCD Type 2 below are a key building block for [[idempotent-pipeline-design]], where every load can be safely re-run without duplicating or corrupting data.
 
-### 5a. SCD Type 1 — Overwrite
+### SCD Type 1 — Overwrite
 
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
 Example: fix a typo in a company name.
@@ -861,7 +858,7 @@ SELECT * FROM #scd_demo
 
 
 
-### 5b. SCD Type 2 — History Tracking
+### SCD Type 2 — History Tracking
 
 Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
@@ -978,9 +975,9 @@ ORDER BY symbol, valid_from
 
 
 
-## 6. Gap Detection & Gap Filling
+## Gap Detection & Gap Filling
 
-### 6a. Islands and Gaps
+### Islands and Gaps
 
 The classic SQL pattern: identify contiguous groups (islands) and missing periods (gaps)
 in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
@@ -1087,7 +1084,7 @@ ORDER BY date DESC
 
 
 
-## 7. Deduplication Strategies
+## Deduplication Strategies
 
 ### ROW_NUMBER Deduplication Pattern
 
@@ -1159,7 +1156,7 @@ ORDER BY date DESC, rn
 
 
 
-## 8. Execution Plans & Query Optimization
+## Execution Plans & Query Optimization
 
 ### Common Anti-Patterns
 
@@ -1201,7 +1198,7 @@ SELECT
 
 
 
-## 9. Transaction Isolation Levels
+## Transaction Isolation Levels
 
 ### Isolation Level Guide for Data Engineering
 
@@ -1215,7 +1212,7 @@ SELECT
 
 **Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
 
-## 10. Bulk Loading Patterns
+## Bulk Loading Patterns
 
 ### Bulk Loading Strategies
 
@@ -1229,7 +1226,7 @@ SELECT
 
 **Pipeline pattern**: load to staging table → validate → MERGE to target → truncate staging.
 
-## 11. Data Lineage & Audit Columns
+## Data Lineage & Audit Columns
 
 ### Standard Audit Columns
 
@@ -1290,7 +1287,7 @@ ORDER BY last_update DESC
 
 
 
-## 12. Partitioning Strategies
+## Partitioning Strategies
 
 ### When to Partition
 
@@ -1318,7 +1315,7 @@ CREATE TABLE silver.ohlcv_partitioned (
 
 </small>
 
-## 13. Cleanup
+## Cleanup
 
 
 ```sql

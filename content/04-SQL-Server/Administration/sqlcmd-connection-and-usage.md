@@ -28,7 +28,7 @@ Microsoft ships two versions of `sqlcmd`:
 
 ---
 
-## 13.1 Connecting — The First Step in Every Database Operation
+## Connecting — The First Step in Every Database Operation
 
 The connection command encodes everything: which server, which credentials, which database, and how to handle TLS. Getting this wrong is the most common reason for "cannot connect" errors.
 

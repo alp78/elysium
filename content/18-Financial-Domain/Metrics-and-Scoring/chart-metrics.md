@@ -55,7 +55,7 @@ $$\text{Drawdown}_t = \left(\frac{\text{CumulativeFactor}_t}{\max_{s \le t}(\tex
 | −10% to −20% | Bear territory |
 | > −20% | Severe bear market |
 
-## 30d Annualized Volatility (%)
+## Annualized Volatility (%)
 
 Rolling 30-day standard deviation of daily returns, annualized by multiplying by the square root of 252 trading days.
 

@@ -17,7 +17,7 @@ Data contracts in dbt make model schemas enforceable at build time rather than d
 
 ---
 
-## 1. What Is a dbt Data Contract?
+## What Is a dbt Data Contract?
 
 A **data contract** is a schema declaration on a model that dbt enforces during `dbt run`. When `contract.enforced: true` is set, dbt will:
 
@@ -32,7 +32,7 @@ This transforms YAML schema files from documentation into active guardrails.
 
 ---
 
-## 2. Enabling a Contract
+## Enabling a Contract
 
 Add the `contract` block to the model's config in YAML. The model must also declare every column with its `data_type`.
 
@@ -107,7 +107,7 @@ models:
 
 ---
 
-## 3. Model Access Levels
+## Model Access Levels
 
 Access levels control which other models can `ref()` a given model. They enforce a clear layered architecture without relying on naming conventions alone.
 
@@ -117,7 +117,7 @@ Access levels control which other models can `ref()` a given model. They enforce
 | `protected` | Models in the **same dbt project** (default)       | Shared intermediate models across teams |
 | `public`    | Any project, including **downstream mesh projects** | Stable mart / fact tables               |
 
-### 3.1 Declaring Access
+### Declaring Access
 
 ```yaml
 models:
@@ -136,7 +136,7 @@ models:
         enforced: true
 ```
 
-### 3.2 Model Groups
+### Model Groups
 
 Groups pair with access levels to provide ownership metadata and restrict private models.
 
@@ -165,11 +165,11 @@ Attempting to `ref('int_cap_weight_calc')` from outside the `index_analytics` gr
 
 ---
 
-## 4. Model Versions
+## Model Versions
 
 Model versioning lets you publish a new breaking schema while keeping the old version live for existing consumers — no big-bang migrations.
 
-### 4.1 Declaring Versions
+### Declaring Versions
 
 ```yaml
 # models/marts/finance/_finance__models.yml
@@ -194,7 +194,7 @@ models:
 
 dbt creates two separate materialisations: `fct_index_performance_v1` and `fct_index_performance` (the v2 current version).
 
-### 4.2 Version SQL Files
+### Version SQL Files
 
 ```
 models/
@@ -261,7 +261,7 @@ left join {{ ref('int_esg_scores_latest') }}     esg
     using (constituent_id, price_date)
 ```
 
-### 4.3 Referencing Specific Versions
+### Referencing Specific Versions
 
 Consumers pin to a version to opt in to upgrades explicitly:
 
@@ -278,11 +278,11 @@ select * from {{ ref('fct_index_performance') }}
 
 ---
 
-## 5. Breaking Change Detection in CI
+## Breaking Change Detection in CI
 
 Use `dbt state:modified` with the `--select` flag in your CI pipeline to catch contract violations before they reach production.
 
-### 5.1 CI Workflow (GitHub Actions)
+### CI Workflow (GitHub Actions)
 
 ```yaml
 # .github/workflows/dbt-ci.yml
@@ -321,7 +321,7 @@ jobs:
 
 `state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project. For the full quality context in which these contract checks operate, see [[data-quality-framework]].
 
-### 5.2 Catching Column Removals
+### Catching Column Removals
 
 If a PR removes `esg_score` from `fct_index_performance`, the contract check fails:
 
@@ -337,7 +337,7 @@ The PR is blocked until the column is restored or the contract YAML is updated a
 > [!warning] Contract ≠ backward-compatible schema
 > Removing a declared column or changing its data type is always a breaking change regardless of version. To remove a column gracefully: publish a new version, deprecate the old one, give consumers a migration window, then delete the old version.
 
-### 5.3 `dbt source freshness` in CI
+### `dbt source freshness` in CI
 
 Pair contract checks with source freshness gates so the pipeline fails before running if upstream feeds are stale:
 
@@ -360,7 +360,7 @@ dbt source freshness --select source:index_provider_raw
 
 ---
 
-## 6. Full Annotated Contract: `fct_index_performance`
+## Full Annotated Contract: `fct_index_performance`
 
 This consolidates all concepts: contract enforcement, public access, versioning, and column-level constraints.
 
@@ -453,7 +453,7 @@ models:
 
 ---
 
-## 7. Deprecating a Version
+## Deprecating a Version
 
 Once consumers have migrated away from v1, mark it deprecated before removing:
 

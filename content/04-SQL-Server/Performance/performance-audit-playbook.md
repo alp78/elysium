@@ -27,7 +27,7 @@ A step-by-step methodology for auditing any SQL Server instance from scratch. Ea
 - **MAXDOP (Max Degree of Parallelism):** How many CPU cores a single query can use. Default 0 = unlimited = all cores.
 - **Cost Threshold for Parallelism:** The estimated query cost (in arbitrary units) above which SQL Server considers parallel execution. Default 5 is almost always too low.
 
-### 1.1 Version and Edition
+### Version and Edition
 
 ```sql
 SELECT @@VERSION;
@@ -44,7 +44,7 @@ SELECT SERVERPROPERTY('ProductVersion') AS Version,
 > [!info] Edition Limits
 > Standard edition: 128 GB RAM max, 24 cores. Express edition: 1.4 GB RAM, 1 socket. Ensure the edition matches workload requirements before tuning anything else.
 
-### 1.2 Uptime
+### Uptime
 
 ```sql
 SELECT sqlserver_start_time,
@@ -57,7 +57,7 @@ FROM sys.dm_os_sys_info;
 - **Bad:** Uptime < 1 day — all DMV-based findings need a disclaimer ("based on limited data since last restart")
 - **Action:** If recently restarted, ask why. Frequent restarts are a red flag (memory leaks, patching without planning, crashes).
 
-### 1.3 Hardware
+### Hardware
 
 ```sql
 SELECT cpu_count AS logical_cpus,
@@ -73,7 +73,7 @@ FROM sys.dm_os_sys_info;
 - **Good:** `committed_mb` ≈ `target_mb` (SQL Server has enough memory to use what it's configured for)
 - **Bad:** `committed_mb` significantly below `target_mb` (OS is under memory pressure and can't give SQL Server what it wants)
 
-### 1.4 Key Instance Settings
+### Key Instance Settings
 
 ```sql
 SELECT name, value_in_use
@@ -115,7 +115,7 @@ EXEC sp_configure 'optimize for ad hoc workloads', 1;
 RECONFIGURE;
 ```
 
-### 1.5 Database Inventory
+### Database Inventory
 
 ```sql
 SELECT name, state_desc, recovery_model_desc,
@@ -148,7 +148,7 @@ ORDER BY name;
 - **Page Life Expectancy (PLE):** Average time (in seconds) a data page stays in the buffer pool before being evicted. Higher = better. If pages are evicted quickly, queries must re-read them from disk.
 - **Buffer cache hit ratio:** Percentage of page reads satisfied from the buffer pool (RAM) vs. disk. Should be > 99%.
 
-### 2.1 Buffer Pool by Database
+### Buffer Pool by Database
 
 ```sql
 SELECT DB_NAME(database_id) AS db,
@@ -160,7 +160,7 @@ ORDER BY buffer_pool_mb DESC;
 
 **Interpretation:** Shows how much of the buffer pool each database occupies. If one database dominates and others get almost nothing, those other databases will have slow queries (every read goes to disk).
 
-### 2.2 Page Life Expectancy (PLE)
+### Page Life Expectancy (PLE)
 
 ```sql
 SELECT cntr_value AS PLE_seconds
@@ -183,7 +183,7 @@ WHERE counter_name = 'Page life expectancy'
 2. Find queries doing table scans (Phase 5) and add indexes
 3. Check if index rebuilds are running during peak hours — schedule them off-peak
 
-### 2.3 Buffer Cache Hit Ratio
+### Buffer Cache Hit Ratio
 
 ```sql
 SELECT cntr_value AS hit_ratio
@@ -198,7 +198,7 @@ WHERE counter_name = 'Buffer cache hit ratio'
 - **< 95%:** Problem — significant disk IO, performance is degraded
 - **< 90%:** Critical — the database is larger than the buffer pool, most queries hit disk
 
-### 2.4 Memory Clerks (What Is Using Memory)
+### Memory Clerks (What Is Using Memory)
 
 ```sql
 SELECT TOP 10 type AS clerk_type,
@@ -217,7 +217,7 @@ ORDER BY pages_kb DESC;
 | `MEMORYCLERK_SQLCLR` | CLR objects | Should be small unless using CLR assemblies |
 | `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for blocking |
 
-### 2.5 Pending Memory Grants
+### Pending Memory Grants
 
 ```sql
 SELECT session_id, requested_memory_kb / 1024 AS requested_mb,
@@ -240,7 +240,7 @@ WHERE grant_time IS NULL;
 
 See [[wait-stats-analysis]] for the full filtered wait stats query and the complete wait type interpretation table.
 
-### 3.1 Top Waits Query
+### Top Waits Query
 
 ```sql
 WITH waits AS (
@@ -275,7 +275,7 @@ FROM waits
 ORDER BY wait_sec DESC;
 ```
 
-### 3.2 Wait Type Decision Table
+### Wait Type Decision Table
 
 | Top wait type | What it means | Root cause | Remediation |
 |---------------|--------------|------------|-------------|
@@ -306,7 +306,7 @@ RESOURCE_SEMAPHORE   9841.2     0.0         284       7.2
 -- Lock waits at 62% = severe blocking. Enable RCSI, increase memory, find blocking queries.
 ```
 
-### 3.3 Resetting Wait Stats (After Fixing Issues)
+### Resetting Wait Stats (After Fixing Issues)
 
 ```sql
 DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
@@ -325,7 +325,7 @@ Then re-run after a representative period (e.g., a full business day) to see if 
 - **Log file (.ldf):** Sequential write-ahead log — every transaction is written here first
 - **IO stall:** Time (in ms) that SQL Server spent waiting for IO operations to complete
 
-### 4.1 IO Latency by File
+### IO Latency by File
 
 ```sql
 SELECT DB_NAME(fs.database_id) AS db,
@@ -344,7 +344,7 @@ JOIN sys.master_files f
 ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 ```
 
-### 4.2 IO Latency Thresholds
+### IO Latency Thresholds
 
 | Metric | Good | Acceptable | Problem | Critical |
 |--------|------|-----------|---------|----------|
@@ -369,7 +369,7 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 
 **Prioritization formula:** `Impact = avg_reads × execution_count`. Fix the queries with the highest impact first — a query doing 100K reads that runs 10,000 times is worse than a query doing 10M reads that runs once.
 
-### 5.1 Top Queries by CPU
+### Top Queries by CPU
 
 ```sql
 SELECT TOP 10
@@ -386,7 +386,7 @@ CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
 ORDER BY qs.total_worker_time DESC;
 ```
 
-### 5.2 Top Queries by Logical Reads (IO Pressure)
+### Top Queries by Logical Reads (IO Pressure)
 
 ```sql
 SELECT TOP 10
@@ -402,7 +402,7 @@ CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
 ORDER BY qs.total_logical_reads DESC;
 ```
 
-### 5.3 Top Queries by Execution Count (Most Frequent)
+### Top Queries by Execution Count (Most Frequent)
 
 ```sql
 SELECT TOP 10
@@ -417,7 +417,7 @@ CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
 ORDER BY qs.execution_count DESC;
 ```
 
-### 5.4 What to Do with a Bad Query
+### What to Do with a Bad Query
 
 1. **Get the [[execution-plans|execution plan]]:** Add `CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp` and inspect `qp.query_plan` in SSMS (click the XML to see the graphical plan)
 2. **Look for:** Table Scans, Clustered Index Scans (yellow = warnings), thick arrows (many rows flowing), Sort operators (expensive)
@@ -433,7 +433,7 @@ ORDER BY qs.execution_count DESC;
 
 **Purpose:** Indexes are the primary mechanism for avoiding expensive table scans. Missing indexes force full scans; unused indexes waste write overhead and disk space; fragmented indexes cause extra IO.
 
-### 6.1 Missing Indexes (DMV-Based Recommendations)
+### Missing Indexes (DMV-Based Recommendations)
 
 ```sql
 SELECT TOP 20
@@ -460,7 +460,7 @@ ORDER BY improvement_score DESC;
 > [!tip] Don't Blindly Create Every Missing Index
 > Look for overlaps — if two recommendations differ only in included columns, merge them into one index. Too many indexes slows down writes.
 
-### 6.2 Unused Indexes
+### Unused Indexes
 
 ```sql
 SELECT OBJECT_SCHEMA_NAME(i.object_id) + '.' + OBJECT_NAME(i.object_id) AS [table],
@@ -486,7 +486,7 @@ ORDER BY us.user_updates DESC;
 > [!warning] Only Drop After Verifying Uptime > 7 Days
 > If the server restarted yesterday, the index might be used by a weekly job that hasn't run yet. An index with `user_updates = 48000` and `user_seeks = 0` is a good drop candidate: `DROP INDEX IX_scores_old ON gold.scores;`
 
-### 6.3 Index Fragmentation
+### Index Fragmentation
 
 ```sql
 SELECT OBJECT_SCHEMA_NAME(ips.object_id) + '.' + OBJECT_NAME(ips.object_id) AS [table],
@@ -523,7 +523,7 @@ ORDER BY ips.avg_fragmentation_in_percent DESC;
 - **Spill:** When a sort or hash operation runs out of its memory grant, it "spills" to TempDB — writing temp data to disk. Spills are slow.
 - **PFS/GAM/SGAM contention:** Allocation pages at the front of each TempDB file. With only one file, all threads compete for the same allocation pages. Fix: multiple files of equal size.
 
-### 7.1 TempDB Space Usage
+### TempDB Space Usage
 
 ```sql
 SELECT SUM(user_object_reserved_page_count) * 8 / 1024 AS user_objects_mb,
@@ -538,7 +538,7 @@ FROM sys.dm_db_file_space_usage;
 - `internal_objects_mb` very large → queries are spilling to disk — find them in Phase 5 and add indexes
 - `free_mb` near zero → TempDB is about to run out of space — add a file or grow the existing ones
 
-### 7.2 TempDB File Configuration
+### TempDB File Configuration
 
 ```sql
 SELECT name, physical_name,
@@ -572,7 +572,7 @@ ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev4', FILENAME = '/var/opt/mssql/da
 > [!info] Full Deadlock Coverage
 > For comprehensive deadlock detection, Extended Events setup, prevention patterns, and retry logic, see [[deadlock-detection-and-prevention]].
 
-### 8.1 Current Blocking Chains
+### Current Blocking Chains
 
 ```sql
 SELECT r.session_id AS blocked,
@@ -607,7 +607,7 @@ WHERE s.session_id = <blocker_session_id>;
 - **Long-running pipeline step:** Pipeline holding locks for minutes. Solution: break into smaller transactions, enable RCSI
 - **Index rebuild running:** Online rebuild holds schema locks briefly. Solution: schedule rebuilds off-peak
 
-### 8.2 Deadlock Count
+### Deadlock Count
 
 ```sql
 SELECT cntr_value AS deadlocks_total
@@ -621,7 +621,7 @@ WHERE counter_name = 'Number of Deadlocks/sec'
 - **< 10:** Rare deadlocks — implement retry logic and monitor
 - **> 100:** Frequent deadlocks — structural problem, investigate access order patterns
 
-### 8.3 Lock Escalation
+### Lock Escalation
 
 ```sql
 SELECT cntr_value AS lock_escalations
@@ -640,7 +640,7 @@ WHERE counter_name = 'Lock Escalations/sec'
 
 **Purpose:** SQL Server's query optimizer creates execution plans based on statistics. If statistics are stale, the optimizer makes bad plans, and queries run orders of magnitude slower than they should.
 
-### 9.1 Stale Statistics
+### Stale Statistics
 
 ```sql
 SELECT TOP 20
@@ -671,7 +671,7 @@ UPDATE STATISTICS silver.signals_daily WITH FULLSCAN;
 EXEC sp_updatestats;
 ```
 
-### 9.2 Plan Cache Analysis
+### Plan Cache Analysis
 
 ```sql
 SELECT objtype,
@@ -698,7 +698,7 @@ EXEC sp_configure 'optimize for ad hoc workloads', 1;
 RECONFIGURE;
 ```
 
-### 9.3 Implicit Conversions (Plan-Affecting)
+### Implicit Conversions (Plan-Affecting)
 
 ```sql
 SELECT TOP 10
@@ -725,7 +725,7 @@ See [[sargable-queries#Implicit Conversions — The Silent Killer]] for the Pyth
 
 ## Phase 10: Database Sizes and Growth
 
-### 10.1 File Sizes and Free Space
+### File Sizes and Free Space
 
 ```sql
 EXEC sp_MSforeachdb '
@@ -749,7 +749,7 @@ FROM sys.database_files f;
 - **Free space near 0:** The file will autogrow soon — on a busy system this causes a pause.
 - **Log file much larger than data file:** Log isn't being backed up (FULL recovery) or has grown due to a large transaction.
 
-### 10.2 Log Reuse Wait Reasons
+### Log Reuse Wait Reasons
 
 ```sql
 SELECT name, log_reuse_wait_desc
@@ -774,7 +774,7 @@ WHERE log_reuse_wait_desc <> 'NOTHING';
 
 **Purpose:** Identify obvious security risks. Not a full security audit, but catches the most common misconfigurations.
 
-### 11.1 Sysadmin Members
+### Sysadmin Members
 
 ```sql
 SELECT sp.name AS login, sp.type_desc, sp.is_disabled
@@ -789,7 +789,7 @@ WHERE rp.name = 'sysadmin';
 - Application logins with sysadmin — applications should use the least privilege needed (e.g., `db_datareader`, `db_datawriter`)
 - Unknown logins — ask who these belong to
 
-### 11.2 Guest Access
+### Guest Access
 
 ```sql
 SELECT d.name AS db

@@ -220,7 +220,7 @@ Manual processes are the enemy of reliability and speed. Every manual step is a 
 - Knowledge can be siloed
 - Speed depends on individual availability
 
-**Automation targets in data engineering:**
+#### Automation targets in data engineering
 
 | Process | Before Automation | After Automation |
 |---------|------------------|-----------------|
@@ -237,14 +237,14 @@ Manual processes are the enemy of reliability and speed. Every manual step is a 
 
 Data teams that operate in long waterfall cycles — "gather requirements for 3 months, build for 6 months, deliver once" — consistently deliver the wrong thing. By the time the product is delivered, business needs have changed.
 
-**Agile for data means:**
+#### Agile for data means
 - Two-week sprints with a shippable data product at the end
 - Backlog grooming with stakeholders, not just engineers
 - Daily standups that surface blockers quickly
 - Sprint reviews where analysts and business users see working data, not slides
 - Retrospectives that improve the process, not just the code
 
-**Adapting Agile for data-specific challenges:**
+#### Adapting Agile for data-specific challenges
 
 | Challenge | Agile Adaptation |
 |-----------|-----------------|
@@ -333,17 +333,17 @@ In traditional data development, quality checks happened at the end: an analyst 
 
 ### Implementing Shift-Left
 
-**At design time:**
+#### At design time
 - Agree on schema with downstream consumers before writing code
 - Define data contracts: types, nullable fields, expected ranges, SLAs
 - Document business rules in code, not in someone's head
 
-**At development time:**
+#### At development time
 - Write dbt schema tests alongside the model, not after — the [[dbt-testing-framework]] provides the full catalog of test types available for shift-left validation
 - Use `dbt-unit-testing` to test SQL logic on small mock datasets
 - Make the feedback loop fast — run tests locally in seconds, not minutes
 
-**At CI time:**
+#### At CI time
 - Block merges that fail tests — no exceptions
 - Run tests against a representative sample of production data
 - Validate that documentation exists before allowing merge

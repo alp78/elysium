@@ -65,7 +65,7 @@ Console.WriteLine("Warnings suppressed");
     Warnings suppressed
     
 
-## 1. Setup & Connection
+## Setup & Connection
 
 This cell:
 
@@ -403,9 +403,9 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
       config                   2 documents
     
 
-## 2. Read Operations
+## Read Operations
 
-### 2a. Get a Single Document by ID
+### Get a Single Document by ID
 
 This cell:
 
@@ -443,7 +443,7 @@ if (doc.Exists)
       Tags:       [technology, netherlands, euro_stoxx_50]
     
 
-### 2b. List Documents (Top 10)
+### List Documents (Top 10)
 
 This cell:
 
@@ -485,7 +485,7 @@ if (listJson.RootElement.TryGetProperty("documents", out var docs))
       BAS.DE       BASF SE              price=   47.74
     
 
-### 2c. Get Multiple Documents by ID
+### Get Multiple Documents by ID
 
 This cell:
 
@@ -513,9 +513,9 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
       SAP.DE: SAP SE — 153.82
     
 
-## 3. Filtering & Ordering
+## Filtering & Ordering
 
-### 3a. Equality Filter
+### Equality Filter
 
 This cell:
 
@@ -570,7 +570,7 @@ foreach (var fdoc in await RestQuery(germanQuery))
       SIE.DE       Industrials
     
 
-### 3b. Range Filter
+### Range Filter
 
 This cell:
 
@@ -618,7 +618,7 @@ foreach (var fdoc in await RestQuery(rangeQuery))
       MUV2.DE      price=526.20
     
 
-### 3c. Compound Filter (AND)
+### Compound Filter (AND)
 
 This cell:
 
@@ -678,7 +678,7 @@ foreach (var fdoc in await RestQuery(compoundQuery))
       AI.PA        AIR LIQUIDE          price=168.02
     
 
-### 3d. Array Contains
+### Array Contains
 
 This cell:
 
@@ -733,7 +733,7 @@ foreach (var fdoc in await RestQuery(arrayQuery))
       SIE.DE       Germany
     
 
-### 3d-ii. array_contains_any
+### ii. array_contains_any
 
 This cell:
 
@@ -789,7 +789,7 @@ foreach (var fdoc in await RestQuery(acaQuery))
       OR.PA        France
     
 
-### 3e. Order By Nested Field + Limit
+### Order By Nested Field + Limit
 
 This cell:
 
@@ -834,9 +834,9 @@ foreach (var fdoc in await RestQuery(topQuery))
       # 5 ABI.BR       score=0.3852
     
 
-## 4. Nested Fields & Arrays
+## Nested Fields & Arrays
 
-### 4a. Query Nested Map Fields
+### Query Nested Map Fields
 
 This cell:
 
@@ -891,9 +891,9 @@ foreach (var fdoc in await RestQuery(momentumQuery))
       SU.PA        momentum=0.5633
     
 
-## 5. Subcollections
+## Subcollections
 
-### 5a. Read Price History Subcollection
+### Read Price History Subcollection
 
 This cell:
 
@@ -941,7 +941,7 @@ foreach (var item in priceResults.RootElement.EnumerateArray())
       2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857'271
     
 
-### 5b. Query Within a Subcollection
+### Query Within a Subcollection
 
 This cell:
 
@@ -1001,9 +1001,9 @@ foreach (var item in subResults.RootElement.EnumerateArray())
       2026-03-11: close=1198.80
     
 
-## 6. Write Operations
+## Write Operations
 
-### 6a. Set, Update & Delete
+### Set, Update & Delete
 
 This cell:
 
@@ -1043,7 +1043,7 @@ Console.WriteLine("Deleted test_cs");
     Deleted test_cs
     
 
-### 6b. Update — ArrayUnion, Increment, ServerTimestamp
+### Update — ArrayUnion, Increment, ServerTimestamp
 
 This cell:
 
@@ -1092,7 +1092,7 @@ Console.WriteLine("Deleted test_update_cs");
     Deleted test_update_cs
     
 
-### 6c. Delete a Document
+### Delete a Document
 
 This cell:
 
@@ -1129,9 +1129,9 @@ Console.WriteLine($"Exists after delete: {delCheck.Exists}");
     Exists after delete: False
     
 
-## 7. Batch Operations & Transactions
+## Batch Operations & Transactions
 
-### 7a. Batch — Atomic Multi-Write
+### Batch — Atomic Multi-Write
 
 This cell:
 
@@ -1167,7 +1167,7 @@ Console.WriteLine("Cleaned up");
     Cleaned up
     
 
-### 7b. Transaction — Acknowledge an Alert
+### Transaction — Acknowledge an Alert
 
 This cell:
 
@@ -1212,7 +1212,7 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
       [RESET] alert_001.acknowledged = false
     
 
-## 8. Real-Time Listeners
+## Real-Time Listeners
 
 **Note**: Firestore C# SDK's `Listen()` method fails on .NET 10 due to the same
 `AsyncInterfaces` assembly issue that affects collection reads.
@@ -1233,7 +1233,7 @@ await listener.StopAsync();
 For .NET 10 notebooks, use REST polling (same pattern as the GCP notebook, Section 15)
 or run the Python listener instead.
 
-## 9. Aggregation Queries
+## Aggregation Queries
 
 **Note**: Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) also fail
 on .NET 10 due to the `AsyncInterfaces` issue.
@@ -1251,9 +1251,9 @@ Console.WriteLine($"Count: {count.Count}");
 For .NET 10 notebooks, use the REST API `runAggregationQuery` endpoint,
 or run the Python aggregation cells.
 
-## 10. Collection Group Queries
+## Collection Group Queries
 
-### 10a. Query Across ALL Price Subcollections
+### Query Across ALL Price Subcollections
 
 This cell:
 
@@ -1313,7 +1313,7 @@ foreach (var item in cgResults.RootElement.EnumerateArray())
       RMS.PA       2026-03-11  close=   1920.50
     
 
-### 10b. Collection Group — Filter by Date
+### Collection Group — Filter by Date
 
 This cell:
 
@@ -1390,7 +1390,7 @@ foreach (var fdoc in dateDocs)
       SAF.PA       close=    315.40  volume=     160'065
     
 
-## 11. Pagination & Cursors
+## Pagination & Cursors
 
 ### Cursor-Based Pagination
 
@@ -1453,9 +1453,9 @@ for (int page = 1; page <= 2; page++)
       BAS.DE       BASF SE             
     
 
-## 12. Maintenance & Monitoring
+## Maintenance & Monitoring
 
-### 12a. Collection Inventory
+### Collection Inventory
 
 This cell:
 
@@ -1491,7 +1491,7 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
       config                   2 documents
     
 
-### 12b. List Subcollections
+### List Subcollections
 
 This cell:
 
@@ -1525,7 +1525,7 @@ if (subCollJson.RootElement.TryGetProperty("documents", out var subDocs))
         Sample: date=2026-02-20, close=1255.60
     
 
-### 12c. Find Stale Documents
+### Find Stale Documents
 
 This cell:
 
@@ -1574,7 +1574,7 @@ foreach (var fdoc in await RestQuery(staleQuery))
       run_013: status=SUCCESS
     
 
-### 12d. Find Failed Pipeline Runs
+### Find Failed Pipeline Runs
 
 This cell:
 
@@ -1618,7 +1618,7 @@ foreach (var fdoc in await RestQuery(failedQuery))
       run_006: status=FAILED
     
 
-### 12e. Unacknowledged Critical Alerts
+### Unacknowledged Critical Alerts
 
 This cell:
 
@@ -1674,7 +1674,7 @@ foreach (var fdoc in await RestQuery(alertQuery))
       alert_020: DHL.DE — DHL.DE triggered rank change alert
     
 
-### 12f. Read Application Config
+### Read Application Config
 
 This cell:
 

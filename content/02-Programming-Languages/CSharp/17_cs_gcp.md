@@ -91,7 +91,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 
-## 1. Authentication & Setup
+## Authentication & Setup
 
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
@@ -113,7 +113,7 @@ Console.WriteLine($"Bucket:  {bucketName}");
     Project: index-lab-2
     Bucket:  index-lab-2-index-data
 
-## 2. Cloud Storage (GCS)
+## Cloud Storage (GCS)
 
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [[gcs-object-operations]].
 
@@ -175,7 +175,7 @@ Console.WriteLine($"\n  Deleted: {blobName}");
     
       Deleted: bronze/ohlcv/20260322_test_cs.csv
 
-## 3. BigQuery
+## BigQuery
 
 **Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
 
@@ -235,7 +235,7 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
        4. MC.PA      close=  457.95  momentum= -10.9%  vol=1.97
        5. SIE.DE     close=  203.75  momentum=-13.24%  vol=2.33
 
-## 4. Pub/Sub
+## Pub/Sub
 
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [[pubsub-messaging]].
 
@@ -304,7 +304,7 @@ if (ackIds.Count > 0)
     
       Acknowledged 3 messages
 
-## 5. Firestore
+## Firestore
 
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
@@ -517,7 +517,7 @@ Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count
     
     Polling complete. 4 polls, 5 tickers tracked.
 
-## 6. Secret Manager
+## Secret Manager
 
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
 
@@ -556,7 +556,7 @@ foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.Li
       index-api-key
       index-db-password
 
-## 7. Cloud Monitoring
+## Cloud Monitoring
 
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
 
@@ -626,7 +626,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
       Logs:    https://console.cloud.google.com/logs?project=index-lab-2
       Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
 
-## 8. Summary
+## Summary
 
 > [!abstract]- GCP C# Quick Reference
 > | Service | Pattern | Description |

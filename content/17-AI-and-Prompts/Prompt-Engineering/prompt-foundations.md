@@ -18,9 +18,9 @@ Prompt engineering is the practice of designing inputs to AI models that produce
 
 ---
 
-## 1.1 Core Principles of Prompt Engineering
+## Core Principles of Prompt Engineering
 
-**Three axioms:**
+#### Three axioms
 
 1. **Models are completion engines.** They predict what text should come next given everything before it. Your prompt is the "everything before." The better you set the stage, the better the performance.
 
@@ -33,7 +33,7 @@ Prompt engineering is the practice of designing inputs to AI models that produce
 
 ---
 
-## 1.2 Context Hierarchy
+## Context Hierarchy
 
 Every prompt operates within a context hierarchy. Understanding this hierarchy is essential because it determines what the model pays attention to and what it deprioritizes.
 
@@ -67,7 +67,7 @@ System Prompt (highest authority)
 
 ---
 
-## 1.3 Clarity, Specificity, and Intent Alignment
+## Clarity, Specificity, and Intent Alignment
 
 **Clarity** means the model cannot misinterpret what you're asking. **Specificity** means the model knows exactly how far to go. **Intent alignment** means the output serves your actual goal, not just the literal request.
 
@@ -102,7 +102,7 @@ Sometimes what you ask for is not what you actually need:
 
 ---
 
-## 1.4 How Structure Affects Reasoning, Creativity, and Factuality
+## How Structure Affects Reasoning, Creativity, and Factuality
 
 The structure of your prompt directly shapes the type of output you get. This is not metaphorical — different structures activate different patterns in how the model generates text.
 

@@ -328,7 +328,7 @@ Alert thresholds:
 | Row count spikes > 200% vs 7-day avg | Warning | Alert, check for duplicate loads |
 | Row count drops > 50% vs 7-day avg | Critical | Page on-call |
 
-#### 7-day average comparison in BigQuery
+#### day average comparison in BigQuery
 
 ```sql
 WITH daily_counts AS (
@@ -826,7 +826,7 @@ Alert fires
 
 ### Common Alert Response Procedures
 
-#### 1. Pipeline Failed
+#### Pipeline Failed
 
 #### Immediate triage — Common Alert Response Procedures
 
@@ -865,7 +865,7 @@ gcloud run jobs execute JOB_NAME \
   --project=PROJECT_ID
 ```
 
-#### 2. Data is Stale
+#### Data is Stale
 
 ```bash
 # Check if job ran at all today
@@ -896,7 +896,7 @@ gcloud pubsub subscriptions describe SUBSCRIPTION_NAME \
   --format="table(name, numUndeliveredMessages, oldestUnackedMessageAge)"
 ```
 
-#### 3. BigQuery Cost Spike
+#### BigQuery Cost Spike
 
 ```sql
 -- Find most expensive jobs in the last 24 hours
@@ -931,7 +931,7 @@ LIMIT 20;
 
 **Fix options:** Add `WHERE DATE(_PARTITIONTIME) = ...` clause, require partition filter (`require_partition_filter=TRUE` on table), or reduce scheduling frequency.
 
-#### 4. Pub/Sub Backlog Growing
+#### Pub/Sub Backlog Growing
 
 ```bash
 # Check subscription state
@@ -967,7 +967,7 @@ gcloud run services update CONSUMER_SERVICE \
   --concurrency=10
 ```
 
-#### 5. VM Unreachable
+#### VM Unreachable
 
 ```bash
 # Check VM status
@@ -992,7 +992,7 @@ gcloud logging read \
   --order=desc --limit=50
 ```
 
-#### 6. Cloud Run Cold Start Spike
+#### Cloud Run Cold Start Spike
 
 ```bash
 # Check current instance count and min-instances setting
@@ -1011,7 +1011,7 @@ gcloud logging read \
   --order=desc --limit=20
 ```
 
-#### 7. Disk Space Critical
+#### Disk Space Critical
 
 ```bash
 # Check disk usage on VM

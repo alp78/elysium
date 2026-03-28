@@ -3074,7 +3074,7 @@ print("Connection OK")
     	Jan 22 20
     Connection OK
 
-## 1. Reading Tables
+## Reading Tables
 
 ### Pandas — pd.read_sql()
 
@@ -3299,7 +3299,7 @@ display(df)
 </style>
 <small>shape: (5, 24)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>long_business_summary</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th></tr><tr><td>i64</td><td>str</td><td>datetime[μs]</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>198</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;7203.T&quot;</td><td>&quot;Toyota Motor Corporation&quot;</td><td>&quot;TOYOTA MOTOR CORP&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;consumer-cyclical&quot;</td><td>&quot;Auto Manufacturers&quot;</td><td>&quot;auto-manufacturers&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Toyota&quot;</td><td>&quot;https://global.toyota/en&quot;</td><td>&quot;Toyota Motor Corporation desig…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>1999-05-06</td><td>2021-01-01</td></tr><tr><td>199</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;BHP.AX&quot;</td><td>&quot;BHP Group Limited&quot;</td><td>&quot;BHP GROUP FPO [BHP]&quot;</td><td>&quot;Basic Materials&quot;</td><td>&quot;basic-materials&quot;</td><td>&quot;Other Industrial Metals &amp; Mini…</td><td>&quot;other-industrial-metals-mining&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Melbourne&quot;</td><td>&quot;https://www.bhp.com&quot;</td><td>&quot;BHP Group Limited operates as …</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1988-01-28</td><td>2021-01-01</td></tr><tr><td>200</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;6758.T&quot;</td><td>&quot;Sony Group Corporation&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td><td>&quot;technology&quot;</td><td>&quot;Consumer Electronics&quot;</td><td>&quot;consumer-electronics&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;https://www.sony.com&quot;</td><td>&quot;Sony Group Corporation designs…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>2000-01-04</td><td>2021-01-01</td></tr><tr><td>201</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;1299.HK&quot;</td><td>&quot;AIA Group Limited&quot;</td><td>&quot;AIA&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Insurance - Life&quot;</td><td>&quot;insurance-life&quot;</td><td>&quot;Hong Kong&quot;</td><td>&quot;Central&quot;</td><td>&quot;https://www.aia.com&quot;</td><td>&quot;AIA Group Limited, together wi…</td><td>&quot;HKG&quot;</td><td>&quot;HKSE&quot;</td><td>&quot;Asia/Hong_Kong&quot;</td><td>&quot;HKT&quot;</td><td>&quot;HKD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;hk_market&quot;</td><td>2010-10-29</td><td>2021-01-01</td></tr><tr><td>202</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;CBA.AX&quot;</td><td>&quot;Commonwealth Bank of Australia&quot;</td><td>&quot;CWLTH BANK FPO [CBA]&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Banks - Diversified&quot;</td><td>&quot;banks-diversified&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Sydney&quot;</td><td>&quot;https://www.commbank.com.au&quot;</td><td>&quot;Commonwealth Bank of Australia…</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;AUD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1991-09-30</td><td>2021-01-01</td></tr></tbody></table></div>
 
-## 2. Chunked Reading (Large Tables)
+## Chunked Reading (Large Tables)
 
 ### Pandas
 
@@ -3327,7 +3327,7 @@ print(f"First batch: {df.shape}")
 
     First batch: (50, 12)
 
-## 3. Writing to SQL Server
+## Writing to SQL Server
 
 ### Pandas — df.to_sql()
 
@@ -3508,7 +3508,7 @@ display(pl.read_database("SELECT * FROM dbo._test_bulk", connection=ENGINE))
 </style>
 <small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>score</th><th>dt</th></tr><tr><td>str</td><td>f64</td><td>date</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
 
-## 4. Executing SQL Statements
+## Executing SQL Statements
 
 ```python
 # DDL and DML via SQLAlchemy
@@ -3573,7 +3573,7 @@ with pyodbc.connect(PYODBC_CONN) as conn:
     Total rows: 50
     Tables (27): ['_test_bulk', '_test_exec', '_test_pandas', '_test_pandas_typed', '_test_polars', 'dim_country', 'dim_index', 'eurostoxx50_ohlcv', 'eurostoxx50_ohlcv', 'index_dim']...
 
-## 5. Stored Procedures
+## Stored Procedures
 
 ```python
 # Call stored procedures and read results
@@ -3664,7 +3664,7 @@ display(df)
   </tbody>
 </table>
 
-## 6. Schema Inspection
+## Schema Inspection
 
 ```python
 # List all tables with row counts
@@ -3954,7 +3954,7 @@ display(pd.read_sql(query, ENGINE))
   </tbody>
 </table>
 
-## 7. Performance: SQLAlchemy vs pyodbc (Pandas vs Polars)
+## Performance: SQLAlchemy vs pyodbc (Pandas vs Polars)
 
 ```python
 query = "SELECT * FROM bronze.eurostoxx50_ohlcv"

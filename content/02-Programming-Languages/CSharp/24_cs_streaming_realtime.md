@@ -173,7 +173,7 @@ for (int i = 0; i < 3; i++)
       MC.PA      231.8838 vol=2458
       TTE.PA      832.032 vol=1651
 
-## 1. WebSocket Streaming
+## WebSocket Streaming
 
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
 Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
@@ -263,7 +263,7 @@ Console.WriteLine($"  p50: {wsP50:F0}µs  p99: {wsP99:F0}µs");
       1000 one-way measurements
       p50: 69µs  p99: 158µs
 
-## 2. Server-Sent Events (SSE)
+## Server-Sent Events (SSE)
 
 One-directional server→client push over HTTP. Simpler than WebSocket — works through
 proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
@@ -360,7 +360,7 @@ Console.WriteLine($"  p50: {sseP50:F0}µs  p99: {sseP99:F0}µs");
       1000 one-way measurements
       p50: 58µs  p99: 154µs
 
-## 3. Google Cloud Pub/Sub
+## Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
 Decouples publishers from subscribers — the backbone of event-driven architectures in GCP.
@@ -445,7 +445,7 @@ Console.WriteLine($"  p50: {psP50:F0}ms  p99: {psP99:F0}ms  avg: {psAvgLatency:F
       468 delivery latency measurements
       p50: 44ms  p99: 54ms  avg: 43ms
 
-## 4. Firestore Real-Time Listener
+## Firestore Real-Time Listener
 
 Firestore’s `Listen()` pushes document changes to the client in real-time over gRPC.
 The same mechanism that powers live sync in Firebase mobile apps and dashboards.
@@ -539,7 +539,7 @@ Console.WriteLine($"  Deleted {totalFs} documents");
 
       Deleted 550 documents
 
-## 5. Latency Comparison
+## Latency Comparison
 
 Two separate comparisons — local protocols vs GCP managed services — because mixing
 localhost (0ms network) with cross-continent GCP (~300ms RTT) would be meaningless.
@@ -652,7 +652,7 @@ catch { Console.WriteLine($"  Topic already deleted"); }
       Deleted subscription
       Deleted topic
 
-## 6. Enterprise Transfer & Streaming Patterns (Reference)
+## Enterprise Transfer & Streaming Patterns (Reference)
 
 Production patterns for large-scale data movement. Included as architecture reference — no runnable code.
 

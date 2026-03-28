@@ -31,9 +31,6 @@ Topics covered:
 - Data Quality Checks
 - Performance (indexes, execution plans)
 
-## 0. Setup
-
-
 ```python
 %load_ext sql
 %config SqlMagic.displaycon = False
@@ -47,9 +44,9 @@ Topics covered:
 Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
 
 
-## 1. Schema Exploration
+## Schema Exploration
 
-### 1a. List All Tables
+### List All Tables
 
 First thing in any database — see what's there. The medallion layers (bronze/silver/gold) are schemas.
 
@@ -157,7 +154,7 @@ ORDER BY s.name, t.name
 
 
 
-### 1b. Inspect Column Types
+### Inspect Column Types
 
 Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join.
 
@@ -263,9 +260,9 @@ ORDER BY ORDINAL_POSITION
 
 
 
-## 2. SELECT, Filtering & Sorting
+## SELECT, Filtering & Sorting
 
-### 2a. Basic SELECT with WHERE
+### Basic SELECT with WHERE
 
 The fundamental query: pick columns, filter rows, sort results. `TOP N` limits output (SQL Server). PostgreSQL uses `LIMIT N`.
 
@@ -395,7 +392,7 @@ ORDER BY date DESC
 
 
 
-### 2b. Multi-Condition Filtering
+### Multi-Condition Filtering
 
 Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
 
@@ -538,9 +535,9 @@ ORDER BY ABS(([close] - [open]) / [open]) DESC
 
 
 
-## 3. Aggregation (GROUP BY)
+## Aggregation (GROUP BY)
 
-### 3a. Aggregate by Stock
+### Aggregate by Stock
 
 `GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
 
@@ -658,7 +655,7 @@ ORDER BY avg_volume DESC
 
 
 
-### 3b. Aggregate by Time Period
+### Aggregate by Time Period
 
 Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly high/low/average price and total volume — the basis for monthly performance reports.
 
@@ -834,9 +831,9 @@ ORDER BY yr, mo
 
 
 
-## 4. JOINs Across Medallion Layers
+## JOINs Across Medallion Layers
 
-### 4a. JOIN OHLCV + Dimension (Silver Layer)
+### JOIN OHLCV + Dimension (Silver Layer)
 
 `JOIN` combines rows from two tables on a matching key. Here we join price data (silver OHLCV) with company metadata (silver dimension) to get the latest price + sector + country for each stock.
 
@@ -1019,7 +1016,7 @@ ORDER BY p.[close] DESC
 
 
 
-### 4b. JOIN Gold Scores + Dimension (Cross-Layer)
+### JOIN Gold Scores + Dimension (Cross-Layer)
 
 The gold layer has pre-computed composite scores. We join with the dimension table to add human-readable names and sector labels — this is what a dashboard query looks like.
 
@@ -1246,9 +1243,9 @@ ORDER BY s.composite_rank
 
 
 
-## 5. Window Functions
+## Window Functions
 
-### 5a. Moving Averages (SMA)
+### Moving Averages (SMA)
 
 A **moving average** smooths price data over N days. Used for trend detection:
 - **SMA 30** (short-term): responsive to recent price action
@@ -1401,7 +1398,7 @@ ORDER BY date DESC
 
 
 
-### 5b. LAG / LEAD — Compare Rows
+### LAG / LEAD — Compare Rows
 
 **LAG(col, N)** returns the value from N rows **before** the current row.
 **LEAD(col, N)** returns the value from N rows **after**.
@@ -1572,7 +1569,7 @@ ORDER BY date DESC
 
 
 
-### 5c. RANK / DENSE_RANK / NTILE — Ranking Rows
+### RANK / DENSE_RANK / NTILE — Ranking Rows
 
 - **RANK()**: assigns rank with gaps (1, 2, 2, 4)
 - **DENSE_RANK()**: no gaps (1, 2, 2, 3)
@@ -1697,9 +1694,9 @@ ORDER BY rank_best
 
 
 
-## 6. CTEs & Subqueries
+## CTEs & Subqueries
 
-### 6a. CTE: Sector Heatmap
+### CTE: Sector Heatmap
 
 A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
 
@@ -1843,7 +1840,7 @@ ORDER BY avg_score DESC
 
 
 
-### 6b. Chained CTEs: Cross-Index Comparison
+### Chained CTEs: Cross-Index Comparison
 
 Multiple CTEs chained together. Compares YTD performance, volatility, and valuation across all 4 indices — the kind of query an index provider runs daily.
 
@@ -1937,9 +1934,9 @@ ORDER BY ytd_pct DESC
 
 
 
-## 7. Data Quality Checks
+## Data Quality Checks
 
-### 7a. Data Quality Checks
+### Data Quality Checks
 
 Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
 
@@ -2020,12 +2017,12 @@ FROM silver.eurostoxx50_ohlcv
 
 
 
-## 8. Bronze → Silver → Gold Transforms
+## Bronze → Silver → Gold Transforms
 
 > [!tip] Related pattern
 > The SQL that creates and populates the bronze tables queried here is covered in [[bronze-layer-loading]], which walks through the ingestion pipeline that feeds this medallion architecture.
 
-### 8a. Bronze → Silver: Daily Returns
+### Bronze → Silver: Daily Returns
 
 The silver transform adds computed columns to raw data. Here, `LAG()` computes daily returns from the price time series. The `is_filled` flag marks gap-filled rows (weekends/holidays).
 
@@ -2134,7 +2131,7 @@ ORDER BY date DESC
 
 
 
-### 8b. Silver → Gold: Z-Score Normalization
+### Silver → Gold: Z-Score Normalization
 
 The gold transform normalizes scores across the index using z-scores: `(value - mean) / stddev`. Stocks are then ranked by composite score. This is the core of any index scoring engine.
 

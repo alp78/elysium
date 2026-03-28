@@ -97,7 +97,7 @@ KILL 82;
 
 Run all five queries during any performance incident to identify the root cause quickly.
 
-### 1. Top Waits — What Is SQL Server Waiting On?
+### Top Waits — What Is SQL Server Waiting On?
 
 ```sql
 SELECT TOP 10 wait_type, wait_time_ms / 1000 AS wait_sec, waiting_tasks_count,
@@ -117,7 +117,7 @@ ORDER BY wait_time_ms DESC;
 -- WRITELOG = transaction log writes slow (solution: faster disk for log file)
 ```
 
-### 2. Memory — Does SQL Server Have Enough?
+### Memory — Does SQL Server Have Enough?
 
 ```sql
 SELECT physical_memory_kb / 1024 AS physical_mb,
@@ -129,7 +129,7 @@ FROM sys.dm_os_sys_info;
 -- PLE < 60 = memory pressure (SQL Server evicting data constantly = slow queries)
 ```
 
-### 3. I/O Latency — Is the Disk Fast Enough?
+### I/O Latency — Is the Disk Fast Enough?
 
 ```sql
 SELECT DB_NAME(fs.database_id) AS db, f.type_desc,
@@ -142,7 +142,7 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 -- avg_write_ms < 5 = excellent, > 20 = log file should be on faster storage
 ```
 
-### 4. Blocking — Who's Waiting for Whom?
+### Blocking — Who's Waiting for Whom?
 
 ```sql
 SELECT r.session_id AS blocked, r.blocking_session_id AS blocker,
@@ -155,7 +155,7 @@ WHERE r.blocking_session_id > 0;
 -- Fix: shorter transactions, RCSI (Read Committed Snapshot Isolation)
 ```
 
-### 5. Deadlocks — How Many Since Restart?
+### Deadlocks — How Many Since Restart?
 
 ```sql
 SELECT cntr_value AS total_deadlocks FROM sys.dm_os_performance_counters

@@ -27,7 +27,7 @@ The data lakehouse combines the low-cost storage of a data lake with the transac
 
 ---
 
-## 31.1 Why Open Table Formats Exist
+## Why Open Table Formats Exist
 
 Traditional Parquet files on cloud storage (GCS, S3) are just files — they have no concept of transactions, schema enforcement, or time travel. If your pipeline crashes mid-write, you get corrupt or partial data. If you need to query "what did this table look like yesterday," you cannot.
 
@@ -73,7 +73,7 @@ Open table formats solve this by adding a metadata layer:
 
 ---
 
-## 31.2 Apache Iceberg Deep Dive
+## Apache Iceberg Deep Dive
 
 Iceberg is the open table format with the broadest engine support and the most advanced metadata management. It was created at Netflix and is now an Apache top-level project.
 
@@ -186,7 +186,7 @@ ALTER TABLE data-pipeline.silver.daily_ohlcv
 
 ---
 
-## 31.3 Iceberg vs Delta Lake vs Hudi
+## Iceberg vs Delta Lake vs Hudi
 
 | Feature | Apache Iceberg | Delta Lake | Apache Hudi |
 |---|---|---|---|
@@ -205,7 +205,7 @@ ALTER TABLE data-pipeline.silver.daily_ohlcv
 
 ---
 
-## 31.4 Iceberg on BigQuery (GCP)
+## Iceberg on BigQuery (GCP)
 
 BigQuery supports reading and writing Iceberg tables natively via **BigLake Metastore**:
 
@@ -235,7 +235,7 @@ ORDER BY close_price DESC;
 
 ---
 
-## 31.5 Table Maintenance: Compaction and Cleanup
+## Table Maintenance: Compaction and Cleanup
 
 Iceberg tables accumulate small files over time (especially with streaming writes or frequent updates). Maintenance operations keep performance optimal:
 
@@ -270,7 +270,7 @@ CALL data-pipeline.system.rewrite_manifests('silver.daily_ohlcv');
 
 ---
 
-## 31.6 The Medallion Architecture on a Lakehouse
+## The Medallion Architecture on a Lakehouse
 
 The [[medallion-architecture|medallion architecture]] (bronze/silver/gold) maps naturally to a lakehouse:
 
@@ -303,7 +303,7 @@ gs://data-pipeline-lakehouse/
 
 ---
 
-## 31.7 Data Privacy and GDPR Deletion in Lakehouses
+## Data Privacy and GDPR Deletion in Lakehouses
 
 Financial data platforms increasingly handle Personally Identifiable Information (PII) — shareholder registries, client portfolio data, KYC records, beneficial ownership databases. When a data subject exercises their "right to be forgotten" under GDPR Article 17, you must delete their data from immutable Parquet files in a data lake. This is an architectural challenge that forces you to understand the write strategies of your table format.
 

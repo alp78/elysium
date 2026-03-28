@@ -23,7 +23,7 @@ Topics covered:
 - Reflection / Introspection
 - Project Structure & Best Practices
 
-## 1. Dependency Injection
+## Dependency Injection
 
 > [!tip] Related pattern
 > dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [[dbt-core-concepts]] for details.
@@ -152,7 +152,7 @@ print(f"  Notifications sent: {mock_notifier.messages}")
       Saved to mock DB: [{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
       Notifications sent: ['Pipeline done: TEST.XX scored 0.85']
 
-## 2. Design Patterns
+## Design Patterns
 
 Ensures a class has exactly ONE instance — useful for database connection pools, configuration managers, or loggers. In Python, use a module-level variable (simplest) or `__new__`. C# equivalent: `static readonly` instance, or `AddSingleton<T>()` in DI. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
 
@@ -359,7 +359,7 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
       Volatility      score=-0.0138
       MeanReversion   score=+0.0103
 
-## 3. Data Validation
+## Data Validation
 
 > [!info] Pydantic data validation
 > - Define data shape with type hints — validates on construction, raises `ValidationError` if invalid
@@ -444,7 +444,7 @@ for case in bad_inputs:
       Empty symbol: CAUGHT — String should have at least 1 character
       Bad config name: CAUGHT — String should match pattern '^[a-z][a-z0-9_]*$'
 
-## 4. Reflection / Introspection
+## Reflection / Introspection
 
 Python is deeply introspective — you can inspect any object's type, attributes, methods, source code, and module at runtime. C# equivalent: `System.Reflection` (`typeof`, `GetType`, `GetProperties`, `GetMethods`). Use cases include plugin systems, serializers, ORMs, debugging, and documentation generation.
 
@@ -537,7 +537,7 @@ for name, param in sig.parameters.items():
       quantity: int
       price: float
 
-## 5. Project Structure & Best Practices
+## Project Structure & Best Practices
 
 ```python
 # Project Structure — how to organize a Python data pipeline project.
@@ -679,7 +679,7 @@ index-pipeline/
        Transforms are pure functions — test directly.
        Loaders/fetchers touch external systems — mock them.
 
-## 6. Summary
+## Summary
 
 > [!abstract]- Design Patterns Quick Reference
 > | Pattern | Python | Usage |

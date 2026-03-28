@@ -139,7 +139,7 @@ Every page, regardless of type, has the same 96-byte header:
 └─────────────────────────────────────────────────────────┘
 ```
 
-#### 8 KB data page — row structure: header, fixed columns, null bitmap, variable columns
+#### KB data page — row structure: header, fixed columns, null bitmap, variable columns
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -160,7 +160,7 @@ Every page, regardless of type, has the same 96-byte header:
 └────────────────────────────────────────────────────────┘
 ```
 
-#### 8 KB page practical capacity — rows per page by row size
+#### KB page practical capacity — rows per page by row size
 
 - Usable space per page: 8,096 bytes (8,192 − 96 header)
 - Maximum row size: 8,060 bytes (leaves room for slot array)

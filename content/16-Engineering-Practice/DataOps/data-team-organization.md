@@ -308,13 +308,13 @@ Data engineering careers follow a progression from individual contributor execut
 
 The relationship between data teams and their stakeholders defines delivery speed and alignment. Three models exist:
 
-**Order-taking model (anti-pattern):**
+#### Order-taking model (anti-pattern)
 Business teams file tickets. Data team processes them in order received. No prioritization, no context, no partnership. Result: slow delivery, wrong priorities, frustrated stakeholders.
 
-**Embedded partnership model:**
+#### Embedded partnership model
 Data engineers and analysts attend business team standups, participate in business planning, and have direct relationships with decision-makers. Work is pulled from a shared prioritized backlog.
 
-**Shared OKR model:**
+#### Shared OKR model
 Data team and business team share outcome-based OKRs. Both teams are accountable for business results, not just data delivery. This is the highest-maturity collaboration model.
 
 > [!tip] Move Toward Shared OKRs
@@ -340,7 +340,7 @@ RACI defines **Responsible** (does the work), **Accountable** (owns the outcome,
 
 ### RACI for Common Data Engineering Activities
 
-**Legend:**
+#### Legend
 - R = Responsible (does the work)
 - A = Accountable (owns outcome)
 - C = Consulted
@@ -377,7 +377,7 @@ Data teams need an on-call rotation, just like software engineering teams. Data 
 
 **Secondary on-call:** Backup if primary is unreachable. Often the previous primary.
 
-**Escalation path:**
+#### Escalation path
 ```
 Alert fires → Primary on-call → (if no response in 15 min) Secondary → (if no response) Engineering Manager → Director
 ```

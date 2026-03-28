@@ -2010,7 +2010,7 @@ Time-series data is a sequence of observations ordered by time — each row repr
 
 ### Three Time-Series Patterns
 
-#### 1. Wide Model — One Row per Timestamp, One Column per Metric
+#### Wide Model — One Row per Timestamp, One Column per Metric
 
 Best when the set of metrics is fixed and well-known. All metrics for a given entity-timestamp combination are in one row.
 
@@ -2069,7 +2069,7 @@ erDiagram
 **Pros:** Fast reads (no pivot/unpivot needed), natural column-level compression, familiar to analysts.
 **Cons:** Adding a new metric requires `ALTER TABLE ADD COLUMN`, which may require backfill.
 
-#### 2. Narrow Model — One Row per Metric per Timestamp (EAV-style)
+#### Narrow Model — One Row per Metric per Timestamp (EAV-style)
 
 Best when different entities have different sets of metrics, or when new metric types are added frequently without schema changes.
 
@@ -2139,7 +2139,7 @@ ORDER BY metric_date;
 **Pros:** No schema changes when adding new metric types. Flexible.
 **Cons:** Pivot queries are verbose and can be slow. Type safety is lost (everything is `DECIMAL`).
 
-#### 3. Hybrid Model — Group Related Metrics
+#### Hybrid Model — Group Related Metrics
 
 Combines the benefits of both: group related metrics that always appear together into a single wide row, but keep unrelated metrics in separate tables.
 
@@ -2884,37 +2884,37 @@ effective_end_date   DATE         NULL        -- NULL or '9999-12-31' for curren
 
 ## Anti-Patterns to Avoid
 
-### 1. Using 3NF for Analytics
+### Using 3NF for Analytics
 
 Normalized models are designed for write efficiency and referential integrity. Forcing analysts to write 7-table joins to answer simple questions creates slow queries, frustrated users, and shadow Excel copies.
 
 **Fix:** Derive a star schema or OBT from the normalized source for analytical consumers.
 
-### 2. OBT as Source of Truth
+### OBT as Source of Truth
 
 Building your OBT first and treating it as the canonical dataset means any schema change, data correction, or backfill requires modifying a massive denormalized table with cascading consequences.
 
 **Fix:** Build a properly modeled upstream layer (dimensional, Data Vault, or normalized). Derive the OBT from it. See [[medallion-architecture]].
 
-### 3. One Model for Everything
+### One Model for Everything
 
 Using a single modeling approach across all layers and all consumers. A Data Vault for BI dashboards is painful; a star schema for multi-source integration is fragile; a document model for cross-entity analytics is impossible.
 
 **Fix:** Use the right model for each layer. Normalized/DV for integration, dimensional for analytics, OBT for dashboards, document for config, graph for relationships.
 
-### 4. Entity-Attribute-Value (EAV) Everywhere
+### Entity-Attribute-Value (EAV) Everywhere
 
 The narrow/EAV pattern is useful for heterogeneous metrics but becomes a performance and maintainability nightmare when applied to well-structured data that should be in proper columns.
 
 **Fix:** Use EAV only for genuinely heterogeneous attributes. If 95% of your entities have the same attributes, use a wide table.
 
-### 5. Ignoring Grain Declaration
+### Ignoring Grain Declaration
 
 Building fact tables without explicitly stating "one row represents exactly X" leads to mixed-grain tables, double-counting in aggregations, and fan-out traps in BI tools.
 
 **Fix:** Document the grain in the table comment, enforce it at load time, and test it with dbt tests. See [[dbt-transformation-layer]].
 
-### 6. Storing Nested JSON in Relational Columns Without Extraction
+### Storing Nested JSON in Relational Columns Without Extraction
 
 Storing a JSON blob in a `VARCHAR(MAX)` column and extracting fields at query time for every query. This negates the benefits of columnar storage and pushes parsing cost to read time.
 
@@ -2929,7 +2929,7 @@ ALTER TABLE events ADD isin AS CAST(JSON_VALUE(payload, '$.isin') AS VARCHAR(12)
 SELECT isin FROM events WHERE ...
 ```
 
-### 7. No Partitioning on Time-Series Tables
+### No Partitioning on Time-Series Tables
 
 Loading billions of rows of time-series data into an unpartitioned table. Every query scans the entire table even when it only needs one day.
 

@@ -116,7 +116,7 @@ display($"Polars: {dfP.Shape}  |  Deedle: {dfD.RowCount} x {dfD.ColumnCount}");
     Polars: (66355, 12)  |  Deedle: 66355 x 12
 
 ---
-## 1 — Column Transforms
+## Column Transforms
 
 #### Polars.NET — Add a computed column with WithColumns and arithmetic expression
 
@@ -492,7 +492,7 @@ dfDMulti.Columns[new[] { "symbol", "date", "range", "midpoint", "daily_return_pc
 </div>
 
 ---
-## 2 — Expression System (Polars.NET focus)
+## Expression System (Polars.NET focus)
 
 Polars' expression engine is the core differentiator. Expressions are lazy, composable,
 and optimizable. Deedle has no equivalent expression system — all operations are eager
@@ -992,7 +992,7 @@ dfDLabel.Columns[new[] { "symbol", "date", "close", "open", "label" }].Rows[dfD.
 </div>
 
 ---
-## 3 — Type Casting
+## Type Casting
 
 #### Polars.NET — Cast a column to Float64 with Col.Cast
 
@@ -1255,7 +1255,7 @@ Console.WriteLine("Deedle has no native Categorical type — manual encoding sho
     Deedle has no native Categorical type — manual encoding shown above.
 
 ---
-## 4 — Method Chaining & Window Functions
+## Method Chaining & Window Functions
 
 #### Polars.NET — Fluent chain: Filter, WithColumns, Sort, Head, Select
 
@@ -1884,7 +1884,7 @@ dfDPctChg.Columns[new[] { "symbol", "date", "close", "close_pct_change" }].Rows[
 </div>
 
 ---
-## 5 — Apply / Map / UDF
+## Apply / Map / UDF
 
 #### Polars.NET — Element-wise UDF with MapElements
 
@@ -2101,7 +2101,7 @@ dfDRow.Columns[new[] { "symbol", "date", "close", "open", "volume", "bullish_hig
 </div>
 
 ---
-## 6 — Summary
+## Summary
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|

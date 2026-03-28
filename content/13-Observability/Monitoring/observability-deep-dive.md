@@ -27,7 +27,7 @@ Observability in data engineering is not just "monitoring with a fancier name." 
 
 ---
 
-## 30.1 The Three Pillars Applied to Data Pipelines
+## The Three Pillars Applied to Data Pipelines
 
 | Pillar | Application Question | Data Engineering Example |
 |---|---|---|
@@ -39,7 +39,7 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 
 ---
 
-## 30.2 DataDog for Data Pipeline Observability
+## DataDog for Data Pipeline Observability
 
 DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [[datadog-architecture-overview]] covers the practical agent setup and infrastructure topology, while [[cloud-logging]] provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
 
@@ -148,7 +148,7 @@ def load_daily_ohlcv(index_key: str, target_date: str):
 
 ---
 
-## 30.3 Data Freshness Monitoring
+## Data Freshness Monitoring
 
 Data freshness is the single most important metric for a data pipeline. It answers: "how old is the data that consumers are seeing right now?"
 
@@ -200,7 +200,7 @@ def report_freshness(conn: pyodbc.Connection):
 
 ---
 
-## 30.4 Data Lineage: Where Did This Number Come From?
+## Data Lineage: Where Did This Number Come From?
 
 Data lineage tracks the journey of every data point from source to destination. For a regulated financial index, an auditor may ask: "Show me exactly how the EURO market index closing value on March 9, 2026 was calculated — every input, every transformation, every intermediate value."
 
@@ -257,7 +257,7 @@ VALUES (@run_id, 'bronze.yahoo_ohlcv', 'silver.daily_ohlcv', 'MERGE', @source_co
 
 ---
 
-## 30.5 Data Cataloging and Entitlement
+## Data Cataloging and Entitlement
 
 A data catalog is the searchable inventory of all datasets, tables, columns, and their metadata. Financial index platforms explicitly require experience with "data cataloging and data entitlement capabilities."
 
@@ -310,7 +310,7 @@ GRANT SELECT ON SCHEMA::gold TO compliance_auditor;
 
 ---
 
-## 30.6 Building a Data Quality Framework
+## Building a Data Quality Framework
 
 Data quality is not a one-time check — it is a continuous system that validates data at every layer.
 
@@ -419,7 +419,7 @@ if not result.success:
 
 ---
 
-## 30.7 Data Profiling and Drift Detection: Shift-Left Quality
+## Data Profiling and Drift Detection: Shift-Left Quality
 
 Traditional data quality checks ask "does this data pass my rules?" Drift detection asks a deeper question: "has the *shape* of this data changed in a way that suggests something upstream is broken?" This is the difference between catching a bad row and catching a bad *data feed* — before the bad rows even arrive.
 

@@ -160,7 +160,7 @@ ohlcv_pl.head(3)
 <small>shape: (3, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## 1 · Direct Column Assignment (Pandas)
+## Direct Column Assignment (Pandas)
 
 ```python
 # Simple derived column — Pandas mutates in place
@@ -275,7 +275,7 @@ df[["symbol", "date", "volume"]].head()
 </table>
 
 ---
-## 2 · <code style="font-size:0.75em">assign</code> — Chainable Column Creation (Pandas)
+## <code style="font-size:0.75em">assign</code> — Chainable Column Creation (Pandas)
 
 ```python
 (ohlcv_pd
@@ -351,7 +351,7 @@ df[["symbol", "date", "volume"]].head()
 </table>
 
 ---
-## 3 · <code style="font-size:0.75em">with_columns</code> (Polars)
+## <code style="font-size:0.75em">with_columns</code> (Polars)
 
 ```python
 ohlcv_pl.with_columns(
@@ -389,7 +389,7 @@ ohlcv_pl.with_columns(
 <small>shape: (5, 16)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>vol_m</th><th>intraday_ret_pct</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>1.513937</td><td>-1.616509</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>1.382722</td><td>0.492091</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>1.370204</td><td>1.397516</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>1.469911</td><td>-0.477164</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>1.428681</td><td>-0.515818</td></tr></tbody></table></div>
 
 ---
-## 4 · <code style="font-size:0.75em">select</code> + <code style="font-size:0.75em">alias</code> (Polars)
+## <code style="font-size:0.75em">select</code> + <code style="font-size:0.75em">alias</code> (Polars)
 
 `select` returns **only** the listed columns — useful when you want a lean result.
 
@@ -412,7 +412,7 @@ ohlcv_pl.select(
 <small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>2.07</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1.23</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1.55</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>0.98</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
 ---
-## 5 · <code style="font-size:0.75em">apply</code> and <code style="font-size:0.75em">map</code> (Pandas)
+## <code style="font-size:0.75em">apply</code> and <code style="font-size:0.75em">map</code> (Pandas)
 
 > **Prefer vectorised operations** whenever possible. `apply` is a Python-level loop and much slower.
 
@@ -552,7 +552,7 @@ ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 </table>
 
 ---
-## 6 · <code style="font-size:0.75em">map_elements</code> / <code style="font-size:0.75em">map_batches</code> (Polars)
+## <code style="font-size:0.75em">map_elements</code> / <code style="font-size:0.75em">map_batches</code> (Polars)
 
 > `map_elements` is analogous to Pandas `apply` — it runs a Python function per element.  
 > `map_batches` receives the whole Series (or column) at once — great for NumPy interop.
@@ -590,7 +590,7 @@ ohlcv_pl.with_columns(
 <small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sqrt_close</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>7.563729</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>7.561746</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>7.666159</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>7.641989</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>7.606576</td></tr></tbody></table></div>
 
 ---
-## 7 · Conditional Columns — <code style="font-size:0.75em">np.where</code> / <code style="font-size:0.75em">np.select</code> (Pandas)
+## Conditional Columns — <code style="font-size:0.75em">np.where</code> / <code style="font-size:0.75em">np.select</code> (Pandas)
 
 ```python
 # np.where — binary condition
@@ -762,7 +762,7 @@ df[["symbol", "date", "open", "close", "move"]].head(10)
 </table>
 
 ---
-## 8 · <code style="font-size:0.75em">when</code> / <code style="font-size:0.75em">then</code> / <code style="font-size:0.75em">otherwise</code> (Polars)
+## <code style="font-size:0.75em">when</code> / <code style="font-size:0.75em">then</code> / <code style="font-size:0.75em">otherwise</code> (Polars)
 
 ```python
 ohlcv_pl.with_columns(
@@ -804,7 +804,7 @@ ohlcv_pl.with_columns(
 <small>shape: (10, 5)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>move</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-11</td><td>57.73</td><td>56.61</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-12</td><td>56.7</td><td>56.51</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-13</td><td>56.5</td><td>56.48</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-14</td><td>56.88</td><td>56.96</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-15</td><td>56.74</td><td>56.74</td><td>&quot;flat&quot;</td></tr></tbody></table></div>
 
 ---
-## 9 · Type Casting
+## Type Casting
 
 ### Pandas — <code style="font-size:0.75em">astype</code>
 
@@ -905,7 +905,7 @@ ohlcv_pl.with_columns(
             ('is_filled', Boolean)])
 
 ---
-## 10 · <code style="font-size:0.75em">.str</code> Accessor Operations
+## <code style="font-size:0.75em">.str</code> Accessor Operations
 
 ### Pandas
 
@@ -1055,7 +1055,7 @@ ohlcv_pl.with_columns(
 <small>shape: (5, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;NDA-FI.HE&quot;</td><td>&quot;NDA-FI.HE&quot;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>&quot;INGA.AS&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot;MBG.DE&quot;</td><td>&quot;MBG&quot;</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>&quot;PRX.AS&quot;</td></tr></tbody></table></div>
 
 ---
-## 11 · <code style="font-size:0.75em">.dt</code> Accessor Operations
+## <code style="font-size:0.75em">.dt</code> Accessor Operations
 
 ### Pandas
 
@@ -1173,7 +1173,7 @@ ohlcv_pl.with_columns(
 <small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>date_plus_7d</th><th>month_start</th></tr><tr><td>date</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021-01-11</td><td>2021-01-01</td></tr><tr><td>2021-01-05</td><td>2021-01-12</td><td>2021-01-01</td></tr><tr><td>2021-01-06</td><td>2021-01-13</td><td>2021-01-01</td></tr><tr><td>2021-01-07</td><td>2021-01-14</td><td>2021-01-01</td></tr><tr><td>2021-01-08</td><td>2021-01-15</td><td>2021-01-01</td></tr></tbody></table></div>
 
 ---
-## 12 · Arithmetic & Math Operations
+## Arithmetic & Math Operations
 
 ```python
 # Pandas
@@ -1327,7 +1327,7 @@ ohlcv_pl.with_columns(
 <small>shape: (5, 6)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_rounded</th><th>close_clipped</th><th>abs_change</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>57.0</td><td>57.21</td><td>0.94</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>57.0</td><td>57.18</td><td>0.28</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>59.0</td><td>58.77</td><td>0.81</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>58.0</td><td>58.4</td><td>0.28</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>58.0</td><td>57.86</td><td>0.3</td></tr></tbody></table></div>
 
 ---
-## 13 · The "Tweak Function" Pattern
+## The "Tweak Function" Pattern
 
 Encapsulate all data-prep transformations in a single function that takes a raw DataFrame and returns a clean one.
 This makes pipelines **reproducible** and **testable**.
@@ -1519,7 +1519,7 @@ tweak_ohlcv_pl(ohlcv_pl).head()
 <small>shape: (5, 17)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>intraday_ret</th><th>volume_m</th><th>symbol_short</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>-0.016165</td><td>1.513937</td><td>&quot;ABI&quot;</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>0.004921</td><td>1.382722</td><td>&quot;ABI&quot;</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>0.013975</td><td>1.370204</td><td>&quot;ABI&quot;</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>-0.004772</td><td>1.469911</td><td>&quot;ABI&quot;</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>-0.005158</td><td>1.428681</td><td>&quot;ABI&quot;</td></tr></tbody></table></div>
 
 ---
-## 14 · Transforming <code style="font-size:0.75em">scores_daily</code> — Practical Examples
+## Transforming <code style="font-size:0.75em">scores_daily</code> — Practical Examples
 
 ```python
 scores_pd.head(3)

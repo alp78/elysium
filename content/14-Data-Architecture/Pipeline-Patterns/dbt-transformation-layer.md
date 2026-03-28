@@ -29,7 +29,7 @@ dbt (Data Build Tool) has become the standard for managing SQL-based transformat
 
 ---
 
-## 29.1 What dbt Actually Does (and Does Not Do)
+## What dbt Actually Does (and Does Not Do)
 
 **dbt is the T in ELT** — it runs SQL transformations inside your data warehouse:
 
@@ -70,7 +70,7 @@ dbt (Data Build Tool) has become the standard for managing SQL-based transformat
 
 ---
 
-## 29.2 dbt Project Structure for Financial Data
+## dbt Project Structure for Financial Data
 
 ```
 dbt_project/
@@ -111,7 +111,7 @@ dbt_project/
 
 ---
 
-## 29.3 Models: Staging, Intermediate, and Marts
+## Models: Staging, Intermediate, and Marts
 
 ### Staging Models (1:1 With Source, Minimal Transformation)
 
@@ -244,7 +244,7 @@ SELECT * FROM scored
 
 ---
 
-## 29.4 Testing: Schema Tests and Custom Data Tests
+## Testing: Schema Tests and Custom Data Tests
 
 ### Schema Tests (Declared in YAML)
 
@@ -316,7 +316,7 @@ WHERE trade_date > GETDATE()
 
 ---
 
-## 29.5 Snapshots: SCD Type 2 with dbt
+## Snapshots: SCD Type 2 with dbt
 
 dbt snapshots implement [[dbt-snapshots-and-scd|SCD Type 2]] automatically — tracking historical changes to dimension tables by adding `dbt_valid_from` and `dbt_valid_to` columns.
 
@@ -360,7 +360,7 @@ Running `dbt snapshot` automatically:
 
 ---
 
-## 29.6 Macros: Reusable SQL Logic
+## Macros: Reusable SQL Logic
 
 dbt macros are Jinja2 templates that generate SQL. They eliminate copy-paste across models and enforce consistent implementations of shared business logic.
 
@@ -395,7 +395,7 @@ FROM ...
 
 ---
 
-## 29.7 dbt + Airflow Integration
+## dbt + Airflow Integration
 
 dbt integrates with [[airflow-core-concepts|Airflow]] via `BashOperator` (simple) or the `DbtTaskGroup` from `astronomer-cosmos` (granular task-level control).
 
@@ -441,7 +441,7 @@ with DAG('pipeline_daily', schedule_interval='0 9,17,22 * * *', start_date=datet
 
 ---
 
-## 29.8 dbt CI/CD: Slim Builds and State Comparison
+## dbt CI/CD: Slim Builds and State Comparison
 
 #### GitHub Actions workflow for dbt CI on pull requests
 

@@ -24,7 +24,7 @@ status: complete
 
 ---
 
-## 1. Effective-Dated Constituent Lists
+## Effective-Dated Constituent Lists
 
 Index constituents change at every quarterly rebalancing and on corporate action events (mergers, delistings, spin-offs). A naive `SELECT * FROM constituents WHERE index_code = 'X'` returns the current state, not the historical state.
 
@@ -110,7 +110,7 @@ WHERE rn = 1;
 
 ---
 
-## 2. Bi-Temporal Model
+## Bi-Temporal Model
 
 Two independent time axes:
 
@@ -167,7 +167,7 @@ WHERE index_code = 'EURO_STOXX_50'
 
 ---
 
-## 3. Weight Normalization
+## Weight Normalization
 
 After applying free-float factors and capping, constituent weights must sum to exactly **1.00000000** (8 decimal places). Rounding errors accumulate across 50+ constituents.
 
@@ -299,7 +299,7 @@ FROM rounded;
 
 ---
 
-## 4. Performance Tuning for Large-Scale Joins
+## Performance Tuning for Large-Scale Joins
 
 ### The Challenge
 
@@ -409,7 +409,7 @@ ORDER BY p.price_date, p.instrument_isin;
 
 ---
 
-## 5. Reconciliation Queries
+## Reconciliation Queries
 
 ### Daily Weight Sum Validation
 

@@ -17,7 +17,7 @@ Terraform is the foundation of infrastructure-as-code for the data platform, but
 
 ---
 
-### 1. Accidental `terraform destroy` on Production
+### Accidental `terraform destroy` on Production
 
 **What happens**
 
@@ -200,7 +200,7 @@ gcloud compute instances describe airflow-prod --zone=europe-west3-b --format="v
 
 ---
 
-### 2. State File Corruption
+### State File Corruption
 
 **What happens**
 
@@ -318,7 +318,7 @@ terraform apply
 
 ---
 
-### 3. Apply Destroys Unexpected Resource (Rename = Destroy + Create)
+### Apply Destroys Unexpected Resource (Rename = Destroy + Create)
 
 **What happens**
 
@@ -443,7 +443,7 @@ moved {
 
 ---
 
-### 4. Secrets in Plain Text in State
+### Secrets in Plain Text in State
 
 **What happens**
 
@@ -626,7 +626,7 @@ gcloud storage rm "gs://tf-state-prod-bucket/terraform/state/default.tfstate#OLD
 
 ---
 
-### 5. `force-unlock` While Another Apply Runs
+### `force-unlock` While Another Apply Runs
 
 **What happens**
 
@@ -725,7 +725,7 @@ terraform import google_cloud_run_v2_service.data_api \
 
 ---
 
-### 6. State Drift (Manual Console Changes)
+### State Drift (Manual Console Changes)
 
 **What happens**
 
@@ -845,7 +845,7 @@ terraform apply  # Reverts the drift
 
 ---
 
-### 7. Concurrent Applies Without Locking
+### Concurrent Applies Without Locking
 
 **What happens**
 
@@ -928,7 +928,7 @@ terraform state pull | jq '[.resources[] | .type + "." + .name]' | sort
 
 ---
 
-### 8. `prevent_destroy` Doesn't Prevent Removal from Config
+### `prevent_destroy` Doesn't Prevent Removal from Config
 
 **What happens**
 
@@ -1004,7 +1004,7 @@ terraform import google_compute_instance.airflow \
 
 ---
 
-### 9. Provider Version Mismatch Across Team
+### Provider Version Mismatch Across Team
 
 **What happens**
 
@@ -1083,7 +1083,7 @@ git push
 
 ---
 
-### 10. Module Version Breaking Changes
+### Module Version Breaking Changes
 
 **What happens**
 
@@ -1158,7 +1158,7 @@ moved {
 
 ---
 
-### 11. Monolithic State File (Single State for Everything)
+### Monolithic State File (Single State for Everything)
 
 **What happens**
 
@@ -1251,7 +1251,7 @@ terraform state rm google_compute_network.data_platform
 
 ---
 
-### 12. Plan Differs from Apply (Plan Staleness)
+### Plan Differs from Apply (Plan Staleness)
 
 **What happens**
 
@@ -1318,7 +1318,7 @@ terraform apply reconcile.tfplan
 
 ---
 
-### 13. Workspace Confusion (Applied to Wrong Environment)
+### Workspace Confusion (Applied to Wrong Environment)
 
 **What happens**
 
@@ -1400,7 +1400,7 @@ terraform apply -var-file=prod.tfvars
 
 ---
 
-### 14. Circular Dependencies
+### Circular Dependencies
 
 **What happens**
 
@@ -1478,7 +1478,7 @@ terraform plan
 
 ---
 
-### 15. `-target` Flag Misuse (Partial State)
+### `-target` Flag Misuse (Partial State)
 
 **What happens**
 
@@ -1538,7 +1538,7 @@ terraform apply reconcile.tfplan
 
 ---
 
-### 16. Import Existing Resources Fails
+### Import Existing Resources Fails
 
 **What happens**
 
@@ -1608,7 +1608,7 @@ terraform plan  # Shows diffs between imported resource and .tf config
 
 ---
 
-### 17. Backend Migration Data Loss
+### Backend Migration Data Loss
 
 **What happens**
 
@@ -1668,7 +1668,7 @@ terraform plan  # Should show 0 changes if migration was successful
 
 ---
 
-### 18. Sensitive Values in Plan Output / CI Logs
+### Sensitive Values in Plan Output / CI Logs
 
 **What happens**
 
@@ -1741,7 +1741,7 @@ gcloud secrets versions add sql-server-db-password --data-file=- <<< "$(openssl 
 
 ---
 
-### 19. HCL Formatting Inconsistency
+### HCL Formatting Inconsistency
 
 **What happens**
 
@@ -1792,7 +1792,7 @@ git commit -m "style: apply terraform fmt"
 
 ---
 
-### 20. `terraform init` Required After Every Change
+### `terraform init` Required After Every Change
 
 **What happens**
 
@@ -1843,7 +1843,7 @@ When in doubt, run init — it's idempotent.
 
 ---
 
-### 21. Hardcoded Values Instead of Variables
+### Hardcoded Values Instead of Variables
 
 **What happens**
 
@@ -1920,7 +1920,7 @@ terraform apply -var-file=environments/prod.tfvars
 
 ---
 
-### 22. No Remote State Data Isolation
+### No Remote State Data Isolation
 
 **What happens**
 
@@ -1961,7 +1961,7 @@ data "google_compute_network" "data_platform" {
 
 ---
 
-### 23. Slow Plan on Large Infrastructure
+### Slow Plan on Large Infrastructure
 
 **What happens**
 
@@ -1994,7 +1994,7 @@ terraform plan -parallelism=20  # Increase parallel API refreshes
 
 ---
 
-### 24. `.terraform` Directory Committed to Git
+### `.terraform` Directory Committed to Git
 
 **What happens**
 
@@ -2053,7 +2053,7 @@ git commit -m "fix: remove .terraform directory from tracking"
 
 ---
 
-### 25. Terraform Version Drift Across Team
+### Terraform Version Drift Across Team
 
 **What happens**
 

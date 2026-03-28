@@ -23,23 +23,23 @@ A junior data engineer learns commands. A senior data engineer understands syste
 
 Every topic in this knowledge base maps to one of these five pillars:
 
-## 1. Reliability
+## Reliability
 
 Your pipeline must produce correct data, every time. This means [[idempotent-pipeline-design|idempotent transforms]], atomic loads, proper error handling, and retry logic that does not silently corrupt state. A pipeline that works 99% of the time is a pipeline that lies to its consumers 3.65 days per year.
 
-## 2. Observability
+## Observability
 
 You cannot fix what you cannot see. Every system you operate needs metrics (how much), logs (what happened), and traces (where did time go). The gap between "it works on my machine" and "it works in production" is entirely filled by observability. See [[datadog-architecture-overview]] and [[cloud-logging]].
 
-## 3. Efficiency
+## Efficiency
 
 Cloud resources cost real money. A query that scans 10 TB when it could scan 10 GB is not just slow — it is a $50 billing event that happens every time someone runs it. Senior engineers think in dollars-per-query, IOPS-per-transaction, and cold-start-latency-per-invocation. See [[querying-and-cost-optimization]] and cost reference.
 
-## 4. Security
+## Security
 
 The data you move often contains financial information, personal identifiers, or proprietary signals. Least-privilege access, encrypted connections, parameterized queries, and credential rotation are not optional hardening steps — they are baseline professional standards. See [[service-accounts-and-iam]] and [[tde-encryption]].
 
-## 5. Operability
+## Operability
 
 Every system you build will eventually be operated by someone who is not you, possibly at 3 AM during an outage. Clear naming conventions, documented runbooks, structured logging, and predictable deployment processes are what make a system operable. If your successor needs to read your mind to operate your system, you have failed as an engineer.
 

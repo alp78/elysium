@@ -193,7 +193,7 @@ dim_pl = pl.read_parquet(DATA / "index_dim.parquet")
 scores_pl = pl.read_parquet(DATA / "scores_daily.parquet")
 ```
 
-## 1. assert_frame_equal
+## assert_frame_equal
 
 Verify two DataFrames are identical. Raises `AssertionError` with a detailed diff if they differ. Essential for unit testing data transformations.
 
@@ -323,7 +323,7 @@ except AssertionError as e:
     	99
     ]
 
-## 2. Schema Testing
+## Schema Testing
 
 Verify column names, data types, and shape before processing. Catches data pipeline issues early — wrong column names, changed types, unexpected nulls.
 
@@ -385,7 +385,7 @@ assert_schema_pl(
 
       Schema OK: (66355, 12), schema matches
 
-## 3. Data Validation Rules
+## Data Validation Rules
 
 Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [[data-quality-framework]], and dbt implements the same patterns declaratively via [[dbt-testing-framework]].
 
@@ -480,7 +480,7 @@ else:
 
       All validation rules passed
 
-## 4. Referential Integrity
+## Referential Integrity
 
 Verify that foreign key relationships hold: every symbol in the fact table exists in the dimension table.
 
@@ -502,11 +502,11 @@ print(f"Pandas orphans: {orphans_pd}")
     Referential integrity: OK
     Pandas orphans: set()
 
-## 5. Debugging Method Chains
+## Debugging Method Chains
 
 When a long chain produces unexpected results, break it into steps and inspect each intermediate result.
 
-### 5.1 Step-by-Step Inspection
+### Step-by-Step Inspection
 
 ```python
 # Instead of one long chain, break into steps and inspect each
@@ -540,7 +540,7 @@ display(step4)
 </style>
 <small>shape: (10, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr></tbody></table></div>
 
-### 5.2 Debug with .pipe() (Pandas)
+### Debug with .pipe() (Pandas)
 
 ```python
 def debug_step(df, label=""):
@@ -567,7 +567,7 @@ result = (
       [after assign] shape=(1331, 13), cols=['id', 'symbol', 'date', 'open', 'high']...
       [final] shape=(5, 3), cols=['date', 'close', 'daily_return']...
 
-### 5.3 Debug with .map_batches() (Polars)
+### Debug with .map_batches() (Polars)
 
 ```python
 def debug_polars(df: pl.DataFrame, label: str = "") -> pl.DataFrame:
@@ -597,11 +597,11 @@ result = (
       [after with_columns] shape=(1331, 13)
       [final] shape=(5, 3)
 
-## 6. Performance Profiling
+## Performance Profiling
 
 Measure execution time and memory usage to find bottlenecks in data pipelines.
 
-### 6.1 Timing with %%timeit and time.perf_counter
+### Timing with %%timeit and time.perf_counter
 
 ```python
 # Manual timing
@@ -619,7 +619,7 @@ print(f"Pandas groupby: {elapsed*1000:.1f}ms")
     Polars group_by: 1.7ms
     Pandas groupby: 2.2ms
 
-### 6.2 Memory Usage
+### Memory Usage
 
 ```python
 # Pandas memory usage
@@ -653,7 +653,7 @@ print(f"\nPolars estimated size: {est:.2f} MB")
     
     Polars estimated size: 5.20 MB
 
-### 6.3 Polars Query Plan (explain)
+### Polars Query Plan (explain)
 
 ```python
 # Inspect the optimized query plan before collecting
@@ -675,7 +675,7 @@ print(plan.explain())
       FROM
         DF ["id", "symbol", "date", "open", ...]; PROJECT["close", "symbol"] 2/12 COLUMNS
 
-### 6.4 Polars .profile() (execution timing per node)
+### Polars .profile() (execution timing per node)
 
 ```python
 # Profile shows time spent at each stage
@@ -703,7 +703,7 @@ display(timings)
 </style>
 <small>shape: (4, 3)</small><table border="1" class="dataframe"><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>118</td></tr><tr><td>&quot;.filter([(col(&quot;symbol&quot;)) == (&quot;…</td><td>118</td><td>288</td></tr><tr><td>&quot;sort(date)&quot;</td><td>295</td><td>487</td></tr><tr><td>&quot;with_column(sma_7)&quot;</td><td>489</td><td>520</td></tr></tbody></table></div>
 
-## 7. Null & Missing Data Audit
+## Null & Missing Data Audit
 
 Comprehensive null detection across all columns, with percentage and sample rows.
 
@@ -807,7 +807,7 @@ if result.height > 0:
 </style>
 <small>shape: (1, 3)</small><table border="1" class="dataframe"><thead><tr><th>column</th><th>nulls</th><th>pct</th></tr><tr><td>str</td><td>u32</td><td>f64</td></tr></thead><tbody><tr><td>&quot;valid_to&quot;</td><td>169</td><td>100.0</td></tr></tbody></table></div>
 
-## 8. Duplicate Detection
+## Duplicate Detection
 
 Find exact duplicates and duplicates on key columns.
 
@@ -856,7 +856,7 @@ if key_dupes > 0:
     Exact duplicate rows: 0
     Duplicate (symbol, date) pairs: 0
 
-## 9. Statistical Sanity Checks
+## Statistical Sanity Checks
 
 Quick checks for outliers, unexpected distributions, and data drift.
 
@@ -920,7 +920,7 @@ if symbol_gaps.height > 0:
 </style>
 <small>shape: (10, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>gap_days</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ADS.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BAS.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BAYN.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BMW.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DB1.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DHL.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ENEL.MI&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ENI.MI&quot;</td><td>2025-12-29</td><td>6</td></tr></tbody></table></div>
 
-## 10. Pipeline Assertion Patterns
+## Pipeline Assertion Patterns
 
 Embed assertions inside data pipelines to catch issues early. If any assertion fails, the pipeline stops with a clear error.
 
@@ -965,7 +965,7 @@ print(f"Pipeline passed all assertions. Result: {result.shape}")
 
     Pipeline passed all assertions. Result: (1331, 12)
 
-## 11. DataFrame Diff
+## DataFrame Diff
 
 Compare two versions of a DataFrame to find what changed: added rows, removed rows, modified values.
 
@@ -1083,7 +1083,7 @@ if changed.height > 0:
 </style>
 <small>shape: (1, 3)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>val</th><th>val_new</th></tr><tr><td>i64</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>2</td><td>20</td><td>25</td></tr></tbody></table></div>
 
-## 12. Error Handling in Data Pipelines
+## Error Handling in Data Pipelines
 
 Gracefully handle bad data: catch exceptions, log errors, quarantine bad rows.
 
@@ -1117,7 +1117,7 @@ if bad.height > 0:
 
     Good rows: 66,355, Bad rows: 0
 
-## 13. Type Coercion & Cast Safety
+## Type Coercion & Cast Safety
 
 Test that type casts succeed and don't silently lose data.
 
@@ -1218,7 +1218,7 @@ print("Polars: just use sort/filter")
     Pandas index: date
     Polars: just use sort/filter
 
-### 2. No inplace
+### No inplace
 
 
 - **Sort**: Reorder rows by column values.
@@ -1235,7 +1235,7 @@ print(f"Polars: original {ohlcv_pl.shape}, new {df2.shape}")
     Pandas: mutated
     Polars: original (66355, 12), new (66355, 12)
 
-### 3. No iloc/loc
+### No iloc/loc
 
 
 - **Select**: Choose specific columns, optionally transforming them.

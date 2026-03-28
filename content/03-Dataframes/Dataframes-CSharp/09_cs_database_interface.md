@@ -109,7 +109,7 @@ Console.WriteLine($"SQL Server: {SQL_CONN.Split(';')[0]}");
 
 ---
 
-## 1 — Polars.NET SQL Context
+## Polars.NET SQL Context
 
 #### Probe Polars.NET for SQLContext using reflection
 
@@ -170,7 +170,7 @@ Console.WriteLine("Proceeding with DuckDB.NET for SQL operations.");
 
 ---
 
-## 2 — DuckDB.NET
+## DuckDB.NET
 
 #### Query in-memory DuckDB table into Polars DataFrame
 
@@ -657,11 +657,11 @@ result
 
 ---
 
-## 3 — SQL Server
+## SQL Server
 
 The query patterns used here follow the same SQL fundamentals documented in [[sql-fundamentals]]. For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [[16_cs_database]].
 
-#### 3.1 Connect + basic query
+#### Connect + basic query
 
 ```csharp
 // List all tables from SQL Server into Polars DataFrame
@@ -1049,7 +1049,7 @@ catch (Exception ex)
 
 ---
 
-## 4 — Performance Comparison
+## Performance Comparison
 
 #### Compare query performance from Parquet using DuckDB vs Polars.NET
 
@@ -1117,7 +1117,7 @@ Console.WriteLine($"Both results match: {Math.Abs(duckResult - polarsResult) < 0
 
 ---
 
-## 5 — Summary
+## Summary
 
 #### SQL ↔ DataFrame interface comparison
 

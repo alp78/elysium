@@ -57,12 +57,12 @@ import io
     numpy   2.4.3
 
 ---
-## 1 — Series
+## Series
 
 A **Series** is a one-dimensional labelled (Pandas) or unnamed (Polars) array.
 Pandas Series carry an **index**; Polars Series carry only a **name**.
 
-### 1.1 Creating a Series from a Python list
+### Creating a Series from a Python list
 
 ```python
 # Pandas — Series from a list (auto-generates a RangeIndex)
@@ -118,7 +118,7 @@ display(s_pl)
 </style>
 <small>shape: (4,)</small><table border="1" class="dataframe"><thead><tr><th>values</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>10</td></tr><tr><td>20</td></tr><tr><td>30</td></tr><tr><td>40</td></tr></tbody></table></div>
 
-### 1.2 Creating a Series from a NumPy array
+### Creating a Series from a NumPy array
 
 ```python
 arr = np.array([1.1, 2.2, 3.3, np.nan, 5.5])
@@ -179,7 +179,7 @@ print(f"dtype: {s_pl.dtype}")  # Float64
 
     dtype: Float64
 
-### 1.3 Custom index (Pandas) vs named-only (Polars)
+### Custom index (Pandas) vs named-only (Polars)
 
 ```python
 # Pandas supports a custom index on a Series
@@ -244,7 +244,7 @@ display(df_pl)
 </style>
 <small>shape: (3, 2)</small><table border="1" class="dataframe"><thead><tr><th>label</th><th>amounts</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;a&quot;</td><td>100</td></tr><tr><td>&quot;b&quot;</td><td>200</td></tr><tr><td>&quot;c&quot;</td><td>300</td></tr></tbody></table></div>
 
-### 1.4 Data types — inference and casting
+### Data types — inference and casting
 
 Pandas defaults to `int64`/`float64`/`object`; Polars defaults to
 `Int64`/`Float64`/`String`.  Polars is stricter: no silent object fallback.
@@ -327,7 +327,7 @@ print(f"dtype with null: {s_pl_null.dtype}")  # Int64, null is native
     dtype after cast: Float32
     dtype with null: Int64
 
-### 1.5 Basic Series operations
+### Basic Series operations
 
 
 - **Describe**: Summary statistics: count, mean, std, min, max, quartiles.
@@ -422,7 +422,7 @@ display(prices_pl.describe())
 </style>
 <small>shape: (9, 2)</small><table border="1" class="dataframe"><thead><tr><th>statistic</th><th>value</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>5.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>30.34</td></tr><tr><td>&quot;std&quot;</td><td>15.735406</td></tr><tr><td>&quot;min&quot;</td><td>10.5</td></tr><tr><td>&quot;25%&quot;</td><td>20.3</td></tr><tr><td>&quot;50%&quot;</td><td>30.1</td></tr><tr><td>&quot;75%&quot;</td><td>40.8</td></tr><tr><td>&quot;max&quot;</td><td>50.0</td></tr></tbody></table></div>
 
-### 1.6 Gotcha — NaN vs null
+### Gotcha — NaN vs null
 
 Pandas uses `NaN` (a float) for missing values, which silently promotes
 integer columns to float.  Polars uses a proper **null** bitmask.
@@ -483,12 +483,12 @@ display(s)
 <small>shape: (3,)</small><table border="1" class="dataframe"><thead><tr><th>x</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>1</td></tr><tr><td>null</td></tr><tr><td>3</td></tr></tbody></table></div>
 
 ---
-## 2 — DataFrame
+## DataFrame
 
 A **DataFrame** is a two-dimensional table of columns.
 Pandas DataFrames have a row index; Polars DataFrames do not.
 
-### 2.1 Creating a DataFrame from a dict
+### Creating a DataFrame from a dict
 
 ```python
 data = {
@@ -564,7 +564,7 @@ display(df_pl)
 </style>
 <small>shape: (4, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>price</th><th>volume</th></tr><tr><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;AAPL&quot;</td><td>175.0</td><td>50000000</td></tr><tr><td>&quot;MSFT&quot;</td><td>340.0</td><td>30000000</td></tr><tr><td>&quot;GOOG&quot;</td><td>140.0</td><td>25000000</td></tr><tr><td>&quot;AMZN&quot;</td><td>180.0</td><td>40000000</td></tr></tbody></table></div>
 
-### 2.2 Creating a DataFrame from a list of dicts (records)
+### Creating a DataFrame from a list of dicts (records)
 
 ```python
 records = [
@@ -622,7 +622,7 @@ display(df_pl)
 </style>
 <small>shape: (3, 3)</small><table border="1" class="dataframe"><thead><tr><th>name</th><th>age</th><th>city</th></tr><tr><td>str</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td><td>&quot;London&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td><td>&quot;Paris&quot;</td></tr><tr><td>&quot;Carol&quot;</td><td>35</td><td>&quot;Berlin&quot;</td></tr></tbody></table></div>
 
-### 2.3 Creating a DataFrame from a NumPy array
+### Creating a DataFrame from a NumPy array
 
 ```python
 arr = np.random.default_rng(42).standard_normal((5, 3))
@@ -699,7 +699,7 @@ print(f"dtypes: {df_pl.dtypes}")
 
     dtypes: [Float64, Float64, Float64]
 
-### 2.4 Shape, height, width, column names
+### Shape, height, width, column names
 
 Pandas uses `.shape` and `.columns`.
 Polars adds `.height` and `.width` for clarity.
@@ -743,12 +743,12 @@ print(f"schema  : {df_pl.schema}")
     schema  : Schema({'symbol': String, 'price': Float64, 'volume': Int64})
 
 ---
-## 3 — The Index Concept
+## The Index Concept
 
 Pandas relies heavily on **Index** objects for alignment, selection, and
 joins.  Polars **has no index** — all operations are column-based.
 
-### 3.1 Pandas Index basics
+### Pandas Index basics
 
 ```python
 df = pd.DataFrame(
@@ -856,7 +856,7 @@ display(df_reset)
   </tbody>
 </table>
 
-### 3.2 Polars — no index, use columns instead
+### Polars — no index, use columns instead
 
 
 - **Filter**: Keep only rows matching a condition.
@@ -889,7 +889,7 @@ display(df_pl.filter(pl.col("key") == "b"))
 </style>
 <small>shape: (1, 2)</small><table border="1" class="dataframe"><thead><tr><th>key</th><th>value</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;b&quot;</td><td>20</td></tr></tbody></table></div>
 
-### 3.3 Gotcha — index alignment in Pandas
+### Gotcha — index alignment in Pandas
 
 When you combine two Pandas objects, they align on the index.
 This can produce unexpected NaNs if the indexes don't match.
@@ -952,7 +952,7 @@ display(result)
 </style>
 <small>shape: (3,)</small><table border="1" class="dataframe"><thead><tr><th>s1</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>11</td></tr><tr><td>22</td></tr><tr><td>33</td></tr></tbody></table></div>
 
-### 3.4 Pandas MultiIndex vs Polars grouped columns
+### Pandas MultiIndex vs Polars grouped columns
 
 ```python
 arrays = [
@@ -1023,12 +1023,12 @@ display(df_pl)
 <small>shape: (4, 3)</small><table border="1" class="dataframe"><thead><tr><th>first</th><th>second</th><th>val</th></tr><tr><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;bar&quot;</td><td>&quot;one&quot;</td><td>10</td></tr><tr><td>&quot;bar&quot;</td><td>&quot;two&quot;</td><td>20</td></tr><tr><td>&quot;baz&quot;</td><td>&quot;one&quot;</td><td>30</td></tr><tr><td>&quot;baz&quot;</td><td>&quot;two&quot;</td><td>40</td></tr></tbody></table></div>
 
 ---
-## 4 — Data Types Deep Dive
+## Data Types Deep Dive
 
 Understanding types is critical. Pandas inherited NumPy types plus
 its own Extension types; Polars uses Apache Arrow types.
 
-### 4.1 Listing available types
+### Listing available types
 
 ```python
 # Pandas common dtypes
@@ -1080,7 +1080,7 @@ for dt in [pl.Int8, pl.Int16, pl.Int32, pl.Int64,
       Categorical
       Null
 
-### 4.2 Inspecting types on real data
+### Inspecting types on real data
 
 
 - **Head**: Return the first N rows.
@@ -1171,7 +1171,7 @@ print(f"Schema: {df_pl.schema}")
 
     Schema: Schema({'country_name': String, 'iso_alpha2': String})
 
-### 4.3 Type casting
+### Type casting
 
 
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
@@ -1332,7 +1332,7 @@ display(df_pl)
 </style>
 <small>shape: (5, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1.513937e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1.382722e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1.370204e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1.469911e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1.428681e6</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### 4.4 Gotcha — Pandas <code style="font-size:0.75em">object</code> vs <code style="font-size:0.75em">string</code> dtype
+### Gotcha — Pandas <code style="font-size:0.75em">object</code> vs <code style="font-size:0.75em">string</code> dtype
 
 Pandas' default for text is `object` which can hold *anything*.
 Use `string` dtype (or `StringDtype()`) for type safety.
@@ -1354,12 +1354,12 @@ print(f"After inserting int into object Series: {s_obj.tolist()}")
     After inserting int into object Series: [42, 'b', 'c']
 
 ---
-## 5 — Loading Real Data from Multiple Formats
+## Loading Real Data from Multiple Formats
 
 The `../data/` directory contains CSV, JSON, and Parquet files.
 Let's compare how each library loads them.
 
-### 5.1 CSV
+### CSV
 
 
 - **Head**: Return the first N rows.
@@ -1477,7 +1477,7 @@ display(df_pl.head(3))
     CPU times: total: 0 ns
     Wall time: 3.5 ms
 
-### 5.2 Parquet
+### Parquet
 
 
 - **Head**: Return the first N rows.
@@ -1595,7 +1595,7 @@ display(df_pl.head(3))
     CPU times: total: 0 ns
     Wall time: 22 ms
 
-### 5.3 JSON
+### JSON
 
 
 - **Head**: Return the first N rows.
@@ -1654,9 +1654,9 @@ display(df_pl.head(3))
 <small>shape: (3, 2)</small><table border="1" class="dataframe"><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr></tbody></table></div>
 
 ---
-## 6 — Inspecting DataFrames
+## Inspecting DataFrames
 
-### 6.1 Head, tail, sample, describe
+### Head, tail, sample, describe
 
 
 - **Head**: Return the first N rows.
@@ -2034,7 +2034,7 @@ display(df_pl.describe())
 </style>
 <small>shape: (9, 13)</small><table border="1" class="dataframe"><thead><tr><th>statistic</th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>66355.0</td><td>&quot;66355&quot;</td><td>&quot;66355&quot;</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td><td>&quot;0&quot;</td><td>&quot;0&quot;</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>33179.733102</td><td>null</td><td>&quot;2023-08-05 00:56:42.354005&quot;</td><td>197.04052</td><td>199.364124</td><td>194.585782</td><td>197.0349</td><td>190.494909</td><td>5.9421e6</td><td>0.011757</td><td>0.000172</td><td>0.00009</td></tr><tr><td>&quot;std&quot;</td><td>19158.201385</td><td>null</td><td>null</td><td>363.150484</td><td>367.873829</td><td>358.011643</td><td>363.052047</td><td>359.635301</td><td>1.6156e7</td><td>0.283142</td><td>0.022716</td><td>null</td></tr><tr><td>&quot;min&quot;</td><td>1.0</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-04&quot;</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;25%&quot;</td><td>16590.0</td><td>null</td><td>&quot;2022-04-20&quot;</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991.0</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;50%&quot;</td><td>33178.0</td><td>null</td><td>&quot;2023-08-03&quot;</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1.415896e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;75%&quot;</td><td>49767.0</td><td>null</td><td>&quot;2024-11-19&quot;</td><td>186.0</td><td>188.0</td><td>184.0</td><td>186.1</td><td>175.2609</td><td>4.089463e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;max&quot;</td><td>66930.0</td><td>&quot;WKL.AS&quot;</td><td>&quot;2026-03-12&quot;</td><td>2926.0</td><td>2957.0</td><td>2813.0</td><td>2839.0</td><td>2802.9382</td><td>3.76391539e8</td><td>22.5</td><td>5.0</td><td>1.0</td></tr></tbody></table></div>
 
-### 6.2 Memory usage
+### Memory usage
 
 
 - **Memory Usage**: Measure RAM consumption (Pandas).
@@ -2073,7 +2073,7 @@ print(f"Polars estimated size: {size_bytes:,} bytes ({size_mb:.2f} MB)")
 
     Polars estimated size: 5,454,618 bytes (5.20 MB)
 
-### 6.3 Null / NaN inspection
+### Null / NaN inspection
 
 ```python
 # Pandas
@@ -2164,9 +2164,9 @@ display(df_pl.null_count())
 <small>shape: (1, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
 ---
-## 7 — Edge Cases and Gotchas
+## Edge Cases and Gotchas
 
-### 7.1 Empty DataFrames
+### Empty DataFrames
 
 ```python
 # Pandas — empty DataFrame keeps dtypes
@@ -2216,7 +2216,7 @@ display(df_empty_pl)
 </style>
 <small>shape: (0, 2)</small><table border="1" class="dataframe"><thead><tr><th>a</th><th>b</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody></tbody></table></div>
 
-### 7.2 Column name duplicates
+### Column name duplicates
 
 ```python
 # Pandas allows duplicate column names (!) — leads to confusing bugs
@@ -2274,7 +2274,7 @@ except Exception as e:
 
     Polars error on duplicate columns: column with name 'x' has more than one occurrence
 
-### 7.3 Integer overflow
+### Integer overflow
 
 ```python
 # Pandas silently wraps on int overflow (numpy behavior)
@@ -2301,7 +2301,7 @@ except Exception as e:
     Max int64: 9223372036854775807
     Max + 1  : -9223372036854775808
 
-### 7.4 Gotcha — Pandas <code style="font-size:0.75em">.values</code> vs <code style="font-size:0.75em">.to_numpy()</code> vs <code style="font-size:0.75em">.to_list()</code>
+### Gotcha — Pandas <code style="font-size:0.75em">.values</code> vs <code style="font-size:0.75em">.to_numpy()</code> vs <code style="font-size:0.75em">.to_list()</code>
 
 
 - **To NumPy**: Extract column as NumPy array.
@@ -2346,7 +2346,7 @@ print(f"Mutated Array: {arr.tolist()}")
     Mutated Array: [999, 2, 3]
 
 ---
-## 8 — Comparison Summary Table
+## Comparison Summary Table
 
 ```python
 comparison = pl.DataFrame({
@@ -2442,9 +2442,9 @@ display(comparison)
 ---
 # Part 2: Reading & Writing Data
 
-## 1 - Setup and Imports
+## Setup and Imports
 
-## 2 - Discovering Data Files
+## Discovering Data Files
 
 We use `pathlib` and glob patterns to discover every file in the `../data/`
 directory, grouped by extension.
@@ -2639,13 +2639,13 @@ display(size_df)
   </tbody>
 </table>
 
-## 3 - Reading CSV Files
+## Reading CSV Files
 
 
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
 
-### 3.1 - Pandas <code style="font-size:0.75em">read_csv</code>
+### Pandas <code style="font-size:0.75em">read_csv</code>
 
 
 - **Head**: Return the first N rows.
@@ -2888,7 +2888,7 @@ display(df_peek)
 </table>
 </div>
 
-### 3.2 - Polars <code style="font-size:0.75em">read_csv</code> (Eager)
+### Polars <code style="font-size:0.75em">read_csv</code> (Eager)
 
 
 - **Head**: Return the first N rows.
@@ -2940,7 +2940,7 @@ display(df_pl_ohlcv.head(3))
 </style>
 <small>shape: (3, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### 3.3 - Polars <code style="font-size:0.75em">scan_csv</code> (Lazy)
+### Polars <code style="font-size:0.75em">scan_csv</code> (Lazy)
 
 ```python
 # Lazy scan - no data is read yet!
@@ -3030,13 +3030,13 @@ for f in csv_files:
       stoxxusa50_ohlcv               -> (65100, 12)  (0.003s)
       trading_calendar               -> (29335, 11)  (0.002s)
 
-## 4 - Reading JSON Files
+## Reading JSON Files
 
 
 - **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
-### 4.1 - Pandas <code style="font-size:0.75em">read_json</code>
+### Pandas <code style="font-size:0.75em">read_json</code>
 
 
 - **Head**: Return the first N rows.
@@ -3233,7 +3233,7 @@ display(df_pd_perf.head(3))
 </table>
 </div>
 
-### 4.2 - Polars <code style="font-size:0.75em">read_json</code>
+### Polars <code style="font-size:0.75em">read_json</code>
 
 
 - **Head**: Return the first N rows.
@@ -3280,7 +3280,7 @@ display(df_pl_perf.head(3))
 </style>
 <small>shape: (3, 15)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-05&quot;</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-06&quot;</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-07&quot;</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr></tbody></table></div>
 
-### 4.3 - Polars <code style="font-size:0.75em">scan_ndjson</code> (Lazy)
+### Polars <code style="font-size:0.75em">scan_ndjson</code> (Lazy)
 
 `scan_ndjson` works with newline-delimited JSON files.  Standard JSON
 arrays need to be converted first.  We demonstrate by writing NDJSON
@@ -3368,13 +3368,13 @@ for f in json_files:
       stoxxusa50_ohlcv               -> (65100, 12)  (0.088s)
       trading_calendar               -> (29335, 11)  (0.035s)
 
-## 5 - Reading Parquet Files
+## Reading Parquet Files
 
 
 - **Head**: Return the first N rows.
 - **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
-### 5.1 - Pandas <code style="font-size:0.75em">read_parquet</code>
+### Pandas <code style="font-size:0.75em">read_parquet</code>
 
 
 - **Head**: Return the first N rows.
@@ -3503,7 +3503,7 @@ display(df_pd_pq_cols.head(3))
 </table>
 </div>
 
-### 5.2 - Polars <code style="font-size:0.75em">read_parquet</code> (Eager)
+### Polars <code style="font-size:0.75em">read_parquet</code> (Eager)
 
 
 - **Head**: Return the first N rows.
@@ -3549,7 +3549,7 @@ display(df_pl_pq_cols.head(3))
 </style>
 <small>shape: (3, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>symbol</th><th>close</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>&quot;ABI.BR&quot;</td><td>57.21</td></tr><tr><td>2021-01-05</td><td>&quot;ABI.BR&quot;</td><td>57.18</td></tr><tr><td>2021-01-06</td><td>&quot;ABI.BR&quot;</td><td>58.77</td></tr></tbody></table></div>
 
-### 5.3 - Polars <code style="font-size:0.75em">scan_parquet</code> (Lazy)
+### Polars <code style="font-size:0.75em">scan_parquet</code> (Lazy)
 
 
 - **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
@@ -3640,13 +3640,13 @@ for f in pq_files:
       stoxxusa50_ohlcv               -> (65100, 12)  (0.004s)
       trading_calendar               -> (29335, 11)  (0.001s)
 
-## 6 - Parameter Deep-Dives
+## Parameter Deep-Dives
 
 
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
 
-### 6.1 - <code style="font-size:0.75em">dtypes</code> / <code style="font-size:0.75em">schema_overrides</code>
+### <code style="font-size:0.75em">dtypes</code> / <code style="font-size:0.75em">schema_overrides</code>
 
 
 - **Head**: Return the first N rows.
@@ -3827,7 +3827,7 @@ display(df_dtype_pl.head(3))
 </style>
 <small>shape: (3, 20)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>timestamp</th><th>current_price</th><th>open_price</th><th>day_high</th><th>day_low</th><th>previous_close</th><th>price_change</th><th>price_change_pct</th><th>bid</th><th>ask</th><th>bid_size</th><th>ask_size</th><th>spread</th><th>current_volume</th><th>average_volume_10day</th><th>volume_ratio</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>20192</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BMW.DE&quot;</td><td>&quot;2026-03-12 13:49:54&quot;</td><td>80.4</td><td>79.0</td><td>81.16</td><td>77.9</td><td>80.82</td><td>-0.42</td><td>-0.5197</td><td>80.38</td><td>80.52</td><td>0.0</td><td>0.0</td><td>0.14</td><td>770681</td><td>1209819</td><td>0.637</td></tr><tr><td>20193</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;RHM.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>1551.0</td><td>1536.0</td><td>1588.0</td><td>1535.0</td><td>1520.5</td><td>30.5</td><td>2.0059</td><td>1551.5</td><td>1552.0</td><td>267.0</td><td>45.0</td><td>0.5</td><td>159633</td><td>294973</td><td>0.5412</td></tr><tr><td>20194</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BAS.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>47.67</td><td>46.3</td><td>48.1</td><td>45.96</td><td>46.31</td><td>1.36</td><td>2.9367</td><td>47.68</td><td>47.71</td><td>1393.0</td><td>165.0</td><td>0.03</td><td>1512800</td><td>4089134</td><td>0.37</td></tr></tbody></table></div>
 
-### 6.2 - <code style="font-size:0.75em">null_values</code>
+### <code style="font-size:0.75em">null_values</code>
 
 
 - **Read CSV**: Load a CSV file into a DataFrame.
@@ -3875,7 +3875,7 @@ display(null_counts_pl)
 </style>
 <small>shape: (1, 36)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>6</td><td>71</td><td>35</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
-### 6.3 - <code style="font-size:0.75em">separator</code>
+### <code style="font-size:0.75em">separator</code>
 
 
 - **Head**: Return the first N rows.
@@ -3951,13 +3951,13 @@ display(df_sep_pd.head(3))
 </table>
 </div>
 
-## 7 - Writing Data
+## Writing Data
 
 
 - **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 - **Write CSV**: Save DataFrame to CSV file.
 
-### 7.1 - Writing CSV
+### Writing CSV
 
 
 - **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
@@ -3983,7 +3983,7 @@ print(f"Polars CSV written: {csv_path_pl.stat().st_size / 1024:.1f} KB")
     Pandas CSV written: 49.0 KB
     Polars CSV written: 49.3 KB
 
-### 7.2 - Writing JSON
+### Writing JSON
 
 ```python
 # Pandas to_json
@@ -4000,7 +4000,7 @@ print(f"Polars JSON written: {json_path_pl.stat().st_size / 1024:.1f} KB")
     Pandas JSON written: 143.6 KB
     Polars JSON written: 128.7 KB
 
-### 7.3 - Writing Parquet
+### Writing Parquet
 
 
 - **Write Parquet**: Save DataFrame to Parquet file.
@@ -4097,7 +4097,7 @@ print(f"Cleaned up {OUT_DIR}")
 
     Cleaned up ..\data\_output
 
-## 8 - Lazy Scanning vs Eager Reading
+## Lazy Scanning vs Eager Reading
 
 Polars' `scan_*` functions return a `LazyFrame` that does **not** read
 data until `.collect()` is called.  This enables:
@@ -4178,7 +4178,7 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
     CSV eager: (24738, 12) in 0.0023s
     CSV lazy+filter: (0, 2) in 0.0034s
 
-## 9 - Format Comparison: Size and Speed
+## Format Comparison: Size and Speed
 
 For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [[serialization-formats]]. The same Parquet I/O patterns shown here apply when loading data into BigQuery via [[data-loading-and-export]].
 
@@ -4463,12 +4463,12 @@ display(size_pivot)
 </table>
 </div>
 
-## 10 - Gotchas and Tips
+## Gotchas and Tips
 
 
 - **Read CSV**: Load a CSV file into a DataFrame.
 
-### 10.1 - Date Parsing
+### Date Parsing
 
 - **Pandas**: use `parse_dates=["col"]` in `read_csv`; JSON dates often
   need `pd.to_datetime()` after loading.
@@ -4489,7 +4489,7 @@ print(f"date column dtype WITH parse_dates:    {df_dates2['date'].dtype}")
     date column dtype WITHOUT parse_dates: object
     date column dtype WITH parse_dates:    datetime64[ns]
 
-### 10.2 - Memory and Large Files
+### Memory and Large Files
 
 - **Parquet** supports column projection - read only the columns you need.
 - **Polars lazy** scans avoid loading entire files.
@@ -4506,7 +4506,7 @@ print(f"Total rows via chunked reading: {total_rows:,}")
 
     Total rows via chunked reading: 66,355
 
-### 10.3 - Index Handling
+### Index Handling
 
 
 - **Write CSV**: Save DataFrame to CSV file.
@@ -4534,7 +4534,7 @@ print(buf2.getvalue())
     1
     2
 
-### 10.4 - String vs Categorical
+### String vs Categorical
 
 - For columns with low cardinality (e.g. tickers, country codes),
   use `category` (Pandas) or `Categorical` (Polars) to save memory.
@@ -4557,7 +4557,7 @@ print(f"Savings: {(1 - mem_cat/mem_str)*100:.1f}%")
     Category dtype memory: 69.7 KB
     Savings: 98.0%
 
-## 11 - Summary Comparison Table
+## Summary Comparison Table
 
 
 - **Filter**: Keep only rows matching a condition.

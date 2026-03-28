@@ -18,7 +18,7 @@ The ability to express the same transformation in SQL, Python, and C# is what ma
 
 > This chapter covers: window functions (ROW_NUMBER, RANK, LAG/LEAD, running aggregates, moving averages), pivoting/unpivoting, conditional aggregation, joins, z-scores, percent change, deduplication, and type conversion.
 
-## 26.1 The Key Insight — Where to Transform
+## The Key Insight — Where to Transform
 
 | Scenario | Best Tool | Why |
 |---|---|---|

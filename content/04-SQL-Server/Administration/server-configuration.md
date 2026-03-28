@@ -20,7 +20,7 @@ These are the non-negotiable configuration settings that every production SQL Se
 
 ## Tier 1: Non-Negotiable (Do Before Going to Production)
 
-### 1. Set Max Server Memory
+### Set Max Server Memory
 
 SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills. See [[memory-and-buffer-pool]] for how the buffer pool uses the memory allocated here.
 
@@ -70,7 +70,7 @@ EXEC sp_configure 'max server memory';
 
 ---
 
-### 2. Recovery Model
+### Recovery Model
 
 Choose deliberately between FULL and SIMPLE. Never leave a database in FULL recovery without log backups — the log file will grow until it fills the disk.
 
@@ -91,7 +91,7 @@ See [[backup-types-and-strategy]] for the full decision matrix.
 
 ---
 
-### 3. Enable Read Committed Snapshot Isolation (RCSI)
+### Enable Read Committed Snapshot Isolation (RCSI)
 
 Without RCSI, readers block writers and writers block readers. Dashboard queries stall while the pipeline writes, and vice versa. RCSI eliminates this entirely with zero code changes — readers use row-version snapshots from TempDB instead of shared locks.
 
@@ -107,7 +107,7 @@ ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 
 ---
 
-### 4. Every Table Must Have a Clustered Index
+### Every Table Must Have a Clustered Index
 
 A table without a clustered index is a **heap**. Heaps have no physical order — every query scans every page. Every table in silver and gold layers must have a clustered index.
 
@@ -125,7 +125,7 @@ See [[index-types-and-strategy]] for clustered index key selection.
 
 ---
 
-### 5. Update Statistics After Bulk Loads
+### Update Statistics After Bulk Loads
 
 Stale statistics cause the optimizer to make wrong choices. After every pipeline run that inserts or updates more than 10% of a table, update statistics.
 

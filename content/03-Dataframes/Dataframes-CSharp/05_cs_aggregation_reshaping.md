@@ -249,7 +249,7 @@ dimExD
 </div>
 
 ---
-## 1 — Grouping & Aggregation
+## Grouping & Aggregation
 
 #### Polars.NET — GroupBy single column with mean aggregation
 
@@ -607,7 +607,7 @@ groupHeadD.Rows[groupHeadD.RowKeys.Take(9)]
 </div>
 
 ---
-## 2 — Window Functions
+## Window Functions
 
 For a cross-language comparison of window functions, pivots, and ranking across SQL, Python, and C#, see [[sql-python-csharp-transforms]]. The SQL Server gold layer in [[gold-transforms]] applies the same windowed aggregations to produce final analytical tables.
 
@@ -947,7 +947,7 @@ dfDWithRolling.Columns[new[] { "symbol", "date", "close", "rolling_mean_20" }].R
 </div>
 
 ---
-## 3 — Joins
+## Joins
 
 #### Polars.NET — Inner join on exchange suffix
 
@@ -1265,7 +1265,7 @@ else
     Anti join: 0 rows — all suffixes matched the dimension table.
 
 ---
-## 4 — Concatenation
+## Concatenation
 
 #### Polars.NET — Vertical concatenation (stacking rows)
 
@@ -1465,7 +1465,7 @@ hcatD
 </div>
 
 ---
-## 5 — Reshaping
+## Reshaping
 
 #### Polars.NET — Pivot (long to wide)
 
@@ -1724,7 +1724,7 @@ meltedD.Rows[meltedD.RowKeys.Take(12)]
 </div>
 
 ---
-## 6 — Summary Comparison
+## Summary Comparison
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|

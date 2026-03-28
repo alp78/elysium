@@ -111,13 +111,13 @@ display($"Polars: {dfP.Shape}  |  Deedle: {dfD.RowCount} x {dfD.ColumnCount}");
     Polars: (66355, 12)  |  Deedle: 66355 x 12
 
 ---
-## 1 — Advanced Data Types
+## Advanced Data Types
 
 Polars supports a rich type system beyond numeric and string columns. The most useful advanced type in Polars.NET 0.4.0 is **Categorical** — a dictionary-encoded string column that saves memory and speeds up group-by operations.
 
 Other advanced types (Enum, List columns, Struct, Binary) exist in the Rust Polars library but are not fully exposed in Polars.NET 0.4.0. Deedle has no categorical type at all.
 
-#### 1.1 — Categorical cast: convert string column to categorical
+#### Categorical cast: convert string column to categorical
 
 ```csharp
 // Polars.NET — check original data type of symbol column
@@ -148,7 +148,7 @@ Console.WriteLine("With 50 symbols repeated over 66K rows, this significantly re
     Categorical stores each unique string once, then uses integer indices.
     With 50 symbols repeated over 66K rows, this significantly reduces memory.
 
-#### 1.2 — Schema after categorical cast
+#### Schema after categorical cast
 
 ```csharp
 // Polars.NET — display schema showing the Categorical type
@@ -178,7 +178,7 @@ foreach (var name in colNames)
       stock_splits         f64
       is_filled            bool
 
-#### 1.3 — Categorical speeds up GroupBy operations
+#### Categorical speeds up GroupBy operations
 
 ```csharp
 // Polars.NET — GroupBy on categorical column
@@ -224,7 +224,7 @@ aggCat.Head(10)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>dictionary</span></th><th>avg_close<span class='pl-dtype'>double</span></th><th>total_volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td></tr></tbody></table></div>
 
-#### 1.4 — Deedle: no categorical type
+#### Deedle: no categorical type
 
 ```csharp
 // Deedle — no native Categorical type
@@ -255,7 +255,7 @@ Console.WriteLine("This is purely manual — no Deedle API support for categoric
     First 5 encoded values: 0, 0, 0, 0, 0
     This is purely manual — no Deedle API support for categoricals.
 
-#### 1.5 — Other advanced types: not exposed in Polars.NET 0.4.0
+#### Other advanced types: not exposed in Polars.NET 0.4.0
 
 ```csharp
 // Polars.NET 0.4.0 — advanced type availability
@@ -295,11 +295,11 @@ foreach (var name in dtProps)
       Unknown
 
 ---
-## 2 — Interoperability
+## Interoperability
 
 Real projects often need to move data between libraries. This section covers extracting data from Polars and Deedle into .NET collections, and converting between the two libraries.
 
-#### 2.1 — Polars.NET to .NET collections: extract columns as arrays
+#### Polars.NET to .NET collections: extract columns as arrays
 
 ```csharp
 // Polars.NET — extract columns as typed .NET arrays via ToArray<T>()
@@ -323,7 +323,7 @@ Console.WriteLine($"\nLINQ on extracted arrays: avg close = {avgClose:F2}, max v
     
     LINQ on extracted arrays: avg close = 197.03, max volume = 376'391'539
 
-#### 2.2 — Polars.NET to DataTable: manual conversion
+#### Polars.NET to DataTable: manual conversion
 
 ```csharp
 // Polars.NET — convert to System.Data.DataTable
@@ -398,7 +398,7 @@ Console.WriteLine($"\nFirst row: {string.Join(", ", dataTable.Rows[0].ItemArray.
     
     First row: , ABI.BR, , , ,
 
-#### 2.3 — Deedle to Polars.NET: extract columns and rebuild
+#### Deedle to Polars.NET: extract columns and rebuild
 
 ```csharp
 // Deedle — extract columns as .NET arrays, then build Polars Series and DataFrame
@@ -452,7 +452,7 @@ dfFromDeedle.Head(5)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>open<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>58.15</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
-#### 2.4 — Polars.NET to Deedle: extract columns and rebuild
+#### Polars.NET to Deedle: extract columns and rebuild
 
 ```csharp
 // Polars.NET — extract columns as .NET arrays, build Deedle Frame
@@ -522,7 +522,7 @@ dfFromPolars.Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### 2.5 — Round-trip verification: Polars -> Deedle -> Polars
+#### Round-trip verification: Polars -> Deedle -> Polars
 
 ```csharp
 // Verify that Polars -> Deedle -> Polars preserves data
@@ -547,11 +547,11 @@ Console.WriteLine($"Close values match after round-trip: {match}");
     Close values match after round-trip: True
 
 ---
-## 3 — I/O Deep Dive
+## I/O Deep Dive
 
 Polars.NET and Deedle both support CSV I/O. Polars also supports Parquet and JSON natively. This section explores format options, separators, and round-trip integrity.
 
-#### 3.1 — CSV read with options: separator, date parsing, row limits
+#### CSV read with options: separator, date parsing, row limits
 
 ```csharp
 // Polars.NET — CSV with tryParseDates
@@ -612,7 +612,7 @@ dfTsv.Head(5)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>country_name<span class='pl-dtype'>utf8view</span></th><th>iso_alpha2<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
 
-#### 3.2 — CSV read with Deedle: format comparison
+#### CSV read with Deedle: format comparison
 
 ```csharp
 // Deedle — standard CSV read
@@ -676,7 +676,7 @@ dfDTsv.Rows[dfDTsv.RowKeys.Take(5)]
 
 </div>
 
-#### 3.3 — CSV write: Polars and Deedle
+#### CSV write: Polars and Deedle
 
 ```csharp
 // Polars.NET — write CSV
@@ -706,7 +706,7 @@ Console.WriteLine($"\nPolars read-back: {dfReadBack.Shape}");
     
     Polars read-back: (50, 12)
 
-#### 3.4 — Parquet read: schema and data
+#### Parquet read: schema and data
 
 ```csharp
 // Polars.NET — read Parquet natively
@@ -748,7 +748,7 @@ Console.WriteLine($"Compression:  {(1.0 - (double)parquetSize / csvSize) * 100:F
     Parquet size: 2'484'896 bytes (2.4 MB)
     Compression:  53% smaller
 
-#### 3.5 — Parquet write and verify
+#### Parquet write and verify
 
 ```csharp
 // Polars.NET — write Parquet
@@ -773,7 +773,7 @@ Console.WriteLine("Workaround: use Polars to read Parquet, convert to arrays, bu
     Deedle has no native Parquet I/O.
     Workaround: use Polars to read Parquet, convert to arrays, build Deedle Frame.
 
-#### 3.6 — JSON read/write (Polars.NET)
+#### JSON read/write (Polars.NET)
 
 ```csharp
 // Polars.NET — JSON read (newline-delimited JSON / NDJSON format)
@@ -829,7 +829,7 @@ catch (Exception ex)
     JSON written: ..\data\_temp_polars_write.json
     File size: 9'868 bytes
 
-#### 3.7 — Round-trip test: CSV -> Polars -> Parquet -> read back -> verify
+#### Round-trip test: CSV -> Polars -> Parquet -> read back -> verify
 
 ```csharp
 // Polars.NET — full round-trip: CSV -> DataFrame -> Parquet -> read back -> compare
@@ -876,7 +876,7 @@ Console.WriteLine($"Content match: {allMatch}");
     Shapes match: True
     Content match: True
 
-#### 3.8 — Cleanup temp files
+#### Cleanup temp files
 
 ```csharp
 // Clean up temporary files created during I/O demos
@@ -912,7 +912,7 @@ Console.WriteLine("\nCleanup complete.");
     Cleanup complete.
 
 ---
-## 4 — Summary
+## Summary
 
 #### Comparison table
 

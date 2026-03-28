@@ -19,7 +19,7 @@ status: complete
 
 This map traces a data pipeline end-to-end, from raw data ingestion to monitoring in production. Follow the links to dive deep into any stage.
 
-## 1. Design and Architecture
+## Design and Architecture
 
 Before writing code, establish the foundational patterns:
 
@@ -28,7 +28,7 @@ Before writing code, establish the foundational patterns:
 - [[idempotent-pipeline-design]] — Safe re-runs and backfills
 - [[etl-vs-elt]] — When to transform outside vs inside the warehouse
 
-## 2. Infrastructure Provisioning
+## Infrastructure Provisioning
 
 Set up the compute, storage, and networking:
 
@@ -38,7 +38,7 @@ Set up the compute, storage, and networking:
 - [[terraform-compute]] — VM instances for SQL Server and Airflow
 - [[terraform-cloud-run]] — Serverless containers for dashboards
 
-## 3. Data Ingestion (Bronze Layer)
+## Data Ingestion (Bronze Layer)
 
 Extract raw data from sources and land it in the bronze layer:
 
@@ -47,7 +47,7 @@ Extract raw data from sources and land it in the bronze layer:
 - [[bronze-layer-loading]] — JSON to bronze tables
 - the pipeline steps — project-specific pipeline step reference
 
-## 4. Data Transformation (Silver Layer)
+## Data Transformation (Silver Layer)
 
 Clean, deduplicate, and enrich data:
 
@@ -55,7 +55,7 @@ Clean, deduplicate, and enrich data:
 - [[merge-and-upsert]] — T-SQL MERGE patterns
 - [[sargable-queries]] — Writing queries that use indexes effectively
 
-## 5. Analytics and Aggregation (Gold Layer)
+## Analytics and Aggregation (Gold Layer)
 
 Produce business-ready datasets:
 
@@ -63,7 +63,7 @@ Produce business-ready datasets:
 - [[daily-signal-scores]] — Momentum, value, sentiment signals
 - [[quarterly-signal-scores]] — Quarterly fundamentals-based signals
 
-## 6. Orchestration
+## Orchestration
 
 Schedule and manage pipeline execution:
 
@@ -71,7 +71,7 @@ Schedule and manage pipeline execution:
 - the Airflow DAGs — Airflow DAGs for complex pipelines
 - [[docker-compose]] — Container orchestration for Airflow workers
 
-## 7. Monitoring and Observability
+## Monitoring and Observability
 
 Ensure the pipeline is healthy and performing:
 
@@ -80,7 +80,7 @@ Ensure the pipeline is healthy and performing:
 - [[wait-stats-analysis]] — SQL Server performance monitoring
 - [[cloud-logging]] — GCP log analysis
 
-## 8. Operations and Recovery
+## Operations and Recovery
 
 Keep the system running day-to-day:
 

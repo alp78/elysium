@@ -15,7 +15,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ## Critical — Production Impact
 
-### 1. Supply Chain Attacks via `pull_request_target`
+### Supply Chain Attacks via `pull_request_target`
 
 **What happens:** An attacker opens a PR from a fork. If the workflow uses `pull_request_target` and checks out the PR's code (`actions/checkout` with `ref: ${{ github.event.pull_request.head.sha }}`), the untrusted code runs in the base branch's context — with full access to repository secrets and a write-scoped `GITHUB_TOKEN`. This is not theoretical: a real-world worm infected 20,000+ repositories and 1,700 npm packages via this exact pattern. The attacker exfiltrates secrets, pushes malicious commits, and moves laterally to other org repos.
 
@@ -117,7 +117,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 2. Secret Exposure in Logs and Fork PRs
+### Secret Exposure in Logs and Fork PRs
 
 **What happens:** Secrets are printed to logs via `echo`, interpolated into URLs, error messages, or curl commands. GitHub masks known secret values in logs — but only exact string matches. Concatenation, encoding, substring extraction, or base64 wrapping bypasses the masking. The result: a secret silently appears in plain text in a log that anyone with read access to the repo can view.
 
@@ -174,7 +174,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 3. Workflow Injection (Command Injection)
+### Workflow Injection (Command Injection)
 
 **What happens:** An attacker crafts a PR title, branch name, commit message, or issue body containing shell metacharacters. If the workflow interpolates that value directly into a `run:` step using `${{ github.event.pull_request.title }}`, the shell interprets the injected payload. The attacker can exfiltrate secrets, modify files, or call arbitrary endpoints — all within the runner's execution context.
 
@@ -254,7 +254,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 4. Broken Production Deploys from Workflow Edits
+### Broken Production Deploys from Workflow Edits
 
 **What happens:** A developer modifies a deploy workflow directly on main — no PR, no review. The change contains a bug (wrong environment variable name, broken conditional, wrong image tag). The next merge to main triggers the workflow, the deploy fails, and production is now blocked. Because the workflow file is the gating mechanism, a broken workflow means no deployments can complete until the file is fixed with another push to main.
 
@@ -307,7 +307,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ## High — Team Velocity Killers
 
-### 5. 20-Minute Feedback Loops
+### Minute Feedback Loops
 
 **What happens:** A developer makes a change to a workflow file — maybe adding a new step, fixing a conditional, or adjusting a matrix. They push, wait in a queue, watch the job run for 15-20 minutes, and discover a syntax error, wrong variable name, or logic bug on line 3. They fix it and push again. Teams routinely report 10-14 push/wait cycles to get a single workflow change working. In a distributed team across time zones, this can consume an entire workday.
 
@@ -379,7 +379,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 6. YAML Is Untestable Locally
+### YAML Is Untestable Locally
 
 **What happens:** YAML is a data format, not a programming language with a test framework. Workflows encode business logic — deployment gates, notification rules, conditional steps — in a syntax with no unit tests, no type system, no linter enforcement by default, and no debugger. Logic errors in conditionals (`if:`) are discovered only when the specific branch is hit in production.
 
@@ -445,7 +445,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 7. Merge Conflicts in Workflow Files (Silent CI Failure)
+### Merge Conflicts in Workflow Files (Silent CI Failure)
 
 **What happens:** Two developers edit different workflows in `.github/workflows/`. Developer A merges first. Developer B's PR now has a merge conflict in a workflow file. When B pushes the conflicting state, GitHub silently skips ALL CI checks — the PR shows no status checks at all, not even "failed." Developer B interprets this as "CI is slow" or "CI is broken" and merges the PR manually after waiting.
 
@@ -492,7 +492,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 8. Silent Cache Misses
+### Silent Cache Misses
 
 **What happens:** The `actions/cache` step restores a cache successfully (exit code 0, "Cache restored" in logs), but the cache key doesn't match the current state — a lockfile changed, a runner OS was upgraded, or the cache expired. The job continues without the cached dependencies, and runs 3-10x slower than expected. There's no error, no warning prominent enough to notice, just slow builds.
 
@@ -559,7 +559,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 9. Reusable Workflow Limitations
+### Reusable Workflow Limitations
 
 **What happens:** A team standardizes on reusable workflows (`workflow_call`) to share CI patterns. After adopting them, they discover the constraints: secrets must be explicitly passed through (not inherited), outputs are limited, matrix strategy can't span a called workflow's jobs, and environment variables aren't inherited. Every caller must explicitly thread every secret. When a new secret is needed, every caller must be updated.
 
@@ -630,7 +630,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 10. Runner Environment Inconsistency
+### Runner Environment Inconsistency
 
 **What happens:** `ubuntu-latest` silently upgraded from Ubuntu 22.04 to Ubuntu 24.04 in Q2 2025. Workflows that worked for months suddenly failed: Python packages with C extensions couldn't compile, system library versions changed, tools pre-installed on the runner were different versions or removed entirely. There was no error saying "runner was upgraded" — just broken builds.
 
@@ -683,7 +683,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ## Moderate — Operational Pain
 
-### 11. Permission Model Confusion
+### Permission Model Confusion
 
 **What happens:** A workflow fails with `403 Resource not accessible by integration` or silently skips a step because the `GITHUB_TOKEN` lacks the required permission. The developer adds `permissions: write-all` to "fix" it, which grants the token maximum privileges for the entire workflow — a security regression that violates least privilege.
 
@@ -747,7 +747,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 12. Cost Surprises
+### Cost Surprises
 
 **What happens:** A team enables GitHub Actions for a new project, uses `pull_request` triggers without restrictions, and has a 45-minute build. With 10 developers each pushing 5 times a day, that's 450 workflow-minutes per day, 9,000 per month. GitHub's free tier gives 2,000 minutes/month on public repos and 500 minutes on private repos (Teams plan gives 3,000). At $0.008/minute for Linux, overages appear suddenly on the billing page.
 
@@ -815,7 +815,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 13. Log Viewing Broken at Scale
+### Log Viewing Broken at Scale
 
 **What happens:** A production deploy fails. The engineer opens the Actions run, expands the failed job, and finds a log with 50,000 lines of output — mostly from a package manager install or build tool — with the actual error buried in the middle. The GitHub UI renders logs slowly for large outputs, search is limited, and there's no structured logging. Finding the failure takes 10-15 minutes in the log viewer.
 
@@ -862,7 +862,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 14. No Workflow Ownership / Blame Model
+### No Workflow Ownership / Blame Model
 
 **What happens:** A workflow has been failing intermittently for 3 months. No one knows who owns it. `git blame .github/workflows/deploy.yml` shows 15 different contributors, each adding one line. There's no workflow owner defined anywhere. The platform team is paged when it breaks, but it was authored by the data team. Responsibilities are unclear and fixes are slow.
 
@@ -908,7 +908,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 15. Stale Deployment Artifacts
+### Stale Deployment Artifacts
 
 **What happens:** A deploy workflow uploads a build artifact, then a separate deployment job downloads and deploys it. A developer re-runs only the deploy job (not the full workflow). The job downloads the artifact from a previous run — silently deploying an older version of the code. The developer believes they deployed the latest commit.
 
@@ -966,7 +966,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 16. Context Switching Overhead
+### Context Switching Overhead
 
 **What happens:** A developer is in deep focus working on a data transformation function. They push a branch, CI takes 18 minutes, and they've fully context-switched to another task. When CI fails, they get a notification, switch back, read the failure, need to re-understand the original code, make the fix, push again, and wait another 18 minutes. For a distributed team with members in different time zones, a single failed CI cycle can add a full day to a PR's time-to-merge.
 
@@ -1011,7 +1011,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ## Low — Annoyances
 
-### 17. Concurrency Control Confusion
+### Concurrency Control Confusion
 
 **What happens:** Multiple PRs are merged in quick succession. Five concurrent deploy workflows run simultaneously — one for each merge. They all target the same environment and step on each other: creating conflicting database migrations, deploying out of order, or exceeding cloud API rate limits. Alternatively, a developer uses `cancel-in-progress: true` on a deploy workflow, and a partial deploy is cancelled mid-execution, leaving the environment in an inconsistent state.
 
@@ -1059,7 +1059,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 18. Matrix Build Explosion
+### Matrix Build Explosion
 
 **What happens:** A developer adds OS, Python version, and dependency version to the matrix strategy. The result: 3 OS × 5 Python versions × 4 dependency versions = 60 concurrent jobs. The team's GitHub Actions concurrency limit is 20 jobs, so 40 are queued. The matrix takes 45 minutes instead of 10 minutes, consuming 60× the minutes of a single job. The next month's bill is 10× higher.
 
@@ -1122,7 +1122,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 19. Action Version Pinning Fatigue
+### Action Version Pinning Fatigue
 
 **What happens:** The security team mandates pinning all actions to commit SHAs (correct practice). Now every `actions/checkout` reference looks like `uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`. Dependabot opens 40 PRs per month updating these SHAs. Engineers don't review them meaningfully because the SHA is opaque. The Dependabot PRs accumulate, creating noise. The team disables Dependabot to reduce noise, defeating the purpose of pinning.
 
@@ -1176,7 +1176,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ---
 
-### 20. No Native Workflow Diff View
+### No Native Workflow Diff View
 
 **What happens:** A PR modifies a workflow file. The reviewer sees a YAML diff. They have no way to understand — without manual tracing — what the effective change in behavior is. Did this change add a new trigger? Remove a required check? Change which secrets are accessed? The YAML diff shows what changed syntactically but not what changed semantically. Reviewers approve without fully understanding the impact.
 

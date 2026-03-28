@@ -84,7 +84,7 @@ The table format layer is what makes the lakehouse work. It is a metadata contra
 
 ## Key Properties of a Lakehouse
 
-### 1. ACID Transactions on Object Storage
+### ACID Transactions on Object Storage
 
 Object storage (GCS, S3) has no native transaction support — it is a key-value store for blobs. Open table formats implement ACID by managing a transaction log that tracks every operation:
 
@@ -96,7 +96,7 @@ Object storage (GCS, S3) has no native transaction support — it is a key-value
 > [!info] How Delta Lake Achieves Atomicity
 > Delta Lake writes new Parquet files to the storage location, then atomically updates a `_delta_log/` transaction log entry. Readers query the log first to determine which files constitute the current table state. Files not referenced in the log are invisible — partial writes simply never appear in the log.
 
-### 2. Schema Enforcement and Evolution
+### Schema Enforcement and Evolution
 
 Unlike a raw data lake, a lakehouse table has a defined schema that is enforced on write:
 
@@ -104,7 +104,7 @@ Unlike a raw data lake, a lakehouse table has a defined schema that is enforced 
 - **Evolution:** new columns can be added safely without breaking existing readers. Column types can be widened (INT → LONG) but not narrowed.
 - **Partition evolution (Iceberg):** the partition scheme of a table can change without rewriting historical data — Iceberg tracks the partition spec per snapshot.
 
-### 3. Time Travel
+### Time Travel
 
 Every write to a lakehouse table creates a new snapshot. Snapshots are retained according to a configurable retention policy. This enables:
 
@@ -133,7 +133,7 @@ Time travel is critical for:
 - **Debugging:** comparing a pipeline output before and after a change.
 - **GDPR right-to-erasure rollbacks:** verifying a deletion propagated correctly across historical snapshots.
 
-### 4. Row-Level Updates and Deletes
+### Row-Level Updates and Deletes
 
 Traditional Parquet on object storage cannot update or delete individual rows — you must rewrite entire partition files. The lakehouse formats handle row-level mutations:
 

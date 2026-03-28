@@ -126,7 +126,7 @@ display($"OHLCV: {dfD.RowCount} x {dfD.ColumnCount}  |  DimCountry: {dimD.RowCou
     OHLCV: 66355 x 12  |  DimCountry: 212 x 2
 
 ---
-## 1 — Data Exploration
+## Data Exploration
 
 #### Polars.NET — Preview first and last rows with Head and Tail
 
@@ -808,7 +808,7 @@ display(ProfilePolars(dimP));
 </style><div class='pl-dim'>Polars DataFrame: <b>(2 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>column<span class='pl-dtype'>utf8view</span></th><th>type<span class='pl-dtype'>utf8view</span></th><th>nulls<span class='pl-dtype'>int64</span></th><th>unique<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>country_name</td><td>str</td><td>0</td><td>212</td></tr><tr><td>iso_alpha2</td><td>str</td><td>0</td><td>212</td></tr></tbody></table></div>
 
 ---
-## 2 — Column Selection
+## Column Selection
 
 #### Polars.NET — Select a single column by name with Column
 
@@ -1397,7 +1397,7 @@ reordered.Rows[Enumerable.Range(0, 3)]
 </div>
 
 ---
-## 3 — Row Filtering
+## Row Filtering
 
 #### Polars.NET — Boolean filter with Filter and Col expressions
 
@@ -1986,7 +1986,7 @@ dateRange.Rows[Enumerable.Range(0, 5)]
 </div>
 
 ---
-## 4 — Row Access & Slicing
+## Row Access & Slicing
 
 #### Polars.NET — Access a single row by position with Head/Slice
 
@@ -2355,7 +2355,7 @@ display($"Unique symbols: {uniqueSymbols} (from {dfD.RowCount} total rows)");
     Unique symbols: 50 (from 66355 total rows)
 
 ---
-## 5 — Summary
+## Summary
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|

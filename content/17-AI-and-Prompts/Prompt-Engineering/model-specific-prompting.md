@@ -18,7 +18,7 @@ Different models respond differently to the same prompt. Understanding these ten
 
 ---
 
-## 2.3 Model-Specific Syntax and Tone
+## Model-Specific Syntax and Tone
 
 ### Claude (Anthropic)
 
@@ -27,7 +27,7 @@ Different models respond differently to the same prompt. Understanding these ten
 - **Tone response:** Matches requested tone precisely. "Be direct" produces notably shorter output. "Be thorough" produces comprehensive coverage.
 - **Distinctive traits:** Tends to add caveats and qualifications unless instructed not to. Will refuse genuinely harmful requests but handles security/pentesting contexts well with clear authorization framing.
 
-**Optimal Claude prompt structure using XML:**
+#### Optimal Claude prompt structure using XML
 
 ```xml
 <task>Rewrite this function to handle edge cases.</task>
@@ -44,7 +44,7 @@ Different models respond differently to the same prompt. Understanding these ten
 > [!info] Claude's Caveat Tendency
 > Claude's default is to hedge and qualify. If you want direct answers without qualifications: add "Be direct. Do not add caveats or qualifications." as a constraint. This single line often cuts response length by 20-30% and eliminates filler hedging.
 
-**Authorization framing for security/technical contexts:**
+#### Authorization framing for security/technical contexts
 When working on legitimate security, pentesting, or sensitive technical topics that Claude might treat cautiously, add explicit context:
 ```
 This is for internal security review of our own production system.
@@ -60,7 +60,7 @@ I am the system owner with full authorization.
 - **Tone response:** Naturally conversational and verbose. Explicitly say "be concise" or "no preamble" to reduce filler.
 - **Distinctive traits:** Tends toward confident, polished output even when uncertain. Benefits from "if unsure, say so" constraints.
 
-**Optimal GPT-4 prompt structure:**
+#### Optimal GPT-4 prompt structure
 
 ```
 System: You are a concise technical writer. No filler, no hedging.
@@ -92,7 +92,7 @@ User: Explain the CAP theorem in exactly 3 sentences.
 > [!tip] Gemini for Multimodal Tasks
 > Gemini's primary advantage over Claude and GPT-4 is native multimodal capability — analyzing images, video frames, and audio. For tasks involving visual data (charts, diagrams, screenshots), Gemini is the strongest choice.
 
-**Recommended Gemini prompt structure for complex tasks:**
+#### Recommended Gemini prompt structure for complex tasks
 
 ```
 Task: [clear one-sentence task statement]
@@ -122,7 +122,7 @@ Limit your response to [N] sentences/paragraphs.
 > [!tip] Grok for Real-Time Information
 > Grok's real-time web access makes it the best choice for "what is the current state of X" queries where timeliness matters. For questions where training cutoff is a limiting factor (stock prices, recent events, current documentation), Grok outperforms offline models.
 
-**Grok responds well to direct, unhedged prompts:**
+#### Grok responds well to direct, unhedged prompts
 ```
 What's the current consensus on using dbt with BigQuery vs SQL Server?
 Give me the honest tradeoffs, not the marketing version.
@@ -140,7 +140,7 @@ Give me the honest tradeoffs, not the marketing version.
 > [!info] Perplexity's Niche
 > Perplexity is not a general-purpose AI — it is a research tool. Its automatic source citations make it uniquely valuable for due diligence work where you need to verify claims. For creative or code tasks, use Claude or GPT-4.
 
-**Perplexity prompt patterns:**
+#### Perplexity prompt patterns
 ```
 What are the current limitations of BigQuery's MERGE statement as of 2026?
 Cite specific documentation or release notes.

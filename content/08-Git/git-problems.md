@@ -15,7 +15,7 @@ Git is the backbone of collaborative data engineering, but its power comes with 
 
 ## Critical — Data Loss / Security Breach
 
-### 1. Secrets Committed to Repository
+### Secrets Committed to Repository
 
 **What happens**
 
@@ -235,7 +235,7 @@ git push --force --tags
 
 ---
 
-### 2. Force Push to Main/Shared Branch
+### Force Push to Main/Shared Branch
 
 **What happens**
 
@@ -320,7 +320,7 @@ git log --all --graph --oneline -30
 
 ---
 
-### 3. Accidental `git reset --hard` on Wrong Branch
+### Accidental `git reset --hard` on Wrong Branch
 
 **What happens**
 
@@ -423,7 +423,7 @@ git reset --hard e4f5g6h   # the "last good" HEAD@{N} entry
 
 ---
 
-### 4. Merge Conflict Resolved by Accepting Wrong Side
+### Merge Conflict Resolved by Accepting Wrong Side
 
 **What happens**
 
@@ -515,7 +515,7 @@ git commit
 
 ---
 
-### 5. Large Binary Files Committed (Repo Bloat)
+### Large Binary Files Committed (Repo Bloat)
 
 **What happens**
 
@@ -666,7 +666,7 @@ git add .gitattributes && git commit -m "chore: add LFS tracking for data files"
 
 ## High — Team Velocity / Code Quality
 
-### 6. Long-Lived Feature Branches
+### Long-Lived Feature Branches
 
 **What happens**
 
@@ -746,7 +746,7 @@ git cherry-pick <dbt-commit-1> <dbt-commit-2> <dbt-commit-3>
 
 ---
 
-### 7. Merge Conflicts in Shared Files
+### Merge Conflicts in Shared Files
 
 **What happens**
 
@@ -827,7 +827,7 @@ For systematic conflict resolution:
 
 ---
 
-### 8. Broken Main Branch
+### Broken Main Branch
 
 **What happens**
 
@@ -906,7 +906,7 @@ git push origin main   # requires admin bypass of branch protection or a hotfix 
 
 ---
 
-### 9. PR Review Bottleneck
+### PR Review Bottleneck
 
 **What happens**
 
@@ -972,7 +972,7 @@ jobs:
 
 ---
 
-### 10. Rebase vs Merge Confusion
+### Rebase vs Merge Confusion
 
 **What happens**
 
@@ -1115,7 +1115,7 @@ git rebase -i origin/main
 
 ---
 
-### 11. Detached HEAD Work Lost
+### Detached HEAD Work Lost
 
 **What happens**
 
@@ -1190,7 +1190,7 @@ git checkout -b recovery/esg-hotfix abc1234
 
 ## Moderate — Operational Pain
 
-### 12. `.gitignore` Missing Entries
+### `.gitignore` Missing Entries
 
 **What happens**
 
@@ -1244,7 +1244,7 @@ git config --global core.excludesFile ~/.gitignore_global
 
 ---
 
-### 13. Commit Message Anarchy
+### Commit Message Anarchy
 
 **What happens**
 
@@ -1302,7 +1302,7 @@ module.exports = {
 
 ---
 
-### 14. Stale Branches Accumulate
+### Stale Branches Accumulate
 
 **What happens**
 
@@ -1355,7 +1355,7 @@ done
 
 ---
 
-### 15. Wrong Branch Deployment
+### Wrong Branch Deployment
 
 **What happens**
 
@@ -1412,7 +1412,7 @@ done
 
 ---
 
-### 16. Cherry-Pick Conflicts
+### Cherry-Pick Conflicts
 
 **What happens**
 
@@ -1460,7 +1460,7 @@ gh pr create --base release/v2.3.x --title "fix(backport): index rounding error 
 
 ---
 
-### 17. SQL Migration Ordering Conflicts
+### SQL Migration Ordering Conflicts
 
 **What happens**
 
@@ -1520,7 +1520,7 @@ echo "Migration version check passed."
 
 ---
 
-### 18. Git LFS Misconfigured
+### Git LFS Misconfigured
 
 **What happens**
 
@@ -1595,7 +1595,7 @@ done
 
 ## Low — Annoyances / Culture Issues
 
-### 19. Blame Culture
+### Blame Culture
 
 **What happens**
 
@@ -1639,7 +1639,7 @@ git blame -C -C -w -L 40,80 models/esg/score_calculation.sql
 
 ---
 
-### 20. Inconsistent Git Config Across Team
+### Inconsistent Git Config Across Team
 
 **What happens**
 
@@ -1694,7 +1694,7 @@ echo "Git configured. Run 'git lg' to verify."
 
 ---
 
-### 21. Overwritten PR During Rebase
+### Overwritten PR During Rebase
 
 **What happens**
 
@@ -1730,7 +1730,7 @@ git merge origin/main   # creates a merge commit but doesn't rewrite history
 
 ---
 
-### 22. Partial Staging Mistakes
+### Partial Staging Mistakes
 
 **What happens**
 
@@ -1784,7 +1784,7 @@ git add -p   # now only one fix exists, staging is simpler
 
 ---
 
-### 23. Tag Mismanagement
+### Tag Mismanagement
 
 **What happens**
 
@@ -1854,7 +1854,7 @@ git describe --tags --dirty
 
 ---
 
-### 24. Submodule Pain
+### Submodule Pain
 
 **What happens**
 
@@ -1911,7 +1911,7 @@ git commit -m "chore(deps): update shared-utils to latest"
 
 ---
 
-### 25. Monorepo vs Multi-Repo Friction
+### Monorepo vs Multi-Repo Friction
 
 **What happens**
 

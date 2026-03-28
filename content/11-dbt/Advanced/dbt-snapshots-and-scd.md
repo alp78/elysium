@@ -17,9 +17,9 @@ dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row 
 
 ---
 
-## 1. Snapshot Mechanics
+## Snapshot Mechanics
 
-### 1.1 How dbt Snapshots Work
+### How dbt Snapshots Work
 
 1. dbt runs the snapshot's `select` query against the source.
 2. For each row, dbt checks whether it already exists in the snapshot table (using `unique_key`).
@@ -28,7 +28,7 @@ dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row 
 5. If the row is **unchanged**: do nothing.
 6. If the row **disappeared** from the source: dbt does **not** automatically close it (a gotcha — see §7).
 
-### 1.2 Generated Metadata Columns
+### Generated Metadata Columns
 
 | Column | Type | Description |
 | ------ | ---- | ----------- |
@@ -39,7 +39,7 @@ dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row 
 
 The **current record** for any `unique_key` value is always the row where `dbt_valid_to is null`.
 
-### 1.3 File Placement
+### File Placement
 
 Snapshots live in the `snapshots/` directory (configurable in `dbt_project.yml`). They use `.sql` extension with a `{% snapshot %}` block.
 
@@ -52,7 +52,7 @@ snapshots/
 
 ---
 
-## 2. Strategy: `timestamp`
+## Strategy: `timestamp`
 
 Use `timestamp` when the source table has a reliable `updated_at` column maintained by the upstream system.
 
@@ -113,7 +113,7 @@ where effective_date >= '2000-01-01'   -- Exclude pre-history bootstrap data
 
 ---
 
-## 3. Strategy: `check`
+## Strategy: `check`
 
 Use `check` when the source has no reliable `updated_at` column. dbt hashes the specified columns and detects changes by comparing hashes.
 
@@ -170,7 +170,7 @@ from {{ source('esg_providers_raw', 'raw_esg_ratings') }}
 > [!warning] `check_cols = 'all'` is expensive
 > Setting `check_cols = 'all'` compares every column. For wide ESG tables with 80+ columns, this creates a very large hash and adds significant compute. Explicitly list the columns that represent meaningful business changes.
 
-### 3.1 `timestamp` vs `check` Decision Matrix
+### `timestamp` vs `check` Decision Matrix
 
 | Criterion | Use `timestamp` | Use `check` |
 | --------- | --------------- | ----------- |
@@ -182,7 +182,7 @@ from {{ source('esg_providers_raw', 'raw_esg_ratings') }}
 
 ---
 
-## 4. Full Example: `snap_constituents` — Index Membership and Weights
+## Full Example: `snap_constituents` — Index Membership and Weights
 
 This is a complete, production-ready snapshot tracking which securities are in each index, their weights, and key descriptive attributes. Entries appear and disappear as indices are rebalanced.
 
@@ -273,11 +273,11 @@ After running `dbt snapshot`, the table `snapshots.snap_constituents` contains a
 
 ---
 
-## 5. Point-in-Time (PIT) Queries on Snapshot Tables
+## Point-in-Time (PIT) Queries on Snapshot Tables
 
 The core query pattern: filter to records that were active at a specific point in time.
 
-### 5.1 Standard PIT Filter
+### Standard PIT Filter
 
 ```sql
 -- "What were the MSCI World constituents and weights as of 2024-12-31?"
@@ -308,7 +308,7 @@ order by weight_pct desc
 > {% endmacro %}
 > ```
 
-### 5.2 PIT Join: Reconstructing Historical Performance
+### PIT Join: Reconstructing Historical Performance
 
 Combine the constituent snapshot with historical price data to reconstruct index performance as if calculated historically:
 
@@ -384,7 +384,7 @@ group by 1, 2, 3
 
 ---
 
-## 6. Snapshot of ESG Scores for Audit Trail
+## Snapshot of ESG Scores for Audit Trail
 
 ESG ratings change as providers update their models and as companies disclose new data. For funds with ESG mandates, regulators may require evidence of what rating a constituent had at the time of a portfolio decision. This is analogous to how [[index-maintenance-and-corporate-actions]] tracks dimension changes for corporate actions like splits and mergers through SCD Type 2 history.
 
@@ -472,11 +472,11 @@ order by esg_provider_id, dbt_valid_from
 
 ---
 
-## 7. Gotchas and Known Issues
+## Gotchas and Known Issues
 
 > [!danger] Critical gotchas that cause data quality issues
 
-### 7.1 Duplicate `unique_key` in Source
+### Duplicate `unique_key` in Source
 
 If the source query returns multiple rows with the same `unique_key` value, dbt will raise an error or produce unpredictable results depending on the adapter. Always deduplicate before the snapshot.
 
@@ -504,7 +504,7 @@ from deduped
 where rn = 1
 ```
 
-### 7.2 `dbt snapshot --full-refresh` Wipes History
+### `dbt snapshot --full-refresh` Wipes History
 
 **`dbt snapshot --full-refresh` drops and recreates the snapshot table, destroying all historical SCD2 data.** Unlike models where `--full-refresh` is a routine operation, on snapshots it is destructive.
 
@@ -515,7 +515,7 @@ where rn = 1
 > [!warning] Full-refresh on incremental models upstream
 > If an incremental model that feeds a snapshot is full-refreshed and re-seeded from a different date, the snapshot will receive "new" rows that look like changes and create spurious SCD2 records. Always full-refresh incrementals and their downstream snapshots together, or avoid full-refresh in production.
 
-### 7.3 Hard Deletes Not Handled by Default
+### Hard Deletes Not Handled by Default
 
 When a constituent is removed from an index, the source row disappears. By default, dbt does **not** close the snapshot record — the `dbt_valid_to` stays null, and the constituent appears to be still active.
 
@@ -533,7 +533,7 @@ When a constituent is removed from an index, the source row disappears. By defau
 > [!note] `invalidate_hard_deletes` overhead
 > When enabled, dbt runs an additional query to find keys present in the snapshot but absent from the source. For very large snapshot tables this adds meaningful query time. Consider partitioning the snapshot table by a date column and filtering accordingly.
 
-### 7.4 Snapshot Timestamps Use `current_timestamp`
+### Snapshot Timestamps Use `current_timestamp`
 
 The `dbt_valid_from` and `dbt_valid_to` are set to `current_timestamp` at the time `dbt snapshot` runs — not the `effective_date` or `provider_updated_at` from the source. This means:
 
@@ -542,7 +542,7 @@ The `dbt_valid_from` and `dbt_valid_to` are set to `current_timestamp` at the ti
 
 **Implication:** `dbt_valid_from` is the *pipeline ingestion timestamp*, not the *business effective date*. Store `effective_date` or `provider_updated_at` as source columns and use those for business-logic PIT queries. Use `dbt_valid_from` only for pipeline-level auditing.
 
-### 7.5 Schema Changes Break Snapshots
+### Schema Changes Break Snapshots
 
 If you add or remove columns from the snapshot's select query, dbt will raise an error on the next run because the snapshot table's DDL does not match the query output.
 
@@ -561,13 +561,13 @@ If you add or remove columns from the snapshot's select query, dbt will raise an
 }}
 ```
 
-### 7.6 Snapshot Tables Are Not Versioned
+### Snapshot Tables Are Not Versioned
 
 Unlike models, snapshot tables have no native versioning in dbt. If the business definition of "constituent" changes (e.g. you start tracking ADRs separately), you cannot bump to `snap_constituents_v2` without manually migrating history. Plan snapshot schemas carefully and treat them as long-lived write-once append tables.
 
 ---
 
-## 8. Running Snapshots
+## Running Snapshots
 
 ```bash
 # Run all snapshots

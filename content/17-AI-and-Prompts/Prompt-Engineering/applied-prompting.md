@@ -18,7 +18,7 @@ This note converts the foundational principles from [[prompt-foundations]] and t
 
 ---
 
-## 3.1 Research and Analysis
+## Research and Analysis
 
 **Domain:** Gathering, synthesizing, and evaluating information.
 
@@ -57,7 +57,7 @@ Constraints:
 
 ---
 
-## 3.2 Content Creation
+## Content Creation
 
 **Domain:** Writing text for a specific audience and purpose.
 
@@ -100,7 +100,7 @@ calls to action, author bios, or SEO keywords.
 
 ---
 
-## 3.3 Code and Technical Tasks
+## Code and Technical Tasks
 
 **Domain:** Writing, reviewing, debugging, or explaining code.
 
@@ -112,7 +112,7 @@ Write a Python function to load data into SQL Server.
 
 ### After (optimized code generation prompt)
 
-**Write a Python upsert function for SQL Server using pyodbc with batch commits:**
+#### Write a Python upsert function for SQL Server using pyodbc with batch commits
 
 ```
 Write a Python function `load_signals_daily(conn, df, index_key)`
@@ -154,7 +154,7 @@ functionally necessary.
 
 ### Code Review Prompt Pattern
 
-**Review for correctness bugs only (exclude style):**
+#### Review for correctness bugs only (exclude style)
 
 ```
 Review this REST API design for a stock data service.
@@ -168,7 +168,7 @@ Just review what's here.
 
 ---
 
-## 3.4 Data Analysis and Extraction
+## Data Analysis and Extraction
 
 **Domain:** Extracting structured information from unstructured text.
 
@@ -180,7 +180,7 @@ Analyze this financial report.
 
 ### After (optimized JSON extraction prompt)
 
-**Extract structured metrics from a quarterly financial report:**
+#### Extract structured metrics from a quarterly financial report
 
 ```
 Extract the following metrics from the attached quarterly report.
@@ -223,7 +223,7 @@ Output format:
 
 ---
 
-## 3.5 Before/After Optimization Examples
+## Before/After Optimization Examples
 
 Three additional optimization patterns with the principle behind each.
 
@@ -260,26 +260,26 @@ Three additional optimization patterns with the principle behind each.
 
 Before sending any applied prompt, verify:
 
-**Research and analysis:**
+#### Research and analysis
 - [ ] Role is domain-specific and time-bound
 - [ ] Structure is enumerated (numbered steps or sections)
 - [ ] Anti-boilerplate constraint is included ("no generic disclaimers")
 - [ ] Comparison or contrarian element is requested if relevant
 
-**Content creation:**
+#### Content creation
 - [ ] Audience is specified with their current knowledge level
 - [ ] Tone is described with a concrete analogy (not just adjectives)
 - [ ] Length is an explicit range (not "appropriate length")
 - [ ] Prohibited content is listed explicitly
 
-**Code and technical:**
+#### Code and technical
 - [ ] Function signature is specified
 - [ ] All column names, types, and constraints are included
 - [ ] Error handling requirements are listed
 - [ ] "Do not add X" clauses cover docstrings, type hints, logging
 - [ ] Return type/format is specified
 
-**Data extraction:**
+#### Data extraction
 - [ ] Every field has null semantics defined
 - [ ] Derived vs. extracted distinction is explicit
 - [ ] Output format is shown as a complete JSON example

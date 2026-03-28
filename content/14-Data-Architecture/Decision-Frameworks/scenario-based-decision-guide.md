@@ -1233,37 +1233,37 @@ flowchart TD
 > [!danger] Common Mistakes
 > These are patterns that look reasonable but cause pain at scale. Learn from others' mistakes.
 
-### 1. "We'll Build a Data Lake and Figure Out the Schema Later"
+### "We'll Build a Data Lake and Figure Out the Schema Later"
 
 **The mistake:** Dumping everything into GCS or S3 with no schema enforcement, no catalog, no naming conventions. Six months later, nobody knows what any file is.
 
 **The fix:** Define schemas upfront (even if they are flexible). Use a catalog (Dataplex, Data Catalog). Enforce naming conventions (`/source/entity/YYYY-MM-DD/`). See [[data-lake-architecture]] and [[context-and-metadata-architecture]].
 
-### 2. "We Need Kafka for Everything"
+### "We Need Kafka for Everything"
 
 **The mistake:** Deploying Kafka for a pipeline that processes 1,000 events per day. You now have ZooKeeper, brokers, schema registry, and Connect to manage — for something Cloud Scheduler + Cloud Run could handle.
 
 **The fix:** Use Pub/Sub for GCP-native workloads under 100K messages/second. Use Kafka only when you need multi-day replay, strict ordering, or you are already running Kafka. See [[streaming-architecture]].
 
-### 3. "Let's Use Microservices for Data Pipelines"
+### "Let's Use Microservices for Data Pipelines"
 
 **The mistake:** Building 20 microservices for a pipeline that is fundamentally a linear DAG. Each service has its own deployment, monitoring, and failure mode. Debugging requires tracing through 20 services.
 
 **The fix:** Use a monolithic pipeline (Airflow DAG with task functions) until you have a genuine reason to decompose. Microservices solve organizational scaling problems, not technical ones. See [[airflow-dag-patterns]].
 
-### 4. "We Don't Need Tests for Data"
+### "We Don't Need Tests for Data"
 
 **The mistake:** No validation between pipeline stages. A source schema change silently produces NULL values that propagate to dashboards. The CEO discovers the issue.
 
 **The fix:** dbt tests at every layer. Freshness checks. Row count assertions. Schema contracts. See [[dbt-transformation-layer]] and [[context-and-metadata-architecture]].
 
-### 5. "Terraform Everything from Day One"
+### "Terraform Everything from Day One"
 
 **The mistake:** A 2-person team spending 40% of their time writing Terraform modules for 10 resources. The overhead exceeds the benefit.
 
 **The fix:** Start with `gcloud` CLI scripts in a Git repo. Switch to Terraform when you have 20+ resources, multiple environments, or 3+ engineers making infra changes. See Scenario 5.
 
-### 6. "One Database to Rule Them All"
+### "One Database to Rule Them All"
 
 **The mistake:** Using SQL Server for everything — transactional writes, analytical queries, real-time serving, and ML feature storage. Performance degrades as workloads compete for resources.
 

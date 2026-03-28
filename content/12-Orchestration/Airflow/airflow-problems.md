@@ -17,7 +17,7 @@ Airflow is the de facto orchestrator for data pipelines, but its flexibility com
 
 ---
 
-### 1. Scheduler Crash or Hang
+### Scheduler Crash or Hang
 
 **What happens**
 
@@ -139,7 +139,7 @@ The scheduler parses every DAG file in the `dags_folder` on a loop. A single DAG
 
 ---
 
-### 2. Zombie Tasks
+### Zombie Tasks
 
 **What happens**
 
@@ -253,7 +253,7 @@ Airflow tracks running tasks via a `LocalTaskJob` record in the metadata databas
 
 ---
 
-### 3. Metadata Database Corruption
+### Metadata Database Corruption
 
 **What happens**
 
@@ -373,7 +373,7 @@ Airflow's metadata database stores all state: DAG definitions, task instance rec
 
 ---
 
-### 4. Catchup Storm
+### Catchup Storm
 
 **What happens**
 
@@ -481,7 +481,7 @@ A new DAG is deployed with `catchup=True` (the Airflow default) and a `start_dat
 
 ---
 
-### 5. Secret / Credential Expiry
+### Secret / Credential Expiry
 
 **What happens**
 
@@ -593,7 +593,7 @@ Service account keys stored as static JSON in Airflow connections or environment
 
 ---
 
-### 6. Sensor Deadlocks
+### Sensor Deadlocks
 
 **What happens**
 
@@ -687,7 +687,7 @@ In `poke` mode, an Airflow sensor occupies a worker slot for its entire lifetime
 
 ---
 
-### 7. XCom Overload
+### XCom Overload
 
 **What happens**
 
@@ -806,7 +806,7 @@ XCom (Cross-Communication) is Airflow's mechanism for passing small metadata bet
 
 ---
 
-### 8. DAG Parse Time Explosion
+### DAG Parse Time Explosion
 
 **What happens**
 
@@ -904,7 +904,7 @@ Airflow's DAG processor imports every Python file in `dags_folder` as a module r
 
 ---
 
-### 9. Trigger Rule Confusion
+### Trigger Rule Confusion
 
 **What happens**
 
@@ -975,7 +975,7 @@ Airflow's trigger rules determine when a task is eligible to run based on the st
 
 ---
 
-### 10. Backfill vs Production Collision
+### Backfill vs Production Collision
 
 **What happens**
 
@@ -1063,7 +1063,7 @@ By default, all DAGs share the same pool of worker slots (`default_pool`). Backf
 
 ---
 
-### 11. Task Retry Storm
+### Task Retry Storm
 
 **What happens**
 
@@ -1175,7 +1175,7 @@ Airflow's retry mechanism operates at the individual task level with no coordina
 
 ---
 
-### 12. DAG Visibility Issues (Import Errors)
+### DAG Visibility Issues (Import Errors)
 
 **What happens**
 
@@ -1268,7 +1268,7 @@ Airflow loads DAGs by treating the `dags_folder` as a Python package. If a DAG f
 
 ---
 
-### 13. Docker Compose Instability
+### Docker Compose Instability
 
 **What happens**
 
@@ -1392,7 +1392,7 @@ The official `docker-compose.yaml` in the Airflow repository is explicitly docum
 
 ---
 
-### 14. Web UI Slow or Unresponsive
+### Web UI Slow or Unresponsive
 
 **What happens**
 
@@ -1479,7 +1479,7 @@ Airflow's web UI queries the metadata database for every page render: the DAG li
 
 ---
 
-### 15. Timezone Confusion
+### Timezone Confusion
 
 **What happens**
 
@@ -1562,7 +1562,7 @@ Airflow internally operates in UTC, but `datetime` objects without timezone info
 
 ---
 
-### 16. Upgrade Path Complexity (2.x → 3.x)
+### Upgrade Path Complexity (2.x → 3.x)
 
 **What happens**
 
@@ -1648,7 +1648,7 @@ Airflow 3.x introduced breaking changes: module paths reorganized (providers mov
 
 ---
 
-### 17. Connection and Variable Management Drift
+### Connection and Variable Management Drift
 
 **What happens**
 
@@ -1728,7 +1728,7 @@ Airflow stores connections and variables in the metadata database. The UI provid
 
 ---
 
-### 18. Log Storage Fills Disk
+### Log Storage Fills Disk
 
 **What happens**
 
@@ -1821,7 +1821,7 @@ By default, Airflow writes task execution logs as flat files under `{logs_folder
 
 ---
 
-### 19. DAG Deployment Coordination
+### DAG Deployment Coordination
 
 **What happens**
 
@@ -1893,7 +1893,7 @@ Without a structured deployment strategy, DAG changes go live as soon as code is
 
 ---
 
-### 20. SubDAG and TaskGroup Confusion
+### SubDAG and TaskGroup Confusion
 
 **What happens**
 
@@ -1959,7 +1959,7 @@ A legacy DAG uses `SubDagOperator` to encapsulate a group of related tasks (e.g.
 
 ---
 
-### 21. Executor Choice Paralysis
+### Executor Choice Paralysis
 
 **What happens**
 
@@ -2004,7 +2004,7 @@ To migrate from LocalExecutor to CeleryExecutor:
 
 ---
 
-### 22. Pool Exhaustion
+### Pool Exhaustion
 
 **What happens**
 
@@ -2081,7 +2081,7 @@ Airflow's default pool (`default_pool`) has a fixed number of slots (128 by defa
 
 ---
 
-### 23. Email and Alert Fatigue
+### Email and Alert Fatigue
 
 **What happens**
 
@@ -2177,7 +2177,7 @@ Airflow's built-in `email_on_failure` and `email_on_retry` operate at the task l
 
 ---
 
-### 24. Dependency Hell
+### Dependency Hell
 
 **What happens**
 
@@ -2263,7 +2263,7 @@ Airflow has a large dependency tree — it pins specific versions of `google-clo
 
 ---
 
-### 25. `execution_date` Confusion
+### `execution_date` Confusion
 
 **What happens**
 

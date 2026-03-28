@@ -22,7 +22,7 @@ Topics covered:
 - Building a REST API (ASP.NET Minimal APIs)
 - Data Engineering API Patterns
 
-## 1. HTTP Clients & REST API Calls
+## HTTP Clients & REST API Calls
 
 ```csharp
 using System.Net.Http;
@@ -155,7 +155,7 @@ catch (HttpRequestException ex)
     
       EnsureSuccessStatusCode() caught: Response status code does not indicate success: 500 (INTERNAL SERVER ERROR).
 
-## 2. REST API Patterns for Data Engineering
+## REST API Patterns for Data Engineering
 
 #### Pagination — fetch data in pages
 
@@ -267,7 +267,7 @@ Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty
       Status: 200
       Server received: 3 trades
 
-## 3. Building a REST API (ASP.NET Minimal APIs)
+## Building a REST API (ASP.NET Minimal APIs)
 
 #### DTO record declarations
 
@@ -459,7 +459,7 @@ app.MapDelete("/trades/{id}",     (string id) => DeleteTrade(id));
 app.Run();
 ```
 
-## 4. Data Validation — Records, Data Annotations, and FluentValidation
+## Data Validation — Records, Data Annotations, and FluentValidation
 
 C# has three layers of validation for API models, from simple to powerful:
 
@@ -792,7 +792,7 @@ Console.WriteLine(@"
 ");
 ```
 
-## 5. Summary
+## Summary
 
 > [!abstract]- Quick Reference
 > **HttpClient**

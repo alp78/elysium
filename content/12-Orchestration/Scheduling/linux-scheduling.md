@@ -27,11 +27,11 @@ Linux task scheduling encompasses every mechanism for running commands automatic
 
 ---
 
-## 1. Cron and Crontab
+## Cron and Crontab
 
 Cron is the simplest scheduler — it runs commands at specified intervals on a single machine. For lightweight tasks (backup scripts, health checks, log rotation), cron is the right tool. For complex pipelines with dependencies, retries, and monitoring, use [[airflow-core-concepts|Airflow]].
 
-### 1.1 Crontab Syntax Diagram
+### Crontab Syntax Diagram
 
 The crontab format uses five time fields followed by the command. Memorize this diagram:
 
@@ -59,7 +59,7 @@ The crontab format uses five time fields followed by the command. Memorize this 
 > [!warning] Day-of-week numbering
 > Both `0` and `7` mean Sunday in standard cron. Vixie cron (the most common Linux implementation) accepts `0–7`. Always verify on your target system.
 
-### 1.2 Crontab Management Commands
+### Crontab Management Commands
 
 #### Edit the current user's crontab
 
@@ -125,7 +125,7 @@ crontab -l > ~/crontab-backup.txt
 > [!tip] Version-control your crontab
 > Export `crontab -l > crontab.txt` and commit it to git. This gives you a history of schedule changes and makes recovery trivial after accidental `crontab -r`.
 
-### 1.3 Common Schedule Patterns
+### Common Schedule Patterns
 
 ```bash
 # ─── EVERY N MINUTES ───────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ crontab -l > ~/crontab-backup.txt
 > [!warning] The day-of-month OR day-of-week trap
 > In standard Vixie cron, if BOTH day-of-month and day-of-week are specified (not `*`), the job runs when EITHER condition is true. To implement true "first Monday of the month", use the guard pattern shown above or switch to systemd timers, which support `OnCalendar=Mon *-*-1..7`.
 
-### 1.4 Special Strings (@reboot, @daily, etc.)
+### Special Strings (@reboot, @daily, etc.)
 
 Vixie cron and most modern crond implementations support `@string` shortcuts:
 
@@ -201,7 +201,7 @@ Vixie cron and most modern crond implementations support `@string` shortcuts:
 > [!info] @reboot timing
 > `@reboot` jobs run after the cron daemon itself starts, not at the very first moment of boot. There can be a delay of several seconds to minutes depending on the system. For precise boot-time ordering, use a systemd service with `After=network.target` instead.
 
-### 1.5 Environment in Cron
+### Environment in Cron
 
 Cron runs with a stripped-down environment — no `.bashrc`, no `.bash_profile`, no PATH additions from your shell config.
 
@@ -277,7 +277,7 @@ Register-ScheduledTask -TaskName "DailyETL" -Action $action `
     -Trigger $trigger -Settings $settings -RunLevel Highest
 ```
 
-### 1.6 Output Handling — Redirect, MAILTO, and Logging
+### Output Handling — Redirect, MAILTO, and Logging
 
 ```bash
 # ─── DEFAULT BEHAVIOR: cron emails output to the local user ─────────────────
@@ -346,7 +346,7 @@ Write-EventLog -LogName Application -Source "PipelineJob" `
     -EntryType Information -EventId 1001 -Message "Pipeline completed successfully"
 ```
 
-### 1.7 Overlap Prevention with flock
+### Overlap Prevention with flock
 
 When a cron job's execution time exceeds its schedule interval, multiple instances run simultaneously. For pipelines that write to databases or files, this causes corruption, duplicate records, and resource exhaustion.
 
@@ -412,7 +412,7 @@ try {
 }
 ```
 
-### 1.8 User Crontab vs System Crontab
+### User Crontab vs System Crontab
 
 Linux has multiple crontab locations with different purposes:
 
@@ -464,7 +464,7 @@ cat /etc/cron.deny  2>/dev/null || echo "cron.deny not present"
 echo -e "root\npipeline" | sudo tee /etc/cron.allow
 ```
 
-### 1.9 Debugging Cron — Syslog, Testing, and Common Failures
+### Debugging Cron — Syslog, Testing, and Common Failures
 
 ```bash
 # ─── CHECK CRON LOGS IN SYSLOG ──────────────────────────────────────────────
@@ -516,11 +516,11 @@ dos2unix /home/pipeline/scripts/run_etl.sh  # fix it
 
 ---
 
-## 2. Systemd Timers — The Modern Alternative to Cron
+## Systemd Timers — The Modern Alternative to Cron
 
 Systemd timers are the recommended replacement for cron on modern Linux systems. They offer dependency-aware scheduling, full integration with `journalctl` logging, better error handling, and persistent timers that run missed jobs after reboot.
 
-### 2.1 Why Systemd Timers Over Cron
+### Why Systemd Timers Over Cron
 
 | Feature | Cron | Systemd Timer |
 |---|---|---|
@@ -533,7 +533,7 @@ Systemd timers are the recommended replacement for cron on modern Linux systems.
 | Distribution | Ships with crond | Ships with systemd (standard on Ubuntu 16.04+) |
 | Randomized delay | Not available | `RandomizedDelaySec=` (avoids thundering herd) |
 
-### 2.2 Creating a Systemd Timer — Full Example
+### Creating a Systemd Timer — Full Example
 
 A systemd timer requires two unit files: a `.service` file (what to run) and a `.timer` file (when to run it).
 
@@ -652,7 +652,7 @@ sudo systemctl disable pipeline-etl.timer
 sudo systemctl stop pipeline-etl.timer
 ```
 
-### 2.3 OnCalendar Syntax Reference
+### OnCalendar Syntax Reference
 
 OnCalendar is richer than cron's 5-field format:
 
@@ -689,7 +689,7 @@ systemd-analyze calendar "Mon..Fri 09:00:00"
 systemd-analyze calendar "*:0/5"
 ```
 
-### 2.4 Reading Timer Logs with journalctl
+### Reading Timer Logs with journalctl
 
 ```bash
 # View logs for the ETL service (all time):
@@ -717,7 +717,7 @@ journalctl -u pipeline-etl.service --since "2026-03-22 03:00:00"
 journalctl -u pipeline-etl.service -o json-pretty | head -100
 ```
 
-### 2.5 Persistent Timers — Handling Missed Jobs After Reboot
+### Persistent Timers — Handling Missed Jobs After Reboot
 
 ```ini
 [Timer]
@@ -737,11 +737,11 @@ systemctl show pipeline-etl.timer --property=LastTriggerUSec
 
 ---
 
-## 3. at and batch — One-Time Scheduling
+## at and batch — One-Time Scheduling
 
 `at` and `batch` schedule commands to run once in the future, unlike cron which runs on recurring schedules.
 
-### 3.1 at — One-Time Future Execution
+### at — One-Time Future Execution
 
 ```bash
 # ─── BASIC USAGE ─────────────────────────────────────────────────────────────
@@ -809,7 +809,7 @@ Get-ScheduledTask | Where-Object State -eq "Ready" | Select-Object TaskName, Tas
 Unregister-ScheduledTask -TaskName "OneTimeMigration" -Confirm:$false
 ```
 
-### 3.2 batch — Load-Aware Execution
+### batch — Load-Aware Execution
 
 ```bash
 # batch runs commands when system load drops below 1.5 (configurable via atd)
@@ -833,11 +833,11 @@ atq
 
 ---
 
-## 4. Anacron — Scheduling for Machines That Aren't Always On
+## Anacron — Scheduling for Machines That Aren't Always On
 
 Anacron solves a fundamental problem with cron: if a daily job is scheduled for 03:00 and the machine is off at 03:00, cron skips it. Anacron ensures the job runs eventually, even if the machine has been off.
 
-### 4.1 How Anacron Differs from Cron
+### How Anacron Differs from Cron
 
 | Aspect | Cron | Anacron |
 |---|---|---|
@@ -848,7 +848,7 @@ Anacron solves a fundamental problem with cron: if a daily job is scheduled for 
 | Use case | Servers | Laptops, development machines |
 | Log | syslog | syslog + `/var/spool/anacron/` |
 
-### 4.2 /etc/anacrontab Format
+### /etc/anacrontab Format
 
 ```bash
 # /etc/anacrontab format:
@@ -896,11 +896,11 @@ cat /etc/anacrontab
 
 ---
 
-## 5. SSH Configuration — Remote Scheduling and Access
+## SSH Configuration — Remote Scheduling and Access
 
 SSH is the secure channel between your workstation and your infrastructure. Every `gcloud compute ssh`, every `scp` file transfer, and every IAP tunnel is SSH underneath. Understanding SSH configuration saves you from typing long commands and enables secure, passwordless automation.
 
-### 5.1 SSH Config File (~/.ssh/config)
+### SSH Config File (~/.ssh/config)
 
 ```bash
 # SSH config file (~/.ssh/config) — stop typing long commands
@@ -931,7 +931,7 @@ ssh -L 1433:10.132.0.2:1433 bastion-server
 # Now: sqlcmd -S localhost,1433 connects to the remote SQL Server through the tunnel
 ```
 
-### 5.2 Extended SSH Config Patterns
+### Extended SSH Config Patterns
 
 ```bash
 # ~/.ssh/config — extended patterns for data engineering infrastructure
@@ -989,7 +989,7 @@ Host *
     AddKeysToAgent yes
 ```
 
-### 5.3 SSH Key Generation and Management
+### SSH Key Generation and Management
 
 ```bash
 # ─── GENERATE KEYS ───────────────────────────────────────────────────────────
@@ -1037,7 +1037,7 @@ chmod 644 ~/.ssh/id_ed25519.pub       # public key: world-readable is fine
 chmod 600 ~/.ssh/authorized_keys
 ```
 
-### 5.4 SSH Tunneling for Data Engineering
+### SSH Tunneling for Data Engineering
 
 ```bash
 # ─── LOCAL PORT FORWARDING (-L): access remote service locally ───────────────
@@ -1112,9 +1112,9 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh user@server "cat >> ~/.ssh/autho
 
 ---
 
-## 6. Data Engineering Scheduling Patterns
+## Data Engineering Scheduling Patterns
 
-### 6.1 Pipeline Scheduling with Cron — Production Patterns
+### Pipeline Scheduling with Cron — Production Patterns
 
 ```bash
 # ─── COMPLETE PRODUCTION CRONTAB EXAMPLE ────────────────────────────────────
@@ -1148,7 +1148,7 @@ TZ=UTC
 0 1 * * *  pipeline  /home/pipeline/scripts/backup_to_gcs.sh >> /var/log/pipeline/backup.log 2>&1
 ```
 
-### 6.2 Running Python Pipelines via Cron
+### Running Python Pipelines via Cron
 
 ```bash
 # ─── RECOMMENDED PATTERN: virtualenv python + flock + logging ────────────────
@@ -1193,7 +1193,7 @@ exit $EXIT_CODE
 0 3 * * * pipeline flock -n /tmp/etl.lock /home/pipeline/scripts/run_etl_wrapper.sh
 ```
 
-### 6.3 Backup Script Pattern
+### Backup Script Pattern
 
 ```bash
 # /home/pipeline/scripts/backup_to_gcs.sh
@@ -1224,7 +1224,7 @@ rm -f "${BACKUP_FILE}"
 log "Backup complete"
 ```
 
-### 6.4 Health Check Script Pattern
+### Health Check Script Pattern
 
 ```bash
 # /home/pipeline/scripts/pulse_check.sh
@@ -1269,7 +1269,7 @@ fi
 log "Health check passed"
 ```
 
-### 6.5 Monitoring Cron Jobs with Datadog / External Alerting
+### Monitoring Cron Jobs with Datadog / External Alerting
 
 ```bash
 # ─── DATADOG DEAD MAN'S SNITCH PATTERN ──────────────────────────────────────
@@ -1297,7 +1297,7 @@ curl -s -X POST "https://api.datadoghq.com/api/v1/series" \
 
 ---
 
-## 7. Choosing Between Cron, Airflow, and Cloud Scheduler
+## Choosing Between Cron, Airflow, and Cloud Scheduler
 
 Use this decision table to select the right scheduler for a given task:
 
@@ -1336,7 +1336,7 @@ Is the task a single command or script on one Linux machine?
 
 ---
 
-## 8. Quick Reference — Schedule Expression Cheat Sheet
+## Quick Reference — Schedule Expression Cheat Sheet
 
 ### Cron Expressions
 

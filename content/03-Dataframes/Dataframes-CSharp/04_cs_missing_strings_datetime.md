@@ -123,7 +123,7 @@ display($"Scores — Polars: {scP.Shape}  |  Deedle: {scD.RowCount} x {scD.Colum
 
 ---
 
-## 1 — Missing Data
+## Missing Data
 
 #### Polars.NET — Detect null rows with Col().IsNull() filter
 
@@ -606,7 +606,7 @@ display("Deedle has no built-in linear interpolation — forward fill is the clo
 
 ---
 
-## 2 — String Operations
+## String Operations
 
 #### Polars.NET — Convert strings to upper/lower case with Str.ToUppercase()
 
@@ -1348,7 +1348,7 @@ builder.Frame
 
 ---
 
-## 3 — DateTime Operations
+## DateTime Operations
 
 #### Polars.NET — Parse string column to date with Str.ToDate()
 
@@ -1901,7 +1901,7 @@ jan2024D.Columns[new[] { "symbol", "date", "close", "volume" }]
 
 ---
 
-## 4 — Summary
+## Summary
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|

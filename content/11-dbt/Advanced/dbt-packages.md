@@ -17,7 +17,7 @@ dbt packages are importable dbt projects containing macros, models, seeds, and t
 
 ---
 
-## 1. `packages.yml` and `dbt deps`
+## `packages.yml` and `dbt deps`
 
 Declare packages in `packages.yml` at the project root. Run `dbt deps` to install them into `dbt_packages/`.
 
@@ -61,7 +61,7 @@ dbt deps --lock                   # Write packages.lock.yml (dbt 1.7+)
 > [!important] Always pin versions in production
 > Floating version ranges (`>=1.0.0`) are acceptable for development. For production pipelines serving regulatory reporting, pin to an exact version or a narrow range and commit `packages.lock.yml` to version control. This prevents silent upgrades from changing macro behaviour between deployments.
 
-### 1.1 `packages.lock.yml`
+### `packages.lock.yml`
 
 Available in dbt Core 1.7+. Records the exact resolved version of every package and its dependencies.
 
@@ -79,11 +79,11 @@ Commit this file. CI should run `dbt deps --check` to verify the lock file is up
 
 ---
 
-## 2. dbt-utils
+## dbt-utils
 
 The foundational utility package. Provides general-purpose macros used across every dbt project.
 
-### 2.1 Most Used in Financial Pipelines
+### Most Used in Financial Pipelines
 
 | Macro | Use case |
 | ----- | -------- |
@@ -97,7 +97,7 @@ The foundational utility package. Provides general-purpose macros used across ev
 | `get_column_values` | Macro-time column value discovery |
 | `union_relations` | Union multiple similarly-structured source tables |
 
-### 2.2 `union_relations` for Multi-Provider Sources
+### `union_relations` for Multi-Provider Sources
 
 When multiple index providers deliver constituent data in the same schema:
 
@@ -116,7 +116,7 @@ When multiple index providers deliver constituent data in the same schema:
 }}
 ```
 
-### 2.3 `get_column_values` at Macro Time
+### `get_column_values` at Macro Time
 
 ```sql
 {% set index_families = dbt_utils.get_column_values(
@@ -139,11 +139,11 @@ group by 1
 
 ---
 
-## 3. dbt-expectations
+## dbt-expectations
 
 Port of Great Expectations to dbt tests. Provides 50+ test macros with richer failure messages than native dbt tests.
 
-### 3.1 Key Tests for Financial Data
+### Key Tests for Financial Data
 
 ```yaml
 models:
@@ -199,11 +199,11 @@ models:
 
 ---
 
-## 4. dbt-codegen
+## dbt-codegen
 
 Generates YAML schema stubs from existing tables or already-materialised models. Eliminates manual typing of column definitions for wide tables (ESG raw data often has 80+ columns).
 
-### 4.1 Generate Source YAML
+### Generate Source YAML
 
 ```bash
 # Generate source YAML for a raw schema
@@ -235,7 +235,7 @@ sources:
           - name: _loaded_at
 ```
 
-### 4.2 Generate Model YAML
+### Generate Model YAML
 
 ```bash
 # Generate schema YAML for an already-run model
@@ -243,7 +243,7 @@ dbt run-operation generate_model_yaml \
   --args '{"model_names": ["stg_msci__esg_scores", "fct_index_performance"]}'
 ```
 
-### 4.3 Generate Base Models
+### Generate Base Models
 
 ```bash
 # Generate a staging model SQL file from a source table
@@ -285,11 +285,11 @@ select * from renamed
 
 ---
 
-## 5. dbt-audit-helper
+## dbt-audit-helper
 
 Compares two relations and surfaces differences. Essential when migrating a legacy transformation to dbt, or promoting a refactored model to replace an existing one.
 
-### 5.1 `compare_relations`
+### `compare_relations`
 
 Compares all rows between two tables and categorises differences:
 
@@ -317,7 +317,7 @@ Result categories:
 | `in_b_only` | Row exists in new table only (added) |
 | `in_both_and_different` | Row exists in both but at least one column differs |
 
-### 5.2 `compare_column_values`
+### `compare_column_values`
 
 For numeric columns, shows a frequency distribution of differences — useful for spotting systematic rounding errors in return calculations:
 
@@ -331,7 +331,7 @@ dbt run-operation audit_helper.compare_column_values \
   }'
 ```
 
-### 5.3 Migration Validation Workflow
+### Migration Validation Workflow
 
 ```bash
 # 1. Build the new model alongside the old one (different name)
@@ -350,11 +350,11 @@ dbt run-operation audit_helper.compare_column_values \
 
 ---
 
-## 6. Elementary
+## Elementary
 
 Elementary adds data observability — anomaly detection, schema change tracking, and a data observability UI — on top of dbt's test framework.
 
-### 6.1 Setup
+### Setup
 
 ```yaml
 # packages.yml
@@ -367,7 +367,7 @@ dbt deps
 dbt run --select elementary  # Materialises elementary monitoring tables
 ```
 
-### 6.2 Anomaly Detection Tests
+### Anomaly Detection Tests
 
 Elementary's anomaly tests use historical baselines rather than fixed thresholds — critical for financial data where volumes and values change with market conditions.
 
@@ -398,7 +398,7 @@ models:
             severity: warn
 ```
 
-### 6.3 Schema Change Tracking
+### Schema Change Tracking
 
 Elementary tracks DDL changes on monitored models and surfaces them in the observability UI and Slack alerts:
 
@@ -413,7 +413,7 @@ models:
 
 When a new column is added or a type changes, Elementary records the change with a timestamp and can alert the data engineering team before downstream consumers are affected.
 
-### 6.4 Running the Elementary Report
+### Running the Elementary Report
 
 ```bash
 # Generate HTML observability report
@@ -425,11 +425,11 @@ edr send-report --slack-webhook $SLACK_WEBHOOK_URL
 
 ---
 
-## 7. Writing a Custom Package: `dbt-financial-utils`
+## Writing a Custom Package: `dbt-financial-utils`
 
 When domain-specific macros and tests accumulate, extract them into a versioned internal package.
 
-### 7.1 Package Structure
+### Package Structure
 
 ```
 dbt-financial-utils/
@@ -453,7 +453,7 @@ dbt-financial-utils/
   README.md
 ```
 
-### 7.2 `dbt_project.yml` for the Package
+### `dbt_project.yml` for the Package
 
 ```yaml
 # dbt-financial-utils/dbt_project.yml
@@ -468,7 +468,7 @@ require-dbt-version: [">=1.6.0", "<2.0.0"]
 # (consumers must also install these)
 ```
 
-### 7.3 Generic Test: `weights_sum_to_one`
+### Generic Test: `weights_sum_to_one`
 
 Generic tests live in `tests/generic/` and are referenced like built-in tests.
 
@@ -503,7 +503,7 @@ models:
           tolerance: 0.005
 ```
 
-### 7.4 Installing a Private Git Package
+### Installing a Private Git Package
 
 ```yaml
 # Consumer project packages.yml
@@ -522,7 +522,7 @@ packages:
 
 ---
 
-## 8. Version Pinning Strategy
+## Version Pinning Strategy
 
 | Environment | Strategy | Rationale |
 | ----------- | -------- | --------- |

@@ -14,7 +14,7 @@ updated: 2026-03-24
 status: complete
 ---
 
-## 1. Timing & Benchmarking
+## Timing & Benchmarking
 
 #### Stopwatch timing and BenchmarkDotNet
 
@@ -94,7 +94,7 @@ MeasureTime(() => dataDict.ContainsKey(99_999), "Dict.ContainsKey (O(1))");
       [HashSet.Contains (O(1))] 0.07ms
       [Dict.ContainsKey (O(1))] 0.04ms
 
-## 2. Memory Measurement
+## Memory Measurement
 
 #### GC.GetTotalMemory — measure managed heap allocations
 
@@ -182,7 +182,7 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
     PointClass[100K]:  3150 KB
     Struct is significantly smaller (no object header, no GC tracking).
 
-## 3. Span<T> & Zero-Allocation Patterns
+## Span<T> & Zero-Allocation Patterns
 
 #### Span and zero-allocation patterns
 
@@ -223,7 +223,7 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
     Date: 2024-01-15, Time: 10:30:00
     stackalloc: 256 ints on the stack
 
-## 4. Big-O Complexity & Collection Performance
+## Big-O Complexity & Collection Performance
 
 #### Big-O complexity and collection performance cheat sheet
 
@@ -257,7 +257,7 @@ MeasureTime(() => sorted.ContainsKey(n - 1), "SortedDict (O(log n))");
       [Dict (O(1))] 0.06ms
       [SortedDict (O(log n))] 0.27ms
 
-## 5. Golden Rules of Performance
+## Golden Rules of Performance
 
 #### Golden rules of C# performance
 
@@ -288,7 +288,7 @@ try {
 
     ArrayPool: rented 1024 (requested 1024), no allocation!
 
-## 6. Absolute No-Go's
+## Absolute No-Go's
 
 > [!danger] Absolute no-go's — patterns that should never appear in production C#
 > 1. **String `+=` in a loop** — O(n²). Use `StringBuilder`.
@@ -314,7 +314,7 @@ try {
 // conn.Open(); ...
 ```
 
-## 7. Code Smells & Anti-Patterns
+## Code Smells & Anti-Patterns
 
 #### Code smells and anti-patterns
 
@@ -360,7 +360,7 @@ try {
     Valid email: alice@example.com
     Caught: Invalid email
 
-## 8. Nullable Reference Types & Static Analysis
+## Nullable Reference Types & Static Analysis
 
 #### Nullable reference types and static analysis
 
@@ -403,7 +403,7 @@ Console.WriteLine($"Chained: {result ?? "(null)"}");
     It's a string: HELLO
     Chained: (null)
 
-## 9. LINQ Performance Pitfalls
+## LINQ Performance Pitfalls
 
 #### LINQ performance pitfalls
 
@@ -449,7 +449,7 @@ MeasureTime(() => {
       [LINQ chain] 3.47ms
       [Manual loop] 0.46ms
 
-## 10. Code Quality Tools
+## Code Quality Tools
 
 | Tool | Purpose | Config |
 |---|---|---|

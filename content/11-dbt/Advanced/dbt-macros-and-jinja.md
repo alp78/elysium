@@ -17,7 +17,7 @@ Jinja2 is the templating layer that makes dbt SQL dynamic. Macros are reusable J
 
 ---
 
-## 1. Jinja2 Fundamentals
+## Jinja2 Fundamentals
 
 dbt uses three Jinja delimiters:
 
@@ -27,7 +27,7 @@ dbt uses three Jinja delimiters:
 | `{% ... %}` | **Statement** — control flow      | `{% if target.name == 'prod' %}` |
 | `{# ... #}` | **Comment** — stripped at compile | `{# TODO: add currency filter #}` |
 
-### 1.1 Variables and Filters
+### Variables and Filters
 
 ```sql
 -- var() reads from dbt_project.yml or --vars CLI flag
@@ -43,7 +43,7 @@ where price_date >= '{{ cutoff_date }}'
 {{ some_list | length }}            -- 3
 ```
 
-### 1.2 Control Flow
+### Control Flow
 
 ```sql
 {% set providers = ['MSCI', 'SUSTAINALYTICS', 'ISS'] %}
@@ -61,7 +61,7 @@ from {{ ref('int_esg_scores_unpivoted') }}
 group by 1, 2
 ```
 
-### 1.3 Macros vs Variables
+### Macros vs Variables
 
 - **`var()`** — project-wide scalar values passed at runtime.
 - **`env_var()`** — reads OS environment variables (credentials, environment names).
@@ -69,11 +69,11 @@ group by 1, 2
 
 ---
 
-## 2. Writing Custom Macros
+## Writing Custom Macros
 
 Place macro files in `macros/`. Each file can hold multiple macros. Use subdirectories for organisation (`macros/finance/`, `macros/utils/`).
 
-### 2.1 `z_score` — Cross-Sectional Normalisation
+### `z_score` — Cross-Sectional Normalisation
 
 ESG and factor data often requires cross-sectional z-score normalisation: subtract the mean and divide by the standard deviation across all constituents on a given date.
 
@@ -115,7 +115,7 @@ select
 from {{ ref('int_esg_scores_latest') }}
 ```
 
-### 2.2 `weighted_average` — Capital-Weighted Metrics
+### `weighted_average` — Capital-Weighted Metrics
 
 ```sql
 -- macros/finance/weighted_average.sql
@@ -147,7 +147,7 @@ select
 from {{ ref('int_esg_scores_latest') }}
 ```
 
-### 2.3 `cap_weighted_return` — Index Return Calculation
+### `cap_weighted_return` — Index Return Calculation
 
 ```sql
 -- macros/finance/cap_weighted_return.sql
@@ -196,11 +196,11 @@ from weighted
 
 ---
 
-## 3. dbt-utils Macros
+## dbt-utils Macros
 
 Install via `packages.yml` (see [[dbt-packages]]). The most useful macros for financial pipelines:
 
-### 3.1 `surrogate_key`
+### `surrogate_key`
 
 Generates a deterministic hash key from one or more columns, handling nulls consistently.
 
@@ -220,7 +220,7 @@ from source_table
 > [!note] MD5 vs SHA256
 > `generate_surrogate_key` uses MD5 by default. For compliance-sensitive pipelines where key collision probability matters (very unlikely but auditable), use `dbt_utils.generate_surrogate_key` with a custom hash function via dispatch.
 
-### 3.2 `date_spine`
+### `date_spine`
 
 Generates a complete calendar table — essential for ensuring no trading days are missing in time-series performance data.
 
@@ -245,7 +245,7 @@ select
 from spine
 ```
 
-### 3.3 `pivot`
+### `pivot`
 
 Rotates ESG provider rows into columns without hardcoding provider names.
 
@@ -276,7 +276,7 @@ from {{ ref('int_esg_scores_unpivoted') }}
 group by 1, 2
 ```
 
-### 3.4 `star`
+### `star`
 
 Selects all columns from a relation except a specified exclusion list — useful when staging tables need to drop raw provider internal IDs.
 
@@ -291,11 +291,11 @@ from {{ ref('raw_esg_scores') }}
 
 ---
 
-## 4. Dispatch Macros for Cross-Adapter Compatibility
+## Dispatch Macros for Cross-Adapter Compatibility
 
 `adapter.dispatch()` lets you write adapter-specific macro implementations that are resolved at compile time based on the active adapter (BigQuery, Snowflake, SQL Server, DuckDB, etc.).
 
-### 4.1 Pattern
+### Pattern
 
 ```
 macros/
@@ -362,11 +362,11 @@ from {{ ref('int_portfolio_analytics') }}
 
 ---
 
-## 5. `run_query()` for Introspection
+## `run_query()` for Introspection
 
 `run_query()` executes SQL during compilation and returns an `agate.Table`. Use it to dynamically discover column names, provider lists, or schema metadata.
 
-### 5.1 Dynamic Column Discovery
+### Dynamic Column Discovery
 
 ```sql
 -- macros/utils/get_column_values.sql
@@ -395,11 +395,11 @@ from {{ ref('int_portfolio_analytics') }}
 
 ---
 
-## 6. Pre-hook and Post-hook Patterns
+## Pre-hook and Post-hook Patterns
 
 Hooks run SQL before or after a model materialises. Common uses: permissions grants, audit logging, index creation.
 
-### 6.1 Model-Level Hooks
+### Model-Level Hooks
 
 ```yaml
 # models/marts/finance/_finance__models.yml
@@ -414,7 +414,7 @@ models:
         - "{{ log_model_end(this) }}"
 ```
 
-### 6.2 Grant Macro
+### Grant Macro
 
 ```sql
 -- macros/utils/grant_select.sql
@@ -429,7 +429,7 @@ models:
 post_hook: "{{ grant_select(this, ['reporting_role', 'risk_readers']) }}"
 ```
 
-### 6.3 Table Statistics Update (Snowflake)
+### Table Statistics Update (Snowflake)
 
 ```yaml
 models:
@@ -441,7 +441,7 @@ models:
 
 ---
 
-## 7. `on-run-start` and `on-run-end` Hooks
+## `on-run-start` and `on-run-end` Hooks
 
 These run once per `dbt run` invocation, not per model. Ideal for pipeline-level audit logging, watermark management, and environment-level setup.
 
@@ -480,7 +480,7 @@ on-run-end:
 
 ---
 
-## 8. Anti-Patterns
+## Anti-Patterns
 
 > [!danger] Anti-patterns to avoid
 

@@ -15,7 +15,7 @@ status: complete
 
 A senior data engineer does not just build pipelines — they design systems that are safe to re-run, possible to migrate, and resilient to the inevitable chaos of production data. This note covers the architectural patterns that distinguish a reliable data platform from a fragile collection of scripts.
 
-## 33.1 Migrating On-Premises to Cloud (The Enterprise Playbook)
+## Migrating On-Premises to Cloud (The Enterprise Playbook)
 
 A large-scale data platform migration in the financial index industry — moving from an on-premises data estate to GCP — illustrates the patterns and pitfalls covered in this section, applicable to any enterprise data platform.
 
@@ -101,7 +101,7 @@ def compare_outputs(on_prem_df: pd.DataFrame, cloud_df: pd.DataFrame,
     )
 ```
 
-## 33.2 Idempotency: The Foundation of Reliable Pipelines
+## Idempotency: The Foundation of Reliable Pipelines
 
 An idempotent operation produces the same result whether you run it once or ten times. In data engineering, idempotency is not optional — it is the difference between a pipeline you can safely retry and one that corrupts data on every failure recovery.
 
@@ -174,7 +174,7 @@ COMMIT;
 | Reading from a queue without acknowledgment tracking | Retry processes the message again | Use exactly-once semantics or idempotency keys |
 | Appending to a file without truncating first | Second run doubles the file size | Truncate or write to a new file with a deterministic name |
 
-## 33.3 Backfill Strategies: Rewriting History Safely
+## Backfill Strategies: Rewriting History Safely
 
 Every data pipeline will eventually need to backfill — reprocess historical data because a bug was found, a calculation changed, or a new data source was added. Backfills are the most dangerous operation in data engineering because they affect data that downstream consumers have already used.
 
@@ -249,7 +249,7 @@ def safe_backfill(engine, start_date: date, end_date: date,
     logger.info(f"Backfill complete: {total_rows} rows processed")
 ```
 
-## 33.4 Exactly-Once Processing in Financial Pipelines
+## Exactly-Once Processing in Financial Pipelines
 
 In financial data, processing a record twice is as bad as not processing it at all. A dividend reinvested twice inflates the total return index. A [[index-maintenance-and-corporate-actions|corporate action]] applied twice reverses itself (a 1:4 split applied twice becomes a 1:16 split).
 
@@ -287,7 +287,7 @@ BEGIN
 END
 ```
 
-## 33.5 Schema Evolution Without Downtime
+## Schema Evolution Without Downtime
 
 Production databases serve live dashboards and APIs. Schema changes must not break running queries.
 
@@ -313,7 +313,7 @@ Step 5 (Contract):  Drop old column after validation period
 
 Each step is a separate deployment. If anything goes wrong, you can stop at any step without data loss.
 
-## 33.6 Serverless and Event-Driven Architecture for Data Pipelines
+## Serverless and Event-Driven Architecture for Data Pipelines
 
 Batch pipelines scheduled on cron are sufficient for daily index calculations, but real-time data ingestion — price ticks, corporate action announcements, regulatory filings — demands an event-driven architecture. GCP's Pub/Sub + Cloud Functions pattern replaces polling loops with reactive triggers that scale to zero when idle.
 
@@ -408,7 +408,7 @@ def handle_event(cloud_event):
 > [!tip] The ICOS Pattern
 > A financial index calculation platform's Index Calculation and Operations System combines batch and event-driven patterns. Reconstitution and quarterly reviews are batch (scheduled, deterministic). But intraday corporate action alerts — a surprise merger announcement at 2 PM — trigger an event-driven pipeline: Pub/Sub message → validation function → index analyst notification → manual review → automated recalculation. The architecture must support both modes without one blocking the other.
 
-## 33.7 Data Contracts: Schema Agreements Between Producers and Consumers
+## Data Contracts: Schema Agreements Between Producers and Consumers
 
 A data contract is a formal agreement between a data producer and its consumers that specifies the schema, semantics, quality guarantees, and SLAs of a data interface. Without data contracts, upstream schema changes silently break downstream pipelines — the #1 source of data incidents in large organizations.
 
@@ -527,7 +527,7 @@ schema_registry.set_compatibility("daily-ohlcv-value", "BACKWARD")
 > [!warning] Data Contracts Are Organizational, Not Just Technical
 > The hardest part of data contracts is not the Protobuf definition — it is getting agreement from the producing team that they will not change the schema without going through the contract evolution process. This requires management support, documented ownership (RACI matrix), and CI/CD enforcement. A contract without enforcement is just documentation.
 
-## 33.8 FinOps: Cloud Cost Optimization for Data Platforms
+## FinOps: Cloud Cost Optimization for Data Platforms
 
 A senior data engineer is often the person closest to the cloud bill — and the person best positioned to reduce it. On a large data platform, BigQuery alone can account for tens of thousands of dollars monthly if left unoptimized. FinOps (Financial Operations) is the practice of making cloud spending visible, accountable, and optimized.
 
@@ -656,7 +656,7 @@ resource "google_billing_budget" "monthly_budget" {
 > [!tip] The FinOps Conversation
 > When your team's BigQuery bill jumps from $2,000 to $8,000 in a month, management will ask "what happened?" A senior engineer should already have the answer: "The new backtesting pipeline scans 500 TB/month. Switching to 200 reserved slots would bring the cost to $5,760/month and also give us predictable query performance. Here is the ADR." Having the data, the solution, and the tradeoff analysis ready before you are asked is what separates senior from staff.
 
-## 33.9 Advanced Streaming Patterns: Dataflow, Windowing, and Stream-Table Joins
+## Advanced Streaming Patterns: Dataflow, Windowing, and Stream-Table Joins
 
 Batch pipelines calculate index values once per day after market close. But real-time index products — live NAV calculations, intraday risk monitors, and streaming dashboards — require continuous processing of market data ticks joined against slowly-changing reference data. This is where Apache Beam (via Cloud Dataflow) fills the gap between Pub/Sub's messaging and BigQuery's analytics.
 

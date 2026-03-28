@@ -46,7 +46,7 @@ status: complete
 - Secret Manager
 - Cloud Monitoring
 
-## 1. Authentication & Setup
+## Authentication & Setup
 
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
@@ -91,7 +91,7 @@ print(f"Region:  {REGION}")
     Project: index-lab-2
     Region:  europe-west1
 
-## 2. Cloud Storage (GCS)
+## Cloud Storage (GCS)
 
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil cp`, `gcloud storage cp`, lifecycle rules), see [[gcs-object-operations]].
 
@@ -175,7 +175,7 @@ print(f"  Tickers: {sorted(df_check["symbol"].unique())}")
       Columns: ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Dividends', 'Stock Splits', 'symbol']
       Tickers: ['ASML.AS', 'MC.PA', 'SAP.DE', 'SIE.DE', 'TTE.PA']
 
-## 3. BigQuery
+## BigQuery
 
 **Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
 
@@ -284,7 +284,7 @@ for row in results:
        4. MC.PA      close=  457.95  momentum=-10.90%  vol_ratio=1.97
        5. SIE.DE     close=  203.75  momentum=-13.24%  vol_ratio=2.33
 
-## 4. Pub/Sub
+## Pub/Sub
 
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [[pubsub-messaging]].
 
@@ -355,7 +355,7 @@ else:
     
       Acknowledged 3 messages
 
-## 5. Firestore
+## Firestore
 
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
@@ -514,7 +514,7 @@ if events_received:
       MODIFIED: 10 (live updates from scheduler)
       REMOVED:  0
 
-## 6. Secret Manager
+## Secret Manager
 
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically. For the broader secrets management strategy including rotation policies and workload identity, see [[secrets-management]].
 
@@ -595,7 +595,7 @@ print('\n  Deleted: index-notebook-demo')
     
       Deleted: index-notebook-demo
 
-## 7. Cloud Monitoring
+## Cloud Monitoring
 
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
 
@@ -686,7 +686,7 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
       Logs:    https://console.cloud.google.com/logs?project=index-lab-2
       Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
 
-## 8. Summary
+## Summary
 
 > [!abstract]- GCP Python Quick Reference
 > | Service | Pattern | Description |

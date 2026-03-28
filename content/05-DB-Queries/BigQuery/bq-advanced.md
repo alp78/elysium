@@ -35,8 +35,6 @@ Topics covered:
 - Date/Time Patterns & Calendar Tables
 - Temp Tables vs Table Variables vs CTEs
 
-## 0. Setup
-
 
 ```python
 %load_ext sql
@@ -51,11 +49,11 @@ Topics covered:
 Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 
-## 1. Advanced Window Functions
+## Advanced Window Functions
 
 The window functions in this section appear throughout production pipelines. The [[gold-transforms]] layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
 
-### 1a. ROW_NUMBER for Deduplication
+### ROW_NUMBER for Deduplication
 
 Assign a unique sequential number within each partition. The classic pattern for picking
 one row per key (e.g., latest price per stock, or deduplicating loads).
@@ -153,7 +151,7 @@ LIMIT 10
 
 
 
-### 1b. PERCENT_RANK and CUME_DIST
+### PERCENT_RANK and CUME_DIST
 
 - `PERCENT_RANK()`: relative rank as a percentage (0 to 1). Where does this stock sit vs peers?
 - `CUME_DIST()`: cumulative distribution — fraction of rows with value ≤ current row.
@@ -300,7 +298,7 @@ LIMIT 15
 
 
 
-### 1c. FIRST_VALUE and LAST_VALUE
+### FIRST_VALUE and LAST_VALUE
 
 - `FIRST_VALUE(col)`: first value in the window frame
 - `LAST_VALUE(col)`: last value — **requires explicit frame** or it only sees up to current row
@@ -455,7 +453,7 @@ LIMIT 15
 
 
 
-### 1d. Running Totals and Cumulative Sums
+### Running Totals and Cumulative Sums
 
 `SUM() OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)` — cumulative sum from the first row to current.
 Use case: cumulative volume, cumulative return, running P&L.
@@ -583,7 +581,7 @@ LIMIT 15
 
 
 
-### 1e. Window Frame Deep Dive
+### Window Frame Deep Dive
 
 The frame clause controls which rows the function sees:
 
@@ -720,9 +718,9 @@ LIMIT 10
 
 
 
-## 2. Recursive CTEs
+## Recursive CTEs
 
-### 2a. Date Series Generation
+### Date Series Generation
 
 A **recursive CTE** has an anchor (starting row) and a recursive member that references itself.
 Classic use: generate a continuous date sequence to detect missing trading days.
@@ -856,9 +854,9 @@ LIMIT 15
 
 
 
-## 3. CROSS JOIN / CROSS APPLY / OUTER APPLY
+## CROSS JOIN / CROSS APPLY / OUTER APPLY
 
-### 3a. CROSS JOIN: Build a Complete Grid
+### CROSS JOIN: Build a Complete Grid
 
 `CROSS JOIN` = cartesian product. Every row from A paired with every row from B.
 Use case: generate all (symbol, date) combinations to find missing data.
@@ -978,7 +976,7 @@ LIMIT 15
 
 
 
-### 3b. CROSS APPLY: Top-N Per Group
+### CROSS APPLY: Top-N Per Group
 
 `CROSS APPLY` is a lateral join — it runs a subquery **for each row** of the outer table.
 Like a correlated subquery, but returns multiple rows. Use case: top 3 highest-volume days per stock.
@@ -1124,7 +1122,7 @@ LIMIT 15
 
 
 
-### 3c. OUTER APPLY: Optional Lateral Join
+### OUTER APPLY: Optional Lateral Join
 
 Like `CROSS APPLY` but keeps the outer row even if the inner returns nothing (like LEFT JOIN).
 Use case: latest score per stock — some stocks may not have scores yet.
@@ -1287,9 +1285,9 @@ LIMIT 15
 
 
 
-## 4. PIVOT / UNPIVOT
+## PIVOT / UNPIVOT
 
-### 4a. PIVOT: Rows to Columns
+### PIVOT: Rows to Columns
 
 Turn row values into column headers. Classic use: monthly close prices as columns.
 
@@ -1333,7 +1331,7 @@ PIVOT (AVG(`close`) FOR mo IN (1 AS Jan, 2 AS Feb, 3 AS Mar, 4 AS Apr, 5 AS May)
 
 
 
-### 4b. Manual Pivot with CASE (Portable)
+### Manual Pivot with CASE (Portable)
 
 `PIVOT` is BigQuery specific. The portable equivalent uses `CASE` inside aggregates.
 Works in any SQL engine (BigQuery, PostgreSQL, etc.).
@@ -1384,7 +1382,7 @@ GROUP BY symbol
 
 
 
-### 4c. UNPIVOT: Columns to Rows
+### UNPIVOT: Columns to Rows
 
 The reverse — turn multiple score columns into rows for easier comparison/charting.
 
@@ -1496,12 +1494,12 @@ LIMIT 15
 
 
 
-## 5. MERGE (Upsert)
+## MERGE (Upsert)
 
 > [!tip] Related pattern
 > For cross-language equivalents of MERGE and window functions, see [[sql-python-csharp-transforms]] which compares how the same logic is expressed in SQL, Python, and C#.
 
-### 5a. MERGE Syntax
+### MERGE Syntax
 
 The `MERGE` statement does INSERT, UPDATE, and DELETE in one atomic operation.
 This is the core of incremental pipeline loads — "upsert" new data, update changed rows.
@@ -1558,9 +1556,9 @@ SELECT 'DEMO.XX', DATE '2026-03-21', 102.5, 1200000
 
 
 
-## 6. EXISTS vs IN vs JOIN
+## EXISTS vs IN vs JOIN
 
-### 6a. EXISTS (Semi-Join)
+### EXISTS (Semi-Join)
 
 `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
 Stops at the first match (efficient). Use for "does a related row exist?" questions.
@@ -1671,7 +1669,7 @@ LIMIT 15
 
 
 
-### 6b. NOT EXISTS (Anti-Join)
+### NOT EXISTS (Anti-Join)
 
 Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases.
 
@@ -1782,9 +1780,9 @@ LIMIT 15
 
 
 
-## 7. Grouping Sets, ROLLUP, CUBE
+## Grouping Sets, ROLLUP, CUBE
 
-### 7a. GROUPING SETS
+### GROUPING SETS
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations,
 use `GROUPING SETS` — more efficient and readable.
@@ -1918,7 +1916,7 @@ LIMIT 15
 
 
 
-### 7b. ROLLUP — Hierarchical Subtotals
+### ROLLUP — Hierarchical Subtotals
 
 `ROLLUP(a, b)` = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
 
@@ -2024,9 +2022,9 @@ LIMIT 15
 
 
 
-## 8. String Aggregation & Functions
+## String Aggregation & Functions
 
-### 8a. STRING_AGG
+### STRING_AGG
 
 Concatenate values from multiple rows into a single comma-separated string.
 Use case: list all tickers in a sector as one field.
@@ -2112,7 +2110,7 @@ LIMIT 10
 
 
 
-### 8b. String Parsing
+### String Parsing
 
 Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
 
@@ -2208,7 +2206,7 @@ LIMIT 10
 
 
 
-## 9. NULL Handling Patterns
+## NULL Handling Patterns
 
 ### NULL Rules
 
@@ -2341,7 +2339,7 @@ LIMIT 10
 
 
 
-## 10. Set Operations
+## Set Operations
 
 ### UNION / INTERSECT / EXCEPT
 
@@ -2423,9 +2421,9 @@ LIMIT 15
 
 
 
-## 11. Date & Calendar Table Patterns
+## Date & Calendar Table Patterns
 
-### 11a. Business Day Arithmetic
+### Business Day Arithmetic
 
 Use the `trading_calendar` table to count trading days between dates.
 Weekend/holiday-aware calculations are essential for financial data.
@@ -2523,7 +2521,7 @@ LIMIT 10
 
 
 
-## 12. Temp Tables vs Table Variables vs CTEs
+## Temp Tables vs Table Variables vs CTEs
 
 ### Decision Guide
 

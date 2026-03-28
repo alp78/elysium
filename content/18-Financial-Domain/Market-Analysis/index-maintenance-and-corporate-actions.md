@@ -15,7 +15,7 @@ status: complete
 
 A senior data engineer at a financial index provider is not just a technologist — they are a domain expert who understands *why* every number matters. A single mishandled stock split cascades into incorrect ETF NAVs, failed rebalancing trades, and regulatory scrutiny. This note covers the financial domain knowledge that separates a data engineer who builds pipelines from one who builds *trusted* pipelines.
 
-## 32.1 What Is a Financial Index?
+## What Is a Financial Index?
 
 A financial index is a *rules-based, transparent calculation* that measures the performance of a defined basket of securities. It is not a portfolio you can invest in directly — it is a benchmark against which portfolios are measured.
 
@@ -51,7 +51,7 @@ New Divisor = Old Divisor × (New Numerator / Old Numerator)
 
 This means: the index value at market close *before* the event equals the index value at market open *after* the event — the event itself creates no return.
 
-## 32.2 Corporate Actions: The Highest-Risk Data Operation
+## Corporate Actions: The Highest-Risk Data Operation
 
 Corporate actions are company-level events that change the capital structure, ownership, or trading characteristics of a security. For index engineers, each corporate action requires a specific data adjustment to maintain index accuracy.
 
@@ -149,7 +149,7 @@ WHERE c.index_key = 'target_index';
 -- So the divisor should NOT change for a clean split
 ```
 
-## 32.3 Index Reconstitution: The Quarterly Event
+## Index Reconstitution: The Quarterly Event
 
 Index reconstitution is the periodic review where constituents are added or removed based on the index methodology rules. For a major European equity index, this happens quarterly (March, June, September, December).
 
@@ -191,7 +191,7 @@ With the 40/60 buffer:
 - A stock ranked #55 is NOT removed (must be > 60 to exit)
 - Result: ~30% fewer constituent changes per year, saving ETF investors ~5-15 basis points in tracking difference
 
-## 32.4 Total Return vs Price Return vs Net Return Indices
+## Total Return vs Price Return vs Net Return Indices
 
 Every major index is published in three variants:
 
@@ -226,7 +226,7 @@ net_adjustment = 1 + (dividend_per_share * (1 - withholding_rate) / close_price_
 # Price return index: no adjustment (price naturally drops by ~dividend amount)
 ```
 
-## 32.5 Free-Float Methodology
+## Free-Float Methodology
 
 Not all shares outstanding are available for trading. Shares held by founders, governments, strategic investors, or locked by regulations are excluded from the weighting calculation via the **free-float factor**.
 
@@ -255,7 +255,7 @@ Not all shares outstanding are available for trading. Shares held by founders, g
 > [!warning] High Impact on ETF Allocation
 > Free-float factors are updated quarterly and affect every weight calculation. A wrong free-float factor for a large constituent (e.g., SAP at 8% of the index) means billions of dollars of ETF money is allocated incorrectly.
 
-## 32.6 Weight Capping and Rebalancing
+## Weight Capping and Rebalancing
 
 Most indices impose a maximum weight cap to prevent single-stock dominance. A typical European equity index caps constituents at **10%** of the index.
 
@@ -294,7 +294,7 @@ capped_weights = apply_weight_cap(weights, cap=0.10)
 # SAP: 0.10, excess 0.02 redistributed to remaining 49 stocks
 ```
 
-## 32.7 Unscheduled Adjustments: When Markets Surprise You
+## Unscheduled Adjustments: When Markets Surprise You
 
 Not everything happens on schedule. These events require immediate index adjustments outside the regular reconstitution cycle:
 
@@ -311,7 +311,7 @@ Not everything happens on schedule. These events require immediate index adjustm
 > [!warning] NULL Price Is Not "No Trade Today"
 > Your pipeline must handle all these edge cases. When a corporate action is missed or misprocessed, follow the [[corporate-action-missed]] runbook for immediate remediation. A `NULL` price is not the same as "not traded today" — it might mean "suspended pending material news" and requires different treatment than a weekend or holiday.
 
-## 32.8 The Regulatory Landscape
+## The Regulatory Landscape
 
 Since the EU Benchmarks Regulation (BMR, 2018) and IOSCO Principles for Financial Benchmarks (2013), financial indices are regulated products:
 
@@ -347,7 +347,7 @@ WHERE c.index_key = 'target_index'
 ORDER BY weight_pct DESC;
 ```
 
-## 32.9 Point-in-Time (PIT) Temporal Data: Querying History Without Look-Ahead Bias
+## Point-in-Time (PIT) Temporal Data: Querying History Without Look-Ahead Bias
 
 Point-in-Time (PIT) data management answers the question: "What did we *know* about this index on a specific date?" This is fundamentally different from "What was the *correct* composition on that date?" — the distinction is critical for backtesting, regulatory audits, and quantitative research.
 
@@ -495,7 +495,7 @@ pit_data = pit_join(
 > [!warning] EU BMR Compliance Requirement
 > [[eu-bmr-benchmark-regulation|EU BMR]] Article 11 requires benchmark administrators to maintain "adequate records" of all input data and calculations. A regulatory auditor may ask: "Reconstruct the index value for March 5, 2024, using only the data available on that date." If your tables only store the latest version, you cannot answer this question — and that is a compliance violation.
 
-## 32.10 ESG and Sustainability Data: Integrating Unstructured Data into Financial Warehouses
+## ESG and Sustainability Data: Integrating Unstructured Data into Financial Warehouses
 
 ISS ESG is one of the world's largest providers of ESG ratings, climate data, and corporate governance assessments. Integrating this data into index calculations is a growing requirement — the EU's Sustainable Finance Disclosure Regulation (SFDR), Corporate Sustainability Reporting Directive (CSRD), and EU Taxonomy require financial products to disclose sustainability metrics.
 

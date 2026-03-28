@@ -226,7 +226,7 @@ display(pd.DataFrame(sample))
 > [!tip] Related pattern
 > For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [[streaming-architecture]].
 
-## 1. WebSocket Streaming
+## WebSocket Streaming
 
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
 Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
@@ -301,7 +301,7 @@ print(f'  p50: {ws_p50:.0f}µs  p99: {ws_p99:.0f}µs  p99.9: {ws_p999:.0f}µs')
       10000 one-way measurements
       p50: 83µs  p99: 139µs  p99.9: 233µs
 
-## 2. Server-Sent Events (SSE)
+## Server-Sent Events (SSE)
 
 One-directional server→client push over HTTP. Simpler than WebSocket — works through
 proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
@@ -400,7 +400,7 @@ print(f'  p50: {sse_p50:.0f}µs  p99: {sse_p99:.0f}µs  p99.9: {sse_p999:.0f}µs
       10000 one-way measurements
       p50: 127µs  p99: 524µs  p99.9: 654µs
 
-## 3. Google Cloud Pub/Sub
+## Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
 Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [[pubsub-messaging]].
@@ -616,7 +616,7 @@ else:
       225 delivery latency measurements
       p50: 45ms  p99: 52ms  avg: 45ms
 
-## 4. Firestore Real-Time Listener
+## Firestore Real-Time Listener
 
 Firestore’s `on_snapshot` pushes document changes to the client in real-time over gRPC.
 The same mechanism that powers live sync in Firebase mobile apps and dashboards.
@@ -717,7 +717,7 @@ print(f'  Deleted {WARMUP_FS + NUM_FS} documents from {FS_RT_COLLECTION}')
 
       Deleted 550 documents from realtime_ticks
 
-## 5. Latency Comparison
+## Latency Comparison
 
 Two separate comparisons — local protocols vs GCP managed services — because mixing
 localhost (0ms network) with cross-continent GCP (300ms RTT) would be meaningless.
@@ -848,7 +848,7 @@ except Exception:
       Deleted subscription: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
       Deleted topic: projects/seclab-dev-ap-26/topics/tick-feed
 
-## 6. Enterprise Transfer & Streaming Patterns (Reference)
+## Enterprise Transfer & Streaming Patterns (Reference)
 
 Production patterns for large-scale data movement that go beyond what a notebook can demonstrate.
 Included as architecture reference — no runnable code.

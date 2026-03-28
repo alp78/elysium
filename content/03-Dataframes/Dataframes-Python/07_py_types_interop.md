@@ -438,9 +438,9 @@ print(f"Temp dir: {TMP}")
 
     Temp dir: C:\Users\aperi\AppData\Local\Temp\tmpmnzrnm_0
 
-## 1. CSV
+## CSV
 
-### 1.1 Separators & Delimiters
+### Separators & Delimiters
 
 #### Pandas read_csv sep — tab, pipe, fixed-width delimiters
 
@@ -596,7 +596,7 @@ display(pl.read_csv(io.StringIO(pipe), separator="|"))
 </style>
 <small>shape: (2, 2)</small><table border="1" class="dataframe"><thead><tr><th>name</th><th>city</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;New York&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td></tr></tbody></table></div>
 
-### 1.2 Column Names & Headers
+### Column Names & Headers
 
 #### Pandas read_csv — header, names, usecols, prefix
 
@@ -756,7 +756,7 @@ display(pl.read_csv(io.StringIO(raw), skip_rows_after_header=1))
 </style>
 <small>shape: (2, 2)</small><table border="1" class="dataframe"><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
-### 1.3 Type Control & Parsing
+### Type Control & Parsing
 
 #### Pandas read_csv dtype, parse_dates, converters — type control
 
@@ -941,7 +941,7 @@ display(df)
 </style>
 <small>shape: (3, 2)</small><table border="1" class="dataframe"><thead><tr><th>name</th><th>score</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>3.14</td></tr><tr><td>&quot;Bob&quot;</td><td>null</td></tr><tr><td>&quot;Carol&quot;</td><td>-999.0</td></tr></tbody></table></div>
 
-### 1.4 Quoting & Escaping
+### Quoting & Escaping
 
 #### Pandas read_csv quoting, escapechar — quoting and escaping
 
@@ -1031,7 +1031,7 @@ print(df.write_csv(quote_style="always"))
     "Alice","Likes cats, dogs"
     "Bob","Said hello"
 
-### 1.5 Error Handling & Bad Lines
+### Error Handling & Bad Lines
 
 #### Pandas read_csv on_bad_lines — skip or warn on malformed rows
 
@@ -1173,7 +1173,7 @@ display(pl.read_csv(io.StringIO(raw), comment_prefix="#"))
 </style>
 <small>shape: (2, 2)</small><table border="1" class="dataframe"><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
-### 1.6 CSV Compression (read & write)
+### CSV Compression (read & write)
 
 #### Pandas read_csv/to_csv compression — gzip, bz2, xz, zstd
 
@@ -1290,7 +1290,7 @@ print(f"Compressed: {(TMP / 'ohlcv_pl.csv.gz').stat().st_size:,} bytes")
 
     Compressed: 2,384 bytes
 
-### 1.7 Writing Options
+### Writing Options
 
 #### Pandas to_csv — index, float_format, quoting, date_format
 
@@ -1415,7 +1415,7 @@ print(f"Written: {(TMP / 'polars_out.csv').stat().st_size:,} bytes")
     
     Written: 470 bytes
 
-### 1.8 Chunked & Streaming Reading
+### Chunked & Streaming Reading
 
 #### Pandas read_csv chunksize — iterate DataFrame chunks
 
@@ -1472,9 +1472,9 @@ print(f"Batched read: {total:,} rows")
 
     Batched read: 66,355 rows
 
-## 2. JSON
+## JSON
 
-### 2.1 Orient Options (Pandas)
+### Orient Options (Pandas)
 
 #### Writing with orient
 
@@ -1648,7 +1648,7 @@ for orient in orientations:
     orient=values    : shape=(2, 3), cols=[0, 1, 2]
     orient=table     : shape=(2, 3), cols=['name', 'age', 'city']
 
-### 2.2 Nested JSON & Flattening
+### Nested JSON & Flattening
 
 #### Pandas json_normalize — flatten nested JSON records
 
@@ -1835,7 +1835,7 @@ display(df_exploded)
 </style>
 <small>shape: (6, 4)</small><table border="1" class="dataframe"><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>90</td></tr><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>85</td></tr><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>92</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>78</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>88</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>95</td></tr></tbody></table></div>
 
-### 2.3 NDJSON (Newline-Delimited JSON)
+### NDJSON (Newline-Delimited JSON)
 
 ```python
 # NDJSON — one JSON object per line, ideal for streaming/append
@@ -1917,7 +1917,7 @@ print(f"\nLazy schema: {lf.collect_schema()}")
     
     Lazy schema: Schema({'name': String, 'age': Int64})
 
-### 2.4 JSON Writing Options
+### JSON Writing Options
 
 #### Pandas to_json — orient, date_format, double_precision
 
@@ -2027,7 +2027,7 @@ print(custom)
       }
     ]
 
-### 2.5 Schema Control on Read
+### Schema Control on Read
 
 ```python
 # Pandas — dtype control
@@ -2093,9 +2093,9 @@ display(df)
 </style>
 <small>shape: (3, 1)</small><table border="1" class="dataframe"><thead><tr><th>x</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;1&quot;</td></tr><tr><td>&quot;two&quot;</td></tr><tr><td>&quot;3&quot;</td></tr></tbody></table></div>
 
-## 3. Parquet
+## Parquet
 
-### 3.1 Compression Codecs
+### Compression Codecs
 
 #### Pandas read_parquet/to_parquet — snappy, gzip, brotli, zstd compression
 
@@ -2157,7 +2157,7 @@ for level in [1, 5, 10, 22]:
     zstd(level=10):    200,071 bytes
     zstd(level=22):    180,766 bytes
 
-### 3.2 Row Groups & Statistics
+### Row Groups & Statistics
 
 ```python
 # Row groups control parallelism and predicate pushdown granularity
@@ -2213,7 +2213,7 @@ print(f"\nWith stats: {path_small.stat().st_size:,}, without: {path_no_stats.sta
     
     With stats: 268,457, without: 215,668
 
-### 3.3 Schema Control & Type Mapping
+### Schema Control & Type Mapping
 
 #### Pandas read_parquet columns, dtype_backend — schema control
 
@@ -2333,7 +2333,7 @@ print("PyArrow engine:", pq.read_schema(TMP / "pl_pyarrow.parquet"))
     value: double
     label: large_string
 
-### 3.4 Partitioned Parquet
+### Partitioned Parquet
 
 ```python
 # Partitioned Parquet — Hive-style directory layout
@@ -2413,7 +2413,7 @@ display(result.head(3))
 </style>
 <small>shape: (0, 2)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody></tbody></table></div>
 
-### 3.5 Custom Metadata
+### Custom Metadata
 
 ```python
 # Parquet files can carry custom key-value metadata
@@ -2444,9 +2444,9 @@ print(f"\nRound-trip metadata: {table_back.schema.metadata[b'version']}")
     
     Round-trip metadata: b'1.0'
 
-## 4. Character Encodings & Binary Data
+## Character Encodings & Binary Data
 
-### 4.1 Character Encodings
+### Character Encodings
 
 #### Pandas read_csv encoding — UTF-8, Latin-1, chardet detection
 
@@ -2525,7 +2525,7 @@ print(f"CP1252: {df['city'].to_list()}")
     UTF-16: ['München', 'Zürich', 'São Paulo']
     CP1252: ['München', 'Zürich', 'São Paulo']
 
-### 4.2 BOM (Byte Order Mark)
+### BOM (Byte Order Mark)
 
 ```python
 # UTF-8 BOM — common when files are exported from Excel
@@ -2546,7 +2546,7 @@ print(f"Polars columns: {df.columns}")
     Pandas columns: ['name', 'age']
     Polars columns: ['name', 'age']
 
-### 4.3 Base64 & Binary Data in DataFrames
+### Base64 & Binary Data in DataFrames
 
 ```python
 # Storing binary data (images, blobs) as base64 strings

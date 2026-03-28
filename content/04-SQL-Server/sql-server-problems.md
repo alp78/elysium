@@ -19,7 +19,7 @@ SQL Server is the transactional backbone of the index calculation platform — b
 
 ---
 
-### 1. Transaction Log Full
+### Transaction Log Full
 
 **What happens**
 
@@ -154,7 +154,7 @@ DBCC SHRINKFILE (analytics_db_log, 1024);  -- shrink to 1 GB
 
 ---
 
-### 2. Deadlocks During ETL
+### Deadlocks During ETL
 
 **What happens**
 
@@ -280,7 +280,7 @@ SET DEADLOCK_PRIORITY LOW;  -- put this at the top of the analytical query SP
 
 ---
 
-### 3. Data Disk Full
+### Data Disk Full
 
 **What happens**
 
@@ -391,7 +391,7 @@ DBCC SHRINKFILE (analytics_db_data, 200000);  -- target size in MB, use conserva
 
 ---
 
-### 4. Backup Corruption / Untested Restores
+### Backup Corruption / Untested Restores
 
 **What happens**
 
@@ -510,7 +510,7 @@ WITH RECOVERY;  -- final log backup: bring database online
 
 ---
 
-### 5. TDE Certificate Lost
+### TDE Certificate Lost
 
 **What happens**
 
@@ -612,7 +612,7 @@ WITH REPLACE, RECOVERY, STATS = 5;
 
 ---
 
-### 6. String or Binary Data Would Be Truncated (Error 8152)
+### String or Binary Data Would Be Truncated (Error 8152)
 
 **What happens**
 
@@ -705,7 +705,7 @@ ALTER TABLE silver.company_master ALTER COLUMN company_name NVARCHAR(500);
 
 ---
 
-### 7. Implicit Type Conversion Kills Performance
+### Implicit Type Conversion Kills Performance
 
 **What happens**
 
@@ -792,7 +792,7 @@ EXEC sp_recompile 'gold.index_constituents';
 
 ---
 
-### 8. Parameter Sniffing
+### Parameter Sniffing
 
 **What happens**
 
@@ -884,7 +884,7 @@ WHERE OBJECT_NAME(ps.object_id) = 'usp_get_index_constituents';
 
 ---
 
-### 9. Blocking Chains
+### Blocking Chains
 
 **What happens**
 
@@ -974,7 +974,7 @@ WHERE index_code = 'MSCI_WORLD' AND effective_date >= '2026-01-01';
 
 ---
 
-### 10. Stale Statistics
+### Stale Statistics
 
 **What happens**
 
@@ -1065,7 +1065,7 @@ DBCC FREEPROCCACHE;
 
 ---
 
-### 11. Index Fragmentation
+### Index Fragmentation
 
 **What happens**
 
@@ -1143,7 +1143,7 @@ SELECT SERVERPROPERTY('EngineEdition');  -- 3 = Enterprise
 
 ---
 
-### 12. Connection Pool Exhaustion
+### Connection Pool Exhaustion
 
 **What happens**
 
@@ -1246,7 +1246,7 @@ WHERE program_name = 'LeakingPipelineScript' AND is_user_process = 1;
 
 ---
 
-### 13. MERGE Statement Race Conditions
+### MERGE Statement Race Conditions
 
 **What happens**
 
@@ -1345,7 +1345,7 @@ ADD CONSTRAINT UQ_esg_scores_isin_date UNIQUE (instrument_isin, score_date);
 
 ---
 
-### 14. Arithmetic Overflow
+### Arithmetic Overflow
 
 **What happens**
 
@@ -1417,7 +1417,7 @@ ALTER TABLE gold.index_weights ALTER COLUMN market_cap_usd DECIMAL(28,2);
 
 ---
 
-### 15. Date/Time Type Confusion
+### Date/Time Type Confusion
 
 **What happens**
 
@@ -1505,7 +1505,7 @@ ALTER TABLE silver.price_history ALTER COLUMN trade_datetime DATETIME2(3);
 
 ---
 
-### 16. TempDB Contention
+### TempDB Contention
 
 **What happens**
 
@@ -1577,7 +1577,7 @@ WHERE wait_type = 'PAGELATCH_UP'
 
 ---
 
-### 17. Query Plan Regression After Statistics Update
+### Query Plan Regression After Statistics Update
 
 **What happens**
 
@@ -1640,7 +1640,7 @@ WHERE qsp_new.plan_id > qsp_old.plan_id
 
 ---
 
-### 18. MAXDOP Misconfiguration
+### MAXDOP Misconfiguration
 
 **What happens**
 
@@ -1705,7 +1705,7 @@ ORDER BY wait_time_ms DESC;
 
 ---
 
-### 19. Orphaned Transactions
+### Orphaned Transactions
 
 **What happens**
 
@@ -1780,7 +1780,7 @@ KILL 62;  -- replace with actual session_id
 
 ---
 
-### 20. Collation Mismatch
+### Collation Mismatch
 
 **What happens**
 
@@ -1854,7 +1854,7 @@ JOIN silver.index_constituents ic
 
 ---
 
-### 21. SELECT * in Production Queries
+### SELECT * in Production Queries
 
 **What happens**
 
@@ -1915,7 +1915,7 @@ WHERE definition LIKE '%SELECT *%'
 
 ---
 
-### 22. No Query Store Enabled
+### No Query Store Enabled
 
 **What happens**
 
@@ -1959,7 +1959,7 @@ Enable Query Store per the prevention steps above. No data retroactively becomes
 
 ---
 
-### 23. Cursor-Based Logic Instead of Set-Based
+### Cursor-Based Logic Instead of Set-Based
 
 **What happens**
 
@@ -2021,7 +2021,7 @@ Replace the cursor with the equivalent set-based query. For running totals, use 
 
 ---
 
-### 24. Missing Error Handling in Stored Procedures
+### Missing Error Handling in Stored Procedures
 
 **What happens**
 
@@ -2110,7 +2110,7 @@ ORDER BY OBJECT_NAME(object_id);
 
 ---
 
-### 25. SQL Server on Linux Gotchas
+### SQL Server on Linux Gotchas
 
 **What happens**
 

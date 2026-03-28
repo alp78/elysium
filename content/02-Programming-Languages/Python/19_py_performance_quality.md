@@ -28,7 +28,7 @@ Topics covered:
 - Type Safety & Static Analysis
 - Profiling Real Workloads
 
-## 1. Timing & Benchmarking
+## Timing & Benchmarking
 
 #### perf_counter and timeit — wall-clock timing
 
@@ -129,7 +129,7 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
     sorted() (new list): 30.2ms
     .sort() (in-place):  21.2ms
 
-## 2. Memory Profiling
+## Memory Profiling
 
 #### sys.getsizeof and memory measurement
 
@@ -255,7 +255,7 @@ del regular, slotted, list_data
     Regular class: 48 bytes/instance
     __slots__ class: 48 bytes/instance
 
-## 3. CPU Profiling
+## CPU Profiling
 
 #### cProfile — built-in CPU profiler
 
@@ -345,7 +345,7 @@ for fn in [concat_plus, concat_join, concat_io]:
     concat_join         : 3.0ms
     concat_io           : 3.2ms
 
-## 4. Big-O Complexity & Algorithmic Thinking
+## Big-O Complexity & Algorithmic Thinking
 
 #### Big-O complexity reference
 
@@ -415,7 +415,7 @@ measure(find_dupes_linear, small, label="Linear O(n)")
 
     []
 
-## 5. Data Structure Performance Cheat Sheet
+## Data Structure Performance Cheat Sheet
 
 #### Data structure performance cheat sheet
 
@@ -462,7 +462,7 @@ print(f"  deque is {t_list/t_deque:.0f}x faster")
       deque: 0.2ms
       deque is 158x faster
 
-## 6. Golden Rules of Performance
+## Golden Rules of Performance
 
 #### Golden rules of Python performance
 
@@ -508,7 +508,7 @@ fib_cached.cache_clear()
     fib(300) cached:   0.341ms
     Cached is 201x faster (on a 10x larger input!)
 
-## 7. Absolute No-Go's
+## Absolute No-Go's
 
 #### Absolute no-go's — patterns that should never appear in production
 
@@ -559,7 +559,7 @@ print(f"  Call 3: {good_append(3)}")
       Call 2: [2]
       Call 3: [3]
 
-## 8. Code Smells & Anti-Patterns
+## Code Smells & Anti-Patterns
 
 #### Code smells and anti-patterns
 
@@ -604,7 +604,7 @@ print("Guard clauses produce the same result, but are flat and readable.")
 
     Guard clauses produce the same result, but are flat and readable.
 
-## 9. Type Safety & Static Analysis
+## Type Safety & Static Analysis
 
 #### Type hints and static analysis — mypy, pyright
 
@@ -674,7 +674,7 @@ for batch in batched(list(range(10)), 3):
       batch: [6, 7, 8]
       batch: [9]
 
-## 10. Linting & Code Quality Tools
+## Linting & Code Quality Tools
 
 #### ruff, flake8, black — cyclomatic complexity and linting tools
 
@@ -721,7 +721,7 @@ print("Refactored function passes all cases.")
 
     Refactored function passes all cases.
 
-## 11. Profiling Real Workloads
+## Profiling Real Workloads
 
 #### cProfile — profiling a realistic data pipeline end-to-end
 

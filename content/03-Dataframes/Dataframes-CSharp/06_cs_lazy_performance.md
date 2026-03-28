@@ -88,7 +88,7 @@ Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
     Data directory: c:\Users\aperi\DEV\LANG\data
 
 ---
-## 1 — Lazy Fundamentals
+## Lazy Fundamentals
 
 Polars has two execution modes:
 
@@ -97,7 +97,7 @@ Polars has two execution modes:
 
 The lazy API lets Polars optimize the entire query plan *before* touching any data: reordering filters, eliminating unused columns, and pushing predicates down to the file scanner.
 
-#### 1.1 — Scan Parquet (lazy): no data loaded until Collect
+#### Scan Parquet (lazy): no data loaded until Collect
 
 ```csharp
 // Polars.NET — ScanParquet returns a LazyFrame (no data read yet)
@@ -112,7 +112,7 @@ Console.WriteLine("No data has been loaded yet — just a query plan.");
     Type: LazyFrame
     No data has been loaded yet — just a query plan.
 
-#### 1.2 — Lazy from eager: convert an existing DataFrame
+#### Lazy from eager: convert an existing DataFrame
 
 ```csharp
 // Polars.NET — read CSV eagerly, then convert to lazy
@@ -129,7 +129,7 @@ Console.WriteLine("Eager -> Lazy conversion is free (no copy).");
     LazyFrame type: LazyFrame
     Eager -> Lazy conversion is free (no copy).
 
-#### 1.3 — Collect: materialize the query plan
+#### Collect: materialize the query plan
 
 ```csharp
 // Polars.NET — Collect() executes the query plan and returns a DataFrame
@@ -167,7 +167,7 @@ result.Head(5)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### 1.4 — Explain: inspect the optimized query plan
+#### Explain: inspect the optimized query plan
 
 > [!info] `Explain()` shows the optimized query plan as a string. It may not be exposed in Polars.NET 0.4.0 — the code catches the exception and notes the limitation.
 
@@ -192,7 +192,7 @@ catch (Exception ex)
     ESTIMATED ROWS: 66355
 
 ---
-## 2 — Query Optimization
+## Query Optimization
 
 When you build a lazy query, Polars applies **automatic optimizations** before execution:
 
@@ -202,7 +202,7 @@ When you build a lazy query, Polars applies **automatic optimizations** before e
 
 These happen transparently. You write clear, readable code; Polars figures out the fastest plan.
 
-#### 2.1 — Predicate pushdown: filter before reading all data
+#### Predicate pushdown: filter before reading all data
 
 ```csharp
 // Polars.NET — filter in lazy mode: Polars pushes the predicate into the scan
@@ -244,7 +244,7 @@ dfFiltered.Head(5)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>5301</td><td>SAP.DE</td><td>2021-01-04</td><td>108.1</td><td>108.5</td><td>104.78</td><td>105.32</td><td>97.0102</td><td>2928515</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5302</td><td>SAP.DE</td><td>2021-01-05</td><td>104.98</td><td>106.2</td><td>104.46</td><td>105.04</td><td>96.7523</td><td>2798888</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5303</td><td>SAP.DE</td><td>2021-01-06</td><td>105.14</td><td>106.26</td><td>103.6</td><td>105.48</td><td>97.1576</td><td>3018802</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5304</td><td>SAP.DE</td><td>2021-01-07</td><td>105.58</td><td>105.7</td><td>104.04</td><td>104.52</td><td>96.2734</td><td>3176143</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5305</td><td>SAP.DE</td><td>2021-01-08</td><td>105.14</td><td>106.72</td><td>105.04</td><td>106.18</td><td>97.8024</td><td>3068744</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### 2.2 — Projection pushdown: select only needed columns
+#### Projection pushdown: select only needed columns
 
 ```csharp
 // Polars.NET — select in lazy mode: only requested columns are read from parquet
@@ -286,7 +286,7 @@ dfProjected.Head(5)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
-#### 2.3 — Combined: filter + select + sort in a single lazy query
+#### Combined: filter + select + sort in a single lazy query
 
 ```csharp
 // Polars.NET — chain filter, select, sort in lazy mode
@@ -330,7 +330,7 @@ dfCombined.Head(10)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.338</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>2.1555</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>2.3305</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>3.31</td><td>306973344</td></tr><tr><td>SAN.MC</td><td>2022-10-19</td><td>2.6345</td><td>304539953</td></tr><tr><td>ISP.MI</td><td>2022-03-07</td><td>1.8432</td><td>286679922</td></tr><tr><td>ISP.MI</td><td>2021-02-03</td><td>1.9512</td><td>284805919</td></tr><tr><td>ISP.MI</td><td>2022-03-09</td><td>2.0725</td><td>284368758</td></tr><tr><td>ISP.MI</td><td>2023-03-15</td><td>2.2435</td><td>282185531</td></tr></tbody></table></div>
 
-#### 2.4 — Lazy GroupBy with aggregation
+#### Lazy GroupBy with aggregation
 
 ```csharp
 // Polars.NET — lazy GroupBy + Agg, all optimized before execution
@@ -377,7 +377,7 @@ dfGrouped.Head(10)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>avg_close<span class='pl-dtype'>double</span></th><th>total_volume<span class='pl-dtype'>int64</span></th><th>num_days<span class='pl-dtype'>uint32</span></th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td><td>1321</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td><td>1329</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td><td>1321</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td><td>1329</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td><td>1321</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td><td>1321</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td><td>1331</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td><td>1329</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td><td>1324</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td><td>1306</td></tr></tbody></table></div>
 
-#### 2.5 — Lazy WithColumns: add computed columns
+#### Lazy WithColumns: add computed columns
 
 ```csharp
 // Polars.NET — WithColumns in lazy mode adds new expressions
@@ -424,7 +424,7 @@ dfWithCols.Head(5)
 </style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 5 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>daily_range<span class='pl-dtype'>double</span></th><th>daily_change<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>2021-01-04</td><td>108.1</td><td>105.32</td><td>3.72</td><td>-2.78</td></tr><tr><td>2021-01-05</td><td>104.98</td><td>105.04</td><td>1.74</td><td>0.06</td></tr><tr><td>2021-01-06</td><td>105.14</td><td>105.48</td><td>2.66</td><td>0.34</td></tr><tr><td>2021-01-07</td><td>105.58</td><td>104.52</td><td>1.66</td><td>-1.06</td></tr><tr><td>2021-01-08</td><td>105.14</td><td>106.18</td><td>1.68</td><td>1.04</td></tr></tbody></table></div>
 
 ---
-## 3 — Performance Comparison
+## Performance Comparison
 
 We compare **eager** vs **lazy** execution on real data to measure the impact of query optimization.
 
@@ -433,7 +433,7 @@ We compare **eager** vs **lazy** execution on real data to measure the impact of
 
 We use `Stopwatch` for timing and average over multiple iterations to reduce noise.
 
-#### 3.1 — Helper: benchmark runner
+#### Helper: benchmark runner
 
 ```csharp
 // Polars.NET — simple benchmark helper using Stopwatch
@@ -462,7 +462,7 @@ Console.WriteLine("Benchmark helper defined.");
 
     Benchmark helper defined.
 
-#### 3.2 — Eager vs Lazy: Parquet read + filter + select
+#### Eager vs Lazy: Parquet read + filter + select
 
 ```csharp
 // Polars.NET — benchmark on bench_large.parquet (~12M rows)
@@ -500,7 +500,7 @@ Console.WriteLine($"\nLazy is ~{speedup:F1}x faster than eager on this query.");
     
     Lazy is ~9.0x faster than eager on this query.
 
-#### 3.3 — Eager vs Lazy: CSV read + filter + select
+#### Eager vs Lazy: CSV read + filter + select
 
 ```csharp
 // Polars.NET — benchmark CSV: eager vs lazy
@@ -558,7 +558,7 @@ catch (Exception ex)
     
     Lazy CSV speedup: ~1.4x
 
-#### 3.4 — Projection pushdown impact: all columns vs selected columns
+#### Projection pushdown impact: all columns vs selected columns
 
 ```csharp
 // Polars.NET — measure projection pushdown benefit on parquet
@@ -588,7 +588,7 @@ Console.WriteLine($"\nProjection pushdown saves ~{(1 - twoColsAvg / allColsAvg) 
     
     Projection pushdown saves ~76% read time.
 
-#### 3.5 — Summary table
+#### Summary table
 
 ```csharp
 // Polars.NET — build a summary DataFrame from benchmark results
@@ -629,7 +629,7 @@ summaryDf
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>approach<span class='pl-dtype'>utf8view</span></th><th>avg_ms<span class='pl-dtype'>double</span></th><th>vs_eager<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>Eager Parquet</td><td>141.5324667</td><td>1</td></tr><tr><td>Lazy Parquet</td><td>15.79983333</td><td>8.957845547</td></tr><tr><td>Lazy 2-col Parquet</td><td>17.7476</td><td>7.974738368</td></tr></tbody></table></div>
 
 ---
-## 4 — Deedle Note
+## Deedle Note
 
 **Deedle is eager-only.** All data is loaded into memory immediately when you read a file. There is no lazy execution mode, no query plan, and no automatic optimization.
 
@@ -642,7 +642,7 @@ For large datasets, Polars.NET's lazy evaluation with predicate and projection p
 If your workflow fits in memory and you only need basic operations, Deedle works fine. For analytical queries on larger-than-memory data, Polars.NET's lazy API is the right tool.
 
 ---
-## 5 — Summary
+## Summary
 
 #### Lazy API cheat sheet
 

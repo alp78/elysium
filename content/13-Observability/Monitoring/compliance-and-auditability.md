@@ -86,9 +86,9 @@ This reference covers the full compliance and auditability surface for a product
 
 ---
 
-## 1. End-to-End Data Lineage
+## End-to-End Data Lineage
 
-### 1.1 The Lineage Chain
+### The Lineage Chain
 
 Every published index level must be traceable from its final value back to the original vendor file byte-for-byte. The canonical lineage chain is:
 
@@ -119,7 +119,7 @@ Key invariants:
 - Every Bronze row carries the `source_file_path` and `source_file_hash` columns inherited from the landing record.
 - Every Gold row carries the `pipeline_run_id` that produced it, enabling a single JOIN back to the lineage metadata table.
 
-### 1.2 BigQuery: Tracing a Table Back to Source Jobs
+### BigQuery: Tracing a Table Back to Source Jobs
 
 Use `INFORMATION_SCHEMA.JOBS` to reconstruct which job wrote a given destination table and when.
 
@@ -175,7 +175,7 @@ WHERE
     j.job_id = '<job_id_to_investigate>';
 ```
 
-### 1.3 Datadog APM Trace Linking
+### Datadog APM Trace Linking
 
 Every pipeline stage emits a Datadog APM span. Spans within the same logical pipeline run share three mandatory tags so that the full execution can be reconstructed from any single span.
 
@@ -273,7 +273,7 @@ def _compute_sha256(path: str) -> str:
     return h.hexdigest()
 ```
 
-### 1.4 Pipeline Lineage Metadata Table (T-SQL)
+### Pipeline Lineage Metadata Table (T-SQL)
 
 ```sql
 -- ============================================================
@@ -340,7 +340,7 @@ CREATE INDEX IX_plm_calc_date_index
     INCLUDE (pipeline_status, source_file_hash);
 ```
 
-### 1.5 Reproducibility Test
+### Reproducibility Test
 
 Given a published index level, this script retrieves the exact inputs that produced it and re-runs the calculation to verify the result matches within floating-point tolerance.
 
@@ -543,9 +543,9 @@ if __name__ == "__main__":
 
 ---
 
-## 2. Corporate Action Processing
+## Corporate Action Processing
 
-### 2.1 Corporate Action Type Reference
+### Corporate Action Type Reference
 
 | Action Type | Price Impact | Shares Impact | Weight Impact | Divisor Impact |
 |---|---|---|---|---|
@@ -559,7 +559,7 @@ if __name__ == "__main__":
 > [!important] Divisor Integrity Rule
 > The divisor must be adjusted **before** the market opens on the ex-date so that the index level does not jump discontinuously. Divisor changes are logged in `divisor_history` with the effective date, reason, and authorising analyst.
 
-### 2.2 Python: Price Adjustment Factor Calculations
+### Python: Price Adjustment Factor Calculations
 
 ```python
 """
@@ -719,7 +719,7 @@ def new_divisor_for_market_cap_change(
     return (old_divisor * ratio).quantize(Decimal("0.00000001"), rounding=ROUND_HALF_UP)
 ```
 
-### 2.3 C#: CorporateActionProcessor
+### C#: CorporateActionProcessor
 
 ```csharp
 // CorporateActionProcessor.cs
@@ -941,7 +941,7 @@ namespace IndexCalculation.CorporateActions
 }
 ```
 
-### 2.4 T-SQL: Divisor Adjustment Stored Procedure
+### T-SQL: Divisor Adjustment Stored Procedure
 
 ```sql
 -- ============================================================
@@ -1072,7 +1072,7 @@ END;
 GO
 ```
 
-### 2.5 Corporate Action Audit Log Table (T-SQL DDL)
+### Corporate Action Audit Log Table (T-SQL DDL)
 
 ```sql
 -- ============================================================
@@ -1146,7 +1146,7 @@ CREATE INDEX IX_caal_ex_date_index
     INCLUDE (action_type, price_adjustment_factor, new_divisor);
 ```
 
-### 2.6 End-to-End Example: 2:1 Stock Split
+### End-to-End Example: 2:1 Stock Split
 
 The following walkthrough traces a 2:1 stock split (company issues one additional share per existing share) from announcement through to index publication.
 
@@ -1214,12 +1214,12 @@ The reproducibility test is executed. The `pipeline_lineage_metadata` row for th
 
 ---
 
-## 3. EU BMR Compliance
+## EU BMR Compliance
 
 > [!warning] Regulatory Requirement — EU BMR (Regulation (EU) 2016/1011)
 > The European Benchmarks Regulation applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams. For a detailed breakdown of the regulation's scope and applicability, see [[eu-bmr-benchmark-regulation]].
 
-### 3.1 Article 11 — Input Data Governance
+### Article 11 — Input Data Governance
 
 > [!important] Article 11(1) — Sufficiency and Representativeness
 > Input data must be sufficient and representative of the economic reality the benchmark is intended to measure. The administrator must document the criteria for selecting input data and the hierarchy of data sources.
@@ -1256,7 +1256,7 @@ CREATE TABLE dbo.input_data_tier_log
 CREATE INDEX IX_idtl_calc_date ON dbo.input_data_tier_log (calc_date, index_code);
 ```
 
-### 3.2 Article 21 — Record Retention
+### Article 21 — Record Retention
 
 > [!warning] Regulatory Requirement — 5-Year Minimum Retention
 > Article 21 requires administrators to retain records for at least five years. Records must include: all input data, the methodology and its basis, all calculations and their results, subscriber identity, and any identified significant changes to the benchmark.
@@ -1317,7 +1317,7 @@ ORDER BY
     j.name, s.step_id;
 ```
 
-### 3.3 Oversight Function
+### Oversight Function
 
 > [!important] BMR Article 5 — Oversight Function
 > The administrator must establish and maintain a permanent and effective oversight function. The oversight function must oversee all aspects of the benchmark provision and, in particular, any outsourced functions.
@@ -1348,7 +1348,7 @@ CREATE TABLE dbo.oversight_signoff
 );
 ```
 
-### 3.4 Complaint Handling
+### Complaint Handling
 
 > [!important] BMR Article 14 — Complaints Procedure
 > The administrator must have a written complaints procedure allowing benchmark users to submit complaints about whether a benchmark is representative, the methodology, proposed changes, and their application in specific cases. Complaints and the administrator's responses must be retained.
@@ -1374,7 +1374,7 @@ CREATE TABLE dbo.bmr_complaints
 );
 ```
 
-### 3.5 Annual Review Checklist
+### Annual Review Checklist
 
 > [!note] BMR Article 11(1)(e) — Annual Review of Methodology
 > The administrator must review the methodology at least once a year and document the review outcome.
@@ -1400,9 +1400,9 @@ CREATE TABLE dbo.bmr_complaints
 
 ---
 
-## 4. Restatement Procedures
+## Restatement Procedures
 
-### 4.1 Restatement Decision Framework
+### Restatement Decision Framework
 
 When an error is discovered in a published index level, the following process governs the response. The [[data-restatement-procedure]] provides the operational runbook that implements the framework below, including subscriber notification templates and approval workflows.
 
@@ -1443,7 +1443,7 @@ Update Audit Trail
   (link restatement to root cause, corrected run_id, original run_id)
 ```
 
-### 4.2 Materiality Threshold Configuration
+### Materiality Threshold Configuration
 
 ```python
 # restatement_config.py
@@ -1480,7 +1480,7 @@ def classify_error(
         return "MATERIAL"
 ```
 
-### 4.3 T-SQL: Restatement Workflow
+### T-SQL: Restatement Workflow
 
 ```sql
 -- ============================================================
@@ -1603,7 +1603,7 @@ CREATE TABLE dbo.restatement_log
 );
 ```
 
-### 4.4 Python: Restatement Workflow Orchestrator
+### Python: Restatement Workflow Orchestrator
 
 ```python
 """
@@ -1818,9 +1818,9 @@ def _notify_subscribers(
 
 ---
 
-## 5. Datadog Integration for Compliance Monitoring
+## Datadog Integration for Compliance Monitoring
 
-### 5.1 Custom Metrics
+### Custom Metrics
 
 All metrics are emitted as `GAUGE` or `COUNT` with mandatory tags `index_code`, `calc_date`, `env`, and `run_id`. This ensures every metric can be correlated back to the specific pipeline run that produced it.
 
@@ -1939,7 +1939,7 @@ def emit_pipeline_stage_complete(
     )
 ```
 
-### 5.2 Datadog Monitor: Shadow Divergence Alert
+### Datadog Monitor: Shadow Divergence Alert
 
 ```python
 """
@@ -2050,7 +2050,7 @@ def create_all_monitors(api_key: str, app_key: str) -> None:
         print(f"Created monitor id={result['id']} name={result['name']}")
 ```
 
-### 5.3 Datadog Dashboard Design
+### Datadog Dashboard Design
 
 The compliance dashboard is structured in four horizontal bands, each corresponding to a phase of the daily calculation workflow.
 
@@ -2207,7 +2207,7 @@ def create_compliance_dashboard(api_key: str, app_key: str) -> str:
     return url
 ```
 
-### 5.4 Alerting Integration with PagerDuty
+### Alerting Integration with PagerDuty
 
 > [!note] On-Call Routing
 > The shadow divergence monitor routes to the `index-operations` PagerDuty service. The restatement monitor routes to `index-operations` AND `compliance-oversight`. All monitors include a runbook link in the message body pointing to the internal restatement procedures documentation.

@@ -18,7 +18,7 @@ A well-architected prompt is the single highest-leverage investment in getting c
 
 ---
 
-## 2.1 Layering: Role, Goal, Constraints, Format
+## Layering: Role, Goal, Constraints, Format
 
 A well-architected prompt has four layers. Each layer serves a distinct purpose:
 
@@ -38,13 +38,13 @@ A well-architected prompt has four layers. Each layer serves a distinct purpose:
 
 The role primes the model's vocabulary, reasoning patterns, and assumptions. A "senior tax accountant" generates different output than a "financial journalist" — even given the same question.
 
-**Effective role definitions include:**
+#### Effective role definitions include
 
 - **Expertise level:** "You are a senior data engineer with 10 years of experience in ETL pipelines"
 - **Perspective:** "You think like a security auditor — assume everything is a potential attack vector"
 - **Anti-role:** "You are NOT a salesperson. Do not pitch or upsell. Be honest about limitations."
 
-**Example of a strong role definition:**
+#### Example of a strong role definition
 
 ```
 You are a Lead Cloud DevOps and Site Reliability Engineer (SRE).
@@ -74,7 +74,7 @@ The goal is the **single most important sentence** in your prompt. If the model 
 
 Constraints prevent the model from going off track. They are **negative space** — defining what NOT to do is often more important than what to do.
 
-**Categories of constraints:**
+#### Categories of constraints
 
 | Type | Example |
 |------|---------|
@@ -124,7 +124,7 @@ Format:
 
 ---
 
-## 2.2 Modular Structures: XML, JSON, Schemas, Paragraphs
+## Modular Structures: XML, JSON, Schemas, Paragraphs
 
 Different structural formats serve different purposes. The choice of format affects how precisely the model interprets your intent.
 
@@ -225,18 +225,18 @@ a slightly delayed update than complex timezone-aware scheduling.
 
 ---
 
-## 2.3 Meta-Prompting and Chain of Thought
+## Meta-Prompting and Chain of Thought
 
 ### Chain of Thought Prompting
 
 Chain of thought (CoT) prompting forces the model to externalize its reasoning before reaching a conclusion. This dramatically improves accuracy on multi-step problems.
 
-**Basic CoT trigger phrases:**
+#### Basic CoT trigger phrases
 - "Think step by step"
 - "Before answering, work through the logic:"
 - "Walk me through your reasoning"
 
-**Structured CoT (numbered stages):**
+#### Structured CoT (numbered stages)
 
 ```
 Analyze whether Company X should enter the Japanese market.
@@ -257,9 +257,9 @@ Think through this step by step:
 
 Meta-prompting is using the model itself to analyze and improve your prompts. It is one of the fastest ways to identify structural weaknesses.
 
-**Key meta-prompt patterns:**
+#### Key meta-prompt patterns
 
-**Before answering, identify 3 possible interpretations of this question:**
+#### Before answering, identify 3 possible interpretations of this question
 ```
 Before answering, identify 3 possible interpretations of this question,
 then state which interpretation you're using and why.
@@ -273,7 +273,7 @@ Analyze this prompt and identify its weaknesses:
 Focus on: ambiguity, missing constraints, format gaps, and intent misalignment.
 ```
 
-**Generate a better version:**
+#### Generate a better version
 ```
 Here is a prompt I'm using: [paste prompt]
 Here is the output it produced: [paste output]

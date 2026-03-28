@@ -342,7 +342,7 @@ WHERE index_code IN ('<INDEX_CODE_1>', '<INDEX_CODE_2>')
 
 If the vendor has not responded within 1 hour of first contact, or if the SLA is definitively breached, send a formal escalation email.
 
-**Email template:**
+#### Vendor escalation email template — SLA breach notification
 
 ```
 To: <vendor_support_email>, <vendor_account_manager>

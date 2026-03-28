@@ -22,7 +22,7 @@ Topics covered:
 - Building a REST API (FastAPI)
 - Data Engineering API Patterns
 
-## 1. HTTP Clients & REST API Calls
+## HTTP Clients & REST API Calls
 
 ```python
 import requests
@@ -288,7 +288,7 @@ comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
   </tbody>
 </table>
 
-## 2. REST API Patterns for Data Engineering
+## REST API Patterns for Data Engineering
 
 #### REST API pagination — fetch data in pages with requests
 
@@ -382,7 +382,7 @@ print(f"  Server received: {len(data['json']['trades'])} trades")
       Status: 200
       Server received: 3 trades
 
-## 3. Building a REST API (FastAPI)
+## Building a REST API (FastAPI)
 
 #### Pydantic models — request/response schemas
 
@@ -738,7 +738,7 @@ pd.DataFrame({
   </tbody>
 </table>
 
-## 4. Pydantic — Data Validation for Production APIs
+## Pydantic — Data Validation for Production APIs
 
 Pydantic is Python’s standard for **runtime data validation**. You define a model class with type-annotated fields, and Pydantic:
 
@@ -1256,7 +1256,7 @@ checklist.style.set_properties(**{"text-align": "left"}).hide(axis="index")
   </tbody>
 </table>
 
-## 5. Summary
+## Summary
 
 > [!abstract]- Quick Reference
 > **HTTP Clients**

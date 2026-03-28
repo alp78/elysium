@@ -33,7 +33,7 @@ The index snapshot panel displays cap-weighted aggregates computed daily from co
 | **P/B** | Cap-weighted avg price-to-book | < 1.5 value · > 3 growth premium |
 | **Dividend Yield** | Cap-weighted avg yield across constituents | > 3% attractive for income |
 
-## 30d vs 90d Return Interpretation
+## vs 90d Return Interpretation
 
 Comparing the 30-day and 90-day rolling returns reveals the trend direction and acceleration. This is a key signal for identifying momentum shifts and potential regime changes.
 

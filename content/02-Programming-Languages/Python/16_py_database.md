@@ -44,7 +44,7 @@ _html_fmt = get_ipython().display_formatter.formatters["text/html"]
 _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="index").to_html())
 ```
 
-## 1. SQLite — Built-in Embedded Database
+## SQLite — Built-in Embedded Database
 
 #### SQLite — connect and CREATE TABLE
 
@@ -410,7 +410,7 @@ conn.close()
     Created: idx_trades_ticker
       {'id': 3, 'parent': 0, 'notused': 0, 'detail': 'SEARCH trades USING INDEX idx_trades_ticker (ticker=?)'}
 
-## 2. SQL Server — pyodbc (ODBC Driver 18)
+## SQL Server — pyodbc (ODBC Driver 18)
 
 The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [[sql-fundamentals]]. For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [[blocking-and-locking]].
 
@@ -1170,7 +1170,7 @@ pd.read_sql("""
 </table>
 </div>
 
-## 3. pandas Integration — pd.read_sql and to_sql
+## pandas Integration — pd.read_sql and to_sql
 
 #### pandas — read_sql into DataFrame with SQLAlchemy engine
 
@@ -1327,7 +1327,7 @@ with engine.connect() as c:
 </table>
 </div>
 
-## 4. SQLAlchemy — ORM
+## SQLAlchemy — ORM
 
 #### SQLAlchemy — define ORM model classes
 
@@ -1490,7 +1490,7 @@ df
 </table>
 </div>
 
-## 5. DuckDB — Embedded Analytical SQL Database
+## DuckDB — Embedded Analytical SQL Database
 
 #### DuckDB — connect and CREATE TABLE
 
@@ -2142,7 +2142,7 @@ pd.DataFrame(results)
 </table>
 </div>
 
-## 6. Querying Files — DuckDB vs Polars vs Pandas
+## Querying Files — DuckDB vs Polars vs Pandas
 
 ### Read Parquet
 

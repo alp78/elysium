@@ -521,17 +521,17 @@ Self-service only succeeds if users have the skills to use it well. A platform i
 
 ### Training Programs
 
-**Self-paced resources:**
+#### Self-paced resources
 - Internal data wiki: How our data platform works, what tables exist, how to get access
 - SQL learning path: Recommended external resources (Mode SQL Tutorial, Codecademy) + internal practice datasets
 - Recorded walkthroughs: 15–30 minute videos of "How to analyze X" using the platform
 
-**Live programs:**
+#### Live programs
 - Monthly "Data Office Hours" — any employee can ask questions of the data team
 - Quarterly SQL workshop for analysts new to SQL
 - Onboarding buddy: New analysts are paired with an analytics engineer for 2 weeks
 
-**Documentation standards:**
+#### Documentation standards
 - Every data product in the catalog has a "How to use this dataset" section with example queries
 - Common analysis patterns are documented as templates in Hex / Jupyter
 - Glossary of business terms with their metric definitions

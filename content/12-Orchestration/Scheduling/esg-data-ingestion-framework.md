@@ -24,7 +24,7 @@ status: complete
 
 ---
 
-## 1. The Multi-Vendor Scale Problem
+## The Multi-Vendor Scale Problem
 
 | Vendor | Scale | Range | Direction | Update Freq | Typical Coverage |
 |--------|-------|-------|-----------|-------------|-----------------|
@@ -39,7 +39,7 @@ status: complete
 
 ---
 
-## 2. Normalization Functions
+## Normalization Functions
 
 ```python
 """
@@ -125,7 +125,7 @@ def normalize_score(vendor: str, raw_value) -> Optional[float]:
 
 ---
 
-## 3. Airflow DAG: ESG Normalization Pipeline
+## Airflow DAG: ESG Normalization Pipeline
 
 ```python
 from datetime import datetime, timedelta
@@ -235,7 +235,7 @@ with DAG(
 
 ---
 
-## 4. Circuit Breaker Pattern
+## Circuit Breaker Pattern
 
 ```python
 def check_anomalies(calc_date: str, max_deviation_pct: float = 20.0, **context) -> str:
@@ -322,7 +322,7 @@ def check_anomalies(calc_date: str, max_deviation_pct: float = 20.0, **context) 
 
 ---
 
-## 5. Carbon Footprint Calculation
+## Carbon Footprint Calculation
 
 ### SFDR/EU Taxonomy Required Metrics
 
@@ -366,7 +366,7 @@ def calculate_carbon_footprint(
 
 ---
 
-## 6. Terraform: Segregated Service Accounts
+## Terraform: Segregated Service Accounts
 
 > [!danger] Regulatory Requirement
 > Financial data pipelines MUST separate Write (can modify production data) from Read (can only query) service accounts. This is both a security best practice and a regulatory requirement under operational risk management frameworks.
@@ -443,7 +443,7 @@ resource "google_project_iam_audit_config" "data_access_audit" {
 
 ---
 
-## 7. Data Vendor SLA Monitoring
+## Data Vendor SLA Monitoring
 
 ### Airflow Sensor for File Arrival
 
