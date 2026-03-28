@@ -92,7 +92,7 @@ These six practices account for the vast majority of BigQuery cost reduction:
 
 **5. Materialized views for repeated queries.** If your dashboard runs the same aggregation every 5 minutes, create a materialized view — BigQuery maintains it automatically and queries read the pre-computed result.
 
-**6. Use INFORMATION_SCHEMA.JOBS for cost tracking:**
+#### INFORMATION_SCHEMA.JOBS — cost tracking by user and query
 
 ```sql
 SELECT user_email,

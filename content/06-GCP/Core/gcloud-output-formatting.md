@@ -26,7 +26,7 @@ Without `--format`, gcloud outputs human-readable tables that are difficult to p
 
 ## Output Format Options
 
-**Default human-readable table:**
+#### --format default table — human-readable output
 ```bash
 gcloud compute instances list
 # NAME        ZONE             MACHINE_TYPE  STATUS
@@ -34,13 +34,13 @@ gcloud compute instances list
 # data-pipeline-air   europe-west1-b   e2-medium     RUNNING
 ```
 
-**JSON (for programmatic parsing with jq):**
+#### --format=json — programmatic output for jq parsing
 ```bash
 gcloud compute instances list --format=json
 # Full JSON output with every field — pipe to jq for extraction
 ```
 
-**Extract a single field:**
+#### --format="value(field)" — extract a single field for scripting
 ```bash
 gcloud compute instances list --format="value(name)"
 # Output: data-pipeline-sql\nproject-air
@@ -48,7 +48,7 @@ gcloud compute instances list --format="value(name)"
 # CRITICAL for scripting: for vm in $(gcloud compute instances list --format="value(name)"); do ...
 ```
 
-**Extract multiple fields with transformations:**
+#### --format="table(field.basename())" — multiple fields with transforms
 ```bash
 gcloud compute instances list --format="table(name,zone.basename(),status,machineType.basename())"
 # table() = formatted table with headers
@@ -56,12 +56,12 @@ gcloud compute instances list --format="table(name,zone.basename(),status,machin
 #   (machineType is a full URL like .../machineTypes/e2-medium — basename extracts "e2-medium")
 ```
 
-**CSV output (for spreadsheets or downstream processing):**
+#### --format="csv(fields)" — CSV output for spreadsheets
 ```bash
 gcloud compute instances list --format="csv(name,zone.basename(),status)"
 ```
 
-**Flattened output (for complex nested structures):**
+#### --format="flattened(field)" — expand nested structures
 ```bash
 gcloud compute instances describe data-pipeline-sql --zone=europe-west1-b --format="flattened(networkInterfaces)"
 # Flattened = dot-notation for nested fields
@@ -79,7 +79,7 @@ gcloud compute instances list --filter="status=RUNNING AND name~data-pipeline"
 # Faster than piping to grep because the API returns only matching results
 ```
 
-**Combine filter and format for scripting:**
+#### --filter + --format — combine filtering and formatting for scripts
 ```bash
 gcloud compute instances list --filter="status=RUNNING" --format="value(name,networkInterfaces[0].networkIP)"
 # Returns: name and internal IP of all running VMs, tab-separated, no headers

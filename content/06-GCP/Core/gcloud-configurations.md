@@ -18,7 +18,7 @@ If you work across multiple GCP projects (dev, staging, production), switching `
 
 ## Creating and Switching Configurations
 
-**Create named configurations for each environment:**
+#### gcloud config configurations create — named config per environment
 
 ```bash
 # Create configurations
@@ -34,7 +34,7 @@ gcloud config set compute/region europe-west1
 gcloud config set compute/zone europe-west1-b
 ```
 
-**List and switch configurations:**
+#### gcloud config configurations list/activate — switch between environments
 
 ```bash
 # List all configurations
@@ -57,7 +57,7 @@ gcloud config list
 # Shows: account, project, region, zone, and all other settings
 ```
 
-**Basic project and region settings (without named configurations):**
+#### gcloud config set project/region — basic settings without named configs
 
 ```bash
 # Set the active project

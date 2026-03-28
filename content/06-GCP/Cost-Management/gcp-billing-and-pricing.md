@@ -233,7 +233,7 @@ You can also attach a Pub/Sub topic to a budget to trigger automated cost-contro
 
 **Billing unit:** Per-second (minimum 1 minute)
 
-**Cost formula:**
+#### Compute Engine cost formula — vCPU + memory + disk + network
 
 ```
 Monthly cost =
@@ -604,7 +604,7 @@ See [[querying-and-cost-optimization]] for full BigQuery optimization patterns.
 | Memory | $0.00000250/GB-second |
 | No per-request charge | — |
 
-**Cost formula for a Cloud Run Job:**
+#### Cloud Run Job cost formula — vCPU-seconds + memory-seconds + requests
 
 ```
 Cost = executions × duration_seconds × (vCPU × $0.0000240 + RAM_GB × $0.0000025)
@@ -668,7 +668,7 @@ See [[cloud-run-jobs-vs-services]] for architecture guidance.
 
 **Minimum message size:** 1,000 bytes (1 KB) per publish operation. Even a 10-byte message is billed as 1 KB.
 
-**Cost formula:**
+#### Pub/Sub cost formula — message volume + delivery + storage
 
 ```
 Monthly cost = max(0, total_message_volume_GB - 10) × $0.04
@@ -820,7 +820,7 @@ Free tier resets daily (not monthly), making Firestore effectively free for deve
 > [!danger] Cost Trap: Unindexed Collection-Group Queries
 > A query that cannot use an index falls back to a collection scan, reading every document in the collection. A 1M-document collection with 10 such queries/day = 10M reads = $6/day = $180/month. Always verify query plans and index coverage.
 
-**Cost estimation:**
+#### Firestore cost estimation — reads, writes, deletes, storage
 
 ```
 Monthly reads cost  = (total_reads - 50,000/day × 30) / 100,000 × $0.06
@@ -872,7 +872,7 @@ See [[firestore-data-model-and-operations]] and [[real-time-nosql-pipelines]] fo
 
 Streaming jobs: 22–25% more expensive than batch due to persistent worker overhead and streaming engine.
 
-**Cost formula (batch):**
+#### Dataflow cost formula — worker vCPUs + memory + shuffle
 
 ```
 Batch job cost =
@@ -929,7 +929,7 @@ gcloud dataflow jobs show JOB_ID --region=us-central1
 
 ### Cloud Scheduler
 
-**Pricing:**
+#### Cloud Scheduler pricing — jobs per month, free tier
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
@@ -950,7 +950,7 @@ gcloud scheduler jobs delete JOB_NAME --location=us-central1
 
 ### Cloud Functions (Gen 2)
 
-**Pricing:**
+#### Cloud Functions pricing — invocations, compute time, networking
 
 | Dimension | Rate | Free tier/month |
 |-----------|------|-----------------|
@@ -978,7 +978,7 @@ gcloud functions deploy FUNCTION_NAME \
 
 ### Secret Manager
 
-**Pricing:**
+#### Secret Manager pricing — active versions, access operations
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
@@ -1005,7 +1005,7 @@ gcloud secrets versions disable VERSION_NUMBER --secret=SECRET_NAME
 
 ### Cloud Logging
 
-**Pricing:**
+#### Cloud Logging pricing — ingestion, storage, routing
 
 | Dimension | Rate | Free tier/month |
 |-----------|------|-----------------|
@@ -1054,7 +1054,7 @@ See [[cloud-logging]] for logging infrastructure patterns.
 
 ### Artifact Registry
 
-**Pricing:**
+#### Artifact Registry pricing — storage per GB, free tier
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
@@ -1087,7 +1087,7 @@ gcloud artifacts repositories set-cleanup-policies REPO_NAME \
 
 ### Cloud NAT
 
-**Pricing:**
+#### Cloud NAT pricing — per-VM charge + data processing
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|

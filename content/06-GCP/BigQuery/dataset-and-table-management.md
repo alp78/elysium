@@ -61,7 +61,7 @@ bq mk --dataset --location=EU --description="data pipeline data" project_data
 
 ## Creating Tables
 
-**Simple table with inline schema:**
+#### bq mk --table — create table with inline schema
 ```bash
 # Create a table with schema
 bq mk --table project_data.ohlcv symbol:STRING,date:DATE,open:FLOAT,high:FLOAT,low:FLOAT,close:FLOAT,volume:INTEGER
@@ -69,7 +69,7 @@ bq mk --table project_data.ohlcv symbol:STRING,date:DATE,open:FLOAT,high:FLOAT,l
 # Types: STRING, INTEGER, FLOAT, NUMERIC, BOOLEAN, DATE, DATETIME, TIMESTAMP, BYTES, GEOGRAPHY
 ```
 
-**Partitioned and clustered table (the optimal layout for time-series data):**
+#### bq mk --time_partitioning_field --clustering_fields — partitioned and clustered table
 ```bash
 # Create a partitioned + clustered table (the optimal layout)
 bq mk --table --time_partitioning_field=date --time_partitioning_type=DAY \

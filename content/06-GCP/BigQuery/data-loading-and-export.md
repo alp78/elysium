@@ -18,7 +18,7 @@ BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parque
 
 ## Loading Data from GCS
 
-**Load CSV from GCS:**
+#### bq load --source_format=CSV — load CSV from GCS
 ```bash
 # Load CSV from GCS into BigQuery
 bq load --source_format=CSV --skip_leading_rows=1 --autodetect \
@@ -29,7 +29,7 @@ bq load --source_format=CSV --skip_leading_rows=1 --autodetect \
 # For production: specify explicit schema with --schema flag or schema.json
 ```
 
-**Load Parquet (recommended for production):**
+#### bq load --source_format=PARQUET — load Parquet from GCS (recommended)
 ```bash
 # Load Parquet (best format — schema is embedded, columnar, compressed)
 bq load --source_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/exports/ohlcv.parquet
@@ -46,7 +46,7 @@ bq load --source_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/exp
 >
 > The only reason to use CSV is when you receive data from an external source that doesn't support Parquet.
 
-**Load with Hive-partitioned directory structure:**
+#### bq load --hive_partitioning_mode=AUTO — load from Hive-partitioned GCS
 ```bash
 # Load with partitioning from GCS Hive layout
 bq load --source_format=PARQUET --hive_partitioning_mode=AUTO \

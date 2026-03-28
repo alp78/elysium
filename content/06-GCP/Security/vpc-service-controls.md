@@ -31,14 +31,14 @@ With VPC-SC:
 
 ## Setting Up a VPC-SC Perimeter
 
-**Step 1: Create an access policy (org-level, done once):**
+#### gcloud access-context-manager policies create — org-level access policy
 ```bash
 gcloud access-context-manager policies create \
   --organization=123456789 \
   --title="Data Platform Data Protection"
 ```
 
-**Step 2: Define an access level (who can access from outside the perimeter):**
+#### gcloud access-context-manager levels create — define access level
 ```bash
 gcloud access-context-manager levels create data-pipeline-trusted-engineers \
   --policy=POLICY_ID \
@@ -47,7 +47,7 @@ gcloud access-context-manager levels create data-pipeline-trusted-engineers \
   # access-level.yaml defines: specific IP ranges, device policies, identity groups
 ```
 
-**Step 3: Create the service perimeter:**
+#### gcloud access-context-manager perimeters create — service perimeter
 ```bash
 gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
   --policy=POLICY_ID \

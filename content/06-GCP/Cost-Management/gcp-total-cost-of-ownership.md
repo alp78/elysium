@@ -365,7 +365,7 @@ A common pattern: stop VMs on nights and weekends (e.g., run only 10 hours/day, 
 
 **Running 24/7 (baseline): ~$222/month**
 
-**VMs stopped nights + weekends (217 hr/month, ~30% runtime):**
+#### VMs stopped nights + weekends — ~30% runtime cost reduction
 | Component | Cost |
 |---|---|
 | SQL Server VM (217 hr × $0.1341 × 0.80 SUD) | ~$23.28 |
@@ -380,7 +380,7 @@ A common pattern: stop VMs on nights and weekends (e.g., run only 10 hours/day, 
 > [!tip] Stop VMs, Disks Keep Billing
 > Stopping a VM eliminates compute charges but **persistent disk charges continue at full rate**. A 200 GB SSD disk costs $34/month whether the VM is running or not. Size disks carefully — you can always resize up, but downsizing requires data migration.
 
-**Everything destroyed (only Terraform state + GCS backup):**
+#### Everything destroyed — only Terraform state + GCS backup remains
 - GCS for Terraform state + SQL backup files: ~100 GB → $2.00
 - BigQuery storage (if kept): 500 GB → $10.00
 - Secret Manager: $0.60
@@ -884,7 +884,7 @@ Use this blank template to estimate your own architecture before building it.
 | **Total TCO** | | | | | **$X.XX** |
 ```
 
-**Instructions:**
+#### Setup instructions — Terraform apply, gcloud, environment variables
 1. Fill in each row for every service you plan to use.
 2. Leave unused rows blank or delete them.
 3. For Compute Engine, multiply hourly rate × expected hours/month × SUD factor (0.80 for 24/7 E2/N2 usage).

@@ -1788,7 +1788,7 @@ gcloud logging read FILTER [FLAGS]
 | `--organization` | Organization to read logs from | — |
 | `--resource-names` | Specific log names or resource names | — |
 
-**Filter expression syntax (Cloud Logging query language):**
+#### Cloud Logging filter syntax — resource.type, severity, textPayload
 
 ```bash
 # --- By severity ---

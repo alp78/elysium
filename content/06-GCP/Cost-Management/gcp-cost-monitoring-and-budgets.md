@@ -147,7 +147,7 @@ Enable **detailed usage cost export** if you want resource-level attribution (e.
 
 ### Example Queries
 
-**Cost by service — current month:**
+#### BigQuery billing export — cost by service, current month
 
 ```sql
 SELECT
@@ -162,7 +162,7 @@ GROUP BY service
 ORDER BY total_cost DESC;
 ```
 
-**Cost by label (e.g., team or pipeline):**
+#### BigQuery billing export — cost by label (team, pipeline)
 
 ```sql
 SELECT
@@ -176,7 +176,7 @@ GROUP BY team
 ORDER BY total_cost DESC;
 ```
 
-**Cost by project — current month:**
+#### BigQuery billing export — cost by project, current month
 
 ```sql
 SELECT
@@ -191,7 +191,7 @@ GROUP BY project_id, project_name
 ORDER BY total_cost DESC;
 ```
 
-**Daily spend trend — last 30 days:**
+#### BigQuery billing export — daily spend trend, last 30 days
 
 ```sql
 SELECT
@@ -205,7 +205,7 @@ GROUP BY usage_date
 ORDER BY usage_date;
 ```
 
-**Cost breakdown by SKU (find surprise line items):**
+#### BigQuery billing export — cost by SKU (find surprise line items)
 
 ```sql
 SELECT
@@ -759,7 +759,7 @@ gcloud storage buckets describe gs://BUCKET_NAME \
   --format="value(lifecycle)"
 ```
 
-**lifecycle.json — full tiering + cleanup:**
+#### lifecycle.json — full GCS tiering: Nearline → Coldline → Archive → Delete
 
 ```json
 {
@@ -807,7 +807,7 @@ gcloud storage ls --recursive --long gs://BUCKET_NAME | \
   awk '{sum[$4] += $1; count[$4]++} END {for (c in sum) print c, count[c], sum[c]}'
 ```
 
-**Storage class pricing reference:**
+#### GCS storage class pricing — Standard, Nearline, Coldline, Archive rates
 
 | Class | Storage/GB/month | Retrieval/GB | Min duration |
 |---|---|---|---|
@@ -869,7 +869,7 @@ gcloud pubsub subscriptions modify-config SUBSCRIPTION_NAME \
   --message-retention-duration=1d
 ```
 
-**Pub/Sub vs Pub/Sub Lite comparison:**
+#### Pub/Sub vs Pub/Sub Lite — feature and cost comparison
 
 | Feature | Pub/Sub | Pub/Sub Lite |
 |---|---|---|
@@ -939,7 +939,7 @@ gcloud logging buckets update _Default \
   --project=PROJECT_ID
 ```
 
-**Logging cost reference:**
+#### Cloud Logging cost reference — ingestion, storage, routing rates
 
 | Tier | Cost |
 |---|---|
@@ -984,7 +984,7 @@ gcloud compute networks subnets update SUBNET_NAME \
 # No direct gcloud cost commands — optimize in application code
 ```
 
-**Application-level optimizations:**
+#### Application-level optimizations — batch queries, connection pooling, caching
 
 ```python
 from google.cloud import firestore

@@ -159,7 +159,7 @@ Pipeline Fail   → Update {status: "failed", error: msg, finished_at: now()}
 
 This pattern requires no polling endpoint, no separate metadata database, and no webhook infrastructure. The dashboard receives server-push updates within milliseconds of the state change.
 
-**Document path convention:**
+#### Document path convention
 
 ```
 pipelines/{pipeline_name}/runs/{run_id}
@@ -167,7 +167,7 @@ pipelines/{pipeline_name}/runs/{run_id}
 
 Using a subcollection per pipeline name allows independent queries per pipeline without scanning all runs.
 
-**Query recent failures:**
+#### Query recent failures
 
 ```python
 db.collection("pipelines").document(pipeline_name).collection("runs") \
@@ -198,7 +198,7 @@ Data arrives  → Write document to Firestore collection "raw_events"
 
 This pattern eliminates polling entirely. The Cloud Function is only invoked when data exists to process. Related: [[cloud-run-jobs-vs-services]] for when a long-running service is preferable to a function.
 
-**Eventarc trigger configuration:**
+#### Eventarc trigger configuration
 
 ```bash
 gcloud eventarc triggers create process-raw-events \
@@ -211,7 +211,7 @@ gcloud eventarc triggers create process-raw-events \
   --service-account=pipeline-sa@PROJECT_ID.iam.gserviceaccount.com
 ```
 
-**Retry and dead-letter pattern:**
+#### Retry and dead-letter pattern
 
 Firestore triggers via Eventarc do not natively support dead-letter queues. Implement retry logic by adding a `retry_count` field to the document and updating it on each failed attempt. After `max_retries`, write the document to a `dead_letter` collection for manual review.
 
@@ -247,7 +247,7 @@ Behavior changes without code deploy or pipeline restart
 
 This pattern decouples operational tuning from the release cycle. Thresholds, email lists, schedule parameters, and feature flags live in Firestore rather than environment variables or code.
 
-**Config document structure:**
+#### Config document structure
 
 ```json
 {
@@ -264,7 +264,7 @@ This pattern decouples operational tuning from the release cycle. Thresholds, em
 }
 ```
 
-**Firestore security rules for config docs:**
+#### Firestore security rules for config docs
 
 ```
 rules_version = '2';
@@ -311,7 +311,7 @@ See [[streaming-architecture]] for the broader context of windowing strategies a
 
 Two approaches to propagating Firestore changes to downstream systems:
 
-**Scheduled export (low complexity, higher latency):**
+#### Scheduled export (low complexity, higher latency)
 
 ```bash
 # Export entire database to GCS daily
@@ -326,7 +326,7 @@ bq load \
   gs://BUCKET/exports/$(date +%Y-%m-%d)/all_namespaces/kind_pipeline_runs/*
 ```
 
-**Real-time CDC via Python listener:**
+#### Real-time CDC via Python listener
 
 ```python
 def on_change(collection_snapshot, changes, read_time):
@@ -347,7 +347,7 @@ col_ref = db.collection("pipeline_runs")
 unsubscribe = col_ref.on_snapshot(on_change)
 ```
 
-**Comparison — scheduled export vs. real-time CDC:**
+#### Comparison — scheduled export vs. real-time CDC
 
 | Dimension | Scheduled Export | Real-Time CDC Listener |
 |---|---|---|
@@ -712,7 +712,7 @@ def _write_to_bigquery(row: dict) -> None:
         raise RuntimeError(f"BigQuery streaming insert errors: {errors}")
 ```
 
-**Deploy command:**
+#### Deploy command
 
 ```bash
 gcloud functions deploy process-firestore-event \
@@ -835,7 +835,7 @@ if __name__ == "__main__":
     run()
 ```
 
-**Run on Dataflow:**
+#### Run on Dataflow
 
 ```bash
 python streaming_pipeline.py \
@@ -868,7 +868,7 @@ The following metrics are available under the `firestore.googleapis.com` namespa
 | `document/delete_count` | Total deletes per second | Monitor for runaway deletes |
 | `api/request_latencies` | p50/p95/p99 read/write latency | p99 > 500ms warrants investigation |
 
-**Create an alert for elevated write rates:**
+#### Create an alert for elevated write rates
 
 ```bash
 gcloud monitoring policies create \
@@ -932,7 +932,7 @@ class FirestoreOperationLogger(logging.LoggerAdapter):
 
 ### Minimize Read Costs
 
-**Cache reads in memory with TTL:**
+#### Cache reads in memory with TTL
 
 ```python
 import time
@@ -952,7 +952,7 @@ def get_pipeline_config(pipeline_name: str, db) -> dict:
     return data
 ```
 
-**Batch reads with `get_all()`:**
+#### Batch reads with `get_all()`
 
 ```python
 # Single round-trip for multiple documents
@@ -961,13 +961,13 @@ docs = db.get_all(doc_refs)
 configs = {doc.id: doc.to_dict() for doc in docs if doc.exists}
 ```
 
-**Denormalize to avoid collection scans:**
+#### Denormalize to avoid collection scans
 
 Rather than querying a subcollection to find the current status, maintain a summary document at `pipelines/{pipeline_name}` that is updated on each state transition. Dashboard reads hit one document, not a query.
 
 ### Minimize Write Costs
 
-**Batch writes — up to 500 operations per batch:**
+#### Batch writes — up to 500 operations per batch
 
 ```python
 batch = db.batch()
@@ -977,7 +977,7 @@ for run in completed_runs:
 batch.commit()  # One network round-trip, counts as N write operations
 ```
 
-**Debounce frequent updates:**
+#### Debounce frequent updates
 
 For metrics that update every second (e.g., rows processed counter), debounce writes to every 10 seconds. Use an in-memory accumulator and flush on a timer or at completion.
 
@@ -992,7 +992,7 @@ gcloud firestore fields ttls update expires_at \
   --enable-ttl
 ```
 
-**Set the expiry field when writing:**
+#### Set the expiry field when writing
 
 ```python
 from datetime import timedelta
@@ -1036,7 +1036,7 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
   --role="roles/datastore.user"
 ```
 
-**Activate credentials in application code:**
+#### Activate credentials in application code
 
 ```python
 from google.oauth2 import service_account

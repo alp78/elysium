@@ -143,14 +143,14 @@ See [[dataset-and-table-management]] for BigQuery table design patterns and [[qu
 
 Firestore pricing is operation-based, not instance-based. There is no cost when the database is idle.
 
-**Free tier (per day, per project):**
+#### Free tier (per day, per project)
 - 50,000 document reads
 - 20,000 document writes
 - 20,000 document deletes
 - 1 GiB stored data
 - 10 GiB network egress per month
 
-**Paid pricing (beyond free tier, us-central1 approximate):**
+#### Paid pricing (beyond free tier, us-central1 approximate)
 - Reads: $0.06 per 100,000 documents
 - Writes: $0.18 per 100,000 documents
 - Deletes: $0.02 per 100,000 documents
@@ -214,7 +214,7 @@ A Firestore document is a set of key-value pairs. Values can be any supported ty
 }
 ```
 
-**Supported field types:**
+#### Supported field types
 
 | Type | Python representation | Notes |
 |---|---|---|
@@ -266,16 +266,16 @@ doc_ref = db.collection("pipelines").document("daily-ingest")
 
 ### Subcollection Patterns: When to Nest vs Flatten
 
-**Nest into a subcollection when:**
+#### Nest into a subcollection when
 - The child data belongs to a single parent and is accessed via the parent.
 - There are many child records per parent (e.g., pipeline run history under a pipeline document).
 - You want to delete the parent without automatically removing children (subcollections are not deleted with parent documents — must be deleted manually).
 
-**Flatten to a top-level collection when:**
+#### Flatten to a top-level collection when
 - You need to query across all instances of the child type regardless of parent.
 - The data can be re-associated via a stored reference or ID field.
 
-**Pattern comparison:**
+#### Pattern comparison
 
 ```
 # Nested — query runs for a specific pipeline
@@ -349,7 +349,7 @@ pipeline_ref.set({
 pipeline_ref.set({"status": "running"}, merge=True)
 ```
 
-**Add a document with auto-generated ID:**
+#### Add a document with auto-generated ID
 
 ```python
 doc_ref = db.collection("events").add({
@@ -373,7 +373,7 @@ else:
     print("Document not found")
 ```
 
-**Read multiple documents by reference:**
+#### Read multiple documents by reference
 
 ```python
 refs = [
@@ -408,7 +408,7 @@ pipeline_ref.update({
 })
 ```
 
-**Atomic field transforms:**
+#### Atomic field transforms
 
 ```python
 # Increment a counter atomically
@@ -570,7 +570,7 @@ for doc in runs_query.stream():
 
 Firestore auto-creates single-field indexes for every field. Queries with multiple `where()` or `order_by()` on different fields require a manually created composite index.
 
-**Create via gcloud:**
+#### Create via gcloud
 
 ```bash
 gcloud firestore indexes composite create \
@@ -580,7 +580,7 @@ gcloud firestore indexes composite create \
   --field-config=field-path=started_at,order=DESCENDING
 ```
 
-**List existing indexes:**
+#### List existing indexes
 
 ```bash
 gcloud firestore indexes composite list
@@ -829,7 +829,7 @@ See [[gcs-buckets-and-lifecycle]] for GCS bucket setup and [[gcs-object-operatio
 
 Security rules apply to **client-side SDK access** (web and mobile apps). When accessing Firestore from a **server-side Python SDK using a service account**, security rules are bypassed — the service account's IAM role governs access instead.
 
-**Required IAM roles for server-side access:**
+#### Required IAM roles for server-side access
 
 | Role | Access level |
 |---|---|
@@ -847,7 +847,7 @@ gcloud projects add-iam-policy-binding my-gcp-project \
 
 See [[service-accounts-and-iam]] for service account creation and key management.
 
-**Basic rules for a web app exposing Firestore (for reference):**
+#### Basic rules for a web app exposing Firestore (for reference)
 
 ```
 rules_version = '2';
@@ -1038,7 +1038,7 @@ def get_recent_failures(limit: int = 20):
 
 Store pipeline configuration in Firestore and read it at runtime. Update configuration without touching code or redeploying.
 
-**Config document structure (`/config/daily-ingest`):**
+#### Config document structure (`/config/daily-ingest`)
 
 ```json
 {
@@ -1052,7 +1052,7 @@ Store pipeline configuration in Firestore and read it at runtime. Update configu
 }
 ```
 
-**Python — read config at pipeline start:**
+#### Python — read config at pipeline start
 
 ```python
 def load_pipeline_config(pipeline_id: str) -> dict:
@@ -1107,7 +1107,7 @@ write_audit_event("rows_loaded", "daily-ingest", run_id, {"rows": 119850, "desti
 write_audit_event("pipeline_completed", "daily-ingest", run_id)
 ```
 
-**Query audit history for a pipeline run:**
+#### Query audit history for a pipeline run
 
 ```python
 def get_run_events(pipeline_id: str, run_id: str):
@@ -1126,7 +1126,7 @@ def get_run_events(pipeline_id: str, run_id: str):
 
 Write streaming or micro-batch data to Firestore for applications that need low-latency access to fresh records. Combine with [[querying-and-cost-optimization|BigQuery]] for historical analytics via periodic export.
 
-**Write micro-batches to Firestore:**
+#### Write micro-batches to Firestore
 
 ```python
 def write_events_batch(events: list[dict]):
@@ -1142,7 +1142,7 @@ def write_events_batch(events: list[dict]):
         batch.commit()
 ```
 
-**Export hot data to BigQuery for analytics:**
+#### Export hot data to BigQuery for analytics
 Run a [[cloud-run-jobs-vs-services|Cloud Run Job]] on a schedule that queries recent Firestore documents and streams them to BigQuery via the BigQuery Storage Write API. See [[data-loading-and-export]] for BigQuery ingestion patterns.
 
 ```python
@@ -1188,13 +1188,13 @@ def export_recent_events_to_bigquery(hours_back: int = 1):
 
 Firestore splits data across shards based on document ID lexicographic order. If many writes target adjacent document IDs (e.g., timestamps like `2026-03-22T00:00:01`, `2026-03-22T00:00:02`, ...), all writes hit the same shard and Firestore throttles.
 
-**Avoid:**
+#### Avoid
 ```python
 # BAD — timestamp IDs create a write hot spot
 doc_ref = db.collection("events").document(datetime.utcnow().isoformat())
 ```
 
-**Prefer:**
+#### Prefer
 ```python
 # GOOD — random auto-generated ID distributes across shards
 doc_ref = db.collection("events").document()  # e.g., "Xk2mN9pQr7..."
@@ -1212,10 +1212,10 @@ doc_ref = db.collection("events").document(f"{prefix}_{ts}")
 
 Firestore auto-indexes every field in every document. If a document contains a large map with many keys, Firestore creates one index entry per field per value combination, which can multiply write costs.
 
-**Example of index explosion:**
+#### Example of index explosion
 A document with a `metadata` map containing 50 dynamic keys creates 50 index entries on write, charged as additional write operations.
 
-**Mitigation:**
+#### Mitigation
 ```bash
 # Exempt a field from auto-indexing using single-field index exemptions
 gcloud firestore indexes fields update metadata \
@@ -1258,7 +1258,7 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 | Best for DE | Pipeline state, config | Analytics queries | Structured transactional data | IoT, time-series, wide rows |
 | Companion service | BigQuery (analytics) | Firestore (hot path) | — | BigQuery (export) |
 
-**Decision guidance:**
+#### Decision guidance
 - Need real-time updates or listeners → **Firestore**
 - Need SQL analytics on large datasets → **BigQuery** (see [[querying-and-cost-optimization]])
 - Need ACID transactions with foreign keys → **Cloud SQL**

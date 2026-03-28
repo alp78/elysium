@@ -18,14 +18,14 @@ Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command
 
 ## Publishing Messages
 
-**Basic publish:**
+#### gcloud pubsub topics publish — basic message publish
 ```bash
 # Publish a message
 gcloud pubsub topics publish pipeline-events \
   --message='{"event":"pipeline_complete","index":"market_index","status":"success"}'
 ```
 
-**Publish with attributes (metadata separate from the message body):**
+#### gcloud pubsub topics publish --attribute — publish with metadata attributes
 ```bash
 # Publish with attributes (metadata separate from the message body)
 gcloud pubsub topics publish pipeline-events \
@@ -39,7 +39,7 @@ gcloud pubsub topics publish pipeline-events \
 
 ## Consuming Messages
 
-**Pull messages for testing and debugging:**
+#### gcloud pubsub subscriptions pull --auto-ack — pull messages for testing
 ```bash
 # Pull messages (for testing and debugging)
 gcloud pubsub subscriptions pull pipeline-sub --limit=10 --auto-ack

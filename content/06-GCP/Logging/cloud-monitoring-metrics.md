@@ -28,7 +28,7 @@ Use `--filter` to narrow down the potentially enormous list of available metrics
 
 ## Reading Time-Series Metric Data
 
-**CPU utilization for a VM over 24 hours:**
+#### gcloud monitoring read — CPU utilization for a VM over 24 hours
 ```bash
 # Read metric data (CPU utilization for a VM over 24 hours)
 gcloud monitoring time-series list \
@@ -38,7 +38,7 @@ gcloud monitoring time-series list \
 # Returns data points — pipe to sort -n | tail for peak utilization
 ```
 
-**VM right-sizing — check peak CPU over 7 days:**
+#### gcloud monitoring read REDUCE_MAX — VM right-sizing, peak CPU over 7 days
 ```bash
 # Check actual utilization over the last week
 gcloud monitoring time-series list \

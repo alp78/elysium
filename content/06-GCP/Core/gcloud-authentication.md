@@ -22,7 +22,7 @@ There are three authentication flows: interactive login for humans, Application 
 
 ## Authentication Commands
 
-**Interactive login (human user):**
+#### gcloud auth login — interactive login for human users
 
 ```bash
 # Interactive login (you, the human)
@@ -32,7 +32,7 @@ gcloud auth login
 # Use for: interactive work (debugging, ad-hoc queries, infrastructure changes)
 ```
 
-**Application Default Credentials (what your code uses):**
+#### gcloud auth application-default login — ADC for application code
 
 ```bash
 # Application Default Credentials (ADC) — what your CODE uses
@@ -44,7 +44,7 @@ gcloud auth application-default login
 # If you only run gcloud auth login, your pipeline still gets "permission denied"
 ```
 
-**Service account authentication (for production and CI/CD):**
+#### gcloud auth activate-service-account — SA key for production and CI/CD
 
 ```bash
 # Service account authentication (for production VMs and containers)
@@ -56,7 +56,7 @@ gcloud auth activate-service-account --key-file=key.json
 
 For creating and managing the service accounts referenced here, see [[service-accounts-and-iam]]. In GitHub Actions, [[github-actions-workflows|Workload Identity Federation]] eliminates key files entirely for CI/CD authentication.
 
-**View and manage credentials:**
+#### gcloud auth list, revoke, print-access-token — view and manage credentials
 
 ```bash
 # View current identity
