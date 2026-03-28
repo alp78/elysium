@@ -14,7 +14,7 @@ status: complete
 
 # Cloud Run Jobs vs Services — Serverless Containers for Data Pipelines
 
-Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running.
+Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. For infrastructure-as-code deployment, [[terraform-cloud-run]] provides the Terraform resource definitions. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running.
 
 ## Jobs vs Services Comparison
 
@@ -75,7 +75,7 @@ gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
 The first execution after a period of inactivity takes longer because Cloud Run needs to pull and start the container image. For data pipelines triggered 3x/day, cold starts are a minor annoyance. Mitigation strategies:
 
 > [!tip] Reducing Cold Start Latency
-> - **Keep images small.** A 2 GB image with unnecessary dependencies takes 30-60 seconds to pull. A 200 MB slim image starts in 5-10 seconds.
+> - **Keep images small.** A 2 GB image with unnecessary dependencies takes 30-60 seconds to pull. A 200 MB slim image starts in 5-10 seconds. Use [[docker-compose]] locally to mirror the production container environment during development.
 > - **Multi-stage Docker builds.** Build dependencies in stage 1, copy only the runtime into the final image.
 > - **Min instances = 1** (for services): keeps one instance warm. Not applicable to Jobs (they always cold start).
 > - **CPU allocation = always** (for services): keeps CPU allocated even between requests, reducing startup latency.
@@ -95,7 +95,7 @@ Airflow DAG
             └─► Cloud Run Job (gold container) → MERGE into BigQuery production
 ```
 
-Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others.
+Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [[github-actions-workflows]].
 
 ## Environment Variables and Secrets
 

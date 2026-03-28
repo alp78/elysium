@@ -21,7 +21,7 @@ updated: 2026-03-23
 ## First 5 Minutes Checklist
 
 1. **Acknowledge** the alert in PagerDuty/Slack
-2. **Check Datadog dashboard** — is the issue isolated or systemic?
+2. **Check Datadog dashboard** — is the issue isolated or systemic? See [[datadog-alerting]] for how alerts are configured and which monitors map to which runbooks.
    - Pipeline Health: `https://app.datadoghq.eu/dashboard/pipeline-health`
    - Infrastructure: `https://app.datadoghq.eu/infrastructure`
 3. **Check Airflow** — are DAGs running? Any failed tasks?
@@ -95,6 +95,8 @@ Thread for updates below ↓
 ```
 
 ## Post-Incident Review (PIR) Template
+
+The PIR process follows the blameless postmortem principles described in [[leadership-and-collaboration]]. Focus on systemic improvements, not individual blame.
 
 ```markdown
 # PIR: [Incident Title]

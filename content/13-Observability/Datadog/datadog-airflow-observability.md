@@ -14,7 +14,7 @@ status: complete
 
 # Airflow Observability — StatsD Metrics and Dashboard
 
-The [[datadog-agent-airflow-vm|Airflow VM Datadog agent]] covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard.
+The [[datadog-agent-airflow-vm|Airflow VM Datadog agent]] covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [[airflow-core-concepts|Airflow's architecture]] (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
 
 ---
 
@@ -221,6 +221,9 @@ Create these in **Monitors → New Monitor → Metric**:
 ---
 
 ## Limitations of Self-Hosted Airflow Observability
+
+> [!tip] Related pattern
+> When Datadog metrics reveal task failures or scheduler anomalies, the [[airflow-troubleshooting]] guide provides targeted diagnostic steps for common failure modes like import errors, pool exhaustion, and zombie task recovery.
 
 | Capability | Available? | Alternative |
 |------------|-----------|-------------|

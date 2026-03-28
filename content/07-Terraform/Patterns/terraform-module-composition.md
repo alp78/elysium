@@ -246,6 +246,9 @@ Extract code into a module when:
 2. A group of resources forms a logical unit (e.g., "a pipeline environment" = BigQuery + Pub/Sub + Cloud Run)
 3. You want to provide a stable interface to a complex configuration
 
+> [!tip] Related pattern
+> Module composition in Terraform mirrors [[18_py_designpatterns|software design patterns]] like facade (a module hides complexity behind a simple interface) and composition over inheritance (combining small modules rather than building monolithic configs).
+
 Do NOT extract when:
 - It's only used once
 - The extraction adds complexity without reuse benefit

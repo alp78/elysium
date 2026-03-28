@@ -150,7 +150,7 @@ For each key metric M in each pipeline P:
   5. Periodically re-baseline as business naturally evolves
 ```
 
-This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anomaly detection features in [[dbt-transformation-layer|dbt]] and Great Expectations.
+This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anomaly detection features in [[dbt-transformation-layer|dbt]] and Great Expectations. For a deeper look at how observability fits into a broader monitoring strategy, see [[observability-deep-dive]].
 
 > [!warning] SPC Requires Stability First
 > SPC only works on a **stable process**. If your pipelines are constantly being rewritten, your baselines will be meaningless. Stabilize your architecture before adding SPC-style monitoring.
@@ -224,7 +224,7 @@ Manual processes are the enemy of reliability and speed. Every manual step is a 
 
 | Process | Before Automation | After Automation |
 |---------|------------------|-----------------|
-| Pipeline deployment | Engineer SSHes to server, runs script | Push to main branch → CI/CD deploys |
+| Pipeline deployment | Engineer SSHes to server, runs script | Push to main branch → [[github-actions-ci-cd|CI/CD]] deploys |
 | Data quality checks | Analyst notices anomaly in dashboard | Automated test fails pipeline before serving |
 | Schema migration | Manual ALTER TABLE + prayer | Migration scripts in version control, tested in staging |
 | Alerting | On-call checks dashboard daily | Alert fires within minutes of anomaly |
@@ -258,7 +258,7 @@ Data teams that operate in long waterfall cycles — "gather requirements for 3 
 DataOps is not a project with an end date — it is a continuous practice. Teams should:
 - Track and trend key operational metrics (see DORA Metrics section below)
 - Hold regular retrospectives focused on process improvement
-- Build governance in, not on (data contracts, access controls, lineage tracking)
+- Build governance in, not on (data contracts, access controls, lineage tracking) — the [[data-quality-framework]] provides the concrete checks and thresholds that operationalize this governance
 - Create feedback loops from consumers back to producers
 
 ---
@@ -339,7 +339,7 @@ In traditional data development, quality checks happened at the end: an analyst 
 - Document business rules in code, not in someone's head
 
 **At development time:**
-- Write dbt schema tests alongside the model, not after
+- Write dbt schema tests alongside the model, not after — the [[dbt-testing-framework]] provides the full catalog of test types available for shift-left validation
 - Use `dbt-unit-testing` to test SQL logic on small mock datasets
 - Make the feedback loop fast — run tests locally in seconds, not minutes
 

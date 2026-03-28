@@ -72,7 +72,7 @@ except Exception:
 
 ## Strategy 2: Read-then-INSERT/UPDATE (OHLCV Merge)
 
-OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed.
+OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed. This is the same MERGE pattern used in [[bronze-layer-loading#Strategy 2: Merge (OHLCV Only)|bronze OHLCV loading]].
 
 **Step 1: Read existing data to build a lookup map:**
 
@@ -258,7 +258,7 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 ## T-SQL MERGE Statement (Atomic Upsert)
 
-The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically.
+The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [[idempotent-pipeline-design|idempotent pattern]] used across the pipeline, and [[dbt-materializations|dbt incremental models]] generate MERGE statements internally when targeting SQL Server.
 
 **MERGE as a race-condition-safe upsert:**
 

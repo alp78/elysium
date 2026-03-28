@@ -431,21 +431,10 @@ print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
       Drawing textbox
     Button is Drawable? True
 
-#### Summary — ABC vs Protocol
-
-```python
-# Summary — ABC vs Protocol comparison
-
-print("ABC:      class must explicitly inherit (class Rect(Shape))")
-print("Protocol: class just needs the right methods (no inheritance)")
-print("ABC:      has concrete methods + abstract methods (partial implementation)")
-print("Protocol: pure contract (just method signatures)")
-```
-
-    ABC:      class must explicitly inherit (class Rect(Shape))
-    Protocol: class just needs the right methods (no inheritance)
-    ABC:      has concrete methods + abstract methods (partial implementation)
-    Protocol: pure contract (just method signatures)
+| Feature | ABC | Protocol |
+|---|---|---|
+| Inheritance | Explicit: `class Rect(Shape)` | None needed — just have the right methods |
+| Methods | Concrete + abstract (partial implementation) | Pure contract (just signatures) |
 
 ## Encapsulation & Access Control
 

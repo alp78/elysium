@@ -55,11 +55,11 @@ gcloud compute firewall-rules list --format="table(name,direction,allowed[].map(
 
 > [!warning] Never Rely on a Single Firewall Layer
 > Never rely on a single firewall. Your SQL Server should be protected by ALL of these:
-> 1. **GCP VPC firewall**: Block port 1433 from external IPs at the network level
+> 1. **GCP VPC firewall**: Block port 1433 from external IPs at the network level (manage declaratively with [[terraform-networking]])
 > 2. **Linux ufw/iptables**: Block port 1433 from unauthorized internal IPs at the OS level
-> 3. **SQL Server login**: Require strong passwords and specific login names
+> 3. **SQL Server login**: Require strong passwords and specific login names (see [[service-accounts-and-iam]] for IAM-based access)
 > 4. **No public IP**: Remove the VM's external IP entirely — use IAP tunneling for SSH
-> 5. **VPC Service Controls**: Prevent data exfiltration from the project (GCP Enterprise)
+> 5. **[[vpc-service-controls]]**: Prevent data exfiltration from the project (GCP Enterprise)
 >
 > If any ONE layer fails or is misconfigured, the others still protect you.
 

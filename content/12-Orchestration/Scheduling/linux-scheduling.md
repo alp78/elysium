@@ -193,7 +193,7 @@ Vixie cron and most modern crond implementations support `@string` shortcuts:
 
 # Practical examples:
 @reboot    /usr/local/bin/start_pipeline_agent.sh
-@daily     /usr/bin/find /var/log/pipeline -name "*.log" -mtime +30 -delete
+@daily     /usr/bin/find /var/log/pipeline -name "*.log" -mtime +30 -delete  # see [[finding-files]] for more find patterns
 @weekly    /home/airflow/scripts/weekly_maintenance.sh
 @monthly   /home/airflow/scripts/monthly_report.sh
 ```
@@ -222,6 +222,7 @@ TZ=UTC
 # ─── APPROACH 2: Source your environment inside the script ─────────────────
 # In your script (/home/pipeline/scripts/run_pipeline.sh):
 #!/bin/bash
+set -euo pipefail                    # see [[defensive-scripting]] for why this matters
 source /home/pipeline/.bashrc       # loads aliases and PATH changes
 source /home/pipeline/.env          # loads environment-specific secrets
 exec /home/pipeline/scripts/main.py "$@"
@@ -1214,7 +1215,7 @@ log "Starting backup"
     -P "${SA_PASSWORD}" \
     -Q "BACKUP DATABASE [analytics_db] TO DISK = '${BACKUP_FILE}' WITH COMPRESSION, STATS = 10"
 
-log "Uploading to GCS: ${BUCKET}/$(date +%Y/%m/%d)/"
+log "Uploading to GCS: ${BUCKET}/$(date +%Y/%m/%d)/"  # see [[data-transfer]] for rsync/gsutil patterns
 gsutil cp "${BACKUP_FILE}" "${BUCKET}/$(date +%Y/%m/%d)/$(basename ${BACKUP_FILE})"
 
 log "Cleanup: removing local backup file"
@@ -1387,6 +1388,8 @@ flock -n 9 || exit 0
 ```
 
 ---
+
+For the Windows equivalent of these scheduling tools, see [[windows-scheduling]].
 
 ## Related Notes
 

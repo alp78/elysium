@@ -580,25 +580,14 @@ foreach (var v in versions)
 
 ## Cloud SQL — SQL Server Authentication and Encryption
 
-```csharp
-// Cloud SQL Authentication Methods:
-//
-// 1. SQL authentication (username + password)
-//    Best for: dev notebooks, DBA maintenance, legacy apps
-//
-// 2. SSL/TLS server certificate verification
-//    Best for: public internet connections, compliance (PCI-DSS, SOC2)
-//
-// 3. Cloud SQL Auth Proxy
-//    Best for: production services on GKE/Cloud Run, CI/CD pipelines
-//
-// 4. IP allowlisting (authorized networks)
-//    Best for: dev access from known office/VPN IP
-//
-// For Cloud SQL SQL Server, username + password is the only practical
-// client auth method. The cert verifies the server; the password verifies you.
-// C# advantage: Microsoft.Data.SqlClient is native — not a FreeTDS wrapper.
-```
+| Method | Best for |
+|---|---|
+| SQL authentication (username + password) | Dev notebooks, DBA maintenance, legacy apps |
+| SSL/TLS server certificate verification | Public internet connections, compliance (PCI-DSS, SOC2) |
+| Cloud SQL Auth Proxy | Production services on GKE/Cloud Run, CI/CD pipelines |
+| IP allowlisting (authorized networks) | Dev access from known office/VPN IP |
+
+For Cloud SQL SQL Server, username + password is the only practical client auth method. The cert verifies the server; the password verifies you. C# advantage: `Microsoft.Data.SqlClient` is native — not a FreeTDS wrapper.
 
 #### SQL Server password authentication — direct connect
 
@@ -1161,47 +1150,19 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 
 ## Security Operations Audit Summary
 
-```csharp
-// Security Operations Audit Summary (C#)
-//
-// Identity & Authentication:
-//   - SA key file authentication (ServiceAccountCredential)
-//   - Application Default Credentials (ADC)
-//   - Service account impersonation
-//   - Short-lived access tokens
-//
-// Secret Manager:
-//   - Read/create/rotate/disable secrets
-//   - JSON secret parsing
-//
-// Cloud KMS:
-//   - Symmetric encrypt/decrypt
-//   - Envelope encryption with AesGcm (built-in .NET)
-//   - Key versioning
-//
-// Cloud SQL:
-//   - SqlClient native TLS connection
-//   - CRUD with parameterized queries
-//   - SSL certificate verification
-//   - SqlBulkCopy (in-process bulk insert)
-//   - CMEK verification
-//
-// BigQuery:
-//   - SA-authenticated queries
-//   - Column-level KMS encryption + decryption
-//
-// Firestore:
-//   - SA-authenticated CRUD
-//   - Field-level KMS encryption
-//
-// Cloud Storage:
-//   - CMEK upload/verify
-//   - Client-side AES-GCM encryption (built-in .NET)
-//   - Signed URLs with UrlSigner
-//
-// C# advantages over Python:
-//   - SqlClient is native (not FreeTDS wrapper)
-//   - SqlBulkCopy: no temp files, direct streaming
-//   - AesGcm built into System.Security.Cryptography
-//   - Compile-time type safety catches errors early
-```
+> [!abstract]- Security Operations Audit Summary (C#)
+> **Identity & Authentication:** SA key file (`ServiceAccountCredential`), ADC, service account impersonation, short-lived access tokens
+>
+> **Secret Manager:** Read/create/rotate/disable secrets, JSON secret parsing
+>
+> **Cloud KMS:** Symmetric encrypt/decrypt, envelope encryption with `AesGcm` (built-in .NET), key versioning
+>
+> **Cloud SQL:** `SqlClient` native TLS, CRUD with parameterized queries, SSL cert verification, `SqlBulkCopy` (in-process bulk insert), CMEK verification
+>
+> **BigQuery:** SA-authenticated queries, column-level KMS encryption + decryption
+>
+> **Firestore:** SA-authenticated CRUD, field-level KMS encryption
+>
+> **Cloud Storage:** CMEK upload/verify, client-side AES-GCM (built-in .NET), signed URLs with `UrlSigner`
+>
+> **C# advantages:** `SqlClient` is native (not FreeTDS), `SqlBulkCopy` streams directly (no temp files), `AesGcm` built into `System.Security.Cryptography`, compile-time type safety

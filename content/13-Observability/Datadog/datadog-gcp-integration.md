@@ -38,7 +38,7 @@ The [[datadog-agent-airflow-vm|Airflow VM agent]] and [[datadog-agent-sql-vm|SQL
 7. Save the integration
 
 > [!info] Service Account Permissions
-> The Datadog SA has `monitoring.viewer`, `compute.viewer`, and `cloudasset.viewer` roles — it can read metrics but cannot modify any GCP resources.
+> The Datadog SA has `monitoring.viewer`, `compute.viewer`, and `cloudasset.viewer` roles — it can read metrics but cannot modify any GCP resources. See [[service-accounts-and-iam]] for the broader IAM model and least-privilege principles applied across the project.
 
 ---
 
@@ -70,7 +70,7 @@ Cloud Run job metrics use the `gcp.run.job.*` namespace. Key metric names:
 |--------|-------------|
 | `gcp.run.job.completed_execution_count` | Number of job executions completed |
 | `gcp.run.container.cpu.utilizations.avg` | CPU utilization during execution |
-| `gcp.run.container.memory.usage` | Memory usage during execution |
+| `gcp.run.container.memory.usage` | Memory usage during execution — these same metrics are available natively in [[cloud-monitoring-metrics|GCP Cloud Monitoring]] |
 
 **Filter by job name:** Use `job_name:data-pipeline-pipeline` (not `service:data-pipeline-pipeline`).
 

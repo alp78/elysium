@@ -18,7 +18,7 @@ status: complete
 
 # Terraform Resource Dependencies
 
-Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait.
+Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [[terraform-problems]].
 
 ## How the Dependency Graph Works
 

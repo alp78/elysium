@@ -54,7 +54,7 @@ status: complete
 # GitHub Actions Patterns
 
 > [!abstract] Summary
-> Reusable patterns for production-grade GitHub Actions workflows. Covers matrix builds, reusable workflows, deployment strategies, Terraform automation, Docker builds, monorepo CI, and cost optimization.
+> Reusable patterns for production-grade GitHub Actions workflows. Covers matrix builds, reusable workflows, deployment strategies, Terraform automation, Docker builds, monorepo CI, and cost optimization. Many shell steps rely on [[defensive-scripting|defensive scripting]] practices (`set -euo pipefail`, error trapping) to fail fast and surface problems clearly. To practice applying these patterns in realistic scenarios, work through [[github-actions-problems]].
 
 ---
 
@@ -430,6 +430,8 @@ jobs:
 ---
 
 ## Deployment to Cloud Run
+
+Workflow secrets like `WIF_PROVIDER` and service account emails are stored through [[secrets-management|GitHub's encrypted secrets]] mechanism and injected at runtime.
 
 ```yaml
 # .github/workflows/deploy-cloud-run.yml

@@ -21,7 +21,7 @@ updated: 2026-03-23
 
 - Client reports index level does not match their independent calculation
 - Internal reconciliation job shows SQL Server gold table diverges from BigQuery published dataset
-- Corporate action was applied with a wrong adjustment factor (price series discontinuity visible in charts)
+- Corporate action was applied with a wrong adjustment factor (price series discontinuity visible in charts) — the most frequent cause; see [[corporate-action-missed]] for the upstream diagnosis
 - Data vendor issued a formal data correction notice for a previously delivered file
 - Datadog alert fires: `index.reconciliation.breach` or `index.level.delta_pct > 0.05`
 - Compliance team flags a value in a regulatory submission that cannot be reproduced
@@ -425,7 +425,7 @@ Reference: Ticket <TICKET_ID> | Restatement ID: <restatement_id>
 ### Step 9 — EU BMR Article 13 notification (if materiality threshold exceeded)
 
 > [!important] BMR Article 13 trigger
-> If any single-day delta exceeds **0.5%** of the published index level, or if the correction affects a value used in a regulated financial instrument (ETF, structured product, derivative), notify the oversight function within **24 hours** of discovery.
+> Under [[eu-bmr-benchmark-regulation|EU BMR Article 13]], if any single-day delta exceeds **0.5%** of the published index level, or if the correction affects a value used in a regulated financial instrument (ETF, structured product, derivative), notify the oversight function within **24 hours** of discovery.
 
 ```sql
 -- Update restatement_log with notification timestamps
@@ -464,7 +464,7 @@ File the following with the Benchmark Oversight Committee:
 - [ ] Airflow DAG re-enabled and a clean publication run completed successfully
 - [ ] Client notification email sent and delivery confirmed
 - [ ] BMR Article 13 filing submitted to oversight function (if material)
-- [ ] `dbo.pipeline_lineage` updated with `status = 'completed'` for the restatement run
+- [ ] `dbo.pipeline_lineage` updated with `status = 'completed'` for the restatement run — see [[compliance-and-auditability]] for the full audit trail requirements
 - [ ] Blameless PIR scheduled within 48 hours
 - [ ] Monitoring gap identified and JIRA ticket raised to add detection coverage
 - [ ] If vendor-caused: formal SLA breach notice sent with reference to contract clause

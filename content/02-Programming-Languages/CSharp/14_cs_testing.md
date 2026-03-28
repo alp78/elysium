@@ -280,36 +280,15 @@ public static class Assert
 
 ## Unit Testing with xUnit
 
-```csharp
-// Unit Testing with xUnit — the standard C# test framework
-//
-// WHAT: xUnit is the most widely used testing framework in .NET.
-//   [Fact] = a single test case (no parameters).
-//   [Theory] + [InlineData] = a parametrized test (runs once per data row).
-//   Assert.Equal/True/Throws = verify expected behavior.
-//
-// WHY xUnit over NUnit/MSTest:
-//   - Constructor injection: xUnit creates a new class instance per test (isolation).
-//   - No [SetUp]/[TearDown]: use constructor/IDisposable instead (cleaner).
-//   - Industry standard: used by ASP.NET Core, EF Core, and most OSS projects.
-//
-// ANTI-PATTERNS:
-//   - Don't share state between tests — each test should be independent.
-//   - Don't test private methods — test the public API that uses them.
-//   - Don't assert on implementation details — assert on observable behavior.
-//
-// KEY CONCEPTS:
-// - xUnit: modern test framework for .NET. Runs with `dotnet test`.
-// - [Fact]: marks a test method (no parameters). Like a pytest test_* function.
-// - [Theory] + [InlineData]: parametrized test. Like @pytest.mark.parametrize.
-// - Assert.Equal(), Assert.True(), etc. — explicit assertion methods.
-// - Test classes: xUnit creates a new instance per test (isolation).
-//
-// NOTEBOOK NOTE:
-// xUnit normally runs via `dotnet test` with a test project.
-// In a notebook, we call test methods directly and report results.
-// In production, tests live in a separate MyProject.Tests project.
-```
+xUnit is the most widely used testing framework in .NET. `[Fact]` marks a single test case (like pytest `test_*`). `[Theory]` + `[InlineData]` creates parametrized tests (like `@pytest.mark.parametrize`). xUnit creates a new class instance per test for isolation — no `[SetUp]`/`[TearDown]`, use constructor/`IDisposable` instead.
+
+> [!warning] Testing anti-patterns
+> - Don't **share state** between tests — each test should be independent
+> - Don't **test private methods** — test the public API that uses them
+> - Don't **assert on implementation details** — assert on observable behavior
+
+> [!info] Running xUnit in notebooks
+> xUnit normally runs via `dotnet test` with a test project. In notebooks, we call test methods directly and report results. In production, tests live in a separate `MyProject.Tests` project.
 
 #### Helper to run tests in notebook
 

@@ -16,7 +16,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# BigQuery for Data Engineering - Database Objects & Performance — Database Objects & Performance
+# BigQuery for Data Engineering - Database Objects & Performance
 
 Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb
@@ -36,6 +36,8 @@ Topics covered:
 - Bulk Loading Patterns
 - Data Lineage & Audit Columns
 - Partitioning Strategies
+
+To practice these patterns against realistic scenarios, work through [[bigquery-problems]].
 
 > **Note**: Some sections CREATE database objects. All objects are created in a `demo` schema
 > or use temp tables to avoid modifying the production stoxx schema.
@@ -95,7 +97,6 @@ FROM (
 ) sub
 WHERE rn = 1;
 ```
-
 <table>
     <thead>
         <tr>
@@ -111,9 +112,6 @@ WHERE rn = 1;
     <tbody>
     </tbody>
 </table>
-
-
-
 
 ```sql
 %%sql
@@ -458,6 +456,9 @@ LIMIT 10
 
 
 ## 2. Stored Procedures
+
+> [!tip] Related pattern
+> Tools like [[dbt-bigquery-adapter|dbt's BigQuery adapter]] generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
 
 ### 2a. Basic SP with Parameters
 
@@ -1272,6 +1273,8 @@ LIMIT 10
 
 
 ## 8. Execution Plans & Query Optimization
+
+For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [[querying-and-cost-optimization]].
 
 ### Common Anti-Patterns
 

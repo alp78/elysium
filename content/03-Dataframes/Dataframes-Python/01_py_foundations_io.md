@@ -4182,6 +4182,7 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
 
 ## 9 - Format Comparison: Size and Speed
 
+For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [[serialization-formats]]. The same Parquet I/O patterns shown here apply when loading data into BigQuery via [[data-loading-and-export]].
 
 - **Benchmark**: Measure execution time.
 - **Read CSV**: Load a CSV file into a DataFrame.

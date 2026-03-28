@@ -125,6 +125,7 @@ display(ctx.execute("""
 
 ## Window Functions in SQL
 
+The SQL syntax used in Polars SQLContext follows the same patterns as [[sql-fundamentals]] for SQL Server and [[bq-fundamentals]] for BigQuery. For direct Python database access with pyodbc and SQLAlchemy outside of DataFrames, see [[16_py_database]].
 
 - **Rolling Window**: Compute statistics over a sliding window of N consecutive rows (e.g., 7-day moving average).
 - **Filter**: Keep only rows matching a condition.

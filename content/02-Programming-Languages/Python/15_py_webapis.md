@@ -1350,38 +1350,26 @@ checklist.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 
 ## 5. Summary
 
-#### Web and APIs cheat sheet
-
-```python
-# Summary — Python Web & APIs cheat sheet
-#
-# HTTP CLIENTS:
-# requests.get(url, params=...)         Sync GET
-# requests.post(url, json=...)          Sync POST with JSON body
-# resp.json()                           Parse JSON response
-# resp.raise_for_status()               Raise on 4xx/5xx
-# httpx.AsyncClient()                   Async client for concurrent calls
-# httpx.Client(base_url=...)            Connection pooling
-#
-# FASTAPI:
-# @app.get("/path")                     Define GET endpoint
-# @app.post("/path", status_code=201)   Define POST endpoint
-# Trade(BaseModel)                      Pydantic model for validation
-# HTTPException(status_code=404)        Return error response
-# Query(), Path(), Body()               Parameter declarations
-# uvicorn main:app --reload             Run the server
-#
-# REST PATTERNS:
-# Pagination                            offset/limit, cursor-based
-# Retry + backoff                       Handle transient failures
-# Rate limit handling                   Respect 429 + Retry-After
-# Bulk POST                             Batch multiple records
-#
-# C# EQUIVALENTS:
-# requests / httpx      → HttpClient
-# FastAPI               → ASP.NET Minimal APIs
-# Pydantic              → record + DataAnnotations
-# uvicorn               → Kestrel (built-in)
-# @app.get              → app.MapGet()
-# HTTPException         → Results.NotFound()
-```
+> [!abstract]- Quick Reference
+> **HTTP Clients**
+> | Pattern | Description |
+> |---|---|
+> | `requests.get(url, params=...)` | Sync GET |
+> | `requests.post(url, json=...)` | Sync POST with JSON body |
+> | `resp.json()` | Parse JSON response |
+> | `resp.raise_for_status()` | Raise on 4xx/5xx |
+> | `httpx.AsyncClient()` | Async client for concurrent calls |
+> | `httpx.Client(base_url=...)` | Connection pooling |
+>
+> **FastAPI**
+> | Pattern | Description |
+> |---|---|
+> | `@app.get("/path")` | Define GET endpoint |
+> | `@app.post("/path", status_code=201)` | Define POST endpoint |
+> | `Trade(BaseModel)` | Pydantic model for validation |
+> | `HTTPException(status_code=404)` | Return error response |
+> | `uvicorn main:app --reload` | Run the server |
+>
+> **REST Patterns:** pagination (offset/limit, cursor-based), retry + backoff, rate limit handling (429 + Retry-After), bulk POST
+>
+> **C# Equivalents:** `requests`/`httpx` → `HttpClient` | `FastAPI` → ASP.NET Minimal APIs | `Pydantic` → `record` + DataAnnotations | `uvicorn` → Kestrel | `@app.get` → `app.MapGet()` | `HTTPException` → `Results.NotFound()`

@@ -60,10 +60,10 @@ SQL Server execution plans are read **right-to-left, bottom-to-top**. The rightm
 **Step-by-step walkthrough:**
 
 1. **Start at the far right.** These are the data access operators — where SQL Server touches tables/indexes. Look at their type:
-   - **Index Seek** (good) — B-tree navigation to specific rows, O(log n)
+   - **Index Seek** (good) — B-tree navigation to specific rows, O(log n). Requires [[sargable-queries|SARGable predicates]] in the WHERE clause.
    - **Index Scan** (check context) — reads all leaf pages of an index
    - **Table Scan** (usually bad) — full heap scan, reads every page
-   - **Key Lookup** (expensive if frequent) — bookmark lookup from NC index to [[index-types-and-strategy|clustered index]]
+   - **Key Lookup** (expensive if frequent) — bookmark lookup from NC index to [[index-types-and-strategy|clustered index]]. Fix by adding INCLUDE columns to the nonclustered index.
 
 2. **Follow the arrows left.** Data flows through intermediate operators:
    - **Hash Match** — builds a hash table for joins or aggregations

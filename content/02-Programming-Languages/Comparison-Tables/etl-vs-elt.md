@@ -55,7 +55,7 @@ The the pipeline steps uses a hybrid approach:
 1. **ETL phase** — Python extracts from yfinance API, transforms JSON into tabular format, loads into [[bronze-layer-loading|bronze layer]]
 2. **ELT phase** — SQL transforms bronze → [[silver-transforms|silver]] → [[gold-transforms|gold]] inside SQL Server
 
-This hybrid leverages Python's strengths (API calls, JSON parsing) and SQL's strengths (joins, aggregations, window functions).
+This hybrid leverages Python's strengths (API calls, JSON parsing) and SQL's strengths (joins, aggregations, window functions). The ELT phase maps directly to the [[medallion-architecture]], where Bronze/Silver/Gold layers are SQL transforms inside the warehouse. In practice, [[dbt-core-concepts|dbt]] is the canonical tool for orchestrating the ELT transform layer.
 
 ## Related
 

@@ -1962,14 +1962,11 @@ df.Head(3)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>utf8view</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04T00:00:00.000</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05T00:00:00.000</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06T00:00:00.000</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-```csharp
-// Polars.NET – NDJSON (newline-delimited JSON)
-// If available as .ndjson, use:
-// var df = DataFrame.ReadJson(path, jsonFormat: JsonFormat.JsonLines);
-
-// Lazy scan NDJSON
-// var lf = LazyFrame.ScanNdjson(path);
-```
+> [!info] Polars.NET — NDJSON (newline-delimited JSON)
+> ```csharp
+> var df = DataFrame.ReadJson(path, jsonFormat: JsonFormat.JsonLines);
+> var lf = LazyFrame.ScanNdjson(path);  // lazy scan
+> ```
 
 #### Deedle – Read JSON via System.Text.Json workaround
 

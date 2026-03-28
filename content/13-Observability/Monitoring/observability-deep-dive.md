@@ -20,7 +20,7 @@ status: complete
 
 # Observability Deep Dive: DataDog, Lineage, and Data Cataloging
 
-Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation.
+Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [[dataops-principles-and-practices|DataOps philosophy]], which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
 
 > [!warning] Financial Data Stakes
 > In financial indexing, a monitoring gap is not just an operational inconvenience — it can result in incorrect index values published to the market, incorrect ETF NAVs, failed rebalancing trades, and regulatory scrutiny. Observability at this level is a compliance requirement, not an engineering nicety.
@@ -41,7 +41,7 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 
 ## 30.2 DataDog for Data Pipeline Observability
 
-DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. See [[datadog-architecture-overview]] for setup and agent configuration.
+DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [[datadog-architecture-overview]] covers the practical agent setup and infrastructure topology, while [[cloud-logging]] provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
 
 ### Custom Metrics for Pipeline Health
 

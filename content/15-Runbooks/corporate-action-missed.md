@@ -26,6 +26,9 @@ updated: 2026-03-23
 - Divisor comparison shows the post-event divisor did not change when it should have
 - Datadog alert: `corporate_action.unapplied_count > 0` for today's ex_date
 
+> [!tip] Related pattern
+> For background on how splits, mergers, and dividends flow through the index calculation engine, see [[index-maintenance-and-corporate-actions]]. That reference covers the standard adjustment factor formulas and divisor chain-linking logic used in Steps 3-5 of the resolution below.
+
 > [!warning] Time sensitivity
 > Corporate actions must be applied before market open on ex_date. If ex_date was today and the index has already published, treat this as a Sev1 and follow [[data-restatement-procedure]] immediately after diagnosing here.
 
@@ -432,7 +435,7 @@ WHERE index_code = '<INDEX_CODE>'
   AND publication_status = 'published';
 ```
 
-If this returns > 0, open [[data-restatement-procedure]] as a parallel workstream.
+If this returns > 0, open the [[data-restatement-procedure]] as a parallel workstream. A missed corporate action is the most common trigger for restatements.
 
 ---
 

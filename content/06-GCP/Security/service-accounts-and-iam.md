@@ -57,6 +57,8 @@ gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pip
 
 ## IAM Bindings — Granting Roles
 
+For declarative, version-controlled IAM bindings, [[terraform-iam-and-secrets]] provides the Terraform equivalent of these `gcloud` commands.
+
 ```bash
 # Grant a role to a service account
 gcloud projects add-iam-policy-binding data-platform-prod \
@@ -107,7 +109,7 @@ You can also test what a service account can see by impersonating it during `gcl
 > - BigQuery: `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`
 > - GCS: `roles/storage.objectAdmin` (on specific buckets, not the project)
 > - Cloud Run: `roles/run.invoker` (to trigger jobs)
-> - SQL Server: no IAM role needed — authentication is at the database level
+> - SQL Server: no IAM role needed — authentication is at the database level (see [[sql-server-authentication]] for the parallel least-privilege patterns)
 > - Secret Manager: `roles/secretmanager.secretAccessor` (to read credentials)
 
 ## Custom Roles for Tighter Control
@@ -122,7 +124,7 @@ Custom roles allow you to grant exactly the permissions needed and no more — f
 
 ## ADC and the Metadata Server
 
-On GCE VMs and Cloud Run, credentials are provided automatically by the GCP metadata server — no key files needed. The credentials are refreshed automatically and scoped to the service account attached to the VM or Cloud Run job. See [[gcloud-authentication]] for the full ADC credential search order.
+On GCE VMs and Cloud Run, credentials are provided automatically by the GCP metadata server — no key files needed. The credentials are refreshed automatically and scoped to the service account attached to the VM or Cloud Run job. See [[gcloud-authentication]] for the full ADC credential search order, including how to activate a service account via `gcloud auth activate-service-account`.
 
 ## Related
 

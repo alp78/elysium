@@ -16,7 +16,7 @@ status: complete
 
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
-This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic — in the terminal (Linux/PowerShell), then [[sql-python-csharp-transforms|SQL Server, Python, and C#]].
+This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then [[sql-python-csharp-transforms|SQL Server, Python, and C#]]. For the Python and C# datetime libraries in more depth, see [[11_py_datetimemathutils]] and [[11_cs_datetimemathutils]].
 
 ## ISO 8601 — The Only Date Format You Should Use
 
@@ -349,6 +349,8 @@ SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-0
 ```
 
 ### Date Arithmetic in T-SQL
+
+For the full T-SQL date function reference including FORMAT, ISDATE, and calendar table patterns, see [[date-and-time-functions]].
 
 ```sql
 -- ============================================================

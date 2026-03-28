@@ -14,7 +14,7 @@ status: complete
 
 # GCS Buckets and Lifecycle — Storage Classes and Cost Management
 
-Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
+Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [[backup-types-and-strategy|backup retention policy]] ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
 
 ## Creating Buckets
 
@@ -47,6 +47,8 @@ gcloud storage buckets create gs://data-pipeline-pipeline-data \
 | NEARLINE | $0.010/GB/mo | 30 days | $0.01/GB | Monthly reports, staging |
 | COLDLINE | $0.004/GB/mo | 90 days | $0.02/GB | Quarterly backups |
 | ARCHIVE | $0.001/GB/mo | 365 days | $0.05/GB | Legal hold, long-term |
+
+Choosing the right storage class is one of the most impactful [[finops-cost-optimization]] levers available in GCP -- a single class change on a multi-TB bucket can save thousands per month.
 
 > [!warning] Minimum Storage Duration Charges
 > Moving an object to NEARLINE before 30 days charges you for the full 30 days regardless. COLDLINE has a 90-day minimum, ARCHIVE has 365 days. Only transition objects when you are confident they won't need to be deleted before the minimum duration expires.
@@ -94,6 +96,9 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --versioning
 
 > [!info] Versioning and Lifecycle Rules Together
 > When versioning is enabled, overwritten objects become "noncurrent" versions rather than being deleted. Lifecycle rules can be configured to delete noncurrent versions after N days using the `"isLive": false` condition, preventing unbounded storage growth while retaining a short recovery window.
+
+> [!tip] Related pattern
+> For reproducible bucket provisioning with lifecycle rules baked in, use [[tf-compute-and-storage|Terraform storage blocks]] instead of manual `gcloud` commands.
 
 ## Bucket Location and Data Residency
 

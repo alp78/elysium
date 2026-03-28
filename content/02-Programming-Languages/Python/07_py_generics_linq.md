@@ -155,23 +155,14 @@ print(f"Stack: {str_stack}")
 
 #### Built-in generic types
 
-```python
-# Built-in generic types — list[int], dict[str, int], set[str], tuple[int, ...]
-
-print("list[int]              — typed list")
-print("dict[str, int]         — typed dictionary")
-print("set[str]               — typed set")
-print("tuple[int, str]        — typed tuple")
-print("Optional[str]          — str or None")
-print("Callable[[int], bool]  — function signature")
-```
-
-    list[int]              — typed list
-    dict[str, int]         — typed dictionary
-    set[str]               — typed set
-    tuple[int, str]        — typed tuple
-    Optional[str]          — str or None
-    Callable[[int], bool]  — function signature
+| Type hint | Meaning |
+|---|---|
+| `list[int]` | Typed list |
+| `dict[str, int]` | Typed dictionary |
+| `set[str]` | Typed set |
+| `tuple[int, str]` | Typed tuple |
+| `Optional[str]` | `str` or `None` |
+| `Callable[\[int], bool]` | Function signature |
 
 ## Pandas vs Polars Analytics
 

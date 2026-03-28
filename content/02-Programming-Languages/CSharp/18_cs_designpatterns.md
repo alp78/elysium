@@ -653,50 +653,15 @@ IndexPipeline/
 
 ## 6. Summary
 
-```csharp
-// Summary — C# Design Patterns cheat sheet
-//
-// DEPENDENCY INJECTION:
-// interface IRepo { ... }              Define contract
-// class SqlRepo : IRepo { ... }        Implement it
-// class Service(IRepo repo)            Constructor injection
-// builder.Services.AddScoped<IRepo, SqlRepo>()  DI registration
-//
-// SINGLETON:
-// static readonly Lazy<T> _instance    Thread-safe singleton
-// AddSingleton<T>()                    DI-managed singleton
-//
-// FACTORY:
-// static IClient Create(string type)   Return right implementation
-//   => type switch { "gcs" => new GCS(), ... }
-//
-// OBSERVER:
-// event Action<T> EventName            C# event/delegate
-// EventName += handler                 Subscribe
-// EventName?.Invoke(data)              Publish
-//
-// STRATEGY:
-// interface IStrategy { double Score(double[] p); }
-// class Scorer(IStrategy s)            Inject algorithm
-//
-// VALIDATION:
-// [Required], [Range], [StringLength]  DataAnnotations
-// IValidatableObject.Validate()        Cross-field rules
-// Validator.TryValidateObject()        Manual validation
-//
-// REFLECTION:
-// obj.GetType()                        Get runtime type
-// type.GetProperties()                 List properties
-// type.GetMethods()                    List methods
-// prop.GetValue(obj)                   Read property dynamically
-// Activator.CreateInstance(type, args) Create instance dynamically
-//
-// PYTHON EQUIVALENTS:
-// interface                → ABC + abstractmethod
-// constructor injection   → __init__(self, dep)
-// AddSingleton<T>()       → module-level instance
-// event Action<T>         → callback list / event bus
-// DataAnnotations         → Pydantic Field()
-// System.Reflection       → type(), dir(), inspect
-// GetType().Name          → type(obj).__name__
-```
+> [!abstract]- C# Design Patterns Quick Reference
+> | Pattern | C# | Usage |
+> |---|---|---|
+> | **Dependency Injection** | `interface IRepo` + `class SqlRepo : IRepo` | Constructor injection, `AddScoped<IRepo, SqlRepo>()` |
+> | **Singleton** | `static readonly Lazy<T>` | Thread-safe; or `AddSingleton<T>()` via DI |
+> | **Factory** | `static IClient Create(string type)` | `type switch { "gcs" => new GCS(), ... }` |
+> | **Observer** | `event Action<T> EventName` | `+=` subscribe, `?.Invoke(data)` publish |
+> | **Strategy** | `interface IStrategy` | Inject algorithm via constructor |
+> | **Validation** | `[Required]`, `[Range]`, `[StringLength]` | DataAnnotations + `IValidatableObject` for cross-field |
+> | **Reflection** | `obj.GetType()`, `type.GetProperties()` | `prop.GetValue(obj)`, `Activator.CreateInstance()` |
+>
+> **Python equivalents:** `interface` → `ABC`+`abstractmethod` | constructor injection → `__init__(dep)` | `AddSingleton<T>()` → module-level instance | `event Action<T>` → callback list | DataAnnotations → Pydantic `Field()` | `System.Reflection` → `type()`, `dir()`, `inspect`

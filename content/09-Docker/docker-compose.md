@@ -18,7 +18,7 @@ status: complete
 
 # Docker Compose — Complete Reference
 
-Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the Airflow DAGs (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI.
+Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [[airflow-deployment|Airflow stack]] (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [[terraform-cloud-run|Cloud Run services]] managed by Terraform.
 
 ---
 
@@ -254,7 +254,7 @@ networks:
 
 ## Environment Variable Substitution
 
-Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order:
+Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [[environment-variables|environment variable patterns]] used throughout shell scripting and CI):
 
 1. Shell environment variables (highest priority)
 2. `.env` file in the same directory as the compose file
@@ -280,6 +280,9 @@ WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
 
 > [!warning] `.env` Security
 > The `.env` file is automatically read by `docker compose` (not `docker` itself). Add `.env` to `.gitignore`. For production secrets use a secrets manager — never hard-code credentials in a committed compose file.
+
+> [!tip] Related pattern
+> The `env_file` and `environment` directives here mirror the [[environment-variables|shell environment variable]] conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
 
 ---
 

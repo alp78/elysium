@@ -330,6 +330,8 @@ group by 1
 
 ## Mapping to Medallion Architecture
 
+The directory structure directly mirrors the [[medallion-architecture]] layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
+
 ```
 Bronze (raw ingestion)
   └── raw_db.market_data_raw.*          ← Source tables (not owned by dbt)

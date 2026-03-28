@@ -25,6 +25,9 @@ Topics covered:
 
 ## 1. Dependency Injection
 
+> [!tip] Related pattern
+> dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [[dbt-core-concepts]] for details.
+
 ```python
 # Dependency Injection (DI) — pass dependencies in, don't create them inside.
 #
@@ -726,49 +729,15 @@ index-pipeline/
 
 ## 6. Summary
 
-```python
-# Summary — Python Design Patterns cheat sheet
-#
-# DEPENDENCY INJECTION:
-# class Service:                     Define with abstract deps
-#     def __init__(self, repo):       Inject via constructor
-# Service(SqlRepo())                 Production wiring
-# Service(MockRepo())                Test wiring
-#
-# SINGLETON:
-# def __new__(cls):                  Control instance creation
-#     if cls._instance is None: ...  Create once, return same
-# Better: module-level variable      Python modules ARE singletons
-#
-# FACTORY:
-# def create_client(type):           Return right subclass
-#     return {"gcs": GCS, "s3": S3}[type]()
-#
-# OBSERVER:
-# bus.subscribe("event", callback)   Register listener
-# bus.publish("event", data)         Notify all listeners
-#
-# STRATEGY:
-# class Scorer:                      Context class
-#     def __init__(self, strategy):   Inject algorithm
-#     def evaluate(self): ...         Delegate to strategy
-#
-# VALIDATION (Pydantic):
-# class Model(BaseModel):            Define with type hints
-#     field: str = Field(min_length=1)
-# Model(**data)                      Auto-validates on creation
-#
-# REFLECTION:
-# type(obj), isinstance()            Type checking
-# dir(obj), vars(obj)                List attributes
-# getattr(obj, "name")               Dynamic access
-# inspect.signature()                Parameter introspection
-#
-# C# EQUIVALENTS:
-# ABC / abstractmethod    → interface
-# __init__(self, dep)     → constructor injection
-# AddSingleton<T>()       → DI singleton lifetime
-# Pydantic BaseModel      → DataAnnotations + FluentValidation
-# inspect module           → System.Reflection
-# type(obj).__name__      → obj.GetType().Name
-```
+> [!abstract]- Design Patterns Quick Reference
+> | Pattern | Python | Usage |
+> |---|---|---|
+> | **Dependency Injection** | `def __init__(self, repo)` | Inject via constructor; `Service(SqlRepo())` in prod, `Service(MockRepo())` in test |
+> | **Singleton** | `def __new__(cls)` | Create once, return same. Better: module-level variable (modules ARE singletons) |
+> | **Factory** | `def create_client(t)` | `return {"gcs": GCS, "s3": S3}[t]()` — return right subclass |
+> | **Observer** | `bus.subscribe("event", cb)` | Register listeners, `bus.publish("event", data)` notifies all |
+> | **Strategy** | `def __init__(self, strategy)` | Inject algorithm, delegate via `self.strategy.evaluate()` |
+> | **Validation** | `class Model(BaseModel)` | Pydantic auto-validates on creation with type hints + `Field()` |
+> | **Reflection** | `type()`, `dir()`, `getattr()` | Type checking, attribute listing, dynamic access, `inspect.signature()` |
+>
+> **C# equivalents:** `ABC`/`abstractmethod` → `interface` | `__init__(dep)` → constructor injection | `AddSingleton<T>()` → DI lifetime | `Pydantic` → DataAnnotations + FluentValidation | `inspect` → `System.Reflection`

@@ -14,7 +14,7 @@ status: complete
 
 # Partitioning Strategies
 
-SQL Server table partitioning divides a large table into smaller horizontal slices based on a partition key column — typically a date. Each partition is a logically independent unit: queries that filter on the partition key can skip entire partitions without scanning them (partition elimination). Partitions also enable fast `SWITCH` operations that move a full partition between tables in milliseconds — the basis for efficient archiving and sliding-window pipeline patterns.
+SQL Server table partitioning divides a large table into smaller horizontal slices based on a partition key column — typically a date. Each partition is a logically independent unit: queries that filter on the partition key can skip entire partitions without scanning them (partition elimination). Partitions also enable fast `SWITCH` operations that move a full partition between tables in milliseconds — the basis for efficient archiving and sliding-window pipeline patterns. BigQuery uses the same partitioning concept for [[querying-and-cost-optimization|cost optimization and query performance]].
 
 > [!info] When to Partition
 > Only partition when a single table exceeds **10 million rows** and queries consistently filter by the partition key. Partitioning small tables adds metadata overhead with no performance benefit. The number one use case is large time-series tables (financial price data, pipeline audit logs) where most queries filter by `trade_date` or a similar date column.
@@ -297,7 +297,7 @@ MERGE RANGE ('2021-01-01');
 
 ## Per-Partition Compression
 
-Different partitions can have different compression levels — useful for mixed hot/cold data:
+Different partitions can have different compression levels — useful for mixed hot/cold data. See [[table-compression]] for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
 
 ```sql
 -- Apply PAGE compression to old partitions, NONE to the current-year partition

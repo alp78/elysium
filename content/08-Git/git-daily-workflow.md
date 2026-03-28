@@ -21,7 +21,7 @@ status: complete
 
 # Git Daily Workflow
 
-Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [[hcl-syntax-basics|Terraform module]] must be version-controlled. These are the commands you run dozens of times per day.
+Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [[hcl-syntax-basics|Terraform module]] must be version-controlled. These are the commands you run dozens of times per day. For a condensed quick-reference, see [[git-cheat-sheet]].
 
 ## Step 1: Check What's Changed
 
@@ -223,6 +223,8 @@ This is the standard workflow used by data engineering teams:
 8. Merge                    gh pr merge --squash --delete-branch
 9. Clean up locally         git checkout main && git pull && git branch -d feat/my-feature
 ```
+
+Pushing a branch or opening a PR typically triggers [[github-actions-fundamentals|GitHub Actions]] CI workflows -- linting, tests, and builds that validate the change before review. For dbt projects specifically, [[dbt-ci-cd]] runs model compilation and test checks on every PR.
 
 ## Rules for Distributed Data Teams
 

@@ -53,7 +53,7 @@ gcloud pubsub subscriptions describe dlq-sub --format=json \
     }'
 ```
 
-The `numMessagesRetained` field shows the backlog. Also check the DLQ *topic* to confirm it is receiving new messages:
+The `numMessagesRetained` field shows the backlog. For background on how subscriptions, acknowledgement deadlines, and dead-letter policies interact, see [[pubsub-messaging]]. Also check the DLQ *topic* to confirm it is receiving new messages:
 
 ```bash
 gcloud pubsub topics describe dlq-topic --format="value(name)"
@@ -356,7 +356,7 @@ gcloud storage cp /tmp/poison_messages_*.json \
 
 ### RC-4: DLQ Subscription Retention Expiry Risk
 
-If the DLQ has been accumulating for days and messages are approaching the retention deadline (default: 7 days), urgent replay is needed before messages expire:
+If the DLQ has been accumulating for days and messages are approaching the retention deadline (default: 7 days), urgent replay is needed before messages expire. See [[pubsub-topics-and-subscriptions]] for details on modifying subscription retention and other properties:
 
 ```bash
 # Check oldest message age

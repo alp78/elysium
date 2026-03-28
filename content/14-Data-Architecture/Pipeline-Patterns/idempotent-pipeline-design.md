@@ -35,7 +35,7 @@ With idempotency, you can re-run any step at any time with confidence.
 
 ### DELETE-INSERT (Partition Swap)
 
-Delete all data for the target partition, then insert fresh data. The partition key (usually a date) scopes the delete.
+Delete all data for the target partition, then insert fresh data. The partition key (usually a date) scopes the delete. The [[bronze-layer-loading]] module uses this exact pattern to reload daily partitions safely.
 
 ```sql
 -- Idempotent daily load: delete today's data, then re-insert
@@ -53,7 +53,7 @@ COMMIT;
 
 ### MERGE (Upsert)
 
-Match on a business key. Update if exists, insert if new. See [[merge-and-upsert]] for the full T-SQL MERGE pattern.
+Match on a business key. Update if exists, insert if new. See [[merge-and-upsert]] for the full T-SQL MERGE pattern. In dbt, the [[dbt-materializations|incremental materialization]] generates a MERGE statement under the hood, providing idempotency declaratively.
 
 ```sql
 MERGE INTO silver.index_dim AS target
@@ -84,6 +84,9 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 | No transaction around multi-step load | Partial failure leaves inconsistent state | Wrap in explicit transaction |
 | Using IDENTITY columns as business keys | Cannot match records across re-runs | Use natural business keys for matching |
 | Appending timestamps without dedup | Same data with different load timestamps | Deduplicate on business key before insert |
+
+> [!tip] Related pattern
+> Without idempotency, concurrent pipeline runs can trigger [[race-conditions]] — two instances inserting the same partition simultaneously, producing duplicates or deadlocks. Idempotent designs eliminate this class of failure by making the outcome independent of execution order.
 
 ## Related
 

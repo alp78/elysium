@@ -54,12 +54,16 @@ Step by step:
 > [!info] The VM Never Sees Your Real IP
 > The VM never sees your workstation's IP address. It sees a connection from an IP in the **GCP internal network** (typically in the `10.x.x.x` or `35.235.240.0/20` range). That's why `ss -tnp` on the VM shows a VPC-internal peer address, not your home IP.
 
+> [!tip] Related pattern
+> IAP requires the `iap.tunnelResourceAccessor` IAM role -- see [[service-accounts-and-iam]] for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [[terraform-networking]].
+
 ## IAP Tunnel Commands — All Variants
 
 **Linux and PowerShell (gcloud commands are identical on both):**
 
 ```bash
 # SSH through IAP (the most common use case)
+# For additional SSH patterns and OS Login configuration, see [[vm-ssh-and-file-transfer]]
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 # Under the hood: opens IAP tunnel on an ephemeral port, then runs SSH through it
 # This is a shortcut for: IAP tunnel → SSH → interactive shell
@@ -76,6 +80,7 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 #   1435 = local port number (use any free port — doesn't have to match remote)
 #
 # After this command, connect via: SSMS → 127.0.0.1,1435 (or just localhost,1435)
+# For sqlcmd through the tunnel, see [[sqlcmd-connection-and-usage]]
 
 # Multiple tunnels simultaneously (different terminals)
 # Terminal 1: SQL Server

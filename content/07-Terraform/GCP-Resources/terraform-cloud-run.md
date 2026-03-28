@@ -47,7 +47,7 @@ locals {
 
 ## Resource: Dashboard Service
 
-A Cloud Run **service** is a long-running HTTP endpoint. Unlike jobs, services stay alive to serve requests.
+A Cloud Run **service** is a long-running HTTP endpoint. Unlike jobs, services stay alive to serve requests. For the architectural distinction between services and jobs, including when to choose each, see [[cloud-run-jobs-vs-services]].
 
 ```hcl
 resource "google_cloud_run_v2_service" "dashboard" {
@@ -130,7 +130,7 @@ containers {
 
 | Field | Value | Meaning |
 |-------|-------|---------|
-| `image` | `.../dashboard:latest` | Docker image to run. `latest` tag is updated by GitHub Actions on every push to `main`. |
+| `image` | `.../dashboard:latest` | Docker image to run. `latest` tag is updated by [[github-actions-workflows|GitHub Actions]] on every push to `main`. |
 | `container_port` | `8080` | Port the Blazor app listens on inside the container. Cloud Run routes external HTTPS traffic to this port. |
 | `startup_probe` | HTTP GET `/` | Cloud Run checks if the container is ready by hitting `/` every 10 seconds, starting 3 seconds after launch. If it fails 3 times, the container is killed and restarted. |
 | `ConnectionStrings__project` | ADO.NET connection string (without password) | .NET convention: double underscore `__` maps to `:` in `appsettings.json` hierarchy. Equivalent to `ConnectionStrings:data-pipeline`. Contains the SQL VM's private IP, database name, and user — but **not** the password. `TrustServerCertificate=true` skips SSL certificate validation (acceptable for internal VPC traffic). |

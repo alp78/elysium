@@ -297,63 +297,33 @@ for expr, val in results:
 
 ## Distributed Task Queues — Architecture Overview
 
-```python
-# Distributed task queues — when single-machine parallelism isn't enough
-#
-# WHAT: a broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines.
-#   Workers pull tasks from the queue, execute them, and report results.
-#   This is the standard architecture for production data engineering at scale.
-#
-# KEY FRAMEWORKS:
-#   - Celery: most popular Python distributed task queue. Workers subscribe to
-#     a broker (Redis/RabbitMQ), pull tasks, execute them asynchronously.
-#     Use for: ETL jobs, API ingestion workers, scheduled pipeline triggers.
-#
-#   - Redis Queue (RQ): simpler alternative to Celery. Workers pull jobs from
-#     Redis queues. Less config than Celery, good for small/medium workloads.
-#
-#   - Dask: parallel computing library that scales from laptop to cluster.
-#     Dask.distributed provides a scheduler + workers model. Integrates with
-#     pandas/numpy. Use for: large DataFrame processing, ML pipelines.
-#
-# EVOLUTION PATH:
-#   1. asyncio.gather → single process, concurrent IO (this notebook)
-#   2. ProcessPoolExecutor → single machine, multiple cores
-#   3. Celery/RQ → multiple machines, distributed workers
-#   4. Dask/Spark → distributed data processing at scale
-#
-# WHEN TO UPGRADE:
-#   - Single machine can't keep up with API rate limits → add worker machines
-#   - Need fault tolerance → broker retries failed tasks automatically
-#   - Need scheduling → Celery Beat or Airflow triggers Celery tasks
+A broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines. Workers pull tasks from the queue, execute them, and report results. This is the standard architecture for production data engineering at scale.
 
-print('Architecture: Producer → Broker (Redis) → Workers (N machines)')
-print()
-print('  # Celery example (not runnable in notebook — needs Redis + worker process):')
-print('  from celery import Celery')
-print('  app = Celery("tasks", broker="redis://localhost:6379/0")')
-print()
-print('  @app.task')
-print('  def fetch_and_store(symbol):')
-print('      data = requests.get(f"api/{symbol}").json()')
-print('      db.insert(data)')
-print()
-print('  # Dispatch 100 tasks — workers pick them up from Redis:')
-print('  for sym in symbols:')
-print('      fetch_and_store.delay(sym)  # .delay() sends to broker, returns immediately')
-```
+**Architecture:** `Producer → Broker (Redis) → Workers (N machines)`
 
-    Architecture: Producer → Broker (Redis) → Workers (N machines)
-    
-      # Celery example (not runnable in notebook — needs Redis + worker process):
-      from celery import Celery
-      app = Celery("tasks", broker="redis://localhost:6379/0")
-    
-      @app.task
-      def fetch_and_store(symbol):
-          data = requests.get(f"api/{symbol}").json()
-          db.insert(data)
-    
-      # Dispatch 100 tasks — workers pick them up from Redis:
-      for sym in symbols:
-          fetch_and_store.delay(sym)  # .delay() sends to broker, returns immediately
+| Framework | Description | Use for |
+|---|---|---|
+| **Celery** | Most popular distributed task queue. Workers subscribe to a broker. | ETL jobs, API ingestion, scheduled pipeline triggers |
+| **Redis Queue (RQ)** | Simpler alternative to Celery. Less config. | Small/medium workloads |
+| **Dask** | Parallel computing, scales from laptop to cluster. Integrates with pandas/numpy. | Large DataFrame processing, ML pipelines |
+
+**Evolution path:**
+1. `asyncio.gather` → single process, concurrent I/O
+2. `ProcessPoolExecutor` → single machine, multiple cores
+3. Celery/RQ → multiple machines, distributed workers
+4. Dask/Spark → distributed data processing at scale
+
+> [!example] Celery example (requires Redis + worker process)
+> ```python
+> from celery import Celery
+> app = Celery("tasks", broker="redis://localhost:6379/0")
+>
+> @app.task
+> def fetch_and_store(symbol):
+>     data = requests.get(f"api/{symbol}").json()
+>     db.insert(data)
+>
+> # Dispatch 100 tasks — workers pick them up from Redis:
+> for sym in symbols:
+>     fetch_and_store.delay(sym)  # sends to broker, returns immediately
+> ```

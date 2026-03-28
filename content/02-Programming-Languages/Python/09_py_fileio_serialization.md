@@ -61,40 +61,12 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 ## Read, Write, Append Files
 
-#### File I/O overview — modes, encoding, context managers
+`open(path, mode)` returns a file object. Modes: `'r'` (read, default), `'w'` (write — truncates!), `'a'` (append), `'x'` (exclusive create — fail if exists). Add `'b'` for binary (`'rb'`, `'wb'`), `'+'` for read+write (`'r+'`, `'w+'`). Always specify `encoding='utf-8'` — the default varies by OS (Windows uses cp1252). Use `pathlib.Path` for modern, object-oriented path handling (preferred over `os.path`).
 
-```python
-# File I/O — open(), modes, encoding, and the with statement
-#
-# Technique: open(path, mode) returns a file object. Modes: 'r' (read),
-#   'w' (write/truncate), 'a' (append), 'x' (exclusive create), 'b' (binary).
-#   Always use with for automatic close, even on exceptions.
-#
-# Benefits:
-#   - with statement guarantees cleanup — no resource leaks
-#   - Explicit encoding= avoids platform-dependent defaults
-#   - Mode string is concise: 'rb' = read binary, 'wt' = write text
-#
-# Anti-patterns:
-#   - open() without with — file handle leak if exception occurs
-#   - Omitting encoding= — defaults vary by OS
-#   - 'w' mode on existing files without backup — truncates immediately
-#
-# When to use:
-#   - All file operations — always use with open() as f:
-#
-# When NOT to use:
-#   - N/A — with statement is always the correct pattern
-
-# File I/O — Read, Write, Append
-#
-# KEY CONCEPTS:
-# - open(path, mode) returns a file object. Always use 'with' to ensure cleanup.
-# - Modes: 'r' read (default), 'w' write (truncates!), 'a' append, 'x' create (fail if exists)
-#   Add 'b' for binary: 'rb', 'wb'. Add '+' for read+write: 'r+', 'w+'.
-# - encoding='utf-8' — always specify! Default varies by OS (Windows uses cp1252).
-# - pathlib.Path — modern, object-oriented file path handling (preferred over os.path).
-```
+> [!warning] Always use `with` for file operations
+> - `open()` without `with` leaks file handles if an exception occurs
+> - `'w'` mode truncates existing files immediately — no undo
+> - Omitting `encoding=` causes platform-dependent behavior
 
 #### Create a temp directory for all demos
 
@@ -328,39 +300,12 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
 
 ## CSV Files
 
-#### CSV overview — csv module and DictReader/DictWriter
+The `csv` module handles quoting, escaping, and delimiters automatically. `csv.reader`/`csv.writer` work with list-based rows; `csv.DictReader`/`csv.DictWriter` use dict-based rows with named columns — preferred in data engineering since you access columns by name, not index.
 
-```python
-# CSV files — the standard tabular interchange format
-#
-# Technique: csv module handles quoting, escaping, and delimiters
-#   automatically. csv.reader/writer for list-based rows. csv.DictReader/
-#   DictWriter for dict-based rows with named columns.
-#
-# Benefits:
-#   - Built-in — no external dependency for standard CSV
-#   - Handles edge cases — embedded commas, quotes, newlines
-#   - DictReader gives named access — row["name"] not row[0]
-#
-# Anti-patterns:
-#   - Manual split(',') — breaks on quoted commas
-#   - Positional indexing with csv.reader — fragile if columns reorder
-#
-# When to use:
-#   - All CSV read/write — always use the csv module
-#
-# When NOT to use:
-#   - Large CSV (>100MB) — use pandas, polars, or DuckDB
-
-# CSV Files — the bread and butter of data engineering
-#
-# KEY CONCEPTS:
-# - csv module: built-in, handles quoting, escaping, delimiters automatically.
-# - csv.reader / csv.writer: list-based — each row is a list of strings.
-# - csv.DictReader / csv.DictWriter: dict-based — each row is a dict {column: value}.
-# - DictReader is preferred in DE — access columns by name, not index.
-# - For large-scale CSV: use pandas.read_csv() with chunking (not covered here).
-```
+> [!warning] CSV pitfalls
+> - **Never use `split(',')`** — breaks on quoted commas. Always use the `csv` module.
+> - **Avoid positional indexing** with `csv.reader` — fragile if columns reorder. Use `DictReader` instead.
+> - **For large CSV (>100MB)** — use pandas, Polars, or DuckDB instead of the built-in module.
 
 #### csv.writer — write CSV rows as lists
 
@@ -1002,6 +947,8 @@ Multi-document    No                      Yes (--- separator)
     Multi-document    No                      Yes (--- separator)
 
 ## Serialization, Deserialization, and Streams
+
+For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro for pipeline storage and interchange, see [[serialization-formats]].
 
 #### Serialization overview — object to bytes/string and back
 
@@ -1809,6 +1756,9 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
       csv module: 0.065s
       Polars:     0.012s
       Speedup:    5.4x
+
+> [!tip] Related pattern
+> When writing pipeline output to files, codec selection (gzip, zstd, snappy) significantly affects both file size and read performance — see [[compression]] for benchmark data and decision guidance.
 
 ## Cloud and Object Storage
 

@@ -14,7 +14,7 @@ status: complete
 
 # Server Configuration
 
-These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures.
+These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [[terraform-compute|Terraform]], these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
 
 ---
 
@@ -22,7 +22,7 @@ These are the non-negotiable configuration settings that every production SQL Se
 
 ### 1. Set Max Server Memory
 
-SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills.
+SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills. See [[memory-and-buffer-pool]] for how the buffer pool uses the memory allocated here.
 
 **Rule:** `max server memory = Total RAM − 1 GB` (minimum). On a 2 GB VM: 768–1024 MB. On an 8 GB VM: 6144 MB.
 
@@ -139,7 +139,7 @@ UPDATE STATISTICS gold.index_performance WITH FULLSCAN;
 
 ## Linux OS Tuning (for SQL Server on Linux)
 
-Three Linux settings with outsized impact on SQL Server performance. Wrong defaults cause random latency spikes, I/O stalls, and memory thrashing.
+Three Linux settings with outsized impact on SQL Server performance. Wrong defaults cause random latency spikes, I/O stalls, and memory thrashing. When running SQL Server in Docker, [[container-lifecycle|container resource limits]] (memory limits, CPU quotas) mirror these OS-level tuning concerns.
 
 ### Swappiness
 

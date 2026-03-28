@@ -223,6 +223,9 @@ display(pd.DataFrame(sample))
   </tbody>
 </table>
 
+> [!tip] Related pattern
+> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [[streaming-architecture]].
+
 ## 1. WebSocket Streaming
 
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
@@ -400,7 +403,7 @@ print(f'  p50: {sse_p50:.0f}µs  p99: {sse_p99:.0f}µs  p99.9: {sse_p999:.0f}µs
 ## 3. Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
-Decouples publishers from subscribers — the backbone of event-driven architectures in GCP.
+Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [[pubsub-messaging]].
 
 #### Enable Pub/Sub API and grant permissions to service account
 

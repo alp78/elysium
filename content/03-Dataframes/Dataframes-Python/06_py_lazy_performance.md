@@ -70,6 +70,7 @@ print(f"Type: {type(df)}, Shape: {df.shape}")
 
 ## Lazy: Deferred
 
+The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's ephemeral models defer computation in the same way a LazyFrame does, while `dbt run` materializes results like `.collect()` — see [[dbt-materializations]]. BigQuery's query planner applies similar predicate pushdown and projection pruning, covered in [[querying-and-cost-optimization]].
 
 - **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
 

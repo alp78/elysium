@@ -28,44 +28,15 @@ using System.Runtime.CompilerServices;
 
 ## Async and Await
 
-#### Async and await basics
+`async` marks a method as asynchronous, returning `Task` or `Task<T>`. `await` pauses the method until the awaited task completes — the thread is released to the pool, not blocked. The thread pool manages threads automatically.
 
-```csharp
-// Async/await — Task-based Asynchronous Pattern (TAP)
-//
-// Technique: async marks a method as asynchronous, returning Task<T>.
-//   await pauses until the task completes, releasing the thread.
-//   The thread pool handles other work while awaiting.
-//
-// Benefits:
-//   - Non-blocking I/O — thread is free while waiting for network/disk
-//   - Scalable — one thread can service many concurrent requests
-//   - Natural syntax — reads like synchronous code
-//
-// Anti-patterns:
-//   - .Result or .Wait() — deadlocks in UI/web contexts; always await
-//   - async void — exceptions are unobservable; use async Task
-//   - await in a loop when Task.WhenAll works — sequential instead of concurrent
-//
-// When to use:
-//   - I/O-bound operations: HTTP calls, DB queries, file I/O
-//
-// When NOT to use:
-//   - CPU-bound work — use Task.Run or Parallel instead
+**Why async matters for data engineering:** API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them. A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
 
-// Async & Await — the Task-based Asynchronous Pattern (TAP)
-//
-// KEY CONCEPTS:
-// - async: marks a method as asynchronous. Returns Task or Task<T>.
-// - await: pauses the method until the awaited task completes.
-//   The thread is NOT blocked — it's released to the thread pool to do other work.
-// - Task<T>: an async operation that returns a value of type T.
-//   The thread pool manages threads automatically.
-//
-// WHY async matters for Data Engineering:
-// - API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them.
-// - A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
-```
+> [!warning] Async pitfalls
+> - **`.Result` or `.Wait()`** — deadlocks in UI/web contexts; always `await`
+> - **`async void`** — exceptions are unobservable; use `async Task`
+> - **`await` in a loop** when `Task.WhenAll` works — sequential instead of concurrent
+> - For **CPU-bound work**, use `Task.Run` or `Parallel` instead
 
 #### Basic async method
 
@@ -510,41 +481,12 @@ await foreach (var item in FetchPagesAsync(10, 3))
 
 ## Tasks and Parallelism
 
-<h4><code style="font-size:0.75em">Task.Run</code> and <code style="font-size:0.75em">Parallel</code></h4>
+`Task.Run()` schedules work on the thread pool (returns a `Task`). `Parallel.ForEach()` partitions a collection and processes chunks on multiple threads, blocking until all done. `Parallel.ForEachAsync()` (.NET 6+) is the async version. C# has **no GIL** — multiple threads execute truly in parallel.
 
-```csharp
-// Task.Run and Parallel — CPU-bound parallelism on the thread pool
-//
-// Technique: Task.Run offloads work to a thread pool thread. Parallel.ForEach
-//   partitions a collection and processes chunks on multiple threads.
-//   Use for CPU-bound work (hashing, compression, parsing).
-//
-// Benefits:
-//   - Utilizes all CPU cores — linear speedup for embarrassingly parallel work
-//   - Thread pool managed by .NET — no manual thread creation
-//   - Parallel.ForEach auto-partitions for optimal load balancing
-//
-// Anti-patterns:
-//   - Task.Run for I/O-bound work — use async/await instead (no thread needed)
-//   - Too many Task.Run calls — thread pool exhaustion
-//   - Shared mutable state without locking — race conditions
-//
-// When to use:
-//   - CPU-bound: hashing, compression, image processing, parsing
-//
-// When NOT to use:
-//   - I/O-bound work — async/await is more efficient
-
-// Task.Run & Parallel — CPU-bound parallelism
-//
-// KEY CONCEPTS:
-// - Task.Run(): schedules work on the thread pool. Returns a Task.
-//   Use for CPU-bound work you want off the current thread.
-// - Parallel.ForEach(): partition a collection and process chunks on multiple threads.
-//   Automatically uses the thread pool. Blocks until all done.
-// - Parallel.ForEachAsync() (.NET 6+): async version of Parallel.ForEach.
-// - C# has NO GIL — multiple threads can execute code truly in parallel.
-```
+> [!warning] CPU parallelism pitfalls
+> - `Task.Run` for I/O-bound work — use `async`/`await` instead (no thread needed)
+> - Too many `Task.Run` calls — thread pool exhaustion
+> - Shared mutable state without locking — race conditions
 
 #### Task.Run — offload CPU work to thread pool
 
@@ -612,12 +554,6 @@ Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(hashResults)}");
     === Parallel.ForEach ===
       8 hashes in 0.00s (max 4 threads)
       Results match: True
-
-<h4><code style="font-size:0.75em">Parallel.ForEachAsync</code> and PLINQ</h4>
-
-```csharp
-// Parallel.ForEachAsync and PLINQ — async parallelism and parallel LINQ
-```
 
 #### Parallel.ForEachAsync — async I/O with controlled concurrency
 
@@ -702,44 +638,14 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 
 ## Threading and Concurrency
 
-#### Thread basics
+`new Thread(method)` creates an OS thread. `.Start()` begins execution, `.Join()` blocks until complete. `lock` provides mutual exclusion (sugar for `Monitor.Enter`/`Exit`). `Interlocked` gives atomic operations without locks (`Increment`, `Add`, `Exchange`). `IsBackground = true` makes a daemon thread that dies when main exits.
 
-```csharp
-// Threading — low-level thread creation and management
-//
-// Technique: new Thread(method) creates an OS thread. .Start() begins
-//   execution. .Join() blocks until the thread completes. Prefer Task.Run
-//   for most scenarios — threads are expensive to create.
-//
-// Benefits:
-//   - Full control — set priority, apartment state, stack size
-//   - No thread pool dependency — dedicated thread for long-running work
-//
-// Anti-patterns:
-//   - Creating threads for short work — use Task.Run (thread pool)
-//   - Not joining threads — orphaned threads may prevent shutdown
-//   - Shared mutable state without synchronization — race conditions
-//
-// When to use:
-//   - Long-running background work, COM interop, dedicated I/O threads
-//
-// When NOT to use:
-//   - Short tasks — Task.Run uses the thread pool efficiently
+> [!tip] In modern C#, prefer `Task`/`async` over raw threads. Use threads only when you need explicit control (priority, apartment state, dedicated long-running work).
 
-// Threading — low-level thread management
-//
-// KEY CONCEPTS:
-// - Thread: create a new OS thread manually.
-// - thread.Start(): begin execution. thread.Join(): wait for it to finish.
-// - lock: mutual exclusion — only one thread can enter at a time.
-//   Syntactic sugar for Monitor.Enter/Monitor.Exit.
-// - Interlocked: atomic operations on shared variables (no lock needed).
-//   Interlocked.Increment, Interlocked.Add, Interlocked.Exchange.
-// - IsBackground: daemon thread — dies when the main thread exits.
-//
-// NOTE: in modern C#, prefer Task/async over raw threads.
-// Use threads only when you need explicit control.
-```
+> [!warning] Threading pitfalls
+> - Creating threads for short work — use `Task.Run` (thread pool) instead
+> - Not joining threads — orphaned threads may prevent shutdown
+> - Shared mutable state without synchronization — race conditions
 
 #### Basic threading
 
@@ -783,12 +689,6 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
       [104] fetch_users finished
       [102] fetch_events finished
       Results: [fetch_events done, fetch_users done, fetch_products done]
-
-<h4><code style="font-size:0.75em">lock</code> and <code style="font-size:0.75em">Interlocked</code></h4>
-
-```csharp
-// lock and Interlocked — preventing race conditions on shared state
-```
 
 #### Race condition demo (WITHOUT lock)
 
@@ -881,12 +781,6 @@ Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operatio
     === Interlocked (lock-free) ===
       Expected: 400,000
       Got:      400'000  (correct — atomic operation)
-
-#### Concurrent collections
-
-```csharp
-// Concurrent collections — thread-safe data structures without manual locking
-```
 
 #### ConcurrentDictionary — thread-safe aggregation
 
@@ -1190,7 +1084,3 @@ timer.Dispose(); // release the timer
       Timer stopped after 3 ticks
 
 #### Choosing the right concurrency tool
-
-```csharp
-// Choosing the right concurrency tool — decision reference
-```

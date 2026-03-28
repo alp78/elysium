@@ -1465,6 +1465,8 @@ fig.show()
 
 ## 8. Financial Charts
 
+> [!tip] Related pattern
+> The financial metrics rendered in these charts — daily returns, moving averages, price-to-book — are defined in [[chart-metrics]]. For the dashboard-level KPIs these charts feed into, see [[index-snapshot-metrics]].
 
 Candlestick and OHLC charts are standard for **price action analysis**. Each bar shows open, high, low, close for a period. Green = close > open (bullish); red = bearish. Adding a volume subplot shows trading activity — high volume confirms price moves.
 

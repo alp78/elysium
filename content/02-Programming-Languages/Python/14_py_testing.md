@@ -83,20 +83,10 @@ ipytest.autoconfig()
 
 ## Unit Testing with pytest
 
-```python
-# Unit Testing with pytest — the standard Python test framework
-#
-# KEY CONCEPTS:
-# - pytest: third-party framework, the de-facto standard. Runs with `pytest` command.
-# - Test discovery: pytest auto-discovers files named test_*.py or *_test.py,
-#   and functions named test_*. No base class or decorator needed.
-# - assert: plain Python assert — pytest rewrites it to show rich diffs on failure.
-#
-# NOTEBOOK NOTE:
-# pytest runs from the command line: `pytest test_mymodule.py`
-# In a notebook, we use ipytest to run pytest cells interactively.
-# In production, test files live in a tests/ directory.
-```
+`pytest` is the de-facto standard Python test framework. Test discovery is automatic: files named `test_*.py` or `*_test.py`, and functions named `test_*`, are picked up without any base class or decorator. Plain `assert` statements get rewritten by pytest to show rich diffs on failure.
+
+> [!info] Running pytest in notebooks
+> pytest runs from the command line (`pytest test_mymodule.py`). In notebooks, we use `ipytest` to run pytest cells interactively. In production, test files live in a `tests/` directory.
 
 #### Basic test functions
 
@@ -112,16 +102,14 @@ def test_price_calculation():
 ipytest.run()
 ```
 
-    [32m.[0m[33m                                                                                            [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m1 passed[0m, [33m[1m1 warning[0m[33m in 0.01s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.</span><span style="color:#e5c07b">                                                                                            [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">1 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: ticker strings are trimmed and uppercased
@@ -133,16 +121,14 @@ def test_ticker_normalization():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[33m                                                                                           [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m2 passed[0m, [33m[1m1 warning[0m[33m in 0.01s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..</span><span style="color:#e5c07b">                                                                                           [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">2 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: normalized portfolio weights sum to exactly 1.0
@@ -154,16 +140,14 @@ def test_portfolio_weights_sum():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[33m                                                                                          [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m3 passed[0m, [33m[1m1 warning[0m[33m in 0.01s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...</span><span style="color:#e5c07b">                                                                                          [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">3 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: trade dict contains all required keys
@@ -183,16 +167,14 @@ def test_trade_record_fields():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                         [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m4 passed[0m, [33m[1m1 warning[0m[33m in 0.01s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">....</span><span style="color:#e5c07b">                                                                                         [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">4 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### Testing exceptions
 
@@ -209,16 +191,14 @@ def test_invalid_quantity_raises():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                        [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m5 passed[0m, [33m[1m1 warning[0m[33m in 0.01s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.....</span><span style="color:#e5c07b">                                                                                        [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">5 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: accessing missing key raises KeyNotFoundException
@@ -231,29 +211,26 @@ def test_missing_ticker_raises():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                       [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m6 passed[0m, [33m[1m1 warning[0m[33m in 0.01s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">......</span><span style="color:#e5c07b">                                                                                       [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">6 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ## Assertions and Test Organization
 
-```python
-# Assertions — pytest rewrites plain `assert` for rich error messages.
-# No assertEqual, assertTrue needed — just use assert.
-#
-#   assert x == y        → Assert.Equal(y, x)
-#   assert x > 0         → Assert.True(x > 0)
-#   assert x is None     → Assert.Null(x)
-#   assert "foo" in bar  → Assert.Contains("foo", bar)
-#   pytest.approx()      → Assert.Equal(expected, actual, precision)
-```
+pytest rewrites plain `assert` for rich error messages — no `assertEqual` or `assertTrue` needed.
+
+| pytest | C# xUnit equivalent |
+|---|---|
+| `assert x == y` | `Assert.Equal(y, x)` |
+| `assert x > 0` | `Assert.True(x > 0)` |
+| `assert x is None` | `Assert.Null(x)` |
+| `assert "foo" in bar` | `Assert.Contains("foo", bar)` |
+| `pytest.approx()` | `Assert.Equal(expected, actual, precision)` |
 
 #### Numeric assertions
 
@@ -270,16 +247,14 @@ def test_pnl_calculation():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                      [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m7 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.......</span><span style="color:#e5c07b">                                                                                      [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">7 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: fee tiers map volume to correct basis points
@@ -292,16 +267,14 @@ def test_basis_points():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                     [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m8 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">........</span><span style="color:#e5c07b">                                                                                     [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">8 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: Sharpe ratio is positive for upward-trending returns
@@ -318,16 +291,14 @@ def test_sharpe_ratio_positive():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                    [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m9 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.........</span><span style="color:#e5c07b">                                                                                    [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">9 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### Collection assertions
 
@@ -342,16 +313,14 @@ def test_index_constituents():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                   [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m10 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..........</span><span style="color:#e5c07b">                                                                                   [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">10 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: OHLCV bar has all required fields with correct types
@@ -365,16 +334,14 @@ def test_ohlcv_bar():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                  [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m11 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...........</span><span style="color:#e5c07b">                                                                                  [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">11 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### String assertions
 
@@ -390,16 +357,14 @@ def test_isin_format():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                 [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m12 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">............</span><span style="color:#e5c07b">                                                                                 [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">12 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: trade log line matches expected pipe-delimited format
@@ -411,16 +376,14 @@ def test_trade_log_format():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                                [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m13 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.............</span><span style="color:#e5c07b">                                                                                [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">13 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### Type & None assertions
 
@@ -435,16 +398,14 @@ def test_market_data_types():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                               [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m14 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..............</span><span style="color:#e5c07b">                                                                               [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">14 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: optional field can be None without causing errors
@@ -456,27 +417,18 @@ def test_optional_field():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                              [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m15 passed[0m, [33m[1m1 warning[0m[33m in 0.03s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...............</span><span style="color:#e5c07b">                                                                              [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">15 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ## Fixtures and Parametrize
 
-```python
-# Fixtures — reusable test setup/teardown.
-# @pytest.fixture marks a function that provides test data or resources.
-# Tests declare the fixture as a parameter — pytest injects it automatically.
-#
-# yield separates setup (before) from teardown (after).
-# scope: how long the fixture lives — "function" (default), "module", "session".
-```
+`@pytest.fixture` marks a function that provides test data or resources. Tests declare the fixture as a parameter — pytest injects it automatically. `yield` separates setup (before) from teardown (after). The `scope` parameter controls lifetime: `"function"` (default, fresh per test), `"module"`, or `"session"`.
 
 #### Fixture: sample trade data
 
@@ -518,16 +470,14 @@ def test_trade_count(sample_trades):
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                             [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m16 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">................</span><span style="color:#e5c07b">                                                                             [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">16 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: every trade has a non-empty ticker field
@@ -540,16 +490,14 @@ def test_all_trades_have_ticker(sample_trades):
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                            [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m17 passed[0m, [33m[1m1 warning[0m[33m in 0.02s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.................</span><span style="color:#e5c07b">                                                                            [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">17 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: net AAPL position = bought 100 - sold 30 = 70 shares
@@ -566,16 +514,14 @@ def test_net_aapl_position(sample_trades):
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                           [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m18 passed[0m, [33m[1m1 warning[0m[33m in 0.03s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..................</span><span style="color:#e5c07b">                                                                           [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">18 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### Fixture with teardown (yield)
 
@@ -627,16 +573,14 @@ def test_load_positions(temp_positions_file):
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                          [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m19 passed[0m, [33m[1m1 warning[0m[33m in 0.03s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...................</span><span style="color:#e5c07b">                                                                          [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">19 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: total market value = sum(shares × avg_cost) for all positions
@@ -652,44 +596,25 @@ def test_total_market_value(temp_positions_file):
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                                         [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m20 passed[0m, [33m[1m1 warning[0m[33m in 0.03s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">....................</span><span style="color:#e5c07b">                                                                         [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">20 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 <h4><code style="font-size:0.75em">@pytest.mark.parametrize</code></h4>
 
-```python
-# @pytest.mark.parametrize — run one test function with multiple input sets
-#
-# WHAT: the decorator takes a comma-separated string of parameter names
-#   and a list of tuples. pytest runs the test function once per tuple,
-#   unpacking the values into the named parameters.
-#   @pytest.mark.parametrize("x, y, expected", [(1, 2, 3), (4, 5, 9)])
-#   def test_add(x, y, expected): assert x + y == expected
-#   → runs test_add(1, 2, 3) then test_add(4, 5, 9) — 2 test cases from 1 function.
-#
-# WHY: without parametrize, you'd write test_add_1_2, test_add_4_5, etc.
-#   Parametrize eliminates copy-paste: one function, N data rows, N test runs.
-#   Each row runs independently — if row 3 fails, rows 1-2 still show as PASSED.
-#
-# WHEN TO USE: any test where the logic is the same but the data varies:
-#   - Fee tier calculations (volume → fee rate)
-#   - Currency conversions (amount × rate = expected)
-#   - Input validation (valid ticker, invalid ticker, edge cases)
-#   - OHLCV invariants (valid bar, high < low, negative volume)
-#
-# ANTI-PATTERNS:
-#   - Don't parametrize when the test LOGIC differs — write separate tests
-#   - Don't put too many cases in one parametrize — hard to find which row failed
-#   - Use ids= parameter to name each case: @pytest.mark.parametrize(..., ids=["valid", "negative"])
-```
+The `@pytest.mark.parametrize` decorator takes a comma-separated string of parameter names and a list of tuples. pytest runs the test function once per tuple, unpacking values into the named parameters. Each row runs independently — if row 3 fails, rows 1–2 still show as PASSED.
+
+Use parametrize when the **logic is the same but the data varies**: fee tier calculations, currency conversions, input validation, OHLCV invariants.
+
+> [!warning] Parametrize pitfalls
+> - Don't parametrize when the test **logic** differs — write separate tests
+> - Don't put too many cases in one parametrize — hard to find which row failed
+> - Use `ids=` to name each case: `@pytest.mark.parametrize(..., ids=["valid", "negative"])`
 
 #### Parametrize: validate ticker formats
 
@@ -771,33 +696,21 @@ def test_currency_conversion(amount_usd, rate, expected):
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                          [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m35 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...................................</span><span style="color:#e5c07b">                                                          [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">35 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ## Mocking and Patching
 
-```python
-# Mocking — replace real dependencies with fakes during tests.
-#
-# KEY CONCEPTS:
-# - unittest.mock: Python's built-in mocking library (works with pytest).
-# - Mock(): flexible fake that records all calls.
-# - MagicMock(): Mock with magic methods pre-configured.
-# - patch(): temporarily replace a real object in a module.
-#
-# WHY MOCK?
-# - Don't call real Bloomberg API / exchange / database in tests.
-# - Tests must be fast, isolated, and deterministic.
-# - Mock the boundary (API client), test the logic (transform, validate).
-```
+`unittest.mock` is Python's built-in mocking library (works with pytest). `Mock()` creates a flexible fake that records all calls. `MagicMock()` adds pre-configured magic methods. `patch()` temporarily replaces a real object in a module.
+
+> [!tip] Why mock?
+> Don't call real Bloomberg API / exchange / database in tests. Tests must be fast, isolated, and deterministic. Mock the boundary (API client), test the logic (transform, validate).
 
 #### Mock a market data client
 
@@ -829,16 +742,14 @@ def test_mock_market_data():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                         [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m36 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">....................................</span><span style="color:#e5c07b">                                                         [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">36 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: mock records the exact arguments passed to submit_order
@@ -870,16 +781,14 @@ def test_mock_order_submission():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                        [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m37 passed[0m, [33m[1m1 warning[0m[33m in 0.06s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.....................................</span><span style="color:#e5c07b">                                                        [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">37 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: mock simulates transient failures then succeeds — tests retry logic
@@ -921,26 +830,21 @@ def test_mock_side_effect_retries():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                       [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m38 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">......................................</span><span style="color:#e5c07b">                                                       [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">38 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### patch()
 
-```python
-# patch() — temporarily replace real objects with mocks.
-#
-# IMPORTANT: patch where the object is USED, not where it's DEFINED.
-# If my_module.py does `from datetime import datetime`,
-# patch "my_module.datetime", NOT "datetime.datetime".
-```
+`patch()` temporarily replaces real objects with mocks during the test.
+
+> [!warning] Patch where the object is **used**, not where it's defined
+> If `my_module.py` does `from datetime import datetime`, patch `"my_module.datetime"`, NOT `"datetime.datetime"`.
 
 #### Function under test: market hours check
 
@@ -968,16 +872,14 @@ def test_market_open_during_hours():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                      [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m39 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.......................................</span><span style="color:#e5c07b">                                                      [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">39 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: market is closed on weekends (Saturday 11:00 AM)
@@ -988,16 +890,14 @@ def test_market_closed_weekend():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                     [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m40 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">........................................</span><span style="color:#e5c07b">                                                     [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">40 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: market is closed after hours (Wednesday 18:00)
@@ -1008,16 +908,14 @@ def test_market_closed_after_hours():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                    [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m41 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.........................................</span><span style="color:#e5c07b">                                                    [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">41 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### Patch environment variables
 
@@ -1070,16 +968,14 @@ def test_production_exchange_config():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                   [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m42 passed[0m, [33m[1m1 warning[0m[33m in 0.06s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..........................................</span><span style="color:#e5c07b">                                                   [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">42 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
 # TEST: without patch — falls back to defaults
@@ -1093,28 +989,26 @@ def test_default_exchange_config():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                  [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m43 passed[0m, [33m[1m1 warning[0m[33m in 0.05s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...........................................</span><span style="color:#e5c07b">                                                  [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">43 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ## Test Patterns for Data Engineering
 
-```python
-# DE/Finance test patterns — testing pipelines, transforms, data quality.
-#
-# KEY PATTERNS:
-# 1. Test transform functions (pure logic, no mocks needed).
-# 2. Mock external systems (exchange APIs, databases, cloud storage).
-# 3. Fixtures for sample market data, trade records, temp files.
-# 4. Parametrize for edge cases (splits, dividends, halts, holidays).
-```
+Key testing patterns for data engineering and finance:
+
+1. **Test transform functions** — pure logic, no mocks needed
+2. **Mock external systems** — exchange APIs, databases, cloud storage
+3. **Fixtures for sample data** — market data, trade records, temp files
+4. **Parametrize for edge cases** — splits, dividends, halts, holidays
+
+> [!tip] Related pattern
+> The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [[dbt-testing-framework]], where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [[data-quality-framework]].
 
 #### Test a data transform
 
@@ -1173,19 +1067,16 @@ def test_normalize_trades_basic():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                 [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m44 passed[0m, [33m[1m1 warning[0m[33m in 0.06s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">............................................</span><span style="color:#e5c07b">                                                 [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">44 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
-
 # TEST: trades with empty/None trade_id are silently dropped
 # In production, exchange feeds sometimes send heartbeat or malformed records
 # with no trade_id. The pipeline must skip these without crashing.
@@ -1205,19 +1096,16 @@ def test_normalize_trades_drops_missing_id():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                                [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m45 passed[0m, [33m[1m1 warning[0m[33m in 0.06s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.............................................</span><span style="color:#e5c07b">                                                [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">45 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
-
 # TEST: empty input produces empty output — no crash, no None, just []
 # Edge case that catches IndexError or NoneType bugs in the transform.
 def test_normalize_trades_empty():
@@ -1226,16 +1114,14 @@ def test_normalize_trades_empty():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                               [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m46 passed[0m, [33m[1m1 warning[0m[33m in 0.06s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..............................................</span><span style="color:#e5c07b">                                               [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">46 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 #### Mock an external API
 
@@ -1338,19 +1224,16 @@ def test_valid_eod_data():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                             [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m48 passed[0m, [33m[1m1 warning[0m[33m in 0.07s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">................................................</span><span style="color:#e5c07b">                                             [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">48 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.07s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ```python
-
 # TEST: three different violations are all caught
 # BAD1: close = -5.0 → non-positive close
 # BAD2: high = 90.0 < low = 95.0 → impossible candle (high < low)
@@ -1378,16 +1261,14 @@ def test_catches_invalid_prices():
 ipytest.run()
 ```
 
-    [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33m                                            [100%][0m
-    [33m======================================== warnings summary =========================================[0m
-    .lang\Lib\site-packages\_pytest\config\__init__.py:1303
-      c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
-        self._mark_plugins_for_rewrite(hook, disable_autoload)
-    
-    -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-    [33m[32m49 passed[0m, [33m[1m1 warning[0m[33m in 0.06s[0m[0m
-
-    <ExitCode.OK: 0>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.................................................</span><span style="color:#e5c07b">                                            [100%]</span>
+<span style="color:#e5c07b">======================================== warnings summary =========================================</span>
+.lang\Lib\site-packages\_pytest\config\__init__.py:1303
+  c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
+    self._mark_plugins_for_rewrite(hook, disable_autoload)
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+<span style="color:#4ec9b0">49 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
+&lt;ExitCode.OK: 0&gt;</pre>
 
 ## Integration Testing with Real Database
 
@@ -1692,7 +1573,6 @@ except SchemaError:
 ## API Integration Tests
 
 #### Test live API responses
-
 ```python
 # API integration tests — verify live API data against expectations
 #
@@ -1721,13 +1601,11 @@ live = resp.json().get("c", 0)
 ratio = live / db_close if db_close else 0
 assert_test(f"SAP live={live:.2f} vs DB={db_close:.2f} (ratio={ratio:.2f})", 0.2 < ratio < 5.0)
 ```
-
       PASS: Finnhub SAP price = 171.00 (expected > 0)
       PASS: Finnhub ASML price = 1399.42 (expected > 0)
       PASS: SAP live=171.00 vs DB=166.52 (ratio=1.03)
 
 ## CI/CD — Running Tests in GitHub Actions
-
 ```python
 # GitHub Actions — automated testing on every push/PR.
 #
@@ -1823,8 +1701,6 @@ print("  --junitxml=...           Test results in JUnit XML format")
 print("  --tb=short               Short tracebacks (cleaner CI logs)")
 print("  -x                       Stop on first failure")
 ```
-
-    
     # .github/workflows/test.yml
     name: Tests
     
@@ -1906,7 +1782,6 @@ print("  -x                       Stop on first failure")
       -x                       Stop on first failure
 
 #### Summary
-
 ```python
 # Summary — Python testing cheat sheet
 #

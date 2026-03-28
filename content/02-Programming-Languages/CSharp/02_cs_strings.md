@@ -940,27 +940,16 @@ Console.WriteLine($"Combined:    {string.Join(", ", combined.Select(m => m.Value
 
 #### RegexOptions Reference
 
-```csharp
-// RegexOptions reference — all available flags and their effects
-
-Console.WriteLine("IgnoreCase              — case-insensitive matching");
-Console.WriteLine("Multiline               — ^ and $ match line boundaries");
-Console.WriteLine("Singleline              — . matches newline characters");
-Console.WriteLine("IgnorePatternWhitespace — whitespace in pattern is ignored, enables comments");
-Console.WriteLine("Compiled                — precompiles regex to IL for repeated use");
-Console.WriteLine("RightToLeft             — search proceeds right to left");
-Console.WriteLine("ExplicitCapture         — only named groups capture, (...) becomes non-capturing");
-Console.WriteLine("NonBacktracking         — .NET 7+, guaranteed linear time (no catastrophic backtracking)");
-```
-
-    IgnoreCase              — case-insensitive matching
-    Multiline               — ^ and $ match line boundaries
-    Singleline              — . matches newline characters
-    IgnorePatternWhitespace — whitespace in pattern is ignored, enables comments
-    Compiled                — precompiles regex to IL for repeated use
-    RightToLeft             — search proceeds right to left
-    ExplicitCapture         — only named groups capture, (...) becomes non-capturing
-    NonBacktracking         — .NET 7+, guaranteed linear time (no catastrophic backtracking)
+| Option | Effect |
+|---|---|
+| `IgnoreCase` | Case-insensitive matching |
+| `Multiline` | `^` and `$` match line boundaries |
+| `Singleline` | `.` matches newline characters |
+| `IgnorePatternWhitespace` | Whitespace in pattern is ignored, enables comments |
+| `Compiled` | Precompiles regex to IL for repeated use |
+| `RightToLeft` | Search proceeds right to left |
+| `ExplicitCapture` | Only named groups capture, `(...)` becomes non-capturing |
+| `NonBacktracking` | .NET 7+, guaranteed linear time (no catastrophic backtracking) |
 
 #### Common Regex Patterns
 

@@ -755,6 +755,8 @@ display(
 
 ## Window Transform
 
+Window functions like `PARTITION BY` and `ROWS BETWEEN` appear across SQL and DataFrame APIs. For a cross-language comparison of these patterns, see [[sql-python-csharp-transforms]]. The SQL Server gold layer in [[gold-transforms]] applies the same ranking and running-total logic, and [[bq-advanced]] covers BigQuery window functions for identical analytical needs.
+
 ### Pandas — <code style="font-size:0.75em">groupby().transform()</code>
 
 ```python

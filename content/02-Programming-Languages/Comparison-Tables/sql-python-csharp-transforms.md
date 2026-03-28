@@ -33,7 +33,7 @@ The ability to express the same transformation in SQL, Python, and C# is what ma
 > Transform data as close to its source as possible, and as late as you can get away with. SQL transformations in the database are almost always faster than pulling data to Python and transforming there. But Python is necessary when crossing system boundaries (API → DB) or when using libraries that don't exist in SQL (scipy, statsmodels, scikit-learn).
 
 > [!info] Context for This Reference
-> SQL examples use SQL Server T-SQL dialect. Python examples use pandas (the standard for data engineering; see also Polars for large-scale pipelines). C# examples use LINQ, which is idiomatic for the application/dashboard layer. For connection recipes, see the database connections note.
+> SQL examples use SQL Server T-SQL dialect. Python examples use pandas (the standard for data engineering; see also Polars for large-scale pipelines). C# examples use LINQ, which is idiomatic for the application/dashboard layer. For connection recipes, see the database connections note. The SQL window functions and aggregations here are the same patterns applied in [[gold-transforms]] to produce analytics-ready scores, and the BigQuery variants are covered in [[bq-advanced]]. The pandas DataFrame operations map directly to [[05_py_aggregation_reshaping]].
 
 ## Window Functions
 

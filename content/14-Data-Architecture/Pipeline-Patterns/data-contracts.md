@@ -21,6 +21,8 @@ updated: 2026-03-23
 | **Ownership** | Who produces, who maintains, who to contact | "Market Data Team owns, Index Ops consumes" |
 | **Versioning** | How changes are communicated and rolled out | "Semver: breaking = major, additive = minor" |
 
+The contract concept parallels [[rest-api-design-and-consumption|API contracts]] in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
+
 ## Contract-First Development Workflow
 
 ```mermaid
@@ -44,7 +46,7 @@ graph LR
 | **JSON Schema** | Human-readable, widely supported | REST APIs, config validation |
 | **Protocol Buffers** | Strongly typed, backward-compatible by design | gRPC services, high-throughput |
 | **Avro** | Schema evolution built-in, compact binary | Kafka/Pub/Sub messages |
-| **dbt YAML** | Native to dbt, enforced at build time | Warehouse transforms |
+| **[[dbt-data-contracts-implementation|dbt YAML]]** | Native to dbt, enforced at build time | Warehouse transforms |
 | **SQL DDL** | Universal, everyone reads SQL | Database tables |
 
 ## Example Contract: ESG Score Feed
@@ -205,7 +207,7 @@ jobs:
 | Anti-Pattern | Problem | Better Approach |
 |-------------|---------|----------------|
 | No contract exists | Schema changes break consumers silently | Define contracts before building |
-| Contract not enforced | Contract exists but nobody checks | Automate validation in CI and pipeline |
+| Contract not enforced | Contract exists but nobody checks | Automate validation in CI and pipeline (see [[data-quality-framework]]) |
 | Verbal agreements | "We agreed in a meeting" is not auditable | Version-controlled YAML contracts |
 | Producer ignores consumer needs | Schema designed for producer convenience | Joint schema design sessions |
 | No deprecation period | Old version removed immediately | Minimum 30-day deprecation window |

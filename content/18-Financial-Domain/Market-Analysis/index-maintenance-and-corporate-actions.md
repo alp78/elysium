@@ -309,7 +309,7 @@ Not everything happens on schedule. These events require immediate index adjustm
 | **Stock exchange migration** | Update exchange codes, trading hours, currency | On migration date |
 
 > [!warning] NULL Price Is Not "No Trade Today"
-> Your pipeline must handle all these edge cases. A `NULL` price is not the same as "not traded today" — it might mean "suspended pending material news" and requires different treatment than a weekend or holiday.
+> Your pipeline must handle all these edge cases. When a corporate action is missed or misprocessed, follow the [[corporate-action-missed]] runbook for immediate remediation. A `NULL` price is not the same as "not traded today" — it might mean "suspended pending material news" and requires different treatment than a weekend or holiday.
 
 ## 32.8 The Regulatory Landscape
 
@@ -370,7 +370,7 @@ If a backtesting system uses the "corrected" composition, it assumes traders had
 
 **SCD Type 2: The foundation of PIT queries**
 
-PIT queries require [[migration-idempotency-backfills|SCD Type 2]] (Slowly Changing Dimension) tables that track *when* each fact was known, not just what it was:
+PIT queries require [[migration-idempotency-backfills|SCD Type 2]] (Slowly Changing Dimension) tables that track *when* each fact was known, not just what it was. The [[silver-transforms]] layer implements SCD Type 2 for constituent tracking, and [[dbt-snapshots-and-scd]] automates snapshot generation for dimension history:
 
 ```sql
 -- silver.index_constituents — SCD Type 2 design
@@ -493,7 +493,7 @@ pit_data = pit_join(
 ```
 
 > [!warning] EU BMR Compliance Requirement
-> EU BMR Article 11 requires benchmark administrators to maintain "adequate records" of all input data and calculations. A regulatory auditor may ask: "Reconstruct the index value for March 5, 2024, using only the data available on that date." If your tables only store the latest version, you cannot answer this question — and that is a compliance violation.
+> [[eu-bmr-benchmark-regulation|EU BMR]] Article 11 requires benchmark administrators to maintain "adequate records" of all input data and calculations. A regulatory auditor may ask: "Reconstruct the index value for March 5, 2024, using only the data available on that date." If your tables only store the latest version, you cannot answer this question — and that is a compliance violation.
 
 ## 32.10 ESG and Sustainability Data: Integrating Unstructured Data into Financial Warehouses
 

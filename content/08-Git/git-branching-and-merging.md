@@ -47,7 +47,7 @@ git stash apply stash@{2}   # apply a specific stash without removing it
 
 ## Merging Strategies
 
-See [[merge-vs-rebase-vs-squash]] for a detailed comparison.
+See [[merge-vs-rebase-vs-squash]] for a detailed comparison of when to use each strategy. Once a branch is merged, [[pull-requests-and-code-review]] covers the PR workflow that typically wraps these merge operations in a review process.
 
 ### Standard Merge
 ```bash

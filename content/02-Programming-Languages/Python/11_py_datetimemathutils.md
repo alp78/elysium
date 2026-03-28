@@ -446,12 +446,6 @@ print(f"dt1 > dt2:   {dt1 > dt2}")
     dt1 == dt2:  False
     dt1 > dt2:   False
 
-#### Arithmetic on different date/time objects
-
-```python
-# Arithmetic on different date/time objects — what supports what
-```
-
 #### datetime: supports full arithmetic
 
 ```python
@@ -892,12 +886,6 @@ logger.critical("Critical: pipeline halted")                   # shown
     05:52:00 [ERROR   ] PipelineDemo: Error: failed partition 2024-03-15
     05:52:00 [CRITICAL] PipelineDemo: Critical: pipeline halted
 
-#### Structured logging & logging best practices
-
-```python
-# Structured logging and best practices — templates, not f-strings
-```
-
 #### Simulating a pipeline run with logging
 
 ```python
@@ -1061,10 +1049,6 @@ print(f"  ... ({len(os.environ)} total)")
       ... (85 total)
 
 #### Configuration files
-
-```python
-# Configuration files — configparser, .env, TOML for structured settings
-```
 
 <h4><code style="font-size:0.75em">configparser</code> — INI-style config</h4>
 

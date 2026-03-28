@@ -42,6 +42,8 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 
 ## Copying Files To and From VMs
 
+The `scp` and `rsync` patterns here mirror the general [[data-transfer]] commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [[terraform-compute]].
+
 ```bash
 # Copy files to/from a VM
 gcloud compute scp local_file.py data-pipeline-airflow:/tmp/ --zone=europe-west1-b --tunnel-through-iap
@@ -75,7 +77,7 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 Your machine ──► Google IAP Proxy ──► GCP Internal Network ──► VM (private IP only)
 ```
 
-IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy.
+IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy. For the full tunnel mechanics including port forwarding and troubleshooting, see [[iap-tunneling]].
 
 ## Prerequisites for IAP Access
 

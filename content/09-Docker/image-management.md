@@ -653,7 +653,7 @@ docker push europe-west1-docker.pkg.dev/data-platform-prod/pipeline/data-pipelin
 docker image inspect europe-west1-docker.pkg.dev/data-platform-prod/pipeline/data-pipeline-pipeline:latest
 ```
 
-In CI/CD, steps 2–5 are handled by [[github-actions-workflows|GitHub Actions]]. The git SHA tag is the canonical production reference used in [[terraform-registry-and-ci|Terraform Cloud Run job definitions]].
+In CI/CD, steps 2-5 are handled by [[github-actions-workflows|GitHub Actions]], which authenticate to GCP via Workload Identity Federation and push to Artifact Registry in a single workflow. The git SHA tag is the canonical production reference used in [[terraform-registry-and-ci|Terraform Cloud Run job definitions]]. Once pushed, [[terraform-cloud-run|Cloud Run]] pulls the image directly from Artifact Registry at deploy time.
 
 ---
 

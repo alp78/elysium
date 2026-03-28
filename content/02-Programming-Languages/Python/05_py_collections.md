@@ -931,30 +931,17 @@ print(guide)
     Need priority ordering? → heapq
     Need fast middle insert?→ (use database — no Python collection is good at this)
 
-#### Common DE patterns
+#### Common data engineering patterns
 
-```python
-# Common data engineering patterns — collection selection by use case
-
-print("ETL records:      list[dict]   or  list[namedtuple]")
-print("Config/params:    dict")
-print("Deduplication:    set")
-print("Lookup table:     dict  (id → record)")
-print("Grouping:         defaultdict(list)")
-print("Counting:         Counter")
-print("Task queue:       deque")
-print("Priority tasks:   heapq")
-print("Schema fields:    tuple or frozenset (immutable)")
-print("Cache key:        tuple or frozenset (hashable)")
-```
-
-    ETL records:      list[dict]   or  list[namedtuple]
-    Config/params:    dict
-    Deduplication:    set
-    Lookup table:     dict  (id → record)
-    Grouping:         defaultdict(list)
-    Counting:         Counter
-    Task queue:       deque
-    Priority tasks:   heapq
-    Schema fields:    tuple or frozenset (immutable)
-    Cache key:        tuple or frozenset (hashable)
+| Use case | Collection |
+|---|---|
+| ETL records | `list[dict]` or `list[namedtuple]` |
+| Config / params | `dict` |
+| Deduplication | `set` |
+| Lookup table | `dict` (id → record) |
+| Grouping | `defaultdict(list)` |
+| Counting | `Counter` |
+| Task queue | `deque` |
+| Priority tasks | `heapq` |
+| Schema fields | `tuple` or `frozenset` (immutable) |
+| Cache key | `tuple` or `frozenset` (hashable) |

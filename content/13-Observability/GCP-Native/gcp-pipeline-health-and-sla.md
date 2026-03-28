@@ -67,7 +67,7 @@ status: complete
 
 # GCP Pipeline Health and SLA Monitoring
 
-Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible.
+Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible. SLA monitoring is a core practice within the [[dataops-principles-and-practices|DataOps discipline]], ensuring that pipeline reliability is measured and reported systematically rather than reactively.
 
 ---
 
@@ -1036,6 +1036,8 @@ gcloud compute ssh INSTANCE_NAME --zone=ZONE -- \
 ```
 
 ### On-Call Playbook
+
+When an SLA breach triggers a page, the responder should follow the [[on-call-guide]] for initial acknowledgement and escalation before diving into technical triage below.
 
 **First 5 minutes — Acknowledge and assess:**
 

@@ -150,12 +150,12 @@ For the index valuation process at the grain of one index per trading day:
 
 ### Step 4 — Identify the Facts
 
-Facts are the numeric measurements produced by the business process at the declared grain. They should be **additive**, **semi-additive**, or **non-additive** — and you must know which.
+Facts are the numeric measurements produced by the business process at the declared grain. They should be **additive**, **semi-additive**, or **non-additive** — and you must know which. DataFrame operations like joins and groupbys in [[05_py_aggregation_reshaping]] mirror the star schema query pattern — joining a fact DataFrame to dimension DataFrames along key columns.
 
 | Measure | Additivity | Explanation |
 |---------|-----------|-------------|
 | `market_cap_usd` | Semi-additive | Can sum across indices but not across dates (use snapshot logic) |
-| `daily_return_pct` | Non-additive | Percentages cannot be summed; must be compounded |
+| `daily_return_pct` | Non-additive | Percentages cannot be summed; must be compounded (see [[bq-advanced]] for BigQuery window functions that handle compounding) |
 | `num_constituents` | Semi-additive | Count at a point in time; averaging across dates is valid, summing is not |
 | `weight_pct` | Semi-additive | Sums to 100% within one index on one date; cannot sum across indices |
 | `rows_processed` | Additive | Can sum across pipelines, dates, or any dimension |
@@ -310,6 +310,8 @@ erDiagram
         varchar freshness_status
     }
 ```
+
+In practice, the [[gold-transforms]] layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
 
 ### Why Star Schemas Outperform Normalized Models for Analytics
 

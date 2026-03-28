@@ -14,7 +14,7 @@ related:
 
 # dbt: BigQuery Adapter
 
-`dbt-bigquery` is a first-party adapter maintained by dbt Labs. It maps dbt materializations to BigQuery DDL/DML and exposes BigQuery-specific config options — partitioning, clustering, slot labels, and cost controls — directly in model config blocks.
+`dbt-bigquery` is a first-party adapter maintained by dbt Labs. It maps dbt materializations to BigQuery DDL/DML and exposes BigQuery-specific config options — partitioning, clustering, slot labels, and cost controls — directly in model config blocks. For broader BigQuery cost and query optimization patterns, see [[querying-and-cost-optimization]].
 
 ---
 
@@ -479,7 +479,7 @@ In dbt, use `dbt compile` to get the rendered SQL, then pipe it to `bq query --d
 
 ## External Tables with Hive Partitioning
 
-For raw ESG provider files landed in GCS with a Hive-style path structure:
+For raw ESG provider files landed in GCS with a Hive-style path structure (see [[data-loading-and-export]] for the upstream loading patterns that produce these files):
 
 ```
 gs://fi-raw-data/esg_scores/provider=msci/score_year=2024/score_month=01/scores.parquet

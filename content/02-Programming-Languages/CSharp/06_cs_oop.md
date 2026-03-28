@@ -424,66 +424,31 @@ Console.WriteLine($"  TextBox is IResizable? {txt is IResizable}");  // False
       Resized button: Drawing button 'OK' size=2.0
       TextBox is IResizable? False
 
-#### Summary — abstract class vs interface
-
-```csharp
-// Summary — abstract class vs interface comparison
-
-Console.WriteLine("Abstract class:  can have fields, constructors, concrete methods");
-Console.WriteLine("Interface:       only method signatures (pure contract)");
-Console.WriteLine("Abstract class:  single inheritance only (one parent)");
-Console.WriteLine("Interface:       multiple implementation allowed");
-Console.WriteLine("Use abstract:    when classes share implementation (Shape.Describe())");
-Console.WriteLine("Use interface:   when classes share behavior contract (IDrawable.Draw())");
-```
-
-    Abstract class:  can have fields, constructors, concrete methods
-    Interface:       only method signatures (pure contract)
-    Abstract class:  single inheritance only (one parent)
-    Interface:       multiple implementation allowed
-    Use abstract:    when classes share implementation (Shape.Describe())
-    Use interface:   when classes share behavior contract (IDrawable.Draw())
+| Feature | Abstract class | Interface |
+|---|---|---|
+| Members | Fields, constructors, concrete methods | Method signatures only (pure contract) |
+| Inheritance | Single inheritance (one parent) | Multiple implementation allowed |
+| Use when | Classes share implementation (`Shape.Describe()`) | Classes share behavior contract (`IDrawable.Draw()`) |
 
 ## Encapsulation & Access Modifiers
 
-#### Access modifiers
+Encapsulation hides internal data, exposing only what's necessary. Choose the most restrictive access that works:
 
-```csharp
-// Encapsulation and access modifiers — controlling visibility
-//
-// Technique: public (everyone), private (class only), protected (class +
-//   derived), internal (same assembly), protected internal, private protected.
-//   Properties expose controlled access; fields are typically private.
-//
-// Benefits:
-//   - Information hiding — internal details can change without breaking callers
-//   - Validation in property setters — enforce invariants
-//   - Minimal public surface — easier to maintain and evolve
-//
-// Anti-patterns:
-//   - Public fields — bypasses validation and encapsulation
-//   - Everything public — exposes implementation details
-//   - protected for non-inheritance scenarios — use private
-//
-// When to use:
-//   - Every class — choose the most restrictive access that works
-//
-// When NOT to use:
-//   - N/A — access modifiers are always applicable
+| Modifier | Accessible from |
+|---|---|
+| `public` | Everywhere |
+| `private` | Defining class only (default for members) |
+| `protected` | Class + its subclasses |
+| `internal` | Same assembly/project |
+| `protected internal` | Protected OR internal |
+| `private protected` | Subclass in same assembly only |
 
-// Encapsulation & Access Modifiers
-//
-// KEY CONCEPTS:
-// - Encapsulation: hiding internal data, exposing only what's necessary.
-//   public:             accessible everywhere
-//   private:            accessible ONLY within the defining class (default for class members)
-//   protected:          accessible in the class + its subclasses
-//   internal:           accessible within the same assembly/project
-//   protected internal: protected OR internal
-//   private protected:  protected AND internal (subclass in same assembly only)
-// - Properties with private set: read from outside, write only inside the class.
-// - init-only properties: can only be set during construction ({ get; init; }).;
-```
+Properties with `private set` allow read from outside, write only inside. `init`-only properties (`{ get; init; }`) can only be set during construction.
+
+> [!warning] Access modifier pitfalls
+> - **Public fields** bypass validation and encapsulation — use properties instead
+> - **Everything public** exposes implementation details and makes the API hard to evolve
+> - **`protected` for non-inheritance scenarios** — use `private` instead
 
 #### OOP theory — access modifiers and abstract vs interface
 
@@ -716,25 +681,10 @@ Console.WriteLine("Record typo: compile error → caught before code even runs")
 
 #### Autocomplete and refactoring
 
-```csharp
-// Autocomplete and refactoring — IDE support records provide over dicts
-
-Console.WriteLine("Dictionary:  no autocomplete — must memorize string keys");
-Console.WriteLine("Record:      IDE shows all properties on '.' → full autocomplete");
-Console.WriteLine("             record Order(int CustomerId, double Amount)");
-Console.WriteLine("             order.█  →  CustomerId, Amount (IDE suggests)");
-Console.WriteLine("Dictionary:  search-and-replace \"customer_id\" strings across all files");
-Console.WriteLine("             miss one? Runtime crash");
-Console.WriteLine("Record:      right-click → Rename → all usages updated automatically");
-```
-
-    Dictionary:  no autocomplete — must memorize string keys
-    Record:      IDE shows all properties on '.' → full autocomplete
-                 record Order(int CustomerId, double Amount)
-                 order.█  →  CustomerId, Amount (IDE suggests)
-    Dictionary:  search-and-replace "customer_id" strings across all files
-                 miss one? Runtime crash
-    Record:      right-click → Rename → all usages updated automatically
+| Feature | Dictionary | Record |
+|---|---|---|
+| Autocomplete | No — must memorize string keys | IDE shows all properties on `.` |
+| Renaming | Search-and-replace string keys (miss one = runtime crash) | Right-click → Rename → all usages updated |
 
 #### Type safety and equality
 
@@ -888,18 +838,9 @@ foreach (var r in records)
       orders: failed (ok=False)
       products: pending (ok=False)
 
-#### Summary — class vs record vs struct
-
-```csharp
-// Summary — class vs record vs record struct vs struct
-
-Console.WriteLine("class:         mutable, identity-based equality, most OOP scenarios");
-Console.WriteLine("record:        immutable, value-based equality, DTOs, config, events");
-Console.WriteLine("record struct: same as record but value type (stack, no GC)");
-Console.WriteLine("struct:        mutable value type (use record struct instead in new code)");
-```
-
-    class:         mutable, identity-based equality, most OOP scenarios
-    record:        immutable, value-based equality, DTOs, config, events
-    record struct: same as record but value type (stack, no GC)
-    struct:        mutable value type (use record struct instead in new code)
+| Type | Mutability | Equality | Use for |
+|---|---|---|---|
+| `class` | Mutable | Identity-based | Most OOP scenarios |
+| `record` | Immutable | Value-based | DTOs, config, events |
+| `record struct` | Immutable | Value-based (value type, stack) | Same as record but no GC |
+| `struct` | Mutable | Value type | Legacy — use `record struct` in new code |

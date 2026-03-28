@@ -729,6 +729,8 @@ Console.WriteLine(@"
 
 ## Format Performance Benchmark
 
+For the architecture-level decision guide on when to use each format (Parquet for analytics, Avro for streaming, Protobuf for services), see [[serialization-formats]].
+
 #### Generate test data
 
 ```csharp

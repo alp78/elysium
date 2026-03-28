@@ -453,87 +453,28 @@ try {
 
 ## 6. Absolute No-Go's
 
-#### Absolute no-go's — patterns that should never appear in production
+> [!danger] Absolute no-go's — patterns that should never appear in production C#
+> 1. **String `+=` in a loop** — O(n²). Use `StringBuilder`.
+> 2. **`catch (Exception) { }`** — empty catch swallows all errors. At minimum: `_logger.LogError(ex, "..."); throw;`
+> 3. **`async void`** — exceptions are unobservable and crash the process. Always use `async Task`. Only exception: event handlers.
+> 4. **`.Result` / `.Wait()`** — deadlocks in UI/ASP.NET contexts. Use `await`.
+> 5. **Exposing mutable collections** — `public List<T> Items { get; set; }` lets anyone `.Clear()` it. Return `IReadOnlyList<T>`.
+> 6. **Not disposing `IDisposable`** — `SqlConnection`, `HttpClient`, `FileStream` → resource leak. Always use `using`.
+> 7. **Hardcoded connection strings / secrets** — use `IConfiguration`, user-secrets, or Key Vault.
+> 8. **`new HttpClient()` per request** — socket exhaustion. Use `IHttpClientFactory` or a static instance.
+> 9. **Blocking the UI thread** — `Thread.Sleep()` or sync I/O → frozen app. Use `async`/`await`.
+> 10. **`obj.GetType() == typeof(Foo)`** — use `if (obj is Foo foo)` instead.
+> 11. **`dynamic` when static types exist** — bypasses all type checking. Use generics or interfaces.
+> 12. **Ignoring CA/IDE warnings** — Roslyn analyzers exist for a reason. Fix warnings, don't suppress blindly.
 
 ```csharp
-// Absolute no-go's — code patterns that are always wrong in production
-//
-// Technique: Catalog of patterns that cause severe performance or
-//   correctness issues: string += in loops (O(n squared)), catching
-//   Exception broadly, async void, nested Task.Result (deadlock).
-//
-// Benefits:
-//   - Clear list of things to check in code review
-//   - Each anti-pattern has the correct alternative
-//   - Prevents the most common C# production bugs
-//
-// Anti-patterns:
-//   - String concatenation in loops — use StringBuilder
-//   - Catching Exception — catch specific types
-//   - async void — use async Task
-//   - .Result/.Wait() — use await
-//
-// When to use:
-//   - Code review checklist, onboarding documentation
-//
-// When NOT to use:
-//   - N/A — these rules are always applicable
-
-// ABSOLUTE NO-GO'S — things that should NEVER appear in production C# code.
-//
-// 1. STRING CONCATENATION IN A LOOP
-//    s += x is O(n²). Use StringBuilder.
-//
-// 2. CATCH (Exception) { } — EMPTY CATCH
-//    Swallows all errors silently. At minimum, log it.
-//    catch (Exception ex) { _logger.LogError(ex, "..."); throw; }
-//
-// 3. ASYNC VOID
-//    Exceptions in async void are unobservable and crash the process.
-//    Always use async Task. Only exception: event handlers.
-//
-// 4. .Result / .Wait() ON ASYNC CODE
-//    Deadlocks in UI/ASP.NET contexts. Use await instead.
-//    If you MUST block, use .GetAwaiter().GetResult() (still bad).
-//
-// 5. EXPOSING MUTABLE COLLECTIONS
-//    public List<T> Items { get; set; } → anyone can .Clear() it.
-//    Return IReadOnlyList<T> or .AsReadOnly().
-//
-// 6. NOT DISPOSING IDisposable
-//    SqlConnection, HttpClient, FileStream → resource leak.
-//    Always use 'using' statement or 'using' declaration.
-//
-// 7. HARDCODED CONNECTION STRINGS / SECRETS
-//    Use IConfiguration, user-secrets, Azure Key Vault.
-//
-// 8. new HttpClient() PER REQUEST
-//    Socket exhaustion. Use IHttpClientFactory or a static instance.
-//
-// 9. BLOCKING THE UI THREAD
-//    Thread.Sleep() or sync I/O on UI thread → frozen app.
-//    Use async/await for all I/O.
-//
-// 10. CHECKING TYPE WITH GetType() INSTEAD OF is/as
-//     if (obj.GetType() == typeof(Foo)) → use: if (obj is Foo foo) { ... }
-//
-// 11. USING dynamic WHEN STATIC TYPES EXIST
-//     dynamic bypasses all type checking. Use generics or interfaces.
-//
-// 12. IGNORING CA/IDE WARNINGS
-//     Roslyn analyzers exist for a reason. Fix warnings, don't suppress blindly.
-
-// Demo: IDisposable (NO-GO #6)
-// BAD:
+// BAD: resource leak if exception occurs
 // var conn = new SqlConnection(connString);
-// conn.Open();
-// ... if exception here, conn is leaked!
-// conn.Close();
+// conn.Open(); ... conn.Close();
 
-// GOOD:
+// GOOD: disposed even if exception occurs
 // using var conn = new SqlConnection(connString);
-// conn.Open();
-// ... conn is disposed even if exception occurs
+// conn.Open(); ...
 ```
 
 ## 7. Code Smells & Anti-Patterns
@@ -765,54 +706,20 @@ MeasureTime(() => {
 
 ## 10. Code Quality Tools
 
-#### Code quality tools for C#
+| Tool | Purpose | Config |
+|---|---|---|
+| Roslyn Analyzers | Built-in code analysis (CA rules) | `.editorconfig` |
+| StyleCop Analyzers | Style enforcement | NuGet package |
+| SonarAnalyzer | Bug & security detection | NuGet / SonarQube |
+| `dotnet format` | Code formatting | `.editorconfig` |
+| NDepend | Dependency & complexity analysis | Standalone |
+| `dotnet-counters` | Runtime performance counters | CLI tool |
+| PerfView | CPU/Memory/GC profiling | Standalone |
+| dotTrace / dotMemory | JetBrains profilers | IDE integration |
 
-```csharp
-// Code quality tools — static analysis, linting, and formatting
-//
-// Technique: .NET analyzers (Roslyn) catch bugs at compile time. StyleCop
-//   enforces coding standards. dotnet format auto-formats code. SonarQube
-//   for continuous inspection. EditorConfig for team-wide settings.
-//
-// Benefits:
-//   - Automated — catches issues before code review
-//   - Consistent style — no formatting debates in PRs
-//   - Security — analyzers detect common vulnerabilities
-//
-// Anti-patterns:
-//   - No static analysis — relies entirely on human code review
-//   - Suppressing all warnings — defeats the purpose
-//   - Different formatting per developer — merge conflicts
-//
-// When to use:
-//   - Every C# project — configure in CI/CD pipeline
-//
-// When NOT to use:
-//   - N/A — quality tools are always beneficial
+Key `.editorconfig` rules: `CA1822` (mark members static), `CA2007` (ConfigureAwait), `CA1062` (validate arguments), `IDE0090` (use `new()` shorthand).
 
-// Code Quality Tools for C#
-//
-// | Tool                  | Purpose                           | Config            |
-// |-----------------------|-----------------------------------|-------------------|
-// | Roslyn Analyzers      | Built-in code analysis (CA rules) | .editorconfig     |
-// | StyleCop Analyzers    | Style enforcement                 | NuGet package     |
-// | SonarAnalyzer         | Bug & security detection          | NuGet / SonarQube |
-// | dotnet format         | Code formatting                   | .editorconfig     |
-// | NDepend               | Dependency & complexity analysis   | Standalone tool   |
-// | dotnet-counters       | Runtime performance counters       | CLI tool          |
-// | PerfView              | CPU/Memory/GC profiling            | Standalone        |
-// | dotTrace / dotMemory  | JetBrains profilers               | IDE integration   |
-//
-// KEY .editorconfig RULES:
-// dotnet_diagnostic.CA1822.severity = warning  // Mark members static if possible
-// dotnet_diagnostic.CA2007.severity = warning  // ConfigureAwait
-// dotnet_diagnostic.CA1062.severity = warning  // Validate arguments
-// dotnet_diagnostic.IDE0090.severity = warning // Use 'new()' shorthand
-//
-// RECOMMENDED: Enable <TreatWarningsAsErrors>true</TreatWarningsAsErrors> in .csproj
-//
-// GOLDEN RULE: Warnings are bugs waiting to happen. Fix them or justify the suppression.
-```
+> [!tip] Enable `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in `.csproj`. Warnings are bugs waiting to happen — fix them or justify the suppression.
 
 ## Summary
 

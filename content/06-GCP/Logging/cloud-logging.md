@@ -14,7 +14,7 @@ status: complete
 
 # Cloud Logging — Finding the Needle
 
-When your Cloud Run job fails at 3 AM, Cloud Logging is the first place you look. The `gcloud logging read` command supports a powerful filter language that lets you narrow from millions of log entries to the specific failure in seconds. The filter language uses field paths, comparison operators, and logical connectives — it is not grep, it is a structured query language applied to structured log records.
+When your Cloud Run job fails at 3 AM, Cloud Logging is the first place you look. As one of the three pillars covered in [[observability-deep-dive]], logging complements metrics and tracing to give you full incident visibility. The `gcloud logging read` command supports a powerful filter language that lets you narrow from millions of log entries to the specific failure in seconds. The filter language uses field paths, comparison operators, and logical connectives — it is not grep, it is a structured query language applied to structured log records.
 
 ## Reading Recent Logs
 
@@ -113,6 +113,9 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 | `bigquery_resource` | BigQuery operations |
 | `pubsub_subscription` | Pub/Sub delivery events |
 | `k8s_container` | Kubernetes/GKE containers |
+
+> [!tip] Related pattern
+> SQL Server [[audit-logging]] can forward its audit events to Cloud Logging via the Datadog agent or custom log sinks, unifying database and infrastructure logs in one place. For teams using Datadog as an alternative log destination, [[datadog-log-management]] provides the routing configuration.
 
 ## Querying VPC-SC Violations
 

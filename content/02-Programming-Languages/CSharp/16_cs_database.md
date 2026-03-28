@@ -644,35 +644,22 @@ pragmaConn.Close();
 
 Quick reference of all important SQLite PRAGMAs — set these right after `Open()`.
 
-```csharp
-// SQLite PRAGMA quick reference
-//
-// PRAGMA                  Value               Effect
-// ─────────────────────── ──────────────────── ────────────────────────────────────────
-// journal_mode            WAL                 Concurrent reads + one writer
-// synchronous             NORMAL              Balance of speed and safety
-// cache_size              -20000 (20MB)       In-memory page cache
-// page_size               4096                Disk block alignment (set before CREATE)
-// busy_timeout            5000 (5s)           Retry on lock instead of failing
-// mmap_size               268435456 (256MB)   Memory-mapped I/O for large files
-// temp_store              MEMORY              Temp tables in RAM
-// foreign_keys            ON                  Enforce FK constraints (OFF by default!)
-// auto_vacuum             FULL or INCREMENTAL Auto-reclaim space on DELETE
-// wal_autocheckpoint      1000                WAL checkpoint every N pages
-//
-// MAINTENANCE:
-// ANALYZE                                     Update query planner statistics
-// VACUUM                                      Rebuild and compact database file
-// REINDEX                                     Rebuild all indexes
-// PRAGMA integrity_check                      Verify database consistency
-//
-// INDEXING:
-// CREATE INDEX idx ON t(col)                  Single column index
-// CREATE INDEX idx ON t(col1, col2)           Composite (covers multi-column WHERE)
-// CREATE UNIQUE INDEX idx ON t(col1, col2)    Unique constraint via index
-// DROP INDEX idx                              Remove an index
-// EXPLAIN QUERY PLAN SELECT ...               Show whether index is used
-```
+> [!abstract]- SQLite PRAGMA Quick Reference
+> | PRAGMA | Value | Effect |
+> |---|---|---|
+> | `journal_mode` | `WAL` | Concurrent reads + one writer |
+> | `synchronous` | `NORMAL` | Balance of speed and safety |
+> | `cache_size` | `-20000` (20MB) | In-memory page cache |
+> | `page_size` | `4096` | Disk block alignment (set before CREATE) |
+> | `busy_timeout` | `5000` (5s) | Retry on lock instead of failing |
+> | `mmap_size` | `268435456` (256MB) | Memory-mapped I/O for large files |
+> | `temp_store` | `MEMORY` | Temp tables in RAM |
+> | `foreign_keys` | `ON` | Enforce FK constraints (OFF by default!) |
+> | `auto_vacuum` | `FULL`/`INCREMENTAL` | Auto-reclaim space on DELETE |
+>
+> **Maintenance:** `ANALYZE` (update stats), `VACUUM` (rebuild/compact), `REINDEX` (rebuild indexes), `PRAGMA integrity_check` (verify consistency)
+>
+> **Indexing:** `CREATE INDEX idx ON t(col)` | composite: `t(col1, col2)` | unique: `CREATE UNIQUE INDEX` | check usage: `EXPLAIN QUERY PLAN SELECT ...`
 
 ## 2. SQL Server
 
@@ -680,7 +667,7 @@ Quick reference of all important SQLite PRAGMAs — set these right after `Open(
 
 Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
 `sys.schemas` to discover the medallion architecture: bronze (raw), silver (cleaned),
-gold (computed scores). `sys.partitions` gives approximate row counts.
+gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [[sql-fundamentals]].
 
 ```csharp
 // SQL Server with ADO.NET (SqlClient) — connect to live database
@@ -1384,48 +1371,26 @@ QueryToTable(conn, @"
 Quick reference of essential SQL Server DMVs and commands for monitoring,
 tuning, and troubleshooting.
 
-```csharp
-// SQL Server administration quick reference
-//
-// METADATA:
-//   sys.tables, sys.schemas, sys.columns        Table/column metadata
-//   sys.indexes, sys.index_columns              Index definitions
-//   sys.partitions                              Row counts per partition
-//   OBJECT_ID('schema.table')                   Get object ID for DMV queries
-//
-// INDEX MANAGEMENT:
-//   sys.dm_db_index_physical_stats               Fragmentation analysis
-//   sys.dm_db_index_usage_stats                  Index usage (seeks/scans/updates)
-//   sys.dm_db_missing_index_details              Missing index recommendations
-//   ALTER INDEX idx ON table REORGANIZE           Defragment online (10-30%)
-//   ALTER INDEX idx ON table REBUILD              Full rebuild (>30%)
-//   UPDATE STATISTICS table                       Refresh query planner stats
-//
-// PERFORMANCE:
-//   SET STATISTICS IO ON                          Show logical/physical reads
-//   SET STATISTICS TIME ON                        Show CPU/elapsed time
-//   sys.dm_exec_query_stats                       Top queries by CPU/reads
-//   sys.dm_exec_cached_plans                      Cached execution plans
-//   DBCC FREEPROCCACHE                            Clear plan cache (dev only!)
-//
-// MONITORING:
-//   sys.dm_exec_sessions                          Active connections
-//   sys.dm_exec_requests                          Currently running queries
-//   sys.dm_os_wait_stats                          Wait type analysis
-//   sp_who2                                       Quick session overview
-//
-// MAINTENANCE:
-//   DBCC CHECKDB                                  Integrity check
-//   DBCC SHRINKDATABASE                           Reclaim space (use sparingly)
-//   sp_spaceused 'table'                         Table size
-//   BACKUP DATABASE db TO DISK = 'path'           Full backup
-//
-// CONFIGURATION:
-//   sys.configurations                            Server settings
-//   sp_configure 'max server memory', 4096        Set max memory (MB)
-//   sp_configure 'max degree of parallelism', 4   Set MAXDOP
-//   RECONFIGURE                                   Apply sp_configure changes
-```
+> [!abstract]- SQL Server Administration Quick Reference
+> **Metadata:** `sys.tables`, `sys.schemas`, `sys.columns` (table/column metadata) | `sys.indexes` (index definitions) | `sys.partitions` (row counts) | `OBJECT_ID('schema.table')` (get object ID)
+>
+> **Index Management**
+> | Command | Purpose |
+> |---|---|
+> | `sys.dm_db_index_physical_stats` | Fragmentation analysis |
+> | `sys.dm_db_index_usage_stats` | Index usage (seeks/scans/updates) |
+> | `sys.dm_db_missing_index_details` | Missing index recommendations |
+> | `ALTER INDEX idx ON table REORGANIZE` | Defragment online (10–30%) |
+> | `ALTER INDEX idx ON table REBUILD` | Full rebuild (>30%) |
+> | `UPDATE STATISTICS table` | Refresh query planner stats |
+>
+> **Performance:** `SET STATISTICS IO ON` (logical/physical reads) | `SET STATISTICS TIME ON` (CPU/elapsed) | `sys.dm_exec_query_stats` (top queries) | `DBCC FREEPROCCACHE` (clear plan cache — dev only!)
+>
+> **Monitoring:** `sys.dm_exec_sessions` (active connections) | `sys.dm_exec_requests` (running queries) | `sys.dm_os_wait_stats` (wait analysis) | `sp_who2` (quick overview)
+>
+> **Maintenance:** `DBCC CHECKDB` (integrity) | `sp_spaceused 'table'` (table size) | `BACKUP DATABASE db TO DISK = 'path'` (full backup)
+>
+> **Configuration:** `sp_configure 'max server memory', 4096` | `sp_configure 'max degree of parallelism', 4` | `RECONFIGURE` (apply changes)
 
 #### SQL Server — ODBC Provider with positional parameters
 
@@ -2189,45 +2154,37 @@ Migrations are the killer feature of EF Core — schema changes are version-cont
 C# code, not ad-hoc SQL scripts. Not executable in notebooks (requires project + CLI),
 but this is the production workflow.
 
-```csharp
-// EF Core migrations workflow — reference (not executable in notebooks)
-//
-// SETUP:
-//   dotnet add package Microsoft.EntityFrameworkCore.SqlServer
-//   dotnet add package Microsoft.EntityFrameworkCore.Design
-//   dotnet tool install dotnet-ef
-//
-// WORKFLOW:
-//   1. Modify entity classes (add property, change type, add table)
-//   2. dotnet ef migrations add AddVolumeColumn
-//      → generates C# migration file with Up() and Down() methods
-//   3. dotnet ef database update
-//      → applies pending migrations to the database
-//   4. dotnet ef migrations script
-//      → generates SQL script (for DBA review in production)
-//
-// PRODUCTION CONNECTION (SQL Server):
-//   protected override void OnConfiguring(DbContextOptionsBuilder options)
-//       => options.UseSqlServer(
-//           "Server=localhost,1434;Database=stoxx;User Id=sa;Password=...;");
-//
-// MIGRATION BEST PRACTICES:
-//   - One migration per logical change (not one per deployment)
-//   - Always test Down() — rollbacks must work
-//   - Generate SQL scripts for production (dotnet ef migrations script)
-//   - Never edit a migration after it has been applied
-//   - Use HasData() for seed data that should be in every environment
-//
-// EXAMPLE MIGRATION (auto-generated):
-//   public partial class AddVolumeColumn : Migration
-//   {
-//       protected override void Up(MigrationBuilder migrationBuilder)
-//           => migrationBuilder.AddColumn<long>("Volume", "Prices");
-//
-//       protected override void Down(MigrationBuilder migrationBuilder)
-//           => migrationBuilder.DropColumn("Volume", "Prices");
-//   }
+**Setup:**
+```bash
+dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet tool install dotnet-ef
 ```
+
+**Workflow:**
+1. Modify entity classes (add property, change type, add table)
+2. `dotnet ef migrations add AddVolumeColumn` → generates C# migration with `Up()` and `Down()`
+3. `dotnet ef database update` → applies pending migrations
+4. `dotnet ef migrations script` → generates SQL script for DBA review
+
+**Example migration (auto-generated):**
+```csharp
+public partial class AddVolumeColumn : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+        => migrationBuilder.AddColumn<long>("Volume", "Prices");
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+        => migrationBuilder.DropColumn("Volume", "Prices");
+}
+```
+
+> [!warning] Migration best practices
+> - One migration per logical change (not one per deployment)
+> - Always test `Down()` — rollbacks must work
+> - Generate SQL scripts for production (`dotnet ef migrations script`)
+> - Never edit a migration after it has been applied
+> - Use `HasData()` for seed data that should be in every environment
 
 #### EF Core — when to use EF Core vs Dapper
 
@@ -3090,44 +3047,23 @@ Console.WriteLine("VACUUM ANALYZE: stats updated + space reclaimed");
 
 Quick reference of all DuckDB tuning and maintenance commands.
 
-```csharp
-// DuckDB tuning and maintenance reference
-//
-// INDEXES:
-//   CREATE INDEX idx ON t(col)              ART index for equality lookups
-//   CREATE UNIQUE INDEX idx ON t(col)       Unique constraint
-//   DROP INDEX idx                          Remove index
-//   duckdb_indexes()                        List all indexes
-//
-// STORAGE:
-//   CALL pragma_database_size()             Database size
-//   CALL pragma_storage_info('table')       Per-column compression + row groups
-//   SUMMARIZE table                         Min/max/avg/nulls per column
-//   DESCRIBE table                          Column names and types
-//
-// MEMORY & THREADS:
-//   SET memory_limit = '4GB'                Max memory for query execution
-//   SET threads = 4                         Parallelism level
-//   SET enable_object_cache = true          Reuse scan results between queries
-//
-// MAINTENANCE:
-//   VACUUM                                  Reclaim space from deletions
-//   VACUUM ANALYZE                          Reclaim space + update statistics
-//   CHECKPOINT                              Force WAL flush (file-based DBs)
-//   FORCE CHECKPOINT                        Force even if no changes
-//
-// EXPLAIN:
-//   EXPLAIN sql                             Show query plan (no execution)
-//   EXPLAIN ANALYZE sql                     Show plan + actual execution times
-//
-// KEY DIFFERENCES FROM SQL SERVER:
-//   - Indexes are optional (columnar engine + zone maps handle most cases)
-//   - ART indexes, not B-trees (fast for equality, not for ranges)
-//   - No ALTER INDEX REBUILD — DuckDB auto-compresses
-//   - No UPDATE STATISTICS — use VACUUM ANALYZE
-//   - No DBCC CHECKDB — DuckDB uses checksums internally
-//   - Memory limit instead of buffer pool — SET memory_limit
-```
+> [!abstract]- DuckDB Tuning & Maintenance Reference
+> **Indexes:** `CREATE INDEX idx ON t(col)` (ART index for equality) | `CREATE UNIQUE INDEX` | `duckdb_indexes()` (list all)
+>
+> **Storage:** `CALL pragma_database_size()` | `CALL pragma_storage_info('table')` (per-column compression) | `SUMMARIZE table` | `DESCRIBE table`
+>
+> **Memory & Threads:** `SET memory_limit = '4GB'` | `SET threads = 4` | `SET enable_object_cache = true`
+>
+> **Maintenance:** `VACUUM` (reclaim space) | `VACUUM ANALYZE` (+ update stats) | `CHECKPOINT` (force WAL flush)
+>
+> **Explain:** `EXPLAIN sql` (plan only) | `EXPLAIN ANALYZE sql` (plan + actual times)
+>
+> **Key differences from SQL Server:**
+> - Indexes are optional (columnar engine + zone maps handle most cases)
+> - ART indexes, not B-trees (fast for equality, not ranges)
+> - No `ALTER INDEX REBUILD` — auto-compresses
+> - No `UPDATE STATISTICS` — use `VACUUM ANALYZE`
+> - Memory limit instead of buffer pool — `SET memory_limit`
 
 ### 6.6 DuckDB vs SQL Server Performance
 
@@ -3471,79 +3407,57 @@ results
 
 ### DuckDB vs Polars.NET — reference
 
-#### DuckDB vs Polars — operation mapping reference
-
-```csharp
-// DuckDB vs Polars.NET — same operations, different syntax
-//
-// Operation          DuckDB (SQL)                              Polars.NET (DataFrame API)
-// ──────────────────  ──────────────────────────────────────  ──────────────────────────────────────────────────
-// Read Parquet       SELECT * FROM 'file.parquet'              DataFrame.ReadParquet(path)
-// Read CSV           SELECT * FROM 'file.csv'                  DataFrame.ReadCsv(path)
-// Read JSON          SELECT * FROM 'file.json'                 DataFrame.ReadJson(path)
-// Filter             WHERE col = 'val'                         df.Filter(Col("col") == Lit("val"))
-// Select             SELECT col1, col2                         df.Select("col1", "col2")
-// Sort               ORDER BY col DESC                         df.Sort("col", descending: true)
-// Limit              LIMIT 10                                  df.Head(10)
-// Group + Agg        GROUP BY ... AVG(col)                     df.GroupBy("col").Agg(Col("col").Mean())
-// Add column         SELECT *, a-b AS c                        df.WithColumns((Col("a")-Col("b")).Alias("c"))
-// Window function    LAG() OVER (PARTITION BY ...)              Not available — use DuckDB
-// CTE                WITH cte AS (...)                          Not available — use DuckDB
-// Export             COPY (...) TO 'file.parquet'              df.WriteParquet(path)
-```
+| Operation | DuckDB (SQL) | Polars.NET (DataFrame API) |
+|---|---|---|
+| Read Parquet | `SELECT * FROM 'file.parquet'` | `DataFrame.ReadParquet(path)` |
+| Read CSV | `SELECT * FROM 'file.csv'` | `DataFrame.ReadCsv(path)` |
+| Filter | `WHERE col = 'val'` | `df.Filter(Col("col") == Lit("val"))` |
+| Select | `SELECT col1, col2` | `df.Select("col1", "col2")` |
+| Sort | `ORDER BY col DESC` | `df.Sort("col", descending: true)` |
+| Group + Agg | `GROUP BY ... AVG(col)` | `df.GroupBy("col").Agg(Col("col").Mean())` |
+| Add column | `SELECT *, a-b AS c` | `df.WithColumns((Col("a")-Col("b")).Alias("c"))` |
+| Window function | `LAG() OVER (PARTITION BY ...)` | Not available — use DuckDB |
+| CTE | `WITH cte AS (...)` | Not available — use DuckDB |
+| Export | `COPY (...) TO 'file.parquet'` | `df.WriteParquet(path)` |
 
 #### DuckDB vs Polars — decision guide
 
-```csharp
-// Decision guide
-//
-// Scenario                                 Use            Why
-// ─────────────────────────────────────────  ──────────────  ────────────────────────────────────────
-// Complex SQL (joins, CTEs, windows)       DuckDB         Full SQL:2003 support
-// Ad-hoc file exploration                  DuckDB         SQL on files, no code needed
-// DataFrame transforms                    Polars.NET     Method chaining, lazy eval
-// ML pipeline preprocessing               Polars.NET     DataFrame API integrates with ML
-// Export results to Parquet                Either         DuckDB COPY or Polars WriteParquet
-// Notebook data exploration               DuckDB         Write SQL directly, instant results
-// Production ETL validation               DuckDB         SQL assertions on file data
-// Both in same project                    Yes            DuckDB for SQL, Polars for transforms
-```
+| Scenario | Use | Why |
+|---|---|---|
+| Complex SQL (joins, CTEs, windows) | DuckDB | Full SQL:2003 support |
+| Ad-hoc file exploration | DuckDB | SQL on files, no code needed |
+| DataFrame transforms | Polars.NET | Method chaining, lazy eval |
+| ML pipeline preprocessing | Polars.NET | DataFrame API integrates with ML |
+| Notebook data exploration | DuckDB | Write SQL directly, instant results |
+| Production ETL validation | DuckDB | SQL assertions on file data |
+| Both in same project | Yes | DuckDB for SQL, Polars for transforms |
 
 ## 8. Summary
 
-```csharp
-// Summary — C# database cheat sheet
-//
-// SQLITE (Microsoft.Data.Sqlite):
-// new SqliteConnection("DataSource=:memory:")    In-memory DB
-// sqlCmd.Parameters.AddWithValue("@p", value)       Named parameter
-// reader.GetString(0), reader.GetInt32(1)        Typed column access
-// reader["column_name"]                          Name-based access
-// conn.BeginTransaction() + tx.Commit()          Explicit transaction
-//
-// SQL SERVER (Microsoft.Data.SqlClient):
-// new SqlConnection(connStr)                     Connect
-// new SqlCommand(sql, conn)                      Create command
-// sqlCmd.ExecuteReader()                            SELECT → reader
-// sqlCmd.ExecuteNonQuery()                          INSERT/UPDATE/DELETE
-// sqlCmd.ExecuteScalar()                            Single value
-//
-// DAPPER (micro-ORM):
-// conn.Query<T>(sql, @params)                    SQL → List<T>
-// conn.QueryFirst<T>(sql)                        SQL → single T
-// conn.Execute(sql, @params)                     INSERT/UPDATE/DELETE
-//
-// PYTHON EQUIVALENTS:
-// SqliteConnection      → sqlite3.connect()
-// SqlConnection          → pyodbc.connect()
-// SqlCommand             → cursor.execute()
-// SqlDataReader          → cursor.fetchall()
-// @param                 → ? placeholder
-// Dapper                 → pd.read_sql() / SQLAlchemy
-// BeginTransaction()     → with conn: (context manager)
-//
-// MEDALLION ARCHITECTURE (stoxx database):
-// Bronze: raw ingested data (latest batch, dim tables)
-// Silver: cleaned, deduplicated, SCD-2, full OHLCV history
-// Gold:   composite scores (value/momentum/sentiment), index performance
-```
+> [!abstract]- C# Database Quick Reference
+> **SQLite** (`Microsoft.Data.Sqlite`)
+> | Pattern | Description |
+> |---|---|
+> | `new SqliteConnection("DataSource=:memory:")` | In-memory DB |
+> | `cmd.Parameters.AddWithValue("@p", value)` | Named parameter |
+> | `reader.GetString(0)`, `reader.GetInt32(1)` | Typed column access |
+> | `conn.BeginTransaction()` + `tx.Commit()` | Explicit transaction |
+>
+> **SQL Server** (`Microsoft.Data.SqlClient`)
+> | Pattern | Description |
+> |---|---|
+> | `new SqlConnection(connStr)` | Connect |
+> | `cmd.ExecuteReader()` | SELECT → reader |
+> | `cmd.ExecuteNonQuery()` | INSERT/UPDATE/DELETE |
+> | `cmd.ExecuteScalar()` | Single value |
+>
+> **Dapper** (micro-ORM)
+> | Pattern | Description |
+> |---|---|
+> | `conn.Query<T>(sql, @params)` | SQL → `List<T>` |
+> | `conn.QueryFirst<T>(sql)` | SQL → single `T` |
+> | `conn.Execute(sql, @params)` | INSERT/UPDATE/DELETE |
+>
+> **Python equivalents:** `SqliteConnection` → `sqlite3.connect()` | `SqlConnection` → `pyodbc.connect()` | `SqlCommand` → `cursor.execute()` | Dapper → `pd.read_sql()`/SQLAlchemy
+>
+> **Medallion architecture:** Bronze (raw ingested data) → Silver (cleaned, deduplicated, SCD-2) → Gold (composite scores, index performance)

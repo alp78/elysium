@@ -38,7 +38,7 @@ All data for the the project architecture dashboard flows through the [[medallio
 
 ## Pipeline Schedule
 
-The the Airflow DAGs orchestrate three daily pipeline runs timed to capture market closes across global regions:
+The [[airflow-dag-patterns|Airflow DAGs]] orchestrate three daily pipeline runs timed to capture market closes across global regions:
 
 | Run Time (UTC) | Purpose | Markets Captured |
 |----------------|---------|-----------------|
@@ -55,7 +55,7 @@ The the Airflow DAGs orchestrate three daily pipeline runs timed to capture mark
 yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scored) → Dashboard
 ```
 
-1. **[[bronze-layer-loading|Bronze]]**: Raw yfinance data lands as-is in `bronze.*` tables
+1. **[[bronze-layer-loading|Bronze]]**: Raw yfinance data lands as-is in `bronze.*` tables — when a vendor file is late or missing, follow the [[vendor-file-late-or-missing]] runbook
 2. **[[silver-transforms|Silver]]**: Deduplication, type casting, gap-filling in `silver.*` tables
 3. **[[gold-transforms|Gold]]**: Z-scores, composite scores, rankings in `gold.*` tables
 

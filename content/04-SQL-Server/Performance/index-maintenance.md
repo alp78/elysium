@@ -126,7 +126,7 @@ WITH (
     ONLINE = ON,
     FILLFACTOR = 90,             -- leave 10% free space on each page for future inserts
     SORT_IN_TEMPDB = ON,         -- use TempDB for sort work (reduces main DB I/O)
-    DATA_COMPRESSION = PAGE,     -- compress at page level (saves ~60% space, slight CPU cost)
+    DATA_COMPRESSION = PAGE,     -- compress at page level (see [[table-compression]] for savings estimates)
     MAXDOP = 2                   -- limit parallel threads to 2
 );
 -- FILLFACTOR: 100 = pack pages full (best for read-only), 80-90 = leave room for inserts
@@ -238,6 +238,7 @@ ORDER BY sp.modification_counter DESC;
 | **Never rebuilding** | Fragmentation grows → range scans read more pages → queries slow down | Weekly maintenance: REORGANIZE at 5–30%, REBUILD at >30% |
 | **Rebuilding tiny indexes** | Indexes under 1,000 pages have negligible fragmentation impact — wasting maintenance time | Skip indexes with page_count < 1,000 |
 | **Over-indexing staging tables** | Staging tables are truncated and bulk-loaded — indexes slow down the load | Drop indexes before bulk load, recreate after |
+| **Ignoring partitioned indexes** | Each partition fragments independently and may need separate maintenance | Use `REBUILD PARTITION = N` to target hot partitions only (see [[partitioning-strategies]]) |
 | **Not updating statistics after large loads** | Stale statistics → bad query plans → table scans | `UPDATE STATISTICS table WITH FULLSCAN` after bulk loads |
 | **REBUILD OFFLINE during business hours** | Locks the table for the duration | Always use `WITH (ONLINE = ON)` in production, or schedule off-hours |
 

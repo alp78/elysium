@@ -13,7 +13,7 @@ related:
 
 # dbt: Snapshots and SCD
 
-dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time.
+dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [[silver-transforms]].
 
 ---
 
@@ -386,7 +386,7 @@ group by 1, 2, 3
 
 ## 6. Snapshot of ESG Scores for Audit Trail
 
-ESG ratings change as providers update their models and as companies disclose new data. For funds with ESG mandates, regulators may require evidence of what rating a constituent had at the time of a portfolio decision.
+ESG ratings change as providers update their models and as companies disclose new data. For funds with ESG mandates, regulators may require evidence of what rating a constituent had at the time of a portfolio decision. This is analogous to how [[index-maintenance-and-corporate-actions]] tracks dimension changes for corporate actions like splits and mergers through SCD Type 2 history.
 
 ```sql
 -- snapshots/snap_esg_scores.sql (production-ready)

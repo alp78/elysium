@@ -64,6 +64,8 @@ They don't have to match.
 
 ## Block Types
 
+The `variable` and `output` blocks below are covered in depth in [[terraform-variables-and-outputs]], which extends HCL syntax with parameterization, type constraints, and validation rules.
+
 The most common block types in Terraform:
 
 | Block Type | Purpose | Example |

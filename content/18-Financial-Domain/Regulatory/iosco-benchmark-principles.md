@@ -9,7 +9,7 @@ updated: 2026-03-23
 # IOSCO Benchmark Principles
 
 > [!abstract] When You Need This
-> The 19 IOSCO Principles for Financial Benchmarks are the international standard that EU BMR is based on. Most regulators worldwide reference these principles. This note maps each principle to what the data engineering team must provide.
+> The 19 IOSCO Principles for Financial Benchmarks are the international standard that [[eu-bmr-benchmark-regulation|EU BMR]] is based on — BMR translates these principles into binding EU law. Most regulators worldwide reference these principles. This note maps each principle to what the data engineering team must provide.
 
 ## The 19 Principles by Theme
 
@@ -21,7 +21,7 @@ updated: 2026-03-23
 | 2 | Oversight of third parties | Vendor SLA monitoring, fallback procedures |
 | 3 | Conflicts of interest | Segregated service accounts (read vs write) |
 | 4 | Control framework | Automated quality gates, circuit breakers |
-| 5 | Internal oversight | Audit logs, pipeline lineage, quarterly reviews |
+| 5 | Internal oversight | Audit logs, pipeline lineage, quarterly reviews — see [[compliance-and-auditability]] for implementation |
 
 ### Quality of the Benchmark (Principles 6-10)
 

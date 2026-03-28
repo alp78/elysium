@@ -15,7 +15,7 @@ updated: 2026-03-23
 
 ## Symptoms
 
-- Airflow DAG `esg_score_normalization` task `circuit_breaker` returned `alert_and_halt`
+- Airflow DAG `esg_score_normalization` task `circuit_breaker` returned `alert_and_halt` — this is one of the [[data-quality-framework|quality gates]] built into the pipeline
 - Slack alert: "ESG Circuit Breaker — publication halted"
 - No new rows in `dbo.esg_scores_normalized` for today's score_date
 - Datadog metric `esg.circuit_breaker.fired` incremented
@@ -80,7 +80,7 @@ updated: 2026-03-23
 
 ### Genuine vendor data issue
 
-If the deviation is caused by a real vendor methodology change or data quality issue:
+If the deviation is caused by a real vendor methodology change or data quality issue within the [[esg-data-ingestion-framework|ESG ingestion pipeline]]:
 
 1. Contact the vendor to confirm the change
 2. If confirmed: update normalization parameters, document the change
@@ -133,7 +133,7 @@ Document in audit trail with reason "T-1 fallback due to circuit breaker".
 
 ## Post-Incident
 
-- [ ] Document the circuit breaker reason and resolution in audit trail (EU BMR requirement)
+- [ ] Document the circuit breaker reason and resolution in audit trail (EU BMR requirement) — refer to [[sfdr-data-requirements]] if the affected scores feed SFDR disclosures
 - [ ] If override was used: file the override decision with Compliance
 - [ ] Review circuit breaker thresholds — should they be adjusted?
 - [ ] If vendor issue: open a ticket with the vendor and track resolution

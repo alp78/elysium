@@ -62,7 +62,7 @@ Expected: `Status: OK` and `Inputs: /var/opt/mssql/log/errorlog`.
 
 ### What Gets Logged
 
-SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry.
+SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [[audit-logging|SQL Server audit logging]] separately from the errorlog.
 
 **To force test entries:**
 
@@ -145,7 +145,7 @@ In Datadog: **Logs > Explorer** → filter by:
 ## Cloud Run Pipeline Logs
 
 > [!warning] Cloud Run Logs Are NOT in Datadog
-> Cloud Run job logs go to **GCP Cloud Logging**, not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
+> Cloud Run job logs go to **GCP Cloud Logging** (see [[cloud-logging]] for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
 
 ```powershell
 gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=data-pipeline-pipeline" --limit=50 --format="table(timestamp,textPayload)"

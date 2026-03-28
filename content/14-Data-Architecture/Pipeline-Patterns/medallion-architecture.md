@@ -39,6 +39,8 @@ The medallion architecture organizes data into three layers — bronze, silver, 
 - Pandas + NumPy for gold-layer analytics
 - Dapper (C#) for dashboard reads
 
+The medallion pattern aligns naturally with the [[etl-vs-elt|ELT paradigm]] — raw data lands first, then transforms run inside the warehouse. In dbt projects, [[dbt-staging-models]] correspond to the bronze-to-silver transition, while [[dbt-mart-models]] produce the gold layer.
+
 ## Connection Pattern
 
 All Python modules share a single connection factory with credentials from `.env`:

@@ -14,7 +14,7 @@ status: complete
 
 # Gold Transforms
 
-The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [[silver-transforms|silver]] and write to gold tables.
+The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [[silver-transforms|silver]] and write to gold tables. In dbt, the equivalent role is served by [[dbt-mart-models|mart models]] that expose business-ready datasets.
 
 **Pipeline flow:** [[silver-transforms|Silver]] → Python + pandas → Gold tables → Blazor dashboard
 
@@ -182,7 +182,7 @@ GO
 
 ## Gold Analytics Logic
 
-Z-score computation and composite scoring happens in Python/pandas (not SQL). The helper functions live in `transforms/_gold_utils.py`. SQL is used for data retrieval and the final write-back.
+Z-score computation and composite scoring happens in Python/pandas (not SQL). The helper functions live in `transforms/_gold_utils.py`. SQL is used for data retrieval and the final write-back. For the pandas equivalents of the window functions used below (groupby, rolling averages, rank), see [[05_py_aggregation_reshaping]].
 
 ### Z-Score by Group (`_gold_utils.py`)
 
@@ -802,7 +802,7 @@ ORDER BY date
 
 | Technique | Where | Why |
 |-----------|-------|-----|
-| `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` | Latest-row queries | Get the most recent record per group without subquery |
+| `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` | Latest-row queries | Get the most recent record per group without subquery (see [[sql-python-csharp-transforms]] for cross-language equivalents) |
 | `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` | SMA computation | Moving averages computed entirely in SQL — no client-side loop |
 | `LAG(col, N) OVER (ORDER BY date)` | Price changes | Previous-day and 5-day-ago close for change % calculation |
 | `CASE WHEN cnt >= N THEN value END` | SMA validation | Only output MA if we have enough data points |

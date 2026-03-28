@@ -42,7 +42,7 @@ updated: 2026-03-23
 
 ### Data Pipeline for PAI Computation
 
-See [[esg-data-ingestion-framework]] for the full vendor normalization pipeline. The PAI computation sits on top of the normalized ESG scores:
+See [[esg-data-ingestion-framework]] for the full vendor normalization pipeline (when the ESG quality checks fail, follow the [[esg-circuit-breaker-fired]] runbook). The PAI computation sits on top of the normalized ESG scores:
 
 ```
 ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR disclosure report
@@ -72,7 +72,7 @@ def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:
 | Controversial weapons | MSCI | Sustainalytics | ~98% |
 
 > [!warning] Coverage Gaps
-> Scope 3 emissions and some social indicators have low reported coverage. Vendors fill gaps with estimates. Your pipeline must track whether a value is reported or estimated — SFDR requires disclosure of estimation methodology.
+> Scope 3 emissions and some social indicators have low reported coverage. Vendors fill gaps with estimates. Your pipeline must track whether a value is reported or estimated — SFDR requires disclosure of estimation methodology. [[ai-augmented-data-engineering|LLM extraction pipelines]] can help parse unstructured sustainability reports to fill these gaps with source-attributed data.
 
 ## Related
 

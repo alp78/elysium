@@ -112,7 +112,7 @@ gcloud scheduler jobs create http weekly-report \
 
 ### Creating Jobs — Pub/Sub Target
 
-The Pub/Sub target publishes a message to a topic at the scheduled time. The message then triggers whatever subscribes to that topic — a Cloud Function, a pull consumer, or a push subscription to Cloud Run. This is the fan-out pattern: one schedule can trigger multiple downstream consumers via one topic.
+The Pub/Sub target publishes a message to a topic at the scheduled time. The message then triggers whatever subscribes to that topic — a Cloud Function, a pull consumer, or a push subscription to Cloud Run. This is the fan-out pattern: one schedule can trigger multiple downstream consumers via one topic. For a deeper dive on topic and subscription design, see [[pubsub-messaging]].
 
 ```bash
 # Create a Pub/Sub-target scheduler job
@@ -740,7 +740,7 @@ gcloud scheduler jobs create http trigger-my-pipeline \
 
 ### The Serverless Pipeline Pattern
 
-The most common GCP data engineering pattern: Cloud Scheduler fires at a cron time → calls the Cloud Run Jobs API → your containerised pipeline stage runs to completion → exits. No always-on servers. No Kubernetes management. You pay only for the compute time the job actually uses.
+The most common GCP data engineering pattern: Cloud Scheduler fires at a cron time → calls the Cloud Run Jobs API → your containerised pipeline stage runs to completion → exits (see [[cloud-run-jobs-vs-services]] for when to use Jobs vs Services). No always-on servers. No Kubernetes management. You pay only for the compute time the job actually uses.
 
 ```
 Cloud Scheduler (cron)
@@ -762,7 +762,7 @@ Cloud Run Job (Docker container)
 ### Full Setup: Scheduler to Cloud Run Job
 
 ```bash
-# Step 1: Ensure the Cloud Run Job exists
+# Step 1: Ensure the Cloud Run Job exists (for Terraform-managed jobs, see [[terraform-cloud-run]])
 gcloud run jobs describe my-etl-job --region=europe-west1
 # If it doesn't exist, create/deploy it first via gcloud run jobs create or CI/CD
 

@@ -14,7 +14,7 @@ related:
 
 # dbt: Testing Framework
 
-dbt's testing system is the primary mechanism for asserting data quality. Tests run against materialised relations in the warehouse, covering structural constraints, business rules, and statistical expectations. This note covers all four test categories: built-in generic, dbt-utils, dbt-expectations, and custom tests.
+dbt's testing system is the primary mechanism for asserting data quality, implementing a key layer of the [[data-quality-framework]]. Tests run against materialised relations in the warehouse, covering structural constraints, business rules, and statistical expectations. When paired with [[data-contracts]], these tests enforce guarantees that downstream consumers can depend on. This note covers all four test categories: built-in generic, dbt-utils, dbt-expectations, and custom tests.
 
 ---
 

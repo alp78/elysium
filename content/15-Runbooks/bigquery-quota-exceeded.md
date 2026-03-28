@@ -187,7 +187,7 @@ gcloud alpha services quota update \
   --value=1099511627776   # 1 TiB in bytes
 ```
 
-For more precise user-level control, set `maximum_bytes_billed` at the query level in your dbt profile (`profiles.yml`):
+For more precise user-level control, set `maximum_bytes_billed` at the query level in your dbt profile (`profiles.yml`). See [[querying-and-cost-optimization]] for broader BigQuery cost-control techniques including partition pruning, clustering, and BI Engine reservations:
 
 ```yaml
 # profiles.yml — add to BigQuery target
@@ -206,7 +206,7 @@ your_project:
 
 ### RC-4: Switch to Flat-Rate Slot Reservation (Emergency Capacity Add)
 
-If legitimate workloads are being throttled due to slot exhaustion during a market event (e.g., index rebalancing day with high ESG recalculation load):
+If legitimate workloads are being throttled due to slot exhaustion during a market event (e.g., index rebalancing day with high ESG recalculation load), consider whether [[dbt-performance-tuning|dbt model optimization]] can reduce slot consumption before purchasing additional capacity:
 
 ```bash
 # Purchase a 100-slot commitment for the duration (FLEX — by-the-minute billing)

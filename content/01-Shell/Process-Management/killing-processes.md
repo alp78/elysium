@@ -20,6 +20,7 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 
 ```bash
 # Graceful shutdown (SIGTERM — signal 15)
+# Docker uses the same SIGTERM→SIGKILL escalation — see [[container-lifecycle]]
 kill <PID>
 # Sends SIGTERM — the process receives the signal and can:
 # 1. Flush buffers and close file handles
@@ -78,7 +79,7 @@ kill -- -<PGID>
 > - Lock files left in `/var/run/`, `/tmp/`, or the application's data directory
 > - Shared memory segments: `ipcs -m` (list), `ipcrm -m <shmid>` (remove)
 > - Incomplete writes: check file sizes and checksums
-> - Database transaction state: look for open transactions in `sys.dm_exec_sessions`
+> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` -- if a SQL Server process is the victim, check [[deadlock-detection-and-prevention]] for proper KILL session handling
 
 ## PowerShell
 

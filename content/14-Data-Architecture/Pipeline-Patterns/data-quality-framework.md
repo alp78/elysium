@@ -36,6 +36,8 @@ updated: 2026-03-23
 
 ### Silver (Cleaned / Validated)
 
+The [[silver-transforms]] layer is where most quality gates live, acting as the boundary between raw ingestion and trusted data.
+
 | Check | Implementation | Action on Failure |
 |-------|---------------|-------------------|
 | Business rule validation | Price > 0, volume >= 0, date is trading day | Quarantine failing rows |
@@ -57,7 +59,7 @@ updated: 2026-03-23
 
 | Tool | Approach | Best For |
 |------|---------|---------|
-| **dbt tests** | SQL assertions in YAML | Schema and business rule validation |
+| **[[dbt-testing-framework|dbt tests]]** | SQL assertions in YAML | Schema and business rule validation |
 | **Great Expectations** | Python assertions with profiling | Statistical anomaly detection |
 | **Soda Core** | YAML-defined checks (SodaCL) | Quick setup, multi-team |
 | **Custom SQL** | Stored procedures / scripts | Legacy systems, edge cases |
@@ -65,7 +67,10 @@ updated: 2026-03-23
 
 ## Quarantine Pattern
 
-When rows fail validation, quarantine for investigation instead of discarding.
+When rows fail validation, quarantine for investigation instead of discarding. [[dbt-data-contracts-implementation|dbt data contracts]] can enforce schema-level quality at build time, catching violations before they reach the quarantine stage.
+
+> [!tip] Related pattern
+> For DataFrame-level validation in Python pipelines (e.g., Pandas schema checks, column type assertions), see [[10_py_testing_migration]].
 
 ## Anomaly Detection for Financial Time Series
 

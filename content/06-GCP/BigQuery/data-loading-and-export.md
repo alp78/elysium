@@ -14,7 +14,7 @@ status: complete
 
 # BigQuery Data Loading and Export
 
-BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
+BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [[serialization-formats]]. This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
 
 ## Loading Data from GCS
 
@@ -63,7 +63,7 @@ bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bu
 # Wildcard * = BigQuery shards the output (parallel export, multiple files)
 # PARQUET | CSV | NEWLINE_DELIMITED_JSON | AVRO
 
-# Export with compression
+# Export with compression (see [[compression]] for algorithm trade-offs)
 bq extract --destination_format=CSV --compression=GZIP \
   project_data.ohlcv gs://data-pipeline-bucket/export/ohlcv-*.csv.gz
 ```
@@ -95,6 +95,9 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 
 > [!tip] Time Travel Is Your First Recovery Option
 > Before considering a backup restore or re-running a pipeline, check if time travel can recover the data. It is instantaneous, free, and requires no infrastructure. Only if the corruption occurred more than 7 days ago do you need an alternative recovery strategy.
+
+> [!tip] Related pattern
+> The `bq load` workflow mirrors the [[bronze-layer-loading]] pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [[bq-engineering]] covers the advanced query patterns that transform and consume it.
 
 ## Format Comparison
 

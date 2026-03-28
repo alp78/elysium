@@ -20,7 +20,7 @@ status: complete
 
 # Datadog SQL Server Integration
 
-The Datadog SQL Server integration (`sqlserver` check) connects to SQL Server using ODBC and collects built-in metrics from DMVs — connections, buffer pool stats, lock waits, batch requests, and query statistics. It runs on the [[datadog-agent-sql-vm|SQL VM agent]] as a scheduled check every 15 seconds.
+The Datadog SQL Server integration (`sqlserver` check) connects to SQL Server using ODBC and collects built-in metrics from DMVs — connections, buffer pool stats, lock waits, batch requests, and query statistics. It runs on the [[datadog-agent-sql-vm|SQL VM agent]] as a scheduled check every 15 seconds. Many of these metrics automate the same health checks you would run manually with [[essential-dba-queries]], but with continuous collection and alerting instead of ad-hoc diagnosis.
 
 ---
 
@@ -60,7 +60,7 @@ instances:
 | `username` / `password` | `dd_agent` | Read-only login with `VIEW SERVER STATE` — see [[datadog-agent-sql-vm]] |
 
 > [!warning] TrustServerCertificate
-> SQL Server 2022 uses a self-signed certificate by default. Without `TrustServerCertificate=yes`, the ODBC driver will refuse to connect. Do not use this in production environments with real certificates — instead, configure a proper certificate and remove this setting.
+> SQL Server 2022 uses a self-signed certificate by default. Without `TrustServerCertificate=yes`, the ODBC driver will refuse to connect. Do not use this in production environments with real certificates — instead, configure a proper certificate and remove this setting. See [[server-configuration]] for the full SQL Server instance setup including certificate and network configuration.
 
 ---
 
@@ -72,7 +72,7 @@ The integration automatically collects these metric groups from SQL Server DMVs:
 |--------|-------------|
 | `sqlserver.stats.connections` | Total active connections |
 | `sqlserver.stats.batch_requests` | Batch requests per second (overall throughput) |
-| `sqlserver.stats.lock_waits` | Lock waits per second |
+| `sqlserver.stats.lock_waits` | Lock waits per second — correlates with [[wait-stats-analysis|wait types]] like `LCK_M_*` |
 | `sqlserver.buffer.cache_hit_ratio` | Buffer cache hit ratio (%) — target > 99% |
 | `sqlserver.buffer.page_life_expectancy` | Seconds a page stays in buffer pool — target > 300 |
 | `sqlserver.buffer.checkpoint_pages` | Checkpoint pages flushed per second |

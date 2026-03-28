@@ -72,7 +72,7 @@ status: complete
 
 # Compliance and Auditability — Financial Index Calculation
 
-This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring.
+This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [[audit-logging|SQL Server audit logging]] configuration captures database-level access events that feed directly into the audit trail described here.
 
 ---
 
@@ -1217,7 +1217,7 @@ The reproducibility test is executed. The `pipeline_lineage_metadata` row for th
 ## 3. EU BMR Compliance
 
 > [!warning] Regulatory Requirement — EU BMR (Regulation (EU) 2016/1011)
-> The European Benchmarks Regulation applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams.
+> The European Benchmarks Regulation applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams. For a detailed breakdown of the regulation's scope and applicability, see [[eu-bmr-benchmark-regulation]].
 
 ### 3.1 Article 11 — Input Data Governance
 
@@ -1404,7 +1404,7 @@ CREATE TABLE dbo.bmr_complaints
 
 ### 4.1 Restatement Decision Framework
 
-When an error is discovered in a published index level, the following process governs the response:
+When an error is discovered in a published index level, the following process governs the response. The [[data-restatement-procedure]] provides the operational runbook that implements the framework below, including subscriber notification templates and approval workflows.
 
 ```
 Error Discovered

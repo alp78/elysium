@@ -122,7 +122,7 @@ Console.WriteLine($"Bucket:  {bucketName}");
 
 ## 2. Cloud Storage (GCS)
 
-**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here.
+**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [[gcs-object-operations]].
 
 ```csharp
 // Cloud Storage — upload/download/list objects.
@@ -244,7 +244,7 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
 
 ## 4. Pub/Sub
 
-**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture.
+**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [[pubsub-messaging]].
 
 ```csharp
 // Pub/Sub — publish and pull messages.
@@ -635,46 +635,21 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 
 ## 8. Summary
 
-```csharp
-// Summary — GCP C# cheat sheet
-//
-// AUTHENTICATION:
-// GoogleCredential.GetApplicationDefault()           Auto-detect ADC
-// GOOGLE_APPLICATION_CREDENTIALS env var             Service account key
-//
-// CLOUD STORAGE (Google.Cloud.Storage.V1):
-// StorageClient.Create()                             Create client
-// client.UploadObject(bucket, name, type, stream)    Upload
-// client.DownloadObject(bucket, name, stream)        Download
-// client.ListObjects(bucket, prefix)                 List blobs
-//
-// BIGQUERY (Google.Cloud.BigQuery.V2):
-// BigQueryClient.Create(projectId)                   Create client
-// client.ExecuteQuery(sql, params)                   Run SQL
-// client.InsertRows(datasetId, tableId, rows)        Insert rows
-//
-// PUB/SUB (Google.Cloud.PubSub.V1):
-// PublisherClient.CreateAsync(topicName)              Create publisher
-// publisher.PublishAsync(message)                     Publish
-// subscriber.Pull(subName, maxMessages)              Pull messages
-//
-// FIRESTORE (Google.Cloud.Firestore):
-// FirestoreDb.Create(projectId)                      Create client
-// collection.Document(id).SetAsync(data)             Write document
-// collection.GetSnapshotAsync()                      Read all docs
-//
-// SECRET MANAGER (Google.Cloud.SecretManager.V1):
-// client.AccessSecretVersion(name)                   Read secret
-// client.ListSecrets(projectName)                    List all secrets
-//
-// CLOUD MONITORING (Google.Cloud.Monitoring.V3):
-// client.CreateTimeSeries(project, timeSeries)       Write metric
-//
-// PYTHON EQUIVALENTS:
-// StorageClient           → storage.Client()
-// BigQueryClient           → bigquery.Client()
-// PublisherClient           → pubsub_v1.PublisherClient()
-// FirestoreDb              → firestore.Client()
-// SecretManagerServiceClient → secretmanager.SecretManagerServiceClient()
-// MetricServiceClient       → monitoring_v3.MetricServiceClient()
-```
+> [!abstract]- GCP C# Quick Reference
+> | Service | Pattern | Description |
+> |---|---|---|
+> | **Auth** | `GoogleCredential.GetApplicationDefault()` | Auto-detect ADC |
+> | **GCS** | `StorageClient.Create()` | Create client |
+> | **GCS** | `client.UploadObject(bucket, name, type, stream)` | Upload |
+> | **GCS** | `client.DownloadObject(bucket, name, stream)` | Download |
+> | **BigQuery** | `BigQueryClient.Create(projectId)` | Create client |
+> | **BigQuery** | `client.ExecuteQuery(sql, params)` | Run SQL |
+> | **BigQuery** | `client.InsertRows(datasetId, tableId, rows)` | Insert rows |
+> | **Pub/Sub** | `PublisherClient.CreateAsync(topicName)` | Create publisher |
+> | **Pub/Sub** | `publisher.PublishAsync(message)` | Publish |
+> | **Firestore** | `FirestoreDb.Create(projectId)` | Create client |
+> | **Firestore** | `collection.Document(id).SetAsync(data)` | Write document |
+> | **Secrets** | `client.AccessSecretVersion(name)` | Read secret |
+> | **Monitoring** | `client.CreateTimeSeries(project, timeSeries)` | Write metric |
+>
+> **Python equivalents:** `StorageClient` → `storage.Client()` | `BigQueryClient` → `bigquery.Client()` | `PublisherClient` → `pubsub_v1.PublisherClient()` | `FirestoreDb` → `firestore.Client()`

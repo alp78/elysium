@@ -33,7 +33,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 
 > [!tip] Format Selection Guide
 > - **APIs and configs** → JSON (universal) or YAML (human-friendly config)
-> - **Data lake and analytics** → Parquet (columnar, compressed, schema embedded)
+> - **Data lake and analytics** → Parquet (columnar, compressed, schema embedded). For loading Parquet into BigQuery, see [[data-loading-and-export]].
 > - **Kafka / streaming** → Avro (schema evolution, compact, widely supported)
 > - **gRPC / microservices** → Protobuf (fastest, smallest, strongly typed)
 > - **Internal Python pipelines** → MessagePack (drop-in JSON replacement, 2-5x faster)
@@ -112,6 +112,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 - See parquet files for detailed coverage
 - Best for: analytical queries, data lakes, pipelines that need fast column-selective reads
 - Used by BigQuery external tables, Spark, Hive, Presto, Snowflake, DuckDB
+- For reading and writing Parquet in Python, see [[10_py_serialization_formats]]; for C#, see [[10_cs_serialization_formats]]; for lower-level file I/O patterns, see [[09_py_fileio_serialization]]
 
 ### Pickle
 
@@ -127,7 +128,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 
 ## Compression Codec Comparison
 
-Compression is orthogonal to format — most formats support multiple codecs. Choose based on the dominant constraint.
+Compression is orthogonal to format — most formats support multiple codecs. Choose based on the dominant constraint. For a deeper treatment of [[compression]] algorithms (snappy, gzip, zstd, lz4) and their trade-offs beyond serialization, see the dedicated compression note.
 
 | Codec | Compress Speed | Decompress Speed | Ratio | Best For |
 |---|---|---|---|---|

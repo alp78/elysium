@@ -105,7 +105,7 @@ nc -zv -w 5 10.132.0.2 1433
 # If refused: SQL Server is not running, or listening on different port
 # If timeout: GCP firewall rule blocking port 1433
 
-# 4. Can we authenticate?
+# 4. Can we authenticate? (see [[sql-server-authentication]] for login types and troubleshooting)
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d data-pipeline -Q "SELECT 1" -l 10
 # -l 10 = login timeout 10 seconds
 # If "Login failed": wrong credentials
@@ -150,6 +150,8 @@ Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
     Select-Object LocalPort, OwningProcess,
     @{N='Process';E={(Get-Process -Id $_.OwningProcess).ProcessName}}
 ```
+
+For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [[troubleshooting-flowcharts]].
 
 ## Related
 - [[firewalls]] — when `nc` shows timeout (packet blocked, not refused)

@@ -54,6 +54,8 @@ gcloud auth activate-service-account --key-file=key.json
 # In production: prefer Workload Identity (no key files) over key files
 ```
 
+For creating and managing the service accounts referenced here, see [[service-accounts-and-iam]]. In GitHub Actions, [[github-actions-workflows|Workload Identity Federation]] eliminates key files entirely for CI/CD authentication.
+
 **View and manage credentials:**
 
 ```bash
@@ -74,7 +76,7 @@ gcloud auth revoke
 ## The ADC Credential Search Order
 
 > [!info] The ADC Search Order
-> When your Python code does `google.auth.default()`, it searches for credentials in this exact order:
+> When your Python code does `google.auth.default()` (covered in [[17_py_gcp]]), it searches for credentials in this exact order:
 > 1. `GOOGLE_APPLICATION_CREDENTIALS` environment variable (path to a JSON key file)
 > 2. Application Default Credentials from `gcloud auth application-default login`
 > 3. GCE metadata server (automatic on VMs and Cloud Run — no setup needed)
@@ -96,6 +98,8 @@ gcloud auth revoke
 - [[gcloud-configurations]] — Manage multiple project contexts
 - [[service-accounts-and-iam]] — Create and manage service accounts, IAM bindings and roles
 - [[gcp-projects-and-apis]] — Set the active project for authentication context
+
+For a comprehensive gcloud command reference, see [[gcloud-cheat-sheet]].
 
 ## References
 

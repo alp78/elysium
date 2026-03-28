@@ -69,6 +69,9 @@ tar tzf archive.tar.gz | head -20
 
 ## Compression Strategy Matrix
 
+> [!tip] Related pattern
+> For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [[serialization-formats]]. For writing Parquet with specific compression options in code, see [[10_py_serialization_formats]] (Python) and [[10_cs_serialization_formats]] (C#).
+
 > [!tip] Compression Strategy for Data Pipelines
 >
 > | Scenario | Algorithm | Level | Why |
@@ -105,6 +108,8 @@ $gz = [System.IO.Compression.GZipStream]::new($ms, [System.IO.Compression.Compre
 $gz.Write($input, 0, $input.Length); $gz.Close()
 [System.IO.File]::WriteAllBytes("data.csv.gz", $ms.ToArray())
 ```
+
+When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports -- see [[data-loading-and-export]] for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost -- see [[gcs-buckets-and-lifecycle]] for lifecycle policies that transition objects between storage classes.
 
 ## Related
 - [[file-manipulation]] — moving and copying the resulting archives

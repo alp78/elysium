@@ -659,6 +659,8 @@ result
 
 ## 3 — SQL Server
 
+The query patterns used here follow the same SQL fundamentals documented in [[sql-fundamentals]]. For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [[16_cs_database]].
+
 #### 3.1 Connect + basic query
 
 ```csharp

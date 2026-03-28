@@ -123,7 +123,7 @@ The webserver reads from the Metadata DB — it does **not** schedule tasks.
 Workers are processes (or pods) that **execute Task Instances**. What "worker" means depends on the Executor:
 - **LocalExecutor**: subprocesses on the Scheduler machine
 - **CeleryExecutor**: Celery worker processes on separate machines
-- **KubernetesExecutor**: ephemeral Kubernetes pods
+- **KubernetesExecutor**: ephemeral Kubernetes pods, each following its own [[container-lifecycle]]
 
 ### Metadata Database
 
@@ -471,7 +471,7 @@ wait_for_data = SqlSensor(
 
 A **Connection** stores credentials for external systems (databases, APIs, cloud services). Stored in the Metadata DB (encrypted) or externally (Secret Manager, env vars).
 
-**Setting a connection via environment variable (preferred for secrets):**
+**Setting a connection via environment variable (preferred for secrets -- see [[environment-variables]] for general env var patterns):**
 
 ```bash
 # Format: AIRFLOW_CONN_{CONN_ID} = URI or JSON
@@ -771,6 +771,9 @@ delete_worker_pods = True
 
 > [!info] Cloud Composer Uses LocalKubernetesExecutor
 > Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [[airflow-deployment]] for Cloud Composer specifics.
+
+> [!tip] Related pattern
+> Most local and self-hosted Airflow deployments use [[docker-compose]] to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [[airflow-deployment]] note walks through the full `docker-compose.yaml` setup.
 
 ---
 

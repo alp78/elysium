@@ -25,6 +25,9 @@ updated: 2026-03-23
 - **Airflow log stream** in Cloud Logging shows no new entries from `airflow.scheduler` logger after a timestamp
 - Downstream effects: BigQuery tables not updated, ESG score refresh stale, Pub/Sub events not triggering consumers
 
+> [!tip] Related pattern
+> If you are unfamiliar with how the scheduler, executor, and DAG parsing interact, review [[airflow-core-concepts]] before diving into diagnosis. Understanding the heartbeat mechanism will make the logs below much easier to interpret.
+
 > [!warning] Data freshness impact
 > A down scheduler stops all DAG scheduling. Pipelines feeding index constituent data and ESG factor calculations will silently fall behind. If the scheduler has been down more than 30 minutes, check what DAG runs were missed before declaring resolution — they will need manual backfill.
 
@@ -44,7 +47,7 @@ gcloud compute ssh airflow-vm --tunnel-through-iap --zone=europe-west1-b
 docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.CreatedAt}}\t{{.RunningFor}}"
 ```
 
-Look specifically for the `airflow-scheduler` row. Expected healthy state: `Up X hours`. Unhealthy states:
+Look specifically for the `airflow-scheduler` row. For general guidance on interpreting [[container-lifecycle|container states and restart policies]], check the container lifecycle reference. Expected healthy state: `Up X hours`. Unhealthy states:
 
 | Status | Meaning |
 |--------|---------|
@@ -111,6 +114,8 @@ Critical paths to check:
 If any mount is above 90%, disk fullness is likely causing the crash loop. See RC-4.
 
 ### Step 6 — Check the Docker daemon and host memory
+
+Check that the Docker daemon itself is healthy using [[managing-services|systemd service management]]:
 
 ```bash
 # Docker daemon health

@@ -55,7 +55,7 @@ Dense rank within each index, descending by score:
 
 **Example:** If three stocks have composite scores of 1.5, 1.2, 1.2, 0.8, they are ranked 1, 2, 2, 3 (dense rank — no gap at rank 3).
 
-**SQL implementation:**
+**SQL implementation** (executed in the [[gold-transforms]] layer):
 ```sql
 DENSE_RANK() OVER (
     PARTITION BY index_key, trade_date
@@ -72,7 +72,7 @@ $$w_i = \frac{\text{MarketCap}_i}{\sum_{j \in \text{index}} \text{MarketCap}_j}$
 Used for P/E, P/B, dividend yield, and other [[index-snapshot-metrics|index-level aggregates]].
 
 > [!tip] Cap-Weighting vs Equal-Weighting
-> Index-level metrics (P/E, volatility) are cap-weighted to reflect the index's actual composition. Individual stock scores (momentum, value, sentiment) are computed on an equal-weighted basis — each stock's z-score has equal influence regardless of market cap.
+> Index-level metrics (P/E, volatility) are cap-weighted to reflect the index's actual composition. Individual stock scores (momentum, value, sentiment) are computed on an equal-weighted basis — each stock's z-score has equal influence regardless of market cap. The [[data-quality-framework]] defines the quality gates that validate score outputs before they reach consumers.
 
 ## Sector-Level vs Index-Level Grouping
 

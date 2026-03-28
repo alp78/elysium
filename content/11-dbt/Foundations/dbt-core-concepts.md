@@ -19,7 +19,7 @@ related:
 
 ## What dbt Is (and Is Not)
 
-dbt is the **T** in ELT. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
+dbt is the **T** in [[etl-vs-elt|ELT]]. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
 
 | dbt Does | dbt Does Not |
 |----------|-------------|
@@ -105,7 +105,7 @@ JOIN {{ ref('int_constituent_weights') }} w
 GROUP BY w.index_code, r.price_date
 ```
 
-dbt knows to run staging first, then intermediate, then marts. You never specify execution order — ref() handles it.
+dbt knows to run staging first, then intermediate, then marts — mirroring the [[medallion-architecture]] progression from bronze to silver to gold. You never specify execution order — ref() handles it.
 
 > [!tip] Contrast with Airflow
 > In Airflow, you explicitly define `task_a >> task_b >> task_c`. In dbt, dependencies are implicit from ref(). Airflow orchestrates *when* dbt runs; dbt manages the *order within* a run.

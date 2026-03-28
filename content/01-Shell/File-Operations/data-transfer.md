@@ -237,7 +237,7 @@ gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ --zone=europe-
 
 ## gcloud compute scp — GCE-Native File Transfer
 
-`gcloud compute scp` wraps scp with automatic IAP tunneling, OS Login authentication, and zone resolution. It's the simplest way to move files to/from GCE VMs.
+`gcloud compute scp` wraps scp with automatic IAP tunneling, OS Login authentication, and zone resolution. It's the simplest way to move files to/from GCE VMs. For additional SSH and file transfer patterns on GCE, including OS Login and metadata SSH keys, see [[vm-ssh-and-file-transfer]].
 
 **Linux and PowerShell (identical commands):**
 
@@ -287,7 +287,7 @@ gcloud compute scp --ssh-key-file=~/.ssh/custom_key file.txt data-pipeline-sql:/
 
 ## gsutil and gcloud storage — Cloud Storage Transfers
 
-Google Cloud Storage (GCS) is the backbone for data lake storage, pipeline staging, and database backups. `gsutil` and `gcloud storage` are your tools for moving data in and out.
+Google Cloud Storage (GCS) is the backbone for data lake storage, pipeline staging, and database backups. `gsutil` and `gcloud storage` are your tools for moving data in and out. For the full range of GCS object operations including parallel composite uploads and signed URLs, see [[gcs-object-operations]].
 
 **Linux and PowerShell (identical commands):**
 
@@ -356,7 +356,7 @@ gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recurs
 
 ## bcp — SQL Server Bulk Copy
 
-`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to/from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements.
+`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to/from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [[bronze-layer-loading|bronze layer]] before transformation begins.
 
 **Linux:**
 
@@ -493,6 +493,8 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 | SQL query → CSV (PowerShell) | `Invoke-Sqlcmd` | `Invoke-Sqlcmd -Query "..." | Export-Csv` |
 | VM → VM (no local relay) | SSH + rsync | SSH into source VM, rsync directly to dest VM |
 | Database backup → GCS | `bcp` + `gsutil` | Export with bcp, then `gsutil cp backup.bak gs://bucket/` |
+
+Once data lands in GCS, you can load it directly into BigQuery with `bq load` -- see [[data-loading-and-export]] for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron -- see [[linux-scheduling]] for crontab patterns.
 
 ## Compression Trade-offs for Transfers
 

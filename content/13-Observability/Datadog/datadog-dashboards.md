@@ -87,7 +87,7 @@ Use **Notes & Links** widgets as section headers:
 | Group By | `resource_name` |
 | Title | DAG Task Duration |
 
-This breaks down each pipeline step by name and shows how long each took.
+This breaks down each pipeline step by name and shows how long each took. The steps that load into the [[gold-transforms|gold layer]] are typically the most resource-intensive, since they run aggregation logic and write final business-ready tables.
 
 #### Widget: Pipeline Peak CPU (Query Value)
 
@@ -264,7 +264,7 @@ This breaks down each pipeline step by name and shows how long each took.
 
 ## SQL Server DBA Dashboard
 
-A dedicated dashboard for SQL Server database administration — deadlock monitoring, blocking detection, buffer pool health, and connection tracking. Separate from Pipeline Watch.
+A dedicated dashboard for SQL Server database administration — deadlock monitoring, blocking detection, buffer pool health, and connection tracking. Separate from Pipeline Watch. The financial metrics displayed here (such as deadlock counts during index calculation windows) complement the business-level views in [[index-snapshot-metrics]].
 
 ### Create the Dashboard
 

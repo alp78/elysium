@@ -477,23 +477,21 @@ Console.WriteLine($"  {s2}: {b2}");
     === DELETE /trades/TRD_999 (not found) ===
       404 Not Found: Trade TRD_999 not found
 
-#### Python FastAPI vs C# ASP.NET Minimal API mapping
+#### ASP.NET Minimal API wiring (outside notebooks)
 
 ```csharp
-// How to wire these handlers in ASP.NET Minimal APIs (outside notebooks):
-//
-//   var builder = WebApplication.CreateBuilder(args);
-//   builder.Services.AddEndpointsApiExplorer();
-//   builder.Services.AddSwaggerGen();
-//   var app = builder.Build();
-//
-//   app.MapGet("/health",             () => Results.Ok(new { status = "healthy" }));
-//   app.MapGet("/positions",          (string? ticker) => GetPositions(ticker));
-//   app.MapGet("/positions/{ticker}", (string ticker) => GetPosition(ticker));
-//   app.MapPost("/trades",            (Trade trade) => PostTrade(trade));
-//   app.MapDelete("/trades/{id}",     (string id) => DeleteTrade(id));
-//
-//   app.Run();
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+var app = builder.Build();
+
+app.MapGet("/health",             () => Results.Ok(new { status = "healthy" }));
+app.MapGet("/positions",          (string? ticker) => GetPositions(ticker));
+app.MapGet("/positions/{ticker}", (string ticker) => GetPosition(ticker));
+app.MapPost("/trades",            (Trade trade) => PostTrade(trade));
+app.MapDelete("/trades/{id}",     (string id) => DeleteTrade(id));
+
+app.Run();
 ```
 
 ## 4. Data Validation — Records, Data Annotations, and FluentValidation
@@ -854,39 +852,25 @@ Console.WriteLine(@"
 
 ## 5. Summary
 
-#### Web and APIs cheat sheet
-
-```csharp
-// Summary — C# Web & APIs cheat sheet
-//
-// HTTP CLIENT:
-// var client = new HttpClient();
-// await client.GetAsync(url)                      GET request
-// await client.PostAsJsonAsync(url, obj)           POST with JSON body
-// await resp.Content.ReadFromJsonAsync<T>()        Deserialize response
-// resp.EnsureSuccessStatusCode()                   Throw on 4xx/5xx
-// client.DefaultRequestHeaders.Add(k, v)           Set headers
-//
-// ASP.NET MINIMAL APIS:
-// app.MapGet("/path", handler)                     Define GET endpoint
-// app.MapPost("/path", handler)                    Define POST endpoint
-// Results.Ok(data)                                 200 response
-// Results.NotFound(msg)                            404 response
-// Results.Created(url, data)                       201 response
-// Results.Conflict(msg)                            409 response
-//
-// REST PATTERNS:
-// Pagination           Loop with page/offset parameter
-// Retry + backoff      Catch HttpRequestException, delay, retry
-// Bulk POST            Batch records in single request
-// Rate limit           Check 429 + Retry-After header
-//
-// PYTHON EQUIVALENTS:
-// HttpClient           → requests / httpx
-// PostAsJsonAsync       → requests.post(url, json=...)
-// EnsureSuccessStatus   → resp.raise_for_status()
-// ASP.NET Minimal       → FastAPI
-// record                → Pydantic BaseModel
-// Results.NotFound()    → HTTPException(404)
-// IHttpClientFactory    → httpx.Client()
-```
+> [!abstract]- Quick Reference
+> **HttpClient**
+> | Pattern | Description |
+> |---|---|
+> | `new HttpClient()` | Create client |
+> | `await client.GetAsync(url)` | GET request |
+> | `await client.PostAsJsonAsync(url, obj)` | POST with JSON body |
+> | `await resp.Content.ReadFromJsonAsync<T>()` | Deserialize response |
+> | `resp.EnsureSuccessStatusCode()` | Throw on 4xx/5xx |
+>
+> **ASP.NET Minimal APIs**
+> | Pattern | Description |
+> |---|---|
+> | `app.MapGet("/path", handler)` | Define GET endpoint |
+> | `app.MapPost("/path", handler)` | Define POST endpoint |
+> | `Results.Ok(data)` | 200 response |
+> | `Results.NotFound(msg)` | 404 response |
+> | `Results.Created(url, data)` | 201 response |
+>
+> **REST Patterns:** pagination (page/offset), retry + backoff, bulk POST, rate limit (429 + Retry-After)
+>
+> **Python equivalents:** `HttpClient` → `requests`/`httpx` | `PostAsJsonAsync` → `requests.post(json=...)` | ASP.NET Minimal → FastAPI | `record` → Pydantic `BaseModel` | `Results.NotFound()` → `HTTPException(404)`

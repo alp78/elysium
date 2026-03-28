@@ -110,7 +110,7 @@ Kleppmann dedicates significant portions of "Designing Data-Intensive Applicatio
 This means:
 - **Loose coupling** between pipeline stages. Each stage should communicate through well-defined interfaces (files, APIs, message queues) rather than direct database connections or shared mutable state.
 - **Schema evolution** through the expand-and-contract pattern: add the new column, migrate consumers, then remove the old column. Never break existing consumers with a schema change.
-- **Idempotent pipelines** that can be safely re-run without duplicating data or corrupting state. See [[idempotent-pipeline-design]] for the full treatment.
+- **Idempotent pipelines** that can be safely re-run without duplicating data or corrupting state. [[idempotent-pipeline-design|Idempotency]] is so fundamental that it could be a golden rule on its own — see the dedicated note for the full treatment.
 - **Versioned interfaces** so that consumers can migrate at their own pace rather than being forced to update in lockstep.
 
 ### Expand-and-Contract in Practice
@@ -198,7 +198,7 @@ This is the rule that, when violated, causes the most regret. Not the most immed
 
 ### The Principle
 
-The bronze layer in a [[medallion-architecture|medallion architecture]] exists for exactly one reason: to preserve raw data exactly as received from the source system. No transformations. No filtering. No deduplication. No "helpful" type conversions. The data lands in bronze looking exactly the way it looked when it left the source.
+The bronze layer in a [[medallion-architecture|medallion architecture]] exists for exactly one reason: to preserve raw data exactly as received from the source system. The [[medallion-architecture]] is the standard architectural pattern that embodies this rule across all three layers. No transformations. No filtering. No deduplication. No "helpful" type conversions. The data lands in bronze looking exactly the way it looked when it left the source.
 
 Why? Because you can always re-derive silver and gold from bronze. You can apply new transformations, fix bugs in old transformations, add new columns, change aggregation logic — all from the same raw data. But you can never re-derive bronze from gold. The transformation is lossy by definition. Information is destroyed at every layer of abstraction.
 
@@ -467,7 +467,7 @@ If you cannot see it, you cannot fix it. If you cannot measure it, you cannot im
 2. **When did it start?** (Metrics)
 3. **Where did time go?** (Traces)
 
-These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [[five-pillars-of-data-engineering|Observability (Pillar 2)]].
+These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [[five-pillars-of-data-engineering|Observability (Pillar 2)]]. [[dataops-principles-and-practices|DataOps]] codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
 
 ### The Minimum Observability Bar
 

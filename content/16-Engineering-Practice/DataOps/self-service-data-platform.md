@@ -169,7 +169,7 @@ A data catalog is the discovery layer that makes self-service possible. Without 
 
 - **Search:** Find tables, columns, and datasets by keyword or business term
 - **Metadata:** Description, owner, data type, row count, last updated
-- **Lineage:** Where does this data come from? What does it feed downstream?
+- **Lineage:** Where does this data come from? What does it feed downstream? Tools like [[gcp-data-lineage-and-catalog]] provide automated cross-system lineage on GCP.
 - **Quality status:** Is this dataset passing its quality checks?
 - **SLA and freshness:** When should this data be updated? Is it currently fresh?
 - **Access request:** How do I get access if I don't have it?
@@ -186,7 +186,7 @@ A data catalog is the discovery layer that makes self-service possible. Without 
 | **Select Star** | Commercial SaaS | Automated documentation from query history, easy setup | Less configurable | Smaller teams wanting quick time-to-value |
 
 > [!tip] Start with dbt Docs If You Use dbt
-> If your transformation layer is dbt, `dbt docs generate` gives you a free, code-generated catalog with lineage, descriptions, and test status. It won't have everything a full catalog provides, but it is infinitely better than nothing and zero additional tooling cost.
+> If your transformation layer is dbt, `dbt docs generate` gives you a free, code-generated catalog with lineage, descriptions, and test status. It won't have everything a full catalog provides, but it is infinitely better than nothing and zero additional tooling cost. See [[dbt-documentation-and-lineage]] for how to maximize the value of dbt's built-in catalog features.
 
 ---
 
@@ -428,7 +428,7 @@ terms:
 
 ### Data Contract Enforcement
 
-Data contracts should be:
+[[data-contracts|Data contracts]] should be:
 - **Versioned in Git** alongside the transformation code
 - **Validated in CI** — a PR that breaks a contract schema fails CI
 - **Checked at runtime** — the pipeline validates the contract before serving data

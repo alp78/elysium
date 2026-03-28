@@ -14,7 +14,7 @@ related:
 
 # dbt: SQL Server Adapter
 
-The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP.
+The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [[server-configuration]].
 
 ---
 
@@ -254,7 +254,7 @@ SELECT value FROM STRING_SPLIT(tag_list, ',')
 
 ## Post-Hook Indexes
 
-SQL Server does not auto-create indexes on dbt-managed tables. For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
+SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [[index-types-and-strategy]]. For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
 
 ```sql
 -- models/mart/mart_esg_scores.sql

@@ -22,7 +22,7 @@ This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestra
 
 ## Architecture Context
 
-Two GCE instances share the same subnet (`10.0.0.0/24`) but differ significantly in their OS, disk, public IP assignment, and purpose:
+Two GCE instances share the same subnet (`10.0.0.0/24`) but differ significantly in their OS, disk, public IP assignment, and purpose. For the full [[vm-lifecycle]] of these instances -- starting, stopping, resizing, and live migration -- see the GCP Compute Engine notes.
 
 | Aspect | Airflow VM | SQL VM |
 |--------|-----------|--------|
@@ -184,7 +184,7 @@ resource "google_compute_instance" "sql" {
 }
 ```
 
-The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker).
+The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker). For the post-provisioning database configuration (memory limits, TempDB, backup schedules), see [[server-configuration]].
 
 | Field | Value | Meaning |
 |-------|-------|---------|

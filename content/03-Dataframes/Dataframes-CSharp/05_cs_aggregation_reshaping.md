@@ -611,6 +611,8 @@ groupHeadD.Rows[groupHeadD.RowKeys.Take(9)]
 ---
 ## 2 — Window Functions
 
+For a cross-language comparison of window functions, pivots, and ranking across SQL, Python, and C#, see [[sql-python-csharp-transforms]]. The SQL Server gold layer in [[gold-transforms]] applies the same windowed aggregations to produce final analytical tables.
+
 #### Polars.NET — Mean over group (window function)
 
 ```csharp

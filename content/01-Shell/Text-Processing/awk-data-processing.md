@@ -16,7 +16,7 @@ status: complete
 
 # awk Data Processing Reference
 
-awk (also gawk — GNU awk, mawk — faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script.
+awk (also gawk -- GNU awk, mawk -- faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script. For a side-by-side comparison of the same operations in SQL, Python, and C#, see [[sql-python-csharp-transforms]].
 
 > [!info] Which awk are you running?
 > On macOS the default `awk` is BSD awk. On Linux it is usually gawk. On Windows you use PowerShell natively or install gawk via Chocolatey (`choco install gawk`) or Git Bash. All examples below work in gawk. BSD awk differences are noted inline.
@@ -1167,6 +1167,8 @@ awk -F',' '!seen[$2]++ {print $2}' file
 > For pure text processing on very large files (multi-GB logs), `mawk` is often 2–5x faster than `gawk` because it has a leaner runtime. Use `mawk` for speed-critical pipelines if extended gawk features (multi-dim arrays, PROCINFO, gensub) are not needed.
 
 ---
+
+The filtering and aggregation patterns here (pattern-action rules, group-by with associative arrays) have direct DataFrame equivalents -- see [[02_py_explore_select_filter]] for the Pandas approach to the same column filtering and selection workflows.
 
 ## Related Notes
 

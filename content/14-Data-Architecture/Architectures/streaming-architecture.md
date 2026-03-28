@@ -27,7 +27,7 @@ status: complete
 
 Streaming architecture is any data system design where data is processed continuously as it arrives — events are consumed and acted upon within milliseconds to seconds, rather than being collected and processed in large batches hours later. It encompasses the message brokers that carry events, the processing engines that transform them, the patterns that govern their semantics (Lambda, Kappa, CQRS, event sourcing), and the windowing strategies that handle the inherent challenges of time-ordered distributed data.
 
-The canonical GCP streaming stack — [[pubsub-messaging|Pub/Sub]] → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases.
+The canonical GCP streaming stack — [[pubsub-messaging|Pub/Sub]] → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [[24_py_streaming_realtime]] and [[24_cs_streaming_realtime]] respectively.
 
 ---
 
@@ -435,7 +435,7 @@ Benefits: complete audit trail, point-in-time state reconstruction, natural CDC 
 
 ### CQRS (Command Query Responsibility Segregation)
 
-CQRS separates the write model (commands that change state) from the read model (queries that read state). In a streaming context:
+CQRS separates the write model (commands that change state) from the read model (queries that read state). [[real-time-nosql-pipelines|Firestore]] is a natural fit for the read-side materialized view in CQRS, providing real-time sync to client applications. In a streaming context:
 
 ```
 Write Side (Command)           Event Stream          Read Side (Query)

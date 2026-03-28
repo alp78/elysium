@@ -35,47 +35,17 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_compl
 
 ## Async and Await
 
-#### Async and await basics
+`async def` declares a coroutine — a function that can pause and resume. `await` pauses until the awaited task completes, releasing the event loop to run other coroutines. `asyncio.run()` is the entry point that starts the event loop (in Jupyter, the loop is already running — use `await` directly at top level).
 
-```python
-# Async/await — cooperative concurrency with asyncio
-#
-# Technique: async def declares a coroutine. await pauses until the awaited
-#   coroutine completes, releasing the event loop to run other tasks.
-#   asyncio.run() starts the event loop (or await in notebooks).
-#
-# Benefits:
-#   - Single-threaded concurrency — no race conditions by default
-#   - I/O-bound speedup — await during network/disk waits
-#   - Clean syntax — reads like synchronous code
-#
-# Anti-patterns:
-#   - Blocking calls (time.sleep, requests.get) in async — blocks the event loop
-#   - asyncio.run() inside a running event loop — RuntimeError in notebooks
-#   - Missing await — coroutine is created but never executed
-#
-# When to use:
-#   - I/O-bound: HTTP calls, DB queries, file I/O, websockets
-#
-# When NOT to use:
-#   - CPU-bound work — use ProcessPoolExecutor (GIL blocks threads)
+The event loop is a single-threaded scheduler that multiplexes coroutines. While one awaits I/O, the loop runs another. This is **not parallelism** — it's concurrency on one thread. Great for I/O-bound work (HTTP, DB, file); useless for CPU-bound work.
 
-# Async & Await — cooperative concurrency with asyncio
-#
-# KEY CONCEPTS:
-# - async def: declares a coroutine (a function that can pause and resume).
-# - await: pauses the coroutine until the awaited task completes.
-# - asyncio.run(): the entry point — starts the event loop and runs a coroutine.
-#   (In Jupyter, the loop is already running — use "await" directly at top level.)
-# - Event loop: a single-threaded scheduler that multiplexes coroutines.
-#   While one coroutine awaits I/O, the loop runs another. No threads needed.
-# - This is NOT parallelism — it's concurrency on ONE thread.
-#   Great for I/O-bound work (HTTP, DB, file). Useless for CPU-bound work.
-#
-# WHY async matters for Data Engineering:
-# - API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them.
-# - A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
-```
+**Why async matters for data engineering:** API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them. A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
+
+> [!warning] Async pitfalls
+> - **Blocking calls** (`time.sleep`, `requests.get`) inside async code block the entire event loop — use `asyncio.sleep` and `aiohttp` instead
+> - **`asyncio.run()` inside a running loop** raises `RuntimeError` in notebooks
+> - **Missing `await`** — the coroutine is created but never executed
+> - For **CPU-bound work**, use `ProcessPoolExecutor` instead (the GIL blocks threads)
 
 #### Basic coroutine
 
@@ -212,12 +182,6 @@ except* RuntimeError as eg:
       Caught 1 error(s):
         - Fetch failed: users
       t3 (products) completed: {'table': 'products', 'rows': 100}
-
-#### Async patterns for data engineering
-
-```python
-# Async patterns for data engineering — semaphore, timeout, retry, queue
-```
 
 #### Semaphore — rate limiting
 
@@ -495,47 +459,23 @@ await asyncio.gather(*worker_tasks)
 
 ## Tasks and Parallelism
 
-<h4><code style="font-size:0.75em">ThreadPoolExecutor</code></h4>
+> [!tip] Related pattern
+> The concurrency patterns below (task fan-out, semaphore-bounded parallelism) parallel how [[airflow-dag-patterns]] manages DAG task concurrency — both control how many units of work execute simultaneously, just at different abstraction levels.
 
-```python
-# concurrent.futures — thread and process pools for parallelism
-#
-# Technique: ThreadPoolExecutor for I/O-bound parallelism (HTTP, file, DB).
-#   ProcessPoolExecutor for CPU-bound parallelism (bypasses GIL). Both
-#   provide map() for bulk operations and submit() for individual tasks.
-#
-# Benefits:
-#   - ThreadPoolExecutor: concurrent I/O without async — works with blocking libraries
-#   - ProcessPoolExecutor: true multi-core — each process has its own GIL
-#   - Uniform API — swap Thread for Process pool with one line change
-#
-# Anti-patterns:
-#   - ThreadPoolExecutor for CPU-bound — GIL limits to ~1 core
-#   - ProcessPoolExecutor for I/O — overhead of process creation, pickling
-#   - Not setting max_workers — defaults may spawn too many threads
-#
-# When to use:
-#   - Threads for I/O-bound; Processes for CPU-bound
-#
-# When NOT to use:
-#   - Simple async I/O — asyncio is lighter than thread pools
+`concurrent.futures` provides two pool executors with a uniform API — swap one for the other with a single line change:
 
-# concurrent.futures — thread and process pools for parallelism
-#
-# KEY CONCEPTS:
-# - ThreadPoolExecutor: pool of threads. Good for I/O-bound work (HTTP, file, DB).
-#   Threads share memory but are limited by the GIL (Global Interpreter Lock) for CPU work.
-# - ProcessPoolExecutor: pool of processes. Good for CPU-bound work (parsing, hashing, ML).
-#   Each process has its own GIL — true parallelism on multiple cores.
-# - executor.submit(fn, *args): schedule a single task, returns a Future.
-# - executor.map(fn, iterable): schedule many tasks, returns results in order.
-# - Future.result(): blocks until the task completes and returns the value (or raises).
-#
-# Python's GIL:
-# - The GIL means only one thread executes Python bytecode at a time.
-# - Threads still help for I/O: while one thread waits for a network response, another runs.
-# - For CPU-bound work, use ProcessPoolExecutor (separate processes, separate GILs).
-```
+- **`ThreadPoolExecutor`** — pool of threads for I/O-bound parallelism (HTTP, file, DB). Threads share memory but are limited by the GIL for CPU work.
+- **`ProcessPoolExecutor`** — pool of processes for CPU-bound parallelism (parsing, hashing, ML). Each process has its own GIL — true multi-core parallelism.
+- `executor.submit(fn, *args)` schedules a single task (returns a `Future`). `executor.map(fn, iterable)` schedules many tasks (returns results in order). `Future.result()` blocks until complete.
+
+> [!info] Python's GIL
+> The Global Interpreter Lock means only one thread executes Python bytecode at a time. Threads still help for I/O (while one waits for a network response, another runs), but for CPU-bound work you need `ProcessPoolExecutor` (separate processes, separate GILs).
+
+> [!warning] Concurrency pitfalls
+> - `ThreadPoolExecutor` for CPU-bound work — GIL limits to ~1 core
+> - `ProcessPoolExecutor` for I/O — unnecessary overhead from process creation and pickling
+> - Not setting `max_workers` — defaults may spawn too many threads
+> - For simple async I/O, `asyncio` is lighter than thread pools
 
 #### ThreadPoolExecutor — I/O-bound work
 
@@ -751,44 +691,15 @@ for expr, result in results:
 
 ## Threading and Concurrency
 
-#### Threading overview — low-level thread management
+`threading.Thread(target=func, args=())` creates an OS thread. `.start()` begins execution, `.join()` waits for completion. Threads share memory — use `Lock` for shared mutable state. `threading.Event` signals between threads (one sets, others wait). Daemon threads die when the main thread exits.
 
-```python
-# threading module — OS-level threads for concurrent execution
-#
-# Technique: threading.Thread(target=func, args=()) creates a thread.
-#   .start() begins execution. .join() waits for completion. Threads
-#   share memory — use Lock for shared mutable state.
-#
-# Benefits:
-#   - True concurrency for I/O-bound work — GIL is released during I/O
-#   - Shared memory — threads access same variables (with synchronization)
-#   - Lower overhead than processes — no pickling, no process creation
-#
-# Anti-patterns:
-#   - Threads for CPU-bound — GIL limits to ~1 core
-#   - Shared mutable state without locks — race conditions
-#   - Not joining threads — main may exit before workers finish
-#
-# When to use:
-#   - I/O-bound parallelism when asyncio isn't an option
-#
-# When NOT to use:
-#   - CPU-bound — use multiprocessing; async I/O — use asyncio
+Threads provide true concurrency for I/O-bound work (the GIL is released during I/O) with lower overhead than processes (no pickling, no process creation). Use threads when asyncio isn't an option.
 
-# threading module — low-level thread management
-#
-# KEY CONCEPTS:
-# - threading.Thread: create a new OS thread.
-# - thread.start(): begin execution. thread.join(): wait for it to finish.
-# - threading.Lock: mutex — only one thread can hold it at a time.
-#   Prevents race conditions when multiple threads read/write shared data.
-# - threading.Event: signal between threads (one sets it, others wait for it).
-# - daemon threads: background threads that die when the main thread exits.
-#
-# WARNING: the GIL means threads don't give you CPU parallelism in Python.
-# Use threads for I/O overlapping, not for computation.
-```
+> [!warning] Threading pitfalls
+> - **Threads for CPU-bound work** — GIL limits to ~1 core. Use `multiprocessing` instead.
+> - **Shared mutable state without locks** — race conditions
+> - **Not joining threads** — main thread may exit before workers finish
+> - For async I/O, prefer `asyncio` (lighter than thread pools)
 
 #### Basic threading
 
@@ -829,10 +740,6 @@ print(f"  Active threads: {threading.active_count()}")
       Active threads: 7
 
 #### Locks
-
-```python
-# Locks — preventing race conditions on shared mutable state
-```
 
 #### Race condition demo (WITHOUT lock)
 
@@ -889,17 +796,7 @@ print(f"  Got:      {counter_safe:,}  (correct — lock prevents race)")
       Expected: 400,000
       Got:      400,000  (correct — lock prevents race)
 
-#### Note on performance
-
-```python
-# Lock performance tradeoff — correctness vs speed
-```
-
 #### Thread-safe data structures and patterns
-
-```python
-# Thread-safe data structures — queue.Queue for producer-consumer
-```
 
 #### Thread-safe Queue — producer-consumer
 
@@ -997,7 +894,3 @@ print("  Both threads done")
       Both threads done
 
 #### Summary
-
-```python
-# Summary — choosing the right concurrency tool in Python
-```

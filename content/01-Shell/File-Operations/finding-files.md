@@ -14,7 +14,7 @@ status: complete
 
 # Finding Files — Surgical Searching at Scale
 
-When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale.
+When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale. While `find` locates files by metadata, [[grep-and-pattern-matching]] searches inside those files for content -- the two tools complement each other in every investigation.
 
 ## Linux — find, fd, locate
 
@@ -49,7 +49,7 @@ find /data/ -type f -size +100M
 **Find and execute — delete old logs:**
 
 ```bash
-# Find and execute (delete old logs)
+# Find and execute (delete old logs — schedule this via cron, see [[linux-scheduling]])
 find /var/log/pipeline/ -name "*.log" -mtime +30 -exec rm {} \;
 # -exec rm {} \; = run rm on each found file
 # {} = placeholder for the found filename
@@ -74,7 +74,7 @@ find /data/ -type f -daystart -mtime 0
 # -daystart = measure from start of today, not 24 hours ago
 # -mtime 0 = modified today
 
-# Find large files consuming disk space
+# Find large files consuming disk space (key step in the [[sql-server-disk-full]] runbook)
 find / -type f -size +1G 2>/dev/null | head -20
 # 2>/dev/null = suppress permission errors from system directories
 ```

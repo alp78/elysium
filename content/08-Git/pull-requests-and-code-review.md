@@ -107,6 +107,8 @@ Go to your repository **Settings → General → Pull Requests** and enable:
 
 **Option C: Branch protection rule (strictest)**
 
+Branch protection rules work hand-in-hand with [[github-actions-ci-cd]] -- CI checks run on every PR push, and the merge button stays greyed out until they pass. Code review itself is also a powerful [[leadership-and-collaboration|teaching and collaboration tool]], especially for onboarding new team members.
+
 Go to **Settings → Branches → Branch protection rules → Add rule** for `main`:
 
 - Enable **"Require branches to be up to date before merging"**

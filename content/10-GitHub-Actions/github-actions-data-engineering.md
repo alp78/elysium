@@ -591,6 +591,8 @@ jobs:
 
 ## dbt CI
 
+The workflows below implement the [[dbt-ci-cd|dbt CI/CD patterns]] specific to BigQuery, running `dbt build` against an ephemeral CI schema and cleaning up afterward.
+
 ### dbt Build Against Dev Schema
 
 ```yaml
@@ -850,6 +852,8 @@ sys.exit(len(failures))
 ---
 
 ## Airflow DAG Validation
+
+Validating [[airflow-dag-patterns|DAG structure]] in CI catches import errors and dependency cycles before they reach the scheduler. The workflow below installs Airflow with version constraints, imports every DAG file, and runs structural assertions.
 
 ```yaml
 # .github/workflows/dag-validation.yml

@@ -313,6 +313,8 @@ class IngestResult
 
 ## Schema Setup
 
+The SQL Server DDL below follows the same [[bronze-layer-loading]] patterns used in the medallion architecture. BigQuery schema and load configuration align with [[data-loading-and-export]].
+
 #### Create staging table in SQL Server
 
 ```csharp

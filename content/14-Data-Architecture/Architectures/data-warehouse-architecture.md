@@ -75,7 +75,7 @@ The grain determines what goes in the fact table (the numeric measures at that g
 
 ### Star Schema
 
-The canonical Kimball structure: one central **fact table** surrounded by **dimension tables** joined via surrogate keys. It looks like a star when drawn.
+The canonical Kimball structure: one central **fact table** surrounded by **dimension tables** joined via surrogate keys. It looks like a star when drawn. See [[dimensional-modeling]] for the full Kimball four-step design process with complete DDL examples.
 
 ```
           ┌──────────────┐
@@ -650,7 +650,7 @@ Cloud warehouses do not require traditional capacity planning, but understanding
 | **Streaming inserts** | Rows inserted via streaming API | Use batch loads where latency allows |
 | **Slot reservations** | Fixed monthly commitment | Use when predictable high volume |
 
-**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [[querying-and-cost-optimization]] for mechanics.
+**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [[querying-and-cost-optimization]] for mechanics. For SQL Server warehouse tables, [[partitioning-strategies]] covers partition functions, schemes, and sliding window maintenance.
 
 ### Snowflake Cost Model
 
@@ -662,6 +662,8 @@ Cloud warehouses do not require traditional capacity planning, but understanding
 | **Data transfer** | Cross-cloud egress | Avoid cross-cloud queries |
 
 ---
+
+For guidance on building the metadata and context layers that make warehouse data self-describing and auditable, see [[context-and-metadata-architecture]].
 
 ## Warehouse Architecture Checklist
 

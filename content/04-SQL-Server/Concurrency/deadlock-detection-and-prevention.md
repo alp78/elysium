@@ -28,7 +28,7 @@ Session B: holds EXCLUSIVE lock on Table2, waiting for lock on Table1
 → Neither can continue → deadlock
 ```
 
-The surviving session proceeds normally — it is not notified that a deadlock occurred. The victim receives:
+The surviving session proceeds normally — it is not notified that a deadlock occurred. The victim receives error 1205, which must be handled with retry logic in application code. For Python retry patterns around this error, see [[08_py_errorhandling]]; for C# `SqlException` retry wrappers, see [[08_cs_errorhandling]].
 
 ```
 Msg 1205, Level 13, State 51
@@ -146,6 +146,9 @@ ORDER BY deadlock_time DESC;
 | **Use NOLOCK for reports** | Dashboard reads don't take locks at all (accepts dirty reads) | **Medium** — only appropriate for non-critical reads |
 | **Add covering indexes** | Queries lock fewer pages when they can use an index instead of scanning the table | **Medium** — reduces lock surface area |
 | **Retry on error 1205** | Catch the deadlock error in application code and retry the transaction | **Safety net** — doesn't prevent, but handles gracefully |
+
+> [!tip] Related pattern: Airflow task retries
+> When deadlocks occur during orchestrated pipeline runs, [[airflow-troubleshooting]] covers configuring Airflow task-level retries with exponential back-off for transient database errors like 1205.
 
 > [!tip] The Single Most Effective Prevention
 > Enable [[server-configuration|Read Committed Snapshot Isolation (RCSI)]]. With RCSI, the dashboard (reader) never competes with the pipeline (writer) for locks:

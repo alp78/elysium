@@ -387,7 +387,7 @@ assert_schema_pl(
 
 ## 3. Data Validation Rules
 
-Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency.
+Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [[data-quality-framework]], and dbt implements the same patterns declaratively via [[dbt-testing-framework]].
 
 ### Polars
 

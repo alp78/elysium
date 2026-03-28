@@ -15,7 +15,7 @@ updated: 2026-03-22
 status: complete
 ---
 
-# BigQuery for Data Engineering - Advanced Patterns — Advanced Patterns
+# BigQuery for Data Engineering - Advanced Patterns
 
 Advanced SQL techniques using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb
@@ -52,6 +52,8 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 
 ## 1. Advanced Window Functions
+
+The window functions in this section appear throughout production pipelines. The [[gold-transforms]] layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
 
 ### 1a. ROW_NUMBER for Deduplication
 
@@ -1495,6 +1497,9 @@ LIMIT 15
 
 
 ## 5. MERGE (Upsert)
+
+> [!tip] Related pattern
+> For cross-language equivalents of MERGE and window functions, see [[sql-python-csharp-transforms]] which compares how the same logic is expressed in SQL, Python, and C#.
 
 ### 5a. MERGE Syntax
 

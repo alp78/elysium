@@ -311,74 +311,23 @@ Use case             Simple exchange, legacy      Data lakes, analytics, BigQuer
 
 ## Enterprise Message Serialization
 
-#### Avro and Protobuf overview
+Binary formats provide schema enforcement, cross-language support, and compact serialization (3–10x smaller than JSON).
 
-```python
-# Enterprise serialization overview — Avro and Protobuf vs JSON/pickle
-#
-# Technique: Compares binary formats (Avro, Protobuf) with text (JSON)
-#   and Python-native (pickle). Binary formats provide schema enforcement,
-#   cross-language support, and compact serialization.
-#
-# Benefits:
-#   - Schema enforcement — catches type mismatches at serialization time
-#   - Cross-language — same schema generates code for any language
-#   - Compact — 3-10x smaller than JSON for the same data
-#
-# Anti-patterns:
-#   - JSON for high-throughput pipelines — binary formats are faster
-#   - pickle for cross-language data — Python-only format
-#
-# When to use:
-#   - Understanding when to upgrade from JSON to binary formats
-#
-# When NOT to use:
-#   - N/A — this is a conceptual overview
+**Apache Avro** — binary format with embedded schema (self-describing). Schema evolution lets you add/remove fields without breaking consumers. Standard for Kafka messages in data engineering. Python library: `fastavro`. ~50–70% smaller than JSON.
 
-# Enterprise serialization — cross-language binary formats with schema evolution
-#
-# WHY NOT JSON/PICKLE:
-#   - JSON: text-based, no schema enforcement, slow to parse at scale
-#   - pickle: Python-only, insecure (arbitrary code execution), no schema
-#
-# PRODUCTION ALTERNATIVES:
-#
-# Apache Avro:
-#   - Binary format with embedded schema (self-describing)
-#   - Schema evolution: add/remove fields without breaking consumers
-#   - Standard for Kafka messages in data engineering
-#   - Python: fastavro library
-#   - Compact: ~50-70% smaller than JSON for structured data
-#
-# Protocol Buffers (Protobuf):
-#   - Binary format with separate .proto schema files
-#   - Code generation: protoc compiles .proto into Python/Java/Go/C# classes
-#   - Standard for gRPC microservices
-#   - Python: protobuf library (google.protobuf)
-#   - Compact: ~60-80% smaller than JSON
-#
-# WHEN TO USE WHAT:
-#   JSON:     human-readable APIs, config files, small payloads
-#   Avro:     Kafka events, data lake storage, schema registry
-#   Protobuf: gRPC services, high-performance IPC, mobile APIs
-#   pickle:   NEVER in production (insecure, Python-only)
+**Protocol Buffers (Protobuf)** — binary format with separate `.proto` schema files. `protoc` compiles schemas into Python/Java/Go/C# classes. Standard for gRPC microservices. ~60–80% smaller than JSON.
 
-print("Format      Size    Speed     Schema    Cross-lang  Use case")
-print("─" * 70)
-print("JSON        Large   Slow      No        Yes         APIs, config")
-print("Avro        Small   Fast      Yes       Yes         Kafka, data lakes")
-print("Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile")
-print("pickle      Medium  Fast      No        No          NEVER in prod")
-print("struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols")
-```
+> [!warning] Why not JSON or pickle at scale?
+> - **JSON:** text-based, no schema enforcement, slow to parse at scale
+> - **pickle:** Python-only, insecure (arbitrary code execution), no schema — never use in production
 
-    Format      Size    Speed     Schema    Cross-lang  Use case
-    ──────────────────────────────────────────────────────────────────────
-    JSON        Large   Slow      No        Yes         APIs, config
-    Avro        Small   Fast      Yes       Yes         Kafka, data lakes
-    Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile
-    pickle      Medium  Fast      No        No          NEVER in prod
-    struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols
+| Format | Size | Speed | Schema | Cross-lang | Use case |
+|---|---|---|---|---|---|
+| JSON | Large | Slow | No | Yes | APIs, config |
+| Avro | Small | Fast | Yes | Yes | Kafka, data lakes |
+| Protobuf | Small | Fastest | Yes | Yes | gRPC, mobile |
+| pickle | Medium | Fast | No | No | Never in prod |
+| struct | Tiny | Fastest | Manual | Manual | IoT, binary protocols |
 
 #### Avro with fastavro
 
@@ -635,6 +584,8 @@ print("""
       # New code reads it if present, uses default ("") if absent
 
 ## Format Performance Benchmark
+
+For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [[serialization-formats]]. The benchmarks below focus on Python-specific library performance, while [[data-loading-and-export]] covers how format choice affects BigQuery load throughput.
 
 #### Generate test data
 

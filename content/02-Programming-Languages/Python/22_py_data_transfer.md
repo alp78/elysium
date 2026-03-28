@@ -177,7 +177,9 @@ for name, files in [("SQL Insert", sql_insert_files), ("BigQuery", bq_files)]:
         small    small_bq_insert.csv            5,281 rows
         large    large_bq_insert.csv            65,100 rows
 
-## Uplod files from Local to GCS
+## Upload files from Local to GCS
+
+For the CLI transfer tools (`gsutil cp`, `gcloud storage cp`, `rsync`, `bcp`) that these Python methods wrap or replace, see [[data-transfer]]. The GCS operations benchmarked below have direct CLI equivalents documented in [[gcs-object-operations]].
 
 ```python
 # Benchmark helper — persists results to JSON, keyed by (method, tier)

@@ -14,7 +14,7 @@ status: complete
 
 # Troubleshooting Flowcharts
 
-Four decision trees for the most common SQL Server problems: slowness, pipeline failures, indexing decisions, and disk space emergencies. Start with the relevant flowchart, then follow references to deeper notes for each resolution path.
+Four decision trees for the most common SQL Server problems: slowness, pipeline failures, indexing decisions, and disk space emergencies. Start with the relevant flowchart, then follow references to deeper notes for each resolution path. To practice applying these flowcharts to realistic scenarios, work through [[sql-server-problems]].
 
 ---
 

@@ -17,7 +17,7 @@ updated: 2026-03-23
 
 - All input data must be **traceable to its source** (vendor file, API call, manual entry)
 - Input data must be **verifiable and auditable** — keep the raw files
-- Procedures for dealing with **errors in input data** must be documented
+- Procedures for dealing with **errors in input data** must be documented — the [[compliance-and-auditability]] framework provides the audit trail implementation that satisfies this requirement
 - Internal review at least **annually**
 
 **What this means for the pipeline:**
@@ -56,8 +56,8 @@ updated: 2026-03-23
 
 ### Restatement and Cessation (Article 13-14)
 
-- If a published benchmark value is materially incorrect: **restate and notify**
-- Document the error, correction, and notification in the audit trail
+- If a published benchmark value is materially incorrect: **restate and notify** — this is a formal Article 13 event requiring a documented correction process
+- Document the error, correction, and notification in the audit trail; [[audit-logging]] in SQL Server provides the evidence chain
 - See [[data-restatement-procedure]] for the operational runbook
 - If cessation is planned: 6-month notice to users
 

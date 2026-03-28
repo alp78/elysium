@@ -433,6 +433,9 @@ ORDER BY [rank]
 
 ## 2. Stored Procedures
 
+> [!tip] Related pattern
+> The [[dbt-sqlserver-adapter]] generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
+
 ### 2a. Basic SP with Parameters
 
 A stored procedure is precompiled SQL that lives in the database.
@@ -785,6 +788,8 @@ ORDER BY i.type_desc
 4. **Filtered indexes** for hot subsets: <small>`WHERE is_current = 1`</small> on dimension tables
 
 ## 5. Slowly Changing Dimensions (SCD)
+
+The MERGE patterns used for SCD Type 2 below are a key building block for [[idempotent-pipeline-design]], where every load can be safely re-run without duplicating or corrupting data.
 
 ### 5a. SCD Type 1 — Overwrite
 

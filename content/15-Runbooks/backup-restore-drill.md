@@ -20,8 +20,8 @@ cadence: quarterly
 ## Purpose
 
 Validate that:
-1. SQL Server backups stored in GCS are intact and restorable
-2. The restore procedure is understood and documented
+1. SQL Server backups stored in GCS are intact and restorable — the drill exercises every level of the [[backup-types-and-strategy]] (FULL, DIFF, LOG)
+2. The [[restore-and-recovery]] procedure is understood and documented
 3. Recovery Time Objective (RTO < 1 hour) can be met
 4. Business-critical queries return correct results on a restored database
 
@@ -49,6 +49,8 @@ This drill must be run quarterly. Results must be recorded in the drill log and 
 Record the wall-clock time at the start of each numbered step. RTO is measured from Step 1 to the end of Step 6.
 
 ### Step 1 — Identify the latest available backup
+
+Backup files are stored in GCS with lifecycle policies managed through [[gcs-buckets-and-lifecycle|bucket lifecycle configuration]]. Confirm the target bucket has not aged out recent backups before proceeding.
 
 ```bash
 # List the most recent backup files in the GCS backup bucket

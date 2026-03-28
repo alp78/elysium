@@ -148,7 +148,7 @@ Use when: rows can be corrected/restated and you want clean replacement without 
 
 #### merge (default for most adapters)
 
-Issues a SQL `MERGE` statement matching on `unique_key`. Rows that match are updated; rows that don't match are inserted.
+Issues a SQL [[merge-and-upsert|MERGE]] statement matching on `unique_key`. Rows that match are updated; rows that don't match are inserted.
 
 ```sql
 {{ config(
@@ -240,7 +240,7 @@ with prices as (
 select * from prices
 ```
 
-With `unique_key` and `merge` strategy, dbt will update existing rows that fall in the lookback window with corrected values, then insert genuinely new rows.
+With `unique_key` and `merge` strategy, dbt will update existing rows that fall in the lookback window with corrected values, then insert genuinely new rows. This merge-based approach is a key ingredient of [[idempotent-pipeline-design]] — re-running the same date range produces identical results without duplicating data.
 
 ---
 

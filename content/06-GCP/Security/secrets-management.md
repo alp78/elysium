@@ -44,6 +44,8 @@ gcloud secrets add-iam-policy-binding db-password \
 
 ### Terraform Provisioning
 
+The Terraform blocks below are part of the broader [[terraform-iam-and-secrets]] module that provisions both IAM bindings and Secret Manager resources together.
+
 ```hcl
 resource "google_secret_manager_secret" "db_password" {
   secret_id = "db-password"
@@ -64,6 +66,8 @@ resource "google_secret_manager_secret_iam_member" "pipeline_access" {
 ```
 
 ### Access from Python
+
+The Python client library usage here is covered in more depth in [[20_py_security_setup]], which includes error handling and caching patterns.
 
 ```python
 from google.cloud import secretmanager
@@ -116,6 +120,8 @@ Store in GitHub Settings > Secrets and variables > Actions:
 - Never store GCP service account JSON keys as GitHub secrets — use WIF instead
 
 ## Local Development
+
+For local development, secrets often surface as [[environment-variables]] in the shell. The `direnv` pattern below bridges Secret Manager with shell-level credential handling.
 
 ```bash
 # Application Default Credentials (no key file needed)

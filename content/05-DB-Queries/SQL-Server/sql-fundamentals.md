@@ -19,7 +19,7 @@ status: complete
 # SQL for Data Engineering
 
 Hands-on SQL using the **stoxx** index database (SQL Server).
-Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics).
+Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [[sql-engineering]].
 
 Topics covered:
 - Connection & Schema Exploration
@@ -2021,6 +2021,9 @@ FROM silver.eurostoxx50_ohlcv
 
 
 ## 8. Bronze → Silver → Gold Transforms
+
+> [!tip] Related pattern
+> The SQL that creates and populates the bronze tables queried here is covered in [[bronze-layer-loading]], which walks through the ingestion pipeline that feeds this medallion architecture.
 
 ### 8a. Bronze → Silver: Daily Returns
 

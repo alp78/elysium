@@ -14,7 +14,7 @@ status: complete
 
 # Silver Transforms
 
-The silver layer cleans, deduplicates, and historicizes the raw data from [[bronze-layer-loading|bronze]]. Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run.
+The silver layer cleans, deduplicates, and historicizes the raw data from [[bronze-layer-loading|bronze]]. Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [[dbt-intermediate-models|intermediate models]] that sit between staging and mart layers.
 
 **Pipeline flow:** [[bronze-layer-loading|Bronze]] → Python transforms → Silver tables → [[gold-transforms|Gold scoring]]
 
@@ -23,6 +23,7 @@ Key improvements silver makes over bronze:
 - **[[data-warehouse-architecture|SCD Type 2]]** on dimensions — tracks attribute changes over time
 - **One row per symbol per date** — deduplication via UNIQUE indexes
 - **Gap-filled OHLCV** — forward-fills missing trading days using the [[bronze-layer-loading#bronze.trading_calendar|trading calendar]]
+- **Validation gates** — a [[data-quality-framework]] between bronze and silver ensures data integrity before promotion
 - **Full history retained** — silver accumulates across runs; bronze is wiped each run
 
 ---
@@ -36,7 +37,7 @@ File: `db/ddl/silver_schema.sql`
 Tracks company attribute changes (sector, name, etc.) over time. When an attribute changes, the old row is closed and a new row is inserted — history is never overwritten.
 
 > [!info] SCD Type 2 Pattern
-> SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [[idempotent-pipeline-design]] for general data pipeline patterns.
+> SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [[idempotent-pipeline-design]] for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [[dbt-snapshots-and-scd]].
 
 **silver.index_dim DDL with SCD2 temporal columns:**
 

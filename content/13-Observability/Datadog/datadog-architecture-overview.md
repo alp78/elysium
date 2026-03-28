@@ -74,7 +74,7 @@ Cloud Run Job: data-pipeline-pipeline
 | SQL Server database | DD Agent (sqlserver check) | Connections, buffer pool, waits, query stats |
 | SQL Server errorlog | DD Agent (file tailing) | Errors, failed logins, checkpoints |
 | Pipeline steps | ddtrace APM | Per-step traces with duration, SQL queries |
-| Cloud Run jobs | GCP Integration | Execution count, CPU, memory |
+| Cloud Run jobs | GCP Integration | Execution count, CPU, memory — compare with [[cloud-monitoring-metrics|GCP-native Cloud Monitoring]] for metrics that remain outside Datadog |
 
 ---
 
@@ -86,7 +86,7 @@ Cloud Run Job: data-pipeline-pipeline
 | **Logs** | Structured text from containers + errorlog | Agent reads Docker stdout via socket; tails SQL Server errorlog |
 | **Traces** | Request-level spans with timing | `ddtrace-run` instruments Python code; traces route through Agent on port 8126 |
 
-All three converge in Datadog by sharing the `service` tag (e.g., `data-pipeline-pipeline`) and trace correlation IDs (`dd.trace_id`, `dd.span_id`) for log-to-trace linking.
+All three converge in Datadog by sharing the `service` tag (e.g., `data-pipeline-pipeline`) and trace correlation IDs (`dd.trace_id`, `dd.span_id`) for log-to-trace linking. This three-pillar approach is an implementation of the conceptual framework described in [[observability-deep-dive]], applied specifically to the project's GCP-hosted stack.
 
 > [!info] Log-to-Trace Correlation
 > When `LOG_FORMAT=json` is set on the Cloud Run Job and the JSON logger injects `dd.trace_id` / `dd.span_id`, you can click directly from a log line in Datadog's Log Explorer to the corresponding APM flame graph. See [[datadog-apm-traces]] for the logger implementation.

@@ -19,7 +19,7 @@ status: complete
 
 # GitHub Actions CI/CD Workflows
 
-GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing Docker images, running pipeline tests, deploying to [[cloud-run-jobs-vs-services|Cloud Run]], and validating [[terraform-plan-apply-destroy|Terraform changes]].
+GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [[docker-compose|Docker images]], running pipeline tests, deploying to [[cloud-run-jobs-vs-services|Cloud Run]] via [[terraform-cloud-run|Terraform-managed infrastructure]], and validating [[terraform-plan-apply-destroy|Terraform changes]].
 
 ## Workflow Structure
 
@@ -42,6 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Authenticate using Workload Identity Federation (see [[gcloud-authentication]])
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
@@ -120,7 +121,7 @@ repos:
 ```
 
 > [!warning] Secrets Management
-> Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer Workload Identity Federation over service account key files.
+> Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer [[gcloud-authentication|Workload Identity Federation]] over service account key files.
 
 ## Related
 

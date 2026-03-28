@@ -49,7 +49,8 @@ ls -d */
 tree -L 2 --dirsfirst
 # -L 2 = depth limit of 2 levels
 # --dirsfirst = directories before files
-# Invaluable for understanding pipeline output directory structure:
+# Invaluable for understanding pipeline output directory structure
+# (visualizes the physical [[medallion-architecture]] layout):
 # data/
 # ├── bronze/
 # │   ├── ohlcv/
@@ -66,6 +67,7 @@ tree -L 2 --dirsfirst
 
 ```bash
 # Step 1: What's consuming the most space? (top 10 directories)
+# This is the opening move in the [[sql-server-disk-full]] runbook
 du -h --max-depth=1 /var/opt/mssql/ | sort -rh | head -10
 # du -h = disk usage, human-readable
 # --max-depth=1 = only immediate subdirectories (don't recurse further)
@@ -131,6 +133,8 @@ Get-PSDrive -PSProvider FileSystem | Format-Table Name,
     @{N='Used(GB)';E={[math]::Round($_.Used/1GB,1)}},
     @{N='Free(GB)';E={[math]::Round($_.Free/1GB,1)}}
 ```
+
+For continuous disk and resource monitoring beyond manual `du`/`df` checks, see [[system-resources]] which covers `vmstat`, `iostat`, and automated alerting patterns.
 
 ## Related
 - [[file-manipulation]] — copying, moving, permissions, and safe delete patterns

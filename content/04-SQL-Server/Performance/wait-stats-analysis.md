@@ -14,7 +14,7 @@ status: complete
 
 # Wait Stats Analysis
 
-Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks.
+Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks. For a structured process that incorporates these queries into a repeatable audit, see [[performance-audit-playbook]].
 
 ---
 
@@ -138,6 +138,9 @@ DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
 | `SOS_SCHEDULER_YIELD` | CPU pressure (queries yielding scheduler) | Optimize queries, increase vCPUs |
 | `RESOURCE_SEMAPHORE` | Memory grant queue (queries waiting for RAM) | Reduce query memory grants, increase RAM |
 | `ASYNC_NETWORK_IO` | Client not consuming results fast enough | Check Airflow worker network, Python cursor fetchsize |
+
+> [!tip] Related pattern: Datadog monitoring
+> These same wait types can be tracked continuously via [[datadog-sql-server-integration]], which surfaces `PAGEIOLATCH`, `LCK_M`, and other waits as Datadog metrics. For custom DMV-based queries exposed through Datadog, see [[datadog-custom-queries]].
 
 > [!info] High Signal Waits = CPU Bottleneck
 > If `signal_wait_sec` is a significant fraction of `wait_sec`, the bottleneck is CPU — sessions are waiting to be scheduled even after their resource is available. This is distinct from `SOS_SCHEDULER_YIELD` which indicates queries are running but actively yielding their time slice.

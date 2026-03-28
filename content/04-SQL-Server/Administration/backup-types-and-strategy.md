@@ -85,6 +85,8 @@ RESTORE VERIFYONLY FROM DISK = '/var/opt/mssql/backup/mydb_full.bak' WITH CHECKS
 > - **3** copies of your data (production + 2 backups)
 > - **2** different storage types (local disk + cloud storage)
 > - **1** copy offsite (GCS bucket in a different region)
+>
+> For the GCS side, [[gcs-buckets-and-lifecycle]] covers lifecycle policies that automatically transition backups from Standard to Nearline to Coldline storage. As a complementary strategy, [[disks-and-snapshots|GCE disk snapshots]] provide block-level backup with near-instant restore.
 
 ---
 
@@ -161,7 +163,7 @@ To restore to a specific second in time, replay backups in this order:
 Full → Differential (optional, speeds up restore) → Log backups in sequence → STOPAT target timestamp
 ```
 
-See [[restore-and-recovery]] for the complete RESTORE commands.
+See [[restore-and-recovery]] for the complete RESTORE commands, and [[backup-restore-drill]] for the quarterly validation drill that tests these backups end-to-end.
 
 ---
 

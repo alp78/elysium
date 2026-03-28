@@ -347,6 +347,8 @@ Console.WriteLine(total == 0
 ---
 ## 2 — Data Quality Pipeline
 
+The guard functions below enforce the same quality dimensions — completeness, uniqueness, referential integrity — defined in [[data-quality-framework]]. For a declarative approach to these same checks in the dbt layer, see [[dbt-testing-framework]].
+
 #### Define assertion guards from validation rules to chainable functions using DataFrame pass-through
 
 ```csharp

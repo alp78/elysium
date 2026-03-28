@@ -19,7 +19,7 @@ status: complete
 # BigQuery for Data Engineering - Fundamentals
 
 Hands-on SQL using the **stoxx** index database (BigQuery).
-Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics).
+Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). Once these fundamentals are solid, [[bq-engineering]] covers the database objects and performance patterns that build on them.
 
 Topics covered:
 - Connection & Schema Exploration
@@ -2138,6 +2138,9 @@ FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 
 
 ## 8. Bronze → Silver → Gold Transforms
+
+> [!tip] Related pattern
+> The transforms below query data that was first ingested through the [[data-loading-and-export]] pipeline. Understanding how data arrives in bronze helps explain the schemas these queries target.
 
 ### 8a. Bronze → Silver: Daily Returns
 

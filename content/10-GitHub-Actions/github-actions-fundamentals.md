@@ -55,7 +55,7 @@ status: complete
 # GitHub Actions Fundamentals
 
 > [!abstract] Summary
-> GitHub Actions automates software workflows directly in a repository. A **workflow** is a YAML file in `.github/workflows/` that defines when to run (triggers), where to run (runners), and what to run (jobs and steps).
+> GitHub Actions automates software workflows directly in a repository. A **workflow** is a YAML file in `.github/workflows/` that defines when to run (triggers), where to run (runners), and what to run (jobs and steps). Workflows are typically triggered by the [[git-daily-workflow|daily Git workflow]] -- pushes, PRs, and merges fire the events that start CI pipelines.
 
 ---
 
@@ -455,6 +455,8 @@ steps:
     run: |
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
+    # Shell steps run in bash by default — apply the same
+    # set -e / set -o pipefail practices from [[defensive-scripting]]
 
   - name: With custom shell
     shell: python
@@ -994,6 +996,8 @@ steps:
 ```
 
 ### Manual Retry Pattern
+
+The retry loop below follows the same [[defensive-scripting|defensive shell patterns]] used in production scripts -- short-circuit on success, log on failure, and cap retries.
 
 ```yaml
 - name: Retry on failure

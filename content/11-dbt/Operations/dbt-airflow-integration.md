@@ -15,7 +15,7 @@ related:
 
 # dbt: Airflow Integration
 
-Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
+Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. This builds on [[airflow-core-concepts]] and applies the [[airflow-dag-patterns]] to dbt-specific workflows. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
 
 ---
 

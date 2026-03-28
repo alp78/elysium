@@ -18,7 +18,7 @@ status: complete
 
 # Terraform Plan, Apply, and Destroy
 
-The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management.
+The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management. For a condensed quick-reference of all Terraform commands, see [[terraform-cheat-sheet]].
 
 ## How terraform apply Works
 

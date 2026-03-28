@@ -18,6 +18,8 @@ updated: 2026-03-23
 
 ## Staleness Thresholds
 
+These thresholds are derived from the [[data-sources-and-refresh|data source refresh schedule]]. Confirm the current SLAs match your vendor contracts before escalating.
+
 | Data Type | Normal SLA | Warn | Critical | Fallback Action |
 |---|---|---|---|---|
 | Market prices | T+0 18:00 UTC | +1 hr (19:00) | +4 hr (22:00) | Use backup feed or T-1 close |
@@ -169,7 +171,7 @@ airflow dags trigger ingest_prices \
 echo "Current UTC time: $(date -u +%H:%M)"
 echo "Publication deadline: 23:00 UTC"
 
-# Set an Airflow variable to extend the sensor timeout
+# Set an Airflow variable to extend the sensor timeout (see [[airflow-dag-patterns]] for the sensor timeout pattern)
 airflow variables set vendor_a_sensor_timeout_hours 10
 
 # Monitor until file arrives

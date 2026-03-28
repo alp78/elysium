@@ -25,7 +25,7 @@ GitHub Actions automates workflows (build, test, deploy) triggered by events lik
 Common trigger events:
 
 - `push` to main — triggers deployment (e.g., deploy pipeline + dashboard to Cloud Run)
-- `pull_request` opened/updated — triggers tests and linting
+- `pull_request` opened/updated — triggers tests and linting (see [[pull-requests-and-code-review]] for the PR conventions that pair with these checks)
 - `schedule` (cron) — triggers periodic jobs (e.g., nightly data refresh)
 - `workflow_dispatch` — manual trigger via GitHub UI or CLI
 
@@ -63,7 +63,7 @@ gh workflow run deploy.yml
 ## Common CI/CD Patterns for Data Teams
 
 - On push to main: deploy pipeline container and dashboard to Cloud Run
-- On PR: run unit tests, linting, SQL validation
+- On PR: run unit tests, linting, SQL validation (for dbt-specific checks, see [[dbt-ci-cd]])
 - On schedule: run data pipeline (e.g., daily at market close)
 - On tag (`v*`): create a GitHub Release with changelog
 - Matrix builds: test across Python 3.10, 3.11, 3.12 in parallel

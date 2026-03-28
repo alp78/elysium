@@ -1357,23 +1357,17 @@ print("    Metadata:    per-VM or project-wide, manual management, legacy")
 
 #### IAP tunnel — SSH without public IP exposure
 
-```python
-# Identity-Aware Proxy (IAP) — encrypted tunnel to VM without public IP or VPN
-#
-# Command:
-#   gcloud compute ssh notebook-vm --zone=europe-west1-b --tunnel-through-iap
-#
-# How IAP works:
-#   1. Your gcloud CLI authenticates via OAuth2
-#   2. IAP verifies your IAM role (roles/iap.tunnelResourceAccessor)
-#   3. IAP creates an encrypted tunnel to the VM's internal IP
-#   4. SSH traffic flows through the tunnel — no public IP needed
-#
-# Benefits:
-#   - No public IP needed on the VM
-#   - No VPN required
-#   - IAM-based access control (who can tunnel)
-#   - Audit logging of all tunnel sessions
+Identity-Aware Proxy (IAP) creates an encrypted tunnel to a VM without needing a public IP or VPN:
+
+1. Your `gcloud` CLI authenticates via OAuth2
+2. IAP verifies your IAM role (`roles/iap.tunnelResourceAccessor`)
+3. IAP creates an encrypted tunnel to the VM's internal IP
+4. SSH traffic flows through the tunnel — no public IP needed
+
+Benefits: no public IP on the VM, no VPN required, IAM-based access control, full audit logging of tunnel sessions.
+
+```bash
+gcloud compute ssh notebook-vm --zone=europe-west1-b --tunnel-through-iap
 ```
 
       IAP TCP Tunnel command:
@@ -1472,65 +1466,30 @@ print("  ⚠️ Rules with 0.0.0.0/0 allow traffic from ANY IP — restrict in p
 
 ## Cloud SQL — SQL Server Authentication and Encryption
 
-```python
-# Cloud SQL Authentication Methods Demonstrated Below
-#
-# 1. SQL authentication (username + password)
-#    How: pymssql.connect(server=IP, user="sqlserver", password=PW)
-#    Scenarios:
-#      - Developer debugging from a laptop or notebook (quick, no infra setup)
-#      - One-off admin maintenance (schema migrations, ad-hoc queries)
-#      - Legacy apps that only support username/password connections
-#    Avoid when: running in production or CI/CD (credentials leak risk)
-#
-# 2. SSL/TLS server certificate verification
-#    How: download server CA cert, validate TLS chain before connecting
-#    Scenarios:
-#      - Any direct connection over public internet (adds MITM protection)
-#      - Compliance-mandated encrypted connections (PCI-DSS, SOC2)
-#      - Multi-cloud setups where traffic crosses untrusted networks
-#    Avoid when: using Auth Proxy (it handles encryption automatically)
-#
-# 3. Cloud SQL Auth Proxy
-#    How: run proxy binary locally, connect to localhost:1433
-#    Scenarios:
-#      - Production services on GKE/Cloud Run/GCE (the recommended default)
-#      - CI/CD pipelines running on GCP infrastructure
-#      - End-user apps connecting through a backend API server
-#      - When you want to eliminate public IP exposure entirely
-#    Avoid when: client cannot run a sidecar process (embedded devices, serverless edge)
-#
-# 4. IP allowlisting (authorized networks)
-#    How: gcloud sql instances patch --authorized-networks=IP/32
-#    Scenarios:
-#      - Developer access from a known office or VPN IP
-#      - CI runners with static egress IPs (GitHub Actions, Jenkins)
-#      - Temporary access for debugging (add IP, debug, remove IP)
-#    Avoid when: IPs are dynamic (home ISP, cloud NAT) or team is large
-#
-# Decision matrix by scenario:
-#   Scenario                        Recommended method
-#   ────────────────────────────────   ─────────────────────────
-#   Dev running a notebook           SQL auth + IP allowlist
-#   DBA running schema migration      SQL auth + SSL + IP allowlist
-#   CI/CD pipeline deploying           Auth Proxy (sidecar container)
-#   Production API backend             Auth Proxy + Private IP
-#   End-user dashboard (via backend)   Auth Proxy (backend) → SQL auth (internal)
-#   Cross-cloud data sync              SQL auth + SSL (mandatory)
-#   Temporary debugging session        SQL auth + temporary IP allowlist
-#
-# Anti-patterns:
-#   - Hardcoding SQL passwords in notebooks or source code
-#     → Store in Secret Manager, read via os.environ
-#   - Using 0.0.0.0/0 as authorized network ("allow all IPs")
-#     → Restrict to specific IPs or use Auth Proxy instead
-#   - Connecting over public IP without SSL in production
-#     → Credentials travel in plaintext; enforce SSL or use Auth Proxy
-#   - Sharing the sqlserver admin account across services
-#     → Create per-service SQL logins with least-privilege grants
-#   - Leaving temporary IP allowlist entries after debugging
-#     → Remove IPs when done; audit authorized networks regularly
-```
+Four Cloud SQL authentication methods, from simplest to most secure:
+
+1. **SQL authentication (username + password)** — `pymssql.connect(server=IP, user="sqlserver", password=PW)`. For dev debugging, ad-hoc admin, legacy apps. Avoid in production/CI (credential leak risk).
+2. **SSL/TLS server certificate** — download server CA cert, validate TLS chain. For public internet connections, compliance (PCI-DSS, SOC2), cross-cloud traffic. Unnecessary with Auth Proxy.
+3. **Cloud SQL Auth Proxy** — run proxy binary locally, connect to `localhost:1433`. For production services (GKE/Cloud Run/GCE), CI/CD pipelines, backend APIs. The recommended default.
+4. **IP allowlisting** — `gcloud sql instances patch --authorized-networks=IP/32`. For known office/VPN IPs, static CI runners, temporary debugging.
+
+> [!abstract]- Decision matrix by scenario
+> | Scenario | Recommended method |
+> |---|---|
+> | Dev running a notebook | SQL auth + IP allowlist |
+> | DBA running schema migration | SQL auth + SSL + IP allowlist |
+> | CI/CD pipeline deploying | Auth Proxy (sidecar container) |
+> | Production API backend | Auth Proxy + Private IP |
+> | End-user dashboard (via backend) | Auth Proxy (backend) → SQL auth (internal) |
+> | Cross-cloud data sync | SQL auth + SSL (mandatory) |
+> | Temporary debugging session | SQL auth + temporary IP allowlist |
+
+> [!danger] Cloud SQL anti-patterns
+> - **Hardcoding SQL passwords** in code → store in Secret Manager, read via `os.environ`
+> - **`0.0.0.0/0` as authorized network** → restrict to specific IPs or use Auth Proxy
+> - **Public IP without SSL** in production → credentials travel in plaintext
+> - **Shared admin account** across services → create per-service SQL logins with least-privilege
+> - **Stale IP allowlist entries** after debugging → remove when done
 
 #### SQL Server password authentication — direct connect
 
@@ -1729,28 +1688,25 @@ finally:
 
 #### Cloud SQL Auth Proxy — IAM-authenticated tunnel
 
-```python
-# Cloud SQL Auth Proxy
-# Creates a local encrypted tunnel to Cloud SQL.
-# Authenticates via IAM — no password or SSL certificate needed by the client.
-#
-# 1. Download the proxy:
-#    curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.win64.exe
-#
-# 2. Start the proxy:
-#    ./cloud-sql-proxy seclab-dev-ap-26:europe-west1:notebook-sql --port=1433
-#
-# 3. Connect via localhost (no public IP needed):
-#    pymssql.connect(server='127.0.0.1', port=1433, ...)
-#
-# Connection methods comparison:
-#   Method                Public IP   SSL     IAM Auth   Key File
-#   ─────────────────────   ────────   ─────   ────────   ────────
-#   Direct + password     Required    Opt.    No         No
-#   Direct + SSL certs    Required    Yes     No         Client cert
-#   Auth Proxy            No          Auto    Yes        No
-#   Private IP            No          Opt.    Optional   No
+The Auth Proxy creates a local encrypted tunnel to Cloud SQL. It authenticates via IAM — no password or SSL certificate needed by the client.
+
+```bash
+# 1. Download the proxy
+curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.win64.exe
+
+# 2. Start the proxy
+./cloud-sql-proxy seclab-dev-ap-26:europe-west1:notebook-sql --port=1433
+
+# 3. Connect via localhost (no public IP needed)
+# pymssql.connect(server='127.0.0.1', port=1433, ...)
 ```
+
+| Method | Public IP | SSL | IAM Auth | Key File |
+|---|---|---|---|---|
+| Direct + password | Required | Optional | No | No |
+| Direct + SSL certs | Required | Yes | No | Client cert |
+| Auth Proxy | No | Auto | Yes | No |
+| Private IP | No | Optional | Optional | No |
 
 #### Cloud SQL authorized networks — IP whitelisting
 
@@ -2200,29 +2156,15 @@ print(f"    risk_notes:   {dec_notes}")
         position:     50,000.00
         risk_notes:   High concentration risk — review quarterly
 
-#### Firestore access control — IAM permissions
-
 #### Firestore access control — IAM vs security rules
 
-```python
-# Firestore has TWO access control layers:
-#
-# 1. IAM roles (Google Cloud) — apply to server-side SDKs and REST API
-#    - roles/datastore.user: read/write documents
-#    - roles/datastore.viewer: read-only
-#    - roles/datastore.owner: full control + index management
-#    This is what controls access from this notebook (admin SDK).
-#
-# 2. Security rules (Firebase) — apply ONLY to Firebase client SDKs (web, mobile)
-#    - Written in a declarative language, deployed via Firebase CLI
-#    - Server-side admin SDKs bypass rules completely
-#    - The googleapis.com REST API uses IAM, not rules
-#    - Only the Firebase REST endpoint enforces rules, and only with
-#      Firebase Auth tokens (not SA tokens)
-#
-# This section demonstrates IAM-based access control, which is what
-# actually governs access from Python/server environments.
-```
+Firestore has **two** access control layers:
+
+1. **IAM roles (Google Cloud)** — apply to server-side SDKs and REST API. `roles/datastore.user` (read/write), `roles/datastore.viewer` (read-only), `roles/datastore.owner` (full control + index management). This is what controls access from Python/server environments.
+
+2. **Security rules (Firebase)** — apply ONLY to Firebase client SDKs (web, mobile). Written in a declarative language, deployed via Firebase CLI. Server-side admin SDKs bypass rules completely.
+
+> [!info] This section demonstrates IAM-based access control, which is what governs access from server-side code. The `googleapis.com` REST API uses IAM, not Firebase security rules.
 
 #### Full-access write with SA credentials
 
@@ -2793,66 +2735,24 @@ print("    Trust model:    publicly trusted, auto-rotated by Google")
         Leaf cert:      *.googleapis.com
         Trust model:    publicly trusted, auto-rotated by Google
 
-#### Security operations audit summary
-
-```python
-# Security Operations Audit Summary
-#
-# Identity & Authentication:
-#   - SA key file authentication
-#   - Application Default Credentials (ADC)
-#   - Service account impersonation
-#   - Short-lived access tokens (600s)
-#   - Workload Identity Federation (GitHub OIDC)
-#   - ID token vs access token comparison
-#   - IAM permissions test
-#
-# Secret Manager:
-#   - Read/create/rotate/disable/destroy secrets
-#   - Version pinning, JSON secrets, IAM audit
-#   - Application caching patterns
-#
-# Cloud KMS:
-#   - Symmetric encrypt/decrypt
-#   - Envelope encryption (DEK + KEK)
-#   - File encryption for GCS
-#   - Key versioning and rotation
-#   - CMEK verification on bucket
-#
-# Compute Engine:
-#   - SSH with Ed25519 key (paramiko)
-#   - OS Login key management
-#   - IAP tunnel (command reference)
-#   - Metadata server identity endpoints
-#   - Firewall rules audit
-#
-# Cloud SQL:
-#   - Password auth (pymssql)
-#   - SSL server CA certificate inspection
-#   - Auth Proxy reference
-#   - Authorized networks, encryption at rest (CMEK)
-#
-# BigQuery:
-#   - SA key + impersonated credential queries
-#   - Column-level KMS encryption
-#   - Dataset encryption audit
-#   - Authorized views
-#
-# Firestore:
-#   - Authenticated CRUD operations
-#   - Field-level KMS encryption
-#   - IAM-based access control demonstration
-#
-# Cloud Storage:
-#   - CMEK upload/verify, client-side AES-GCM
-#   - CSEK (customer-supplied keys)
-#   - Signed URLs (download + upload)
-#   - IAM policy audit
-#
-# Cross-Service:
-#   - End-to-end encrypted pipeline
-#   - Certificate chain inspection
-```
+> [!abstract]- Security Operations Audit Summary
+> **Identity & Authentication:** SA key file, ADC, service account impersonation, short-lived access tokens (600s), Workload Identity Federation (GitHub OIDC), ID vs access token comparison, IAM permissions test
+>
+> **Secret Manager:** Read/create/rotate/disable/destroy secrets, version pinning, JSON secrets, IAM audit, application caching patterns
+>
+> **Cloud KMS:** Symmetric encrypt/decrypt, envelope encryption (DEK + KEK), file encryption for GCS, key versioning and rotation, CMEK verification
+>
+> **Compute Engine:** SSH with Ed25519 key (paramiko), OS Login key management, IAP tunnel, metadata server identity, firewall rules audit
+>
+> **Cloud SQL:** Password auth (pymssql), SSL server CA certificate inspection, Auth Proxy reference, authorized networks, encryption at rest (CMEK)
+>
+> **BigQuery:** SA key + impersonated credential queries, column-level KMS encryption, dataset encryption audit, authorized views
+>
+> **Firestore:** Authenticated CRUD, field-level KMS encryption, IAM-based access control
+>
+> **Cloud Storage:** CMEK upload/verify, client-side AES-GCM, CSEK (customer-supplied keys), signed URLs (download + upload), IAM policy audit
+>
+> **Cross-Service:** End-to-end encrypted pipeline, certificate chain inspection
 
 ## Cleanup and Cost Control
 
@@ -2914,35 +2814,31 @@ print(f"  Stopped: {VM_NAME}")
 print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 ```
 
-#### Full teardown commands (commented — run manually if needed)
-
-```python
-# Uncomment and run these to delete ALL resources created by the lab
-# This is IRREVERSIBLE — all data will be lost
-
-# # Delete Cloud SQL instance
-# !gcloud sql instances delete {SQL_INSTANCE} --quiet
-
-# # Delete VM
-# !gcloud compute instances delete {VM_NAME} --zone={ZONE} --quiet
-
-# # Delete GCS bucket and all contents
-# !gcloud storage rm -r gs://{BUCKET_NAME}
-
-# # Delete BigQuery dataset and all tables
-# !bq rm -r -f {PROJECT_ID}:{BQ_DATASET}
-
-# # Delete Firestore database
-# !gcloud firestore databases delete --database={FIRESTORE_DB} --quiet
-
-# # Delete secrets
-# !gcloud secrets delete test-api-key --quiet
-# !gcloud secrets delete db-password --quiet
-# !gcloud secrets delete db-config --quiet
-
-# # Delete Artifact Registry
-# !gcloud artifacts repositories delete notebook-docker --location={REGION} --quiet
-
-# # Delete the entire project (nuclear option)
-# !gcloud projects delete {PROJECT_ID} --quiet
-```
+> [!danger]- Full teardown commands (IRREVERSIBLE — all data will be lost)
+> ```bash
+> # Delete Cloud SQL instance
+> gcloud sql instances delete $SQL_INSTANCE --quiet
+>
+> # Delete VM
+> gcloud compute instances delete $VM_NAME --zone=$ZONE --quiet
+>
+> # Delete GCS bucket and all contents
+> gcloud storage rm -r gs://$BUCKET_NAME
+>
+> # Delete BigQuery dataset and all tables
+> bq rm -r -f $PROJECT_ID:$BQ_DATASET
+>
+> # Delete Firestore database
+> gcloud firestore databases delete --database=$FIRESTORE_DB --quiet
+>
+> # Delete secrets
+> gcloud secrets delete test-api-key --quiet
+> gcloud secrets delete db-password --quiet
+> gcloud secrets delete db-config --quiet
+>
+> # Delete Artifact Registry
+> gcloud artifacts repositories delete notebook-docker --location=$REGION --quiet
+>
+> # Delete the entire project (nuclear option)
+> gcloud projects delete $PROJECT_ID --quiet
+> ```

@@ -18,7 +18,7 @@ status: complete
 
 # Container Lifecycle
 
-Docker containers are the runtime environment for pipeline stages, databases, and monitoring agents. Each step — loader, transform, scorer — runs in a container with its own dependencies, isolated from the host system. This note covers every container operation you need as a data engineer, from launching a one-off job to debugging a crash loop in production.
+Docker containers are the runtime environment for pipeline stages, databases, and monitoring agents. Each step — loader, transform, scorer — runs in a container with its own dependencies, isolated from the host system. This note covers every container operation you need as a data engineer, from launching a one-off job to debugging a crash loop in production. For a condensed quick-reference of all Docker commands, see [[docker-cheat-sheet]].
 
 ---
 
@@ -62,6 +62,9 @@ docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 ```
 
 **Volume mounts — persist data and inject config files:**
+
+When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [[airflow-deployment|Airflow containers]], the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [[file-manipulation|file permission patterns]] used in shell administration.
+
 ```bash
 # -v HOST_PATH:CONTAINER_PATH
 # Mount a host directory into the container
@@ -322,8 +325,8 @@ docker ps --filter name=airflow -q | xargs docker restart
 
 ```bash
 # docker stop: sends SIGTERM, waits for the process to exit cleanly, then SIGKILL
-# This is the correct way to stop a container — gives the app time to flush buffers,
-# close DB connections, finish in-flight requests
+# This is the same signal sequence used by the kernel for regular processes (see [[killing-processes]])
+# — gives the app time to flush buffers, close DB connections, finish in-flight requests
 docker stop airflow-scheduler         # default 10-second timeout
 
 # Extend the timeout for slow-to-stop containers (e.g., Spark jobs)
@@ -707,7 +710,7 @@ docker inspect <container> --format='{{json .Mounts}}' | python3 -m json.tool
 | 143 | SIGTERM | Graceful termination | `docker stop` completed within timeout |
 
 > [!tip] Decoding Exit Codes
-> Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
+> Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. These are the same [[killing-processes|Unix signals]] you send with `kill` on a regular process. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
 
 ```bash
 # Definitive OOM check — returns true or false

@@ -13,7 +13,7 @@ related:
 
 # dbt: Data Contracts Implementation
 
-Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.
+Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. This is the dbt-specific implementation of the broader [[data-contracts]] architectural pattern. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.
 
 ---
 
@@ -319,7 +319,7 @@ jobs:
             --full-refresh false
 ```
 
-`state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project.
+`state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project. For the full quality context in which these contract checks operate, see [[data-quality-framework]].
 
 ### 5.2 Catching Column Removals
 

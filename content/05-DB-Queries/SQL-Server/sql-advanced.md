@@ -54,6 +54,8 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 ## 1. Advanced Window Functions
 
+The window functions and SCD patterns in this section are used extensively in the [[silver-transforms]] and [[gold-transforms]] layers of the medallion pipeline to produce cleaned and analytical datasets.
+
 ### 1a. ROW_NUMBER for Deduplication
 
 Assign a unique sequential number within each partition. The classic pattern for picking

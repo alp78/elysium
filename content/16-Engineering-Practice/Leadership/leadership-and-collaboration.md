@@ -67,7 +67,7 @@ See our silver layer pattern in dags/common/sql_helpers.py:42 for an example."
 - Suggest alternatives, don't just point out problems
 - Use "we" language: "We prefer MERGE here because..." not "You should use MERGE"
 - Approve with comments for minor issues; block only for correctness or safety
-- Review within 24 hours — stale PRs kill velocity
+- Review within 24 hours — stale PRs kill velocity (see [[pull-requests-and-code-review]] for the full review workflow and PR template)
 
 ## 35.2 Technical Design Documents
 
@@ -203,6 +203,9 @@ Large financial data companies and similar organizations operate in a **matrix s
 | Data quality monitoring | **R** | **I** | **C** | **A** | **C** |
 | Regulatory audit | **C** | **I** | **C** | **I** | **A** |
 | Incident response | **R** | **I** | **C** | **A** | **I** |
+
+> [!tip] Related pattern
+> For detailed on-call procedures and escalation paths that complement this RACI matrix, see the [[on-call-guide]]. For financial-specific incidents such as incorrect published index values, the [[data-restatement-procedure]] documents the end-to-end correction workflow.
 
 ## 35.6 Architecture Decision Records (ADRs)
 

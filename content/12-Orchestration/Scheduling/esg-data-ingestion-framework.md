@@ -20,7 +20,7 @@ status: complete
 # ESG Data Ingestion Framework
 
 > [!abstract] When You Need This
-> An index provider ingests ESG data from multiple vendors (MSCI ESG, Sustainalytics, ISS ESG, Bloomberg ESG). Each vendor uses different scales, update frequencies, and coverage universes. Before these scores can drive index weighting or screening, they must be normalized to a common scale and validated for anomalies.
+> An index provider ingests ESG data from multiple vendors (MSCI ESG, Sustainalytics, ISS ESG, Bloomberg ESG). Each vendor uses different scales, update frequencies, and coverage universes. Before these scores can drive index weighting or screening, they must be normalized to a common scale and validated for anomalies. For background on ESG concepts and regulatory drivers, see [[esg-and-sustainability]].
 
 ---
 
@@ -193,6 +193,7 @@ with DAG(
     )
 
     # --- Validation: coverage check ---
+    # Coverage validation applies the quality gates from [[data-quality-framework]]
     validate_coverage = PythonOperator(
         task_id='validate_coverage',
         python_callable=check_universe_coverage,
@@ -317,7 +318,7 @@ def check_anomalies(calc_date: str, max_deviation_pct: float = 20.0, **context) 
 ```
 
 > [!warning] Never Auto-Override
-> The circuit breaker must require explicit human approval to resume. An index published with bad ESG data triggers restatements, regulatory scrutiny, and client trust erosion. The cost of a delayed publication is far lower than the cost of a wrong one.
+> The circuit breaker must require explicit human approval to resume. An index published with bad ESG data triggers restatements, regulatory scrutiny, and client trust erosion. The cost of a delayed publication is far lower than the cost of a wrong one. When the breaker fires, follow the [[esg-circuit-breaker-fired]] runbook.
 
 ---
 
@@ -334,7 +335,7 @@ def calculate_waci(
 
     WACI = SUM(weight_i * (scope1_2_emissions_i / revenue_i))
 
-    Required by SFDR Article 7 for financial products promoting
+    Required by SFDR Article 7 (see [[sfdr-data-requirements]]) for financial products promoting
     environmental characteristics (Article 8) or sustainable
     investment objectives (Article 9).
     """

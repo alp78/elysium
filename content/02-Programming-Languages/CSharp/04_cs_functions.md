@@ -20,32 +20,14 @@ status: complete
 
 #### Basic functions
 
+C# methods must declare a return type (`int`, `string`, `void`). Parameters are typed. Static typing catches signature mismatches at compile time. Overloading allows same name with different parameter types.
+
+> [!warning] Function anti-patterns
+> - Returning `null` instead of a meaningful empty value or `Optional`
+> - Very long parameter lists — use a config object or builder
+> - Methods doing too much — single responsibility principle
+
 ```csharp
-// Function basics — methods, return types, void, and parameters
-//
-// Technique: C# methods must declare return type (int, string, void).
-//   void means no return value. Parameters are typed. Methods belong
-//   to classes but .NET Interactive allows top-level local functions.
-//
-// Benefits:
-//   - Static typing catches signature mismatches at compile time
-//   - Return type is documented in the signature — no guessing
-//   - Overloading allows same name with different parameter types
-//
-// Anti-patterns:
-//   - Returning null instead of a meaningful empty value or Optional
-//   - Very long parameter lists — use a config object or builder
-//   - Methods doing too much — single responsibility principle
-//
-// When to use:
-//   - Every named piece of reusable logic
-//
-// When NOT to use:
-//   - Trivial one-liners used once — inline or use a lambda
-
-// Function Basics
-
-
 string Greet(string name) { return $"Hello, {name}!"; }
 Console.WriteLine(Greet("Alice"));
 
@@ -70,28 +52,9 @@ RunDemo();
 
 #### Expression-bodied and tuple return
 
-```csharp
-// Expression-bodied methods — => for single-expression, tuples for multiple returns
-//
-// Technique: => syntax eliminates braces and return for one-liners.
-//   Tuples return multiple values: (string, int) GetInfo() => ("Alice", 30).
-//   Callers destructure: var (name, age) = GetInfo().
-//
-// Benefits:
-//   - Concise — no braces or return keyword for simple methods
-//   - Tuples avoid creating a class just to return two values
-//   - Named tuple fields for clarity: (string Name, int Age)
-//
-// Anti-patterns:
-//   - Expression body for complex logic — readability suffers
-//   - More than 3-4 values via tuple — use a record or class
-//
-// When to use:
-//   - Simple one-expression methods; returning 2-3 related values
-//
-// When NOT to use:
-//   - Multi-statement logic — use block body with braces
+`=>` syntax eliminates braces and `return` for one-liners. Tuples return multiple values: `(string, int) GetInfo() => ("Alice", 30)`. Callers destructure: `var (name, age) = GetInfo()`. Use named tuple fields for clarity. For more than 3-4 values, use a `record` or class instead.
 
+```csharp
 string GreetShort(string name) => $"Hello, {name}!";
 int Square(int x) => x * x;
 Console.WriteLine(GreetShort("Diana"));
@@ -114,28 +77,9 @@ Console.WriteLine($"As tuple: {Divide(17, 5)}");
 
 <h4><code style="font-size:0.75em">Func&lt;T, TResult&gt;</code> — function with return value</h4>
 
-```csharp
-// Func<T,TResult> and Action<T> — store and pass function references
-//
-// Technique: Func<T, TResult> holds a method that returns a value.
-//   Action<T> holds a void method. Both store lambdas, named methods,
-//   or method groups. Enables passing functions as arguments.
-//
-// Benefits:
-//   - Functions as first-class values — store, pass, return them
-//   - Type-safe — compiler checks parameter and return types
-//   - Enables strategy, callback, and pipeline patterns
-//
-// Anti-patterns:
-//   - Custom delegate types when Func/Action suffice
-//   - Very long Func signatures — define a delegate type for readability
-//
-// When to use:
-//   - Callbacks, LINQ lambdas, strategy pattern, dependency injection
-//
-// When NOT to use:
-//   - Event handlers — use EventHandler<T> or custom delegates
+`Func<T, TResult>` holds a method that returns a value. `Action<T>` holds a void method. Both store lambdas, named methods, or method groups — functions as first-class values. Use `Func`/`Action` for callbacks, LINQ, strategy pattern, DI. For event handlers, use `EventHandler<T>`.
 
+```csharp
 Func<string, string> sayHello = Greet;     // assign method to variable
 Console.WriteLine(sayHello("Eve"));
 
@@ -163,27 +107,9 @@ Console.WriteLine($"tripler(5) = {tripler(5)}");
 
 #### Callbacks — onSuccess / onError
 
-```csharp
-// Callbacks — pass Action<T> for success/error response handling
-//
-// Technique: Accept Action<string> onSuccess and Action<Exception> onError.
-//   The caller defines what happens on each outcome. Decouples the
-//   operation from its response handling.
-//
-// Benefits:
-//   - Caller controls the response — logging, UI, retry, or ignore
-//   - Decouples operation from side effects — testable and composable
-//
-// Anti-patterns:
-//   - Null callbacks without null checks — NullReferenceException
-//   - Too many callback parameters — use an interface or event
-//
-// When to use:
-//   - Async completion, event-driven processing, plugin hooks
-//
-// When NOT to use:
-//   - Simple return values — just return the result directly
+Accept `Action<string> onSuccess` and `Action<Exception> onError` — the caller defines the response. Decouples the operation from its side effects.
 
+```csharp
 void FetchData(string url, Action<string> onSuccess, Action<Exception> onError)
 {
     try
@@ -203,28 +129,9 @@ FetchData("api/users",
 
 <h4>Strategy pattern — swap behavior via <code style="font-size:0.75em">Func</code></h4>
 
-```csharp
-// Strategy pattern — swap behavior at runtime via Func parameters
-//
-// Technique: Define interchangeable Func<T, TResult> for each strategy.
-//   Pass the desired one to the consuming method. Change behavior
-//   without modifying code — open/closed principle.
-//
-// Benefits:
-//   - Add strategies without modifying consumers
-//   - Runtime flexibility — select strategy from config, user, context
-//   - Testable — inject mock strategies for unit tests
-//
-// Anti-patterns:
-//   - if/else chains to select behavior — use a dictionary of strategies
-//   - Complex strategies in lambdas — extract to named methods
-//
-// When to use:
-//   - Pricing rules, validation rules, sorting strategies, formatters
-//
-// When NOT to use:
-//   - Single fixed behavior — direct method call is simpler
+Define interchangeable `Func<T, TResult>` for each strategy. Pass the desired one to the consumer — change behavior without modifying code (open/closed principle). Use for pricing rules, validation, sorting, formatters.
 
+```csharp
 Func<decimal, decimal> fullPrice = price => price;
 Func<decimal, decimal> discount20 = price => price * 0.8m;
 Func<decimal, decimal> memberDiscount = price => price * 0.7m;
@@ -242,27 +149,9 @@ Console.WriteLine($"  Member:   ${Calculate(100, memberDiscount):F2}");
 
 <h4>Pipeline — chained <code style="font-size:0.75em">Func</code> steps with <code style="font-size:0.75em">Aggregate</code></h4>
 
-```csharp
-// Pipeline — chain Func steps sequentially with Aggregate
-//
-// Technique: Store steps as List<Func<string, string>>. Aggregate folds
-//   the input through each step. Each step receives previous step's output.
-//
-// Benefits:
-//   - Steps are composable — add, remove, reorder without changing others
-//   - Aggregate folds in one line
-//   - Each step independently testable
-//
-// Anti-patterns:
-//   - Mutating shared state between steps — each should be pure
-//   - Too many steps — break into named sub-pipelines
-//
-// When to use:
-//   - Text processing, data transformation, middleware chains
-//
-// When NOT to use:
-//   - Steps with side effects — use explicit sequential calls
+Store steps as `List<Func<string, string>>`. `Aggregate` folds the input through each step sequentially. Steps are composable — add, remove, reorder independently, each testable in isolation.
 
+```csharp
 var steps = new List<Func<string, string>>
 {
     s => s.Trim(),                                                      // lambda: s is the input string
@@ -285,28 +174,11 @@ Console.WriteLine($"  '{raw}' -> '{result}'");
 
 <h4>Dependency injection — inject fake time via <code style="font-size:0.75em">Func</code></h4>
 
-```csharp
-// Dependency injection via Func — inject fake time for testability
-//
-// Technique: Accept Func<DateTime> getNow with default DateTime.UtcNow.
-//   Production uses the default. Tests inject a fixed DateTime for
-//   deterministic, reproducible results.
-//
-// Benefits:
-//   - Testable — inject fixed time for reproducible test results
-//   - No interface needed — Func<DateTime> is lightweight DI
-//   - Default value means production callers need no changes
-//
-// Anti-patterns:
-//   - DateTime.Now directly — untestable, non-deterministic
-//   - Creating an interface for one method — Func is simpler
-//
-// When to use:
-//   - Any code depending on DateTime, random, or external state
-//
-// When NOT to use:
-//   - Complex dependencies — use a full DI container
+Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses the default; tests inject a fixed `DateTime` for deterministic results. No interface needed — `Func<DateTime>` is lightweight DI.
 
+> [!warning] Don't use `DateTime.Now` directly — untestable and non-deterministic.
+
+```csharp
 Dictionary<string, object> ProcessOrder(
     Dictionary<string, object> order,
     Func<DateTime>? getNow = null)
@@ -322,25 +194,9 @@ Dictionary<string, object> ProcessOrder(
 
 #### Production
 
-```csharp
-// Production call — default Func<DateTime> uses real UtcNow
-//
-// Technique: Call ProcessOrder without getNow parameter — default
-//   provides DateTime.UtcNow. No test infrastructure in production path.
-//
-// Benefits:
-//   - Default parameter means production code is unchanged
-//   - No test-only code paths in production
-//
-// Anti-patterns:
-//   - Hardcoding DateTime.Now inside the method — can't test
-//
-// When to use:
-//   - Normal production calls where real time is appropriate
-//
-// When NOT to use:
-//   - Tests or reproducible runs — inject a fixed clock
+Production call — default parameter uses real `DateTime.UtcNow`:
 
+```csharp
 var order1 = ProcessOrder(new Dictionary<string, object> { ["id"] = 1 });
 Console.WriteLine($"  Production: {order1["processed_at"]}");
 ```
@@ -349,25 +205,9 @@ Console.WriteLine($"  Production: {order1["processed_at"]}");
 
 #### Test — inject fake time
 
-```csharp
-// Test with injected time — fixed DateTime for deterministic tests
-//
-// Technique: Pass getNow: () => new DateTime(2024, 1, 15) to freeze time.
-//   Tests produce identical results on every run. No mocking framework needed.
-//
-// Benefits:
-//   - Reproducible — same output every run
-//   - No mocking framework — just a lambda
-//
-// Anti-patterns:
-//   - Testing with real time — results vary, flaky tests
-//
-// When to use:
-//   - Unit tests, integration tests, snapshot testing
-//
-// When NOT to use:
-//   - Production code — use real time via the default
+Test call — inject a fixed `DateTime` for deterministic, reproducible results:
 
+```csharp
 var order2 = ProcessOrder(
     new Dictionary<string, object> { ["id"] = 2 },
     getNow: () => new DateTime(2024, 1, 1, 12, 0, 0));
@@ -378,27 +218,9 @@ Console.WriteLine($"  Test:       {order2["processed_at"]}");
 
 #### Progress callback
 
-```csharp
-// Progress callback — optional Action for reporting iteration progress
-//
-// Technique: Accept Action<int, int, string>? (nullable). Call with
-//   onProgress?.Invoke(current, total, message). Callers can omit it.
-//
-// Benefits:
-//   - Caller controls display — console, UI, logging, or nothing
-//   - Nullable — no overhead when not needed
-//   - Decouples processing from reporting
-//
-// Anti-patterns:
-//   - Hardcoding Console.WriteLine — not reusable
-//   - Calling without null check — NullReferenceException
-//
-// When to use:
-//   - Long-running ops: file processing, batch imports, downloads
-//
-// When NOT to use:
-//   - Fast operations where progress adds overhead without value
+Accept `Action<int, int, string>?` (nullable). Call with `onProgress?.Invoke(current, total, message)`. Callers control the display — console, UI, logging, or nothing.
 
+```csharp
 void LoadData(string[] items, Action<int, int, string>? onProgress = null)
 {
     for (int i = 0; i < items.Length; i++)
@@ -426,27 +248,11 @@ LoadData(new[] { "users", "orders", "products" },
 
 <h4>Sorting with <code style="font-size:0.75em">Func</code> as key</h4>
 
-```csharp
-// Sorting with Func key — OrderBy/OrderByDescending with lambdas
-//
-// Technique: LINQ OrderBy(x => x.Property) extracts the sort key.
-//   ThenBy for secondary. GroupBy + Select for aggregation over groups.
-//
-// Benefits:
-//   - Declarative — specify what to sort by, not how
-//   - Composable — chain multiple sort criteria
-//   - Lambda key selector works with any property
-//
-// Anti-patterns:
-//   - OrderBy then OrderBy — second replaces first; use ThenBy
-//   - Sorting inside a loop — sort once, iterate the result
-//
-// When to use:
-//   - Ranked output, top-N queries, grouped reports
-//
-// When NOT to use:
-//   - In-place sorting — use List.Sort() for better performance
+LINQ `OrderBy(x => x.Property)` extracts the sort key. `ThenBy` for secondary sort. `GroupBy` + `Select` for aggregation over groups. Declarative and composable.
 
+> [!warning] `OrderBy` then another `OrderBy` **replaces** the first — use `ThenBy` for secondary sort.
+
+```csharp
 var employees = new[]
 {
     new { Name = "Alice", Dept = "Engineering", Salary = 95000 },
@@ -461,81 +267,26 @@ foreach (var e in employees.OrderByDescending(e => e.Salary))
       Alice      $95'000
       Bob        $65'000
 
-#### Summary — common function-passing patterns
+#### Common function-passing patterns
 
-```csharp
-// Summary — common function-passing patterns reference
-//
-// Technique: Quick reference of Func/Action patterns: callbacks, strategy,
-//   pipeline, DI, progress, sorting key.
-//
-// Benefits:
-//   - Quick lookup for choosing the right function-passing pattern
-//
-// Anti-patterns:
-//   - Using the wrong pattern — match to the use case
-//
-// When to use:
-//   - Designing APIs that accept function parameters
-//
-// When NOT to use:
-//   - N/A — this is a reference summary
-
-Console.WriteLine("Callbacks:    Action<string> onSuccess, Action<Exception> onError");
-Console.WriteLine("Strategy:     Func<decimal, decimal> pricingStrategy");
-Console.WriteLine("Pipeline:     List<Func<string, string>> steps + Aggregate");
-Console.WriteLine("DI/Testing:   Func<DateTime> getNow — inject fake time");
-Console.WriteLine("Events:       Action<int, int, string> onProgress hooks");
-Console.WriteLine("Sorting:      .OrderBy(e => e.Salary) — Func<T, TKey>");
-```
-
-    Callbacks:    Action<string> onSuccess, Action<Exception> onError
-    Strategy:     Func<decimal, decimal> pricingStrategy
-    Pipeline:     List<Func<string, string>> steps + Aggregate
-    DI/Testing:   Func<DateTime> getNow — inject fake time
-    Events:       Action<int, int, string> onProgress hooks
-    Sorting:      .OrderBy(e => e.Salary) — Func<T, TKey>
+| Pattern | C# signature | Use case |
+|---|---|---|
+| **Callbacks** | `Action<string> onSuccess, Action<Exception> onError` | Success/error hooks |
+| **Strategy** | `Func<decimal, decimal> pricingStrategy` | Swap algorithms |
+| **Pipeline** | `List<Func<string, string>> steps` + `Aggregate` | Chain processing steps |
+| **DI / Testing** | `Func<DateTime> getNow` | Inject fake time |
+| **Events** | `Action<int, int, string> onProgress` | Progress hooks |
+| **Sorting** | `.OrderBy(e => e.Salary)` — `Func<T, TKey>` | Key selector |
 
 ## Parameters
 
 #### Default and named parameters
 
+Default values: `void Func(int x = 10)` — must be compile-time constants (no mutable default trap like Python). Named arguments: `Func(x: 5, y: 10)` — self-documenting, any order.
+
+Parameter passing modes: `ref` (read+write), `out` (must assign before return — `TryParse` pattern), `in` (read-only reference — avoids copies of large structs), `params` (variable argument count as array). No `**kwargs` equivalent — use anonymous objects or dictionaries.
+
 ```csharp
-// Default and named parameters — optional values and argument clarity
-//
-// Technique: Default values in signature: void Func(int x = 10). Named
-//   arguments at call site: Func(x: 5, y: 10). Defaults must be
-//   compile-time constants. Named args can be in any order.
-//
-// Benefits:
-//   - Defaults eliminate overloads for optional parameters
-//   - Named args make calls self-documenting: Connect(port: 8080, host: "localhost")
-//   - Combination enables flexible APIs with few required params
-//
-// Anti-patterns:
-//   - Mutable reference types as defaults — shared across calls (use null + ??)
-//   - Too many defaulted params — use an options class instead
-//
-// When to use:
-//   - Optional configuration, backward-compatible API extensions
-//
-// When NOT to use:
-//   - When all parameters are required — defaults add ambiguity
-
-// Parameters — default, named, ref, out, in, params
-//
-// KEY CONCEPTS:
-// - Default values: void Func(int x = 10) — must be compile-time constants.
-// - Named arguments: Func(x: 5, y: 10) — can skip positional order.
-// - ref: pass by reference — the method can READ and MODIFY the caller's variable.
-// - out: like ref but the variable doesn't need to be initialized first.
-//   The method MUST assign a value before returning. Common for TryParse pattern.
-// - in: pass by reference but READ-ONLY — the method cannot modify it.
-//   Used for large structs to avoid copying without risking mutation.
-// - params: accepts variable number of arguments as an array.
-// - No **kwargs equivalent — use anonymous objects or dictionaries instead.
-// - No mutable default trap: defaults must be compile-time constants.
-
 string Connect(string host, int port = 5432, bool ssl = true)
     => $"{host}:{port} ssl={ssl}";
 
@@ -550,27 +301,9 @@ Console.WriteLine(Connect("db.example.com", ssl: false));  // named, skip port
 
 <h4><code style="font-size:0.75em">ref</code> — pass by reference</h4>
 
-```csharp
-// ref — pass by reference for two-way communication
-//
-// Technique: ref int x passes the variable itself. Changes inside the
-//   method are visible to the caller. Both sides must use ref keyword.
-//   Variable must be initialized before passing.
-//
-// Benefits:
-//   - Methods can modify caller's value-type variables
-//   - Efficient for large structs — no copy, just a reference
-//
-// Anti-patterns:
-//   - ref for output-only — use out instead (clearer intent)
-//   - Multiple ref params — return a tuple or object instead
-//
-// When to use:
-//   - Swap functions, in-place modification, interop
-//
-// When NOT to use:
-//   - Output-only — use out; reference types already pass by reference
+`ref int x` passes the variable itself — changes inside the method are visible to the caller. Both sides must use the `ref` keyword. Variable must be initialized before passing. Use `out` for output-only scenarios.
 
+```csharp
 void DoubleIt(ref int x)
 {
     x *= 2;
@@ -584,28 +317,9 @@ Console.WriteLine($"  ref: {val}");
 
 <h4><code style="font-size:0.75em">out</code> — must-assign output</h4>
 
-```csharp
-// out — method must assign a value before returning
-//
-// Technique: out int result requires assignment before return. TryParse
-//   pattern: if (int.TryParse(s, out int n)) combines check + extraction.
-//   Inline declaration: no pre-declaration needed.
-//
-// Benefits:
-//   - Compiler enforces assignment — can't forget to set output
-//   - TryParse is the standard safe parsing pattern
-//   - Inline: TryParse(s, out int n) — clean one-liner
-//
-// Anti-patterns:
-//   - Multiple out params — return a tuple or result object
-//   - out when ref is needed — out doesn't pass input to method
-//
-// When to use:
-//   - TryParse, methods returning success + value
-//
-// When NOT to use:
-//   - When a return value or tuple suffices
+`out int result` requires the method to assign a value before returning — compiler enforces it. The `TryParse` pattern combines check + extraction in one line: `if (int.TryParse(s, out int n))`.
 
+```csharp
 bool TryDivide(int a, int b, out int result)
 {
     if (b == 0) { result = 0; return false; }
@@ -620,27 +334,9 @@ if (TryDivide(10, 3, out int answer))
 
 <h4><code style="font-size:0.75em">in</code> — read-only reference</h4>
 
-```csharp
-// in — read-only reference avoiding copies of large value types
-//
-// Technique: in passes by reference but prevents modification. Compiler
-//   enforces read-only. Avoids copying large structs while guaranteeing
-//   the method can't change the caller's value.
-//
-// Benefits:
-//   - No copy overhead for large structs (Matrix, Vector3D)
-//   - Read-only guarantee — safer than ref
-//
-// Anti-patterns:
-//   - in for small types (int, double) — copy is just as fast
-//   - in for reference types — already passed by reference
-//
-// When to use:
-//   - Large struct parameters (>16 bytes) in performance-critical code
-//
-// When NOT to use:
-//   - Small value types — indirection overhead exceeds copy cost
+`in` passes by reference but prevents modification — compiler enforces read-only. Avoids copy overhead for large structs (Matrix, Vector3D). Don't use for small types (`int`, `double`) — copy is just as fast.
 
+```csharp
 double Distance(in (double x, double y) point)
     => Math.Sqrt(point.x * point.x + point.y * point.y);
 Console.WriteLine($"  in: {Distance((3, 4))}");
@@ -650,27 +346,9 @@ Console.WriteLine($"  in: {Distance((3, 4))}");
 
 <h4><code style="font-size:0.75em">params</code> — variable arguments</h4>
 
-```csharp
-// params — accept any number of arguments as an array
-//
-// Technique: params int[] numbers accepts variable arguments. Compiler
-//   creates the array. Must be the last parameter. Callers can also
-//   pass an existing array directly.
-//
-// Benefits:
-//   - Flexible: Total(1, 2, 3) and Total(myArray) both work
-//   - No manual array creation at call site
-//
-// Anti-patterns:
-//   - params with other params after — compiler error (must be last)
-//   - Large arrays via params — new array each call
-//
-// When to use:
-//   - Utility methods: Math.Min, string.Format, logging
-//
-// When NOT to use:
-//   - Collection parameter is more appropriate — List<T> or IEnumerable<T>
+`params int[] numbers` accepts variable arguments — compiler creates the array. Must be the last parameter. `Total(1, 2, 3)` and `Total(myArray)` both work.
 
+```csharp
 int Total(params int[] numbers)       // caller can pass any number of ints
 {
     return numbers.Sum();
@@ -689,27 +367,9 @@ Console.WriteLine($"Total(array):   {Total(nums)}");
 
 <h4>No <code style="font-size:0.75em">**kwargs</code> — alternatives</h4>
 
-```csharp
-// No **kwargs — C# alternatives for flexible key-value arguments
-//
-// Technique: (1) Anonymous object: new { key = value }. (2) Dictionary.
-//   (3) Named params with defaults. Anonymous objects common in ASP.NET.
-//
-// Benefits:
-//   - Anonymous objects have clean syntax: new { page = "home", x = 42 }
-//   - Dictionary is fully dynamic — runtime keys
-//   - Named params give compile-time safety
-//
-// Anti-patterns:
-//   - Reflection on anonymous objects in hot paths — slow
-//   - Dictionary when named params would give type safety
-//
-// When to use:
-//   - Anonymous for framework APIs; Dictionary for dynamic key sets
-//
-// When NOT to use:
-//   - Known parameter types — use typed parameters
+C# has no `**kwargs`. Alternatives: (1) anonymous object `new { key = value }` (common in ASP.NET), (2) `Dictionary<string, object>` for dynamic keys, (3) named params with defaults for compile-time safety.
 
+```csharp
 void LogEvent(string name, object data) =>
     Console.WriteLine($"  {name}: {data}");
 LogEvent("click", new { page = "home", button = "submit" });
@@ -727,37 +387,11 @@ LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] 
 
 #### Lambda expressions
 
+`(params) => expression` for single-expression lambdas (return is implicit). `(params) => { statements }` for multi-statement with explicit `return`. Assign to `Func<T, TResult>` (returns value) or `Action<T>` (void). Lambdas capture enclosing scope variables automatically.
+
+> [!warning] Keep lambdas short (≤3 lines). Extract complex logic to named methods. Don't use lambdas with side effects in LINQ — use `foreach`.
+
 ```csharp
-// Lambda expressions — anonymous inline functions
-//
-// Technique: (params) => expression for single-expression lambdas.
-//   (params) => { statements } for multi-statement with explicit return.
-//   Assigned to Func<T, TResult>, Action<T>, or Predicate<T> variables.
-//
-// Benefits:
-//   - Inline — no separate method declaration needed
-//   - Closures — capture variables from enclosing scope automatically
-//   - LINQ integration — Where(x => x > 5), Select(x => x * 2)
-//
-// Anti-patterns:
-//   - Complex lambdas (>3 lines) — extract to a named method
-//   - Lambdas with side effects in LINQ — use foreach for clarity
-//
-// When to use:
-//   - LINQ queries, event handlers, callbacks, short inline logic
-//
-// When NOT to use:
-//   - Complex logic — named methods are more readable and debuggable
-
-// Lambda expressions — anonymous inline functions assigned to Func or Action variables
-//
-// KEY CONCEPTS:
-// - Lambda: (params) => expression  or  (params) => { statements; }
-// - Expression lambda: (x, y) => x + y — single expression, return is implicit.
-// - Statement lambda: (x) => { var y = x * 2; return y; } — multi-line with braces.
-// - Func<T, TResult>: delegate type for lambdas that return a value.
-// - Action<T>: delegate type for lambdas that return void.
-
 Func<int, int> square = x => x * x;
 Func<int, int, int> add = (a, b) => a + b;
 
@@ -770,26 +404,9 @@ Console.WriteLine($"add(3, 4): {add(3, 4)}");
 
 #### Statement lambda — multi-line body
 
-```csharp
-// Statement lambda — multi-line with braces and explicit return
-//
-// Technique: (params) => { statements; return value; }. Braces and
-//   explicit return required. Supports if/else, loops, try/catch.
-//
-// Benefits:
-//   - Full method body syntax — any statement allowed
-//   - Still captures enclosing scope (closure)
-//
-// Anti-patterns:
-//   - Statement lambdas >5 lines — extract to named method
-//   - Missing return in statement lambda — compiles as void Action
-//
-// When to use:
-//   - Multi-step transformations in LINQ or callbacks
-//
-// When NOT to use:
-//   - Single expressions — use expression lambda (no braces)
+`(params) => { statements; return value; }` — braces and explicit `return` required. Supports `if`/`else`, loops, `try`/`catch`. Still captures enclosing scope. Keep under 5 lines — extract longer logic to a named method.
 
+```csharp
 Func<int, string> classify = (x) => {
     if (x > 0) return "positive";
     if (x < 0) return "negative";
@@ -802,16 +419,10 @@ Console.WriteLine($"classify(-5): {classify(-5)}");
 
 #### Lambdas with LINQ
 
+Pass lambdas to `OrderBy`, `Select`, `Where`, `MinBy`. Method chains compose operations declaratively. Compiler infers lambda parameter types.
+
 ```csharp
-// Lambdas with LINQ — inline functions for sorting, filtering, projection
-//
-// Technique: Pass lambdas to OrderBy, Select, Where, MinBy. Lambda
-//   extracts or transforms each element. Method chains compose operations.
-//
-// Benefits:
-//   - Declarative — describe the transformation, not the loop
-//   - Composable — chain without intermediate variables
-//   - Type-inferred — compiler deduces lambda parameter types
+// Lambdas with LINQ
 //
 // Anti-patterns:
 //   - Complex lambdas in LINQ — extract to named methods
@@ -912,35 +523,15 @@ Console.WriteLine($"times(5): {times(5)}");    // 50 — sees the change!
     times(5): 15
     times(5): 50
 
-#### Summary — lambdas vs named methods
+#### Lambdas vs named methods
 
-```csharp
-// Summary — lambda vs named method decision guide
-//
-// Technique: Lambda for LINQ, event handlers, short inline logic.
-//   Named method for reusable logic, complex bodies, debugging.
-//
-// Benefits:
-//   - Quick decision guide for consistent code style
-//
-// Anti-patterns:
-//   - Complex lambdas that should be methods
-//   - Named methods for trivial one-liners used once
-//
-// When to use:
-//   - Deciding between lambda and named method
-//
-// When NOT to use:
-//   - N/A — reference summary
+| Use | When |
+|---|---|
+| **Lambda** | LINQ, event handlers, callbacks, short inline logic |
+| **Named method** | Reusable, complex, needs documentation |
+| **Statement lambda** | Multi-line body with braces and explicit `return` |
 
-Console.WriteLine("Use lambda:  with LINQ, event handlers, callbacks, short inline logic");
-Console.WriteLine("Use method:  reusable, complex, needs documentation");
-Console.WriteLine("Statement lambda: allows multi-line body with braces and explicit return");
-```
-
-    Use lambda:  with LINQ, event handlers, callbacks, short inline logic
-    Use method:  reusable, complex, needs documentation
-    Statement lambda: allows multi-line body with braces and explicit return
+> [!warning] Don't write complex lambdas that should be methods. Don't create named methods for trivial one-liners used once.
 
 ## Closures & Scope
 
@@ -1337,40 +928,14 @@ Console.WriteLine();
 
 ## Method Overloading & Extension Methods
 
-#### Method overloading
+**Method overloading:** multiple methods with the same name but different parameter types or counts. The compiler resolves the correct overload at compile time — clean API, no runtime overhead, backward compatible.
 
-```csharp
-// Method overloading — same name, different parameter signatures
-//
-// Technique: Multiple methods with the same name but different parameter
-//   types or counts. The compiler resolves the correct overload at
-//   compile time based on argument types.
-//
-// Benefits:
-//   - Clean API — one name for related operations: Format(int), Format(double)
-//   - Compile-time resolution — no runtime overhead or ambiguity
-//   - Backward compatible — add new overloads without breaking existing callers
-//
-// Anti-patterns:
-//   - Overloads that do fundamentally different things — confusing API
-//   - Too many overloads — use optional/named parameters or generics
-//   - Ambiguous overloads — compiler error when it can't decide
-//
-// When to use:
-//   - Same operation on different types, progressive parameter addition
-//
-// When NOT to use:
-//   - Unrelated operations — use different method names
+**Extension methods:** add methods to existing types without modifying their source code. Defined as static methods in a static class with `this` before the first parameter. LINQ methods (`.Where`, `.Select`, `.OrderBy`) are all extension methods on `IEnumerable<T>`.
 
-// Method Overloading & Extension Methods
-//
-// KEY CONCEPTS:
-// - Method overloading: multiple methods with the SAME name but DIFFERENT parameter types
-//   or counts. The compiler picks the right one based on arguments.
-// - Extension methods: add methods to EXISTING types without modifying their source code.
-//   Defined as static methods in a static class, with 'this' before the first parameter.
-// - LINQ methods (.Where, .Select, .OrderBy) are all extension methods on IEnumerable<T>.
-```
+> [!warning] Overloading pitfalls
+> - Overloads that do fundamentally different things — confusing API
+> - Too many overloads — use optional/named parameters or generics instead
+> - Ambiguous overloads cause compiler errors when it can't decide
 
 #### Same name, different parameters
 

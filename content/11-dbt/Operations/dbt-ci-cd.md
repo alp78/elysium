@@ -15,7 +15,7 @@ related:
 
 # dbt: CI/CD
 
-A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents regressions in data quality tests, and deploys only what changed. For financial index and ESG data pipelines the stakes are high: a broken model can silently corrupt benchmark calculations used for regulatory reporting.
+A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents regressions in data quality tests, and deploys only what changed. The workflows here build on [[github-actions-workflows]] and apply [[github-actions-ci-cd]] patterns to dbt-specific concerns. For financial index and ESG data pipelines the stakes are high: a broken model can silently corrupt benchmark calculations used for regulatory reporting.
 
 ---
 

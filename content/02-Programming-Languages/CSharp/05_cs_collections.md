@@ -313,21 +313,12 @@ Console.WriteLine($"Substring:     '{sub1}'");
 
 #### When to use Array vs List vs Span
 
-```csharp
-// When to use Array vs List vs Span — decision reference
-
-Console.WriteLine("Array (int[]):    fixed data, interop, raw buffers");
-Console.WriteLine("List<T>:          dynamic data, add/remove, general purpose (95% of the time)");
-Console.WriteLine("Span<T>:          performance-critical slicing without allocation");
-Console.WriteLine("                  parsers, serializers, hot loops, large data processing");
-Console.WriteLine("ReadOnlySpan:     zero-copy string slicing, immutable views");
-```
-
-    Array (int[]):    fixed data, interop, raw buffers
-    List<T>:          dynamic data, add/remove, general purpose (95% of the time)
-    Span<T>:          performance-critical slicing without allocation
-                      parsers, serializers, hot loops, large data processing
-    ReadOnlySpan:     zero-copy string slicing, immutable views
+| Type | Use when |
+|---|---|
+| `int[]` (Array) | Fixed data, interop, raw buffers |
+| `List<T>` | Dynamic data, add/remove, general purpose (95% of the time) |
+| `Span<T>` | Performance-critical slicing without allocation (parsers, serializers, hot loops) |
+| `ReadOnlySpan<T>` | Zero-copy string slicing, immutable views |
 
 ## Dictionaries
 
@@ -677,19 +668,13 @@ Console.WriteLine($"Swapped: a={a2}, b={b2}");
 
 #### Records as an alternative to namedtuple
 
+For named immutable data, C# uses records:
+
 ```csharp
-// Records as alternative to tuples — named immutable data types
-
-Console.WriteLine("For named immutable data, C# uses:");
-Console.WriteLine("  record Point(int X, int Y);         // positional record");
-Console.WriteLine("  record class Person(string Name);    // reference type (default)");
-Console.WriteLine("  record struct Coord(int X, int Y);   // value type");
+record Point(int X, int Y);          // positional record
+record class Person(string Name);    // reference type (default)
+record struct Coord(int X, int Y);   // value type
 ```
-
-    For named immutable data, C# uses:
-      record Point(int X, int Y);         // positional record
-      record class Person(string Name);    // reference type (default)
-      record struct Coord(int X, int Y);   // value type
 
 #### Enum type declaration
 
@@ -948,30 +933,17 @@ Need O(1) insert/remove at position? → LinkedList<T>
     Need priority?         → PriorityQueue<T,P>
     Need O(1) insert/remove at position? → LinkedList<T>
 
-#### Common DE patterns
+#### Common data engineering patterns
 
-```csharp
-// Common data engineering patterns — collection selection by use case
-
-Console.WriteLine("ETL records:      List<T> or T[]");
-Console.WriteLine("Config/params:    Dictionary<string, object>");
-Console.WriteLine("Deduplication:    HashSet<T>");
-Console.WriteLine("Lookup table:     Dictionary<TKey, TValue>");
-Console.WriteLine("Grouping:         .GroupBy().ToDictionary()  (LINQ)");
-Console.WriteLine("Counting:         .GroupBy().Count()  (LINQ)");
-Console.WriteLine("Task queue:       Queue<T>");
-Console.WriteLine("Priority tasks:   PriorityQueue<T, int>");
-Console.WriteLine("Schema fields:    ValueTuple or enum");
-Console.WriteLine("Immutable config: ImmutableDictionary (System.Collections.Immutable)");
-```
-
-    ETL records:      List<T> or T[]
-    Config/params:    Dictionary<string, object>
-    Deduplication:    HashSet<T>
-    Lookup table:     Dictionary<TKey, TValue>
-    Grouping:         .GroupBy().ToDictionary()  (LINQ)
-    Counting:         .GroupBy().Count()  (LINQ)
-    Task queue:       Queue<T>
-    Priority tasks:   PriorityQueue<T, int>
-    Schema fields:    ValueTuple or enum
-    Immutable config: ImmutableDictionary (System.Collections.Immutable)
+| Use case | Collection |
+|---|---|
+| ETL records | `List<T>` or `T[]` |
+| Config / params | `Dictionary<string, object>` |
+| Deduplication | `HashSet<T>` |
+| Lookup table | `Dictionary<TKey, TValue>` |
+| Grouping | `.GroupBy().ToDictionary()` (LINQ) |
+| Counting | `.GroupBy().Count()` (LINQ) |
+| Task queue | `Queue<T>` |
+| Priority tasks | `PriorityQueue<T, int>` |
+| Schema fields | `ValueTuple` or `enum` |
+| Immutable config | `ImmutableDictionary` (`System.Collections.Immutable`) |

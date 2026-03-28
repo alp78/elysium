@@ -14,7 +14,7 @@ status: complete
 
 # Services — Starting, Stopping, and Debugging Daemons
 
-Every long-running process in your infrastructure — SQL Server, Airflow, Datadog agent, Docker daemon — runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots.
+Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [[airflow-core-concepts]].
 
 ## Linux (systemd)
 
@@ -98,6 +98,8 @@ Get-Service | Where-Object Status -eq "Running" | Sort-Object DisplayName
 # Service dependencies (what else stops if I stop this?)
 Get-Service -Name "MSSQLSERVER" -DependentServices
 ```
+
+When running multiple services as containers, [[docker-compose]] provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
 
 ## Related
 - [[viewing-processes]] — monitor resource usage of a running service

@@ -25,7 +25,7 @@ SQL Server's buffer pool is its primary data cache — it holds database pages (
 | **Buffer Cache Hit Ratio** | Percentage of page reads served from RAM vs. disk. Target: > 99%. |
 | **Memory clerk** | Internal component tracking memory allocations by type (buffer pool, plan cache, lock manager) |
 | **Memory grant** | RAM pre-allocated to a query for sort and hash operations before it can execute |
-| **max server memory** | Hard cap on how much RAM SQL Server can allocate. Must always be set — never leave at default. |
+| **max server memory** | Hard cap on how much RAM SQL Server can allocate. Must always be set — never leave at default (see [[server-configuration]] for the exact `sp_configure` commands). |
 
 ## Memory Sizing Rule
 
@@ -55,6 +55,8 @@ WHERE name = 'max server memory (MB)';
 > The default max server memory is 2,147,483,647 MB (unlimited). SQL Server will consume nearly all available RAM, starving the OS and creating instability. On GCP VMs, this can cause the OOM killer to terminate the `sqlservr` process during spikes. Always set this before going to production.
 
 ## Checking Available System Memory
+
+For OS-level memory monitoring with `free`, `vmstat`, and other Linux tools, see [[system-resources]].
 
 **OS-level memory status:**
 
@@ -236,6 +238,9 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 | Small OLTP pipeline | e2-standard-4 (16 GB) | e2-highmem-2 (16 GB) |
 | Medium data warehouse | e2-standard-8 (32 GB) | n2-highmem-4 (32 GB) |
 | Large analytical workload | n2-highmem-8 (64 GB) | n2-highmem-16 (128 GB) |
+
+> [!tip] Related pattern: buffer pool metrics in Datadog
+> The [[datadog-sql-server-integration]] exposes buffer cache hit ratio and PLE as continuous time-series metrics, enabling alerting on memory pressure trends before they become incidents.
 
 > [!warning] 2 GB VMs Are Insufficient
 > SQL Server 2022 on a 2 GB e2-small VM is critically undersized. The SQL Server engine alone reserves ~700 MB–1 GB, leaving almost nothing for the buffer pool. Any table scan or bulk load will constantly thrash the disk. Minimum production recommendation: 16 GB.

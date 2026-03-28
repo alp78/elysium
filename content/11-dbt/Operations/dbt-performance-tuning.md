@@ -88,7 +88,7 @@ def check_slow_models(**context):
 
 ### Partition Pruning
 
-Partitioned tables are only useful if queries filter on the partition column. Verify pruning is happening in the query plan:
+Partitioned tables are only useful if queries filter on the partition column — see [[querying-and-cost-optimization]] for broader BigQuery cost strategies. Verify pruning is happening in the query plan:
 
 ```sql
 -- Check partitions scanned in INFORMATION_SCHEMA
@@ -181,7 +181,7 @@ GROUP BY 1, 2
 
 ### Post-Hook Indexes
 
-dbt materialises tables without indexes by default. Add them in `post-hook`:
+dbt materialises tables without indexes by default. The [[partitioning-strategies]] note covers SQL Server partitioning in depth; for dbt-managed tables, add indexes in `post-hook`:
 
 ```sql
 -- dbt_project.yml

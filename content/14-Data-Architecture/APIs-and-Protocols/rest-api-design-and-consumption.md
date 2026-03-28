@@ -91,7 +91,7 @@ status: complete
 
 ### What REST Is
 
-REST (Representational State Transfer) is a stateless client-server architectural style built on top of HTTP. Every request from a client contains all information the server needs to fulfill it — no session state lives on the server between calls. This property is what makes REST pipelines straightforward to scale horizontally and retry safely.
+REST (Representational State Transfer) is a stateless client-server architectural style built on top of HTTP. Every request from a client contains all information the server needs to fulfill it — no session state lives on the server between calls. This property is what makes REST pipelines straightforward to scale horizontally and retry safely. For Python implementation of REST clients and servers, see [[15_py_webapis]]; for C#, see [[15_cs_webapis]].
 
 Key constraints of REST:
 - **Stateless** — server holds no client context between requests
@@ -299,6 +299,8 @@ curl -H "X-API-Key: $API_KEY" "https://api.example.com/v1/prices?symbol=AAPL"
 # curl with Authorization header
 curl -H "Authorization: Bearer $API_KEY" "https://api.example.com/v1/prices?symbol=AAPL"
 ```
+
+For more curl recipes and CLI-based API interaction patterns, see [[http-requests-and-apis]].
 
 > [!warning] Never log query params containing secrets
 > Many logging frameworks capture full URLs. If the API key is a query parameter, it ends up in your logs. Use header-based auth and scrub Authorization headers from logs.
@@ -1657,6 +1659,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | WebSocket | Real-time feeds, live prices          | Very low     | Any format          | Yes (full-duplex)  |
 | Webhook   | Event notifications, push-based       | Event-driven | JSON                | Push-based         |
 | FTP/SFTP  | Bulk file transfers, legacy data      | High         | Files               | No                 |
+
+For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [[api-protocols-comparison]].
 
 **Use REST when:**
 - Consuming a third-party API (it will almost certainly be REST)

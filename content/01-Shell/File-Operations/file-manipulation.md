@@ -74,6 +74,9 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 # Now you have a recovery window. Delete from /tmp later.
 ```
 
+> [!info] Prerequisites
+> Before writing delete logic in scripts, enable [[defensive-scripting|set -euo pipefail]] -- `set -u` prevents the catastrophic `rm -rf $UNDEFINED` expansion, and `trap EXIT` ensures cleanup runs even on error.
+
 > [!warning] Never `rm -rf` Directly in Scripts
 > Use this pattern instead:
 > ```bash
@@ -90,7 +93,7 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 # Create directory with parents
 mkdir -p /data/pipeline/{bronze,silver,gold}/staging
 # -p = create parent directories as needed, no error if already exists
-# Combined with brace expansion: creates the full medallion directory tree
+# Combined with brace expansion: creates the full [[medallion-architecture]] directory tree
 
 # File permissions — the numeric system
 chmod 755 script.sh
@@ -120,7 +123,7 @@ chown -R 50000:0 /home/airflow/dags/
 > ```bash
 > chown -R 50000:0 /opt/airflow/dags/
 > ```
-> The UID 50000 is Airflow's default container user. Verify with `docker inspect` if using a custom image.
+> The UID 50000 is Airflow's default container user. Verify with `docker inspect` if using a custom image. For the full [[container-lifecycle]] including bind mounts and volume management, see the Docker section.
 
 ## Disk Usage Analysis
 
@@ -137,6 +140,7 @@ du -h --max-depth=1 /var/opt/mssql/ | sort -rh
 df -h
 # Disk free space for all mounted filesystems
 # CHECK THIS REGULARLY on database servers — SQL Server crashes when disk is full
+# For the full disk-full investigation workflow, see the [[sql-server-disk-full]] runbook
 ```
 
 ## PowerShell

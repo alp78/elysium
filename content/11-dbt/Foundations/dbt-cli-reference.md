@@ -13,7 +13,7 @@ related:
 
 # dbt: CLI Reference
 
-Complete reference for the dbt command-line interface. All examples are oriented toward a financial data platform running index, OHLCV, ESG, and corporate action models.
+Complete reference for the dbt command-line interface. All examples are oriented toward a financial data platform running index, OHLCV, ESG, and corporate action models. For a condensed quick-reference version, see [[dbt-cheat-sheet]].
 
 ---
 

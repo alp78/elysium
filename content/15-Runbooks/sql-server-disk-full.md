@@ -51,6 +51,8 @@ gcloud compute ssh sql-vm --zone=europe-west1-b --ssh-flag="-o StrictHostKeyChec
 
 ### Step 2 — Identify the full mount point
 
+Use [[navigation-and-listing|df and du]] to identify which mount point is consuming space:
+
 ```bash
 df -h
 ```
@@ -297,7 +299,7 @@ sudo systemctl restart mssql-server
 
 ### RC-5: Emergency GCE Disk Resize (Online, No VM Downtime)
 
-Use this when the disk physically needs to grow and no data can be deleted fast enough.
+Use this when the disk physically needs to grow and no data can be deleted fast enough. The full [[disks-and-snapshots|GCE disk and snapshot lifecycle]] applies here — remember that resizes are irreversible.
 
 ```bash
 # Step 1: Snapshot the disk before any resize (safety net)
@@ -331,6 +333,8 @@ df -h /datadrive
 > You can only increase disk size, never decrease. Start with the minimum needed (e.g., +100 GB) rather than jumping to maximum. A snapshot does not protect against a bad resize, but it allows restore to a new disk if the VM becomes unbootable.
 
 ### RC-6: Old SQL Server Backup Files Consuming Disk
+
+Stale backup files are a frequent cause of disk pressure. Review your [[backup-types-and-strategy]] to confirm which files can safely be purged and which must be retained for point-in-time recovery.
 
 ```bash
 # List backup files older than 3 days on the local disk

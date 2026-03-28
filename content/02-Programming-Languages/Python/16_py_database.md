@@ -424,6 +424,8 @@ conn.close()
 
 ## 2. SQL Server — pyodbc (ODBC Driver 18)
 
+The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [[sql-fundamentals]]. For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [[blocking-and-locking]].
+
 #### SQL Server — connect and list schemas/tables
 
 ```python
@@ -4190,22 +4192,16 @@ pd.DataFrame(results)
 
 ### DuckDB vs Polars vs Pandas — reference
 
-#### Operation mapping — DuckDB SQL vs Polars vs Pandas
-
-```python
-# DuckDB vs Polars vs Pandas — operation mapping
-#
-# Operation        DuckDB SQL                         Polars                              Pandas
-# ───────────────  ───────────────────────────────────  ───────────────────────────────────  ───────────────────────────────────
-# Read Parquet     SELECT FROM 'file.parquet'          pl.read_parquet(path)                pd.read_parquet(path)
-# Read CSV         SELECT FROM 'file.csv'              pl.read_csv(path)                    pd.read_csv(path)
-# Filter           WHERE col = 'val'                   df.filter(pl.col("c")==v)            df[df["c"]==v]
-# Select cols      SELECT a, b                         df.select("a","b")                   df[["a","b"]]
-# Sort             ORDER BY col DESC                   df.sort("c", descending=True)        df.sort_values("c", ascending=False)
-# Limit            LIMIT 10                            df.head(10)                          df.head(10)
-# Group + Agg      GROUP BY ... AVG(c)                 df.group_by("c").agg(...)            df.groupby("c").agg(...)
-# Window           LAG() OVER (PARTITION BY ...)        pl.col("c").shift(1).over("g")       df.groupby("g")["c"].shift(1)
-# Export           COPY TO 'file.parquet'              df.write_parquet(path)                df.to_parquet(path)
-# Lazy eval        No                                   pl.scan_parquet(path)                No
-# Returns          .df() → pandas DataFrame            Polars DataFrame                     pandas DataFrame
-```
+| Operation | DuckDB SQL | Polars | Pandas |
+|---|---|---|---|
+| Read Parquet | `SELECT FROM 'file.parquet'` | `pl.read_parquet(path)` | `pd.read_parquet(path)` |
+| Read CSV | `SELECT FROM 'file.csv'` | `pl.read_csv(path)` | `pd.read_csv(path)` |
+| Filter | `WHERE col = 'val'` | `df.filter(pl.col("c")==v)` | `df[df["c"]==v]` |
+| Select cols | `SELECT a, b` | `df.select("a","b")` | `df[["a","b"]]` |
+| Sort | `ORDER BY col DESC` | `df.sort("c", descending=True)` | `df.sort_values("c", ascending=False)` |
+| Limit | `LIMIT 10` | `df.head(10)` | `df.head(10)` |
+| Group + Agg | `GROUP BY ... AVG(c)` | `df.group_by("c").agg(...)` | `df.groupby("c").agg(...)` |
+| Window | `LAG() OVER (PARTITION BY ...)` | `pl.col("c").shift(1).over("g")` | `df.groupby("g")["c"].shift(1)` |
+| Export | `COPY TO 'file.parquet'` | `df.write_parquet(path)` | `df.to_parquet(path)` |
+| Lazy eval | No | `pl.scan_parquet(path)` | No |
+| Returns | `.df()` → pandas DataFrame | Polars DataFrame | pandas DataFrame |

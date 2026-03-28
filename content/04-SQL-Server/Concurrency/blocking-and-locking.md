@@ -146,7 +146,7 @@ The isolation level controls what a transaction can see when other transactions 
 
 ## Read Committed Snapshot Isolation (RCSI)
 
-RCSI is the most important concurrency improvement for mixed read/write workloads. It eliminates reader-writer blocking entirely by giving readers a snapshot of the data from the version store (in TempDB) rather than taking shared locks.
+RCSI is the most important concurrency improvement for mixed read/write workloads. It eliminates reader-writer blocking entirely by giving readers a snapshot of the data from the version store (in TempDB) rather than taking shared locks. The [[server-configuration]] page covers the full RCSI setup alongside other non-negotiable instance settings.
 
 **Under RCSI:**
 - `SELECT` statements do NOT acquire S locks → cannot block `INSERT`/`UPDATE`/`DELETE`
@@ -215,7 +215,7 @@ WHERE s.session_id = <blocker_session_id>;
 - **0 rows:** No blocking right now — good
 - **Rows with wait_sec < 5:** Transient blocking — normal under load
 - **Rows with wait_sec > 30:** Significant blocking — a long-running transaction is holding locks
-- **Chains (A blocks B, B blocks C):** One session cascading to many — find the head blocker (the session_id that appears as `blocker` but not as `blocked`)
+- **Chains (A blocks B, B blocks C):** One session cascading to many — find the head blocker (the session_id that appears as `blocker` but not as `blocked`). When blocking becomes circular, it escalates to a [[deadlock-detection-and-prevention|deadlock]].
 
 **Common causes and fixes:**
 
@@ -261,7 +261,7 @@ COMMIT;
 -- Without XACT_ABORT, a failed UPDATE leaves the transaction open and locks held
 ```
 
-For pipeline code in Python/C#, always check that errors cause a `rollback()` call. The `XACT_ABORT ON` setting handles this at the T-SQL level for stored procedure and batch code. See [[merge-and-upsert#Transaction Management]] for complete patterns.
+For pipeline code in Python/C#, always check that errors cause a `rollback()` call. The `XACT_ABORT ON` setting handles this at the T-SQL level for stored procedure and batch code. See [[merge-and-upsert#Transaction Management]] for complete patterns. In pipeline orchestration, [[race-conditions]] caused by concurrent tasks are a common source of unexpected blocking.
 
 ---
 

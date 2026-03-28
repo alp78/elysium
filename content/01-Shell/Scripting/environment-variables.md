@@ -89,7 +89,7 @@ sqlcmd -S 10.132.0.2 -U sa -P 'MyPassword123'  # password visible in process lis
 export SA_PASSWORD=$(cat /run/secrets/sa_password)
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 
-# BEST: Use a secret manager and inject at runtime
+# BEST: Use a secret manager and inject at runtime (see [[secrets-management]])
 export SA_PASSWORD=$(gcloud secrets versions access latest --secret="sql-sa-password")
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 
@@ -98,7 +98,7 @@ unset SA_PASSWORD
 ```
 
 > [!info] The `ps aux` Credential Leak
-> Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the container — always use this mechanism for containerized workloads.
+> Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [[container-lifecycle|container]] -- always use this mechanism for containerized workloads.
 
 ## PowerShell Environment Variables
 
@@ -135,6 +135,8 @@ Remove-Item Env:MY_VAR                                          # current sessio
 > [Environment]::SetEnvironmentVariable("PATH", "$current;C:\tools\bin", "User")
 > ```
 > Restart your terminal for the change to take effect.
+
+For a declarative approach to managing variables and configuration across environments, see [[terraform-variables-and-outputs]] which covers Terraform input variables, locals, and output values.
 
 ## Related
 

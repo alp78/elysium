@@ -44,6 +44,8 @@ Each line is a pattern. Git will ignore matching files.
 
 ## Pattern Syntax
 
+The glob-style pattern syntax used in `.gitignore` is shared with shell expansion. For a deeper look at how `*`, `**`, and `?` work, see [[brace-expansion-and-globbing]].
+
 | Pattern | Matches |
 |---------|---------|
 | `.env` | A file named exactly `.env` anywhere in the repo |
@@ -172,6 +174,8 @@ Use BFG or `filter-branch` as above. Even after removing the trailer from all co
 ---
 
 ## terraform.tfvars — Critical to Gitignore
+
+Files like `.env` contain [[environment-variables]] that configure local development and CI/CD -- they should always be gitignored because they often hold secrets or machine-specific paths.
 
 The Terraform variables file containing passwords and API keys must be gitignored:
 

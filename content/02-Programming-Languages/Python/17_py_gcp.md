@@ -102,7 +102,7 @@ print(f"Region:  {REGION}")
 
 ## 2. Cloud Storage (GCS)
 
-**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here.
+**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil cp`, `gcloud storage cp`, lifecycle rules), see [[gcs-object-operations]].
 
 ```python
 # Cloud Storage — object storage for data lakes.
@@ -314,7 +314,7 @@ for row in results:
 
 ## 4. Pub/Sub
 
-**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture.
+**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [[pubsub-messaging]].
 
 ```python
 # Pub/Sub — asynchronous messaging for pipeline events.
@@ -574,7 +574,7 @@ if events_received:
 
 ## 6. Secret Manager
 
-**Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
+**Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically. For the broader secrets management strategy including rotation policies and workload identity, see [[secrets-management]].
 
 ```python
 # Secret Manager — secure storage for credentials, API keys, connection strings.
@@ -765,50 +765,24 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
 
 ## 8. Summary
 
-```python
-# Summary — GCP Python cheat sheet
-#
-# AUTHENTICATION:
-# os.environ['GOOGLE_APPLICATION_CREDENTIALS']   Service account key
-# Client(project=PROJECT_ID)                     All libraries use this
-#
-# CLOUD STORAGE:
-# storage.Client()                               Create client
-# bucket.blob(path).upload_from_string(data)     Upload
-# bucket.blob(path).download_as_text()           Download
-# client.list_blobs(bucket, prefix=...)          List objects
-#
-# BIGQUERY:
-# bigquery.Client()                              Create client
-# client.load_table_from_dataframe(df, table)    Load DataFrame
-# client.query(sql)                              Run SQL query
-# job.result()                                   Wait for completion
-#
-# PUB/SUB:
-# publisher.publish(topic, data, **attrs)        Publish message
-# subscriber.pull(subscription, max_messages)    Pull messages
-# subscriber.acknowledge(subscription, ack_ids)  Acknowledge
-#
-# FIRESTORE:
-# db.collection('name').document('id').set({})   Write document
-# db.collection('name').stream()                 Read all docs
-# db.collection('name').where(field, op, val)    Query with filter
-# db.batch()                                     Batch writes
-#
-# SECRET MANAGER:
-# sm.access_secret_version(name)                 Read secret
-# sm.create_secret(parent, secret_id, secret)    Create secret
-# sm.add_secret_version(parent, payload)         Add version
-#
-# CLOUD MONITORING:
-# logger.log_struct({...}, severity='INFO')      Write structured log
-# metric_client.create_time_series(series)       Write custom metric
-#
-# C# EQUIVALENTS:
-# google-cloud-storage     → Google.Cloud.Storage.V1
-# google-cloud-bigquery    → Google.Cloud.BigQuery.V2
-# google-cloud-pubsub      → Google.Cloud.PubSub.V1
-# google-cloud-firestore   → Google.Cloud.Firestore
-# google-cloud-secret-mgr  → Google.Cloud.SecretManager.V1
-# google-cloud-monitoring  → Google.Cloud.Monitoring.V3
-```
+> [!abstract]- GCP Python Quick Reference
+> | Service | Pattern | Description |
+> |---|---|---|
+> | **Auth** | `os.environ['GOOGLE_APPLICATION_CREDENTIALS']` | Service account key |
+> | **Auth** | `Client(project=PROJECT_ID)` | All libraries use this |
+> | **GCS** | `storage.Client()` | Create client |
+> | **GCS** | `bucket.blob(path).upload_from_string(data)` | Upload |
+> | **GCS** | `bucket.blob(path).download_as_text()` | Download |
+> | **GCS** | `client.list_blobs(bucket, prefix=...)` | List objects |
+> | **BigQuery** | `client.load_table_from_dataframe(df, table)` | Load DataFrame |
+> | **BigQuery** | `client.query(sql)` | Run SQL query |
+> | **BigQuery** | `job.result()` | Wait for completion |
+> | **Pub/Sub** | `publisher.publish(topic, data, **attrs)` | Publish message |
+> | **Pub/Sub** | `subscriber.pull(subscription, max_messages)` | Pull messages |
+> | **Firestore** | `db.collection('name').document('id').set({})` | Write document |
+> | **Firestore** | `db.collection('name').stream()` | Read all docs |
+> | **Firestore** | `db.batch()` | Batch writes |
+> | **Secrets** | `sm.access_secret_version(name)` | Read secret |
+> | **Monitoring** | `logger.log_struct({...}, severity='INFO')` | Structured log |
+>
+> **C# equivalents:** `google-cloud-storage` → `Google.Cloud.Storage.V1` | `google-cloud-bigquery` → `Google.Cloud.BigQuery.V2` | `google-cloud-pubsub` → `Google.Cloud.PubSub.V1` | `google-cloud-firestore` → `Google.Cloud.Firestore` | `google-cloud-secret-mgr` → `Google.Cloud.SecretManager.V1`

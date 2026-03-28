@@ -27,7 +27,7 @@ The bronze layer is the raw data landing zone in the [[medallion-architecture]].
 
 ### Idempotent Database and Schema Creation
 
-All DDL in this project is idempotent — safe to run multiple times without error. File: `db/ddl/bronze_schema.sql`
+All DDL in this project is idempotent — safe to run multiple times without error, following the principles described in [[idempotent-pipeline-design]]. File: `db/ddl/bronze_schema.sql`
 
 **Create the analytics database if it doesn't exist (idempotent):**
 
@@ -48,7 +48,7 @@ GO
 
 ### Connection Helper (`utils/db.py`)
 
-All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded.
+All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded. For benchmarks comparing pyodbc `fast_executemany` with alternative ingestion methods (bcp, SqlBulkCopy), see [[23_py_data_ingestion]] and [[23_cs_data_ingestion]].
 
 **pyodbc connection factory using environment variables from .env:**
 
@@ -465,7 +465,7 @@ CREATE UNIQUE INDEX UX_silver_{ohlcv_table}
 
 ## Loading Patterns (JSON → Bronze)
 
-Loaders read JSON files produced by fetchers and write to bronze tables. Two strategies apply, depending on the data type.
+Loaders read JSON files produced by fetchers and write to bronze tables. Two strategies apply, depending on the data type. In production, [[airflow-dag-patterns|Airflow DAGs]] orchestrate these bronze loads as upstream tasks in the pipeline.
 
 ### Strategy 1: Truncate & Reload (Most Loaders)
 
