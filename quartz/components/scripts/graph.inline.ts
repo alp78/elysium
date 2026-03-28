@@ -334,14 +334,16 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     }
   }
 
-  // Attach hover events
+  // Attach hover events (suppressed during drag)
   for (const nr of nodeRenders) {
     nr.gfx
       .on("pointerover", () => {
+        if (dragging) return // don't change hover while dragging
         setHover(nr.sim.id)
         updateLabels(currentTransform.k)
       })
       .on("pointerleave", () => {
+        if (dragging) return
         setHover(null)
         updateLabels(currentTransform.k)
       })
@@ -358,20 +360,24 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           if (!event.active) simulation.alphaTarget(0.008).restart()
           event.subject.fx = event.subject.x
           event.subject.fy = event.subject.y
-          event.subject.__initDrag = { x: event.subject.x, y: event.subject.y }
           dragStartTime = Date.now()
           dragging = true
+          // Lock hover to the dragged node
+          setHover(event.subject.id)
+          updateLabels(currentTransform.k)
         })
         .on("drag", function (event) {
-          const init = event.subject.__initDrag
-          event.subject.fx = init.x + (event.x - init.x) / currentTransform.k
-          event.subject.fy = init.y + (event.y - init.y) / currentTransform.k
+          // Convert screen coords to simulation coords, keeping pointer on node
+          event.subject.fx = (event.x - currentTransform.x) / currentTransform.k
+          event.subject.fy = (event.y - currentTransform.y) / currentTransform.k
         })
         .on("end", function (event) {
           if (!event.active) simulation.alphaTarget(0)
           event.subject.fx = null
           event.subject.fy = null
           dragging = false
+          setHover(null)
+          updateLabels(currentTransform.k)
           if (Date.now() - dragStartTime < 500) {
             const targ = resolveRelative(fullSlug, event.subject.id)
             window.spaNavigate(new URL(targ, window.location.toString()))
