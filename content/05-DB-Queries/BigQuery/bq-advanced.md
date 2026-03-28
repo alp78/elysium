@@ -2215,7 +2215,7 @@ LIMIT 10
 | `NULL = NULL` | NULL (not TRUE!) | NULL is unknown, not a value |
 | `NULL + 5` | NULL | Any arithmetic with NULL = NULL |
 | `AVG(col)` | Ignores NULLs | Aggregates skip NULLs |
-| `COUNT(*)` vs `COUNT(col)` | Different! | COUNT(*) counts rows, COUNT(col) skips NULLs |
+| `COUNT(\*)` vs `COUNT(col)` | Different! | `COUNT(\*)` counts rows, `COUNT(col)` skips NULLs |
 | `COALESCE(a, b, c)` | First non-NULL | ANSI standard, N arguments |
 | `IFNULL(a, b)` | a if not null, else b | BigQuery SQL only, 2 args, type of first arg |
 | `NULLIF(a, b)` | NULL if a = b | Prevents divide-by-zero: `x / NULLIF(y, 0)` |
