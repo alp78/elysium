@@ -2,7 +2,7 @@
 type: reference
 category: financial-encyclopedia
 technology: []
-tags: [financial, esg]
+tags: [financial, esg, stoxx]
 aliases: [ESG glossary, sustainable finance terms, green bond glossary, net-zero terms, sustainability glossary]
 keywords: [ESG, environmental social governance, sustainable finance, net-zero, green bonds, carbon emissions, impact investing, sustainability-linked loans, renewable energy, carbon capture, green hydrogen, climate risk]
 description: "Encyclopedia definitions for ESG and sustainability terms covering environmental, social, and governance criteria, sustainable finance instruments, and net-zero concepts, drawn from the example Index universe."
@@ -19,6 +19,12 @@ status: complete
 # ESG and Sustainability
 
 Encyclopedia of ESG and sustainability terms covering the three pillars of ESG analysis, sustainable finance instruments, and the transition to a net-zero economy.
+
+> [!info] ISS & STOXX Glossary
+> For formal methodology definitions of ESG ratings, frameworks, and sustainability
+> terms as used by index providers and ESG data vendors, see the
+> [[ISS-STOXX/_index|ISS & STOXX Glossary]] — particularly [[esg-ratings|ESG Ratings]],
+> [[esg-frameworks|ESG Frameworks]], and [[sustainability-themes|Sustainability Themes]].
 
 ---
 

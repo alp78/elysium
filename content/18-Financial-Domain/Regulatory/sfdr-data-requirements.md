@@ -1,5 +1,5 @@
 ---
-tags: [python, sql, bigquery, financial, regulatory, esg]
+tags: [python, sql, bigquery, financial, regulatory, esg, stoxx]
 type: reference
 technology: [python, bigquery, sql-server]
 status: stable
@@ -73,6 +73,15 @@ def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:
 
 > [!warning] Coverage Gaps
 > Scope 3 emissions and some social indicators have low reported coverage. Vendors fill gaps with estimates. Your pipeline must track whether a value is reported or estimated — SFDR requires disclosure of estimation methodology. [[ai-augmented-data-engineering|LLM extraction pipelines]] can help parse unstructured sustainability reports to fill these gaps with source-attributed data.
+
+## ISS & STOXX Glossary
+
+- [[regulatory#SFDR (Sustainable Finance Disclosure Regulation)|SFDR]] — formal regulatory definition and scope
+- [[regulatory#Article 8 Fund (SFDR)|Article 8]] and [[regulatory#Article 9 Fund (SFDR)|Article 9]] — fund classification definitions
+- [[regulatory#PAI (Principal Adverse Impact)|PAI]] and [[regulatory#PAI Indicators|PAI Indicators]] — indicator framework
+- [[sustainability-themes#Weighted Average Carbon Intensity (WACI)|WACI]] — carbon intensity methodology
+- [[sustainability-themes#Emissions Scopes|Emissions Scopes]] — Scope 1, 2, 3 definitions
+- [[esg-ratings#Norm-Based Screening|Norm-Based Screening]] — UNGC violations screening methodology
 
 ## Related
 

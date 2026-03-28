@@ -1,5 +1,5 @@
 ---
-tags: [financial, regulatory]
+tags: [financial, regulatory, stoxx]
 type: reference
 technology: []
 status: stable

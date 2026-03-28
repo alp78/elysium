@@ -2,7 +2,7 @@
 type: concept
 category: financial-domain
 technology: [sql-server, python, bigquery]
-tags: [python, sql, bigquery, financial]
+tags: [python, sql, bigquery, financial, stoxx]
 aliases: [corporate actions processing, index maintenance, financial index engineering, stock split adjustment, free-float methodology, index divisor, reconstitution pipeline, ESG data integration, point-in-time data, bi-temporal modeling]
 keywords: [financial index, corporate actions, stock split, dividend, merger, spinoff, free-float, index divisor, index reconstitution, weight capping, total return, price return, net return, withholding tax, point-in-time, look-ahead bias, SCD type 2, bi-temporal, ESG, SFDR, BMR, European equity index, MSCI, rebalancing, buffer rules, index calculation, benchmark regulation]
 description: "Comprehensive guide to financial index maintenance: corporate actions processing (splits, dividends, mergers, spinoffs), free-float methodology, weight capping, quarterly reconstitution, and ESG data integration. Covers the index divisor, point-in-time (PIT) temporal data, bi-temporal modeling, and EU regulatory requirements (BMR, SFDR). Essential for data engineers at financial index providers."
@@ -654,6 +654,18 @@ ORDER BY esg_tilted_weight DESC;
 
 > [!tip] ESG Data Quality Is the Next Frontier
 > ESG data in 2026 is where financial price data was in the 1990s — fragmented, inconsistent, and full of gaps. Scope 3 emissions are largely estimated. ESG scores from different providers correlate at only 0.4-0.6 (compared to 0.99+ for credit ratings). A senior data engineer building ESG pipelines must treat every input with skepticism, implement cross-provider reconciliation, and version every score with its methodology. The companies that solve ESG data quality first will dominate the sustainable finance market.
+
+## ISS & STOXX Glossary Cross-References
+
+For formal definitions of the index construction terms discussed above, see the [[ISS-STOXX/_index|ISS & STOXX Glossary]]:
+
+- [[index-construction#Divisor|Divisor]] and [[index-construction#Divisor Adjustment|Divisor Adjustment]] — formal definition and formula
+- [[index-construction#Free-Float|Free-Float]] and [[index-construction#Free-Float Factor|Free-Float Factor]] — weighting methodology
+- [[index-construction#Capping|Capping]] and [[index-construction#Capping Factor|Capping Factor]] — weight cap mechanics
+- [[index-construction#Reconstitution|Reconstitution]] and [[index-construction#Buffer Rule|Buffer Rule]] — periodic review process
+- [[index-construction#Corporate Action Treatment|Corporate Action Treatment]] — how indices handle splits, mergers, dividends
+- [[index-construction#Total Return Index|Total Return Index]] vs [[index-construction#Net Return Index|Net Return Index]] vs [[index-construction#Price Return Index|Price Return Index]]
+- [[regulatory#Benchmark Regulation (EU BMR)|EU BMR]] and [[regulatory#SFDR (Sustainable Finance Disclosure Regulation)|SFDR]] — regulatory framework details
 
 ## Related
 

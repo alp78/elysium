@@ -1,5 +1,5 @@
 ---
-tags: [sql, bigquery, gcp, financial, regulatory]
+tags: [sql, bigquery, gcp, financial, regulatory, stoxx]
 type: reference
 technology: [sql-server, bigquery, gcp]
 status: stable
@@ -72,6 +72,13 @@ updated: 2026-03-23
 - [ ] Annual internal review conducted and documented
 - [ ] Restatement procedure documented and tested
 - [ ] Oversight function has read access to all data and audit tables
+
+## ISS & STOXX Glossary
+
+- [[regulatory#Benchmark Regulation (EU BMR)|Benchmark Regulation (EU BMR)]] — formal definition and scope
+- [[regulatory#Benchmark Administrator|Benchmark Administrator]] — administrator obligations
+- [[regulatory#Climate Transition Benchmark (CTB)|CTB]] and [[regulatory#PAB (Paris-Aligned Benchmark)|PAB]] — climate benchmark definitions
+- [[index-construction|Index Construction Glossary]] — methodology terms referenced in BMR compliance
 
 ## Related
 

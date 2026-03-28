@@ -72,6 +72,26 @@ Comprehensive definitions of 150+ financial and business terms grouped thematica
 | [[business-models-and-commerce]] | E-commerce, B2B, B2C, franchise, licensing, platform models, subscription, omnichannel |
 | [[trade-and-treasury]] | Trade finance, cash management, treasury services, working capital, export credit agency finance |
 
+### ISS & STOXX Glossary
+
+A comprehensive glossary of 393 financial domain terms extracted from [STOXX](https://stoxx.com/) and [ISS Governance](https://www.issgovernance.com/) official documentation, covering index construction, ESG ratings, corporate governance, sustainability, and regulatory frameworks.
+
+| Note | Terms | Description |
+|------|-------|-------------|
+| [[ISS-STOXX/_index\|ISS-STOXX Glossary Index]] | 393 | Landing page and domain overview |
+| [[index-construction\|Index Construction]] | 43 | Weighting, rebalancing, divisors, calculation formulas |
+| [[index-families\|Index Families]] | 36 | DAX, EURO STOXX 50, STOXX Europe 600 and more |
+| [[esg-ratings\|ESG Ratings]] | 36 | QualityScore, Corporate Rating, controversy levels |
+| [[esg-frameworks\|ESG Frameworks]] | 24 | TCFD, GRI, SASB, EU Taxonomy, SBTi |
+| [[sustainability-themes\|Sustainability Themes]] | 34 | Carbon intensity, Net Zero, WACI, biodiversity |
+| [[corporate-governance\|Corporate Governance]] | 41 | Proxy voting, board structure, Say-on-Pay |
+| [[financial-instruments\|Financial Instruments]] | 27 | ETFs, futures, green bonds, structured products |
+| [[financial-metrics\|Financial Metrics]] | 35 | Sharpe ratio, EVA, tracking error, volatility |
+| [[data-methodology\|Data Methodology]] | 27 | Back-testing, survivorship bias, DataDesk |
+| [[regulatory\|Regulatory]] | 26 | SFDR, EU BMR, MiFID II, PAB/CTB |
+| [[market-structure\|Market Structure]] | 31 | ICB, GICS, free float, exchanges, liquidity |
+| [[smart-beta-factors\|Smart Beta & Factors]] | 33 | Value, momentum, quality, multi-factor |
+
 ## Cross-References
 
 - **Data Pipeline**: [[data-sources-and-refresh]] | [[medallion-architecture]] | [[gold-transforms]]

@@ -244,12 +244,9 @@ except Exception as e:
 
 #### Application Default Credentials (ADC) lookup chain
 
+ADC checks credentials in order: (1) `GOOGLE_APPLICATION_CREDENTIALS` env var → SA key file, (2) `gcloud auth application-default login` → user credentials, (3) Compute Engine metadata server → VM identity, (4) Workload Identity Federation → external identity.
+
 ```python
-# ADC checks credentials in this order:
-#   1. GOOGLE_APPLICATION_CREDENTIALS env var → SA key file
-#   2. gcloud auth application-default login → user credentials
-#   3. Compute Engine metadata server → VM identity
-#   4. Workload Identity Federation → external identity
 adc_credentials, adc_project = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
@@ -277,29 +274,14 @@ print("    4. Workload Identity Federation config")
 
 #### Service account impersonation — keyless authentication
 
+Impersonation: act as another SA without holding its key. The source requests a short-lived token for the target — requires `roles/iam.serviceAccountTokenCreator`. Use for: dev testing production SA access, CI/CD escalation, cross-project access, local development matching production behavior.
+
+> [!warning] Impersonation anti-patterns
+> - Granting `serviceAccountTokenCreator` at project level — scope to specific SAs
+> - Using impersonation for long-running workloads — prefer WIF or attached SA
+> - Not auditing who can impersonate — `tokenCreator` is effectively "become this identity"
+
 ```python
-# Service Account Impersonation: act as another SA without holding its key.
-# The source identity requests a short-lived token for the target SA.
-# Requires roles/iam.serviceAccountTokenCreator on the target.
-#
-# When to use:
-#   - Developer needs to test what a production SA can do, without downloading
-#     its key (the key never leaves Google)
-#   - CI/CD pipeline escalates to a deploy SA for a single step, then drops back
-#   - Cross-project access: SA in project A impersonates SA in project B
-#     to read data, avoiding broad IAM grants on project B
-#   - Local development: your user account impersonates the app SA so your
-#     code behaves identically to production without a key file
-#
-# Anti-patterns:
-#   - Granting serviceAccountTokenCreator at project level (lets anyone
-#     impersonate ANY SA in the project — scope to specific SAs)
-#   - Using impersonation as a permanent auth method instead of attaching
-#     the SA directly to the resource (GKE pod, Cloud Run service)
-#   - Long lifetimes (3600s here is the max) for unattended jobs — prefer
-#     WIF or attached SA for long-running workloads
-#   - Not auditing who can impersonate: tokenCreator is effectively
-#     "become this identity" — treat it like admin access
 source_credentials, _ = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
@@ -346,26 +328,9 @@ for b in buckets:
 
 #### Short-lived OAuth2 access tokens
 
-```python
-# Generate a short-lived access token (300s-3600s) for time-boxed operations
-# This is what impersonation uses internally — here we do it explicitly
-#
-# When to use short-lived tokens:
-#   - Hand off credentials to untrusted or semi-trusted code that needs
-#     temporary GCP access (e.g. a script run by a third party)
-#   - Time-box a sensitive operation: the token expires automatically,
-#     so a leaked token has a bounded damage window
-#   - CI jobs or serverless functions that should not hold long-lived keys
-#   - Satisfying audit requirements that mandate short credential lifetimes
-#
-# When NOT to use short-lived tokens:
-#   - Long-running background jobs: the token expires mid-run causing failures
-#   - Services that need credentials across restarts without a refresh mechanism
-#   - Replacing Workload Identity Federation: WIF already issues short-lived
-#     tokens automatically — generating them manually adds complexity for no gain
-#   - Minimum lifetime is 300s — not suitable for sub-5-minute microoperations
-     # that need finer-grained expiry
+Short-lived access token (300s–3600s) for time-boxed operations. A leaked token has a bounded damage window. Use for: handing off to untrusted code, time-boxing sensitive ops, CI jobs without long-lived keys. Don't use for long-running jobs (token expires mid-run) or as a replacement for WIF (it already issues short-lived tokens).
 
+```python
 iam_client = iam_credentials_v1.IAMCredentialsClient(credentials=sa_credentials)
 
 token_response = iam_client.generate_access_token(
@@ -413,17 +378,9 @@ else:
 
 #### Workload Identity Federation — GitHub Actions OIDC flow
 
-```python
-# Workload Identity Federation allows external identities (GitHub, AWS, Azure)
-# to authenticate to GCP without service account keys
-#
-# Flow: GitHub OIDC token → Google STS → GCP access token
-#
-# Existing configuration in this project:
-#   Pool:     projects/922174528852/locations/global/workloadIdentityPools/github-pool
-#   Provider: github-provider (OIDC, issuer: https://token.actions.githubusercontent.com)
-#   Bound:    alp78/security-lab repo → notebook-sa@... SA
+Workload Identity Federation allows external identities (GitHub, AWS, Azure) to authenticate to GCP without SA keys. Flow: GitHub OIDC token → Google STS → GCP access token.
 
+```python
 print("  Workload Identity Federation Configuration:")
 print(f"    Pool:           {WIF_POOL}")
 print(f"    Provider:       {WIF_PROVIDER}")
@@ -745,23 +702,11 @@ for k, v in db_config.items():
 
 #### Create a new secret with labels and replication
 
-```python
-# Create a secret programmatically with metadata labels and replication config
-#
-# When to use Secret Manager:
-#   - API keys, OAuth tokens, database passwords that your code needs at runtime
-#   - Certificates and private keys rotated on a schedule
-#   - Any credential shared across multiple services or environments
-#
-# Labels let you slice secrets by env/team/sensitivity for auditing and IAM conditions
-# (e.g. grant access only to secrets labelled sensitivity=high in prod).
-#
-# Anti-patterns:
-#   - Hardcoding secrets in source code or notebooks (even temporarily)
-#   - Storing secrets in env vars baked into Docker images or CI pipelines
-#   - Putting secrets in GCS, BigQuery, or Firestore instead of Secret Manager
-#   - Using the same secret version forever instead of rotating
+Use Secret Manager for API keys, passwords, certificates shared across services. Labels enable IAM conditions (e.g., `sensitivity=high` in prod).
 
+> [!danger] Never hardcode secrets in code, bake them into Docker images, or store them in GCS/BigQuery instead of Secret Manager.
+
+```python
 new_secret_id = "notebook-demo-secret"
 
 try:
@@ -791,28 +736,13 @@ except Exception as e:
 
 #### Add a secret version — rotation scenario
 
-```python
-# Key rotation: replace a secret with a new value by adding a new version.
-# Old versions stay accessible until explicitly disabled or destroyed.
-#
-# Why rotate:
-#   - Limits the blast radius if a credential is leaked (attacker window = rotation interval)
-#   - Satisfies compliance requirements (SOC2, PCI-DSS, ISO 27001 mandate periodic rotation)
-#   - Forces consuming services to handle version changes, preventing credential lock-in
-#
-# Recommended frequency by resource type:
-#   - API keys / service account keys : 90 days
-#   - Database passwords              : 30-90 days
-#   - Certificates / TLS keys         : before expiry, typically 1 year max
-#   - Encryption keys (KMS)           : 1-3 years (automatic via KMS rotation policy)
-#   - Short-lived tokens (this cell)  : generated on demand, expire in minutes
-#
-# Anti-patterns:
-#   - Rotating without updating consumers first (causes outages)
-#   - Destroying old versions immediately (breaks services still holding the old value)
-#   - Rotating manually and inconsistently across environments
-#   - Never rotating because "it has never been leaked" (you would not know)
+Add a new version to replace the secret value — old versions stay accessible until disabled. Rotation limits blast radius of leaked credentials and satisfies compliance (SOC2, PCI-DSS).
 
+Recommended frequency: API/SA keys 90 days, DB passwords 30–90 days, certificates before expiry (1 year max), KMS keys 1–3 years (automatic via rotation policy).
+
+> [!warning] Don't rotate without updating consumers first (outages). Don't destroy old versions immediately (breaks services). Don't skip rotation because "it has never been leaked" — you wouldn't know.
+
+```python
 new_password = secrets_module.token_urlsafe(24)
 parent = f"projects/{PROJECT_ID}/secrets/{new_secret_id}"
 
@@ -964,24 +894,9 @@ FIPS 140-2 Level 3 certified — the standard regulators (PCI-DSS, HIPAA, etc.) 
 
 #### Symmetric encryption — encrypt plaintext with KMS
 
-```python
-# Encrypt data using the existing symmetric key in Cloud KMS
-# The plaintext is sent to KMS, encrypted server-side, and ciphertext returned
-#
-# When to use KMS encrypt directly:
-#   - Small, sensitive values: API keys, tokens, config secrets under 64 KB
-#   - Audit trail is required: every KMS encrypt/decrypt call is logged in Cloud Audit Logs
-#   - Key rotation is needed: KMS rotates automatically; old ciphertext still decrypts
-#   - You want HSM-backed encryption without managing key material yourself
-#
-# When NOT to use KMS encrypt directly:
-#   - Payloads over 64 KB: use envelope encryption instead (encrypt a DEK with KMS,
-#     encrypt data locally with the DEK via AES-GCM)
-#   - High-throughput paths: each call is a network round-trip to Google’s HSM;
-#     use local AES-GCM with a KMS-wrapped DEK for performance
-#   - Data already encrypted at rest by GCS/BigQuery CMEK: double-encrypting adds
-#     latency and cost with minimal security benefit unless you need client-side control
+KMS symmetric encryption — plaintext sent to KMS, encrypted server-side, ciphertext returned. Use for small values (<64 KB) where audit trail and automatic key rotation are needed. For payloads >64 KB or high-throughput paths, use envelope encryption instead.
 
+```python
 kms_client = kms.KeyManagementServiceClient(credentials=sa_credentials)
 
 key_name = kms_client.crypto_key_path(PROJECT_ID, KMS_LOCATION, KMS_KEYRING, KMS_KEY)
@@ -1025,27 +940,9 @@ print(f"  Match:            {decrypted == plaintext}")
 
 #### Envelope encryption — wrap a local data encryption key
 
-```python
-# Envelope encryption: generate a local DEK, encrypt data with it,
-# then wrap (encrypt) the DEK with the KMS key.
-# This avoids sending large payloads to KMS (64 KB limit on direct encrypt).
-#
-# When to use envelope encryption:
-#   - Payloads over 64 KB (files, documents, database rows, blobs)
-#   - High-throughput encryption: data is encrypted locally (no network round-trip);
-#     only the small DEK is sent to KMS once per session
-#   - You need to store encrypted data independently of KMS availability:
-#     the wrapped DEK travels with the data and is unwrapped on demand
-#   - Minimizing KMS costs: billing is per API call; encrypting locally
-#     with one KMS wrap per DEK is far cheaper than per-record KMS calls
-#
-# When NOT to use envelope encryption:
-#   - Tiny values (passwords, tokens): direct KMS encrypt is simpler
-#   - You need field-level audit logs per record: KMS only logs the DEK
-#     unwrap, not each individual record decryption
-#   - You cannot safely generate or store the nonce: losing the nonce
-#     makes the ciphertext permanently unrecoverable
+Envelope encryption: generate a local DEK, encrypt data locally with AES-GCM, then wrap the DEK with KMS. Avoids the 64 KB limit on direct KMS encrypt. Data encrypted locally (no network round-trip); only the small DEK is sent to KMS once per session. Use for files, blobs, high-throughput paths.
 
+```python
 # Generate a 256-bit local Data Encryption Key (DEK)
 dek = AESGCM.generate_key(bit_length=256)
 print(f"  DEK (b64):        {base64.b64encode(dek)[:30].decode()}...")
@@ -1142,27 +1039,9 @@ print("  Note: >64KB payloads require envelope encryption (local DEK + KMS wrap)
 
 #### Encrypt and upload a file to GCS
 
-```python
-# Client-side encryption: encrypt a file locally with KMS, then upload to GCS
-# This provides double encryption — client-side KMS + server-side CMEK on the bucket
-#
-# When to use client-side encryption before GCS upload:
-#   - Compliance requires data to be encrypted before it leaves your process
-#     (e.g. HIPAA, PCI-DSS mandating client-controlled encryption)
-#   - You need proof that GCS operators cannot read the plaintext even with
-#     bucket access — server-side CMEK alone still allows Google infra to decrypt
-#   - Separating access: one team owns the GCS bucket, another owns the KMS key;
-#     neither alone can read the data
-#
-# When NOT to use client-side encryption before GCS upload:
-#   - Files over 64 KB: use envelope encryption (DEK + KMS wrap) instead
-#     of sending raw plaintext to KMS directly
-#   - Server-side CMEK already satisfies your compliance requirements:
-#     adding client-side encryption increases operational complexity
-#     (key management, nonce storage, decryption pipeline)
-#   - The bucket is not public and IAM already restricts access tightly:
-#     double encryption adds cost and latency for marginal security gain
+Client-side encryption before GCS upload — provides double encryption (client KMS + server CMEK). Use when compliance requires encryption before data leaves your process (HIPAA, PCI-DSS) or when separating access (one team owns bucket, another owns KMS key). For files >64 KB, use envelope encryption.
 
+```python
 gcs_client = storage.Client(project=PROJECT_ID, credentials=sa_credentials)
 bucket = gcs_client.bucket(BUCKET_NAME)
 
@@ -1495,14 +1374,9 @@ Four Cloud SQL authentication methods, from simplest to most secure:
 
 #### Authorize current IP in Cloud SQL
 
+Cloud SQL only accepts connections from authorized IPs. This cell detects your public IP and patches the allowlist automatically. Re-running is safe (replaces the full list). Takes 5–10 minutes.
+
 ```python
-# Cloud SQL only accepts connections from explicitly authorized IP addresses.
-# Your public IP must be added to the instance allowlist before any TCP
-# connection attempt — otherwise the connection times out (error 10060).
-# This cell detects your current public IP and patches the allowlist automatically.
-# Note: each patch call replaces the full authorized-networks list, so re-running
-# this cell is safe — it will simply re-authorize your current IP.
-# This takes 5-10 minutes to complete — wait for it before running the connection cell.
 my_ip = http_requests.get("https://api.ipify.org").text.strip()
 print(f"  Your public IP: {my_ip}")
 
@@ -1624,35 +1498,13 @@ except Exception as e:
 
 #### SSL-verified connection — validate server identity
 
+The server CA certificate proves you're talking to the real Cloud SQL instance (MITM protection). This does NOT replace username/password — the cert verifies the server, the password verifies the client. Required for public internet, compliance (PCI-DSS, SOC2), cross-cloud traffic.
+
+> [!danger] Never use `TrustServerCertificate=yes` in production — accepts any cert. Don't assume encryption = authentication (encrypted channel to the wrong server is still compromised).
+
+pymssql uses FreeTDS — TLS via `TDSSSL` env var, cert validation via `TDSCAFILE`.
+
 ```python
-# SSL-verified connection: encrypted channel + server identity validation.
-#
-# Purpose:
-#   The server CA certificate proves you are talking to the real Cloud SQL
-#   instance, not an attacker intercepting traffic (man-in-the-middle).
-#   This does NOT replace username/password — SQL Server has no client-cert auth.
-#   The cert verifies the server; the password verifies the client.
-#
-# When required:
-#   - Connecting over the public internet (traffic crosses untrusted networks)
-#   - Compliance: PCI-DSS, SOC2, HIPAA mandate encrypted database connections
-#   - Multi-cloud or hybrid setups where traffic leaves your VPC
-#   - Accessing Cloud SQL from on-premise data centers
-#
-# When NOT required:
-#   - Using Auth Proxy (it handles TLS + identity automatically)
-#   - Private IP within the same VPC (no public exposure, but still recommended)
-#
-# Anti-patterns:
-#   - TrustServerCertificate=yes in production (accepts any cert, defeats the purpose)
-#   - Not downloading a fresh CA cert after instance recreation (old cert is invalid)
-#   - Assuming encryption = authentication (encrypted channel to the wrong server
-#     is still compromised)
-#   - Storing the CA cert in source control alongside connection strings
-#
-# pymssql uses FreeTDS under the hood. FreeTDS enables TLS via the
-# TDSSSL environment variable and validates the server cert against
-# the CA file pointed to by TDSCAFILE.
 try:
     # Tell FreeTDS to require encryption and verify the server cert
     os.environ["TDSSSL"] = "require"
@@ -1740,13 +1592,9 @@ print("  ⚠️ Never use 0.0.0.0/0 — it allows connections from any IP on the
 
 #### Cloud SQL encryption at rest — check instance encryption
 
+Check if the instance uses CMEK or Google-default encryption for data at rest. Empty output = Google-default. CMEK requires `--disk-encryption-key` at creation time — cannot be changed after.
+
 ```python
-# Check if the Cloud SQL instance uses CMEK (Customer-Managed Encryption Key)
-# or Google-default encryption for data at rest.
-# Empty output = Google-default encryption (Google manages the key).
-# This is NOT an authentication method — it protects data on disk, not connections.
-# To use CMEK, the instance must be created with --disk-encryption-key pointing
-# to a Cloud KMS key. This cannot be changed after instance creation.
 !gcloud sql instances describe {SQL_INSTANCE} --format="yaml(diskEncryptionConfiguration, diskEncryptionStatus)"
 print()
 print("  (empty = Google-default encryption, not CMEK)")
@@ -1822,32 +1670,11 @@ print(results.to_string(index=False))
 
 #### Column-level encryption — encrypt sensitive values before insert
 
+Encrypt individual field values with KMS before inserting into BigQuery — the table stores ciphertext. Only callers with KMS decrypt access see plaintext. Use for PII (GDPR, CCPA), multi-tenant isolation, or shared datasets with sensitive columns.
+
+> [!warning] Don’t encrypt columns you need to query/filter/join on — ciphertext is not searchable (use tokenization instead). Don’t use the same KMS key for all tenants.
+
 ```python
-# Client-side column encryption: encrypt individual field values with KMS
-# before inserting into BigQuery. The table stores ciphertext; only callers
-# with KMS decrypt access can recover the original values.
-#
-# When required:
-#   - PII protection (names, IDs, SSNs) where BigQuery admins should NOT
-#     see plaintext — even users with bigquery.tables.getData can only read ciphertext
-#   - Regulatory compliance (GDPR, CCPA) mandating encryption of personal data
-#     at the field level, not just at rest
-#   - Multi-tenant tables where different tenants’ data is encrypted with
-#     different KMS keys — tenant A cannot decrypt tenant B’s rows
-#   - Data sharing: you share a BigQuery dataset externally but keep
-#     sensitive columns encrypted; recipients need your KMS key to decrypt
-#
-# When NOT needed:
-#   - Non-sensitive data (public market data, aggregated metrics)
-#   - BigQuery’s built-in encryption at rest (Google-managed or CMEK) already
-#     satisfies your compliance requirements
-#   - All users with table access are trusted to see the plaintext
-#
-# Anti-patterns:
-#   - Encrypting columns you need to query/filter/join on — ciphertext is
-#     not searchable (use deterministic encryption or tokenization instead)
-#   - Using the same KMS key for all tenants (no isolation)
-#   - Storing the decryption key alongside the ciphertext in the same project
 sample_data = [
     {"symbol": "AAPL", "portfolio_id": "PF-001", "allocation_pct": 15.5},
     {"symbol": "MSFT", "portfolio_id": "PF-002", "allocation_pct": 22.0},
@@ -2363,37 +2190,11 @@ print(f"  Match:     {recovered_data == plaintext_data}")
 
 #### Customer-Supplied Encryption Keys (CSEK)
 
+CSEK: you provide a 256-bit AES key in the request header. Google uses it but **never stores it** — lost key = permanent data loss. Maximum customer control. Use for ultra-sensitive data where even trusting Google with a KMS key is not acceptable.
+
+> [!danger] Never store the CSEK key in GCS or any Google service. Never use the same key for all objects. Always have a key backup strategy. Prefer CMEK when it satisfies compliance — CSEK adds significant operational burden.
+
 ```python
-# CSEK (Customer-Supplied Encryption Key): you provide a 256-bit AES key
-# in the request header. Google uses it to encrypt/decrypt the object but
-# NEVER stores it — you lose the key, you lose the data permanently.
-#
-# Purpose:
-#   Maximum customer control over encryption. Google has zero ability to
-#   read your data, even with full infrastructure access. The key exists
-#   only in your systems and in memory during the API call.
-#
-# When to use:
-#   - Ultra-sensitive data where even trusting Google with a KMS key is
-#     not acceptable (defense, intelligence, legal holds)
-#   - Regulatory environments that mandate customer-held keys with no
-#     cloud provider access (some financial regulators, data sovereignty laws)
-#   - Temporary staging: encrypt with CSEK, process, delete — key is discarded,
-#     guaranteeing no residual access even if deletion is delayed
-#
-# When NOT to use (prefer CMEK or Google-managed instead):
-#   - You cannot guarantee reliable key backup (lost key = permanent data loss)
-#   - You need GCS features that require server-side access to the data
-#     (Cloud CDN, GCS-triggered Cloud Functions, BigQuery federated queries)
-#   - Multiple services need to read the same objects (every reader needs the key)
-#   - CMEK already satisfies your compliance requirements with less operational risk
-#
-# Anti-patterns:
-#   - Storing the CSEK key in GCS or any Google service (defeats the purpose)
-#   - Using the same CSEK key for all objects (one leak exposes everything)
-#   - No key backup strategy (single laptop with the key = single point of failure)
-#   - Logging the key in application logs or print statements
-#   - Using CSEK when CMEK would suffice (CSEK adds significant operational burden)
 csek_key = os.urandom(32)
 csek_key_b64 = base64.b64encode(csek_key).decode()
 csek_key_hash = base64.b64encode(hashlib.sha256(csek_key).digest()).decode()
@@ -2428,33 +2229,11 @@ print("  Google does not store CSEK keys — you must manage them yourself")
 
 #### Signed URLs — time-limited access without credentials
 
-```python
-# Signed URLs: grant time-limited access to a private GCS object
-# without requiring the caller to authenticate. The SA signs the URL;
-# anyone with the URL can access the object until it expires.
-#
-# When to use:
-#   - Sharing files with external users who have no GCP account
-#     (clients, partners, auditors downloading reports)
-#   - Frontend apps that need to upload/download directly to GCS
-#     without proxying through your backend
-#   - Temporary download links in emails or dashboards
-#   - CI/CD artifacts shared across teams without granting bucket access
-#
-# When NOT to use:
-#   - Long-lived access (max expiration is 7 days; use IAM roles instead)
-#   - Access that needs to be revoked instantly (signed URLs cannot be
-#     invalidated before expiry — only deleting the object or rotating
-#     the SA key revokes them)
-#   - Internal services that already have IAM access to the bucket
-#
-# Anti-patterns:
-#   - Logging signed URLs (anyone who reads the logs gets access)
-#   - Long expiration times "just in case" (use the shortest time needed)
-#   - Using the same SA for signing and for production workloads
-#     (rotating the SA key invalidates ALL outstanding signed URLs)
-#   - Embedding signed URLs in client-side code that gets cached
+Signed URLs grant time-limited access to a private GCS object without requiring authentication. Use for sharing with external users, frontend direct upload/download, temporary links in emails. Max 7 days; cannot be revoked before expiry.
 
+> [!warning] Don't log signed URLs (anyone reading logs gets access). Use the shortest expiration needed. Don't use the same SA for signing and production (key rotation invalidates all URLs).
+
+```python
 blob_to_sign = bucket.blob("bronze/csv/dim_index.csv")
 
 # Generate a V4 signed URL valid for 15 minutes
@@ -2559,18 +2338,9 @@ print("    Fine-grained (ACL): legacy — per-object ACLs, harder to audit")
 
 #### End-to-end encrypted pipeline — overview
 
+Complete secure data flow: `Secret Manager → BigQuery → Cloud KMS → Firestore → GCS`. Every step: SA authentication, TLS in transit, KMS + CMEK at rest, Cloud Audit Logs.
+
 ```python
-# This pipeline demonstrates a complete secure data flow across GCP services.
-# Every step uses authenticated, encrypted connections:
-#
-#   Secret Manager  →  BigQuery  →  Cloud KMS  →  Firestore  →  GCS
-#     (credentials)    (query)    (encrypt)    (store)       (archive)
-#
-# Security properties at each step:
-#   - Authentication: SA key or impersonated credentials
-#   - Encryption in transit: TLS for all API calls
-#   - Encryption at rest: KMS (application-layer) + CMEK (storage-layer)
-#   - Audit: every API call logged in Cloud Audit Logs
 print("  End-to-End Encrypted Pipeline: starting...")
 ```
 
@@ -2654,12 +2424,9 @@ print(f"     Collection: pipeline_results, doc: latest_run")
 
 #### Step 5 — Archive encrypted data to CMEK-encrypted GCS
 
+GCS archive layer — three encryption layers: (1) application KMS before upload, (2) CMEK on the bucket, (3) Google infrastructure default.
+
 ```python
-# GCS serves as the archive layer: long-term storage for compliance/audit.
-# The data has three encryption layers:
-#   1. Application-layer: KMS-encrypted before upload (we control the key)
-#   2. Storage-layer: CMEK on the bucket (we control the key)
-#   3. Infrastructure: Google default encryption (Google controls)
 pipeline_blob = bucket.blob("pipeline/latest_scores.enc")
 pipeline_blob.upload_from_string(enc_data)
 print("  5. Uploaded to CMEK-encrypted GCS bucket")

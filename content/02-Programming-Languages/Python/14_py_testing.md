@@ -101,7 +101,6 @@ def test_price_calculation():
 
 ipytest.run()
 ```
-
 <pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.</span><span style="color:#e5c07b">                                                                                            [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
@@ -432,23 +431,9 @@ ipytest.run()
 
 #### Fixture: sample trade data
 
+`@pytest.fixture` provides fresh test data per test — no cross-test contamination. Fixtures support setup + teardown (with `yield`), composability (fixtures depending on other fixtures), and auto-discovery.
+
 ```python
-# Fixture: sample trade data — reusable test data injected by pytest
-#
-# WHAT: @pytest.fixture turns a function into a test data provider.
-#   Any test that lists "sample_trades" as a parameter automatically receives
-#   the return value of this function. pytest calls it ONCE per test (fresh data each time).
-#
-# WHY fixtures instead of global variables:
-#   - Each test gets a FRESH copy — no cross-test contamination
-#   - Fixtures can do setup AND teardown (with yield)
-#   - pytest auto-discovers them — no manual wiring needed
-#   - Fixtures can depend on other fixtures (composable)
-#
-# WHAT THIS FIXTURE PROVIDES:
-#   4 trade records representing a small portfolio:
-#   - 2 AAPL trades (buy 100 + sell 30 = net 70 shares)
-#   - 1 MSFT buy, 1 GOOG buy
 @pytest.fixture
 def sample_trades():
     """Provide sample trade records — reused across multiple tests."""
@@ -525,22 +510,9 @@ ipytest.run()
 
 #### Fixture with teardown (yield)
 
+A `yield` fixture has two phases: **setup** (before `yield` — create resources) and **teardown** (after `yield` — cleanup, runs even if the test fails). `return` has no cleanup; `yield` guarantees no leftover files.
+
 ```python
-# Fixture with teardown (yield) — creates a temp file, cleans up after test
-#
-# WHAT: a yield fixture has two phases:
-#   1. SETUP (before yield): create temp file, write test data
-#   2. TEARDOWN (after yield): delete the temp file — runs even if the test FAILS
-#   The value passed to yield is what the test receives as the fixture parameter.
-#
-# WHY yield instead of return:
-#   - return: no cleanup happens. Temp files accumulate.
-#   - yield: code after yield always runs (like a finally block).
-#   - This guarantees no leftover files even if the test crashes.
-#
-# WHAT THIS FIXTURE PROVIDES:
-#   A path to a temp JSONL file containing 3 portfolio positions.
-#   After the test, the file is deleted automatically.
 @pytest.fixture
 def temp_positions_file():
     """Create temp JSONL file with positions, clean up after test."""
@@ -714,20 +686,9 @@ ipytest.run()
 
 #### Mock a market data client
 
+`Mock()` creates a fake object. `mock_client.get_quote.return_value = {...}` configures canned data — no real API call. Test verifies: caller reads the right field, spread is positive, correct symbol was requested. In production, `get_quote()` hits a live API; in tests, the mock returns instantly.
+
 ```python
-# TEST: mock returns canned market data — verify the caller reads it correctly
-#
-# WHAT: Mock() creates a fake object with any method you call on it.
-#   mock_client.get_quote.return_value = {...} tells the mock: "when someone
-#   calls get_quote(), return this dict." No real API call happens.
-#
-# WHAT WE TEST:
-#   - The quote dict has the expected "last" price (caller reads data correctly)
-#   - ask > bid (spread is positive — basic sanity check on the data shape)
-#   - get_quote was called exactly once with "AAPL" (caller passed the right symbol)
-#
-# WHY: in production, get_quote() hits a live exchange API. In tests, the mock
-#   returns instant, deterministic data — no network, no rate limits, no flakiness.
 def test_mock_market_data():
     mock_client = Mock()
     mock_client.get_quote.return_value = {
@@ -751,19 +712,9 @@ ipytest.run()
 <span style="color:#4ec9b0">36 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+`assert_called_once_with(...)` verifies the mock was called with exactly the right arguments — catches parameter-passing bugs. Order submission bugs (wrong ticker, wrong side, wrong quantity) can lose real money.
+
 ```python
-# TEST: mock records the exact arguments passed to submit_order
-#
-# WHAT: mock_broker.submit_order.return_value = {...} sets the canned response.
-#   assert_called_once_with(...) verifies that the code under test called the mock
-#   with EXACTLY the right keyword arguments — ticker, side, qty, order_type, limit_price.
-#
-# WHAT WE TEST:
-#   - The response has status "FILLED" (caller handles the response correctly)
-#   - submit_order was called with the exact order parameters (no typos, no missing fields)
-#
-# WHY: order submission bugs are catastrophic — wrong ticker, wrong side (BUY vs SELL),
-#   or wrong quantity can lose real money. This test catches parameter-passing bugs.
 def test_mock_order_submission():
     """Verify that our order function calls the broker API correctly."""
     mock_broker = Mock()
@@ -790,22 +741,9 @@ ipytest.run()
 <span style="color:#4ec9b0">37 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+`side_effect` takes a list — each call returns the next item (exceptions are raised). `[ConnectionError, ConnectionError, {"ack": True}]` = fail, fail, succeed. Tests retry logic: must retry on failure, stop after success, return the successful result.
+
 ```python
-# TEST: mock simulates transient failures then succeeds — tests retry logic
-#
-# WHAT: side_effect takes a list — each call to mock_gw.send() returns the next
-#   item in the list. If the item is an exception, it's raised instead of returned.
-#   [ConnectionError, ConnectionError, {"ack": True}] = fail, fail, succeed.
-#
-# WHAT WE TEST:
-#   - After 3 attempts, result has ack=True (retry eventually succeeded)
-#   - send was called exactly 3 times (2 failures + 1 success)
-#
-# WHY: exchange gateways have transient failures — network blips, load balancer
-#   resets, brief maintenance windows. Retry logic must:
-#   1. Actually retry (not silently give up after 1 failure)
-#   2. Stop retrying after success (not keep hammering the gateway)
-#   3. Return the successful result (not the last exception)
 def test_mock_side_effect_retries():
     """Simulate transient failures from an exchange gateway."""
     mock_gw = Mock()
@@ -919,29 +857,11 @@ ipytest.run()
 
 #### Patch environment variables
 
-```python
-# Patching environment variables — test code that reads os.environ
-#
-# WHAT: @patch.dict(os.environ, {...}) temporarily injects fake env vars for the
-#   duration of one test function. When the test ends, the original env is restored.
-#   This lets you test config-reading code without actually setting real env vars.
-#
-# get_exchange_config(): reads EXCHANGE_HOST, EXCHANGE_PORT, EXCHANGE_API_KEY from
-#   os.environ with fallback defaults. This is the standard pattern for
-#   Docker/Kubernetes deployments where config is injected via env vars.
-#
-# test_production_exchange_config: uses @patch.dict to inject production-like env vars.
-#   The function reads the patched env, so it sees "exchange.prod.internal" etc.
-#   After the test, the patch is removed — env vars return to their real values.
-#
-# test_default_exchange_config: runs WITHOUT any patch, so os.environ.get() falls
-#   back to the default values ("localhost", "8080").
-#   WHY THIS TEST MAY FAIL: if EXCHANGE_HOST or EXCHANGE_PORT are actually set in
-#   your real environment (e.g., from a .env file, Docker, or a previous cell),
-#   the defaults won't be used and the assertions fail. The fix: also wrap this
-#   test with @patch.dict(os.environ, {}, clear=True) to guarantee a clean env,
-#   or use @patch.dict to explicitly remove those keys.
+`@patch.dict(os.environ, {...})` temporarily injects fake env vars for one test — original env is restored after. Standard pattern for testing Docker/K8s config-reading code.
 
+> [!warning] If env vars are already set (from `.env`, Docker, or a previous cell), default-value tests will fail. Fix: use `@patch.dict(os.environ, {}, clear=True)` to guarantee a clean env.
+
+```python
 def get_exchange_config():
     """Read exchange config from env vars (Docker/K8s deployment)."""
     return {
@@ -1012,17 +932,9 @@ Key testing patterns for data engineering and finance:
 
 #### Test a data transform
 
-```python
-# Test a data transform — verify pure business logic in isolation
-#
-# WHAT: normalize_trades is a pure function (no side effects, no DB, no API).
-#   It takes raw trade dicts (as they arrive from an exchange feed) and returns
-#   cleaned dicts with consistent formatting. This is the most testable kind of code.
-#
-# WHY: transform tests are the most valuable — they run fast (no I/O),
-#   are deterministic (same input = same output), and catch logic bugs.
-#   If this test fails, the bug is in YOUR code, not in the API or DB.
+`normalize_trades` is a pure function — no side effects, no DB, no API. Transform tests are the most valuable: fast (no I/O), deterministic, catch logic bugs.
 
+```python
 # normalize_trades — the function under test
 # Takes raw exchange data (string prices, messy tickers) and returns clean dicts.
 # Rules: drop missing IDs, uppercase tickers, convert types, compute notional.
@@ -1156,25 +1068,9 @@ def test_index_weight_calculation():
 
 #### Test data quality checks
 
-```python
-# Test data quality checks — validate OHLCV financial data invariants
-#
-# WHAT: validate_eod_prices takes a list of end-of-day price dicts and returns
-#   a list of error strings. Empty list = all data is valid. Non-empty = violations found.
-#
-# INVARIANTS CHECKED:
-#   - close > 0: no negative or zero prices (a stock can't have negative value)
-#   - high >= low: by definition, high is the max price and low is the min of the day
-#   - volume >= 0: volume can be 0 on holidays but never negative
-#   - daily return < 20%: flags suspiciously large moves that usually indicate
-#     data corruption (bad stock split adjustment, wrong currency, API error).
-#     Real moves >20% exist (flash crashes) but are rare enough to flag.
-#
-# WHY: financial APIs return garbage more often than you'd expect — zero prices
-#   for missing data, negative prices from currency conversion bugs, extreme values
-#   from unadjusted stock splits. These tests are the last line of defense
-#   before bad data enters your models or dashboards.
+`validate_eod_prices` returns error strings — empty = all valid. Invariants: `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%. Financial APIs return garbage more often than expected — these tests are the last line of defense.
 
+```python
 # validate_eod_prices — the function under test
 # Returns a list of human-readable error strings describing each violation found.
 def validate_eod_prices(prices: list[dict]) -> list[str]:
@@ -1233,19 +1129,9 @@ ipytest.run()
 <span style="color:#4ec9b0">48 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.07s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+Three violations: BAD1 (negative close), BAD2 (high < low), BAD3 (50% daily move). Note: BAD1 triggers **two** rules (negative close + extreme return) → total 4 errors, not 3. A record can violate multiple rules.
+
 ```python
-# TEST: three different violations are all caught
-# BAD1: close = -5.0 → non-positive close
-# BAD2: high = 90.0 < low = 95.0 → impossible candle (high < low)
-# BAD3: close = 150.0, prev_close = 100.0 → 50% daily move (> 20% threshold)
-#
-# WHY THIS TEST FAILS (assert len(errors) == 4  # BAD1 triggers 2 rules → actually gets 4):
-#   BAD1 has close = -5.0 and prev_close = 10.0, so |(-5 - 10) / 10| = 150%.
-#   That triggers BOTH the "non-positive close" AND "suspicious daily move" checks.
-#   So BAD1 produces 2 errors, BAD2 produces 1, BAD3 produces 1 → total 4, not 3.
-#   This is a real bug in the test, not in the function — the test assumed each
-#   bad record produces exactly 1 error, but a record can violate multiple rules.
-#   FIX: change assert to len(errors) == 4, or separate BAD1 so it only triggers one rule.
 def test_catches_invalid_prices():
     prices = [
         {"ticker": "BAD1", "close": -5.0,  "high": 10.0, "low": 8.0,  "volume": 1000, "prev_close": 10.0},
@@ -1274,29 +1160,11 @@ ipytest.run()
 
 #### Database connection and test helpers
 
-```python
-# Integration testing against the stoxx SQL Server database
-#
-# WHAT: integration tests verify code against real dependencies (DB, APIs, files).
-#   Unlike unit tests that mock the DB, these execute real SQL against SQL Server.
-#   The stoxx database has a medallion architecture: bronze → silver → gold.
-#
-# WHY: mocked tests can pass while real queries fail because:
-#   - SQL syntax differs between engines (SQL Server vs Postgres vs SQLite)
-#   - Schema migrations may have failed or drifted
-#   - Data constraints (FK, UNIQUE, NOT NULL) only exist in the real DB
-#
-# DATABASE SCHEMA (stoxx — Euro Stoxx 50 financial data):
-#   bronze.eurostoxx50_ohlcv: raw daily OHLCV (50 stocks, from API)
-#   silver.eurostoxx50_ohlcv: cleaned + gap-filled (is_filled flag)
-#   gold.index_performance:   aggregated index returns and volatility
-#   gold.scores_daily:        per-stock composite scores and rankings
-#
-# ANTI-PATTERNS:
-#   - Don't run destructive tests against production — use staging
-#   - Don't depend on specific data values — test invariants and ranges
-#   - In CI: use Testcontainers for ephemeral, isolated DB instances
+Integration tests execute real SQL against SQL Server — mocked tests can pass while real queries fail (SQL syntax differences, schema drift, data constraints). The stoxx database uses medallion architecture: `bronze` (raw OHLCV) → `silver` (cleaned + gap-filled) → `gold` (scores, index performance).
 
+> [!warning] Don't run against production. Don't depend on specific values — test invariants. In CI, use Testcontainers for ephemeral DBs.
+
+```python
 # Load credentials from .env — never hardcode passwords in notebooks
 
 CONN_STR = (
@@ -1331,15 +1199,9 @@ print("  DB connection ready.")
 
 #### Schema validation tests
 
-```python
-# Schema validation — verify tables exist and columns have expected types
-#
-# WHAT: queries INFORMATION_SCHEMA to check expected tables and columns.
-#   Catches schema drift: renamed columns, dropped tables, changed types.
-#
-# WHY: schema changes are the #1 cause of silent pipeline failures.
-#   A renamed column produces NULLs instead of errors.
+Query `INFORMATION_SCHEMA` to verify tables and columns exist. Schema changes are the #1 cause of silent pipeline failures.
 
+```python
 # TEST: all medallion layers exist
 for table in ["bronze.eurostoxx50_ohlcv", "silver.eurostoxx50_ohlcv",
               "gold.index_performance", "gold.scores_daily"]:
@@ -1373,13 +1235,9 @@ assert_test("silver has fake_column (expected FAIL)", has_fake == 1)
 
 #### Data completeness tests
 
-```python
-# Data completeness — verify all expected data was ingested
-#
-# WHAT: checks symbol count, row counts, NULL coverage.
-# WHY: a silent API failure might ingest 40 of 50 stocks —
-#   without these tests the pipeline reports success on incomplete data.
+Verify all expected data was ingested — symbol count, row counts, NULL coverage. A silent API failure might ingest 40 of 50 stocks.
 
+```python
 # TEST: exactly 50 distinct symbols in bronze (Euro Stoxx 50 = 50 stocks)
 bronze_syms = query_scalar("SELECT COUNT(DISTINCT symbol) FROM bronze.eurostoxx50_ohlcv")
 assert_test(f"bronze has {bronze_syms} symbols (expected 50)", bronze_syms == 50)
@@ -1406,14 +1264,9 @@ assert_test(f"gold has {gold_idx} indices (expected {dim_idx})", gold_idx >= dim
 
 #### Data quality tests
 
-```python
-# Data quality — OHLCV invariants that must hold for all financial data
-#
-# WHAT: checks mathematical invariants:
-#   high >= low, close between low/high, no negatives, no future dates
-# WHY: bad API responses produce data that looks valid but violates
-#   basic financial rules. Models trained on this produce garbage.
+OHLCV invariants: `high >= low`, close between low/high, no negative prices, no future dates.
 
+```python
 # TEST: high >= low for all rows
 bad_hl = query_scalar("SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv WHERE high < low")
 assert_test(f"high >= low ({bad_hl} violations)", bad_hl == 0)
@@ -1484,22 +1337,11 @@ assert_test(f"daily returns within +/-20% ({extreme} violations)", extreme == 0)
 
 <h4><code style="font-size:0.75em">pandera</code> — DataFrame schema validation</h4>
 
-```python
-# Pandera — declarative DataFrame schema validation
-#
-# WHAT: pandera lets you define a schema (column names, types, ranges, nullability)
-#   and validate a DataFrame against it. Invalid data raises SchemaError.
-#
-# WHY: assert statements check one condition at a time.
-#   Pandera validates ALL columns at once and reports ALL violations.
-#   It integrates with pytest — one schema test covers dozens of assertions.
-#
-# WHEN TO USE: ETL pipeline output validation, API response validation,
-#   data contract enforcement between teams.
-# ANTI-PATTERNS:
-#   - Don't make schemas too strict — allow for NULL where the source allows it
-#   - Don't validate raw bronze data with silver schema — each layer has its own
+Pandera defines a schema (column names, types, ranges, nullability) and validates a DataFrame against it — invalid data raises `SchemaError`. Validates ALL columns at once and reports ALL violations. Integrates with pytest.
 
+> [!warning] Don't make schemas too strict — allow NULL where the source allows it. Don't validate bronze data with silver schema — each layer has its own.
+
+```python
 # Define schema for silver OHLCV data
 ohlcv_schema = DataFrameSchema({
     "symbol":    Column(str, Check.str_length(min_value=1)),
@@ -1573,15 +1415,9 @@ except SchemaError:
 ## API Integration Tests
 
 #### Test live API responses
-```python
-# API integration tests — verify live API data against expectations
-#
-# WHAT: call real APIs and check that responses are valid.
-#   Cross-check live prices against DB values to catch stale data.
-#
-# WHY: APIs change without notice — field names renamed, endpoints deprecated,
-#   rate limits tightened. These tests catch breakages before they hit production.
+Call real APIs and verify responses. Cross-check live prices against DB values to catch stale data. APIs change without notice — these tests catch breakages before production.
 
+```python
 FINNHUB_KEY = os.environ.get("FINNHUB_KEY", "")
 
 # TEST: Finnhub returns valid price for Euro Stoxx 50 stocks
@@ -1606,18 +1442,9 @@ assert_test(f"SAP live={live:.2f} vs DB={db_close:.2f} (ratio={ratio:.2f})", 0.2
       PASS: SAP live=171.00 vs DB=166.52 (ratio=1.03)
 
 ## CI/CD — Running Tests in GitHub Actions
-```python
-# GitHub Actions — automated testing on every push/PR.
-#
-# KEY CONCEPTS:
-# - Workflow file: .github/workflows/test.yml — defines when and how tests run.
-# - Triggers: on push, on pull_request, on schedule (cron).
-# - Matrix: run tests across multiple Python versions simultaneously.
-# - Secrets: env vars like API keys injected securely via GitHub Secrets.
-# - Artifacts: upload test reports, coverage, logs after each run.
-#
-# This cell prints a production-ready workflow file you can copy to your repo.
+GitHub Actions workflow: `.github/workflows/test.yml`. Triggers on push/PR/schedule. Matrix tests across Python versions. Secrets injected via GitHub Secrets. Artifacts: test reports, coverage, logs.
 
+```python
 workflow = '''
 # .github/workflows/test.yml
 name: Tests
@@ -1781,57 +1608,29 @@ print("  -x                       Stop on first failure")
       --tb=short               Short tracebacks (cleaner CI logs)
       -x                       Stop on first failure
 
-#### Summary
-```python
-# Summary — Python testing cheat sheet
-#
-# FRAMEWORK:
-# pytest                          Run tests:  pytest tests/
-# pytest -v                       Verbose (show each test name)
-# pytest -k "test_trade"          Run only tests matching pattern
-# pytest --tb=short               Short tracebacks on failure
-# pytest -x                       Stop on first failure
-#
-# ASSERTIONS:
-# assert x == y                   Equality (rich diff on failure)
-# assert x in collection          Membership
-# assert x is None                Identity
-# pytest.approx(3.14)             Float comparison with tolerance
-# pytest.raises(ValueError)       Expect an exception
-#
-# FIXTURES:
-# @pytest.fixture                 Reusable setup/teardown
-# yield                           setup ← before │ after → teardown
-# scope="module"                  Share fixture across module
-# conftest.py                     Auto-discovered shared fixtures
-#
-# PARAMETRIZE:
-# @pytest.mark.parametrize        One test, multiple inputs
-# ids=[...]                       Readable names per parameter set
-#
-# MOCKING:
-# Mock()                          Flexible fake object
-# mock.return_value = ...         Set return value
-# mock.side_effect = [...]        Sequence of returns/exceptions
-# mock.assert_called_once_with()  Verify call
-# @patch("module.object")         Temporarily replace real object
-# @patch.dict(os.environ, {...})  Temporarily set env vars
-# Mock(spec=RealClass)            Enforce real interface
-#
-# pytest           → xUnit
-# assert           → Assert.Equal / Assert.True
-# @pytest.fixture  → constructor + IDisposable
-# @parametrize     → [Theory] + [InlineData]
-# unittest.mock    → Moq (NuGet)
-# conftest.py      → shared test base class / collection fixtures
+> [!abstract]- Python Testing Quick Reference
+> **Framework**
+> | Command | Purpose |
+> |---|---|
+> | `pytest tests/` | Run all tests |
+> | `pytest -v` | Verbose (show each test name) |
+> | `pytest -k "test_trade"` | Run only matching tests |
+> | `pytest -x` | Stop on first failure |
+>
+> **Assertions:** `assert x == y` (equality) | `assert x in coll` (membership) | `pytest.approx(3.14)` (float tolerance) | `pytest.raises(ValueError)` (expect exception)
+>
+> **Fixtures:** `@pytest.fixture` (reusable setup) | `yield` (setup + teardown) | `scope="module"` (share across module) | `conftest.py` (auto-discovered)
+>
+> **Parametrize:** `@pytest.mark.parametrize("x,y", [(1,2)])` | `ids=[...]` for readable names
+>
+> **Mocking:** `Mock()` | `.return_value = ...` | `.side_effect = [...]` | `.assert_called_once_with()` | `@patch("module.object")` | `@patch.dict(os.environ)` | `Mock(spec=RealClass)`
+>
+> **C# equivalents:** `assert` → `Assert.Equal` | `@pytest.fixture` → constructor + `IDisposable` | `@parametrize` → `[Theory]` + `[InlineData]` | `unittest.mock` → Moq
 
-print("Testing cheat sheet loaded — see comments above.")
-print()
-print("Typical project layout:")
-print("""
+**Typical project layout:**
+```
 trading_pipeline/
 ├── src/
-│   ├── __init__.py
 │   ├── transforms.py        # normalize_trades(), adjust_for_splits()
 │   ├── market_data.py       # MarketDataClient, get_index_constituents()
 │   ├── quality.py           # validate_eod_prices(), check_stale_quotes()
@@ -1842,27 +1641,6 @@ trading_pipeline/
 │   ├── test_market_data.py  # mock exchange/API calls
 │   ├── test_quality.py      # data quality validation tests
 │   └── test_config.py       # patch env vars
-├── pyproject.toml            # [tool.pytest.ini_options]
+├── pyproject.toml
 └── requirements.txt
-""")
 ```
-
-    Testing cheat sheet loaded — see comments above.
-    
-    Typical project layout:
-    
-    trading_pipeline/
-    ├── src/
-    │   ├── __init__.py
-    │   ├── transforms.py        # normalize_trades(), adjust_for_splits()
-    │   ├── market_data.py       # MarketDataClient, get_index_constituents()
-    │   ├── quality.py           # validate_eod_prices(), check_stale_quotes()
-    │   └── config.py            # get_exchange_config()
-    ├── tests/
-    │   ├── conftest.py          # shared fixtures (sample trades, mock clients)
-    │   ├── test_transforms.py   # pure function tests — fast, no mocks
-    │   ├── test_market_data.py  # mock exchange/API calls
-    │   ├── test_quality.py      # data quality validation tests
-    │   └── test_config.py       # patch env vars
-    ├── pyproject.toml            # [tool.pytest.ini_options]
-    └── requirements.txt

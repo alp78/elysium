@@ -422,18 +422,6 @@ Console.WriteLine($"classify(-5): {classify(-5)}");
 Pass lambdas to `OrderBy`, `Select`, `Where`, `MinBy`. Method chains compose operations declaratively. Compiler infers lambda parameter types.
 
 ```csharp
-// Lambdas with LINQ
-//
-// Anti-patterns:
-//   - Complex lambdas in LINQ — extract to named methods
-//   - Stateful lambdas capturing mutable variables — surprising behavior
-//
-// When to use:
-//   - Sorting, filtering, projection, aggregation on collections
-//
-// When NOT to use:
-//   - Side effects (printing, writing) — use foreach
-
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
 Console.WriteLine($"By length:    [{string.Join(", ", names.OrderBy(n => n.Length))}]");
 Console.WriteLine($"By last char: [{string.Join(", ", names.OrderBy(n => n[^1]))}]");
@@ -455,28 +443,9 @@ Console.WriteLine($"Youngest: {youngest}");
 
 <h4><code style="font-size:0.75em">Action</code>, <code style="font-size:0.75em">Predicate</code>, and closure capture</h4>
 
-```csharp
-// Action, Predicate, and closure capture
-//
-// Technique: Action<T> for side-effect lambdas (void). Predicate<T> for
-//   boolean tests used by List.FindAll, Exists. Closures capture the
-//   variable reference, not its value — changes are shared.
-//
-// Benefits:
-//   - Action separates "what to do" from "when to do it"
-//   - Predicate integrates with List's built-in search methods
-//   - Closures enable stateful lambdas without objects
-//
-// Anti-patterns:
-//   - Capturing loop variables — all lambdas share same variable
-//   - Mutating captured variables from multiple threads — races
-//
-// When to use:
-//   - Action for logging, notifications; Predicate for filtering
-//
-// When NOT to use:
-//   - Complex predicates — extract to a named method
+`Action<T>` for side-effect lambdas (void). `Predicate<T>` for boolean tests used by `List.FindAll`, `Exists`. Closures capture the **variable reference**, not its value — changes are shared.
 
+```csharp
 Action<string> shout = msg => Console.WriteLine($"  {msg.ToUpper()}!");
 shout("hello");
 
@@ -492,27 +461,9 @@ Console.WriteLine($"Exists > 5:   {list.Exists(x => x > 5)}");
 
 #### Closure capture — variable, not value
 
-```csharp
-// Closure capture — lambda captures variable reference, not snapshot
-//
-// Technique: Lambda sees the CURRENT value of captured variable, not
-//   the value at definition time. If multiplier changes after lambda
-//   is defined, lambda uses the new value.
-//
-// Benefits:
-//   - Shared state between lambda and enclosing scope — counters, accumulators
-//   - Automatic — no explicit passing needed
-//
-// Anti-patterns:
-//   - Assuming captured value is frozen — it's not
-//   - Capturing loop variables — all iterations share same variable
-//
-// When to use:
-//   - Accumulators, counters, memoization closures
-//
-// When NOT to use:
-//   - When frozen value is needed — copy to local variable first
+Lambdas capture the **variable reference**, not a snapshot. If `multiplier` changes after the lambda is defined, the lambda uses the new value. When you need a frozen value, copy to a local variable first.
 
+```csharp
 int multiplier = 3;
 Func<int, int> times = x => x * multiplier;   // captures 'multiplier'
 Console.WriteLine($"times(5): {times(5)}");    // 15
@@ -537,37 +488,9 @@ Console.WriteLine($"times(5): {times(5)}");    // 50 — sees the change!
 
 #### Block scope
 
+C# uses block-level scoping defined by `{}`. A variable is visible from its declaration to the end of its block. Closures capture the variable itself (shared reference, not a copy). Lambdas in a loop all share the same loop variable — fix by copying to a local inside the loop body.
+
 ```csharp
-// Block scope — variables are scoped to their enclosing braces
-//
-// Technique: C# uses block-level scoping defined by {}. A variable is
-//   visible from its declaration to the end of its block. Inner blocks
-//   can see outer variables; outer blocks cannot see inner variables.
-//
-// Benefits:
-//   - Prevents accidental use of variables outside their intended scope
-//   - Compiler catches undeclared variable errors at build time
-//
-// Anti-patterns:
-//   - Declaring variables far from their use — declare close to first use
-//   - Reusing a variable name in nested scope — shadows outer variable
-//
-// When to use:
-//   - Always — block scoping is enforced by the language
-//
-// When NOT to use:
-//   - N/A — C# has no alternative scoping mechanism
-
-// Closures & Variable Scope
-//
-// KEY CONCEPTS:
-// - Scope: C# uses block-level scoping (defined by {}).
-//   A variable is visible from its declaration to the end of its enclosing block.
-// - Closure: a lambda or local function that captures variables from its enclosing scope.
-//   The captured variable itself is shared, not a copy of its value.
-// - Loop capture gotcha: lambdas in a loop all share the same loop variable.
-//   Fix: copy into a local variable inside the loop body.
-
 {
     int x = 10;
     Console.WriteLine($"  Inside block: {x}");
@@ -579,28 +502,9 @@ Console.WriteLine($"times(5): {times(5)}");    // 50 — sees the change!
 
 #### Closures capture variables
 
-```csharp
-// Closures — returned lambda keeps enclosing scope's variables alive
-//
-// Technique: Lambda returned from a method retains access to the method's
-//   locals. Variable lives on heap (not stack) because closure keeps a
-//   reference. This is the "closure" pattern.
-//
-// Benefits:
-//   - Factory functions: MakeAdder(5) returns x => x + 5
-//   - State encapsulated — no external variable needed
-//   - Each call creates independent state
-//
-// Anti-patterns:
-//   - Large closures capturing many variables — memory leak risk
-//   - Assuming captured variables are copied — shared references
-//
-// When to use:
-//   - Factory functions, parameterized callbacks, memoization
-//
-// When NOT to use:
-//   - When a class with explicit state is clearer
+A lambda returned from a method retains access to the method's locals — the variable lives on the heap because the closure keeps a reference. Each call creates independent state.
 
+```csharp
 Func<int, int> MakeAdder(int n)
 {
     // n is captured by the returned lambda
@@ -617,26 +521,9 @@ Console.WriteLine($"add10(3): {add10(3)}");    // 13
 
 #### Closure modifies outer variable
 
-```csharp
-// Closure modification — lambda and caller share the same variable
-//
-// Technique: Closure can read AND modify captured variables. Both the
-//   lambda and enclosing scope see the same variable. Enables counters.
-//
-// Benefits:
-//   - Shared mutable state without explicit objects
-//   - Simple counter: Action increment = () => counter++
-//
-// Anti-patterns:
-//   - Unintended mutation — caller may not expect lambda to modify state
-//   - Thread safety — shared mutable state without locks
-//
-// When to use:
-//   - Simple counters, accumulators in single-threaded code
-//
-// When NOT to use:
-//   - Multi-threaded — use Interlocked or locks
+Closures can read AND modify captured variables — both the lambda and enclosing scope see the same variable. Use for simple counters in single-threaded code. For multi-threaded scenarios, use `Interlocked` or locks.
 
+```csharp
 int counter = 0;
 Action increment = () => counter++;
 increment();
@@ -649,27 +536,9 @@ Console.WriteLine($"counter: {counter}");      // 3 — closure modified outer v
 
 #### Closure as state — counter factory
 
-```csharp
-// Counter factory — each call creates independent closure state
-//
-// Technique: MakeCounter() returns Func<int> closing over a local count.
-//   Each call creates a new, independent counter. State is private.
-//
-// Benefits:
-//   - Encapsulated state — no public fields
-//   - Independent instances — multiple counters don't interfere
-//   - Lightweight — no class definition needed
-//
-// Anti-patterns:
-//   - Sharing returned Func across threads without synchronization
-//   - Complex state — use a class with methods
-//
-// When to use:
-//   - Simple state machines, ID generators, rate limiters
-//
-// When NOT to use:
-//   - Complex state with multiple operations — use a class
+`MakeCounter()` returns `Func<int>` closing over a local `count`. Each call creates an independent counter with private, encapsulated state — no class needed.
 
+```csharp
 Func<int> MakeCounter(int start = 0)
 {
     int count = start;
@@ -689,26 +558,9 @@ Console.WriteLine($"c2(): {c2()}");   // 1
 
 #### Range validator factory — parameterized closure
 
-```csharp
-// Range validator factory — parameterized closure for reusable checks
-//
-// Technique: MakeRangeValidator(min, max) returns Func<int, bool> that
-//   tests [min, max]. Each call creates an independent validator.
-//
-// Benefits:
-//   - Reusable — create validators for different ranges
-//   - Composable — items.Where(isValid)
-//   - Lightweight — no class needed
-//
-// Anti-patterns:
-//   - Hardcoding ranges — factory pattern is more flexible
-//
-// When to use:
-//   - Parameterized validation, configurable filters, rule engines
-//
-// When NOT to use:
-//   - Complex validation — use a validator class
+`MakeRangeValidator(min, max)` returns `Func<int, bool>` that tests `[min, max]`. Each call creates an independent validator, composable with `items.Where(isValid)`.
 
+```csharp
 Func<int, bool> MakeRangeValidator(int min, int max)
     => value => value >= min && value <= max;
 
@@ -723,26 +575,9 @@ Console.WriteLine($"age 150: {isValidAge(150)}");
 
 #### Loop capture gotcha
 
-```csharp
-// Loop capture gotcha — all lambdas share the same loop variable
-//
-// Technique: Lambdas in a loop capture the variable itself. After the
-//   loop, all see the final value. Fix: copy to local inside the loop.
-//
-// Benefits:
-//   - Understanding prevents a common and subtle bug
-//   - Local copy (int copy = i) is the standard fix
-//
-// Anti-patterns:
-//   - Assuming each iteration captures its own value — it doesn't
-//   - Captured loop vars in callbacks — delayed eval sees final value
-//
-// When to use:
-//   - Always apply the local copy fix when creating closures in loops
-//
-// When NOT to use:
-//   - foreach in C# 5+ — variable is captured per-iteration
+> [!danger] Lambdas in a `for` loop capture the variable itself — after the loop, all see the final value. Fix: `int captured = i` inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
 
+```csharp
 var funcs = new List<Func<int>>();
 for (int i = 0; i < 3; i++)
     funcs.Add(() => i);               // all capture the SAME variable i
@@ -765,40 +600,11 @@ Console.WriteLine($"Good: [{string.Join(", ", funcsGood.Select(f => f()))}]");  
 
 #### Delegate types
 
+Delegates declare a function signature as a type — type-safe function pointers. Built-in: `Func<T, TResult>` (returns value), `Action<T>` (void), `Predicate<T>` (returns bool). Custom: `delegate int Op(int a, int b)`. Delegates can chain multiple methods via `+=` (multicast). Events are restricted delegates that only the owner can invoke.
+
+> [!warning] With multicast delegates, only the **last** handler's return value is kept. Use `Func`/`Action` for simple cases — custom delegate types add unnecessary ceremony.
+
 ```csharp
-// Delegate types — type-safe function pointers
-//
-// Technique: Delegates declare a function signature as a type. Func<T, TResult>
-//   and Action<T> are built-in. Custom delegates: delegate int Op(int a, int b).
-//   Delegates can be combined (multicast) with += and -=.
-//
-// Benefits:
-//   - Type-safe — compiler checks parameter and return types
-//   - Multicast — invoke multiple methods with one call
-//   - Foundation for events, callbacks, and LINQ
-//
-// Anti-patterns:
-//   - Custom delegate types when Func/Action suffice — unnecessary ceremony
-//   - Multicast delegates expecting a single return value — only last wins
-//
-// When to use:
-//   - Event systems, callback registrations, plugin architectures
-//
-// When NOT to use:
-//   - Simple function passing — Func/Action is cleaner than custom delegates
-
-// Delegates & Events — type-safe function pointers
-//
-// KEY CONCEPTS:
-// - Delegate: a type-safe function pointer. Declares a function signature.
-//   Func<int, int> is a delegate for "function taking int, returning int".
-// - Built-in delegate types:
-//   Func<T1, T2, TResult> — function with return value (up to 16 params)
-//   Action<T1, T2> — void function (up to 16 params)
-//   Predicate<T> — function returning bool
-// - Multicast: delegates can chain multiple methods via +=.
-// - Events: restricted delegates that only the owner can invoke.
-
 int Add(int a, int b) => a + b;
 int Multiply(int a, int b) => a * b;
 
@@ -815,27 +621,9 @@ delegate int MathOp(int a, int b);     // custom delegate type
 
 #### Multicast delegates
 
-```csharp
-// Multicast delegates — combine multiple handlers with +=
-//
-// Technique: += adds a handler; -= removes. Invoking calls all registered
-//   handlers in order. Each handler gets the same input independently.
-//
-// Benefits:
-//   - Observer pattern — multiple subscribers notified by one invoke
-//   - Dynamic — add/remove handlers at runtime
-//   - Foundation for C# events
-//
-// Anti-patterns:
-//   - Expecting return values from multicast — only last handler's return kept
-//   - Not removing handlers — memory leaks from long-lived delegates
-//
-// When to use:
-//   - Event notifications, logging hooks, plugin systems
-//
-// When NOT to use:
-//   - Pipelines where output feeds next step — use Aggregate
+`+=` adds a handler, `-=` removes. Invoking calls all registered handlers in order. Observer pattern — multiple subscribers notified by one invoke. Don't forget to remove handlers to avoid memory leaks.
 
+```csharp
 Action<string> pipeline = msg => Console.WriteLine($"  Step 1: {msg}");
 pipeline += msg => Console.WriteLine($"  Step 2: {msg.ToUpper()}");
 pipeline += msg => Console.WriteLine($"  Step 3: {msg.Length} chars");
@@ -854,27 +642,9 @@ pipeline("hello world");    // all 3 functions execute
 
 #### Method groups and callbacks
 
-```csharp
-// Method groups — pass a method name directly as a delegate
-//
-// Technique: Action<string> h = PrintUpper — no parentheses. Compiler
-//   creates the delegate automatically. Cleaner than lambda wrapper.
-//
-// Benefits:
-//   - Concise — no lambda wrapper for simple delegation
-//   - Readable — handler = PrintUpper is self-documenting
-//   - Works with LINQ: .Select(Transform), .Where(IsValid)
-//
-// Anti-patterns:
-//   - Lambda wrapper when method group works — redundant
-//   - Method groups with overloads — ambiguous, may error
-//
-// When to use:
-//   - Assigning named methods to Func/Action or LINQ
-//
-// When NOT to use:
-//   - Additional arguments or transformation needed — use lambda
+`Action<string> h = PrintUpper` — no parentheses, no lambda wrapper. Compiler creates the delegate automatically. Works with LINQ: `.Select(Transform)`, `.Where(IsValid)`. Use lambda only when additional arguments or transformation are needed.
 
+```csharp
 void PrintUpper(string s) => Console.WriteLine($"  {s.ToUpper()}");
 
 Action<string> handler = PrintUpper;    // no () — passing the method itself
@@ -890,26 +660,9 @@ var names = new[] { "alice", "bob", "charlie" };
 
 #### Callback via Action — processing with notification
 
-```csharp
-// Callback via Action — per-item notification during processing
-//
-// Technique: ProcessData accepts Action<int> onProcessed called for each
-//   item. Caller defines response logic. Decouples algorithm from output.
-//
-// Benefits:
-//   - Caller controls per-item handling — log, collect, display, ignore
-//   - Processing logic reusable with different callbacks
-//
-// Anti-patterns:
-//   - Hardcoding Console.WriteLine — not reusable
-//   - Null callback without check — NullReferenceException
-//
-// When to use:
-//   - Batch processing with progress, ETL with row-level hooks
-//
-// When NOT to use:
-//   - Returning results is simpler — use Select/yield return
+`ProcessData` accepts `Action<int> onProcessed` called for each item. Caller defines the response — log, collect, display, or ignore. Decouples the algorithm from output handling.
 
+```csharp
 void ProcessData(int[] data, Action<int> onProcessed)
 {
     foreach (var item in data)
@@ -939,27 +692,9 @@ Console.WriteLine();
 
 #### Same name, different parameters
 
-```csharp
-// Overload resolution — compiler picks best match by argument types
-//
-// Technique: Format(42) resolves to Format(int). Format(3.14) resolves
-//   to Format(double). Compiler uses most specific match. Numeric
-//   promotions: int can promote to double but not vice versa.
-//
-// Benefits:
-//   - Automatic — caller doesn't specify which overload
-//   - Type-safe — no runtime casting
-//
-// Anti-patterns:
-//   - Relying on implicit numeric conversion surprises
-//   - Overloading with object parameter — catches everything
-//
-// When to use:
-//   - Type-specific implementations of the same operation
-//
-// When NOT to use:
-//   - Generics can handle all types with one method
+The compiler picks the most specific overload by argument types. `Format(42)` resolves to `Format(int)`, `Format(3.14)` to `Format(double)`. Numeric promotions: `int` can promote to `double` but not vice versa. Use generics when one method can handle all types.
 
+```csharp
 string Format(int value) => $"int: {value}";
 string Format(double value) => $"double: {value:F2}";
 string Format(string value) => $"string: '{value}'";
@@ -978,28 +713,9 @@ Console.WriteLine(Format(10, 20));       // calls Format(int, int)
 
 #### Extension methods and LINQ
 
-```csharp
-// Extension methods — add methods to types you don't own
-//
-// Technique: static method in static class, first param uses this:
-//   static int WordCount(this string s). LINQ is built entirely
-//   with extension methods on IEnumerable<T>.
-//
-// Benefits:
-//   - Add methods to framework types — string, List<T>, IEnumerable
-//   - Fluent: "hello".WordCount() instead of WordCount("hello")
-//   - LINQ operators are all extension methods — composable pipeline
-//
-// Anti-patterns:
-//   - Extensions in non-static classes — compile error
-//   - Extensions on object — pollutes IntelliSense for all types
-//
-// When to use:
-//   - Utility methods on framework types, LINQ-style pipelines
-//
-// When NOT to use:
-//   - Types you own — add the method directly
+Static method in a static class with `this` as first parameter: `static int WordCount(this string s)`. Enables fluent syntax: `"hello".WordCount()`. LINQ is built entirely with extension methods on `IEnumerable<T>`. Don't extend `object` — pollutes IntelliSense for all types.
 
+```csharp
 Console.WriteLine("Extension methods must be in static classes.");
 Console.WriteLine("LINQ methods (.Where, .Select, .OrderBy) are ALL extension methods.");
 Console.WriteLine("They 'extend' IEnumerable<T> without modifying its source code.");
