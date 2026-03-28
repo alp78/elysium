@@ -74,7 +74,7 @@ Cloud Run job metrics use the `gcp.run.job.*` namespace. Key metric names:
 
 **Filter by job name:** Use `job_name:data-pipeline-pipeline` (not `service:data-pipeline-pipeline`).
 
-**Query example (Pipeline Runs widget):**
+#### Query example (Pipeline Runs widget)
 
 ```
 sum:gcp.run.job.completed_execution_count{job_name:data-pipeline-pipeline}.as_count()
@@ -87,14 +87,14 @@ sum:gcp.run.job.completed_execution_count{job_name:data-pipeline-pipeline}.as_co
 
 ## Troubleshooting
 
-**Cloud Run metrics not showing:**
+#### Cloud Run metrics not showing
 
 1. Verify GCP Integration is set up (Integrations > Google Cloud Platform)
 2. Check the Datadog SA has `monitoring.viewer` role
 3. GCP metrics can take 5-10 minutes to appear after integration setup
 4. Use `job_name:data-pipeline-pipeline` as the filter (not `service:data-pipeline-pipeline`)
 
-**Pipeline logs not in Datadog:**
+#### Pipeline logs not in Datadog
 Cloud Run job logs go to **GCP Cloud Logging**, not through dd-agent. They are not available in Datadog's Log Explorer. View them via:
 
 ```powershell

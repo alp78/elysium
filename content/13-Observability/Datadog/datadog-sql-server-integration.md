@@ -28,7 +28,7 @@ The Datadog SQL Server integration (`sqlserver` check) connects to SQL Server us
 
 Written to `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml`:
 
-**Minimal config (integration only, no custom queries):**
+#### Minimal config (integration only, no custom queries)
 
 ```yaml
 init_config:

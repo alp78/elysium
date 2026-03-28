@@ -126,7 +126,7 @@ Every piece of data flowing through a pipeline needs five types of context to be
 
 Run context answers: "This row exists because pipeline X ran at time Y with parameters Z and produced N rows." It is the most fundamental form of pipeline observability.
 
-**What it captures:**
+#### What it captures
 
 | Field | Type | Purpose |
 |---|---|---|
@@ -436,7 +436,7 @@ def run_daily_ingest(**airflow_context):
 
 Provenance answers: "This row was extracted from source system X, table Y, at time Z, via API version V." It creates the chain of custody from origin to destination.
 
-**What it captures:**
+#### What it captures
 
 | Field | Type | Purpose |
 |---|---|---|
@@ -701,7 +701,7 @@ Temporal context is the hardest context problem. It requires distinguishing betw
 | **Processing time** | When the pipeline processed the record | The pipeline ingested it at 15:45:00 UTC |
 | **Recording time** | When the record was written to the target | The row was inserted into SQL Server at 15:47:12 UTC |
 
-**Why all three matter:**
+#### Why all three matter
 
 - **Late-arriving data**: A trade from Monday arrives in Tuesday's pipeline run. If you only track processing time, it appears as a Tuesday event. If you track event time, it correctly belongs to Monday.
 - **Corrections**: The source system corrects a price from $185.42 to $185.44. With only current state, the old value is gone. With recording time, you know both values and when each was believed true.
@@ -769,7 +769,7 @@ WHERE instrument_id = 42
   AND (superseded_at IS NULL OR superseded_at > '2026-03-01');
 ```
 
-**"Show me how our knowledge of this instrument changed over time":**
+#### "Show me how our knowledge of this instrument changed over time"
 
 ```sql
 -- All versions of a single instrument, ordered by when we learned about them
@@ -950,7 +950,7 @@ WHERE rn = 1;
 
 Quality context answers: "This dataset has a completeness score of 0.97, all uniqueness constraints passed, but freshness is 3 hours past SLA." It transforms quality from a binary pass/fail into a quantified signal that consumers can reason about.
 
-**What it captures:**
+#### What it captures
 
 | Check Type | Metric | Example |
 |---|---|---|
@@ -1254,7 +1254,7 @@ class QualityGateFailure(Exception):
 
 Business context answers: "This column represents the closing price adjusted for stock splits and dividends, owned by the market-data team, classified as non-PII, and refreshed daily by 6 PM UTC."
 
-**What it captures:**
+#### What it captures
 
 | Field | Purpose |
 |---|---|

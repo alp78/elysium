@@ -124,7 +124,7 @@ dd_api_key = "<your-32-char-api-key>"
 
 All Datadog resources are conditional on `var.dd_api_key != ""`. Setting it to empty disables everything.
 
-**Apply Terraform:**
+#### Apply Terraform
 
 ```powershell
 terraform -chdir=infra apply

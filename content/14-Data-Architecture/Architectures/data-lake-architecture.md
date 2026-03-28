@@ -95,7 +95,7 @@ Source Systems
 
 The landing zone is an **append-only, immutable record** of everything that arrived from source systems. Never delete from this zone and never modify files once written. If a source sends bad data, that bad data must be preserved in landing — it is the audit trail.
 
-**What goes here:**
+#### What goes here
 - API responses as raw JSON files
 - Database exports as CSV or bulk format
 - Event streams from Pub/Sub written as Avro or JSON
@@ -125,7 +125,7 @@ gs://example-data-lake-landing/
 
 The cleansed zone applies quality rules and standardization. This is where the lake starts enforcing structure.
 
-**Transformation rules at this boundary:**
+#### Transformation rules at this boundary
 - Validate required fields (not null, expected types)
 - Deduplicate by business key + timestamp
 - Standardize date formats to ISO 8601 (YYYY-MM-DD)
@@ -141,7 +141,7 @@ The cleansed zone applies quality rules and standardization. This is where the l
 
 The curated zone is the public-facing layer. It is optimized for the actual query patterns of downstream consumers.
 
-**Characteristics:**
+#### Characteristics
 - Columnar Parquet, partitioned and sorted for the dominant query pattern
 - Pre-joined or pre-aggregated where beneficial
 - Registered in the data catalog with full metadata
@@ -175,7 +175,7 @@ gs://example-data-lake-cleansed/equity-prices/
         equity_prices_20260321.parquet
 ```
 
-**Query engines read partition columns from path, not from file:**
+#### Query engines read partition columns from path, not from file
 
 ```python
 # PySpark / Dataproc: reads partition key=value from path automatically
@@ -201,7 +201,7 @@ equity prices (1).parquet       # spaces, parentheses — breaks many tools
 EQUITY_PRICES_2026-03-22.PARQUET  # case inconsistency, dashes in date
 ```
 
-**Rules:**
+#### Rules
 - All lowercase, no spaces, no special characters except underscores and dots
 - Include date (YYYYMMDD) or datetime (YYYYMMDDHHMMSS) in filename
 - Include sequence number for multi-file batches (`_001`, `_002`)
@@ -247,7 +247,7 @@ See [[serialization-formats]] for detailed encoding mechanics and compression co
 | **Avro** | Yes | No | Yes | Streaming / Kafka; schema evolution focus |
 | **ORC** | Yes | Yes | Yes | Hive-ecosystem legacy; Presto/Trino on AWS |
 
-**Decision rules:**
+#### Decision rules
 
 ```
 Landing zone:    Whatever format the source sends (preserve exactly)
@@ -258,7 +258,7 @@ Curated zone:   Parquet (compressed, partitioned, clustered)
 > [!warning] Never Use CSV or JSON in the Curated Zone
 > CSV and JSON have no embedded schema, no columnar storage, and no compression interoperability. A 10 GB CSV file in the curated zone will be read end-to-end for every query. The same data as Parquet with Snappy compression is typically 2–5 GB and scanned 3–10x faster because query engines read only the relevant columns. See [[serialization-formats]] for the full format comparison.
 
-**Parquet configuration for data lake:**
+#### Parquet configuration for data lake
 
 ```python
 import pyarrow as pa
@@ -292,7 +292,7 @@ An ungoverned data lake inevitably becomes a data swamp. The three most common p
 
 A data catalog is the index of the data lake: what tables exist, where they live, what their schemas are, who owns them, when they were last updated, and what they contain.
 
-**Minimum viable catalog entry for each dataset:**
+#### Minimum viable catalog entry for each dataset
 
 ```yaml
 name: equity_prices_daily
@@ -326,7 +326,7 @@ lineage_upstream: [yfinance-api]
 lineage_downstream: [equity_prices_curated, fact_prices_bq]
 ```
 
-**GCP-native catalog options:**
+#### GCP-native catalog options
 
 | Tool | Scope | Best for |
 |---|---|---|
@@ -342,7 +342,7 @@ Lineage tracks the provenance of each dataset: what were its inputs, what transf
 > [!tip] Implement Lineage from Day One
 > Retrofitting lineage onto an existing lake is vastly more expensive than building it in from the start. Even a simple metadata file (`lineage.json`) alongside each dataset — listing upstream source names and the pipeline job that produced it — provides enormous value when something breaks.
 
-**Minimum lineage metadata approach (practical for small teams):**
+#### Minimum lineage metadata approach (practical for small teams)
 
 ```python
 # Write a sidecar metadata file alongside every Parquet dataset
@@ -392,7 +392,7 @@ See [[service-accounts-and-iam]] for GCP IAM mechanics and [[vpc-service-control
 
 Personally Identifiable Information (PII) in the lake requires a clear handling strategy.
 
-**Options in order of preference:**
+#### Options in order of preference
 
 1. **Tokenization** — Replace PII with a reversible token. The token → PII mapping lives in a secure vault (GCP Secret Manager). Data in the lake contains only tokens.
 2. **Pseudonymization** — Hash the PII with a secret salt. Irreversible without the salt. Suitable for analytics where re-identification is not needed.
@@ -571,7 +571,7 @@ OPTIONS (
 );
 ```
 
-**Query the external table with partition pruning:**
+#### Query the external table with partition pruning
 
 ```sql
 -- This scans ONLY year=2026/month=03/day=22/ — not the full table

@@ -19,7 +19,7 @@ A senior data engineer does not just build pipelines — they design systems tha
 
 A large-scale data platform migration in the financial index industry — moving from an on-premises data estate to GCP — illustrates the patterns and pitfalls covered in this section, applicable to any enterprise data platform.
 
-**The migration spectrum:**
+#### The migration spectrum
 
 | Strategy | Description | Risk | Duration | Cost |
 |---|---|---|---|---|
@@ -56,7 +56,7 @@ Phase 4: Decommission On-Prem (18-24 months)
    └─▶ Decommission on-prem infrastructure
 ```
 
-**The shadow comparison pattern — your safety net:**
+#### The shadow comparison pattern — your safety net
 
 ```python
 import pandas as pd
@@ -105,7 +105,7 @@ def compare_outputs(on_prem_df: pd.DataFrame, cloud_df: pd.DataFrame,
 
 An idempotent operation produces the same result whether you run it once or ten times. In data engineering, idempotency is not optional — it is the difference between a pipeline you can safely retry and one that corrupts data on every failure recovery.
 
-**The four idempotency patterns:**
+#### The four idempotency patterns
 
 | Pattern | Mechanism | Use Case | Trade-off |
 |---|---|---|---|
@@ -114,7 +114,7 @@ An idempotent operation produces the same result whether you run it once or ten 
 | **Delete-insert** | Delete rows for the date/partition, then insert | Fact tables, daily loads | Atomic if wrapped in a transaction |
 | **SCD Type 2** | Never update; insert new version with effective dates | Audit trail, regulatory compliance | Storage grows over time, queries need date filtering |
 
-**Truncate-reload (Bronze layer):**
+#### Truncate-reload (Bronze layer)
 
 ```sql
 -- Idempotent: safe to rerun — always produces the same result
@@ -127,7 +127,7 @@ BEGIN TRANSACTION;
 COMMIT;
 ```
 
-**Upsert / MERGE (Silver layer):**
+#### Upsert / MERGE (Silver layer)
 
 ```sql
 -- Idempotent: running twice produces the same result (second run updates with same values)
@@ -149,7 +149,7 @@ WHEN NOT MATCHED THEN
             source.sentiment_score, SYSUTCDATETIME());
 ```
 
-**Delete-insert (fact tables with date partitioning):**
+#### Delete-insert (fact tables with date partitioning)
 
 ```sql
 -- Idempotent: deletes today's data first, then inserts fresh
@@ -164,7 +164,7 @@ BEGIN TRANSACTION;
 COMMIT;
 ```
 
-**Anti-patterns that break idempotency:**
+#### Anti-patterns that break idempotency
 
 | Anti-pattern | Why It Breaks | Fix |
 |---|---|---|
@@ -178,7 +178,7 @@ COMMIT;
 
 Every data pipeline will eventually need to backfill — reprocess historical data because a bug was found, a calculation changed, or a new data source was added. Backfills are the most dangerous operation in data engineering because they affect data that downstream consumers have already used.
 
-**The backfill safety checklist:**
+#### The backfill safety checklist
 
 1. **Scope the impact**: Which tables, date ranges, and downstream consumers are affected?
 2. **Communicate before you start**: Notify all consumers that historical data will change
@@ -291,7 +291,7 @@ END
 
 Production databases serve live dashboards and APIs. Schema changes must not break running queries.
 
-**Safe migration patterns:**
+#### Safe migration patterns
 
 | Change | Safe Approach | Dangerous Approach |
 |---|---|---|
@@ -301,7 +301,7 @@ Production databases serve live dashboards and APIs. Schema changes must not bre
 | Change data type | Add new column with new type → migrate data → swap | `ALTER COLUMN` on a large table (long lock) |
 | Add an index | `CREATE INDEX ... WITH (ONLINE = ON)` | `CREATE INDEX` without ONLINE (blocks writes) |
 
-**The expand-and-contract pattern:**
+#### The expand-and-contract pattern
 
 ```
 Step 1 (Expand):    Add new column, keep old column
@@ -317,7 +317,7 @@ Each step is a separate deployment. If anything goes wrong, you can stop at any 
 
 Batch pipelines scheduled on cron are sufficient for daily index calculations, but real-time data ingestion — price ticks, corporate action announcements, regulatory filings — demands an event-driven architecture. GCP's Pub/Sub + Cloud Functions pattern replaces polling loops with reactive triggers that scale to zero when idle.
 
-**The event-driven pipeline pattern:**
+#### The event-driven pipeline pattern
 
 ```
                           ┌───────────────────────────────────────────┐
@@ -341,7 +341,7 @@ Batch pipelines scheduled on cron are sufficient for daily index calculations, b
                           └───────────────────────────────────────────┘
 ```
 
-**Cloud Function as an event-driven ingest worker:**
+#### Cloud Function as an event-driven ingest worker
 
 ```python
 # functions/ingest_market_data/main.py
@@ -389,7 +389,7 @@ def handle_event(cloud_event):
         raise RuntimeError(f"BigQuery insert failed: {errors}")
 ```
 
-**When to use each pattern:**
+#### When to use each pattern
 
 | Pattern | Use When | GCP Services | Latency |
 |---|---|---|---|
@@ -398,7 +398,7 @@ def handle_event(cloud_event):
 | **Streaming** (Pub/Sub + Dataflow) | Continuous aggregation, windowed metrics | Pub/Sub, Dataflow (Apache Beam) | Sub-second |
 | **Hybrid** (events trigger batch) | Event arrives → enriches → triggers DAG | Pub/Sub → Cloud Function → Airflow API | Seconds + batch |
 
-**Cost optimization for event-driven pipelines:**
+#### Cost optimization for event-driven pipelines
 
 - Cloud Functions scale to zero — you pay nothing when no events arrive (unlike always-on VMs)
 - Set `max_instance_count` to prevent runaway scaling during market data bursts
@@ -412,7 +412,7 @@ def handle_event(cloud_event):
 
 A data contract is a formal agreement between a data producer and its consumers that specifies the schema, semantics, quality guarantees, and SLAs of a data interface. Without data contracts, upstream schema changes silently break downstream pipelines — the #1 source of data incidents in large organizations.
 
-**Why data contracts matter at scale:**
+#### Why data contracts matter at scale
 
 ```
 Without contracts:                    With contracts:
@@ -424,7 +424,7 @@ Without contracts:                    With contracts:
                                                                              └──────────┘
 ```
 
-**Protobuf for data contracts:**
+#### Protobuf for data contracts
 
 Protocol Buffers (Protobuf) enforce schema at the serialization level. If a producer adds or removes a field, the Protobuf definition makes it explicit, versioned, and backward-compatible.
 
@@ -461,7 +461,7 @@ message CorporateAction {
 }
 ```
 
-**Avro for streaming data contracts (Kafka/Pub/Sub):**
+#### Avro for streaming data contracts (Kafka/Pub/Sub)
 
 ```json
 {
@@ -484,7 +484,7 @@ message CorporateAction {
 }
 ```
 
-**Schema Registry — the contract enforcement layer:**
+#### Schema Registry — the contract enforcement layer
 
 ```python
 # Using Confluent Schema Registry (works with Kafka and Pub/Sub via connectors)
@@ -504,7 +504,7 @@ schema_registry.register("daily-ohlcv-value", Schema(schema_str, "AVRO"))
 schema_registry.set_compatibility("daily-ohlcv-value", "BACKWARD")
 ```
 
-**Data contract enforcement in practice:**
+#### Data contract enforcement in practice
 
 | Level | Enforcement | Tool |
 |---|---|---|
@@ -513,7 +513,7 @@ schema_registry.set_compatibility("daily-ohlcv-value", "BACKWARD")
 | **Pipeline validation** | dbt tests validate schema expectations after load | dbt schema tests, Great Expectations |
 | **CI/CD** | PR that changes a `.proto` file triggers contract compatibility check | GitHub Actions + `buf lint` + `buf breaking` |
 
-**Protobuf vs Avro — when to use which:**
+#### Protobuf vs Avro — when to use which
 
 | Aspect | Protobuf | Avro |
 |---|---|---|
@@ -531,7 +531,7 @@ schema_registry.set_compatibility("daily-ohlcv-value", "BACKWARD")
 
 A senior data engineer is often the person closest to the cloud bill — and the person best positioned to reduce it. On a large data platform, BigQuery alone can account for tens of thousands of dollars monthly if left unoptimized. FinOps (Financial Operations) is the practice of making cloud spending visible, accountable, and optimized.
 
-**BigQuery pricing models — the most consequential choice:**
+#### BigQuery pricing models — the most consequential choice
 
 | Model | How You Pay | Best For | Risk |
 |---|---|---|---|
@@ -540,7 +540,7 @@ A senior data engineer is often the person closest to the cloud bill — and the
 | **Enterprise edition** | $0.06/slot-hour + features | Multi-region, VPC-SC, CMEK, advanced security | Higher per-slot cost, lower total cost at scale |
 | **Enterprise Plus** | $0.10/slot-hour + all features | Mission-critical, sub-second BI queries | Highest cost, highest performance |
 
-**When to switch from on-demand to reservations:**
+#### When to switch from on-demand to reservations
 
 ```python
 # Calculate the break-even point
@@ -558,7 +558,7 @@ reservation_100_slots = 2880     # = $2,880/month — saves $3,370/month
 # Rule of thumb: switch to reservations when on-demand exceeds ~$3,000/month
 ```
 
-**BigQuery cost reduction techniques (immediate impact):**
+#### BigQuery cost reduction techniques (immediate impact)
 
 | Technique | Savings | Implementation |
 |---|---|---|
@@ -594,7 +594,7 @@ GROUP BY user_email
 ORDER BY tb_billed DESC;
 ```
 
-**GCP cost optimization beyond BigQuery:**
+#### GCP cost optimization beyond BigQuery
 
 | Service | Cost Trap | Fix |
 |---|---|---|
@@ -605,7 +605,7 @@ ORDER BY tb_billed DESC;
 | **Cloud Functions** | Long-running functions billed per 100ms | Move functions >5 min to Cloud Run (cheaper per-second billing) |
 | **Data Transfer** | Egress charges between regions | Co-locate all services in the same region (europe-west1) |
 
-**Building a FinOps dashboard:**
+#### Building a FinOps dashboard
 
 ```sql
 -- GCP billing export to BigQuery (enabled in Billing → Billing Export)
@@ -622,7 +622,7 @@ GROUP BY usage_date, service
 ORDER BY usage_date DESC, net_cost DESC;
 ```
 
-**Cost alerting with Terraform:**
+#### Cost alerting with Terraform
 
 ```hcl
 # terraform — budget alerts
@@ -660,7 +660,7 @@ resource "google_billing_budget" "monthly_budget" {
 
 Batch pipelines calculate index values once per day after market close. But real-time index products — live NAV calculations, intraday risk monitors, and streaming dashboards — require continuous processing of market data ticks joined against slowly-changing reference data. This is where Apache Beam (via Cloud Dataflow) fills the gap between Pub/Sub's messaging and BigQuery's analytics.
 
-**The streaming pipeline architecture:**
+#### The streaming pipeline architecture
 
 ```
 Market Data Feed (WebSocket / FIX protocol)
@@ -679,7 +679,7 @@ Cloud Dataflow (Apache Beam pipeline)
          └── Bigtable: real-time dashboard reads (sub-ms latency)
 ```
 
-**Windowing strategies for financial data:**
+#### Windowing strategies for financial data
 
 | Window Type | Definition | Financial Use Case |
 |---|---|---|
@@ -688,7 +688,7 @@ Cloud Dataflow (Apache Beam pipeline)
 | **Session** | Gap-based, dynamic size | Group trades by activity bursts (e.g., around earnings announcements) |
 | **Global** | Single window for all time | Cumulative daily statistics (reset at market open) |
 
-**Apache Beam pipeline for real-time index calculation:**
+#### Apache Beam pipeline for real-time index calculation
 
 ```python
 import apache_beam as beam
@@ -825,7 +825,7 @@ def compute_windowed_index_value(index_ticks):
     }
 ```
 
-**Late data and watermarks — the streaming reliability challenge:**
+#### Late data and watermarks — the streaming reliability challenge
 
 In financial markets, data arrives late for multiple reasons: exchange feed delays, network congestion, retry queues, and cross-region replication lag. A streaming pipeline must handle late data without either dropping it (incorrect) or waiting forever (high latency).
 

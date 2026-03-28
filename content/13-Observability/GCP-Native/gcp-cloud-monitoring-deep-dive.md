@@ -796,7 +796,7 @@ fetch <resource_type>
 | within <duration>
 ```
 
-**Core operations:**
+#### Core operations
 
 | Operation | Purpose | Example |
 |---|---|---|
@@ -1150,7 +1150,7 @@ def update_data_freshness_metric(
 
 ### Writing Metrics from Different Contexts
 
-**From an Airflow task:**
+#### From an Airflow task
 
 ```python
 from airflow.decorators import task
@@ -1169,7 +1169,7 @@ def load_data():
     return rows
 ```
 
-**From a Cloud Run Job entrypoint:**
+#### From a Cloud Run Job entrypoint
 
 ```python
 import os

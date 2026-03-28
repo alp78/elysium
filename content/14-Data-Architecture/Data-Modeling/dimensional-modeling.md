@@ -3115,7 +3115,7 @@ Consistent naming is essential for a maintainable warehouse. Adopt these prefixe
 | `mv_` | Materialized view | `mv_monthly_index_performance` |
 | `vw_` | Standard view | `vw_current_constituents` |
 
-**Column naming conventions:**
+#### Column naming conventions
 
 | Pattern | Purpose | Example |
 |---------|---------|---------|

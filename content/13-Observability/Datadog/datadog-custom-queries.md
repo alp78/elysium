@@ -50,7 +50,7 @@ custom_queries:
 
 **Metric in Datadog:** `sqlserver.connections.by_login` (gauge, tagged by `login_name` and `program_name`).
 
-**Expected idle values:**
+#### Expected idle values
 
 | Login | Count | Source |
 |-------|-------|--------|

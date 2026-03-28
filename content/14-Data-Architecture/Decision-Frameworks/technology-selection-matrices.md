@@ -106,7 +106,7 @@ Two languages every data engineer uses daily. The question is never "which one" 
 | **Portability** | Linux/macOS (bash 4+ not default on macOS) | Cross-platform |
 | **Debugging** | `set -x`, echo statements | pdb, IDE debuggers, logging module |
 
-**When Bash wins:**
+#### When Bash wins
 
 - File manipulation: `mv`, `cp`, `chmod`, `find`, `rsync`
 - Process management: `ps aux`, `kill`, `nohup`, background jobs
@@ -115,7 +115,7 @@ Two languages every data engineer uses daily. The question is never "which one" 
 - Quick-and-dirty log parsing: `grep ERROR /var/log/app.log | tail -20`
 - Environment setup: `.bashrc`, `.profile`, `export` chains
 
-**When Python wins:**
+#### When Python wins
 
 - Anything with conditionals beyond simple if/else
 - Loops that process data (not just files)
@@ -164,7 +164,7 @@ The bash version is 1 line. The Python version is 3 lines plus imports. But when
 | **IDE experience** | VS Code + Pylance (good) | Visual Studio / Rider (excellent) |
 | **Learning curve** | Low (readable, forgiving) | Medium (more ceremony, but clearer contracts) |
 
-**When C# wins:**
+#### When C# wins
 
 - High-throughput APIs serving thousands of requests/second
 - Windows services that run as background daemons
@@ -173,7 +173,7 @@ The bash version is 1 line. The Python version is 3 lines plus imports. But when
 - Enterprise middleware integrating with .NET ecosystem
 - Performance-critical code paths (no GIL, true parallelism)
 
-**When Python wins:**
+#### When Python wins
 
 - Data manipulation and transformation pipelines
 - ML model training and inference
@@ -211,7 +211,7 @@ This is the most frequent decision a data engineer makes. The answer is almost a
 
 **dbt as the bridge:** [[dbt-transformation-layer]] lets you write SQL transforms but manage them with software engineering practices — version control, testing, documentation, dependency graphs. This gives you SQL's performance with Python-level engineering discipline.
 
-**When SQL wins (always prefer for these):**
+#### When SQL wins (always prefer for these)
 
 - Aggregations: `SUM`, `AVG`, `COUNT`, `MIN`, `MAX`
 - Joins: `INNER JOIN`, `LEFT JOIN`, `CROSS APPLY`
@@ -222,7 +222,7 @@ This is the most frequent decision a data engineer makes. The answer is almost a
 - Date arithmetic: `DATEADD`, `DATEDIFF`, `DATE_TRUNC`
 - Type conversion: `CAST`, `CONVERT`, `TRY_CAST`
 
-**When Python wins (SQL cannot do these well):**
+#### When Python wins (SQL cannot do these well)
 
 - Calling external APIs during a transform
 - Complex regex beyond PATINDEX capability
@@ -995,18 +995,18 @@ For rapid lookup when you just need the answer:
 
 ## Related Notes
 
-**Architecture and modeling:**
+#### Architecture and modeling
 - [[data-architecture-index]] — full section index
 - [[five-pillars-of-data-engineering]] — the principles behind every decision
 - [[moc-data-pipeline-lifecycle]] — end-to-end pipeline patterns
 - [[moc-infrastructure-as-code]] — Terraform and IaC overview
 
-**Comparison references:**
+#### Comparison references
 - [[sql-python-csharp-transforms]] — side-by-side code for the same transforms
 - [[etl-vs-elt]] — when to transform outside vs inside the warehouse
 - [[api-protocols-comparison]] — REST vs gRPC vs GraphQL vs WebSocket
 
-**Implementation details:**
+#### Implementation details
 - [[airflow-core-concepts]] / [[airflow-dag-patterns]] / [[airflow-deployment]] — orchestration
 - [[cloud-run-jobs-vs-services]] — serverless compute patterns
 - [[terraform-plan-apply-destroy]] / [[terraform-module-composition]] — IaC
@@ -1018,7 +1018,7 @@ For rapid lookup when you just need the answer:
 - [[container-lifecycle]] / [[docker-compose]] — containerization
 - [[github-actions-workflows]] — CI/CD patterns
 
-**Observability and operations:**
+#### Observability and operations
 - [[datadog-architecture-overview]] — monitoring platform
 - [[observability-deep-dive]] — metrics, logs, traces framework
 - [[finops-cost-optimization]] — cost management

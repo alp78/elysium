@@ -29,7 +29,7 @@ Datadog monitors watch metrics over time and trigger notifications when conditio
 
 The most critical SQL Server monitor — triggers an email alert whenever a deadlock occurs.
 
-**Setup:**
+#### Setup
 
 1. Go to **Monitors > New Monitor > Metric**
 2. **Detection method:** Change Alert

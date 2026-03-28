@@ -167,7 +167,7 @@ All three APIs must be enabled for a complete setup.
 
 ### Setting Up Dataplex
 
-**Enable required APIs:**
+#### Enable required APIs
 
 ```bash
 gcloud services enable dataplex.googleapis.com
@@ -176,7 +176,7 @@ gcloud services enable datacatalog.googleapis.com
 gcloud services enable bigquery.googleapis.com
 ```
 
-**Verify APIs are active:**
+#### Verify APIs are active
 
 ```bash
 gcloud services list --enabled \
@@ -184,7 +184,7 @@ gcloud services list --enabled \
   --format="table(name,state)"
 ```
 
-**Grant required roles to the service account that will manage Dataplex:**
+#### Grant required roles to the service account that will manage Dataplex
 
 ```bash
 # Dataplex admin for lake/zone/asset management
@@ -314,7 +314,7 @@ When discovery is enabled, Dataplex crawls attached assets and automatically:
 - Updates entries when schemas change
 - Detects and catalogs partition structures
 
-**Trigger discovery manually after a schema change:**
+#### Trigger discovery manually after a schema change
 
 ```bash
 gcloud dataplex assets run-discovery \
@@ -324,7 +324,7 @@ gcloud dataplex assets run-discovery \
   --asset=bq-analytics
 ```
 
-**Check the last discovery status:**
+#### Check the last discovery status
 
 ```bash
 gcloud dataplex assets describe bq-analytics \
@@ -354,7 +354,7 @@ gcloud dataplex entries lookup \
   'projects/PROJECT_ID/locations/us-central1/entryGroups/@bigquery/entries/PROJECT_ID.analytics.daily_prices'
 ```
 
-**Python SDK for programmatic discovery:**
+#### Python SDK for programmatic discovery
 
 ```python
 from google.cloud import dataplex_v1
@@ -376,7 +376,7 @@ for entry in results:
         print(f"  Description: {entry.description}")
 ```
 
-**Entry Groups:**
+#### Entry Groups
 
 Dataplex organizes catalog entries into entry groups. BigQuery entries live in the `@bigquery` system entry group. GCS objects live in `@gcs`. You can create custom entry groups for external systems.
 
@@ -404,7 +404,7 @@ gcloud dataplex entries create sqlserver-market-data \
 
 Tag templates define the schema of metadata you want to attach to data assets. Think of them as custom fields you can apply to any catalog entry.
 
-**Create a comprehensive pipeline metadata tag template:**
+#### Create a comprehensive pipeline metadata tag template
 
 ```bash
 gcloud data-catalog tag-templates create pipeline-metadata \
@@ -422,7 +422,7 @@ gcloud data-catalog tag-templates create pipeline-metadata \
   --field=id=business_criticality,display-name="Business Criticality",type='enum(low|medium|high|critical)'
 ```
 
-**Create a separate quality metadata template:**
+#### Create a separate quality metadata template
 
 ```bash
 gcloud data-catalog tag-templates create quality-metadata \
@@ -435,7 +435,7 @@ gcloud data-catalog tag-templates create quality-metadata \
   --field=id=issue_ticket,display-name="Issue Tracker Link",type=string
 ```
 
-**Apply a tag to a BigQuery table:**
+#### Apply a tag to a BigQuery table
 
 ```bash
 # First, look up the entry resource name
@@ -557,7 +557,7 @@ bulk_tag_tables(
 )
 ```
 
-**Search for tables by tag values:**
+#### Search for tables by tag values
 
 ```python
 def find_tables_by_owner(project_id: str, location: str, owner: str) -> list[str]:
@@ -629,7 +629,7 @@ def upsert_tag(client, entry_name: str, tag_template_name: str, fields: dict):
 
 The Dataplex business glossary is a formal dictionary of business terms with agreed definitions. It is the source of truth when two teams disagree on what "revenue" or "active user" means.
 
-**Create a glossary:**
+#### Create a glossary
 
 ```bash
 gcloud dataplex glossaries create finance-glossary \
@@ -638,7 +638,7 @@ gcloud dataplex glossaries create finance-glossary \
   --description="Approved definitions for all finance domain metrics and dimensions"
 ```
 
-**Create glossary terms:**
+#### Create glossary terms
 
 ```bash
 gcloud dataplex glossaries terms create market-cap \
@@ -666,7 +666,7 @@ gcloud dataplex glossaries terms create active-user \
   --description="A registered user who has logged in at least once in the past 30 calendar days AND completed at least one meaningful action (trade, quote request, or report download). Bots and service accounts are excluded."
 ```
 
-**List all terms in a glossary:**
+#### List all terms in a glossary
 
 ```bash
 gcloud dataplex glossaries terms list \
@@ -678,7 +678,7 @@ gcloud dataplex glossaries terms list \
 > [!warning] Glossary Governance Process
 > A business glossary only has value if the process for adding and modifying terms is controlled. Establish a review process: proposed terms require sign-off from the domain data steward before being published. Unofficial definitions added without review create confusion rather than clarity. Treat glossary terms as a formal specification, not a wiki.
 
-**Link glossary terms to BigQuery columns via tags:**
+#### Link glossary terms to BigQuery columns via tags
 
 Create a column-level tag template that links to a glossary term:
 
@@ -744,10 +744,10 @@ BigQuery captures lineage automatically for every SQL operation that reads from 
 > - Python code that reads BigQuery rows via the Storage Read API and writes to a different system is not tracked
 > - `TRUNCATE TABLE` followed by `INSERT` may not create a link if done as separate statements across sessions
 
-**View lineage in the console:**
+#### View lineage in the console
 BigQuery Studio → Select a table → "Lineage" tab → Visual graph of upstream sources and downstream consumers.
 
-**Query lineage via gcloud:**
+#### Query lineage via gcloud
 
 ```bash
 # Find all sources that feed into a target table
@@ -803,7 +803,7 @@ FROM analytics.daily_prices d;
 
 After this query runs, the Lineage API records that `daily_returns.daily_return` is derived from `daily_prices.close_price`.
 
-**Query column-level lineage via the Python SDK:**
+#### Query column-level lineage via the Python SDK
 
 ```python
 from google.cloud import datacatalog_lineage_v1
@@ -830,12 +830,12 @@ for link in response.links:
 
 For any pipeline step that involves systems outside BigQuery — SQL Server ingestion, REST API pulls, CSV file processing, transformations in Python — you must report lineage explicitly using the Lineage API.
 
-**Core concepts:**
+#### Core concepts — Lineage API — Custom Lineage for Non-BigQuery Sources
 - **Process**: A logical pipeline (e.g., "daily-market-data-ingestion"). Created once, reused across runs.
 - **Run**: A single execution of the process (e.g., the 2026-03-22 run). Created per execution.
 - **LineageEvent**: A specific data transfer within a run. Contains one or more `EventLink` objects, each with a source and target `EntityReference`.
 
-**Reporting lineage for a SQL Server → BigQuery pipeline:**
+#### Reporting lineage for a SQL Server → BigQuery pipeline
 
 ```python
 import time
@@ -993,7 +993,7 @@ def ingest_market_data(trade_date: str):
         )
 ```
 
-**Fully qualified name conventions for common systems:**
+#### Fully qualified name conventions for common systems
 
 ```
 BigQuery:       bigquery:PROJECT_ID.DATASET.TABLE
@@ -1091,7 +1091,7 @@ See [[airflow-core-concepts]] for the full pattern of using Airflow callbacks fo
 
 OpenLineage is the open standard for lineage metadata interchange. Airflow, Spark, dbt, and Flink all have OpenLineage emitters. GCP's Lineage API accepts OpenLineage events natively, making it a universal sink.
 
-**Airflow + OpenLineage:**
+#### Airflow + OpenLineage
 
 ```bash
 pip install "apache-airflow-providers-openlineage>=1.0.0"
@@ -1115,7 +1115,7 @@ export OPENLINEAGE_NAMESPACE="production-airflow"
 
 With this configuration, Airflow automatically reports lineage for all operators that support OpenLineage extraction (BigQuery, Postgres, MySQL, Snowflake, and more).
 
-**Spark + OpenLineage:**
+#### Spark + OpenLineage
 
 Add the OpenLineage Spark listener to your Dataproc job submission:
 
@@ -1147,7 +1147,7 @@ result.write.format("bigquery").option("table", "my-project.analytics.avg_prices
 # The GCS → BQ lineage is automatically captured by the listener
 ```
 
-**dbt + Lineage API:**
+#### dbt + Lineage API
 
 dbt's `manifest.json` contains full column-level lineage between dbt models. Parse it and push to the Lineage API:
 
@@ -1245,11 +1245,11 @@ See [[dbt-transformation-layer]] for the full dbt operational model this integra
 
 ### Lineage Visualization
 
-**Console views:**
+#### Console views — Lineage Visualization
 - BigQuery Studio → Table → Lineage tab: shows immediate upstream/downstream with one hop
 - Dataplex → Lineage Explorer: full multi-hop cross-system lineage graph, filterable by time range
 
-**Programmatic lineage traversal — "Show everything upstream of the executive dashboard":**
+#### Programmatic lineage traversal — "Show everything upstream of the executive dashboard"
 
 ```bash
 # Direct upstream links (one hop)
@@ -1338,7 +1338,7 @@ for node, sources in upstream_graph.items():
 
 Dataplex data quality scans run rules against BigQuery tables on a schedule and produce pass/fail results with row-level details.
 
-**Define quality rules in YAML:**
+#### Define quality rules in YAML
 
 ```yaml
 # quality-rules.yaml
@@ -1404,7 +1404,7 @@ rules:
       sqlExpression: "DATE_DIFF(CURRENT_DATE(), MAX(trade_date), DAY) <= 1"
 ```
 
-**Create the data quality scan:**
+#### Create the data quality scan
 
 ```bash
 gcloud dataplex datascans create data-quality daily-prices-quality \
@@ -1443,7 +1443,7 @@ gcloud dataplex datascans jobs describe "$JOB_ID" \
   --format="yaml(dataQualityResult)"
 ```
 
-**Quality scan result structure (YAML output):**
+#### Quality scan result structure (YAML output)
 
 ```yaml
 dataQualityResult:
@@ -1675,7 +1675,7 @@ Impact analysis is the discipline of querying lineage before making changes to u
 
 ### Pre-Change Impact Analysis Workflow
 
-**Step 1: Identify all downstream consumers of a table:**
+#### Step 1: Identify all downstream consumers of a table
 
 ```bash
 # What downstream tables, jobs, and processes depend on this table?
@@ -1692,7 +1692,7 @@ for link in data.get('links', []):
 "
 ```
 
-**Step 2: Check if any scheduled queries reference the table:**
+#### Step 2: Check if any scheduled queries reference the table
 
 ```sql
 -- Find all BigQuery scheduled queries that reference a specific table
@@ -1721,7 +1721,7 @@ WHERE
   LOWER(view_definition) LIKE '%daily_prices%';
 ```
 
-**Step 3: Find all Dataflow jobs that read this table:**
+#### Step 3: Find all Dataflow jobs that read this table
 
 ```bash
 gcloud dataflow jobs list \
@@ -1730,7 +1730,7 @@ gcloud dataflow jobs list \
   --format="table(id,name,currentState,startTime)"
 ```
 
-**Step 4: Assess the blast radius before making the change:**
+#### Step 4: Assess the blast radius before making the change
 
 ```python
 def get_impact_summary(project_id: str, location: str, table_fqn: str) -> dict:
@@ -1846,7 +1846,7 @@ sys.exit(0 if all_clear else 1)
 | Python scripts using Storage Read API | No | Add manual lineage event |
 | dbt models | No (automatic) | Parse manifest.json and push |
 
-**Document your gaps in a tracking table:**
+#### Document your gaps in a tracking table
 
 ```sql
 -- Create a gap registry in BigQuery
@@ -1882,20 +1882,20 @@ CREATE TABLE IF NOT EXISTS governance.lineage_gaps (
 
 ### Decision Guide
 
-**Choose GCP-native Dataplex when:**
+#### Choose GCP-native Dataplex when
 - Your data stack is primarily on GCP
 - You want zero operational overhead — no Kubernetes clusters to manage
 - You are already paying for BigQuery and Dataflow; lineage is included
 - Your compliance requirements are met by GCP audit logging and lineage records
 - Your team is small and cannot dedicate engineering time to operating open-source infrastructure
 
-**Choose OpenMetadata or DataHub when:**
+#### Choose OpenMetadata or DataHub when
 - You have a multi-cloud or hybrid stack (AWS, Azure, on-prem, GCP)
 - You need deeper integrations with tools GCP does not natively cover (Snowflake, Redshift, Tableau, Looker — note Looker is GCP-native but DataHub has better lineage extraction)
 - You want a richer, more customizable UI for data discovery
 - Your data platform team has Kubernetes operational expertise
 
-**Choose Collibra or Alation when:**
+#### Choose Collibra or Alation when
 - You have a large governance team and need workflow management (approval workflows, stewardship assignments)
 - You need a business-facing catalog with deep business glossary and policy management
 - Your compliance team requires a dedicated governance platform with audit trails beyond what GCP provides
@@ -2025,7 +2025,7 @@ def find_orphaned_tables(project_id: str, dataset: str, location: str) -> list[s
 
 ### Troubleshooting Common Issues
 
-**Auto-discovery not finding new tables:**
+#### Auto-discovery not finding new tables
 ```bash
 # Check discovery status
 gcloud dataplex assets describe ASSET_NAME \
@@ -2037,7 +2037,7 @@ gcloud dataplex assets run-discovery ASSET_NAME \
   --lake=LAKE --zone=ZONE --location=us-central1
 ```
 
-**Lineage not appearing for a BigQuery transformation:**
+#### Lineage not appearing for a BigQuery transformation
 ```bash
 # Check if the job was captured in the Lineage API
 gcloud dataplex lineage search-links \
@@ -2048,7 +2048,7 @@ gcloud dataplex lineage search-links \
 # SELECT-only queries without a destination table do not create lineage
 ```
 
-**Tag template field validation errors:**
+#### Tag template field validation errors
 ```bash
 # List tag template fields to verify correct field IDs
 gcloud data-catalog tag-templates describe pipeline-metadata \
@@ -2056,7 +2056,7 @@ gcloud data-catalog tag-templates describe pipeline-metadata \
   --format="yaml(fields)"
 ```
 
-**Permission denied on Lineage API:**
+#### Permission denied on Lineage API
 ```bash
 # Verify the service account has the lineage producer role
 gcloud projects get-iam-policy PROJECT_ID \

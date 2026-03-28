@@ -94,13 +94,13 @@ Raw Event Stream ──►│              MESSAGE BROKER                  │
 
 ### Lambda Architecture Pros and Cons
 
-**Pros:**
+#### Pros
 - Handles late-arriving data correctly — batch layer reprocesses with full dataset, correcting any errors the speed layer made.
 - Batch results are always authoritative — if the speed layer has a bug, the batch layer corrects it in the next run.
 - Can use best-of-breed tools for each layer (Spark for batch, Flink for speed).
 - Provides graceful degradation — if the speed layer fails, the system falls back to batch-only mode.
 
-**Cons:**
+#### Cons
 - **Dual codebases.** The same business logic (e.g., "calculate revenue") must be implemented twice — once in batch (Spark SQL) and once in streaming (Flink). They will diverge. This is the primary operational cost and the main reason Lambda architecture is being replaced.
 - **Serving layer complexity.** Merging batch and speed views at query time is non-trivial and a common source of subtle bugs.
 - **High infrastructure cost.** Two separate processing systems (batch + streaming) with different operational models.
@@ -237,11 +237,11 @@ Flink is the leading stateful stream processing engine. Its core strengths:
 
 **Watermarks:** mechanism for handling event-time ordering in distributed systems (see Windowing section below).
 
-**State backends:**
+#### State backends
 - `HashMapStateBackend`: in-memory, fast, limited by heap size. Good for development.
 - `EmbeddedRocksDBStateBackend`: persistent on-disk state using RocksDB. Handles state larger than memory. Required for production.
 
-**Flink writing to Iceberg with exactly-once:**
+#### Flink writing to Iceberg with exactly-once
 ```java
 // Apache Flink — Iceberg sink with exactly-once semantics (Java)
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -264,7 +264,7 @@ FlinkSink.forRowData(stream)
 env.execute("Events to Iceberg");
 ```
 
-**Apache Beam / Dataflow (GCP):**
+#### Apache Beam / Dataflow (GCP)
 
 Beam provides a unified programming model that runs on multiple runners (Dataflow, Spark, Flink). Dataflow is the GCP-managed runner — serverless, autoscaling, no cluster management.
 
@@ -353,7 +353,7 @@ Transaction log  ──────────────►  Reads WAL / CDC 
                                   Schema in registry    ──►  db.payments
 ```
 
-**SQL Server CDC: enabling on a table:**
+#### SQL Server CDC: enabling on a table
 ```sql
 -- Enable CDC on the SQL Server database (requires sysadmin)
 EXEC sys.sp_cdc_enable_db;
@@ -380,7 +380,7 @@ WHERE __$start_lsn > @last_processed_lsn
 ORDER BY __$start_lsn;
 ```
 
-**GCP Datastream: stream SQL Server changes to BigQuery:**
+#### GCP Datastream: stream SQL Server changes to BigQuery
 ```bash
 # Create a Datastream connection profile for SQL Server source
 gcloud datastream connection-profiles create sql-server-source \
@@ -459,7 +459,7 @@ Distributed streaming systems can guarantee one of three delivery semantics:
 | **At-least-once** | Every message processed 1 or more times | Duplicates — failures cause reprocessing; consumers must be idempotent |
 | **Exactly-once** | Every message processed exactly once | Requires coordination between broker, processor, and sink; highest overhead |
 
-**Exactly-once in Kafka:**
+#### Exactly-once in Kafka
 - Kafka producers: `transactional.id` + `enable.idempotence=true`
 - Kafka Streams: `processing.guarantee=exactly_once_v2`
 - Flink + Kafka: two-phase commit protocol between Flink's checkpoint and Kafka's transaction coordinator
@@ -529,7 +529,7 @@ events
     .print();
 ```
 
-**Beam windowing in Python:**
+#### Beam windowing in Python
 ```python
 import apache_beam as beam
 from apache_beam.transforms.window import FixedWindows, SlidingWindows, Sessions
@@ -564,14 +564,14 @@ Late event: arrives at processing time 09:06 with event time 09:01
   → Either DISCARDED or sent to a side output for separate handling
 ```
 
-**Strategies for late data:**
+#### Strategies for late data
 
 1. **Discard:** ignore events that arrive after the watermark. Simple, but loses data. Acceptable when late events are rare and business impact is low.
 2. **Side output (Flink/Beam):** route late events to a separate stream for separate processing or logging.
 3. **Allowed lateness:** extend the window to wait for late events for a defined period after the watermark. The window can update and re-emit corrected results.
 4. **Reprocessing:** accept that streaming results are approximate; batch reprocessing (Kappa-style or Lambda batch layer) corrects them.
 
-**Flink watermark strategy:**
+#### Flink watermark strategy
 ```java
 // Flink — bounded out-of-orderness watermark strategy (Java)
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
@@ -600,13 +600,13 @@ IoT devices        ──►  IoT Core       ──►             ──►  Bi
 Files on GCS       ──►                                ──►  Firestore
 ```
 
-**Why this stack:**
+#### Why this stack
 - **Pub/Sub** is serverless, globally distributed, and deeply integrated with every GCP service. It handles spikes without capacity planning. See [[pubsub-topics-and-subscriptions]] for setup and [[pubsub-messaging]] for publish/consume patterns.
 - **Dataflow** (Apache Beam runner) is fully managed — no cluster to size, patch, or scale. It auto-scales workers based on backlog. The unified batch+stream model means one Beam pipeline handles both historical backfill and live streaming.
 - **BigQuery** is the serving layer — serverless SQL, no indexes to manage, sub-second query latency on petabytes, native streaming insert API.
 - **Cloud Logging + Monitoring:** see [[cloud-logging]] and [[cloud-monitoring-metrics]] for pipeline observability.
 
-**End-to-end GCP streaming pipeline with Dataflow:**
+#### End-to-end GCP streaming pipeline with Dataflow
 ```python
 # Complete Pub/Sub → Dataflow → BigQuery streaming pipeline
 import apache_beam as beam

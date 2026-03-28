@@ -29,14 +29,14 @@ The SQL VM runs Ubuntu 22.04, so the Datadog Agent is installed as a system pack
 
 The startup script (`infra/scripts/sql-startup.sh`) installs the agent on first boot:
 
-**Install the Datadog Agent 7:**
+#### Install the Datadog Agent 7
 
 ```bash
 DD_API_KEY="${DD_API_KEY}" DD_SITE="datadoghq.eu" \
   bash -c "$(curl -fsSL https://s3.amazonaws.com/dd-agent/scripts/install_script_agent7.sh)"
 ```
 
-**Write the main agent config:**
+#### Write the main agent config
 
 ```yaml
 # /etc/datadog-agent/datadog.yaml
@@ -52,7 +52,7 @@ process_config:
     enabled: true
 ```
 
-**Create the `dd_agent` SQL Server login with read-only permissions:**
+#### Create the `dd_agent` SQL Server login with read-only permissions
 
 ```sql
 CREATE LOGIN dd_agent WITH PASSWORD = 'Dd@g3nt!Monitor';
@@ -63,7 +63,7 @@ GRANT VIEW ANY DEFINITION TO dd_agent;
 > [!info] Minimal Permissions
 > `VIEW SERVER STATE` grants access to DMVs like `sys.dm_exec_sessions`, `sys.dm_os_performance_counters`, and `sys.dm_os_wait_stats`. `VIEW ANY DEFINITION` allows reading object metadata. No write permissions are granted.
 
-**Write the SQL Server integration config to:**
+#### Write the SQL Server integration config to
 `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` — see [[datadog-sql-server-integration]] for the full config.
 
 ---

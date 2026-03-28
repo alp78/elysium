@@ -350,7 +350,7 @@ For Cloud Composer (managed Airflow on GCP), logs are automatically routed to Cl
 
 The `gcloud logging read` command accepts the same filter syntax as Log Explorer.
 
-**Basic reads:**
+#### Basic reads
 
 ```bash
 # Most recent 50 logs from a specific VM
@@ -379,7 +379,7 @@ gcloud logging read \
   --project=PROJECT
 ```
 
-**Cloud Run specific:**
+#### Cloud Run specific
 
 ```bash
 # All logs from a Cloud Run Job named "daily-pipeline"
@@ -401,7 +401,7 @@ gcloud logging read \
   --project=PROJECT
 ```
 
-**Data pipeline specific:**
+#### Data pipeline specific
 
 ```bash
 # All logs for a pipeline run ID (requires structured logging with pipeline_run_id)
@@ -458,7 +458,7 @@ gcloud logging read \
   --project=PROJECT
 ```
 
-**Real-time log tailing:**
+#### Real-time log tailing
 
 ```bash
 # Tail logs from a Cloud Run Job as it runs (like tail -f)
@@ -473,7 +473,7 @@ gcloud logging tail \
   --project=PROJECT
 ```
 
-**Output formatting:**
+#### Output formatting
 
 ```bash
 # Pretty print just message and timestamp
@@ -750,7 +750,7 @@ Once enabled, navigate to Log Analytics in the Cloud Logging console or query th
 
 #### SQL Queries for Pipeline Analysis
 
-**Basic error analysis:**
+#### Basic error analysis
 
 ```sql
 SELECT
@@ -768,7 +768,7 @@ ORDER BY timestamp DESC
 LIMIT 100;
 ```
 
-**Error rate over time:**
+#### Error rate over time
 
 ```sql
 SELECT
@@ -787,7 +787,7 @@ GROUP BY hour, job_name
 ORDER BY hour DESC;
 ```
 
-**Pipeline duration trends:**
+#### Pipeline duration trends
 
 ```sql
 SELECT
@@ -807,7 +807,7 @@ GROUP BY run_date, job_name
 ORDER BY run_date DESC;
 ```
 
-**Rows processed per pipeline run:**
+#### Rows processed per pipeline run
 
 ```sql
 SELECT
@@ -825,7 +825,7 @@ GROUP BY run_id
 ORDER BY start_time DESC;
 ```
 
-**Cross-correlate logs with BigQuery job metadata:**
+#### Cross-correlate logs with BigQuery job metadata
 
 ```sql
 -- Join pipeline logs with BigQuery INFORMATION_SCHEMA for cost analysis
@@ -1086,7 +1086,7 @@ response = requests.get("https://api.example.com/data")
 
 When one Cloud Run Job triggers another (e.g., via Cloud Tasks or Pub/Sub), propagate the trace context:
 
-**Sender (Job A — creating the downstream task):**
+#### Sender (Job A — creating the downstream task)
 
 ```python
 from opentelemetry import trace
@@ -1107,7 +1107,7 @@ def enqueue_downstream_job(payload: dict):
     publish_message(message_with_context)
 ```
 
-**Receiver (Job B — processing the task):**
+#### Receiver (Job B — processing the task)
 
 ```python
 from opentelemetry import trace
@@ -1279,7 +1279,7 @@ The three observability signals serve different diagnostic needs:
 | **Logs** | What happened and why | Minutes (search and read) |
 | **Traces** | Where time was spent across services | Minutes (find the slow span) |
 
-**Investigation flow:**
+#### Investigation flow
 
 1. Alert fires on a Cloud Monitoring policy: `pipeline-errors > 5 in 5 minutes`
 2. Drill into the alerting metric in Cloud Monitoring → see which Cloud Run Job spiked

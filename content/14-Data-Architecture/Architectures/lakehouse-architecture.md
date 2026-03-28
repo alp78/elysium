@@ -197,7 +197,7 @@ BigLake is Google's lakehouse governance layer. It consists of:
 - **Fine-grained access control:** row-level security and column-level masking policies are enforced at the BigLake layer — the same policy applies whether a user queries via BigQuery SQL or via Spark.
 - **Data Boost:** a serverless read path that lets Bigtable and Spanner data be queried without consuming database compute.
 
-**GCP Lakehouse Stack:**
+#### GCP Lakehouse Stack
 ```
 BigQuery (SQL queries, BI)
     ▲
@@ -262,7 +262,7 @@ A key lakehouse advantage is engine independence — the same data can be querie
 > [!tip] DuckDB for Local Development
 > DuckDB is the fastest way to develop and test lakehouse queries locally. It reads Parquet files from GCS directly (with `INSTALL httpfs; LOAD httpfs; SET s3_region='auto'`) and supports basic Iceberg catalog queries. Use it to prototype transformations before scaling to Spark.
 
-**DuckDB reading Parquet from GCS:**
+#### DuckDB reading Parquet from GCS
 ```sql
 -- DuckDB local query against GCS Parquet files
 INSTALL httpfs;
@@ -306,7 +306,7 @@ ORDER BY event_date;
 
 ## When to Choose the Lakehouse
 
-**Choose the lakehouse when:**
+#### Choose the lakehouse when
 
 - You have multiple compute engines that must access the same data (Spark for ETL, BigQuery for BI, Python for ML).
 - Your data volume makes warehouse storage pricing prohibitive (>10 TB active data).
@@ -316,7 +316,7 @@ ORDER BY event_date;
 - You are managing semi-structured or unstructured data alongside structured.
 - You need to implement [[data-mesh-architecture|data mesh]] — domain teams owning their data products in open formats that any consumer can read.
 
-**Do not choose the lakehouse when:**
+#### Do not choose the lakehouse when
 
 - Your team is small and primarily doing SQL-based BI — a managed warehouse (BigQuery, Snowflake) has far less operational overhead.
 - You are in early-stage product development where iteration speed matters more than scalability.
@@ -339,7 +339,7 @@ Databricks is the company that invented Delta Lake and coined the term "lakehous
 - **MLflow:** integrated ML experiment tracking and model registry.
 - **Delta Live Tables:** declarative pipeline framework for building medallion architecture with automatic dependency resolution and quality assertions.
 
-**Databricks Delta Live Tables (declarative medallion):**
+#### Databricks Delta Live Tables (declarative medallion)
 ```python
 import dlt
 from pyspark.sql.functions import col, current_timestamp
@@ -398,7 +398,7 @@ BigQuery's lakehouse story is built around:
 - **Omni:** run BigQuery SQL against data in AWS S3 or Azure ADLS.
 - **Materialized views on external tables:** BigQuery can materialize the results of queries against BigLake Iceberg tables, providing sub-second BI latency.
 
-**BigQuery query against a BigLake Iceberg table:**
+#### BigQuery query against a BigLake Iceberg table
 ```sql
 -- BigQuery SQL — reads directly from GCS Iceberg table
 SELECT
@@ -420,7 +420,7 @@ For BigQuery query optimization on external tables, see [[querying-and-cost-opti
 
 A critical operational responsibility in any lakehouse is table maintenance. Streaming writes and frequent small updates create many small Parquet files, which degrade read performance:
 
-**Iceberg table maintenance with Spark:**
+#### Iceberg table maintenance with Spark
 ```python
 from pyspark.sql import SparkSession
 

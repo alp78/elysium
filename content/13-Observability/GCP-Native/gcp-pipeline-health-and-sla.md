@@ -162,7 +162,7 @@ ORDER BY minutes_stale DESC;
 
 Push data age as a gauge metric to Cloud Monitoring. This enables alerting, dashboards, and SLO tracking in the same tool used for all other GCP metrics.
 
-**Python — write freshness metric:**
+#### Python — write freshness metric
 
 ```python
 from google.cloud import monitoring_v3
@@ -193,7 +193,7 @@ def push_freshness_metric(project_id: str, pipeline_name: str, last_success_epoc
     print(f"Pushed freshness: {freshness_seconds:.0f}s for {pipeline_name}")
 ```
 
-**Create alerting policy on freshness metric:**
+#### Create alerting policy on freshness metric
 
 ```bash
 # Create metric descriptor first (idempotent)
@@ -243,7 +243,7 @@ WHERE TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), TIMESTAMP_MILLIS(last_modified_time), 
 ORDER BY last_modified_time ASC;
 ```
 
-**Automated freshness check script (Python):**
+#### Automated freshness check script (Python)
 
 ```python
 from google.cloud import bigquery
@@ -328,7 +328,7 @@ Alert thresholds:
 | Row count spikes > 200% vs 7-day avg | Warning | Alert, check for duplicate loads |
 | Row count drops > 50% vs 7-day avg | Critical | Page on-call |
 
-**7-day average comparison in BigQuery:**
+#### 7-day average comparison in BigQuery
 
 ```sql
 WITH daily_counts AS (
@@ -376,7 +376,7 @@ FROM `PROJECT.DATASET.TABLE`
 WHERE DATE(load_timestamp) = CURRENT_DATE();
 ```
 
-**Push null rate as custom metric:**
+#### Push null rate as custom metric
 
 ```python
 import time
@@ -464,7 +464,7 @@ def save_current_schema(project: str, dataset: str, table: str, output_path: str
     print(f"Schema saved to {output_path}")
 ```
 
-**gcloud shortcut to view current schema:**
+#### gcloud shortcut to view current schema
 
 ```bash
 bq show --schema --format=prettyjson PROJECT:DATASET.TABLE
@@ -562,7 +562,7 @@ CREATE TABLE dbo.pipeline_sla_log (
 );
 ```
 
-**Python — SLA check function:**
+#### Python — SLA check function
 
 ```python
 from datetime import datetime, timezone, timedelta
@@ -615,7 +615,7 @@ def check_sla(sla: PipelineSLA, run_result: dict) -> dict:
     }
 ```
 
-**Push SLA compliance as custom metric:**
+#### Push SLA compliance as custom metric
 
 ```python
 def push_sla_metric(project: str, pipeline_name: str, sla_met: bool):
@@ -828,7 +828,7 @@ Alert fires
 
 #### 1. Pipeline Failed
 
-**Immediate triage:**
+#### Immediate triage — Common Alert Response Procedures
 
 ```bash
 # List recent executions and their status
@@ -845,7 +845,7 @@ gcloud logging read \
   --order=desc --limit=100
 ```
 
-**Common causes and fixes:**
+#### Common causes and fixes — Common Alert Response Procedures
 
 | Cause | Signal | Fix |
 |---|---|---|
@@ -856,7 +856,7 @@ gcloud logging read \
 | Dependency missing | Import error / missing file | Check Cloud Storage path; check config |
 | Auth failure | 403 / permission denied | Check service account roles |
 
-**Re-trigger manually:**
+#### Re-trigger manually
 
 ```bash
 gcloud run jobs execute JOB_NAME \
@@ -888,7 +888,7 @@ bq show --format=prettyjson PROJECT:DATASET.TABLE | python3 -c \
    print(datetime.datetime.utcfromtimestamp(ts))"
 ```
 
-**Dependency chain investigation:**
+#### Dependency chain investigation
 
 ```bash
 # Check if Pub/Sub has unprocessed messages (pipeline waiting on upstream)
@@ -950,7 +950,7 @@ gcloud run services describe CONSUMER_SERVICE \
   --format="table(name, status.observedGeneration, status.traffic[0].revisionName)"
 ```
 
-**Common causes:**
+#### Common causes — Common Alert Response Procedures
 
 | Cause | Fix |
 |---|---|
@@ -1039,7 +1039,7 @@ gcloud compute ssh INSTANCE_NAME --zone=ZONE -- \
 
 When an SLA breach triggers a page, the responder should follow the [[on-call-guide]] for initial acknowledgement and escalation before diving into technical triage below.
 
-**First 5 minutes — Acknowledge and assess:**
+#### First 5 minutes — Acknowledge and assess
 
 1. Acknowledge the alert in your notification channel
 2. Open the relevant Cloud Monitoring dashboard
@@ -1047,7 +1047,7 @@ When an SLA breach triggers a page, the responder should follow the [[on-call-gu
 4. Check if there is an ongoing GCP incident: `https://status.cloud.google.com`
 5. Post initial status to team channel: "Investigating [alert name] — scope TBD"
 
-**Next 15 minutes — Root cause and initial fix:**
+#### Next 15 minutes — Root cause and initial fix
 
 1. Follow the decision tree for the alert type above
 2. Check for recent deploys (Cloud Run image updates, config changes)
@@ -1055,7 +1055,7 @@ When an SLA breach triggers a page, the responder should follow the [[on-call-gu
 4. If root cause is unclear: escalate to senior engineer or service owner
 5. Update team channel with findings and ETA
 
-**Communication template:**
+#### Communication template — On-Call Playbook
 
 ```
 [INCIDENT UPDATE - T+15min]
@@ -1067,7 +1067,7 @@ Action taken: <what we did>
 Next update: <time>
 ```
 
-**Post-incident (within 24 hours):**
+#### Post-incident (within 24 hours)
 
 1. Write a brief RCA (root cause, timeline, fix, prevention)
 2. Add or tune the alert if it was noisy or missed something
@@ -1080,7 +1080,7 @@ Next update: <time>
 
 ### Auto-Retry Patterns
 
-**Cloud Run Jobs — built-in retry:**
+#### Cloud Run Jobs — built-in retry
 
 ```bash
 gcloud run jobs create JOB_NAME \
@@ -1091,7 +1091,7 @@ gcloud run jobs create JOB_NAME \
   --project=PROJECT_ID
 ```
 
-**Airflow — task-level retry:**
+#### Airflow — task-level retry
 
 ```python
 from datetime import timedelta
@@ -1108,7 +1108,7 @@ def ingest_data(**context):
     pass
 ```
 
-**Python — custom exponential backoff decorator:**
+#### Python — custom exponential backoff decorator
 
 ```python
 import functools
@@ -1157,13 +1157,13 @@ def fetch_source_data(url: str) -> dict:
 
 When an alert fires, a Pub/Sub notification can trigger a Cloud Function that takes automated corrective action. This works for deterministic failure modes: pipeline never started, VM stopped, disk space low.
 
-**Architecture:**
+#### Architecture — Auto-Remediation via Cloud Functions
 
 ```
 Alert Policy → Notification Channel (Pub/Sub) → Cloud Function → Remediation Action
 ```
 
-**Create notification channel targeting Pub/Sub:**
+#### Create notification channel targeting Pub/Sub
 
 ```bash
 # Create Pub/Sub topic for alert notifications
@@ -1177,7 +1177,7 @@ gcloud alpha monitoring channels create \
   --project=PROJECT_ID
 ```
 
-**Cloud Function — restart failed Cloud Run job:**
+#### Cloud Function — restart failed Cloud Run job
 
 ```python
 # main.py for Cloud Function (Python 3.11, trigger: Pub/Sub)
@@ -1223,7 +1223,7 @@ def restart_cloud_run_job(project: str, region: str, job_name: str):
     log.info(f"Restarted job: {execution.name}")
 ```
 
-**Deploy the Cloud Function:**
+#### Deploy the Cloud Function
 
 ```bash
 gcloud functions deploy handle-pipeline-alert \
@@ -1360,7 +1360,7 @@ if __name__ == "__main__":
     main()
 ```
 
-**Schedule the health check:**
+#### Schedule the health check
 
 ```bash
 # Create the Cloud Run Job
@@ -1477,7 +1477,7 @@ bq add-iam-policy-binding \
   PROJECT_ID:pipeline_logs
 ```
 
-**Query historical pipeline performance:**
+#### Query historical pipeline performance
 
 ```sql
 -- Average pipeline duration by week for the past 3 months

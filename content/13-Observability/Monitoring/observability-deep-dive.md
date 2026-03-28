@@ -45,7 +45,7 @@ DataDog is the observability platform used by financial data companies and index
 
 ### Custom Metrics for Pipeline Health
 
-**Wrapping pipeline stages with DataDog metrics — statsd gauge/histogram/increment:**
+#### Wrapping pipeline stages with DataDog metrics — statsd gauge/histogram/increment
 
 ```python
 from datadog import statsd
@@ -73,7 +73,7 @@ run_pipeline_stage('load_gold', upsert_gold_scores, index_key='market_index')
 
 ### SQL Server Integration Metrics
 
-**SQL Server metrics to monitor in DataDog:**
+#### SQL Server metrics to monitor in DataDog
 
 | Metric | Alert Threshold | Why It Matters |
 |---|---|---|
@@ -86,7 +86,7 @@ run_pipeline_stage('load_gold', upsert_gold_scores, index_key='market_index')
 
 ### DataDog APM Traces for Airflow DAGs
 
-**APM tracing with `ddtrace` — instrument any pipeline function:**
+#### APM tracing with `ddtrace` — instrument any pipeline function
 
 ```python
 from ddtrace import tracer
@@ -110,7 +110,7 @@ def load_daily_ohlcv(index_key: str, target_date: str):
 
 ### DataDog Monitor Definitions (as Code)
 
-**DataDog monitors defined as YAML — deploy via Terraform or DataDog API:**
+#### DataDog monitors defined as YAML — deploy via Terraform or DataDog API
 
 ```yaml
 # datadog-monitors.yaml — define as code, deploy via Terraform or DataDog API
@@ -154,7 +154,7 @@ Data freshness is the single most important metric for a data pipeline. It answe
 
 ### SQL Implementation: Freshness Tracking Table
 
-**Create a freshness tracking table with a computed freshness column:**
+#### Create a freshness tracking table with a computed freshness column
 
 ```sql
 -- Create a freshness tracking table
@@ -180,7 +180,7 @@ FROM gold.index_performance
 GROUP BY index_key;
 ```
 
-**Push freshness to DataDog as a gauge metric:**
+#### Push freshness to DataDog as a gauge metric
 
 ```python
 # Push freshness to DataDog as a gauge metric
@@ -234,7 +234,7 @@ silver.daily_ohlcv.close_price (cleaned, validated, SCD2)
 
 ### Implementing Lineage with Metadata Tables
 
-**Lineage metadata table — track every transformation:**
+#### Lineage metadata table — track every transformation
 
 ```sql
 CREATE TABLE pipeline.lineage (
@@ -275,7 +275,7 @@ A data catalog is the searchable inventory of all datasets, tables, columns, and
 
 In index providers, not all data is available to all teams. Client data is segregated, pre-announcement reconstitution data is restricted, and market data licensing limits redistribution.
 
-**Role-based access control for index data schemas:**
+#### Role-based access control for index data schemas
 
 ```sql
 -- Example: role-based access control for index data
@@ -325,7 +325,7 @@ Data quality is not a one-time check — it is a continuous system that validate
 | **Uniqueness** | Are there duplicates? | COUNT vs COUNT(DISTINCT key) |
 | **Validity** | Are values in acceptable ranges? | Stock price > 0; weight between 0 and 1; date is a valid trading day |
 
-**Automated data quality checks stored in pipeline.quality_checks:**
+#### Automated data quality checks stored in pipeline.quality_checks
 
 ```sql
 -- Automated data quality checks run after every pipeline load
@@ -374,7 +374,7 @@ WHERE index_key = 'market_index';
 
 ### Great Expectations Integration
 
-**Great Expectations Python-based validation suite:**
+#### Great Expectations Python-based validation suite
 
 ```python
 import great_expectations as gx
@@ -423,7 +423,7 @@ if not result.success:
 
 Traditional data quality checks ask "does this data pass my rules?" Drift detection asks a deeper question: "has the *shape* of this data changed in a way that suggests something upstream is broken?" This is the difference between catching a bad row and catching a bad *data feed* — before the bad rows even arrive.
 
-**Two types of drift that break financial pipelines:**
+#### Two types of drift that break financial pipelines
 
 | Drift Type | Definition | Example | Impact |
 |---|---|---|---|
@@ -432,7 +432,7 @@ Traditional data quality checks ask "does this data pass my rules?" Drift detect
 
 ### Schema Drift Detection
 
-**Python function to detect schema drift against a reference schema:**
+#### Python function to detect schema drift against a reference schema
 
 ```python
 import polars as pl
@@ -501,7 +501,7 @@ if any(d['severity'] == 'CRITICAL' for d in drifts):
 
 ### Statistical Data Drift Detection
 
-**Z-score and Kolmogorov-Smirnov test for distribution drift:**
+#### Z-score and Kolmogorov-Smirnov test for distribution drift
 
 ```python
 import polars as pl
@@ -599,7 +599,7 @@ for r in drift_results:
 
 ### Automated Drift Monitoring Table
 
-**SQL table for persisting drift detection results — drives dashboards and alerts:**
+#### SQL table for persisting drift detection results — drives dashboards and alerts
 
 ```sql
 -- pipeline.drift_monitor — store drift results for dashboarding and alerting

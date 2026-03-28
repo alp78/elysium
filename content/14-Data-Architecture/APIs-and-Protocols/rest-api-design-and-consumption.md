@@ -276,7 +276,7 @@ The simplest pattern. A static secret issued by the API provider, sent on every 
 
 Two delivery mechanisms:
 
-**Header-based (preferred):**
+#### Header-based (preferred)
 ```python
 response = session.get(
     "https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/2026-01-01/2026-03-22",
@@ -284,7 +284,7 @@ response = session.get(
 )
 ```
 
-**Query parameter (avoid if possible — keys appear in logs):**
+#### Query parameter (avoid if possible — keys appear in logs)
 ```python
 response = session.get(
     "https://api.example.com/v1/prices",
@@ -309,7 +309,7 @@ For more curl recipes and CLI-based API interaction patterns, see [[http-request
 
 The standard for modern enterprise APIs: GCP, Azure, AWS SigV4 (variant), Salesforce, most financial data platforms.
 
-**OAuth2 Client Credentials Flow (machine-to-machine):**
+#### OAuth2 Client Credentials Flow (machine-to-machine)
 
 ```python
 import requests
@@ -342,7 +342,7 @@ response = session.get(
 )
 ```
 
-**Token caching with expiry:**
+#### Token caching with expiry
 
 ```python
 import time
@@ -541,7 +541,7 @@ def api_get(session: requests.Session, url: str, **kwargs) -> dict:
     return response.json()
 ```
 
-**Usage in a financial data pipeline:**
+#### Usage in a financial data pipeline
 
 ```python
 session = build_session(token=get_token())
@@ -722,7 +722,7 @@ def paginate_keyset(session, base_url: str, params: dict, id_field: str = "id", 
     return all_records
 ```
 
-**Financial data example — paginating 5,000 index constituents:**
+#### Financial data example — paginating 5,000 index constituents
 
 ```python
 def fetch_index_constituents(
@@ -1232,7 +1232,7 @@ async def get_constituents(
 
 ### API Versioning
 
-**URL path versioning (recommended for data APIs):**
+#### URL path versioning (recommended for data APIs)
 
 ```
 /v1/indices    ← stable, deprecated
@@ -1242,7 +1242,7 @@ async def get_constituents(
 Pros: explicit in logs, cacheable, works everywhere.
 Cons: URL changes require client updates.
 
-**Header versioning:**
+#### Header versioning
 
 ```
 GET /indices
@@ -1361,14 +1361,14 @@ curl -X POST \
 
 Always enable gzip for large responses. Both sides of the equation:
 
-**As a consumer:**
+#### As a consumer
 ```python
 # requests enables Accept-Encoding: gzip by default when you pass headers
 session.headers["Accept-Encoding"] = "gzip, deflate"
 # responses are decompressed transparently
 ```
 
-**As a producer (FastAPI with GZipMiddleware):**
+#### As a producer (FastAPI with GZipMiddleware)
 ```python
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -1623,7 +1623,7 @@ curl --retry 3 --retry-delay 2 --retry-on-http-error 429,500,502,503,504 \
      "https://api.example.com/v2/prices?symbol=AAPL"
 ```
 
-**Useful curl one-liners for pipeline debugging:**
+#### Useful curl one-liners for pipeline debugging
 
 ```bash
 # Check all symbols in a list against an API
@@ -1662,13 +1662,13 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [[api-protocols-comparison]].
 
-**Use REST when:**
+#### Use REST when
 - Consuming a third-party API (it will almost certainly be REST)
 - Building an API for external teams or BI tools
 - The operation is naturally request-response (fetch data, submit batch)
 - You need broad compatibility with any HTTP client
 
-**Avoid REST when:**
+#### Avoid REST when
 - You need sub-millisecond latency between internal services (use gRPC)
 - The client needs server-push with no polling (use WebSocket or Server-Sent Events)
 - You're moving bulk files (use SFTP, GCS, S3)

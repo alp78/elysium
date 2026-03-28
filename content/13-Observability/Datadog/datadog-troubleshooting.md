@@ -34,7 +34,7 @@ docker exec dd-agent agent status
 docker logs dd-agent --tail 50
 ```
 
-**Common issues:**
+#### Common issues
 
 - **No container:** API key is empty in VM metadata. Check `terraform output` and re-apply.
 - **"Invalid API key":** Wrong key in `terraform.tfvars`. API keys are 32 chars, not 40. The Application key is 40 chars — do not confuse them.
@@ -44,7 +44,7 @@ docker logs dd-agent --tail 50
 
 ## APM Traces Not Appearing
 
-**Step 1 — Check dd-agent is running on the Airflow VM:**
+#### Step 1 — Check dd-agent is running on the Airflow VM
 
 ```powershell
 gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b \
@@ -63,7 +63,7 @@ metadata = {
 }
 ```
 
-**Step 4 — Apply and reset the VM:**
+#### Step 4 — Apply and reset the VM
 
 ```powershell
 terraform -chdir=infra apply -target="google_compute_instance.airflow"
@@ -73,7 +73,7 @@ gcloud compute instances reset data-pipeline-airflow --zone=europe-west1-b
 > [!warning] terraform apply Does Not Restart the VM
 > `terraform apply` only updates the VM's **metadata** stored in GCP — it does NOT restart the VM or re-run the startup script. The startup script only executes on boot. You must manually reset the VM after applying metadata changes.
 
-**Step 5 — Wait 2–3 minutes, then verify:**
+#### Step 5 — Wait 2–3 minutes, then verify
 
 ```powershell
 gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b \
@@ -82,7 +82,7 @@ gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b \
 
 All 5 containers (4 Airflow + dd-agent) should show status `Up`.
 
-**If dd-agent is running but traces still don't appear:**
+#### If dd-agent is running but traces still don't appear
 
 1. Check APM status: `docker exec dd-agent agent status | grep -A 10 "APM Agent"`
    - Expected: `Status: Running`, `Receiver: 0.0.0.0:8126`

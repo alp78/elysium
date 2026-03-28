@@ -44,13 +44,13 @@ Dehghani's data mesh framework rests on four principles. Every implementation mu
 
 **Why it matters:** In a centralized model, the data team ingests data from 40 source systems they do not understand deeply. They cannot detect that the payments API started sending amounts in cents instead of dollars. The payments engineering team would catch that in 30 seconds. Domain ownership moves the accountability where the knowledge lives.
 
-**What it requires in practice:**
+#### What it requires in practice
 - Domain teams must accept that data is part of their product — not someone else's problem.
 - Data engineers may be embedded in domains rather than centralized.
 - SLAs for data quality (freshness, completeness, schema stability) are owned at the domain level.
 - The organizational chart must support this — you cannot have domain ownership without domain authority.
 
-**Example mapping:**
+#### Example mapping
 ```
 Domain Team            Owns
 ─────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ Finance                ledger_entries, reconciliation_summaries
 
 **What it means:** Domain data is not an internal byproduct of operational systems — it is a product, designed for consumption by others. A data product has defined consumers, a contract (schema + SLA), and is actively maintained and improved.
 
-**The six characteristics of a data product (Dehghani):**
+#### The six characteristics of a data product (Dehghani)
 
 | Characteristic | What it means | Example |
 |---|---|---|
@@ -81,13 +81,13 @@ Finance                ledger_entries, reconciliation_summaries
 | **Interoperable** | Uses standard formats and access patterns any consumer can use | Iceberg table on GCS; BigQuery dataset; Kafka topic with Avro |
 | **Secure** | Access controls are policy-driven; no ad-hoc permission grants | IAM bindings; column-level security; row-level security |
 
-**A data product is not:**
+#### A data product is not
 - A raw operational database dump with no documentation.
 - A CSV file emailed to a stakeholder.
 - A pipeline that "should be fine" without a freshness SLA.
 - A table whose schema changes without notice to consumers.
 
-**Data product ownership boundary:**
+#### Data product ownership boundary
 ```
 Source System                    Data Product                    Consumers
 (Payments API)                   (owned by Payments team)        (Finance, Risk, Analytics)
@@ -104,7 +104,7 @@ payments_raw_events  ──►  payments_transactions_v2  ──────► 
 
 **What it means:** A central platform team builds the infrastructure and tooling that domain teams use to build, deploy, and operate data products — without needing platform team involvement for each data product. The platform is a product. Its customers are domain teams.
 
-**What the platform provides:**
+#### What the platform provides
 - **Storage infrastructure:** managed object storage (GCS buckets), managed catalogs (BigLake Metastore, DataHub).
 - **Compute infrastructure:** managed Spark clusters, Dataflow runners, BigQuery slots.
 - **Schema registry:** Confluent Schema Registry or equivalent — schema registration, compatibility checking, evolution rules.
@@ -116,7 +116,7 @@ payments_raw_events  ──►  payments_transactions_v2  ──────► 
 > [!tip] Platform Team Anti-Pattern
 > A platform team that processes individual requests ("please create a bucket for us", "please add this IAM binding") is not a self-serve platform — it is a centralized bottleneck with extra steps. The measure of success is: can a domain team launch a new data product without filing a single ticket to the platform team?
 
-**Example self-serve platform tooling stack:**
+#### Example self-serve platform tooling stack
 ```
 Domain Team Experience          Platform Layer                  Infrastructure
 ─────────────────────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ git push → CI deploys           dbt Cloud / Airflow DAG         GCP Dataproc
 
 **What it means:** Global governance standards (data classification, retention policies, compliance rules, interoperability contracts) are defined centrally but enforced automatically by the platform — not by a central team reviewing every change. Domain teams operate autonomously within these guardrails.
 
-**What federated governance covers:**
+#### What federated governance covers
 - **Data classification:** every dataset is tagged with sensitivity level (public, internal, confidential, restricted). The tagging rule is global; the tagging is done by domain teams.
 - **Retention policies:** automated enforcement — a "confidential" tag automatically triggers a 90-day lifecycle rule on the GCS bucket.
 - **Schema compatibility:** the schema registry enforces backward/forward compatibility rules globally — a domain team cannot publish a breaking schema change without explicit versioning.
@@ -208,7 +208,7 @@ A schema registry stores and versions the schemas for data products. It enforces
 - **FORWARD compatibility:** old schema can read data written with new schema. New producer, old consumer.
 - **FULL compatibility:** both backward and forward. The strictest and safest for long-lived data products.
 
-**Registering a schema with Confluent Schema Registry (Python):**
+#### Registering a schema with Confluent Schema Registry (Python)
 ```python
 from confluent_kafka.schema_registry import SchemaRegistryClient, Schema
 
@@ -314,14 +314,14 @@ A data catalog in a data mesh context must support:
 
 ## When Data Mesh Makes Sense
 
-**Strong indicators for data mesh:**
+#### Strong indicators for data mesh
 - Your organization has 10+ distinct business domains, each with their own engineering teams.
 - The central data team is a chronic bottleneck — time-to-data for new datasets is measured in weeks.
 - Data quality issues are repeatedly traced back to the central team not understanding the source domain.
 - You have active regulatory requirements that mandate clear data ownership and lineage.
 - Your engineering org already practices domain-driven design (DDD) in application development.
 
-**Indicators data mesh is the wrong choice:**
+#### Indicators data mesh is the wrong choice
 - Your organization has fewer than 50 engineers total.
 - Domain teams do not have data engineering capacity and are unwilling to build it.
 - You are in a highly regulated industry with strict, centralized compliance requirements (some financial services contexts).

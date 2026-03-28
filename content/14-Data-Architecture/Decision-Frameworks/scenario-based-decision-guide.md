@@ -48,7 +48,7 @@ Every scenario in this guide has been built from patterns proven in production. 
 > [!warning] These Are Starting Points
 > No two organizations are identical. Use these scenarios as a foundation and adapt. If your team has deep Snowflake expertise, do not switch to BigQuery just because this guide recommends it. If you already run Kafka, do not rip it out for Pub/Sub. The best architecture is the one your team can build, operate, and debug at 2 AM.
 
-**Scenarios covered:**
+#### Scenarios covered
 
 | # | Scenario | Complexity | Monthly Cost Estimate |
 |---|----------|------------|----------------------|

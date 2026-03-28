@@ -687,7 +687,7 @@ GROUP BY di.sector_name, di.industry_group_name
 ORDER BY total_market_cap DESC;
 ```
 
-**Performance comparison on 10 years of daily data (~5M price rows, 50 instruments, ~130K constituent-day combinations):**
+#### Performance comparison on 10 years of daily data (~5M price rows, 50 instruments, ~130K constituent-day combinations)
 
 | Metric | Normalized (3NF) | Star Schema |
 |--------|-------------------|-------------|
@@ -1908,7 +1908,7 @@ erDiagram
 
 ### Querying the Activity Schema
 
-**Audit trail — every change to an index in the last 90 days:**
+#### Audit trail — every change to an index in the last 90 days
 
 ```sql
 SELECT
@@ -1924,7 +1924,7 @@ WHERE index_code = 'EU_LARGE_CAP'
 ORDER BY event_timestamp DESC;
 ```
 
-**Funnel analysis — indices that had a rebalance followed by a corporate action within 7 days:**
+#### Funnel analysis — indices that had a rebalance followed by a corporate action within 7 days
 
 ```sql
 WITH rebalances AS (
@@ -1958,7 +1958,7 @@ JOIN corp_actions c
 ORDER BY r.index_code, r.rebalance_ts;
 ```
 
-**Activity counts by type and month — operational monitoring:**
+#### Activity counts by type and month — operational monitoring
 
 ```sql
 SELECT
@@ -2118,7 +2118,7 @@ erDiagram
     }
 ```
 
-**Querying the narrow model requires pivoting:**
+#### Querying the narrow model requires pivoting
 
 ```sql
 -- Pivot narrow model to get a wide result set
@@ -2268,7 +2268,7 @@ erDiagram
     }
 ```
 
-**Window functions for time-series analysis:**
+#### Window functions for time-series analysis
 
 ```sql
 -- Rolling averages, returns, and distribution analysis
@@ -2317,7 +2317,7 @@ WINDOW w AS (PARTITION BY instrument_isin ORDER BY trade_date)
 ORDER BY instrument_isin, trade_date;
 ```
 
-**Distribution analysis with APPROX_QUANTILES:**
+#### Distribution analysis with APPROX_QUANTILES
 
 ```sql
 -- Distribution of daily returns across all instruments in an index
@@ -2733,7 +2733,7 @@ CREATE (p)-[:BOARD_MEMBER_OF {role: 'independent_director', appointed_date: date
 
 #### Graph Queries
 
-**Find all companies that are in both a European and a US index:**
+#### Find all companies that are in both a European and a US index
 
 ```cypher
 MATCH (i:Instrument)-[:CONSTITUENT_OF]->(eu:Index)
@@ -2745,7 +2745,7 @@ RETURN DISTINCT i.isin, i.ticker, i.company_name
 ORDER BY i.company_name;
 ```
 
-**Find companies that share board members across indices:**
+#### Find companies that share board members across indices
 
 ```cypher
 MATCH (p:Person)-[:BOARD_MEMBER_OF]->(i1:Instrument)-[:CONSTITUENT_OF]->(idx1:Index),

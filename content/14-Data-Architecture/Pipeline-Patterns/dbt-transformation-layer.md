@@ -55,7 +55,7 @@ dbt (Data Build Tool) has become the standard for managing SQL-based transformat
                                       └──────────────────────┘
 ```
 
-**dbt Core vs dbt Cloud:**
+#### dbt Core vs dbt Cloud
 
 | Aspect | dbt Core (OSS) | dbt Cloud |
 |---|---|---|
@@ -115,7 +115,7 @@ dbt_project/
 
 ### Staging Models (1:1 With Source, Minimal Transformation)
 
-**Staging model — rename, cast, and filter a source table:**
+#### Staging model — rename, cast, and filter a source table
 
 ```sql
 -- models/staging/stg_yahoo_ohlcv.sql
@@ -148,7 +148,7 @@ SELECT * FROM cleaned
 
 ### Intermediate Models (Business Logic)
 
-**Intermediate model — momentum scores with rolling window functions:**
+#### Intermediate model — momentum scores with rolling window functions
 
 ```sql
 -- models/intermediate/int_momentum_scores.sql
@@ -195,7 +195,7 @@ SELECT * FROM rolling_metrics
 
 ### Mart Models (Consumption-Ready, Incremental)
 
-**Mart model — incremental load of gold layer composite scores:**
+#### Mart model — incremental load of gold layer composite scores
 
 ```sql
 -- models/marts/fct_index_performance.sql
@@ -248,7 +248,7 @@ SELECT * FROM scored
 
 ### Schema Tests (Declared in YAML)
 
-**Schema test definitions in YAML — declarative data contracts:**
+#### Schema test definitions in YAML — declarative data contracts
 
 ```yaml
 # models/staging/stg_yahoo_ohlcv.yml
@@ -286,7 +286,7 @@ models:
 
 ### Custom Data Tests (SQL-Based)
 
-**Custom data test — assert index constituent weights sum to approximately 100%:**
+#### Custom data test — assert index constituent weights sum to approximately 100%
 
 ```sql
 -- tests/assert_weights_sum_to_100.sql
@@ -302,7 +302,7 @@ GROUP BY index_key, trade_date
 HAVING ABS(SUM(weight_pct) - 100.0) > 0.5  -- 0.5% tolerance
 ```
 
-**Custom data test — no future trade dates allowed:**
+#### Custom data test — no future trade dates allowed
 
 ```sql
 -- tests/assert_no_future_dates.sql
@@ -320,7 +320,7 @@ WHERE trade_date > GETDATE()
 
 dbt snapshots implement [[dbt-snapshots-and-scd|SCD Type 2]] automatically — tracking historical changes to dimension tables by adding `dbt_valid_from` and `dbt_valid_to` columns.
 
-**dbt snapshot for index constituents (SCD Type 2):**
+#### dbt snapshot for index constituents (SCD Type 2)
 
 ```sql
 -- snapshots/snap_constituents.sql
@@ -364,7 +364,7 @@ Running `dbt snapshot` automatically:
 
 dbt macros are Jinja2 templates that generate SQL. They eliminate copy-paste across models and enforce consistent implementations of shared business logic.
 
-**Z-score macro — reusable statistical normalization:**
+#### Z-score macro — reusable statistical normalization
 
 ```sql
 -- macros/z_score.sql
@@ -379,7 +379,7 @@ dbt macros are Jinja2 templates that generate SQL. They eliminate copy-paste acr
 {% endmacro %}
 ```
 
-**Usage in any model:**
+#### Usage in any model
 
 ```sql
 SELECT
@@ -399,7 +399,7 @@ FROM ...
 
 dbt integrates with [[airflow-core-concepts|Airflow]] via `BashOperator` (simple) or the `DbtTaskGroup` from `astronomer-cosmos` (granular task-level control).
 
-**Airflow DAG integrating dbt into the daily data pipeline:**
+#### Airflow DAG integrating dbt into the daily data pipeline
 
 ```python
 # Airflow DAG that runs dbt as part of the daily pipeline
@@ -443,7 +443,7 @@ with DAG('pipeline_daily', schedule_interval='0 9,17,22 * * *', start_date=datet
 
 ## 29.8 dbt CI/CD: Slim Builds and State Comparison
 
-**GitHub Actions workflow for dbt CI on pull requests:**
+#### GitHub Actions workflow for dbt CI on pull requests
 
 ```yaml
 # .github/workflows/dbt-ci.yml

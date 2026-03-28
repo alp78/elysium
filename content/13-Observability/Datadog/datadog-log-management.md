@@ -64,7 +64,7 @@ Expected: `Status: OK` and `Inputs: /var/opt/mssql/log/errorlog`.
 
 SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [[audit-logging|SQL Server audit logging]] separately from the errorlog.
 
-**To force test entries:**
+#### To force test entries
 
 ```bash
 SA_PWD=$(curl -s -H "Metadata-Flavor: Google" \

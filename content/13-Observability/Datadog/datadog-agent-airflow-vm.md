@@ -27,14 +27,14 @@ The Airflow VM runs Container-Optimized OS (COS), so the Datadog Agent runs as a
 
 The startup script (`infra/scripts/airflow-startup.sh`) reads the API key from VM metadata and launches dd-agent on boot:
 
-**Read API key from GCE metadata:**
+#### Read API key from GCE metadata
 
 ```bash
 DD_API_KEY=$(curl -sf -H "Metadata-Flavor: Google" \
   "http://metadata.google.internal/computeMetadata/v1/instance/attributes/dd-api-key" || true)
 ```
 
-**If the key is present, launch dd-agent:**
+#### If the key is present, launch dd-agent
 
 ```bash
 docker run -d \
@@ -80,7 +80,7 @@ docker run -d \
 
 Container log source tagging and the Postgres integration check are configured via Docker labels applied when containers are launched:
 
-**On airflow-postgres:**
+#### On airflow-postgres
 
 ```bash
 -l com.datadoghq.ad.logs='[{"source":"postgresql","service":"airflow-postgres"}]'
@@ -89,7 +89,7 @@ Container log source tagging and the Postgres integration check are configured v
 -l com.datadoghq.ad.instances='[{"host":"%%host%%","port":"5432","username":"airflow","password":"airflow"}]'
 ```
 
-**On airflow-webserver, scheduler, triggerer:**
+#### On airflow-webserver, scheduler, triggerer
 
 ```bash
 -l com.datadoghq.ad.logs='[{"source":"airflow","service":"airflow-<component>"}]'

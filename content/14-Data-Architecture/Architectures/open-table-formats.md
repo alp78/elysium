@@ -112,7 +112,7 @@ Catalog (Hive Metastore, REST, Nessie, Glue)
 
 ### Creating an Iceberg Table (Spark)
 
-**Create an Iceberg table with partitioning using PySpark:**
+#### Create an Iceberg table with partitioning using PySpark
 
 ```python
 from pyspark.sql import SparkSession
@@ -148,7 +148,7 @@ spark.sql("""
 
 ### Time Travel Queries
 
-**Time travel queries — query historical snapshots for audit purposes:**
+#### Time travel queries — query historical snapshots for audit purposes
 
 ```sql
 -- Query the table as it was at a specific timestamp (audit use case)
@@ -168,7 +168,7 @@ CALL data-pipeline.system.rollback_to_snapshot('silver.daily_ohlcv', 12345677);
 
 ### Partition Evolution (Change Partitioning Without Rewriting Data)
 
-**Add a new partition field without rewriting existing data:**
+#### Add a new partition field without rewriting existing data
 
 ```sql
 -- Original: partitioned by month
@@ -209,7 +209,7 @@ ALTER TABLE data-pipeline.silver.daily_ohlcv
 
 BigQuery supports reading and writing Iceberg tables natively via **BigLake Metastore**:
 
-**Create a BigLake external table pointing to Iceberg files on GCS:**
+#### Create a BigLake external table pointing to Iceberg files on GCS
 
 ```sql
 -- Create a BigLake connection for GCS access
@@ -239,7 +239,7 @@ ORDER BY close_price DESC;
 
 Iceberg tables accumulate small files over time (especially with streaming writes or frequent updates). Maintenance operations keep performance optimal:
 
-**Iceberg table maintenance procedures — run as scheduled Airflow tasks:**
+#### Iceberg table maintenance procedures — run as scheduled Airflow tasks
 
 ```sql
 -- Compaction: merge small files into larger ones (target 256MB per file)
@@ -280,7 +280,7 @@ The [[medallion-architecture|medallion architecture]] (bronze/silver/gold) maps 
 | **Silver** | Merge-on-read for upserts, partitioned by trade_date | Cleaned, validated, SCD2 via snapshots |
 | **Gold** | Copy-on-write for fast reads, sorted by index_key | Aggregated, optimized for dashboard queries |
 
-**GCS lakehouse folder structure for the project financial data:**
+#### GCS lakehouse folder structure for the project financial data
 
 ```
 gs://data-pipeline-lakehouse/
@@ -318,7 +318,7 @@ Parquet files are immutable by design. You cannot remove a single row from a Par
 | **Copy-on-Write (CoW)** | Rewrite affected data files without the deleted rows | Fast (no merge at read time) | Slow (rewriting large files) | Read-heavy tables (gold layer, dashboards) |
 | **Merge-on-Read (MoR)** | Write a "delete file" listing row positions to skip | Unchanged (until compaction) | Fast (small delete file written) | Write-heavy tables (bronze, silver layers) |
 
-**Iceberg GDPR deletion — step by step:**
+#### Iceberg GDPR deletion — step by step
 
 ```sql
 -- Iceberg: delete a specific person's data (uses MoR by default)
@@ -355,7 +355,7 @@ CALL system.remove_orphan_files(
 
 ### Delta Lake's GDPR Deletion Approach
 
-**Delta Lake delete and vacuum for GDPR compliance:**
+#### Delta Lake delete and vacuum for GDPR compliance
 
 ```python
 from delta.tables import DeltaTable
@@ -388,7 +388,7 @@ dt.vacuum(0)  # 0 hours = remove all unreferenced files immediately
 
 ### PII Registry — Know Where Your Sensitive Data Lives
 
-**PII registry table — maintained by data engineers, queried for GDPR deletions:**
+#### PII registry table — maintained by data engineers, queried for GDPR deletions
 
 ```sql
 -- data_catalog.pii_registry — maintained by data engineers

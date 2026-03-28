@@ -94,7 +94,7 @@ The canonical Kimball structure: one central **fact table** surrounded by **dime
                      └───────────┘
 ```
 
-**Advantages of star schema:**
+#### Advantages of star schema
 - Queries need only one join level (fact → dim) — no intermediate joins
 - Optimizers handle star joins efficiently; BigQuery and Snowflake both recognize star patterns
 - Analysts understand the pattern immediately — fact table contains measures, dims contain descriptions
@@ -108,7 +108,7 @@ A normalized variant where dimension tables themselves have parent dimension tab
 dim_product → dim_subcategory → dim_category
 ```
 
-**When to use snowflake schema:**
+#### When to use snowflake schema
 - Dimensions have very high cardinality attributes that would dominate table size
 - Storage is severely constrained (less relevant in cloud)
 - Strict normalization requirements from governance
@@ -147,7 +147,7 @@ CREATE TABLE fact_trades (
 );
 ```
 
-**Additive, semi-additive, and non-additive measures:**
+#### Additive, semi-additive, and non-additive measures
 
 | Measure type | SUM across time? | SUM across other dims? | Example |
 |---|---|---|---|
@@ -179,7 +179,7 @@ CREATE TABLE fact_account_daily (
 );
 ```
 
-**Periodic snapshot characteristics:**
+#### Periodic snapshot characteristics
 - Rows are populated even when nothing changes (fill-forward logic required for missing periods)
 - All rows for the same snapshot date are loaded in a single batch
 - Enables easy period-over-period queries: join to itself on `date_sk - 1`
@@ -220,7 +220,7 @@ A dimension shared across multiple fact tables or data marts. The classic exampl
 > [!tip] Build dim_date Once, Use Everywhere
 > Generate a complete date dimension covering 20+ years, populated once. It should include day of week, week number, fiscal calendar, holidays, trading day flags, and any domain-specific date attributes your business needs. Never compute these at query time — they belong in the dimension.
 
-**Standard dim_date columns for a financial data warehouse:**
+#### Standard dim_date columns for a financial data warehouse
 
 ```sql
 CREATE TABLE dim_date (
@@ -318,7 +318,7 @@ VALUES (
 );
 ```
 
-**Resulting table:**
+#### Resulting table
 
 | analyst_sk | analyst_id | desk | region | effective_start | effective_end | is_current |
 |---|---|---|---|---|---|---|
@@ -402,13 +402,13 @@ dim_customer (
 
 Bill Inmon's approach is top-down: build an integrated, normalized Enterprise Data Warehouse (EDW) first in Third Normal Form (3NF), then derive department-specific data marts from it.
 
-**Inmon's 4 characteristics of a data warehouse:**
+#### Inmon's 4 characteristics of a data warehouse
 1. **Subject-oriented** — organized around subjects (Customer, Instrument, Position), not business processes
 2. **Integrated** — single, consistent representation across all source systems
 3. **Non-volatile** — data is never updated or deleted; only loaded
 4. **Time-variant** — every record has a timestamp; history is preserved by design
 
-**The Inmon flow:**
+#### The Inmon flow
 
 ```
 Source Systems (OLTP)
@@ -537,12 +537,12 @@ Modern cloud data warehouses have largely converged on columnar storage, MPP (Ma
 
 Modern cloud warehouses favor **ELT** (Extract → Load → Transform) over traditional **ETL** (Extract → Transform → Load). The distinction matters because it determines where transformation compute runs and who pays for it.
 
-**ETL paradigm (legacy):**
+#### ETL paradigm (legacy)
 1. Extract from source
 2. Transform in a middleware engine (Informatica, SSIS, Spark, Python)
 3. Load clean data into warehouse
 
-**ELT paradigm (modern cloud):**
+#### ELT paradigm (modern cloud)
 1. Extract from source
 2. Load raw data into warehouse (cheap columnar storage)
 3. Transform inside the warehouse using SQL (leverages the warehouse's MPP engine)
@@ -562,7 +562,7 @@ When analytical queries are expensive but predictable, pre-computing results red
 
 A materialized view persists the result of a query as physical storage, refreshed on a schedule or incrementally.
 
-**BigQuery materialized views:**
+#### BigQuery materialized views
 ```sql
 -- BigQuery: materialized view with incremental refresh
 CREATE MATERIALIZED VIEW `project.dataset.daily_volume_mv`
@@ -577,7 +577,7 @@ FROM `project.dataset.fact_trades`
 GROUP BY 1, 2;
 ```
 
-**SQL Server materialized views (indexed views):**
+#### SQL Server materialized views (indexed views)
 ```sql
 -- SQL Server: indexed view (must use SCHEMABINDING, WITH NOEXPAND hint)
 CREATE VIEW dbo.vw_daily_volume

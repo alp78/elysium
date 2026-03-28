@@ -130,13 +130,13 @@ When the data model is continuous rather than discrete — market tick data, sen
 
 WebSocket establishes a full-duplex persistent TCP connection, negotiated via an HTTP/1.1 upgrade handshake. Once the connection is open, both client and server can send frames at any time without the overhead of repeated HTTP headers. This makes it the standard protocol for real-time financial data: live price feeds, order book updates, and execution reports from exchanges all arrive over WebSocket connections.
 
-**When a data engineer uses it:**
+#### When a data engineer uses it
 - Connecting to exchange WebSocket feeds (Coinbase Advanced Trade, Binance, ICE, CME streaming APIs)
 - Subscribing to live FX tick data from a broker or aggregator
 - Receiving real-time portfolio valuation updates
 - Feeding live price data to a dashboard without polling
 
-**Python example — connecting to a price feed:**
+#### Python example — connecting to a price feed
 
 ```python
 import asyncio
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     asyncio.run(subscribe_price_feed(FEED_URI, ["BTC-USD", "ETH-USD"]))
 ```
 
-**Pros and cons:**
+#### Pros and cons
 
 | Aspect | Detail |
 |--------|--------|
@@ -211,20 +211,20 @@ SSE is a one-way streaming protocol built on HTTP. The server holds the connecti
 
 The trade-off is directionality: the client cannot send data after the initial request. For data engineering, this is often fine — you want to receive a stream of pipeline status updates, log tail output, or price events without needing to send anything back.
 
-**When a data engineer uses it:**
+#### When a data engineer uses it
 - Streaming pipeline job status to a dashboard (job started, running, X rows processed, complete)
 - Log tailing endpoints in internal tooling
 - Server-push notifications for data quality alerts
 - Streaming LLM-generated data summaries
 
-**curl example:**
+#### curl example
 
 ```bash
 # -N disables output buffering so events appear as they arrive
 curl -N -H "Authorization: Bearer $TOKEN" https://api.example.com/stream/pipeline/job-42/status
 ```
 
-**Python client example with httpx:**
+#### Python client example with httpx
 
 ```python
 import httpx
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     stream_pipeline_status("job-42", token="your-token-here")
 ```
 
-**Python server example with FastAPI:**
+#### Python server example with FastAPI
 
 ```python
 import asyncio
@@ -308,12 +308,12 @@ async def stream_status(job_id: str):
 
 MQTT (Message Queuing Telemetry Transport) is a lightweight publish-subscribe protocol designed for constrained devices and unreliable networks. It runs over TCP and uses a broker model: publishers send messages to topics on a broker; subscribers receive messages for the topics they subscribe to. The protocol overhead is minimal — a minimum header of 2 bytes — making it viable for microcontrollers and sensors with limited battery and bandwidth.
 
-**When a data engineer uses it:**
+#### When a data engineer uses it
 - Ingesting telemetry from IoT sensors (temperature, pressure, flow rate) into a time-series database
 - Consuming edge device data (factory equipment, trading terminal heartbeats)
 - Bridging IoT device networks to cloud pipelines (MQTT broker → Cloud Pub/Sub → BigQuery)
 
-**Quality of Service levels:**
+#### Quality of Service levels
 
 | QoS | Guarantee | Use case |
 |-----|-----------|----------|
@@ -321,7 +321,7 @@ MQTT (Message Queuing Telemetry Transport) is a lightweight publish-subscribe pr
 | 1 (At least once) | Message delivered at least once — possible duplicates | Pipeline events where duplicates can be deduplicated |
 | 2 (Exactly once) | Four-way handshake ensures exactly-once delivery | Financial transactions, critical control commands |
 
-**Python example with paho-mqtt:**
+#### Python example with paho-mqtt
 
 ```python
 import json
@@ -402,13 +402,13 @@ if __name__ == "__main__":
 
 AMQP (Advanced Message Queuing Protocol) is a binary wire-level protocol for message queuing. RabbitMQ is its most widely deployed implementation. Where Kafka is a distributed log (append-only, consumer manages offset), RabbitMQ is a traditional message broker with rich routing: direct exchanges, fanout exchanges, topic exchanges, and header-based routing. Messages can be acknowledged, rejected, and dead-lettered to separate queues for failed-message handling.
 
-**When a data engineer uses it:**
+#### When a data engineer uses it
 - Decoupling pipeline stages that operate at different throughput rates
 - Async task dispatch: queue a data quality check job; a worker pool processes it
 - Dead-letter queues: failed transformation attempts accumulate for manual inspection
 - Priority queues: urgent regulatory reports ahead of routine batch jobs
 
-**AMQP vs Pub/Sub vs Kafka:**
+#### AMQP vs Pub/Sub vs Kafka
 
 | Dimension | AMQP (RabbitMQ) | Cloud Pub/Sub | Kafka |
 |-----------|-----------------|---------------|-------|
@@ -432,14 +432,14 @@ AMQP (Advanced Message Queuing Protocol) is a binary wire-level protocol for mes
 
 A webhook is not a protocol — it is a pattern built on HTTP. Instead of polling an endpoint to check for new events, you register a URL with a third-party service and that service sends an HTTP POST to your URL whenever an event occurs. From your server's perspective, you are receiving an inbound HTTP request, not making one.
 
-**When a data engineer uses it:**
+#### When a data engineer uses it
 - Receiving trade execution notifications from a brokerage API
 - GitHub Actions triggering pipeline runs on push to main
 - Stripe payment events landing in a financial reconciliation pipeline
 - Salesforce change data capture events (new lead, closed opportunity)
 - PagerDuty alerting a pipeline monitoring endpoint on data quality breach
 
-**Webhook receiver in FastAPI with HMAC verification:**
+#### Webhook receiver in FastAPI with HMAC verification
 
 ```python
 import hashlib
@@ -519,7 +519,7 @@ async def is_already_processed(key: str) -> bool:
     return False
 ```
 
-**Reliability patterns for webhook consumers:**
+#### Reliability patterns for webhook consumers
 
 | Challenge | Solution |
 |-----------|----------|
@@ -541,13 +541,13 @@ async def is_already_processed(key: str) -> bool:
 
 SFTP (SSH File Transfer Protocol) is not a streaming API — it is a file-based data exchange protocol, and it remains deeply embedded in financial data workflows. Exchanges, data vendors, regulators, and clearinghouses all deliver data as files dropped into an SFTP server. End-of-day position files, reference data updates, settlement instructions, regulatory reports — these arrive as CSV, fixed-width, or XML files transferred over SFTP.
 
-**When a data engineer uses it:**
+#### When a data engineer uses it
 - Retrieving end-of-day trade files from an exchange or prime broker
 - Consuming reference data updates (security master, FX rates) from a data vendor
 - Delivering regulatory reports (MiFID II, EMIR trade reports) to a regulator's SFTP drop
 - Exchanging settlement files with a clearinghouse (DTCC, LCH)
 
-**Python example with paramiko:**
+#### Python example with paramiko
 
 ```python
 import os
@@ -678,12 +678,12 @@ if __name__ == "__main__":
 
 FIX (Financial Information eXchange) is the industry standard messaging protocol for electronic trading. Developed in 1992 between Fidelity Investments and Salomon Brothers, it remains dominant in equities, derivatives, and FX trading globally. A FIX message is a sequence of tag=value pairs delimited by the SOH (ASCII 01) character — entirely human-readable when decoded, but processed at machine speed.
 
-**When a data engineer encounters FIX:**
+#### When a data engineer encounters FIX
 - Ingesting trade execution reports from an order management system (OMS) or execution management system (EMS) in real time
 - Consuming order book snapshots and incremental updates from an exchange FIX feed
 - Processing drop-copy feeds: a real-time mirror of all executed orders routed to a separate system for risk monitoring and regulatory reporting
 
-**Message structure example (decoded):**
+#### Message structure example (decoded)
 
 ```
 8=FIX.4.4 | 9=148 | 35=D | 49=CLIENT | 56=BROKER | 34=1 | 52=20241115-09:30:01.123 |
@@ -699,7 +699,7 @@ FIX (Financial Information eXchange) is the industry standard messaging protocol
 | 40 | OrdType | 2 = Limit |
 | 44 | Price | 182.50 |
 
-**Key FIX message types for data engineers:**
+#### Key FIX message types for data engineers
 
 | MsgType | Name | Data engineering use |
 |---------|------|---------------------|
