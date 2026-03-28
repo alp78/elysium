@@ -77,7 +77,7 @@ A reference for diagnosing and fixing the most common Apache Airflow problems en
 
 **Symptom:** The Airflow UI shows a red banner: `DAG Import Errors` on the DAGs list page, or a specific DAG has an "Import Error" badge. The DAG does not appear as runnable.
 
-**Where to look first:**
+#### Where to look first
 
 ```bash
 # List all current import errors
@@ -92,7 +92,7 @@ docker compose logs airflow-scheduler | grep -i "error|import"
 
 ### Root Cause 1a: Python Syntax Error
 
-**Error message in logs:**
+#### Error message in logs — Root Cause 1a: Python Syntax Error
 ```
 Broken DAG: [/opt/airflow/dags/my_dag.py] Traceback (most recent call last):
   File "/opt/airflow/dags/my_dag.py", line 24
@@ -117,7 +117,7 @@ find ./dags -name "*.py" -exec python -m py_compile {} \; && echo "All DAGs synt
 
 ### Root Cause 1b: Missing Python Module
 
-**Error message:**
+#### Error message — Root Cause 1b: Missing Python Module
 ```
 Broken DAG: [/opt/airflow/dags/my_dag.py] Traceback (most recent call last):
   File "/opt/airflow/dags/my_dag.py", line 3, in <module>
@@ -149,7 +149,7 @@ sudo systemctl restart airflow-scheduler airflow-webserver
 
 **Symptom:** The DAG has a database call, API call, or slow/failing import at module level (outside any function), which fails during the Scheduler's parse cycle.
 
-**Error message:**
+#### Error message — Root Cause 1c: Import at Module Level (Parse-Time Error)
 ```
 Broken DAG: [/opt/airflow/dags/my_dag.py]
   File "/opt/airflow/dags/my_dag.py", line 8, in <module>
@@ -179,7 +179,7 @@ with DAG("my_dag", ...) as dag:
 
 ### Root Cause 1d: No DAG Object Found
 
-**Error message:**
+#### Error message — Root Cause 1d: No DAG Object Found
 ```
 Failed to import: /opt/airflow/dags/my_dag.py
 The DAG file doesn't contain valid DAG, it may be a utility module.
@@ -227,7 +227,7 @@ or for PythonOperator:
 airflow.exceptions.AirflowException: Task failed with return code 1
 ```
 
-**Debugging steps:**
+#### Debugging steps — Root Cause 1d: No DAG Object Found
 
 ```bash
 # Step 1: Read the full task log in the UI
@@ -290,7 +290,7 @@ Fix: Check that the Airflow user (default UID 50000) has write access to the out
 
 **Symptom:** You added a new DAG file to the `dags/` folder but it does not appear in the Airflow UI after several minutes.
 
-**Diagnosis:**
+#### Diagnosis — Common Sub-Causes
 
 ```bash
 # Step 1: Verify the file is in the correct dags_folder
@@ -310,7 +310,7 @@ airflow jobs check --job-type SchedulerJob --allow-multiple --limit 10
 docker compose logs -f airflow-scheduler | grep "my_new_dag.py"
 ```
 
-**Common root causes:**
+#### Common root causes — Common Sub-Causes
 
 | Root Cause | Symptom in Logs | Fix |
 |---|---|---|
@@ -351,7 +351,7 @@ airflow pools list
 airflow config get-value core parallelism
 ```
 
-**Fix:**
+#### Fix — Stuck in Queued
 
 ```bash
 # Temporarily increase parallelism (hot-reload not always supported — may require restart)
@@ -425,7 +425,7 @@ port 5432 failed: Connection refused
     Is the server running on that host and accepting TCP/IP connections?
 ```
 
-**Diagnosis and Fix:**
+#### Diagnosis and Fix — Stuck in Running (Zombie Tasks)
 
 ```bash
 # Step 1: Verify the Metadata DB is running
@@ -491,7 +491,7 @@ mysql.connector.errors.DataError: 1406 (22001): Data too long for column 'value'
 
 **Root Cause:** XComs are stored in the Metadata DB. The `value` column is a `LargeBinary` field, but pushing large objects (DataFrames, file contents, query results) hits practical limits and causes serialization failures or DB errors.
 
-**Fix — Pass Paths, Not Data:**
+#### Fix — Pass Paths, Not Data — Stuck in Running (Zombie Tasks)
 
 ```python
 # WRONG — pushing a DataFrame as XCom
@@ -531,7 +531,7 @@ def transform(**context):
 > - **MySQL**: `MEDIUMBLOB` column, limit = 16 MB. Smaller than PostgreSQL.
 > - **Custom XCom backends**: Airflow 2.0+ supports custom backends (e.g., GCS-backed XComs) that remove size limits entirely. See the Airflow docs for `AIRFLOW__CORE__XCOM_BACKEND`.
 
-**Optional: GCS-backed XCom Backend (Airflow 2.0+):**
+#### Optional: GCS-backed XCom Backend (Airflow 2.0+)
 
 ```python
 # plugins/gcs_xcom_backend.py
@@ -588,7 +588,7 @@ DETAIL: Process 12345 waits for ShareLock on transaction 67890; blocked by proce
         Process 23456 waits for ShareLock on transaction 12345; blocked by process 12345.
 ```
 
-**Root Causes and Fixes:**
+#### Root Causes and Fixes — Stuck in Running (Zombie Tasks)
 
 **Root Cause 1: Too many concurrent database writes**
 
@@ -654,7 +654,7 @@ On Linux: `dmesg | grep -i "out of memory"` shows the OOM killer targeting the C
 
 **Root Cause:** A task loaded too much data into memory (e.g., a large Pandas DataFrame), causing the Celery worker process to exceed available RAM. The Linux OOM killer terminates the process with SIGKILL (signal 9), bypassing Python exception handling — hence no clean `failed` state.
 
-**Fix — Immediate:**
+#### Fix — Immediate — Stuck in Running (Zombie Tasks)
 
 ```bash
 # The task will be marked as zombie and eventually fail via the Zombie Detector
@@ -667,7 +667,7 @@ docker compose restart airflow-worker
 sudo systemctl restart airflow-worker
 ```
 
-**Fix — Structural (prevent recurrence):**
+#### Fix — Structural (prevent recurrence) — Stuck in Running (Zombie Tasks)
 
 ```python
 # 1. Profile memory usage before scaling up
@@ -960,7 +960,7 @@ AttributeError: 'MyCustomOperator' object has no attribute 'serialize'
 
 **Root Cause:** DAG serialization stores DAG definitions in the Metadata DB as JSON, allowing the Webserver to display DAGs without parsing Python files. Custom Operators or objects that are not JSON-serializable break this.
 
-**Fix:**
+#### Fix — Scheduler Logs
 
 ```python
 # Custom Operators must inherit from BaseOperator properly
@@ -1000,7 +1000,7 @@ MyCustomOperator(
 
 **Symptom:** The Scheduler is consuming high CPU. New DAGs take minutes to appear. The UI shows an old `Last Parsed` time in the DAG list. If the scheduler process has stopped entirely, follow the [[airflow-scheduler-down]] runbook.
 
-**Diagnosis:**
+#### Diagnosis — Scheduler Logs
 
 ```bash
 # Check scheduler parsing times per DAG file
@@ -1014,9 +1014,9 @@ ls -la $AIRFLOW_HOME/dags/*.py | wc -l
 airflow jobs check --job-type SchedulerJob
 ```
 
-**Common Causes and Fixes:**
+#### Common Causes and Fixes — Scheduler Logs
 
-**Too many DAG files:**
+#### Too many DAG files
 
 ```ini
 # airflow.cfg — limit the file parsing worker pool
@@ -1026,7 +1026,7 @@ parsing_processes = 4      # Number of processes for parallel DAG parsing
                            # Increase for faster parsing of many files
 ```
 
-**Expensive module-level code:**
+#### Expensive module-level code
 
 ```python
 # WRONG — slow code at module level runs every 30 seconds during parsing
@@ -1040,7 +1040,7 @@ def my_task():
     config = pd.read_csv("/data/config.csv")  # I/O at task runtime
 ```
 
-**Too many XCom entries slowing DB queries:**
+#### Too many XCom entries slowing DB queries
 
 ```bash
 # Run airflow db clean to remove old XComs
@@ -1054,14 +1054,14 @@ airflow db clean \
 
 ## Issue 12: Webserver Not Starting (Port 8080)
 
-**Symptom:**
+#### Symptom — Scheduler Logs
 
 ```
 [2024-01-15 06:00:01,123] {manager.py:92} ERROR - Webserver exited with return code 1
 OSError: [Errno 98] Address already in use
 ```
 
-**Fix:**
+#### Fix — Scheduler Logs
 
 ```bash
 # Find what is using port 8080
@@ -1078,13 +1078,13 @@ airflow webserver --port 8081
 export AIRFLOW__WEBSERVER__WEB_SERVER_PORT=8081
 ```
 
-**Flask secret key warning (non-fatal but important):**
+#### Flask secret key warning (non-fatal but important)
 
 ```
 [WARNING] No SECRET_KEY found. Falling back to a random key - sessions will be lost between Webserver restarts.
 ```
 
-**Fix:**
+#### Fix — Scheduler Logs
 
 ```bash
 # Generate a secure secret key
@@ -1125,7 +1125,7 @@ airflow db clean \
 psql -h localhost -U airflow -d airflow -c "ANALYZE task_instance; ANALYZE dag_run; ANALYZE xcom;"
 ```
 
-**Maintenance DAG pattern:**
+#### Maintenance DAG pattern
 
 ```python
 # dags/airflow_db_maintenance.py

@@ -46,7 +46,7 @@ Compilation errors occur before any SQL reaches the warehouse. They are dbt or J
 
 ### Jinja Syntax Errors
 
-**Symptom:**
+#### Symptom — Jinja Syntax Errors
 ```
 Compilation Error in model fct_esg_scores
   unexpected end of template, expected 'endif'
@@ -70,7 +70,7 @@ WHERE score_date >= '{{ var("run_date") }}'
 
 ### Missing `ref()` / `source()`
 
-**Symptom:**
+#### Symptom — Missing ref() / source()
 ```
 Compilation Error in model fct_esg_scores
   'stg_esg_msci' is undefined
@@ -78,7 +78,7 @@ Compilation Error in model fct_esg_scores
 
 **Cause:** `{{ ref('stg_esg_msci') }}` was written as `{{ ref('stg_esg_MSCI') }}` (case mismatch) or the model file does not exist.
 
-**Fix:**
+#### Fix — Missing ref() / source()
 ```bash
 # List all nodes matching a pattern
 dbt ls --select "*msci*"
@@ -88,7 +88,7 @@ Verify the model file name matches the string inside `ref()`. dbt model names ar
 
 ### Circular Dependencies
 
-**Symptom:**
+#### Symptom — Circular Dependencies
 ```
 Found a cycle: model.financial_indices.int_esg_scored
   --> model.financial_indices.fct_esg_scores
@@ -97,7 +97,7 @@ Found a cycle: model.financial_indices.int_esg_scored
 
 **Cause:** Model A references Model B, and Model B (directly or transitively) references Model A.
 
-**Diagnosis:**
+#### Diagnosis — Circular Dependencies
 ```bash
 dbt ls --select +int_esg_scored   # all upstream
 dbt ls --select int_esg_scored+   # all downstream
@@ -113,14 +113,14 @@ Runtime errors occur after compilation succeeds. The SQL reaches the warehouse a
 
 ### Connection Failures
 
-**Symptom:**
+#### Symptom — Connection Failures
 ```
 Runtime Error
   Database error while running model fct_esg_scores
   Could not connect to BigQuery: 403 Access denied: project fin-data-prod
 ```
 
-**Fix:**
+#### Fix — Connection Failures
 
 ```bash
 # Test connection independently
@@ -137,7 +137,7 @@ cat $GOOGLE_APPLICATION_CREDENTIALS | python -m json.tool | grep client_email
 
 ### SQL Errors in the Warehouse
 
-**Symptom:**
+#### Symptom — SQL Errors in the Warehouse
 ```
 Database Error in model fct_esg_scores
   Syntax error: Unexpected keyword RANGE at [47:5]
@@ -154,13 +154,13 @@ Paste the compiled SQL directly into the BigQuery console or SQL Server Manageme
 
 ### Query Timeout
 
-**Symptom:**
+#### Symptom — Query Timeout
 ```
 Database Error in model fct_index_constituent_history
   Operation timed out after 3600 seconds
 ```
 
-**Fix:**
+#### Fix — Query Timeout
 - For BigQuery: increase `job_timeout_ms` in the model config or profile.
 - For SQL Server: increase `query_timeout` in `profiles.yml`.
 - Longer term: see [[dbt-performance-tuning]] for model splitting strategies.
@@ -176,12 +176,12 @@ Database Error in model fct_index_constituent_history
 
 ### Out-of-Memory (OOM)
 
-**Symptom (BigQuery):**
+#### Symptom (BigQuery) — Out-of-Memory (OOM)
 ```
 Resources exceeded during query execution: Out of memory; ...
 ```
 
-**Fix:**
+#### Fix — Out-of-Memory (OOM)
 1. Check if the model performs a large cross-join or missing join predicate.
 2. Enable `allow_large_results` and switch to a temporary table:
 

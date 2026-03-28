@@ -649,7 +649,7 @@ with DAG(
     PythonOperator(task_id="run", python_callable=run_with_params)
 ```
 
-**Triggering with custom params:**
+#### Triggering with custom params
 
 ```bash
 # CLI: pass params as JSON

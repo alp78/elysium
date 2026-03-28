@@ -2427,7 +2427,7 @@ LIMIT 15
 
 ### 11a. Business Day Arithmetic
 
-Use the <small>`trading_calendar`</small> table to count trading days between dates.
+Use the `trading_calendar` table to count trading days between dates.
 Weekend/holiday-aware calculations are essential for financial data.
 
 
@@ -2527,7 +2527,7 @@ LIMIT 10
 
 ### Decision Guide
 
-| Feature | CTE | \#Temp Table | @Table Variable |
+| Feature | CTE | Temp Table | @Table Variable |
 |---------|-----|-------------|----------------|
 | Materialized? | No (re-evaluated) | Yes (on disk) | Yes (in memory*) |
 | Indexes? | No | Yes | Limited |
@@ -2535,4 +2535,4 @@ LIMIT 10
 | Best for | Readability | Reuse, large sets | Small lookups (<100 rows) |
 | Performance | Re-runs each ref | One-time compute | Fast for small sets |
 
-**Rule of thumb**: start with CTE. If the query is slow and the CTE is referenced multiple times, materialize into \#temp.
+**Rule of thumb**: start with CTE. If the query is slow and the CTE is referenced multiple times, materialize into temp.

@@ -102,7 +102,7 @@ ESG and factor data often requires cross-sectional z-score normalisation: subtra
 {% endmacro %}
 ```
 
-**Usage:**
+#### Usage — 2.1 z_score — Cross-Sectional Normalisation
 
 ```sql
 select
@@ -133,7 +133,7 @@ from {{ ref('int_esg_scores_latest') }}
 {% endmacro %}
 ```
 
-**Usage:**
+#### Usage — 2.2 weighted_average — Capital-Weighted Metrics
 
 ```sql
 select
@@ -305,7 +305,7 @@ macros/
     sqlserver__safe_divide.sql
 ```
 
-**Default (ANSI-compatible):**
+#### Default (ANSI-compatible)
 
 ```sql
 -- macros/finance/safe_divide.sql
@@ -342,7 +342,7 @@ macros/
 {% endmacro %}
 ```
 
-**Usage in a model (adapter-agnostic):**
+#### Usage in a model (adapter-agnostic)
 
 ```sql
 select
@@ -457,7 +457,7 @@ on-run-end:
   - "call sp_update_freshness_metadata()"
 ```
 
-**Audit log macro:**
+#### Audit log macro
 
 ```sql
 -- macros/utils/log_run_start.sql

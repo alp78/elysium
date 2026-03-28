@@ -465,13 +465,13 @@ gcloud composer environments describe my-airflow-env \
 
 ### When to Use Cloud Composer
 
-**Use Cloud Composer when:**
+#### Use Cloud Composer when
 - You need a fully managed, enterprise-grade Airflow with GCP IAM integration
 - Your team cannot or should not manage Airflow infrastructure
 - You need GCP-native features: IAP for UI access, VPC-SC, Audit Logs
 - Budget allows (~$300-1500+/month depending on size)
 
-**Do NOT use Cloud Composer when:**
+#### Do NOT use Cloud Composer when
 - You have fewer than 5-10 DAGs (massive over-engineering)
 - Budget is very tight (a single GCE e2-standard-4 + Cloud SQL is far cheaper)
 - You need executor customization (Composer fixes the executor)
@@ -814,7 +814,7 @@ statsd_port = 8125
 statsd_prefix = airflow
 ```
 
-**Key metrics to alert on:**
+#### Key metrics to alert on
 
 ```
 # Task metrics

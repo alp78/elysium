@@ -152,7 +152,7 @@ A DAG (Directed Acyclic Graph) is the core abstraction in Airflow. It represents
 
 Airflow discovers DAGs by scanning Python files in the `dags_folder` (default: `$AIRFLOW_HOME/dags`). A file is a valid DAG file if it contains a `DAG` object at the module level.
 
-**Minimal valid DAG:**
+#### Minimal valid DAG
 
 ```python
 # dags/minimal_example.py
@@ -471,7 +471,7 @@ wait_for_data = SqlSensor(
 
 A **Connection** stores credentials for external systems (databases, APIs, cloud services). Stored in the Metadata DB (encrypted) or externally (Secret Manager, env vars).
 
-**Setting a connection via environment variable (preferred for secrets -- see [[environment-variables]] for general env var patterns):**
+#### Setting a connection via environment variable (preferred for secrets -- see [[environment-variables]] for general env var patterns)
 
 ```bash
 # Format: AIRFLOW_CONN_{CONN_ID} = URI or JSON
@@ -490,7 +490,7 @@ airflow connections add my_postgres \
     --conn-schema mydb
 ```
 
-**Setting a connection via the Airflow UI:**
+#### Setting a connection via the Airflow UI
 Admin → Connections → + (Add) → Fill in conn_id, conn_type, host, login, password, port, schema, Extra (JSON).
 
 ### Hooks
@@ -696,7 +696,7 @@ def use_variable(**context):
     batch_size = config["batch_size"]
 ```
 
-**Setting variables:**
+#### Setting variables
 
 ```bash
 # CLI

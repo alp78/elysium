@@ -453,7 +453,7 @@ where esg_provider_id in ('MSCI', 'SUSTAINALYTICS', 'ISS', 'REFINITIV')
 {% endsnapshot %}
 ```
 
-**Audit query — show the full rating history for a specific ISIN:**
+#### Audit query — show the full rating history for a specific ISIN
 
 ```sql
 select
@@ -546,7 +546,7 @@ The `dbt_valid_from` and `dbt_valid_to` are set to `current_timestamp` at the ti
 
 If you add or remove columns from the snapshot's select query, dbt will raise an error on the next run because the snapshot table's DDL does not match the query output.
 
-**Resolution:**
+#### Resolution — 7.5 Schema Changes Break Snapshots
 
 1. Add the column to the warehouse table manually (`alter table ... add column`), then run `dbt snapshot`.
 2. Or drop and recreate — but this destroys history (see §7.2).

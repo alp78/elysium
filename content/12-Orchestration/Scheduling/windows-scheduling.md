@@ -80,22 +80,22 @@ Task Scheduler (the Windows service `Schedule`) stores tasks as XML files under 
 
 ### Query — Inspect Existing Tasks
 
-**List all tasks on the local machine in table format:**
+#### List all tasks on the local machine in table format
 ```cmd
 schtasks /query /fo TABLE /v
 ```
 
-**List all tasks in CSV format (easier to parse in scripts):**
+#### List all tasks in CSV format (easier to parse in scripts)
 ```cmd
 schtasks /query /fo CSV /v > tasks-export.csv
 ```
 
-**Export a specific task as XML (for source control):**
+#### Export a specific task as XML (for source control)
 ```cmd
 schtasks /query /tn "BackupDB" /xml > BackupDB.xml
 ```
 
-**Query tasks on a remote machine:**
+#### Query tasks on a remote machine
 ```cmd
 schtasks /query /s SQLSERVER01 /u DOMAIN\Admin /p Password /fo TABLE
 ```
@@ -104,19 +104,19 @@ schtasks /query /s SQLSERVER01 /u DOMAIN\Admin /p Password /fo TABLE
 
 Every `/create` call requires at minimum: `/sc` (schedule type), `/tn` (task name), `/tr` (task run — the program or script to execute).
 
-**MINUTE — run every N minutes:**
+#### MINUTE — run every N minutes
 ```cmd
 :: Run every 15 minutes, indefinitely
 schtasks /create /sc MINUTE /mo 15 /tn "Poll-API" /tr "C:\Scripts\poll_api.py" /f
 ```
 
-**HOURLY — run every N hours:**
+#### HOURLY — run every N hours
 ```cmd
 :: Run once per hour starting at :30
 schtasks /create /sc HOURLY /mo 1 /st 00:30 /tn "Hourly-ETL" /tr "C:\Scripts\run_etl.bat" /f
 ```
 
-**DAILY — run once a day at a fixed time:**
+#### DAILY — run once a day at a fixed time
 ```cmd
 :: Run every day at 02:00 AM as a service account, with highest privileges
 schtasks /create ^
@@ -133,7 +133,7 @@ schtasks /create ^
 > [!warning] Quoting Paths with Spaces
 > When the script path contains spaces, wrap the entire path in escaped quotes inside the `/tr` value: `/tr "\"C:\My Scripts\run.ps1\""`. Without this, Task Scheduler truncates the path at the first space.
 
-**WEEKLY — run on specific days:**
+#### WEEKLY — run on specific days
 ```cmd
 :: Every Monday and Wednesday at 06:00
 schtasks /create ^
@@ -143,7 +143,7 @@ schtasks /create ^
   /ru SYSTEM /f
 ```
 
-**MONTHLY — run on specific day of month:**
+#### MONTHLY — run on specific day of month
 ```cmd
 :: 1st day of every month at midnight
 schtasks /create ^
@@ -155,31 +155,31 @@ schtasks /create ^
 schtasks /create /sc MONTHLY /d LASTDAY /st 23:30 /tn "EOM-Archive" /tr "C:\Scripts\archive.bat" /f
 ```
 
-**ONCE — run a single time:**
+#### ONCE — run a single time
 ```cmd
 :: Fire exactly once on 2026-04-01 at 09:00
 schtasks /create /sc ONCE /sd 04/01/2026 /st 09:00 /tn "One-Time-Migration" /tr "C:\Scripts\migrate.ps1" /f
 ```
 
-**ONSTART — run at every system startup:**
+#### ONSTART — run at every system startup
 ```cmd
 :: Restart a monitoring agent on boot, run as SYSTEM
 schtasks /create /sc ONSTART /tn "Start-Monitor" /tr "C:\Agents\monitor.exe" /ru SYSTEM /f
 ```
 
-**ONLOGON — run when any user logs on:**
+#### ONLOGON — run when any user logs on
 ```cmd
 :: Sync drive mappings for any user
 schtasks /create /sc ONLOGON /tn "Drive-Map" /tr "C:\Scripts\map_drives.bat" /f
 ```
 
-**ONIDLE — run when the machine is idle for N minutes:**
+#### ONIDLE — run when the machine is idle for N minutes
 ```cmd
 :: Run data quality scan when idle for 10 minutes
 schtasks /create /sc ONIDLE /i 10 /tn "Idle-DQ-Scan" /tr "C:\Scripts\dq_scan.ps1" /f
 ```
 
-**ONEVENT — run on a Windows Event Log entry:**
+#### ONEVENT — run on a Windows Event Log entry
 ```cmd
 :: Trigger on Event ID 1000 in Application log (failure event)
 schtasks /create ^
@@ -193,22 +193,22 @@ schtasks /create ^
 
 ### Change — Modify Existing Tasks
 
-**Change the run time of an existing task:**
+#### Change the run time of an existing task
 ```cmd
 schtasks /change /tn "BackupDB" /st 03:00
 ```
 
-**Disable a task without deleting it:**
+#### Disable a task without deleting it
 ```cmd
 schtasks /change /tn "BackupDB" /disable
 ```
 
-**Re-enable a disabled task:**
+#### Re-enable a disabled task
 ```cmd
 schtasks /change /tn "BackupDB" /enable
 ```
 
-**Change the run-as user:**
+#### Change the run-as user
 ```cmd
 schtasks /change /tn "BackupDB" /ru "DOMAIN\new-svc-account" /rp "NewPassword"
 ```
@@ -273,13 +273,13 @@ The `ScheduledTasks` module (built into Windows 8+ / Server 2012+) exposes Task 
 
 ### New-ScheduledTaskTrigger — All Trigger Types
 
-**Daily trigger:**
+#### Daily trigger
 ```powershell
 # Fire every day at 02:00 AM
 $trigger = New-ScheduledTaskTrigger -Daily -At "02:00"
 ```
 
-**Weekly trigger:**
+#### Weekly trigger
 ```powershell
 # Every Monday at 06:00 AM
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At "06:00"
@@ -288,7 +288,7 @@ $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At "06:00"
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday,Wednesday,Friday -At "08:00"
 ```
 
-**Repeating trigger (every N minutes, using RepetitionInterval):**
+#### Repeating trigger (every N minutes, using RepetitionInterval)
 ```powershell
 # Fire at startup, then repeat every 30 minutes indefinitely
 $trigger = New-ScheduledTaskTrigger -AtStartup
@@ -304,12 +304,12 @@ $trigger.Repetition = (New-CimInstance -ClassName MSFT_TaskRepetitionPattern `
 > [!info] ISO 8601 Duration Strings
 > Task Scheduler uses ISO 8601 duration format: `PT15M` = 15 minutes, `PT1H` = 1 hour, `P1D` = 1 day, `P1DT2H30M` = 1 day, 2 hours, 30 minutes.
 
-**Once trigger:**
+#### Once trigger
 ```powershell
 $trigger = New-ScheduledTaskTrigger -Once -At "2026-04-01 09:00"
 ```
 
-**At logon:**
+#### At logon
 ```powershell
 # Any user
 $trigger = New-ScheduledTaskTrigger -AtLogOn
@@ -318,12 +318,12 @@ $trigger = New-ScheduledTaskTrigger -AtLogOn
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User "DOMAIN\jdoe"
 ```
 
-**At startup:**
+#### At startup
 ```powershell
 $trigger = New-ScheduledTaskTrigger -AtStartup
 ```
 
-**Event-based trigger (via CIM, not natively in New-ScheduledTaskTrigger):**
+#### Event-based trigger (via CIM, not natively in New-ScheduledTaskTrigger)
 ```powershell
 # Event triggers require building the CIM object directly
 $eventTrigger = New-CimInstance -ClassName MSFT_TaskEventTrigger `
@@ -391,7 +391,7 @@ $settings = New-ScheduledTaskSettingsSet `
     -Priority 7                                     # Normal priority (0=highest, 10=lowest)
 ```
 
-**MultipleInstances options:**
+#### MultipleInstances options
 
 | Value | Behavior |
 |-------|---------|
@@ -437,7 +437,7 @@ Write-Host "Next run:    $($info.NextRunTime)"
 Write-Host "Last run:    $($info.LastRunTime)"
 ```
 
-**Last task result codes:**
+#### Last task result codes
 
 | Code | Meaning |
 |------|---------|
@@ -662,7 +662,7 @@ $storedJob = Get-Job -Name "ETL-ScheduledJob"
 $storedJob | Receive-Job -Keep
 ```
 
-**Job result storage location:**
+#### Job result storage location
 ```
 C:\Users\<username>\AppData\Local\Microsoft\Windows\PowerShell\ScheduledJobs\
   ETL-ScheduledJob\
@@ -698,7 +698,7 @@ Get-ScheduledJob -Name "ETL-ScheduledJob" | Unregister-ScheduledJob
 
 Use ONEVENT triggers to react to system events — application errors, service state changes, security events.
 
-**schtasks approach:**
+#### schtasks approach
 ```cmd
 :: Trigger when SQL Server writes Event ID 18456 (login failure) to Application log
 schtasks /create ^
@@ -710,7 +710,7 @@ schtasks /create ^
   /ru SYSTEM /f
 ```
 
-**PowerShell approach with CIM:**
+#### PowerShell approach with CIM
 ```powershell
 # Build the WMI event filter subscription XML
 $eventSubscription = @'

@@ -46,7 +46,7 @@ Cloud Scheduler uses standard Unix cron syntax with full timezone support:
 * * * * *
 ```
 
-**Common schedule expressions:**
+#### Common schedule expressions
 
 ```
 0 6 * * *          Every day at 06:00 UTC
@@ -197,7 +197,7 @@ Cloud Scheduler retries failed job executions (HTTP non-2xx response, or timeout
 | Max doublings | `--max-doublings` | 5 | Times the backoff doubles before capping |
 | Attempt deadline | `--attempt-deadline` | 3m | Per-attempt timeout (max 30m for HTTP) |
 
-**Backoff calculation:**
+#### Backoff calculation
 ```
 retry 1: min-backoff * 2^0 = min-backoff
 retry 2: min-backoff * 2^1
@@ -269,7 +269,7 @@ Cloud Tasks is a **durable task queue** — you enqueue tasks programmatically, 
 | Deduplication | N/A | Yes (task names) |
 | Task payload | Fixed per job | Dynamic per task |
 
-**When to use Cloud Tasks instead of Scheduler:**
+#### When to use Cloud Tasks instead of Scheduler
 - You need to create 1,000 tasks from a single trigger (e.g., one task per row in a batch)
 - You need to rate-limit outbound calls to a third-party API (e.g., 10 calls/second max)
 - You need deduplication by task name (prevents double-processing)
@@ -899,7 +899,7 @@ gcloud scheduler jobs create pubsub trigger-function-daily \
   --message-body='{"pipeline":"daily","env":"prod"}'
 ```
 
-**Python Cloud Function handler:**
+#### Python Cloud Function handler
 
 ```python
 # functions/my-pipeline/main.py
@@ -1155,7 +1155,7 @@ gcloud scheduler jobs create http health-check-api \
 # Alert condition: cloudscheduler.googleapis.com/job/attempt_count with failure filter
 ```
 
-**Python health check function:**
+#### Python health check function
 
 ```python
 # functions/health-check/main.py

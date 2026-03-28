@@ -77,7 +77,7 @@ dbt run [FLAGS]
 | `--event-time-start` | datetime | — | Filter microbatch models by event time window start |
 | `--event-time-end` | datetime | — | Filter microbatch models by event time window end |
 
-**Examples:**
+#### Examples — dbt run
 
 ```bash
 # Run all models in the staging layer
@@ -124,7 +124,7 @@ dbt test [FLAGS]
 | `--vars` | YAML dict | `{}` | Runtime variable overrides |
 | `--threads` | int | — | Override thread count |
 
-**`--indirect-selection` values:**
+#### `--indirect-selection` values
 
 | Value | Behavior |
 |-------|----------|
@@ -133,7 +133,7 @@ dbt test [FLAGS]
 | `buildable` | Like cautious but also includes tests that can be deferred |
 | `empty` | Run no tests regardless of selection |
 
-**Examples:**
+#### Examples — dbt test
 
 ```bash
 # Test only a specific model
@@ -176,7 +176,7 @@ dbt build [FLAGS]
 | `--resource-type` | list | all | Restrict to specific resource types |
 | `--empty` | bool | false | Dry-run with `limit 0` |
 
-**Examples:**
+#### Examples — dbt build
 
 ```bash
 # Full CI build for a feature branch
@@ -211,7 +211,7 @@ dbt compile [FLAGS]
 | `--parse-only` | bool | false | Parse project without compiling |
 | `--threads` | int | — | Override thread count |
 
-**Examples:**
+#### Examples — dbt compile
 
 ```bash
 # Compile a single model to inspect generated SQL
@@ -243,7 +243,7 @@ dbt seed [FLAGS]
 | `--threads` | int | — | Override thread count |
 | `--selector` | string | — | Named selector |
 
-**Examples:**
+#### Examples — dbt seed
 
 ```bash
 # Load all seeds
@@ -272,7 +272,7 @@ dbt snapshot [FLAGS]
 | `--threads` | int | — | Override thread count |
 | `--selector` | string | — | Named selector |
 
-**Examples:**
+#### Examples — dbt snapshot
 
 ```bash
 # Run all snapshots
@@ -301,7 +301,7 @@ dbt source freshness [FLAGS]
 | `--threads` | int | — | Override thread count |
 | `--selector` | string | — | Named selector |
 
-**Examples:**
+#### Examples — dbt source freshness
 
 ```bash
 # Check freshness for all sources
@@ -439,7 +439,7 @@ dbt ls [FLAGS]
 | `--indirect-selection` | enum | `eager` | Test selection mode |
 | `--vars` | YAML dict | `{}` | Runtime variable overrides |
 
-**Examples:**
+#### Examples — dbt ls / dbt list
 
 ```bash
 # List all models in the marts layer
@@ -502,7 +502,7 @@ dbt run-operation MACRO_NAME [FLAGS]
 | `--vars` | YAML dict | `{}` | Runtime variable overrides |
 | `--target` / `-t` | string | — | Override profile target |
 
-**Examples:**
+#### Examples — dbt run-operation
 
 ```bash
 # Grant access to a schema after a build
@@ -631,14 +631,14 @@ dbt run-operation drop_schema --args '{"schema_name": "dbt_dev_old"}'
 | `--select a,b` | Intersection: nodes matching `a` AND `b` |
 | `--select a --exclude b` | Nodes in `a` minus nodes in `b` |
 
-**Intersection example:**
+#### Intersection example — Set Operators
 
 ```bash
 # Incremental models that are also tagged daily
 dbt run --select config.materialized:incremental,tag:daily
 ```
 
-**Union example:**
+#### Union example — Set Operators
 
 ```bash
 # Staging models OR models tagged critical
@@ -1186,7 +1186,7 @@ exposures:
 | `accepted_values` | `values`, `quote` (bool), `where` | Column only contains values from the list |
 | `relationships` | `to`, `field`, `where` | Foreign key integrity check |
 
-**Full syntax examples:**
+#### Full syntax examples — Built-in Generic Tests
 
 ```yaml
 columns:
@@ -1296,7 +1296,7 @@ Ephemeral models are compiled as CTEs inline into their dependants. They do not 
 | `merge_update_columns` | list | Columns to include in the UPDATE part of a merge (mutually exclusive with `merge_exclude_columns`) |
 | `full_refresh` | bool | If `false`, prevents `--full-refresh` from rebuilding this model |
 
-**`incremental_strategy` support by adapter:**
+#### `incremental_strategy` support by adapter
 
 | Strategy | SQL Server | BigQuery | Notes |
 |----------|-----------|----------|-------|
@@ -1335,7 +1335,7 @@ Ephemeral models are compiled as CTEs inline into their dependants. They do not 
 | `copy_partitions` | bool | Use copy-based partition overwrite strategy |
 | `merge_update_columns` | list | Columns to update during merge |
 
-**`partition_by` dict fields:**
+#### `partition_by` dict fields
 
 | Key | Type | Values / Description |
 |-----|------|---------------------|
@@ -1632,7 +1632,7 @@ FROM {{ source('security_master', 'securities') }}
 {% endsnapshot %}
 ```
 
-**Snapshot columns added by dbt:**
+#### Snapshot columns added by dbt
 
 | Column | Description |
 |--------|-------------|

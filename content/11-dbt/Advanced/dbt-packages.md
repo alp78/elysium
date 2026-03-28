@@ -491,7 +491,7 @@ where abs(total_weight - 1.0) > {{ tolerance }}
 {% endtest %}
 ```
 
-**Usage in consumer projects:**
+#### Usage in consumer projects
 
 ```yaml
 models:
@@ -531,7 +531,7 @@ packages:
 | Production | Exact via lock file, reviewed upgrade PRs | Zero surprise upgrades |
 | Custom internal package | Git tag (`v0.3.1`) | Semantic versioning with changelogs |
 
-**Upgrade workflow:**
+#### Upgrade workflow
 
 1. Update `packages.yml` to the new version.
 2. Run `dbt deps` locally.

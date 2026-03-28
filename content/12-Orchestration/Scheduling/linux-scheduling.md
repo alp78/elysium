@@ -45,7 +45,7 @@ The crontab format uses five time fields followed by the command. Memorize this 
 * * * * *  command to execute
 ```
 
-**Field operators:**
+#### Field operators
 
 | Operator | Meaning | Example |
 |---|---|---|
@@ -61,7 +61,7 @@ The crontab format uses five time fields followed by the command. Memorize this 
 
 ### 1.2 Crontab Management Commands
 
-**Edit the current user's crontab:**
+#### Edit the current user's crontab
 
 ```bash
 # Edit the current user's crontab
@@ -96,7 +96,7 @@ crontab -l
 # Full path to python3, full path to script, redirect output to log file
 ```
 
-**Full crontab management:**
+#### Full crontab management
 
 ```bash
 # List all cron jobs for the current user
@@ -253,7 +253,7 @@ sudo timedatectl set-timezone UTC
 > [!warning] cron PATH issues — the #1 source of "it works in terminal but not in cron"
 > Always test a failing cron job by running it exactly as cron would: `env -i HOME=/root SHELL=/bin/bash PATH=/usr/bin:/bin /path/to/your/script.sh`. This strips your environment down to cron's defaults and surfaces missing PATH entries immediately.
 
-**PowerShell equivalent (Windows Task Scheduler environment):**
+#### PowerShell equivalent (Windows Task Scheduler environment)
 
 ```powershell
 # Windows Task Scheduler also runs with a minimal environment
@@ -327,7 +327,7 @@ MAILTO=""                          # suppress all email (equivalent to 2>&1 > /d
 # Useful when you already aggregate syslog centrally
 ```
 
-**PowerShell equivalent (Windows logging):**
+#### PowerShell equivalent (Windows logging)
 
 ```powershell
 # Redirect output in a scheduled PowerShell task:
@@ -394,7 +394,7 @@ flock -n /tmp/pipeline.lock echo "No lock held" || echo "Lock is currently held"
 > [!warning] PID files vs flock
 > Older scripts use PID file patterns (`echo $$ > /tmp/script.pid; kill -0 $(cat /tmp/script.pid)`). These are fragile: if the process crashes, the PID file is left behind and blocks future runs. `flock` uses kernel-level file locks that are automatically released on process exit — always prefer `flock`.
 
-**PowerShell equivalent (Windows mutex):**
+#### PowerShell equivalent (Windows mutex)
 
 ```powershell
 # Windows equivalent of flock: use a named mutex
@@ -626,7 +626,7 @@ Unit=pipeline-etl.service
 WantedBy=timers.target
 ```
 
-**Step 3 — Enable and start the timer:**
+#### Step 3 — Enable and start the timer
 
 ```bash
 # Reload systemd to pick up new unit files
@@ -793,7 +793,7 @@ echo "/home/pipeline/scripts/bulk_load.sh >> /var/log/bulk-load.log 2>&1" | at n
 # This makes at jobs easier to debug than cron jobs
 ```
 
-**PowerShell equivalent (Windows Task Scheduler one-time task):**
+#### PowerShell equivalent (Windows Task Scheduler one-time task)
 
 ```powershell
 # Schedule a one-time task to run at a specific time:
@@ -1090,7 +1090,7 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 --local-host-port=localho
 sqlcmd -S localhost,1433 -U sa
 ```
 
-**PowerShell equivalent (Windows SSH and tunneling):**
+#### PowerShell equivalent (Windows SSH and tunneling)
 
 ```powershell
 # Windows 10/11 includes OpenSSH client natively
@@ -1315,7 +1315,7 @@ Use this decision table to select the right scheduler for a given task:
 | **Infrastructure req** | Linux machine | Linux machine with systemd | Kubernetes cluster or Cloud Composer | GCP project |
 | **Ideal use cases** | Log rotation, health checks, backups, quick ETL | Service-lifecycle-aware tasks | Multi-step ETL, pipeline DAGs, data warehouse loads | Trigger Pub/Sub, invoke APIs on schedule |
 
-**Decision flowchart:**
+#### Decision flowchart
 
 ```
 Is the task a single command or script on one Linux machine?

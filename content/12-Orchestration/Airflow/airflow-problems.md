@@ -2279,7 +2279,7 @@ Additionally, a new engineer writes `start_date=pendulum.today(tz='UTC')`, expec
 
 This is intentional — Airflow was designed for batch data pipelines where you process data from the previous interval. But this design is deeply counterintuitive and causes widespread confusion.
 
-**Airflow 2.2+ data interval terminology:**
+#### Airflow 2.2+ data interval terminology
 
 | Old term | New term | Meaning |
 |---|---|---|
