@@ -544,33 +544,10 @@ except ImportError:
 
 ## Efficient String Building
 
-#### Efficient string building — why + in loops is slow
+Strings are immutable — each `+=` copies the entire string. For *n* concatenations, this is O(n²) total work. Use `"".join()` or `io.StringIO` for O(n) string building.
 
-```python
-# String building overview — immutability makes + in loops O(n squared)
-#
-# Technique: Strings are immutable — each += copies the entire string.
-#   For n concatenations, this is O(n squared) total work. Use "".join()
-#   or io.StringIO for O(n) string building.
-#
-# Benefits:
-#   - Understanding this prevents major performance bottlenecks
-#   - join() and StringIO are the standard efficient alternatives
-#
-# Anti-patterns:
-#   - += in loops — each iteration copies the growing string
-#   - Assuming Python optimizes string += — CPython may, but it's not guaranteed
-#
-# When to use:
-#   - Always consider the building strategy for >10 concatenations
-#
-# When NOT to use:
-#   - 2-5 string concatenations — + is fine for small numbers
-
-# Efficient String Building
-# Strings are IMMUTABLE — each + creates a new string object
-# For many concatenations, use join() or io.StringIO instead
-```
+> [!warning] Don't use `+=` in loops
+> Each iteration copies the growing string into a new object. CPython may optimize simple cases, but this is not guaranteed. Always consider the building strategy for more than ~10 concatenations. For 2–5 concatenations, `+` is fine.
 
 #### BAD: O(n²) — each + copies the entire string
 

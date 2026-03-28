@@ -647,48 +647,16 @@ print(f"Type: {type(mgr).__name__}")       # Manager, not Employee
 
 #### Why dataclasses instead of dicts
 
-```python
-# Why dataclasses over dicts — compile-time safety for known structures
-#
-# Technique: Dicts accept any key (including typos) and any value type —
-#   errors appear only at runtime. Dataclasses enforce field names and
-#   types at definition, with IDE autocomplete and type checker support.
-#
-# Benefits:
-#   - Typos caught by IDE and type checker — not at runtime
-#   - Autocomplete lists all valid fields — no memorizing string keys
-#   - Refactoring tools rename fields across the codebase
-#
-# Anti-patterns:
-#   - Dicts for fixed-structure data — loses safety and tooling
-#   - String keys when field names are known — dataclass is type-safe
-#
-# When to use:
-#   - Any data with a known schema: API responses, configs, DB rows
-#
-# When NOT to use:
-#   - Truly dynamic keys from runtime — dicts are appropriate
+Dicts accept any key (including typos) and any value type — errors only appear at runtime. Dataclasses enforce field names and types at definition, with IDE autocomplete and type-checker support. Typos are caught before the code runs, and refactoring tools rename fields across the codebase.
 
-# In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored
-# in databases. So why bother with classes for moving data around?
-#
-# SHORT ANSWER: dataclasses aren't for the DATA itself (that flows through
-# pandas/Spark/SQL). They're for everything AROUND the data: configs, metadata,
-# API responses, pipeline state, error reports, task definitions.
-#
-# WHEN DICTS WIN:
-# - Exploratory/ad-hoc work, notebooks
-# - Unknown/dynamic schemas (arbitrary JSON from external API)
-# - Pandas DataFrames (already structured)
-# - Quick scripts you'll run once
-#
-# WHEN DATACLASSES WIN:
-# - Production pipelines that run unattended (typos = 3am failures)
-# - Shared code between team members (self-documenting)
-# - Anything that gets deployed and must not fail silently
-# - APIs (input/output contracts)
-# - Configs, metadata, pipeline orchestration state
-```
+In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored in databases. So why bother with classes? Dataclasses aren't for the data itself (that flows through pandas/Spark/SQL) — they're for everything *around* the data: configs, metadata, API responses, pipeline state, error reports, task definitions.
+
+| When dicts win | When dataclasses win |
+|---|---|
+| Exploratory/ad-hoc work, notebooks | Production pipelines that run unattended (typos = 3am failures) |
+| Unknown/dynamic schemas (arbitrary JSON from external API) | Shared code between team members (self-documenting) |
+| Pandas DataFrames (already structured) | Anything that gets deployed and must not fail silently |
+| Quick scripts you'll run once | APIs (input/output contracts), configs, orchestration state |
 
 #### Dict — silent typos
 

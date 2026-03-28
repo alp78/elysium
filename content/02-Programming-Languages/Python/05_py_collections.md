@@ -701,40 +701,15 @@ if status == PipelineStatus.RUNNING:
 
 ## Stacks, Queues & Deques
 
-#### Stacks, queues, and deques overview
+Each data structure enforces a specific access pattern:
 
-```python
-# Stacks, queues, and deques — specialized access patterns
-#
-# Technique: Stack (LIFO): list with append/pop. Queue (FIFO): deque
-#   with append/popleft. Deque: double-ended with O(1) both ends.
-#   PriorityQueue: heapq for min-heap ordering.
-#
-# Benefits:
-#   - Each type enforces a specific access pattern — prevents misuse
-#   - deque is O(1) at both ends — list.pop(0) is O(n)
-#   - heapq provides priority ordering without sorting
-#
-# Anti-patterns:
-#   - list.pop(0) for FIFO — O(n); use deque.popleft() which is O(1)
-#   - Using list as both stack and queue — confusing semantics
-#
-# When to use:
-#   - Stack: DFS, undo, backtracking; Queue: BFS, task processing
-#   - Deque: sliding windows, both-ends access; heapq: priority ordering
-#
-# When NOT to use:
-#   - Random access — use list; sorted unique — use SortedSet
+- **Stack (LIFO):** Last In, First Out — use `list` with `append()`/`pop()`, or `collections.deque`. Use cases: DFS, undo history, backtracking.
+- **Queue (FIFO):** First In, First Out — use `collections.deque` with `append()`/`popleft()`. Use cases: BFS, task processing.
+- **Deque:** Double-ended queue — efficiently add/remove from both ends in O(1). Use cases: sliding windows, both-ends access.
+- **Priority Queue:** Items come out in priority order, not insertion order — use the `heapq` module.
 
-# Stacks, Queues & Deques
-#
-# KEY CONCEPTS:
-# - Stack (LIFO): Last In, First Out. Use list (append/pop) or collections.deque.
-# - Queue (FIFO): First In, First Out.
-#   Use collections.deque (NOT list — list.pop(0) is O(n), deque.popleft() is O(1)).
-# - Deque (double-ended queue): efficiently add/remove from BOTH ends.
-# - Priority Queue: items come out in priority order, not insertion order (heapq module).
-```
+> [!warning] Don't use `list.pop(0)` for FIFO queues
+> `list.pop(0)` is O(n) because it shifts all remaining elements. Use `deque.popleft()` which is O(1). Also avoid using a single list as both stack and queue — the semantics become confusing.
 
 #### Stack (LIFO)
 
