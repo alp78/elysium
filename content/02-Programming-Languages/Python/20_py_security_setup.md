@@ -105,7 +105,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## GitHub Repository
 
-#### Create a public repo for Workload Identity Federation demos
+#### gh repo create — public repo for Workload Identity Federation demos
 
 ```python
 # Workload Identity Federation allows GitHub Actions to authenticate to GCP
@@ -117,7 +117,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## GCP Project
 
-#### Create GCP project
+#### gcloud projects create — new GCP project
 
 ```python
 # A project is the top-level container for all GCP resources.
@@ -131,7 +131,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
     Enabling service [cloudapis.googleapis.com] on project [seclab-dev-ap-26]...
     Operation "operations/acat.p2-922174528852-dacd229c-fa88-4eb5-8fe1-457d3151c07c" finished successfully.
 
-#### Set project as default
+#### gcloud config set project — set default project
 
 ```python
 # All subsequent gcloud commands will target this project automatically.
@@ -145,7 +145,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## Billing
 
-#### List billing accounts
+#### gcloud billing accounts list
 
 ```python
 # You need the billing account ID to link it to the project.
@@ -157,7 +157,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
     0190CF-C61D5A-F08831  Agents Billing Account  True
     01E212-1C5E05-99306D  My Billing Account      False
 
-#### Link billing account to project
+#### gcloud billing projects link — attach billing account
 
 ```python
 # This enables paid APIs (Compute Engine, KMS, etc.) on the project.
@@ -172,7 +172,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## Enable APIs
 
-#### Enable all required Google Cloud APIs
+#### gcloud services enable — enable required Google Cloud APIs
 
 ```python
 # Each API must be explicitly enabled before you can use it.
@@ -224,7 +224,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## Service Account
 
-#### Create service account
+#### gcloud iam service-accounts create
 
 ```python
 # A service account is a non-human identity used by applications, VMs, and CI/CD to authenticate to GCP APIs.
@@ -233,7 +233,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
     Created service account [notebook-sa].
 
-#### Verify service account was created
+#### gcloud iam service-accounts list — verify creation
 
 ```python
 # Check the service account exists in the project.
@@ -244,7 +244,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
     Notebook Service Account                notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com  False
     Compute Engine default service account  922174528852-compute@developer.gserviceaccount.com    False
 
-#### Download service account JSON key
+#### gcloud iam service-accounts keys create — download JSON key
 
 ```python
 # The JSON key file contains the private key for the service account.
@@ -262,7 +262,7 @@ print("  GCP_SA_KEY_PATH set")
 
 ## IAM Role Bindings
 
-#### Grant Secret Manager Admin
+#### gcloud IAM policy binding — grant Secret Manager Admin
 
 ```python
 # Allows the service account to create, read, update, and delete secrets.
@@ -290,7 +290,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant Cloud KMS Encrypter/Decrypter
+#### gcloud IAM policy binding — grant Cloud KMS Encrypter/Decrypter
 
 ```python
 # Allows encrypting and decrypting data using KMS keys.
@@ -321,7 +321,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant Cloud KMS Viewer
+#### gcloud kms keys add-iam-policy-binding — grant KMS Viewer
 
 ```python
 # Grants cloudkms.cryptoKeys.get and list permissions on KMS resources.
@@ -344,7 +344,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for key [notebook-encrypt-key].
 
-#### Grant Cloud Storage Admin
+#### gcloud IAM policy binding — grant Cloud Storage Admin
 
 ```python
 # Allows creating buckets, uploading/downloading objects, managing ACLs.
@@ -378,7 +378,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant Compute Engine Instance Admin
+#### gcloud IAM policy binding — grant Compute Engine Instance Admin
 
 ```python
 # Allows creating, starting, stopping VMs and managing SSH keys.
@@ -415,7 +415,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant Service Account Token Creator
+#### gcloud IAM policy binding — grant Service Account Token Creator
 
 ```python
 # Allows impersonating the service account and generating access tokens.
@@ -456,7 +456,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant Cloud SQL Admin
+#### gcloud IAM policy binding — grant Cloud SQL Admin
 
 ```python
 # Allows creating and managing Cloud SQL instances, users, databases,
@@ -501,7 +501,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant BigQuery Admin
+#### gcloud IAM policy binding — grant BigQuery Admin
 
 ```python
 # Allows creating datasets, tables, and running queries.
@@ -548,7 +548,7 @@ print("  GCP_SA_KEY_PATH set")
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Grant Firestore Admin
+#### gcloud IAM policy binding — grant Firestore Admin
 
 ```python
 # Allows creating databases, collections, and reading/writing documents.
@@ -600,7 +600,7 @@ print("  GCP_SA_KEY_PATH set")
 
 ## Cloud KMS
 
-#### Create KMS key ring
+#### gcloud kms keyrings create — KMS key ring
 
 ```python
 # A key ring is a logical grouping of cryptographic keys.
@@ -608,7 +608,7 @@ print("  GCP_SA_KEY_PATH set")
 !gcloud kms keyrings create notebook-keyring --location=europe-west1
 ```
 
-#### Create symmetric encryption key
+#### gcloud kms keys create — symmetric encryption key
 
 ```python
 # A symmetric key encrypts and decrypts with the same key.
@@ -691,7 +691,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
 ## Cloud Storage
 
-#### Create GCS bucket
+#### gcloud storage buckets create — GCS bucket
 
 ```python
 # A bucket is a container for objects (files) in Cloud Storage.
@@ -701,7 +701,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
     Creating gs://seclab-dev-ap-26-data/...
 
-#### Enable CMEK encryption on bucket
+#### gcloud storage buckets update — enable CMEK encryption
 
 ```python
 # CMEK (Customer-Managed Encryption Key) uses your KMS key to encrypt
@@ -715,7 +715,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
 ## Compute Engine
 
-#### Create VM instance
+#### gcloud compute instances create — VM instance
 
 ```python
 # An e2-micro is the smallest (and free-tier eligible) VM.
@@ -728,7 +728,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
     Created [https://www.googleapis.com/compute/v1/projects/seclab-dev-ap-26/zones/europe-west1-b/instances/notebook-vm].
 
-#### Create firewall rule for SSH
+#### gcloud compute firewall-rules create — SSH access
 
 ```python
 # Allows TCP port 22 (SSH) from any IP to VMs tagged ssh-server.
@@ -743,7 +743,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
     ..Created [https://www.googleapis.com/compute/v1/projects/seclab-dev-ap-26/global/firewalls/allow-ssh].
     done.
 
-#### Get VM external IP
+#### gcloud compute instances describe — get VM external IP
 
 ```python
 # This is the public IP you'll SSH into.
@@ -752,7 +752,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
     34.76.141.248
 
-#### Enable OS Login on VM
+#### gcloud compute instances add-metadata — enable OS Login
 
 ```python
 # Enable OS Login on the VM instance so that SSH authentication is handled
@@ -765,7 +765,7 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
     Updated [https://www.googleapis.com/compute/v1/projects/seclab-dev-ap-26/zones/europe-west1-b/instances/notebook-vm].
 
-#### Install pip on the VM
+#### gcloud compute ssh — install pip on VM
 
 Debian 12 ships Python 3.11 without pip. `ensurepip` is disabled by the OS, so pip must be installed via apt. The `--fix-missing` flag is needed because the Debian security repo sometimes has unavailable packages.
 
@@ -794,7 +794,7 @@ Debian 12 ships Python 3.11 without pip. `ensurepip` is disabled by the OS, so p
     Use 'sudo apt autoremove' to remove them.
     0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
 
-#### Install Python packages on the VM
+#### gcloud compute ssh — install Python packages on VM
 
 Installs the packages needed for GCS upload benchmarking. Debian 12 enforces PEP 668 (externally managed Python), so `--break-system-packages` is required to install into the system Python rather than a venv.
 
@@ -826,7 +826,7 @@ Installs the packages needed for GCS upload benchmarking. Debian 12 enforces PEP
     Requirement already satisfied: pyasn1<0.7.0,>=0.6.1 in ./.local/lib/python3.11/site-packages (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.26.1->google-cloud-storage) (0.6.3)
     Requirement already satisfied: pycparser in ./.local/lib/python3.11/site-packages (from cffi>=2.0.0->cryptography>=38.0.3->google-auth<3.0.0,>=2.26.1->google-cloud-storage) (3.0)
 
-#### Verify VM Python environment
+#### gcloud compute ssh — verify VM Python environment
 
 ```python
 !gcloud compute ssh notebook-vm --zone=europe-west1-b --project=seclab-dev-ap-26 \
@@ -874,7 +874,7 @@ Installs the packages needed for GCS upload benchmarking. Debian 12 enforces PEP
 
     Updated IAM policy for key [notebook-encrypt-key].
 
-#### Create SQL Server instance with SSL
+#### gcloud sql instances create — SQL Server with SSL and CMEK
 
 ```python
 # Create Cloud SQL for SQL Server 2022 Express (~5-10 min to provision)
@@ -950,7 +950,7 @@ print(f"  GCP_SQL_IP={sql_ip} written to .env")
 
       GCP_SQL_IP=34.22.129.89 written to .env
 
-#### Authorize current IP in Cloud SQL
+#### gcloud sql instances patch — authorize current IP
 
 ```python
 # Cloud SQL only accepts connections from explicitly authorized IPs.
@@ -994,7 +994,7 @@ print(f"  File exists: {os.path.exists(os.environ['GOOGLE_APPLICATION_CREDENTIAL
       Credentials: ./gcp-sa-key.json
       File exists: True
 
-#### Upload local data files to GCS bucket
+#### google-cloud-storage Client — upload local data files to GCS
 
 ```python
 # Upload all CSV/JSON/Parquet files from the local data folder to GCS.
@@ -1141,7 +1141,7 @@ print("All tables loaded into stoxx.")
       trading_calendar...  29335 rows
     All tables loaded into stoxx.
 
-#### Load OHLCV into BigQuery (bronze/silver/gold)
+#### google-cloud-bigquery Client — load OHLCV into BigQuery (bronze/silver/gold)
 
 ```python
 # Load Euro Stoxx 50 OHLCV from local CSV into BigQuery bronze layer,
@@ -1236,7 +1236,7 @@ for row in itertools.islice(results, 5):
        4. AD.AS      close=   41.05  momentum= +5.54%  vol_ratio=0.12
        5. PRX.AS     close=   45.69  momentum= +3.28%  vol_ratio=0.19
 
-#### Create Firestore database
+#### gcloud firestore databases create
 
 ```python
 # Create a named Firestore database (not the default).
@@ -1267,7 +1267,7 @@ for row in itertools.islice(results, 5):
       updateTime: '2026-03-25T22:36:33.309401Z'
       versionRetentionPeriod: 3600s
 
-#### Write gold scores to Firestore
+#### google-cloud-firestore Client — write gold scores to Firestore
 
 ```python
 # Write the gold scores from BigQuery into Firestore for real-time access.
@@ -1314,7 +1314,7 @@ for doc in db.collection('scores_latest').limit(5).stream():
 
 ## SSH Keys
 
-#### Generate Ed25519 SSH key pair
+#### ssh-keygen — generate Ed25519 SSH key pair
 
 ```python
 # Ed25519 is the modern standard - shorter keys, faster, more secure than RSA.
@@ -1343,7 +1343,7 @@ print("  SSH_KEY_PATH set")
     |           o+o   |
     +----[SHA256]-----+
 
-#### Upload public key to GCP OS Login
+#### gcloud compute os-login ssh-keys add — upload public key
 
 ```python
 # OS Login maps SSH keys to Google accounts - no need to manage
@@ -1381,7 +1381,7 @@ print("  SSH_KEY_PATH set")
 
 ## Artifact Registry
 
-#### Create Docker repository
+#### gcloud artifacts repositories create — Docker repository
 
 ```python
 # Artifact Registry is GCP's managed container registry (replaces Container Registry).
@@ -1394,7 +1394,7 @@ print("  SSH_KEY_PATH set")
     ...........................................................................................................................................done.
     Created repository [notebook-docker].
 
-#### Configure Docker authentication
+#### gcloud auth configure-docker — Artifact Registry authentication
 
 ```python
 # Tells Docker to use gcloud credentials when pushing/pulling from this registry.
@@ -1413,7 +1413,7 @@ print("  SSH_KEY_PATH set")
 
 ## Workload Identity Federation
 
-#### Create identity pool
+#### gcloud iam workload-identity-pools create — identity pool
 
 ```python
 # A workload identity pool is a container for external identity providers.
@@ -1423,7 +1423,7 @@ print("  SSH_KEY_PATH set")
 
     Created workload identity pool [github-pool].
 
-#### Create OIDC provider for GitHub Actions
+#### gcloud iam workload-identity-pools providers create-oidc — GitHub Actions
 
 ```python
 # Maps GitHub's OIDC tokens to Google Cloud identities.
@@ -1467,7 +1467,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
 
 ## Verify Setup
 
-#### List secrets
+#### gcloud secrets list — verify Secret Manager
 
 ```python
 # Verify all secrets were created.
@@ -1479,7 +1479,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
     db-password   2026-03-25T22:10:26  automatic           -
     test-api-key  2026-03-25T22:10:22  automatic           -
 
-#### List KMS keys
+#### gcloud kms keys list — verify Cloud KMS
 
 ```python
 # Verify the encryption key exists in the key ring.
@@ -1489,7 +1489,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
     NAME                                                                                                        PURPOSE          ALGORITHM                    PROTECTION_LEVEL  LABELS  PRIMARY_ID  PRIMARY_STATE
     projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key  ENCRYPT_DECRYPT  GOOGLE_SYMMETRIC_ENCRYPTION  SOFTWARE                  1           ENABLED
 
-#### List VM instances
+#### gcloud compute instances list — verify Compute Engine
 
 ```python
 # Verify the VM was created and is running.
@@ -1499,7 +1499,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
     NAME         ZONE            MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
     notebook-vm  europe-west1-b  e2-micro                   10.132.0.2   34.76.141.248  RUNNING
 
-#### List GCS bucket contents
+#### gcloud storage ls — verify GCS bucket contents
 
 ```python
 # Verify the bucket exists (will be empty).
@@ -1508,7 +1508,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
 
     gs://seclab-dev-ap-26-data/bronze/
 
-#### List Cloud SQL instances
+#### gcloud sql instances list — verify Cloud SQL
 
 ```python
 # Verify the SQL Server instance is running.
@@ -1518,7 +1518,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
     NAME          DATABASE_VERSION        LOCATION        TIER              PRIMARY_ADDRESS  PRIVATE_ADDRESS  STATUS
     notebook-sql  SQLSERVER_2022_EXPRESS  europe-west1-b  db-custom-1-3840  35.189.244.119   -                RUNNABLE
 
-#### List BigQuery datasets
+#### bq ls — verify BigQuery datasets
 
 ```python
 # Verify BigQuery access (will be empty initially).
@@ -1529,7 +1529,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
      ------------ 
       index_data
 
-#### List Firestore databases
+#### gcloud firestore databases list — verify Firestore
 
 ```python
 # Verify the seclab-scores database was created.
@@ -1554,7 +1554,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
     updateTime: '2026-03-25T22:36:33.309401Z'
     versionRetentionPeriod: 3600s
 
-#### List Artifact Registry repos
+#### gcloud artifacts repositories list — verify Artifact Registry
 
 ```python
 # Verify the Docker repository was created.
@@ -1567,7 +1567,7 @@ print(f'  Project number: {PROJECT_NUMBER}')
 
     Listing items under project seclab-dev-ap-26, location europe-west1.
 
-#### List Workload Identity pools
+#### gcloud iam workload-identity-pools list — verify WIF
 
 ```python
 # Verify the identity pool and provider exist.

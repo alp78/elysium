@@ -189,12 +189,9 @@ Console.WriteLine($"  Scope: devstorage.read_only (storage only, no KMS/BQ/etc.)
 
 #### Application Default Credentials (ADC) lookup chain
 
+ADC checks: (1) `GOOGLE_APPLICATION_CREDENTIALS` env var, (2) gcloud default credentials, (3) GCE/GKE metadata server.
+
 ```csharp
-// ADC checks these locations in order:
-//   1. GOOGLE_APPLICATION_CREDENTIALS env var (set above)
-//   2. gcloud default credentials (~/.config/gcloud/)
-//   3. GCE/GKE metadata server
-// In this notebook, #1 is used because we set the env var.
 var adcCredential = GoogleCredential.GetApplicationDefault();
 Console.WriteLine($"  ADC type: {adcCredential.UnderlyingCredential.GetType().Name}");
 Console.WriteLine($"  Source:   GOOGLE_APPLICATION_CREDENTIALS={SA_KEY_PATH}");
@@ -205,21 +202,9 @@ Console.WriteLine($"  Source:   GOOGLE_APPLICATION_CREDENTIALS={SA_KEY_PATH}");
 
 #### Service account impersonation — keyless authentication
 
+Impersonation: act as another SA without its key. Requires `roles/iam.serviceAccountTokenCreator`. Use for dev testing, CI/CD escalation, cross-project access. Don't grant at project level — scope to specific SAs.
+
 ```csharp
-// Service Account Impersonation: act as another SA without holding its key.
-// The source identity requests a short-lived token for the target SA.
-// Requires roles/iam.serviceAccountTokenCreator on the target.
-//
-// When to use:
-//   - Developer needs to test what a production SA can do, without its key
-//   - CI/CD pipeline escalates to a deploy SA for a single step
-//   - Cross-project access without broad IAM grants
-//   - Local dev: impersonate the app SA so code behaves like production
-//
-// Anti-patterns:
-//   - Granting serviceAccountTokenCreator at project level
-//   - Using impersonation instead of attaching the SA to the resource
-//   - Not auditing who can impersonate
 var sourceCredential = GoogleCredential.GetApplicationDefault();
 var impersonated = sourceCredential.Impersonate(new ImpersonatedCredential.Initializer(SA_EMAIL)
 {
@@ -293,17 +278,9 @@ foreach (var name in secretNames)
 
 #### Create a new secret with labels and replication
 
+Use Secret Manager for API keys, passwords, certificates. Never hardcode secrets or bake them into Docker images.
+
 ```csharp
-// Create a secret programmatically with metadata labels and replication config.
-// When to use Secret Manager:
-//   - API keys, OAuth tokens, database passwords needed at runtime
-//   - Certificates and private keys rotated on a schedule
-//   - Any credential shared across multiple services or environments
-//
-// Anti-patterns:
-//   - Hardcoding secrets in source code or notebooks
-//   - Storing secrets in env vars baked into Docker images
-//   - Using the same secret version forever instead of rotating
 var newSecretId = "notebook-demo-secret-cs";
 try
 {
@@ -329,14 +306,9 @@ catch (Grpc.Core.RpcException e) when (e.StatusCode == Grpc.Core.StatusCode.Alre
 
 #### Add a secret version — rotation scenario
 
+Add a new version — old versions stay until disabled. Rotate: API/SA keys 90 days, DB passwords 30–90 days, certificates before expiry.
+
 ```csharp
-// Key rotation: replace a secret with a new value by adding a new version.
-// Old versions stay accessible until explicitly disabled or destroyed.
-//
-// Recommended rotation frequency:
-//   - API keys / SA keys: 90 days
-//   - Database passwords: 30-90 days
-//   - Certificates: before expiry, typically 1 year max
 var newPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(24));
 var version = smClient.AddSecretVersion(new AddSecretVersionRequest
 {
@@ -412,18 +384,9 @@ catch (Exception e)
 
 #### What Cloud KMS does and when to use it
 
-```csharp
-// Core concepts:
-//   Key ring — logical grouping of keys, bound to a region; cannot be deleted
-//   CryptoKey — the named key inside a ring; has a rotation schedule and purpose
-//   Key version — the actual key material; KMS rotates automatically
-//   Envelope encryption — KMS encrypts a short DEK, your app encrypts data with the DEK
-//
-// Anti-patterns:
-//   Encrypting large payloads directly (64 KB limit) — use envelope encryption
-//   Same key for all environments — separate key rings per env
-//   Destroying key versions before re-encrypting data — permanent data loss
+**Key ring** — regional grouping (cannot be deleted). **CryptoKey** — named key with rotation schedule. **Key version** — actual material, auto-rotated. **Envelope encryption** — KMS wraps a short DEK, app encrypts data with it. Don't encrypt >64 KB directly; don't destroy versions before re-encrypting.
 
+```csharp
 var kmsClient = KeyManagementServiceClient.Create();
 var keyName = new CryptoKeyName(PROJECT_ID, KMS_LOCATION, KMS_KEYRING, KMS_KEY);
 Console.WriteLine($"  KMS client ready");
@@ -435,15 +398,9 @@ Console.WriteLine($"  Key: {keyName}");
 
 #### Symmetric encryption — encrypt plaintext with KMS
 
+KMS encrypt: for small values (<64 KB) with audit trail. Each call is logged. Key rotation automatic. For >64 KB or high-throughput, use envelope encryption.
+
 ```csharp
-// When to use KMS encrypt directly:
-//   - Small, sensitive values: API keys, tokens, config secrets under 64 KB
-//   - Audit trail required: every KMS call is logged in Cloud Audit Logs
-//   - Key rotation needed: KMS rotates automatically; old ciphertext still decrypts
-//
-// When NOT to use:
-//   - Payloads over 64 KB: use envelope encryption
-//   - High-throughput: each call is a network round-trip to Google's HSM
 var plaintext = Encoding.UTF8.GetBytes("Sensitive financial data: EUROSTOXX50 daily returns");
 
 var encryptResponse = kmsClient.Encrypt(keyName, ByteString.CopyFrom(plaintext));
@@ -475,16 +432,9 @@ Console.WriteLine($"  Match:     {plaintext.SequenceEqual(decrypted)}");
 
 #### Envelope encryption — wrap a local data encryption key
 
+Envelope encryption: generate local DEK, encrypt data with AES-GCM (built into .NET), wrap DEK with KMS. For >64 KB, high-throughput, or cost optimization (one KMS call per DEK).
+
 ```csharp
-// Envelope encryption: generate a local DEK, encrypt data with it,
-// then wrap (encrypt) the DEK with the KMS key.
-//
-// When to use:
-//   - Payloads over 64 KB (files, documents, database rows)
-//   - High-throughput: data encrypted locally, one KMS call per DEK
-//   - Minimizing KMS costs: billing is per API call
-//
-// .NET has AES-GCM built into System.Security.Cryptography
 var dek = RandomNumberGenerator.GetBytes(32);  // 256-bit DEK
 var nonce = RandomNumberGenerator.GetBytes(12); // 96-bit nonce
 Console.WriteLine($"  DEK (b64):  {Convert.ToBase64String(dek)[..30]}...");
@@ -695,16 +645,9 @@ catch (Exception e)
 
 #### SSL-verified connection — validate server identity
 
+`Encrypt=true` + `TrustServerCertificate=false` forces cert chain validation. C# advantage: `SqlClient` has native TLS — no FreeTDS workarounds. Never use `TrustServerCertificate=true` in production.
+
 ```csharp
-// Connect with Encrypt=Mandatory and validate the server certificate.
-// TrustServerCertificate=false forces the client to verify the cert chain.
-// For Cloud SQL, the server uses a Google-signed CA cert.
-//
-// C# advantage: Microsoft.Data.SqlClient has native TLS support with
-// full certificate validation — no FreeTDS workarounds needed.
-//
-// When to use: any connection over public internet, compliance requirements.
-// Anti-pattern: TrustServerCertificate=true in production.
 var sslConnStr = new SqlConnectionStringBuilder
 {
     DataSource = $"{SQL_IP},1433",
@@ -763,13 +706,9 @@ else
 
 #### SqlBulkCopy — high-performance data loading
 
+C# advantage: `SqlBulkCopy` streams data directly via TDS bulk insert — no temp files, no `bcp` CLI. Python needs: GCS → pyarrow → temp TSV → bcp → SQL Server. C#: `DataTable` → `SqlBulkCopy` → SQL Server (single step).
+
 ```csharp
-// C# advantage over Python: SqlBulkCopy streams data directly to SQL Server
-// using the TDS bulk insert protocol — no temp files, no bcp CLI.
-// This is the equivalent of bcp but fully in-process.
-//
-// In Python we needed: GCS parquet → pyarrow → temp TSV → bcp CLI → SQL Server
-// In C#:               DataTable → SqlBulkCopy → SQL Server (single step)
 try
 {
     using var conn = new SqlConnection(connStr);
@@ -857,13 +796,9 @@ foreach (var row in results)
 
 #### Column-level encryption — encrypt sensitive values before insert
 
+Encrypt individual field values with KMS before inserting into BigQuery — table stores ciphertext, only KMS decrypt access can recover values. For PII (GDPR, CCPA) and multi-tenant isolation.
+
 ```csharp
-// Client-side column encryption: encrypt individual field values with KMS
-// before inserting into BigQuery. The table stores ciphertext; only callers
-// with KMS decrypt access can recover the original values.
-//
-// When required: PII protection, GDPR/CCPA, multi-tenant isolation.
-// When NOT needed: non-sensitive data, BigQuery CMEK already sufficient.
 var sampleData = new[] {
     new { symbol = "AAPL", portfolio_id = "PF-001", allocation = 15.5 },
     new { symbol = "MSFT", portfolio_id = "PF-002", allocation = 22.0 },

@@ -47,7 +47,7 @@ The event loop is a single-threaded scheduler that multiplexes coroutines. While
 > - **Missing `await`** — the coroutine is created but never executed
 > - For **CPU-bound work**, use `ProcessPoolExecutor` instead (the GIL blocks threads)
 
-#### Basic coroutine
+#### async def / await — basic coroutine
 
 ```python
 # Basic coroutine — async def with await asyncio.sleep
@@ -60,7 +60,7 @@ async def fetch_data(source: str, delay: float) -> dict:
     return {"source": source, "rows": int(delay * 1000)}
 ```
 
-#### Sequential vs concurrent
+#### asyncio.gather — sequential vs concurrent execution
 
 ```python
 # Sequential vs concurrent — await one-by-one vs asyncio.gather
@@ -183,7 +183,7 @@ except* RuntimeError as eg:
         - Fetch failed: users
       t3 (products) completed: {'table': 'products', 'rows': 100}
 
-#### Semaphore — rate limiting
+#### asyncio.Semaphore — concurrency rate limiting
 
 ```python
 # Semaphore — limit concurrent async operations (rate limiting)
@@ -215,7 +215,7 @@ print(f"    ... ({len(results) - 3} more)")
         https://api.example.com/page/2 (0.45s)
         ... (7 more)
 
-#### Timeout — cancel slow tasks
+#### asyncio.wait_for — timeout and cancel slow tasks
 
 ```python
 # Timeout — cancel slow tasks with asyncio.wait_for
@@ -236,7 +236,7 @@ except asyncio.TimeoutError:
     === Timeout (asyncio.wait_for) ===
       Query timed out after 1.0s — cancelled automatically
 
-#### Retry with exponential backoff
+#### Retry with exponential backoff — asyncio transient error recovery
 
 ```python
 # Retry with exponential backoff — recover from transient failures
@@ -701,7 +701,7 @@ Threads provide true concurrency for I/O-bound work (the GIL is released during 
 > - **Not joining threads** — main thread may exit before workers finish
 > - For async I/O, prefer `asyncio` (lighter than thread pools)
 
-#### Basic threading
+#### threading.Thread — basic thread creation and join
 
 ```python
 # Basic threading — create, start, join, and collect results
@@ -768,7 +768,7 @@ print(f"  Got:      {counter_unsafe:,}  {'(WRONG — race condition!)' if counte
       Expected: 400,000
       Got:      400,000  (got lucky this time)
 
-#### Fixed with Lock
+#### threading.Lock — fix race condition with mutual exclusion
 
 ```python
 # Fixed with Lock — mutual exclusion prevents lost updates

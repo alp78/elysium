@@ -56,8 +56,6 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 
     OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
-## Setup
-
 ## Load Data
 
 We use three datasets from `../data/`:  
@@ -3640,8 +3638,6 @@ display(Markdown(comparison))
 
 ---
 # Part 2: Selecting Rows & Columns
-
-## Setup
 
 - **Head**: Return the first N rows.
 

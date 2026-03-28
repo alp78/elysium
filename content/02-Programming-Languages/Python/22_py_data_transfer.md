@@ -692,7 +692,7 @@ fig.show()
 
 <iframe src="/static/plotly/dt_py_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Cleanup benchmark blobs
+#### google-cloud-storage — cleanup benchmark blobs
 
 ```python
 # Delete all benchmark blobs from the bucket
@@ -1030,7 +1030,7 @@ fig.show()
 
 from VM (`notebook-vm`, `europe-west1-b`)
 
-#### Copy upload files and SA key to VM
+#### paramiko SFTP — copy upload files and SA key to VM
 
 ```python
 # Copy upload files + SA key to VM via SFTP
@@ -1055,7 +1055,7 @@ with _ssh() as ssh:
       Copying gcp-sa-key.json (2.3 KB)... 103ms  (22.5 KB/s)
       Done
 
-#### Run upload benchmarks on VM
+#### paramiko SSHClient — run upload benchmarks on VM via SSH
 
 Executes the same 10 upload methods on the VM via SSH. The VM is in `europe-west1-b`, same region as the bucket
 
@@ -1646,7 +1646,7 @@ for r in parallel_results:
       threaded_8              8    1.51 GB     4.1min       6.3 MB/s
       multiprocess_4          8    1.51 GB     4.1min       6.3 MB/s
 
-#### Cleanup parallel benchmark blobs
+#### google-cloud-storage — cleanup parallel benchmark blobs
 
 ```python
 # Delete parallel benchmark blobs

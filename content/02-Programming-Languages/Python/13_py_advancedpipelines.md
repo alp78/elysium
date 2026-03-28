@@ -106,7 +106,7 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 
 ## Parallel API Ingestion
 
-#### Parallel fetch with rate limiting
+#### asyncio.Semaphore + aiohttp — parallel fetch with rate limiting
 
 ```python
 # Parallel fetch with asyncio.Semaphore — limit concurrent API requests
@@ -199,7 +199,7 @@ async with aiohttp.ClientSession() as session:
 
 ## Async Batching
 
-#### Time and count bounded batching
+#### asyncio.Queue + asyncio.wait_for — time and count bounded batching
 
 ```python
 # Async batching — accumulate items by count OR time, whichever comes first

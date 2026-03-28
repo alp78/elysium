@@ -18,7 +18,7 @@ status: complete
 
 ## Lists (Dynamic Arrays)
 
-#### Creation
+#### List creation — literals, list(), range, nested
 
 ```python
 # Lists — ordered, mutable, dynamic arrays
@@ -92,7 +92,7 @@ print(f"nested[1][0]: {nested[1][0]}")      # 2D access: row 1, col 0
     nums[::-1]: [5, 4, 3, 2, 1]
     nested[1][0]: 3
 
-#### Adding and removing elements
+#### List append, insert, extend, remove, pop — add and remove elements
 
 ```python
 # Adding and removing — append, insert, extend, remove, pop, del
@@ -120,7 +120,7 @@ print(f"clear():    {lst}")
     pop():      [3, 2, 4] (popped: 5)
     clear():    []
 
-#### Search and membership
+#### List search — in operator, index(), count()
 
 ```python
 # Search and membership — in, index, count for finding elements
@@ -137,7 +137,7 @@ print(f"count(30):      {lst.count(30)}")   # 2 (how many times)
     index(30):      2
     count(30):      2
 
-#### Sorting
+#### List sort() and sorted() — in-place vs new list
 
 ```python
 # Sorting — sorted() returns new list, .sort() mutates in place
@@ -201,7 +201,7 @@ print(f"stack:  {stack}")
 
 ## Dictionaries
 
-#### Creation
+#### Dict creation — literals, dict(), fromkeys, comprehension
 
 ```python
 # Dictionaries — key-value mapping with O(1) lookup
@@ -253,7 +253,7 @@ print(f"comprehension: {comprehension}")
     from_keys:  {'x': 0, 'y': 0, 'z': 0}
     comprehension: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
 
-#### Access and update
+#### Dict access — [], .get(), .setdefault(), KeyError
 
 ```python
 # Dict access and update — bracket, .get(), .setdefault(), .update()
@@ -274,7 +274,7 @@ print(f"Updated: {person}")
     person.get('zip', 'N/A'): N/A
     Updated: {'name': 'Alice', 'age': 31, 'city': 'LA', 'email': 'alice@example.com', 'zip': '90001', 'phone': '555-0123'}
 
-#### Removing and iterating
+#### Dict del, pop, clear — removing and iterating with .items()
 
 ```python
 # Removing and iterating — del, pop, popitem, and key/value/item loops
@@ -313,7 +313,7 @@ print(f"len(d):       {len(d)}")
     'Alice' in d: False
     len(d):       3
 
-#### Merging dicts
+#### Dict merging — | operator, .update(), **unpacking
 
 ```python
 # Merging dicts — {**a, **b}, |, and |= operators
@@ -365,7 +365,7 @@ print(f"Total:        {c.total()}")
 
 ## Sets
 
-#### Creation
+#### Set creation — literals, set(), frozenset
 
 ```python
 # Sets — unordered unique elements with O(1) operations
@@ -416,7 +416,7 @@ print(f"comprehension:{comprehension}")
     from_str:     {'d', 'b', 'r', 'a', 'c'}
     comprehension:{0, 1, 4, 9, 16}
 
-#### Adding and removing
+#### Set add, remove, discard, pop — modify set elements
 
 ```python
 # Set add and remove — add, update, remove, discard, pop
@@ -434,7 +434,7 @@ print(f"After removes:{s}")
     After adds:   {1, 2, 3, 4, 5, 6, 7}
     After removes:{2, 3, 4, 5, 6}
 
-#### Set operations
+#### Set union, intersection, difference, symmetric_difference
 
 ```python
 # Set operations — union, intersection, difference, symmetric difference
@@ -465,7 +465,7 @@ print(f"a.isdisjoint(b): {a.isdisjoint({10, 20})}")  # no common elements
     a >= {1,2}:    a is superset: True
     a.isdisjoint(b): True
 
-#### Data comparison use case
+#### Set difference for data comparison — find missing and extra items
 
 ```python
 # Data comparison — set difference for finding missing/extra items
@@ -593,7 +593,7 @@ print(f"_asdict: {p._asdict()}")        # convert to dict
     p[0]=3
     _asdict: {'x': 3, 'y': 4}
 
-#### Immutability
+#### Tuple immutability — _replace for non-destructive updates
 
 ```python
 # Tuple immutability — _replace for non-destructive updates
@@ -711,7 +711,7 @@ Each data structure enforces a specific access pattern:
 > [!warning] Don't use `list.pop(0)` for FIFO queues
 > `list.pop(0)` is O(n) because it shifts all remaining elements. Use `deque.popleft()` which is O(1). Also avoid using a single list as both stack and queue — the semantics become confusing.
 
-#### Stack (LIFO)
+#### collections.deque — Stack (LIFO) with append and pop
 
 ```python
 # Stack (LIFO) — list with append/pop from the end
@@ -731,7 +731,7 @@ print(f"Peek:  {stack[-1]}")       # look at top without removing
     Pop:   second
     Peek:  first
 
-#### Queue (FIFO)
+#### collections.deque — Queue (FIFO) with append and popleft
 
 ```python
 # Queue (FIFO) — deque with append/popleft

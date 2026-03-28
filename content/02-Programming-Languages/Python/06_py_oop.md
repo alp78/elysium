@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 
 ## Classes & Objects
 
-#### Type definitions
+#### Class definition — __init__, attributes, __str__
 
 ```python
 # Class definition — blueprint with __init__, attributes, methods, __str__
@@ -74,7 +74,7 @@ class Dog:
         return f"Dog(name='{self.name}', age={self.age})"
 ```
 
-#### Using Dog — instance and class attributes
+#### Instance vs class attributes — instantiation and attribute access
 
 ```python
 # Using classes — instantiation, attribute access, method calls
@@ -159,7 +159,7 @@ print(f"new radius: {c.radius}")
 
 ## Inheritance & Polymorphism
 
-#### Type definitions
+#### Inheritance — base class, super().__init__, method override
 
 ```python
 # Inheritance — base class with methods, derived classes override
@@ -216,7 +216,7 @@ class Cat(Animal):
         return f"{self.name} says {self.sound}... when it feels like it."
 ```
 
-#### Using inheritance
+#### Using inheritance — subclass instantiation and polymorphic calls
 
 ```python
 # Using inheritance — instantiate subclasses, call overridden methods
@@ -262,7 +262,7 @@ print(f"issubclass(Dog, Animal): {issubclass(Dog, Animal)}")   # True
     isinstance(cat, Dog):    False
     issubclass(Dog, Animal): True
 
-#### Mixin
+#### Mixin classes — add capabilities via multiple inheritance
 
 ```python
 # Mixin — add capabilities via multiple inheritance
@@ -368,7 +368,7 @@ class Circle(Shape):
         return 2 * math.pi * self.radius
 ```
 
-#### Using abstract classes
+#### Using ABC — instantiate subclasses, enforce abstract methods
 
 ```python
 # Using abstract classes — instantiate subclasses, call abstract methods
@@ -438,7 +438,7 @@ print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
 
 ## Encapsulation & Access Control
 
-#### Access conventions
+#### Encapsulation — public, _protected, __private name mangling
 
 ```python
 # Encapsulation — naming conventions for access control
@@ -523,7 +523,7 @@ print("Python: conventions only — nothing is truly private")
 
 ## Static & Class Methods
 
-#### Type definitions
+#### @staticmethod and @classmethod — definition and factory methods
 
 ```python
 # Static and class methods — @classmethod receives cls, @staticmethod has no self
@@ -587,7 +587,7 @@ class Employee:
         return f"{self.name} @ {self.company}: ${self.salary:,.0f}"
 ```
 
-#### Using static and class methods
+#### Using @staticmethod and @classmethod — calls and inheritance
 
 ```python
 # Using static and class methods — factories and aggregate operations
@@ -647,7 +647,7 @@ In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored i
 | Pandas DataFrames (already structured) | Anything that gets deployed and must not fail silently |
 | Quick scripts you'll run once | APIs (input/output contracts), configs, orchestration state |
 
-#### Dict — silent typos
+#### Dict vs @dataclass — silent typos and missing validation
 
 ```python
 # Dict vs dataclass — typos pass silently with dicts

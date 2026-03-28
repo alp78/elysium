@@ -26,8 +26,6 @@ status: complete
 Polars.NET lazy execution, optimization, benchmarks. Deedle is eager-only.
 
 ---
-## 0 — Setup & Imports
-
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.

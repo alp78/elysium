@@ -27,8 +27,6 @@ Polars.NET vs Deedle: Handle nulls, manipulate strings, time series.
 
 ---
 
-## 0 — Setup
-
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.

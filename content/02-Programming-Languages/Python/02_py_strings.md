@@ -65,7 +65,7 @@ print(f"Same? {s5 == s6}")
     Escaped string: C:\Users\new\test
     Same? True
 
-#### String from Other Types
+#### str() — convert other types to string
 
 ```python
 # Type-to-string conversion — str(), repetition, and empty checks
@@ -166,7 +166,7 @@ print(f"s[2:10:2]:'{s[2:10:2]}'")   # lo o (slice with step)
     s[7:12]:  'World'
     s[2:10:2]:'lo o'
 
-#### Out of Range & Iteration
+#### String iteration — enumerate(), slicing out of range
 
 ```python
 # Out-of-range behavior and character iteration
@@ -549,7 +549,7 @@ Strings are immutable — each `+=` copies the entire string. For *n* concatenat
 > [!warning] Don't use `+=` in loops
 > Each iteration copies the growing string into a new object. CPython may optimize simple cases, but this is not guaranteed. Always consider the building strategy for more than ~10 concatenations. For 2–5 concatenations, `+` is fine.
 
-#### BAD: O(n²) — each + copies the entire string
+#### String concatenation performance — += in loops is O(n²)
 
 ```python
 # Performance comparison — + in loop vs join()
@@ -618,7 +618,7 @@ print("Rule: use + for 2-5 strings, join() for loops/many strings")
 
 ## Regular Expressions
 
-#### Regex setup — import and test text
+#### re module — import and test text setup
 
 ```python
 # Regex setup — declare test text for pattern matching demonstrations
@@ -641,7 +641,7 @@ print("Rule: use + for 2-5 strings, join() for loops/many strings")
 text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
 ```
 
-#### re.search() — First Match
+#### re.search, re.findall, re.finditer, re.match — pattern matching
 
 ```python
 # re.search, re.findall, re.match — find patterns in text
@@ -669,7 +669,7 @@ print(f"fullmatch digits: {bool(re.fullmatch(r'\d+', '12345'))}")
 print(f"fullmatch digits: {bool(re.fullmatch(r'\d+', '123a5'))}")
 ```
 
-#### Capture Groups
+#### Regex capture groups — numbered and named (?P&lt;name&gt;...)
 
 ```python
 # Capture groups — extract sub-matches with () and (?P<name>...)
@@ -689,7 +689,7 @@ if match:
     print(f"GroupDict:{match.groupdict()}")
 ```
 
-#### Replace, Split & Compile
+#### re.sub, re.split, re.compile — replace, split, precompile
 
 ```python
 # re.sub, re.split, re.compile — replace, split, and precompile patterns

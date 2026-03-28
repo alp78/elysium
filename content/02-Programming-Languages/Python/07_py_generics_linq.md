@@ -153,7 +153,7 @@ print(f"Stack: {str_stack}")
     Pop:   3
     Stack: Stack(['hello', 'world'])
 
-#### Built-in generic types
+#### Built-in generic type hints — list[int], dict[str, T], Optional
 
 | Type hint | Meaning |
 |---|---|

@@ -48,28 +48,9 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 <h4><code style="font-size:0.75em">File.WriteAllText</code> and <code style="font-size:0.75em">File.ReadAllText</code></h4>
 
-```csharp
-// File.WriteAllText / ReadAllText — one-shot file operations
-//
-// Technique: Static File class methods for simple read/write. WriteAllText
-//   creates or overwrites. ReadAllText reads entire file into a string.
-//   ReadAllLines returns string[] with one element per line.
-//
-// Benefits:
-//   - One line — no stream management, no using statement needed
-//   - UTF-8 by default — correct encoding for most scenarios
-//   - ReadAllLines splits on any line ending (\n, \r\n)
-//
-// Anti-patterns:
-//   - ReadAllText on huge files — loads entire file into memory
-//   - WriteAllText without directory check — DirectoryNotFoundException
-//
-// When to use:
-//   - Small files (<100MB): configs, CSVs, logs, temp files
-//
-// When NOT to use:
-//   - Large files — use StreamReader for line-by-line processing
+Static `File` class — one-line read/write. `WriteAllText` creates or overwrites. `ReadAllText` reads entire file. UTF-8 by default. Don't use on huge files (loads all into memory) — use `StreamReader` for line-by-line.
 
+```csharp
 #nullable enable
 
 // Write and read — File class static methods for simple one-shot operations
@@ -191,28 +172,11 @@ Console.WriteLine($"\n  Cleaned up: {tmpDir}");
 
 #### Write and read CSV manually
 
-```csharp
-// Manual CSV write and read — string.Split for controlled data
-//
-// Technique: Write header + rows with string.Join. Read with Split(',').
-//   Works for simple data without commas or quotes in values. For
-//   production CSV with quoting, use CsvHelper library.
-//
-// Benefits:
-//   - No dependencies — built-in string operations only
-//   - Simple and transparent — easy to debug line by line
-//   - Good for controlled, internal data pipelines
-//
-// Anti-patterns:
-//   - Manual Split for user-facing CSV — breaks on quoted commas
-//   - Not handling the header row separately — misparse as data
-//
-// When to use:
-//   - Internal tools, test data, CSV without special characters
-//
-// When NOT to use:
-//   - External/user CSV — use CsvHelper for proper RFC 4180 handling
+Write header + rows with `string.Join`. Read with `Split(',')`. Works for simple data without commas or quotes. For production CSV with quoting, use `CsvHelper`.
 
+> [!warning] Manual `Split` breaks on quoted commas — use `CsvHelper` for user-facing CSV.
+
+```csharp
 #nullable enable
 
 // Write and read CSV — manual string.Split works for controlled data; use CsvHelper for production
@@ -332,28 +296,9 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### Type declarations
 
-```csharp
-// JSON setup — shared options and type declarations
-//
-// Technique: JsonSerializerOptions configures serialization globally:
-//   WriteIndented for readability, PropertyNamingPolicy for camelCase,
-//   Encoder for Unicode support. Reuse one instance across all calls.
-//
-// Benefits:
-//   - Shared options ensure consistent formatting across the codebase
-//   - PropertyNamingPolicy automates PascalCase to camelCase conversion
-//   - UnsafeRelaxedJsonEscaping avoids unnecessary escaping of Unicode
-//
-// Anti-patterns:
-//   - Creating new JsonSerializerOptions per call — allocation overhead
-//   - Different options in different places — inconsistent JSON format
-//
-// When to use:
-//   - Top of any file/notebook that uses System.Text.Json
-//
-// When NOT to use:
-//   - N/A — shared options are always beneficial
+`JsonSerializerOptions` configures serialization globally: `WriteIndented`, `PropertyNamingPolicy` for camelCase, `Encoder` for Unicode. Reuse one instance — don't create new options per call.
 
+```csharp
 #nullable enable
 
 // Shared JSON options — reuse everywhere
@@ -565,33 +510,9 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### YAML format and comparison with JSON
 
+YAML uses indentation (like Python), supports comments (`#`), anchors, multi-line strings (`|` and `>`). Standard config for dbt, Airflow, K8s, Docker Compose. Requires `YamlDotNet` NuGet. Don't use YAML for API payloads (JSON is the standard) or rely on type coercion (`"yes"` → boolean `true`).
+
 ```csharp
-// YAML format — human-friendly configuration with comments and anchors
-//
-// Technique: YAML uses indentation for nesting (like Python). Supports
-//   comments (#), anchors (&name/*name), multi-line strings (| and >).
-//   Standard config format for dbt, Airflow, Kubernetes, Docker Compose.
-//
-// Benefits:
-//   - Comments — JSON has none; YAML documents inline
-//   - No quotes needed for most strings — cleaner than JSON
-//   - Multi-line strings with | (literal) and > (folded)
-//
-// Anti-patterns:
-//   - YAML for data interchange — JSON is the standard for APIs
-//   - Relying on YAML type coercion — "yes" becomes boolean true
-//   - Complex anchors/aliases — hard to debug
-//
-// When to use:
-//   - Configuration files: dbt, Airflow, K8s, Docker, CI/CD
-//
-// When NOT to use:
-//   - API payloads — use JSON; binary data — use Protobuf
-
-// YAML — human-friendly config format used by dbt, Airflow, Kubernetes, Docker Compose
-// Supports comments, anchors, multi-line strings — unlike JSON which is strict and verbose
-// Requires NuGet package YamlDotNet (not built-in like System.Text.Json)
-
 // JSON version — strict: double quotes, no comments, no trailing commas
 var jsonConfig = @"{
     ""pipeline"": {
@@ -745,28 +666,9 @@ For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Av
 
 #### Stream hierarchy
 
-```csharp
-// Stream hierarchy — all .NET I/O flows through streams
-//
-// Technique: Stream is the abstract base. FileStream for files, MemoryStream
-//   for in-memory, NetworkStream for network. StreamReader/Writer wrap
-//   streams for text. BinaryReader/Writer for typed binary data.
-//
-// Benefits:
-//   - Uniform API — same Read/Write calls for files, memory, and network
-//   - Composable — wrap any stream with readers/writers/compression
-//   - Async support — ReadAsync/WriteAsync on all stream types
-//
-// Anti-patterns:
-//   - Not disposing streams — file handles and memory leak
-//   - Reading entire stream into memory — defeats streaming benefits
-//
-// When to use:
-//   - Any I/O: files, network, in-memory buffers, compression
-//
-// When NOT to use:
-//   - Simple file ops — File.ReadAllText/WriteAllText is easier
+`Stream` is the abstract base — `FileStream` for files, `MemoryStream` for in-memory, `NetworkStream` for network. `StreamReader`/`Writer` wrap for text. Uniform API with async support. Always dispose streams.
 
+```csharp
 #nullable enable
 
 // Stream hierarchy — all I/O in .NET flows through streams
@@ -982,45 +884,11 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### Async read and write
 
+Async versions of every I/O method (`ReadAllTextAsync`, `ReadLineAsync`, `ReadAsync`) release the thread during I/O — essential for web servers handling concurrent requests. Same API, just add `Async` suffix and `await`.
+
+> [!warning] Don't use `.Result` or `.Wait()` on async methods — deadlock risk. Don't forget `CancellationToken` for graceful shutdown. Don't mix sync and async in the same code path.
+
 ```csharp
-// Async file I/O — non-blocking operations for high-throughput services
-//
-// Technique: File.ReadAllTextAsync, StreamReader.ReadLineAsync, and
-//   FileStream.ReadAsync are async versions that don't block the thread.
-//   Use with await in async methods. Essential for web servers and services.
-//
-// Benefits:
-//   - Non-blocking — thread returns to pool during I/O wait
-//   - Higher throughput — web server handles more requests concurrently
-//   - Same API — just add Async suffix and await
-//
-// Anti-patterns:
-//   - .Result or .Wait() on async methods — deadlocks in UI/web contexts
-//   - Async for simple scripts — overhead without benefit
-//   - File.ReadAllTextAsync on huge files — still loads entire file
-//
-// When to use:
-//   - Web services, background workers, concurrent file processing
-//
-// When NOT to use:
-//   - Console apps and notebooks — synchronous is simpler
-
-// Async file I/O — non-blocking operations for high-throughput services
-//
-// WHAT: File.ReadAllTextAsync, StreamReader.ReadLineAsync, FileStream.ReadAsync
-//   are async versions of every synchronous I/O method. They return Task<T>
-//   and release the calling thread while the OS completes the disk/network operation.
-//
-// WHY: in a web API or background service, synchronous I/O blocks thread pool threads.
-//   With 100 concurrent requests doing File.ReadAllText, you exhaust the thread pool
-//   and the entire service hangs. Async I/O releases the thread during the wait.
-//
-// WHEN TO USE: any I/O in ASP.NET Core, background services, or concurrent pipelines
-// ANTI-PATTERNS:
-//   - Don't use .Result or .Wait() on async methods — deadlock risk
-//   - Don't forget CancellationToken — allows graceful shutdown of long reads
-//   - Don't mix sync and async in the same code path
-
 var tmpDir = Path.Combine(Path.GetTempPath(), "async_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 var asyncFile = Path.Combine(tmpDir, "data.txt");
@@ -1068,48 +936,11 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### JSON Source Generators
 
+`[JsonSerializable]` generates serialization code at compile time — no reflection, 2–5x faster, zero allocations, AOT-compatible. Required for Native AOT. Use for high-throughput APIs (>1000 req/s), serverless (cold start), hot paths. Overkill for prototyping.
+
+> [!info] Source generators require a partial class in a real project. The pattern below demonstrates the API — actual codegen needs a `.csproj`.
+
 ```csharp
-// JSON Source Generators — compile-time serialization for max performance
-//
-// Technique: [JsonSerializable] attribute generates serialization code at
-//   compile time. No runtime reflection — faster startup and execution.
-//   AOT-compatible. Requires a partial JsonSerializerContext class.
-//
-// Benefits:
-//   - No reflection — faster startup, smaller memory footprint
-//   - AOT compatible — works with Native AOT trimming
-//   - Compile-time validation — schema errors caught at build time
-//
-// Anti-patterns:
-//   - Source generators for prototyping — too much ceremony for quick work
-//   - Forgetting to register types — serialization falls back to reflection
-//
-// When to use:
-//   - Production APIs, AOT apps, high-throughput services
-//
-// When NOT to use:
-//   - Prototyping, notebooks — standard JsonSerializer is simpler
-
-// JSON Source Generators — compile-time serialization for maximum performance
-//
-// WHAT: [JsonSerializable] generates serialization code at compile time instead of
-//   using reflection at runtime. The generated code is a JsonSerializerContext
-//   that knows how to serialize/deserialize specific types without reflection.
-//
-// WHY:
-//   - 2-5x faster than reflection-based serialization
-//   - Zero allocations for known types (no boxing, no reflection metadata)
-//   - Required for Native AOT compilation (no runtime code generation)
-//   - Reduces application startup time (no JIT compilation of serialization code)
-//
-// WHEN TO USE: high-throughput APIs (>1000 req/s), serverless (cold start matters),
-//   Native AOT builds, any hot path that serializes/deserializes JSON
-// ANTI-PATTERNS:
-//   - Don't forget to add [JsonSerializable(typeof(YourType))] for each type
-//   - Don't use source generators for one-off scripts — overkill, use reflection
-
-// NOTE: Source generators require a partial class in a real project.
-// In notebooks, we demonstrate the PATTERN — the actual codegen needs csproj.
 Console.WriteLine(@"
 // In a real project (not notebook):
 
@@ -1190,44 +1021,9 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
 
 <h4><code style="font-size:0.75em">MemoryMappedFile</code> — OS-paged random access</h4>
 
-```csharp
-// MemoryMappedFile — OS-paged random access for huge files
-//
-// Technique: Maps a file into the process's virtual address space. The OS
-//   pages portions into RAM on demand. Access via ViewAccessor for random
-//   byte-level reads without loading the entire file.
-//
-// Benefits:
-//   - Files larger than RAM — OS manages paging automatically
-//   - Random access — seek to any position without sequential scan
-//   - Shared between processes — multiple readers via named mapping
-//
-// Anti-patterns:
-//   - MemoryMappedFile for small files — FileStream is simpler
-//   - Writing to a mapped file without synchronization — data corruption
-//
-// When to use:
-//   - Huge files (>1GB), random access patterns, IPC shared memory
-//
-// When NOT to use:
-//   - Sequential processing — StreamReader is simpler
+Maps a file into virtual address space — OS pages data into RAM on demand. Access any offset without loading the whole file. Use for huge files (>1GB), random access, IPC shared memory. Don't use for sequential reads (StreamReader is simpler) or files <1MB.
 
-// MemoryMappedFile — let the OS page parts of a huge file into virtual memory
-//
-// WHAT: maps a file directly into the process's virtual address space.
-//   The OS loads pages on demand — only the parts you access are in RAM.
-//   The file behaves like a giant byte array: random access via offset.
-//
-// WHY: reading a 50GB file with File.ReadAllBytes allocates 50GB of RAM and crashes.
-//   MemoryMappedFile lets you access any offset without loading the whole file.
-//   The OS handles paging — recently accessed pages stay in RAM, old pages are evicted.
-//
-// WHEN TO USE: large binary datasets, database files, shared memory between processes,
-//   random access patterns (seek to offset N, read M bytes)
-// ANTI-PATTERNS:
-//   - Don't use for sequential reads — StreamReader is simpler and just as fast
-//   - Don't forget to dispose the accessor and the MMF
-//   - Don't use for files < 1MB — overhead isn't worth it
+```csharp
 var tmpDir = Path.Combine(Path.GetTempPath(), "mmf_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 var mmfFile = Path.Combine(tmpDir, "large_data.bin");
@@ -1285,47 +1081,11 @@ Directory.Delete(tmpDir, recursive: true);
 
 <h4><code style="font-size:0.75em">PipeReader</code> and <code style="font-size:0.75em">PipeWriter</code></h4>
 
+`Pipe` is a producer-consumer buffer. `PipeWriter` writes bytes, `PipeReader` reads without copying (zero-allocation). Buffer manages growth and recycling automatically. Built-in backpressure. Used internally by ASP.NET Core (Kestrel) for HTTP parsing. Don't use for simple file reads.
+
+> [!info] This demonstrates the pattern — real usage requires a continuous data source (network stream, log pipe).
+
 ```csharp
-// System.IO.Pipelines — high-performance buffered I/O for streaming
-//
-// Technique: Pipe is a producer-consumer buffer. PipeWriter writes bytes.
-//   PipeReader reads without copying (examines then advances). Zero-copy
-//   parsing eliminates intermediate byte[] allocations.
-//
-// Benefits:
-//   - Zero-copy reading — examine bytes without allocating
-//   - Backpressure — writer pauses when reader is slow
-//   - Higher throughput than Stream for protocol parsing
-//
-// Anti-patterns:
-//   - Pipelines for simple file I/O — StreamReader is easier
-//   - Not calling AdvanceTo — reader buffer grows unbounded
-//
-// When to use:
-//   - Network protocol parsing, high-throughput data ingestion
-//
-// When NOT to use:
-//   - Simple file reading — Stream/StreamReader is sufficient
-
-// System.IO.Pipelines — high-performance buffered I/O for streaming data
-//
-// WHAT: Pipe is a producer-consumer buffer for bytes. PipeWriter writes bytes in,
-//   PipeReader reads them out. The pipe manages buffer allocation, growth,
-//   and recycling automatically — no manual byte[] management.
-//
-// WHY: traditional Stream-based code has two problems:
-//   1. You allocate byte[] buffers manually and risk over/under-sizing them
-//   2. Partial reads require complex state management (what if a record spans two reads?)
-//   Pipelines solve both: the buffer grows as needed, and you can "peek" at data
-//   without consuming it (AdvanceTo marks how far you've processed).
-//
-// WHEN TO USE: network servers (Kestrel uses it), log parsers, streaming ingestion
-// ANTI-PATTERNS:
-//   - Don't use for simple file reads — StreamReader is simpler
-//   - Don't forget to call reader.AdvanceTo — without it, the buffer grows forever
-
-// NOTE: System.IO.Pipelines is used internally by ASP.NET Core (Kestrel) for HTTP parsing.
-// In notebooks we demonstrate the PATTERN — real usage requires a continuous data source.
 Console.WriteLine(@"
 // Production pattern: parse newline-delimited records from a network stream
 
@@ -1391,42 +1151,9 @@ Console.WriteLine("  Pipelines: used by ASP.NET Core Kestrel for HTTP parsing");
 
 <h4>Zero-allocation CSV parsing with <code style="font-size:0.75em">ReadOnlySpan&lt;char&gt;</code></h4>
 
+`AsSpan()` creates a zero-allocation view. `IndexOf` finds delimiters, `Slice` creates sub-views without new strings. Orders of magnitude less GC pressure than `Split`. Use for high-throughput parsing (>100MB, millions of rows). For normal CSV, `Split` is simpler and sufficient.
+
 ```csharp
-// Zero-allocation CSV parsing with ReadOnlySpan<char>
-//
-// Technique: AsSpan() creates a zero-allocation view of the string.
-//   IndexOf finds delimiter positions. Slice creates sub-views without
-//   allocating new strings. Only allocate when the final value is needed.
-//
-// Benefits:
-//   - No string[] from Split — orders of magnitude less GC pressure
-//   - Span slicing is O(1) — just pointer + length, no copy
-//   - Critical for high-throughput CSV parsing (millions of rows)
-//
-// Anti-patterns:
-//   - Span-based parsing for simple CSV — string.Split is much simpler
-//   - Storing spans — they're stack-only, can't persist
-//
-// When to use:
-//   - High-throughput CSV/TSV parsing where GC pressure matters
-//
-// When NOT to use:
-//   - Normal CSV processing — Split is cleaner and sufficient
-
-// Span-based CSV parsing — parse without allocating strings for each cell
-//
-// WHAT: instead of line.Split(',') which allocates a new string[] and string per cell,
-//   use ReadOnlySpan<char> to slice the line in-place. No heap allocations.
-//
-// WHY: parsing a 10M-row CSV with Split allocates ~100M strings → massive GC pressure.
-//   With Span, you process each cell as a "window" into the original line buffer.
-//   The only allocations are for the final output values you choose to keep.
-//
-// WHEN TO USE: parsing large files (>100MB), hot loops, streaming ingestion
-// ANTI-PATTERNS:
-//   - Don't store Span in a field or closure — it's stack-only
-//   - Don't use for small files — Split is simpler and fast enough
-
 // Traditional: line.Split(',') — allocates N strings per line
 var csvLine = "SAP.DE,2024-03-12,166.52,168.00,165.30,82621";
 var parts = csvLine.Split(','); // allocates string[] + 6 strings
@@ -1467,42 +1194,11 @@ Console.WriteLine($"  Split: {parts[0]}, close={parts[2]}");
 
 #### Character encoding — UTF-8, ASCII, Unicode
 
+`Encoding.UTF8.GetBytes(string)` converts text to bytes. `.GetString(bytes)` converts back. C# strings are internally UTF-16; APIs/files use UTF-8. Always specify encoding explicitly — without it, you get mojibake or data corruption.
+
+> [!danger] Never use `Encoding.Default` (varies by OS) or ASCII for non-English text (silently loses characters like `€`).
+
 ```csharp
-// Character encoding — UTF-8, ASCII, Unicode conversion
-//
-// Technique: Encoding.UTF8.GetBytes converts string to bytes. GetString
-//   converts back. UTF-8 is variable-width (1-4 bytes per char). ASCII
-//   is 7-bit (replaces unknown chars with ?). UTF-16 is C#'s internal format.
-//
-// Benefits:
-//   - UTF-8 handles all Unicode — the universal encoding for files and APIs
-//   - Explicit encoding prevents silent character corruption
-//   - GetByteCount reveals size before allocation
-//
-// Anti-patterns:
-//   - ASCII for non-English text — silently loses characters
-//   - Encoding.Default — varies by OS locale, non-portable
-//   - Assuming 1 char = 1 byte — multi-byte chars break this
-//
-// When to use:
-//   - File I/O, network protocols, hashing, encryption
-//
-// When NOT to use:
-//   - String manipulation — work with string, encode at I/O boundaries
-
-// Character encoding — converting between strings and byte arrays
-//
-// WHAT: Encoding.UTF8.GetBytes(string) converts text to bytes.
-//   Encoding.UTF8.GetString(bytes) converts bytes back to text.
-//   UTF-8 is the standard for APIs, files, and databases. Always specify it explicitly.
-//
-// WHY: a string in C# is internally UTF-16 (2 bytes per char). APIs and files use UTF-8
-//   (1-4 bytes per char, ASCII-compatible). Without explicit encoding, you get mojibake
-//   (é becomes Ã©) or data corruption. Always use Encoding.UTF8, never the default.
-//
-// WHEN TO USE: writing bytes to streams, HTTP request/response bodies, hashing,
-//   reading files with specific encoding, interop with non-.NET systems
-
 var text = "Euro Stoxx 50: SAP €166.52, ASML €685.40";
 
 // UTF-8: variable-length, ASCII-compatible, the internet standard

@@ -18,7 +18,7 @@ status: complete
 
 ## Date and Time
 
-#### Creating date and time objects
+#### datetime module — creating date, time, datetime, timedelta objects
 
 ```python
 # Creating date and time objects — datetime, date, time, timedelta
@@ -94,7 +94,7 @@ print(f"With microseconds: {dt_micro}")
     Specific time:     14:30:45
     With microseconds: 2024-03-15 14:30:45.123456
 
-#### Accessing date/time components
+#### datetime .year, .month, .day, .hour — accessing components
 
 ```python
 # Accessing date/time components — year, month, day, hour, etc.
@@ -318,7 +318,7 @@ print(f"With Z (UTC):    {from_iso_z}")
     With offset:     2024-03-15 14:30:45+05:30
     With Z (UTC):    2024-03-15 14:30:45+00:00
 
-#### Timezone management
+#### zoneinfo.ZoneInfo — timezone-aware datetime creation
 
 ```python
 # Timezone management — naive vs aware, zoneinfo, UTC
@@ -348,7 +348,7 @@ print(f"India:           {india_dt}")
     Tokyo:           2024-03-15 14:30:45+09:00
     India:           2024-03-15 14:30:45+05:30
 
-#### Converting between timezones
+#### datetime.astimezone — converting between timezones
 
 ```python
 # Converting between timezones — astimezone() for instant conversion
@@ -547,7 +547,7 @@ print(f"Back to datetime: {datetime.fromtimestamp(ts + 86400)}")
     + 45 seconds:    1710509490.0
     Back to datetime: 2024-03-16 14:30:45
 
-#### No built-in AddMonths/AddYears
+#### dateutil.relativedelta — add months and years to dates
 
 ```python
 # dateutil.relativedelta — month and year arithmetic
@@ -573,7 +573,7 @@ print(f"+ 1y 2m 3d:      {dt + relativedelta(years=1, months=2, days=3)}")
 
 ## Math and Random
 
-#### Basic math
+#### Built-in math — abs(), max(), min(), divmod(), clamp
 
 ```python
 # Basic math — abs, max, min are built-in; clamp with max(lo, min(val, hi))
@@ -610,7 +610,7 @@ print(f"clamp(15, 0,10): {max(0, min(15, 10))}")
     min(10, 20):     10
     clamp(15, 0,10): 10
 
-#### Rounding
+#### math.floor, math.ceil, round — rounding strategies
 
 ```python
 # Rounding — floor, ceil, round with banker's rounding default
@@ -630,7 +630,7 @@ print(f"int(3.9):            {int(3.9)}")
     math.trunc(3.9):     3
     int(3.9):            3
 
-#### Powers, roots, and logarithms
+#### math.sqrt, math.log, math.pow — powers, roots, logarithms
 
 ```python
 # Powers, roots, logarithms — ** operator, math.sqrt, math.log
@@ -658,7 +658,7 @@ print(f"math.exp(1):         {math.exp(1)}")
     math.log2(1024):     10.0
     math.exp(1):         2.718281828459045
 
-#### Trigonometry and constants
+#### math.sin, math.cos, math.pi, math.e — trigonometry and constants
 
 ```python
 # Trigonometry and constants — pi, e, tau, sin, cos, atan2
@@ -682,7 +682,7 @@ print(f"math.radians(180):   {math.radians(180)}")
     math.degrees(π):     180.0
     math.radians(180):   3.141592653589793
 
-#### Special float values
+#### math.inf, math.nan, math.isnan — special float values
 
 ```python
 # Special float values — inf, nan, and detection functions
@@ -700,7 +700,7 @@ print(f"math.isfinite(42):   {math.isfinite(42)}")
     math.isinf(inf):     True
     math.isfinite(42):   True
 
-#### Percentile calculation
+#### statistics.quantiles — percentile calculation
 
 ```python
 # Percentile calculation — statistics module for distribution analysis
@@ -768,7 +768,7 @@ print(f"Shuffled:  {items}")
     Original:  ['A', 'B', 'C', 'D', 'E']
     Shuffled:  ['E', 'A', 'B', 'C', 'D']
 
-#### Weighted random
+#### random.choices weights= — weighted random selection
 
 ```python
 # Weighted random — random.choices with weights for non-uniform sampling
@@ -784,7 +784,7 @@ print(f"Distribution: {dict(Counter(picks))}")
     Weighted picks (20): ['page_view', 'click', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'purchase', 'page_view', 'page_view', 'click', 'purchase', 'page_view', 'page_view', 'page_view', 'click', 'click']
     Distribution: {'page_view': 14, 'click': 4, 'purchase': 2}
 
-#### Synthetic test data generation
+#### random + datetime — synthetic OHLCV test data generation
 
 ```python
 # Synthetic test data generation — realistic event records for pipelines
@@ -819,7 +819,7 @@ for i in range(8):
 
 ## Logging
 
-#### Logging overview — levels, handlers, formatters
+#### logging module — levels, handlers, formatters, basicConfig
 
 ```python
 # logging module — Python's built-in structured logging framework
@@ -886,7 +886,7 @@ logger.critical("Critical: pipeline halted")                   # shown
     05:52:00 [ERROR   ] PipelineDemo: Error: failed partition 2024-03-15
     05:52:00 [CRITICAL] PipelineDemo: Critical: pipeline halted
 
-#### Simulating a pipeline run with logging
+#### logging.getLogger — simulating a pipeline run with structured logs
 
 ```python
 # Simulating a pipeline run with logging — practical ETL example
@@ -922,7 +922,7 @@ logger.info("Pipeline completed")
     05:52:09 [INFO    ] ETL: Loaded transactions: 3757 rows in 1343ms
     05:52:09 [INFO    ] ETL: Pipeline completed
 
-#### JSON log formatter
+#### logging.Formatter — JSON structured log output
 
 ```python
 # JSON log formatter — machine-parseable logs for ELK/CloudWatch/Datadog
@@ -959,7 +959,7 @@ json_logger.warning("Schema drift detected in %s", "users")
 
 ## Configuration and Environment Variables
 
-#### Environment variables — reading and setting
+#### os.environ — reading and setting environment variables
 
 ```python
 # Environment variables — os.environ for process-level configuration
@@ -1024,7 +1024,7 @@ print(f"After delete:  {os.getenv('PIPELINE_ENV', 'not set')}")
     PIPELINE_ENV:  staging
     After delete:  not set
 
-#### List all environment variables
+#### os.environ.items() — list all environment variables
 
 ```python
 # List all environment variables — diagnostic inspection
@@ -1048,7 +1048,7 @@ print(f"  ... ({len(os.environ)} total)")
       CLAUDE_CODE_MAX_OUTPUT_TOKENS = 64000
       ... (85 total)
 
-#### Configuration files
+#### configparser — INI-style configuration files
 
 <h4><code style="font-size:0.75em">configparser</code> — INI-style config</h4>
 
@@ -1101,7 +1101,7 @@ print(f"Timeout:        {config.getint('pipeline', 'timeout', fallback=30)}")
     Log level:      INFO
     Timeout:        30
 
-#### Reading configparser sections and keys
+#### configparser.sections, .get — reading config sections and keys
 
 ```python
 # Reading configparser — sections, keys, and type-safe access
@@ -1114,7 +1114,7 @@ print(f"Pipeline keys: {list(config['pipeline'].keys())}")
     Sections: ['pipeline', 'database', 'logging']
     Pipeline keys: ['name', 'batch_size', 'max_retries', 'enabled']
 
-#### TOML — modern config format
+#### tomllib — TOML modern config format (Python 3.11+)
 
 ```python
 # TOML — modern configuration format (built-in since Python 3.11)

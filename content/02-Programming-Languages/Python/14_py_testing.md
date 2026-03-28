@@ -78,9 +78,6 @@ load_dotenv()
 ipytest.autoconfig()
 ```
 
-    c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.3.0)/charset_normalizer (3.4.6) doesn't match a supported version!
-      warnings.warn(
-
 ## Unit Testing with pytest
 
 `pytest` is the de-facto standard Python test framework. Test discovery is automatic: files named `test_*.py` or `*_test.py`, and functions named `test_*`, are picked up without any base class or decorator. Plain `assert` statements get rewritten by pytest to show rich diffs on failure.
@@ -88,7 +85,7 @@ ipytest.autoconfig()
 > [!info] Running pytest in notebooks
 > pytest runs from the command line (`pytest test_mymodule.py`). In notebooks, we use `ipytest` to run pytest cells interactively. In production, test files live in a `tests/` directory.
 
-#### Basic test functions
+#### pytest assert — basic test functions
 
 ```python
 # TEST: basic price calculation — quantity * unit_price = total
@@ -175,7 +172,7 @@ ipytest.run()
 <span style="color:#4ec9b0">4 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### Testing exceptions
+#### pytest.raises — testing exceptions
 
 ```python
 # TEST: negative quantity raises ValueError (fail-fast validation)
@@ -231,7 +228,7 @@ pytest rewrites plain `assert` for rich error messages — no `assertEqual` or `
 | `assert "foo" in bar` | `Assert.Contains("foo", bar)` |
 | `pytest.approx()` | `Assert.Equal(expected, actual, precision)` |
 
-#### Numeric assertions
+#### Numeric assertions — pytest.approx for float tolerance
 
 ```python
 # TEST: PnL = (exit - entry) * quantity
@@ -299,7 +296,7 @@ ipytest.run()
 <span style="color:#4ec9b0">9 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### Collection assertions
+#### Collection assertions — in, issubset, all()
 
 ```python
 # TEST: Euro Stoxx 50 index has exactly 50 constituents
@@ -342,7 +339,7 @@ ipytest.run()
 <span style="color:#4ec9b0">11 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### String assertions
+#### String assertions — len, isalpha, re.match
 
 ```python
 # TEST: ISIN matches 2-letter country + 9 alphanum + 1 check digit
@@ -384,7 +381,7 @@ ipytest.run()
 <span style="color:#4ec9b0">13 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### Type & None assertions
+#### Type & None assertions — isinstance, is None
 
 ```python
 # TEST: market data dict fields have correct types (str, float, int)
@@ -684,7 +681,7 @@ ipytest.run()
 > [!tip] Why mock?
 > Don't call real Bloomberg API / exchange / database in tests. Tests must be fast, isolated, and deterministic. Mock the boundary (API client), test the logic (transform, validate).
 
-#### Mock a market data client
+#### unittest.mock Mock() — return_value, assert_called_once_with
 
 `Mock()` creates a fake object. `mock_client.get_quote.return_value = {...}` configures canned data — no real API call. Test verifies: caller reads the right field, spread is positive, correct symbol was requested. In production, `get_quote()` hits a live API; in tests, the mock returns instantly.
 
@@ -777,14 +774,14 @@ ipytest.run()
 <span style="color:#4ec9b0">38 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### patch()
+#### unittest.mock patch() — temporarily replace objects with mocks
 
 `patch()` temporarily replaces real objects with mocks during the test.
 
 > [!warning] Patch where the object is **used**, not where it's defined
 > If `my_module.py` does `from datetime import datetime`, patch `"my_module.datetime"`, NOT `"datetime.datetime"`.
 
-#### Function under test: market hours check
+#### Dependency injection — testable market hours check
 
 ```python
 # Function under test: market hours check
@@ -855,7 +852,7 @@ ipytest.run()
 <span style="color:#4ec9b0">41 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### Patch environment variables
+#### unittest.mock @patch.dict(os.environ) — patch environment variables
 
 `@patch.dict(os.environ, {...})` temporarily injects fake env vars for one test — original env is restored after. Standard pattern for testing Docker/K8s config-reading code.
 
@@ -930,7 +927,7 @@ Key testing patterns for data engineering and finance:
 > [!tip] Related pattern
 > The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [[dbt-testing-framework]], where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [[data-quality-framework]].
 
-#### Test a data transform
+#### Pure function testing — normalize_trades transform
 
 `normalize_trades` is a pure function — no side effects, no DB, no API. Transform tests are the most valuable: fast (no I/O), deterministic, catch logic bugs.
 
@@ -1035,7 +1032,7 @@ ipytest.run()
 <span style="color:#4ec9b0">46 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### Mock an external API
+#### unittest.mock Mock(spec=Class) — mock an external API client
 
 ```python
 # Mock an external API
@@ -1066,7 +1063,7 @@ def test_index_weight_calculation():
     mock_client.get_index_constituents.assert_called_once_with("SP500")
 ```
 
-#### Test data quality checks
+#### Data quality validation — validate_eod_prices, OHLCV invariants
 
 `validate_eod_prices` returns error strings — empty = all valid. Invariants: `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%. Financial APIs return garbage more often than expected — these tests are the last line of defense.
 

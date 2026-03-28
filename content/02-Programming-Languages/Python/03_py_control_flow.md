@@ -59,7 +59,7 @@ if x > 0: print(f"{x} is positive")
     Score 85 → Grade B
     10 is positive
 
-#### Ternary expression
+#### Ternary operator — inline conditional expression
 
 Inline conditional: `value_if_true if condition else value_if_false`. Reads like natural English. Can nest, but readability drops fast — avoid nesting beyond 2 levels.
 
@@ -230,7 +230,7 @@ print()
     range(10, 0, -2):
       10   8   6   4   2
 
-#### Iterating strings and dicts
+#### Iterating strings and dicts — .items(), .values(), .keys()
 
 Strings yield characters one at a time. Dicts yield keys by default; `.items()` for `(key, value)`, `.values()` for values only. Don't use `for key in dict: dict[key]` — use `for k, v in dict.items()`.
 
@@ -389,7 +389,7 @@ class Placeholder:
       1   3   5   7   9 
       0   1   2   4
 
-#### break only exits the innermost loop
+#### Nested break behavior — only exits the innermost loop
 
 In nested loops, `break` affects only the innermost loop — outer loops continue. Python has no labeled break. For multi-level exit, use a flag + break, or extract to a function and `return`.
 
@@ -551,7 +551,7 @@ print(f"Flatten: {list(flatten(nested))}")
 
     Flatten: [1, 2, 3, 4, 5, 6, 7]
 
-#### Infinite generator and built-in iterators
+#### Infinite generators — islice, map, filter, reversed
 
 `while True` with `yield` produces infinite values. Callers control with `islice`, break, or `zip`. Zero storage — values computed on demand.
 
@@ -624,7 +624,7 @@ print(f"Squares(5): {list(Squares(5))}")
 
     Squares(5): [0, 1, 4, 9, 16]
 
-#### Practical flatten alternatives
+#### Flatten nested iterables — four approaches
 
 Four flatten approaches, each suited to a different nesting depth: `chain.from_iterable` (1 level), `more_itertools.collapse` (any depth), stack-based iterative (no dependencies), `pd.json_normalize` (nested dicts).
 
@@ -632,7 +632,7 @@ Four flatten approaches, each suited to a different nesting depth: `chain.from_i
 nested = [1, [2, 3], [4, [5, 6]], 7]
 ```
 
-#### Flatten alternatives
+#### itertools chain.from_iterable and more_itertools collapse
 
 `chain.from_iterable` flattens exactly one level — inner lists stay nested. Stdlib, lazy, no external dependency. For arbitrary depth, use `more_itertools.collapse`.
 
@@ -816,7 +816,7 @@ print(f"any():   {any(x > 3 for x in nums)}")    # True if ANY match
     all():   True
     any():   True
 
-#### Sorting with a key function
+#### sorted() with key function — custom sort order, multi-key, reverse
 
 `sorted(iterable, key=func)` returns a new sorted list. `list.sort()` sorts in place. The `key` function extracts the comparison value: `key=len`, `key=str.lower`, `key=lambda x: x[1]`. Python's sort is stable — equal elements keep original order. `reverse=True` for descending. For multiple sort keys, return a tuple: `key=lambda x: (x[0], -x[1])`.
 

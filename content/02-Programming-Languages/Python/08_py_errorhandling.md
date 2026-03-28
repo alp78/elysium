@@ -164,7 +164,7 @@ except RuntimeError as e:
 
 ## Exception Types and Hierarchy
 
-#### Exception hierarchy and properties
+#### Exception hierarchy — BaseException tree, args, __cause__
 
 ```python
 # Exception hierarchy — inheritance tree and key properties
@@ -333,7 +333,7 @@ class ConfigError(Exception):
     pass
 ```
 
-#### Using custom exceptions
+#### Using custom exceptions — catch, wrap, and re-raise with domain context
 
 ```python
 # Using custom exceptions — catch low-level, wrap with domain context
@@ -504,7 +504,7 @@ for f in [tmp.name, out_tmp.name, out2]:
       Deleted: C:\Users\aperi\AppData\Local\Temp\tmpxzwt778q.csv
       Deleted: C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv
 
-#### Class-based context manager
+#### Class-based context manager — __enter__ and __exit__ protocol
 
 ```python
 # Class-based context manager — __enter__ and __exit__ for resource lifecycle
@@ -539,7 +539,7 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
 
 ## Data Engineering — error accumulation and resilience patterns
 
-#### Safe parse helpers
+#### Safe parse helpers — return default on failure instead of raising
 
 ```python
 # Safe parse helpers — return default instead of raising on bad data

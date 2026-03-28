@@ -93,7 +93,7 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 ```
 
-#### Write parquet from Arrow table
+#### pyarrow pq.write_table — write Parquet from Arrow table
 
 ```python
 # Write parquet from Arrow table — column-oriented creation
@@ -140,7 +140,7 @@ print(f"  Rows: {table.num_rows}, Columns: {table.num_columns}")
       Size: 1594 bytes (compressed)
       Rows: 5, Columns: 5
 
-#### Read entire parquet file
+#### pyarrow pq.read_table — read entire Parquet file
 
 ```python
 # Read entire parquet file — schema discovery and full table load
@@ -169,7 +169,7 @@ print(f"\n  Data:\n{table_read.to_pandas()}")  # convert to pandas DataFrame for
     3  evt_004     signup     1003     0.00       True
     4  evt_005   purchase     1002   129.99      False
 
-#### Read specific columns only (column pruning)
+#### pyarrow pq.read_table columns= — column pruning
 
 ```python
 # Column pruning — read only selected columns from parquet
@@ -190,7 +190,7 @@ print(f"  Sum: {sum(partial.column('revenue').to_pylist()):.2f}")
       Revenue total: [0.0, 49.99, 0.0, 0.0, 129.99]
       Sum: 179.98
 
-#### Read with row filter (predicate pushdown)
+#### pyarrow pq.read_table filters= — predicate pushdown
 
 ```python
 # Predicate pushdown — filter rows at read time via row group statistics
@@ -224,7 +224,7 @@ for i, field in enumerate(schema_read):
         [3] revenue: double
         [4] is_mobile: bool
 
-#### Hive-style partitioning
+#### pyarrow pq.write_to_dataset — Hive-style partitioning
 
 ```python
 # Hive-style partitioning — split files into subdirectories by column value
@@ -587,7 +587,7 @@ print("""
 
 For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [[serialization-formats]]. The benchmarks below focus on Python-specific library performance, while [[data-loading-and-export]] covers how format choice affects BigQuery load throughput.
 
-#### Generate test data
+#### Generate synthetic OHLCV test data — three sizes for benchmarks
 
 ```python
 # Generate OHLCV test data — three sizes for format benchmarking
@@ -643,7 +643,7 @@ print(f"  Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}"
 
       Small: 100, Medium: 10,000, Large: 100,000
 
-#### Run benchmarks
+#### Format benchmarks — write/read speed across CSV, Parquet, Avro, Protobuf, MessagePack
 
 ```python
 # Run benchmarks — write/read all 5 formats at all 3 sizes
@@ -753,7 +753,7 @@ print("  All benchmarks complete.")
 
       All benchmarks complete.
 
-#### Results — performance matrix
+#### Benchmark results — write/read performance matrix
 
 ```python
 # Results table — pandas styled DataFrame with performance metrics
@@ -1010,7 +1010,7 @@ fig.show()
 
 <iframe src="/static/plotly/pyser_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Compression comparison
+#### Compression comparison — snappy, gzip, zstd, lz4 ratios and speed
 
 ```python
 # Compression comparison — file size per format for large tier

@@ -18,7 +18,7 @@ status: complete
 
 ## Function Basics
 
-#### Basic functions
+#### def, return, docstrings — basic function definition
 
 Define with `def name(params): body`. Return a value with `return` — functions without `return` implicitly return `None`. Docstrings (triple-quoted first line) provide built-in documentation via `help()`. Functions are first-class objects: assign to variables, pass as arguments, return from other functions.
 
@@ -61,7 +61,7 @@ print(f"Return value: {result}")       # None
     Hi, Charlie!
     Return value: None
 
-#### Tuple return and unpacking
+#### Default parameters, *args, **kwargs — tuple return and unpacking
 
 Default parameters: `def f(x=10)`. Named arguments: `f(x=5)` — self-documenting. `*args` collects extra positional as tuple, `**kwargs` collects extra keyword as dict. Order: positional, `*args`, keyword-only, `**kwargs`.
 
@@ -98,7 +98,7 @@ print(apply(greet, "Eve"))
     Hello, Diana!
     Hello, Eve!
 
-#### Return a function from a function
+#### Closures — return a function from a function
 
 Inner functions capture variables from the enclosing scope. `make_multiplier(3)` returns a function that multiplies by 3 — each call creates independent state. Use for factory functions, parameterized callbacks, and partial application. For complex state, prefer a class.
 
@@ -260,7 +260,7 @@ for e in by_salary:
 
 ## Parameters
 
-#### Mutable default trap
+#### Mutable default argument trap — def f(lst=[]) pitfall
 
 `def f(lst=[])` creates ONE list at definition time — all calls share it. This is Python's most common gotcha. Fix: use `None` as default, create inside: `if lst is None: lst = []`. Immutable defaults (`int`, `str`, `tuple`) are safe.
 
@@ -462,7 +462,7 @@ print(f"  Name: {slow_sum.__name__}")     # 'slow_sum' (preserved by wraps)
       Result: 499999500000
       Name: slow_sum
 
-#### Loop capture gotcha
+#### Lambda loop capture gotcha — closures bind by reference
 
 > [!danger] Lambdas in a loop capture the variable itself — not the value. After the loop, all see the final value. Fix: default argument `i=i` captures the current value.
 
@@ -534,7 +534,7 @@ except ValueError as e:
       Attempt 2 failed: bad luck, retrying...
       Final failure: bad luck
 
-#### Stacking decorators
+#### Stacking decorators — execution order and composition
 
 `@a @b @c def f()` means `f = a(b(c(f)))` — bottom decorator wraps first, each receives the result of the one below. Order matters. Avoid stacking more than 3 decorators.
 
@@ -656,7 +656,7 @@ print(f"apply_nohint: {apply_func_nohint(lambda x: x * 2, 5)}")
     apply: 10
     apply_nohint: 10
 
-#### Type aliases and introspection
+#### Type aliases, __annotations__, get_type_hints — runtime introspection
 
 Type aliases give readable names to complex types: `UserMap = dict[int, str]`. `__annotations__` stores hints as a dict for runtime introspection — this is how pydantic validates types. `get_type_hints()` resolves forward references.
 

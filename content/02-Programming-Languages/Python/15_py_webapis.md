@@ -87,7 +87,7 @@ print(f"Args echoed: {data['args']}")
     Content-Type: application/json
     Args echoed: {'date': '2024-03-15', 'ticker': 'AAPL'}
 
-#### POST request — send JSON data
+#### requests.post — send JSON data
 
 ```python
 # POST — send a JSON body to an API endpoint
@@ -113,7 +113,7 @@ print(f"Body echoed: {data['json']}")
     Status: 200
     Body echoed: {'limit_price': 178.5, 'order_type': 'LIMIT', 'quantity': 100, 'side': 'BUY', 'ticker': 'AAPL'}
 
-#### Headers and authentication
+#### requests headers — API keys and Bearer token authentication
 
 ```python
 # Custom headers — API keys, bearer tokens for financial data providers
@@ -137,7 +137,7 @@ for k, v in resp.json()["headers"].items():
       Authorization: Bearer sk_demo_fake_key_12345
       X-Client-Id: trading-pipeline-v2
 
-#### Status code handling
+#### requests .status_code, .raise_for_status() — HTTP error handling
 
 ```python
 # Status code handling — check success/failure, raise_for_status()
@@ -327,7 +327,7 @@ comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 
 ## 2. REST API Patterns for Data Engineering
 
-#### Pagination — fetch data in pages
+#### REST API pagination — fetch data in pages with requests
 
 ```python
 # REST API patterns — pagination, retry, bulk operations
@@ -379,7 +379,7 @@ print(f"  Total pages fetched: {len(pages)}")
       Page 3: fetched (params: {'page': '3', 'per_page': '50'})
       Total pages fetched: 3
 
-#### Retry with exponential backoff
+#### requests retry with exponential backoff — transient error recovery
 
 ```python
 # Retry — recover from transient API failures with increasing delay
@@ -409,7 +409,7 @@ print(f"  Success: {resp.status_code}")
     === Retry with Backoff ===
       Success: 200
 
-#### Bulk POST — batch multiple records
+#### requests bulk POST — batch multiple records in one call
 
 ```python
 # Bulk POST — send multiple records in one request
@@ -573,7 +573,7 @@ def cancel_trade(trade_id: str):
     return {"status": "CANCELLED", "trade_id": trade_id}
 ```
 
-#### Start the FastAPI server in background
+#### uvicorn.Server — start FastAPI server programmatically in background
 
 ```python
 # Run uvicorn in a background thread so we can test from the next cells
@@ -701,7 +701,7 @@ print(f"  Remaining trades: {resp.json()['count']}")
       200: {'status': 'CANCELLED', 'trade_id': 'TRD_001'}
       Remaining trades: 1
 
-#### Shutdown the FastAPI server
+#### uvicorn graceful shutdown — stop FastAPI server
 
 ```python
 # ─── Shutdown the FastAPI server ───

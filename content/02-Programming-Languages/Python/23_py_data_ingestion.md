@@ -318,7 +318,7 @@ print(f'  Loaded {len(ingest_results)} existing results from {INGEST_RESULTS_FIL
 Create unified `ohlcv_bench` staging table in SQL Server and BigQuery.
 Same OHLCV schema everywhere. Firestore is schemaless — no setup needed. The SQL Server DDL below follows the same [[bronze-layer-loading]] patterns used in the medallion architecture, while the BigQuery schema aligns with the format decisions documented in [[data-loading-and-export]].
 
-#### Create staging table in SQL Server
+#### pymssql — create staging table in SQL Server
 
 ```python
 # Single staging table matching the OHLCV schema. All nvarchar (matching existing Cloud SQL pattern).
@@ -344,7 +344,7 @@ with sql_pymssql() as conn:
     conn.commit()
 ```
 
-#### Create staging table in BigQuery
+#### google-cloud-bigquery — create staging table in BigQuery
 
 ```python
 # Typed schema for BigQuery staging table.
@@ -378,24 +378,9 @@ Small tier: `executemany` (baseline). Medium + large: `fast_executemany` vs `bcp
 
 Parameterised INSERT, one row per network round-trip. Simple but slow — included as baseline for the small tier only.
 
-```python
-# pymssql executemany — parameterised INSERT, small tier only
-#
-# Technique: Reads CSV into a DataFrame, then sends each row as a parameterised
-#   INSERT statement via pymssql's executemany(). Uses the TDS protocol (FreeTDS).
-#
-# Benefits:
-#   - Simplest possible ingestion path — no ODBC driver or CLI tools needed
-#   - Parameterised queries prevent SQL injection
-#   - Works with any SQL Server (on-premise, Cloud SQL, Azure)
-#
-# Anti-patterns:
-#   - One network round-trip per row — extremely slow for >5K rows
-#   - No bulk protocol — each INSERT is parsed individually by the SQL engine
-#   - Never use for medium/large datasets — use fast_executemany or bcp instead
-#
-# Benchmarked on small tier only (2,500 rows) as a baseline.
+`pymssql.executemany()` — simplest ingestion, one round-trip per row. Parameterised queries prevent injection. Works with any SQL Server. **Extremely slow for >5K rows** — use `fast_executemany` or `bcp` instead.
 
+```python
 def pymssql_executemany():
     _sql_truncate('ohlcv_bench')
     df = pd.read_csv(tiers['small']['csv'], dtype=str, keep_default_na=False)
@@ -419,37 +404,11 @@ print(f'  small    {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
 
 Packs all rows into a single TDS packet. ODBC Driver 18 with TLS encryption. 5-10x faster than plain `executemany`.
 
+`fast_executemany=True` packs all rows into a single TDS packet per chunk — 5–10x faster. ODBC Driver 18 with TLS. Chunk at 10K rows to avoid timeouts. For >1M rows, `bcp` is 2–5x faster.
+
+> [!warning] Always chunk large datasets — sending all rows in one `executemany()` causes `Communication link failure`. Always set `fast_executemany=True` — without it, falls back to row-by-row.
+
 ```python
-# pyodbc fast_executemany — ODBC Driver 18, TLS-encrypted, chunked batch INSERT
-#
-# Technique: Sets fast_executemany=True on the pyodbc cursor, which packs all rows
-#   in a chunk into a single TDS packet instead of one INSERT per row. Chunks of
-#   10,000 rows avoid TDS packet timeout on large datasets over the network.
-#
-# Benefits:
-#   - 5-10x faster than plain executemany (single network round-trip per chunk)
-#   - ODBC Driver 18 encrypts the connection with TLS (Encrypt=yes)
-#   - Parameterised — no SQL injection risk
-#   - Works with any ODBC-compatible tool (Excel, Power BI, SSIS)
-#
-# Anti-patterns:
-#   - Sending all rows in one executemany() call — causes Communication link failure
-#     on large datasets (750K+ rows). Always chunk.
-#   - Using TrustServerCertificate=yes in production — acceptable for Cloud SQL
-#     (self-signed cert) but not for on-premise with proper CA certs
-#   - Not setting fast_executemany=True — falls back to row-by-row, 10x slower
-
-#
-# When to use:
-#   - Batch ingestion of 5K-1M rows from any pandas-readable format
-#   - When you need TLS encryption (regulatory: PCI-DSS, SOC2, HIPAA)
-#   - Applications that already use pyodbc/SQLAlchemy for other queries
-#   - Cloud SQL or Azure SQL where bcp may not be available
-#
-# When NOT to use:
-#   - Datasets over 1M rows — bcp is 2-5x faster at scale
-#   - Real-time streaming — use Change Data Capture or Service Broker instead
-
 def pyodbc_fast(tier):
     _sql_truncate('ohlcv_bench')
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
@@ -480,26 +439,11 @@ for tier in tiers:
 
 The `bcp` CLI is the fastest bulk loader for SQL Server. Native TDS bulk-insert protocol — bypasses the SQL parser entirely. Production standard for ETL pipelines.
 
-```python
-# bcp (Bulk Copy Program) — native TDS bulk-insert protocol
-#
-# Technique: CLI utility that reads CSV and streams rows via the TDS bulk-insert
-#   protocol, bypassing the SQL parser entirely. The server receives pre-formatted
-#   row data and writes directly to the table pages.
-#
-# Benefits:
-#   - Fastest method for SQL Server ingestion (10-50x faster than row-by-row)
-#   - Minimal server-side CPU — no SQL parsing, no query plan
-#   - Supports batch size (-b) for transaction control and recovery
-#   - Production standard for ETL/ELT pipelines and data warehouse loads
-#
-# Anti-patterns:
-#   - Hardcoding passwords in CLI args — use -T (trusted) or env vars in production
-#   - Skipping -F 2 — bcp will try to insert the CSV header as a data row
-#   - Not using -b (batch size) — a single failed row rolls back the entire load
-#   - Using -c (character mode) for binary data — use -n (native) instead
+`bcp` streams rows via native TDS bulk-insert protocol — bypasses SQL parser, writes directly to table pages. 10–50x faster than row-by-row. Always use `-F 2` (skip header), `-b 10000` (batch size for recovery).
 
-# bcp dbo.ohlcv_bench in C:/Users/aperi/DEV/LANG/data/ingest_medium.csv -S 34.22.129.89,1433 -U sqlserver -P SecLabPass2026 -d stoxx -c -t "," -F 2 -b 10000 -u
+> [!warning] Don't hardcode passwords in CLI args — use `-T` (trusted) or env vars. Don't skip `-b` (batch size) — one failed row rolls back the entire load.
+
+```python
 BCP = shutil.which('bcp') or 'bcp'
 
 def bcp_import(tier):
@@ -532,30 +476,9 @@ for tier in tiers:
 
 Reads newline-delimited JSON with pandas, then inserts via `fast_executemany`. Same TLS-encrypted ODBC path as CSV.
 
-```python
-# JSON → SQL Server via pyodbc fast_executemany
-#
-# Technique: Reads newline-delimited JSON with pandas (json_normalize under the hood),
-#   converts all values to strings, then inserts via fast_executemany with chunking.
-#
-# Benefits:
-#   - Handles nested/optional fields gracefully (JSON is schema-flexible)
-#   - Same fast_executemany path as CSV — identical throughput once parsed
-#
-# Anti-patterns:
-#   - Loading entire JSON into memory — use chunked pd.read_json for GB-scale files
-#   - Not handling NaN/None — JSON nulls become NaN in pandas, must fillna before INSERT
+Reads newline-delimited JSON with pandas, converts to strings, inserts via `fast_executemany`. Handles nested/optional fields. JSON nulls become NaN — must `fillna` before INSERT.
 
-#
-# When to use:
-#   - Batch ingestion of 5K-1M rows from any pandas-readable format
-#   - When you need TLS encryption (regulatory: PCI-DSS, SOC2, HIPAA)
-#   - Applications that already use pyodbc/SQLAlchemy for other queries
-#   - Cloud SQL or Azure SQL where bcp may not be available
-#
-# When NOT to use:
-#   - Datasets over 1M rows — bcp is 2-5x faster at scale
-#   - Real-time streaming — use Change Data Capture or Service Broker instead
+```python
 def json_to_sql(tier):
     _sql_truncate('ohlcv_bench')
     df = pd.read_json(tiers[tier]['json'], lines=True, dtype=str)
@@ -587,22 +510,9 @@ for tier in tiers:
 
 Reads Parquet with pyarrow (fastest local parse), then inserts via `fast_executemany`. Parquet’s columnar format makes the read near-instant.
 
-```python
-# Parquet → SQL Server via pyodbc fast_executemany
-#
-# Technique: Reads Parquet with pyarrow (zero-copy columnar read), converts to string
-#   DataFrame, then inserts via fast_executemany. The Parquet read is near-instant
-#   because pyarrow maps the file directly into memory without parsing.
-#
-# Benefits:
-#   - Fastest local file parse (Parquet is pre-compressed and pre-typed)
-#   - Schema embedded in file — no column mapping errors
-#   - Smallest file size — less disk I/O before the network transfer
-#
-# Anti-patterns:
-#   - Converting to string before INSERT — loses type fidelity. Acceptable here
-#     because Cloud SQL table uses nvarchar. For typed tables, preserve dtypes.
+Reads Parquet with pyarrow (zero-copy columnar, near-instant), then inserts via `fast_executemany`. Parquet's schema is embedded — no column mapping errors. Smallest file size = less disk I/O.
 
+```python
 def parquet_to_sql(tier):
     _sql_truncate('ohlcv_bench')
     df = pd.read_parquet(tiers[tier]['parquet']).astype(str)
@@ -645,31 +555,9 @@ plus `bq` CLI and Storage Write API.
 
 Server parses CSV rows. `skip_leading_rows=1` for header. `WRITE_TRUNCATE` clears before load.
 
-```python
-# BigQuery load from local CSV via load_table_from_file
-#
-# Technique: Uploads the CSV file to BigQuery's load job API over HTTPS. The server
-#   parses CSV rows and inserts into the table. WRITE_TRUNCATE clears before load.
-#
-# Benefits:
-#   - Server-side parsing — no local compute needed beyond the upload
-#   - Automatic schema detection (autodetect=True) — no manual column mapping
-#   - Atomic — load job either fully succeeds or fully fails (no partial loads)
-#
-# Anti-patterns:
-#   - Not setting skip_leading_rows=1 for CSV with headers — header becomes a data row
-#   - Using autodetect for production — specify schema explicitly to catch drift
-#   - Appending (WRITE_APPEND) without dedup — re-runs create duplicate rows
+Uploads CSV to BigQuery's load job API over HTTPS. Server-side parsing, atomic (fully succeeds or fails). Always set `skip_leading_rows=1`. Use explicit schema in production (not autodetect). For large files, use Parquet (5x compression) or GCS staging.
 
-#
-# When to use:
-#   - One-off data loads from local files under 100 MB
-#   - Development/testing where autodetect is acceptable
-#   - Data exported from spreadsheets or legacy systems (CSV is universal)
-#
-# When NOT to use:
-#   - Production pipelines — use GCS staging + load_table_from_uri instead
-#   - Large files — upload bandwidth is the bottleneck; use Parquet for 5x compression
+```python
 def bq_load_csv(tier):
     path = DATA_DIR / f'ingest_{tier}.csv'
     job_config = bigquery.LoadJobConfig(
@@ -698,30 +586,9 @@ for tier in tiers:
 
 Server parses newline-delimited JSON. Auto-detects schema from keys.
 
-```python
-# BigQuery load from local JSON (newline-delimited)
-#
-# Technique: Uploads NDJSON file to BigQuery. Each line is a JSON object representing
-#   one row. BigQuery auto-detects schema from the JSON keys.
-#
-# Benefits:
-#   - Handles nested/repeated fields natively (STRUCT, ARRAY in BQ)
-#   - No header row issues — each line is self-describing
-#   - Schema evolution — new keys in JSON auto-add columns (with autodetect)
-#
-# Anti-patterns:
-#   - Using regular JSON (array of objects) instead of NDJSON — BQ expects one object per line
-#   - Large JSON files — 3-5x bigger than CSV/Parquet for the same data
+NDJSON (one JSON object per line) — handles nested/repeated fields natively. Schema auto-detected from keys. Use for API dumps or nested data. For flat tabular data, CSV/Parquet is 3–5x smaller.
 
-#
-# When to use:
-#   - Data with nested/repeated fields (STRUCT, ARRAY) that CSV can't represent
-#   - API response dumps or log files already in JSON format
-#   - Schema evolution scenarios where new fields appear over time
-#
-# When NOT to use:
-#   - Flat tabular data — CSV or Parquet is 3-5x smaller
-#   - High-throughput ingestion — JSON parsing is the slowest of the three formats
+```python
 def bq_load_json(tier):
     path = DATA_DIR / f'ingest_{tier}.json'
     job_config = bigquery.LoadJobConfig(
@@ -749,30 +616,9 @@ for tier in tiers:
 
 Fastest format — columnar, compressed, schema embedded. No parsing overhead.
 
-```python
-# BigQuery load from local Parquet
-#
-# Technique: Uploads Parquet file to BigQuery. Schema is embedded in the file footer —
-#   no autodetect needed. Columnar + compressed = fastest format for BQ ingestion.
-#
-# Benefits:
-#   - No parsing overhead — Parquet schema maps directly to BQ schema
-#   - Smallest upload size (Snappy compression) — fastest network transfer
-#   - Type-safe — INT/FLOAT/STRING/BOOL preserved end-to-end
-#
-# Anti-patterns:
-#   - Using autodetect with Parquet — unnecessary, schema is in the file
-#   - Generating Parquet with incompatible types (e.g. pandas Timestamp vs BQ DATE)
+Parquet schema maps directly to BQ schema — no parsing, no autodetect needed. Snappy compression = smallest upload. Type-safe end-to-end. BigQuery-recommended format for production pipelines.
 
-#
-# When to use:
-#   - Production data pipelines (Parquet is the BigQuery-recommended format)
-#   - Data exported from Spark, Hive, or other columnar systems
-#   - When type safety matters — schema is embedded, no parsing ambiguity
-#
-# When NOT to use:
-#   - Ad-hoc loads from human-edited files — use CSV for simplicity
-#   - When source system only exports CSV/JSON — conversion overhead may not be worth it for small files
+```python
 def bq_load_parquet(tier):
     path = DATA_DIR / f'ingest_{tier}.parquet'
     job_config = bigquery.LoadJobConfig(
@@ -800,22 +646,9 @@ for tier in tiers:
 
 Command-line tool — same load job API but no Python code needed.
 
-```python
-# bq CLI — command-line load without writing Python code
-#
-# Technique: Shells out to `bq load` which uses the same load job API as the Python
-#   client library. Useful in shell scripts, CI/CD pipelines, and one-off loads.
-#
-# Benefits:
-#   - No Python dependencies — just the gcloud SDK
-#   - Same atomic load semantics as the Python API
-#   - Easy to integrate into bash/PowerShell automation
-#
-# Anti-patterns:
-#   - Parsing bq CLI output for row counts — fragile. Use the Python API for programmatic access.
-#   - Not quoting file paths with spaces
+`bq load` — same load job API as Python but no code needed. Just the gcloud SDK. Good for shell scripts, CI/CD, and one-off loads.
 
-# bq load --source_format=CSV --skip_leading_rows=1 --autodetect --replace --project_id=seclab-dev-ap-26 index_data.ohlcv_bench C:/Users/aperi/DEV/LANG/data/ingest_medium.csv
+```python
 BQ_CMD = shutil.which('bq.cmd') or shutil.which('bq') or 'bq'
 
 def bq_cli_csv(tier):
@@ -845,31 +678,9 @@ for tier in tiers:
 
 Highest throughput for streaming ingestion. `pandas_gbq.to_gbq()` uses the Storage Write API when available.
 
-```python
-# BigQuery Storage Write API via pandas-gbq
-#
-# Technique: pandas_gbq.to_gbq() uses the Storage Write API (gRPC-based) when
-#   available, bypassing load jobs entirely. Writes directly to BigQuery storage
-#   with row-level acknowledgment.
-#
-# Benefits:
-#   - Highest throughput for streaming ingestion (used by Dataflow, Kafka Connect)
-#   - Row-level error reporting (vs load jobs which fail atomically)
-#   - Exactly-once semantics with committed streams
-#
-# Anti-patterns:
-#   - Using for one-off batch loads — load jobs are simpler and equally fast for batch
-#   - Not closing the stream — uncommitted writes are garbage-collected after 24h
+`pandas_gbq.to_gbq()` uses the Storage Write API (gRPC) — writes directly to BQ storage with row-level acknowledgment and exactly-once semantics. Highest throughput for streaming. For batch loads, load jobs are simpler.
 
-#
-# When to use:
-#   - Real-time streaming ingestion (IoT, clickstream, financial ticks)
-#   - When you need exactly-once semantics (committed streams)
-#   - High-throughput pipelines (Dataflow, Kafka Connect sink)
-#
-# When NOT to use:
-#   - One-off batch loads — load jobs are simpler and equally fast
-#   - Small datasets under 10K rows — the gRPC overhead isn't justified
+```python
 def bq_storage_write(tier):
     df = pd.read_csv(tiers[tier]['csv'])
     pandas_gbq.to_gbq(df, f'{BQ_DATASET}.ohlcv_bench', project_id=PROJECT_ID, if_exists='replace')
@@ -890,32 +701,9 @@ for tier in tiers:
 
 Query CSV/JSON/Parquet in GCS directly via SQL. Zero ingestion time — slower queries but no storage cost.
 
-```python
-# BigQuery External Table — query GCS data without loading
-#
-# Technique: Creates a table definition that points to a GCS file. Queries read
-#   directly from GCS at query time — zero ingestion, zero storage cost.
-#
-# Benefits:
-#   - No ingestion step — instant 'table' creation
-#   - Zero storage cost — data stays in GCS
-#   - Useful for ad-hoc exploration before deciding to load permanently
-#
-# Anti-patterns:
-#   - Using for production queries — 10-100x slower than native BQ tables
-#   - No caching — every query re-reads from GCS
-#   - Schema drift — if the GCS file changes, the table may break silently
+External table points to a GCS file — queries read directly at query time. Zero ingestion, zero storage cost. 10–100x slower than native tables. Use for ad-hoc exploration; not for production dashboards.
 
-#
-# When to use:
-#   - Ad-hoc exploration of GCS data before deciding to load permanently
-#   - Data that changes frequently in GCS (always reads latest version)
-#   - Cost optimization — zero storage cost, pay only for queries
-#
-# When NOT to use:
-#   - Production dashboards — 10-100x slower than native tables
-#   - Frequently queried data — no caching, every query re-reads from GCS
-#   - JOINs with native tables — performance is poor for large external tables
+```python
 def bq_external_table(tier):
     ext_table = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench_ext'
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["parquet"]}'
@@ -953,32 +741,11 @@ Write OHLCV data into Firestore. Each row becomes a document in the `ohlcv_bench
 
 500-doc batches (Firestore limit). Each batch is a single gRPC call.
 
+500-doc batches (Firestore's limit). Each `batch.commit()` is a single atomic gRPC call. Simple API. For >50K docs, `BulkWriter` is 2–5x faster (parallel batches).
+
+> [!warning] Don't exceed 500 docs per batch (rejected). Don't forget to commit the final partial batch.
+
 ```python
-# Firestore batch writes — 500 docs per gRPC call
-#
-# Technique: Groups writes into batches of 500 (Firestore's per-batch limit).
-#   Each batch.commit() is a single gRPC call that atomically writes all 500 docs.
-#
-# Benefits:
-#   - Atomic per batch — all 500 docs succeed or all fail
-#   - Simple API — no configuration needed
-#   - Works within Firestore's free tier (50K writes/day)
-#
-# Anti-patterns:
-#   - Exceeding 500 docs per batch — Firestore rejects the entire commit
-#   - Not committing the final partial batch — last <500 docs are lost
-#   - Using for >100K docs — BulkWriter is faster (parallel batches)
-
-#
-# When to use:
-#   - Bulk loading <50K documents (within Firestore's free tier)
-#   - When atomic per-batch semantics are needed (all-or-nothing per 500 docs)
-#   - Simple scripts without BulkWriter's complexity
-#
-# When NOT to use:
-#   - Over 50K docs — BulkWriter is 2-5x faster (parallel batches)
-#   - Real-time single-doc writes — use set()/update() directly
-
 def fs_batch_write(tier):
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
     batch = fs_client.batch()
@@ -1012,30 +779,9 @@ for tier in tiers:
 
 `BulkWriter` manages batching, retries, and throttling automatically. Parallel writes — the recommended method for bulk ingestion.
 
-```python
-# Firestore BulkWriter — auto-batched, parallel, throttled
-#
-# Technique: BulkWriter manages batching, retries, and rate limiting automatically.
-#   Sends multiple batches in parallel over gRPC, with exponential backoff on errors.
-#
-# Benefits:
-#   - 2-5x faster than manual batch.set() for large collections
-#   - Automatic retry with backoff — handles transient gRPC errors
-#   - Rate-limited to avoid overwhelming Firestore (respects 429 throttling)
-#
-# Anti-patterns:
-#   - Forgetting bw.close() — unflushed writes are lost
-#   - Using for real-time single-doc writes — overhead isn't justified for <10 docs
+`BulkWriter` manages batching, retries, and rate limiting automatically. 2–5x faster than manual `batch.set()`. Use for 10K–500K document migrations/backfills. Always call `bw.close()` — unflushed writes are lost.
 
-#
-# When to use:
-#   - Bulk loading 10K-500K documents (migrations, backfills, ETL)
-#   - When automatic retry and rate limiting are needed
-#   - Populating Firestore from BigQuery/SQL Server for real-time serving
-#
-# When NOT to use:
-#   - Over 500K docs — Firestore costs scale per document, consider BigQuery instead
-#   - When you need transaction guarantees across documents — use batch writes
+```python
 def fs_bulk_write(tier):
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
     bw = fs_client.bulk_writer()
@@ -1077,30 +823,9 @@ Server-side operation — no data passes through the local machine.
 
 Server-side CSV parse. Data flows GCS → BigQuery within Google’s network.
 
-```python
-# BigQuery load from GCS CSV — server-side, no local data transfer
-#
-# Technique: load_table_from_uri triggers a server-side load job. Data flows
-#   directly from GCS to BigQuery within Google's internal network.
-#
-# Benefits:
-#   - No local bandwidth consumed — data never touches the client
-#   - Fastest path for data already in GCS (typical for data lake architectures)
-#   - Supports wildcards (gs://bucket/path/*.csv) for multi-file loads
-#
-# Anti-patterns:
-#   - Loading from a multi-region bucket into a single-region dataset — cross-region
-#     egress charges apply
-#   - Not using WRITE_TRUNCATE for idempotent pipelines — re-runs duplicate data
+`load_table_from_uri` triggers a server-side load — data flows GCS → BQ within Google's network, no local bandwidth. Supports wildcards (`gs://bucket/path/*.csv`). Standard data lake pattern.
 
-#
-# When to use:
-#   - Data lake architecture — data lands in GCS, then loads into BQ
-#   - Multi-file loads with wildcards (gs://bucket/path/*.csv)
-#   - When data is already in GCS from another pipeline
-#
-# When NOT to use:
-#   - Data is only on local disk — upload to GCS first or use load_table_from_file
+```python
 def bq_gcs_csv(tier):
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["csv"]}'
     job_config = bigquery.LoadJobConfig(
@@ -1188,29 +913,9 @@ Two-hop: download from GCS to memory, then insert into SQL Server.
 
 Download CSV → pandas → fast_executemany. Combined pipeline.
 
-```python
-# GCS CSV → SQL Server — two-hop pipeline (download + insert)
-#
-# Technique: Downloads CSV from GCS into memory (BytesIO), parses with pandas,
-#   then inserts into SQL Server with fast_executemany in 10K-row chunks.
-#
-# Benefits:
-#   - Works with any SQL Server (no direct GCS→SQL path exists)
-#   - In-memory processing — no temp files on disk
-#   - Chunked inserts handle large datasets without timeout
-#
-# Anti-patterns:
-#   - Loading GB-scale files into memory — use streaming/chunked pd.read_csv instead
-#   - Not chunking the executemany — causes TDS Communication link failure on 750K+ rows
+Two-hop: download CSV from GCS into memory (BytesIO), parse with pandas, insert via `fast_executemany` in 10K-row chunks. No direct GCS→SQL path exists. For GB-scale, use VM-hosted SQL Server or Dataflow instead.
 
-#
-# When to use:
-#   - Syncing GCS data lake to SQL Server for reporting/BI tools
-#   - When SQL Server is the system of record and GCS is the staging area
-#
-# When NOT to use:
-#   - GB-scale datasets — download to local RAM is the bottleneck. Use VM-hosted
-#     SQL Server with direct GCS access or a Dataflow pipeline instead.
+```python
 def gcs_csv_to_sql(tier):
     _sql_truncate('ohlcv_bench')
     blob = bucket.blob(gcs_paths[tier]['csv'])
@@ -2420,7 +2125,7 @@ fig_export.show()
 
 <iframe src="/static/plotly/di_py_05.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Cleanup staging tables
+#### pymssql + google-cloud-bigquery — cleanup staging tables
 
 ```python
 # Drop staging tables and clean up

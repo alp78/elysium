@@ -26,8 +26,6 @@ status: complete
 Polars.NET vs Deedle: Categoricals, nested types, library conversions, I/O deep dive.
 
 ---
-## 0 — Setup & Imports
-
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.

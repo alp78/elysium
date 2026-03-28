@@ -29,8 +29,6 @@ equivalent, and flags gotchas along the way.
 
 ---
 
-## 0 — Setup & Imports
-
 ```python
 import pandas as pd
 import polars as pl

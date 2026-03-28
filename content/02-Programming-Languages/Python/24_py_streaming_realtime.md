@@ -259,7 +259,7 @@ print(f'  WebSocket server running on ws://localhost:{WS_PORT}')
 
       WebSocket server running on ws://localhost:8765
 
-#### WebSocket client — receive ticks for 3 seconds
+#### websockets.connect — WebSocket client, receive ticks for 3 seconds
 
 ```python
 # WebSocket client — one-way latency (send_ts embedded by server)
@@ -353,7 +353,7 @@ print(f'  SSE server running on http://localhost:{SSE_PORT}/ticks')
 
       SSE server running on http://localhost:8766/ticks
 
-#### SSE client — receive ticks for 3 seconds
+#### httpx AsyncClient — SSE client, receive Server-Sent Events
 
 ```python
 # SSE client — one-way latency (SSE is server→client only, can't echo)
@@ -405,7 +405,7 @@ print(f'  p50: {sse_p50:.0f}µs  p99: {sse_p99:.0f}µs  p99.9: {sse_p999:.0f}µs
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
 Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [[pubsub-messaging]].
 
-#### Enable Pub/Sub API and grant permissions to service account
+#### gcloud services enable + IAM binding — Pub/Sub API and permissions
 
 ```python
 # Enable Pub/Sub API and grant admin role to the service account
@@ -470,7 +470,7 @@ Decouples publishers from subscribers — the backbone of event-driven architect
 
     Updated IAM policy for project [seclab-dev-ap-26].
 
-#### Create Pub/Sub topic and subscription
+#### google-cloud-pubsub PublisherClient + SubscriberClient — create topic and subscription
 
 ```python
 # Create topic and subscription for tick streaming (idempotent — skips if exists)
@@ -706,7 +706,7 @@ else:
       500 delivery latency measurements
       p50: 44ms  p99: 63ms  avg: 44ms
 
-#### Cleanup Firestore real-time collection
+#### google-cloud-firestore — cleanup real-time collection
 
 ```python
 # Delete test documents
@@ -828,7 +828,7 @@ fig_gcp.show()
 
 <iframe src="/static/plotly/sr_py_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Cleanup Pub/Sub resources
+#### google-cloud-pubsub — delete subscription and topic
 
 ```python
 # Delete subscription and topic
