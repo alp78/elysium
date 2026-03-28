@@ -54,6 +54,11 @@ from abc import ABC, abstractmethod
 # In Python, we use ABC. In C#, we use interface.
 # The consumer depends on the abstraction, not the implementation.
 
+from datetime import date
+from pydantic import BaseModel, Field, model_validator, ValidationError
+from typing import Callable
+from typing import Optional
+import inspect
 class DataRepository(ABC):
     """Interface for data access — could be SQL, BigQuery, CSV, mock."""
     @abstractmethod
@@ -213,7 +218,6 @@ print(f"  c1.project_id: {c1.project_id}")
 # In Python: a function or classmethod that returns the right subclass.
 # C# equivalent: static factory method, or IServiceProvider.GetService<T>().
 
-from abc import ABC, abstractmethod
 
 class StorageClient(ABC):
     @abstractmethod
@@ -265,7 +269,6 @@ for provider in ["gcs", "s3", "local"]:
 # C# equivalent: event/delegate pattern, or IObservable<T>.
 # GCP equivalent: Pub/Sub (same pattern, distributed).
 
-from typing import Callable
 
 class PipelineEventBus:
     """Simple observer/event bus — subscribe to events, publish notifications."""
@@ -322,7 +325,6 @@ bus.publish("step_completed", {"step": "gold_score", "status": "error", "message
 # different retry policies. The context class delegates to a strategy.
 # C# equivalent: interface + DI, or Func<T> delegate.
 
-from abc import ABC, abstractmethod
 
 class ScoringStrategy(ABC):
     """Interface for different scoring algorithms."""
@@ -405,9 +407,6 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
 # Why: catch bad data at the boundary (API input, file load, config parse)
 # before it flows into your pipeline and causes silent corruption.
 
-from pydantic import BaseModel, Field, model_validator, ValidationError
-from datetime import date
-from typing import Optional
 
 # ─── Model definitions ───
 
@@ -494,7 +493,6 @@ for case in bad_inputs:
 #
 # Use cases: plugin systems, serializers, ORMs, debugging, documentation.
 
-import inspect
 
 class TradeOrder:
     """Sample class to inspect."""

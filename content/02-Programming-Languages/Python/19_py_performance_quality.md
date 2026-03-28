@@ -30,7 +30,31 @@ Topics covered:
 
 ## 1. Timing & Benchmarking
 
+#### perf_counter and timeit — wall-clock timing
+
 ```python
+# Timing and benchmarking — measure execution time accurately
+#
+# Technique: time.perf_counter() for high-resolution wall-clock timing.
+#   timeit.timeit() for reliable micro-benchmarks with automatic repetition.
+#   cProfile for per-function profiling. Always measure before optimizing.
+#
+# Benefits:
+#   - perf_counter has sub-microsecond resolution — best for ad-hoc timing
+#   - timeit handles warm-up and repetition — statistical reliability
+#   - Prevents premature optimization — data-driven decisions
+#
+# Anti-patterns:
+#   - time.time() for benchmarks — lower resolution than perf_counter
+#   - Single-run timing — cache, JIT, and OS scheduling skew results
+#   - Optimizing without profiling — solving the wrong problem
+#
+# When to use:
+#   - Comparing algorithm alternatives, validating optimizations
+#
+# When NOT to use:
+#   - Production monitoring — use structured logging with timing
+
 # Timing & Benchmarking — measure how long code takes to run.
 #
 # KEY CONCEPTS:
@@ -46,6 +70,20 @@ import time
 import timeit
 
 # --- time.perf_counter (manual timing) ---
+from collections import deque
+from collections.abc import Callable, Iterator, Sequence
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+from typing import Optional
+from typing import overload
+import cProfile
+import io
+import pandas as pd
+import pstats
+import random
+import sys
+import tracemalloc
 def slow_sum(n):
     return sum(range(n))
 
@@ -84,12 +122,10 @@ with timer("generator"):
       [map] 4.97ms
       [generator] 5.00ms
 
-```python
-# Comparing algorithms with timeit
-#
-# RULE: Always compare alternatives on the SAME data, SAME machine, SAME conditions.
+#### Comparing algorithms with timeit
 
-import timeit
+```python
+# Comparing alternatives — benchmark the same operation across approaches
 
 setup = "data = list(range(10_000))"
 
@@ -117,7 +153,31 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
 
 ## 2. Memory Profiling
 
+#### sys.getsizeof and memory measurement
+
 ```python
+# Memory profiling — measure RAM usage of Python objects
+#
+# Technique: sys.getsizeof() returns shallow size of one object (not
+#   contents). tracemalloc tracks allocations with source file/line.
+#   Compare approaches: list (O(n) memory) vs generator (O(1) memory).
+#
+# Benefits:
+#   - sys.getsizeof is instant — no profiling setup needed
+#   - tracemalloc shows WHERE allocations happen — file and line number
+#   - Reveals hidden allocations from comprehensions, closures, caching
+#
+# Anti-patterns:
+#   - sys.getsizeof on containers — only shows the container, not elements
+#   - Not accounting for shared references — getsizeof double-counts
+#   - memory_profiler in production — significant overhead
+#
+# When to use:
+#   - Comparing memory footprint of data structures and approaches
+#
+# When NOT to use:
+#   - Production monitoring — use Prometheus memory metrics
+
 # Memory Profiling — measure how much RAM your code uses.
 #
 # KEY CONCEPTS:
@@ -129,7 +189,6 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
 # GOLDEN RULE: Memory is the silent killer. A 10x memory blowup is invisible
 #   until your container gets OOM-killed in production.
 
-import sys
 
 # --- sys.getsizeof (shallow) ---
 print("Object sizes (bytes):")
@@ -160,12 +219,10 @@ for n in [0, 10, 100, 1000, 10_000]:
       n=  1000: list=    8056  dict=   36952  set=   32984
       n= 10000: list=   80056  dict=  294992  set=  524504
 
-```python
-# tracemalloc — track allocations over time
-#
-# Shows WHERE memory was allocated, not just how much.
+#### tracemalloc — track allocation sources
 
-import tracemalloc
+```python
+# tracemalloc — track memory allocations with source location
 
 tracemalloc.start()
 
@@ -198,14 +255,11 @@ del data, mapping
     Current: 4.75 MB
     Peak:    4.77 MB
 
+#### Generators vs lists — O(1) vs O(n) memory
+
 ```python
-# Comparing memory-efficient alternatives
-#
-# RULE: Generators use O(1) memory. Lists use O(n).
+# Memory-efficient alternatives — generators use O(1) memory
 
-import sys
-
-# List vs generator for sum
 list_data = [x**2 for x in range(100_000)]
 gen_result = sum(x**2 for x in range(100_000))  # generator, no list created
 
@@ -250,7 +304,31 @@ del regular, slotted, list_data
 
 ## 3. CPU Profiling
 
+#### cProfile — built-in CPU profiler
+
 ```python
+# cProfile — identify which functions consume the most CPU time
+#
+# Technique: cProfile.run('statement') profiles and prints a table sorted
+#   by cumulative time. Shows ncalls, tottime (excluding subcalls),
+#   cumtime (including subcalls). Use pstats for programmatic analysis.
+#
+# Benefits:
+#   - Built-in — no pip install needed
+#   - Per-function breakdown — find the exact bottleneck function
+#   - cumtime shows the full cost including all called functions
+#
+# Anti-patterns:
+#   - Profiling in production — overhead; use sampling profilers (py-spy)
+#   - Profiling short operations — noise dominates; use timeit instead
+#   - Optimizing functions with low cumtime — focus on the top consumers
+#
+# When to use:
+#   - Finding the bottleneck function in a slow pipeline or script
+#
+# When NOT to use:
+#   - Micro-benchmarks — use timeit; production — use py-spy
+
 # cProfile — built-in profiler, shows time per function.
 #
 # KEY CONCEPTS:
@@ -263,9 +341,6 @@ del regular, slotted, list_data
 # GOLDEN RULE: Profile the WHOLE program first, then zoom into hotspots.
 #   Don't guess where the bottleneck is.
 
-import cProfile
-import pstats
-import io
 
 def fib(n):
     if n <= 1:
@@ -312,14 +387,10 @@ print(stream.getvalue())
             2    0.000    0.000    0.000    0.000 c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\traitlets\traitlets.py:3474(validate)
             1    0.000    0.000    0.000    0.000 c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\traitlets\traitlets.py:1523(notify_change)
 
-```python
-# Profiling a more realistic workload
-#
-# Compare string concatenation strategies
+#### Profiling string concatenation strategies
 
-import cProfile
-import io
-import pstats
+```python
+# Profiling a realistic workload — comparing string building strategies
 
 def concat_plus(n):
     s = ""
@@ -350,7 +421,30 @@ for fn in [concat_plus, concat_join, concat_io]:
 
 ## 4. Big-O Complexity & Algorithmic Thinking
 
+#### Big-O complexity reference
+
 ```python
+# Big-O complexity — how performance scales with input size
+#
+# Technique: Reference of common complexities: O(1) constant (dict lookup),
+#   O(log n) logarithmic (binary search), O(n) linear (list scan),
+#   O(n log n) sort, O(n squared) nested loops, O(2^n) exponential.
+#
+# Benefits:
+#   - Predicts scaling behavior without benchmarking
+#   - Guides algorithm and data structure selection
+#   - Explains why dict lookup is fast and list.index is slow
+#
+# Anti-patterns:
+#   - Ignoring Big-O — works on small data, fails at scale
+#   - Optimizing constants when Big-O is wrong — fix the algorithm first
+#
+# When to use:
+#   - Choosing algorithms and data structures for scalable code
+#
+# When NOT to use:
+#   - Small fixed-size data — constants matter more than Big-O
+
 # Big-O Complexity — how performance scales with input size.
 #
 # KEY CONCEPTS:
@@ -364,7 +458,6 @@ for fn in [concat_plus, concat_join, concat_io]:
 # GOLDEN RULE: Know the complexity of the data structures you use.
 # GOLDEN RULE: If n can grow, O(n²) is a ticking time bomb.
 
-import time
 
 def measure(fn, *args, label=""):
     t0 = time.perf_counter()
@@ -384,7 +477,6 @@ measure(lambda: 999_999 in data_set, label="set (O(1))")
 measure(lambda: 999_999 in data_dict, label="dict (O(1))")
 
 # O(n) vs O(n²): finding duplicates
-import random
 data = random.sample(range(1_000_000), 10_000)
 
 def find_dupes_quadratic(lst):
@@ -423,7 +515,30 @@ measure(find_dupes_linear, small, label="Linear O(n)")
 
 ## 5. Data Structure Performance Cheat Sheet
 
+#### Data structure performance cheat sheet
+
 ```python
+# Python data structure performance — operation complexity by type
+#
+# Technique: Reference table: list (O(1) index, O(n) search), dict (O(1)
+#   lookup/insert), set (O(1) membership), deque (O(1) both ends).
+#   Choose data structure based on dominant operation pattern.
+#
+# Benefits:
+#   - Quick lookup for choosing the right structure by access pattern
+#   - Shows why set/dict are O(1) for membership vs list O(n)
+#   - Covers edge cases: list.insert(0) is O(n), deque.appendleft is O(1)
+#
+# Anti-patterns:
+#   - list for frequent membership tests — O(n); use set for O(1)
+#   - list.pop(0) for FIFO — O(n); use deque.popleft for O(1)
+#
+# When to use:
+#   - Selecting data structures based on performance requirements
+#
+# When NOT to use:
+#   - N/A — this is a reference table
+
 # Python Data Structure Performance
 #
 # | Operation        | list    | dict    | set     | deque   |
@@ -447,8 +562,6 @@ measure(find_dupes_linear, small, label="Linear O(n)")
 #   - Need FIFO queue? collections.deque, not list.
 #   - Need both ends? deque.
 
-from collections import deque
-import time
 
 n = 100_000
 
@@ -481,7 +594,31 @@ print(f"  deque is {t_list/t_deque:.0f}x faster")
 
 ## 6. Golden Rules of Performance
 
+#### Golden rules of Python performance
+
 ```python
+# Golden rules of performance — principles before micro-optimization
+#
+# Technique: Ten rules: measure first, use built-in functions (written in C),
+#   prefer comprehensions over loops, use generators for large data,
+#   choose the right data structure, avoid global variable lookups.
+#
+# Benefits:
+#   - Prioritizes high-impact optimizations over micro-optimizations
+#   - Python-specific: built-ins are C-implemented — 10x faster than loops
+#   - Covers the 80/20 of Python performance improvements
+#
+# Anti-patterns:
+#   - Optimizing without profiling — solving the wrong problem
+#   - Writing C-style loops when built-ins exist — sum(), max(), map()
+#   - Micro-optimizing cold paths — only hot paths matter
+#
+# When to use:
+#   - Before any optimization work — review these rules first
+#
+# When NOT to use:
+#   - N/A — these principles are always applicable
+
 # GOLDEN RULES OF PERFORMANCE
 #
 # 1. MEASURE BEFORE OPTIMIZING
@@ -525,7 +662,6 @@ print(f"  deque is {t_list/t_deque:.0f}x faster")
 #     Only optimize hot paths after profiling confirms the need.
 
 # Example: Rule 7 — caching
-from functools import lru_cache
 
 def fib_slow(n):
     if n <= 1: return n
@@ -536,7 +672,6 @@ def fib_cached(n):
     if n <= 1: return n
     return fib_cached(n-1) + fib_cached(n-2)
 
-import time
 t0 = time.perf_counter()
 fib_slow(30)
 t_slow = time.perf_counter() - t0
@@ -557,7 +692,32 @@ fib_cached.cache_clear()
 
 ## 7. Absolute No-Go's
 
+#### Absolute no-go's — patterns that should never appear in production
+
 ```python
+# Absolute no-go's — code patterns that are always wrong in production
+#
+# Technique: Catalog of patterns causing severe performance or correctness
+#   issues: string += in loops (O(n squared)), bare except:, mutable
+#   default arguments, eval/exec on user input, global state mutation.
+#
+# Benefits:
+#   - Clear list of things to check in code review
+#   - Each anti-pattern has the correct alternative
+#   - Prevents the most common Python production bugs
+#
+# Anti-patterns:
+#   - String += in loops — use "".join() or io.StringIO
+#   - Bare except: — catches SystemExit and KeyboardInterrupt
+#   - Mutable default args — def f(lst=[]) shares one list across calls
+#   - eval(user_input) — arbitrary code execution vulnerability
+#
+# When to use:
+#   - Code review checklist, onboarding documentation
+#
+# When NOT to use:
+#   - N/A — these rules are always applicable
+
 # ABSOLUTE NO-GO'S — things that should NEVER appear in production code.
 #
 # 1. STRING CONCATENATION IN A LOOP
@@ -633,7 +793,32 @@ print(f"  Call 3: {good_append(3)}")
 
 ## 8. Code Smells & Anti-Patterns
 
+#### Code smells and anti-patterns
+
 ```python
+# Code smells — patterns that indicate deeper design problems
+#
+# Technique: Catalog of common smells: god function/class, primitive
+#   obsession (str for email), deep nesting (>3 levels), magic numbers,
+#   boolean parameters, dead code, feature envy.
+#
+# Benefits:
+#   - Recognition guide — spot smells during code review
+#   - Each smell has a concrete refactoring solution
+#   - Prevents technical debt accumulation
+#
+# Anti-patterns:
+#   - God class — split by single responsibility principle
+#   - Primitive obsession — wrap in dataclass or NewType
+#   - Magic numbers — extract to named constants
+#   - Deep nesting — early return, extract to functions
+#
+# When to use:
+#   - Code review, refactoring planning, design improvement
+#
+# When NOT to use:
+#   - Premature refactoring — fix smells when they cause real problems
+
 # CODE SMELLS — patterns that indicate deeper problems.
 #
 # 1. GOD FUNCTION / GOD CLASS
@@ -695,7 +880,31 @@ print("Guard clauses produce the same result, but are flat and readable.")
 
 ## 9. Type Safety & Static Analysis
 
+#### Type hints and static analysis — mypy, pyright
+
 ```python
+# Type hints and static analysis — catch bugs before runtime
+#
+# Technique: Type annotations (def f(x: int) -> str) document intent.
+#   mypy and pyright check types statically — no runtime cost. Catches
+#   type mismatches, None errors, and missing attributes at lint time.
+#
+# Benefits:
+#   - Catches bugs before runtime — NoneType errors, wrong argument types
+#   - IDE autocomplete and refactoring work better with type hints
+#   - Self-documenting — signature shows expected types
+#
+# Anti-patterns:
+#   - Using Any everywhere — defeats the purpose of type hints
+#   - Ignoring mypy errors — accumulates unchecked type debt
+#   - Runtime isinstance checks instead of type hints — slower and verbose
+#
+# When to use:
+#   - All public APIs, library interfaces, complex function signatures
+#
+# When NOT to use:
+#   - Quick scripts — overhead outweighs benefit for throwaway code
+
 # Type Hints & Static Analysis — catch bugs before runtime.
 #
 # KEY CONCEPTS:
@@ -706,7 +915,6 @@ print("Guard clauses produce the same result, but are flat and readable.")
 #
 # GOLDEN RULE: Type hints are free documentation. Always use them in function signatures.
 
-from typing import Optional
 
 # Without types — what does this return? what types are valid?
 def process(data, flag):
@@ -721,7 +929,6 @@ def process_typed(data: str, flag: bool) -> str | int:
     return len(data)
 
 # Better: use Union or overload for different return types
-from typing import overload
 
 @overload
 def fetch(id: int, as_dict: bool = True) -> dict: ...
@@ -738,16 +945,11 @@ print(f"Overload:   {fetch(1, as_dict=True)}")
     Type hints: HELLO
     Overload:   {'id': 1, 'name': 'test'}
 
+#### Common typing patterns for data engineering
+
 ```python
-# Common typing patterns for data engineering
-#
-# Use these in function signatures for clarity and type checking.
+# Common typing patterns — practical type hints for DE functions
 
-from typing import Any
-from pathlib import Path
-from collections.abc import Callable, Iterator, Sequence
-
-# Function that accepts a path
 def read_data(path: str | Path) -> list[dict[str, Any]]:
     return [{"example": True}]
 
@@ -777,7 +979,32 @@ for batch in batched(list(range(10)), 3):
 
 ## 10. Linting & Code Quality Tools
 
+#### Cyclomatic complexity and linting tools
+
 ```python
+# Cyclomatic complexity and code quality tools — ruff, flake8, black
+#
+# Technique: Cyclomatic complexity counts independent code paths through
+#   a function. 1-5 = simple, 6-10 = moderate, 10+ = refactor. ruff
+#   (Rust-based) replaces flake8+isort+pyflakes. black auto-formats.
+#
+# Benefits:
+#   - Complexity measurement identifies functions that need refactoring
+#   - ruff is 10-100x faster than flake8 — instant feedback
+#   - black eliminates formatting debates — one canonical style
+#   - pre-commit hooks enforce quality automatically
+#
+# Anti-patterns:
+#   - No linter — relies entirely on human code review
+#   - Suppressing all warnings — defeats the purpose
+#   - Different formatters per developer — merge conflicts
+#
+# When to use:
+#   - Every Python project — configure in CI/CD pipeline
+#
+# When NOT to use:
+#   - N/A — quality tools are always beneficial
+
 # Cyclomatic complexity = number of independent paths through the code.
 # 1 = simple, 5 = moderate, 10+ = too complex, refactor.
 
@@ -821,12 +1048,35 @@ print("Refactored function passes all cases.")
 
 ## 11. Profiling Real Workloads
 
+#### Profiling a realistic data pipeline
+
 ```python
+# Profiling a realistic data pipeline — find the bottleneck stage
+#
+# Technique: Wrap each pipeline stage (extract, transform, load) with
+#   timing. Compare stage durations to find the bottleneck. Optimize
+#   the slowest stage first — Amdahl's law.
+#
+# Benefits:
+#   - Identifies which stage dominates total pipeline time
+#   - Stage-level timing enables targeted optimization
+#   - Amdahl's law — speedup is limited by the slowest unoptimized stage
+#
+# Anti-patterns:
+#   - Optimizing all stages equally — focus on the bottleneck
+#   - No timing in pipeline code — can't tell where time is spent
+#   - Profiling with small data — bottlenecks may differ at scale
+#
+# When to use:
+#   - Pipeline optimization, performance debugging, capacity planning
+#
+# When NOT to use:
+#   - Code that's already fast enough — premature optimization
+
 # Profiling a realistic data pipeline
 #
 # Measure each stage to find the bottleneck.
 
-import time
 
 def stage_timer(stages: dict):
     """Run each stage and report timing."""
@@ -842,8 +1092,6 @@ def stage_timer(stages: dict):
     print(f"\n  Bottleneck: {max(results, key=lambda k: results[k][0])}")
     return results
 
-import pandas as pd
-from pathlib import Path
 DATA = Path("./data")
 
 print("Data pipeline profiling:")

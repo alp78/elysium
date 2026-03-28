@@ -29,6 +29,7 @@ using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 
+using System.ComponentModel.DataAnnotations;
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
     BindingFlags.NonPublic | BindingFlags.Instance);
@@ -334,8 +335,6 @@ public class StockScorer
 ## 3. Data Validation
 
 ```csharp
-using System.ComponentModel.DataAnnotations;
-
 // Data Validation with DataAnnotations — built into .NET.
 // Python equivalent: Pydantic BaseModel with Field() constraints.
 //
@@ -426,8 +425,6 @@ public class OhlcvRecord : IValidatableObject
 ## 4. Reflection
 
 ```csharp
-using System.Reflection;
-
 // Reflection — inspect types, properties, methods at runtime.
 // Python equivalent: type(), dir(), vars(), inspect module.
 //

@@ -18,21 +18,22 @@ status: complete
 # 13. Advanced Parallel Pipelines - C#
 
 ```csharp
-#r "C:\Users\aperi\.nuget\packages\system.threading.tasks.dataflow\10.0.5\lib\net10.0\System.Threading.Tasks.Dataflow.dll"
 using System.Threading.Tasks.Dataflow;
-```
-
-```csharp
-// Import namespaces and suppress warnings
+using Microsoft.DotNet.Interactive.CSharp;
+using Microsoft.DotNet.Interactive;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Channels;
-using System.Collections.Concurrent;
 using System.Reflection;
-using Microsoft.DotNet.Interactive;
-using Microsoft.DotNet.Interactive.CSharp;
+using System.Text.Json;
+using System.Threading.Channels;
+using System.Threading;
+```
+
+#### Imports and warning suppression
+
+```csharp
+// Imports — namespaces for dataflow, HTTP, JSON, channels, and diagnostics
 
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
@@ -49,12 +50,8 @@ http.DefaultRequestHeaders.Add("User-Agent", "CSharp-Notebook/1.0");
 #### API keys from environment variables
 
 ```csharp
-// Load API keys from .env file — keeps secrets out of code
-// .env file format: KEY=value (one per line, no quotes needed)
-// In production: use secret managers (GCP Secret Manager, Azure Key Vault).
-// NEVER commit .env to git — add it to .gitignore.
+// API keys from environment — .env file loading for secrets
 
-// Read .env file and set environment variables
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
 if (File.Exists(envPath))
 {
@@ -89,6 +86,29 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 <h4><code style="font-size:0.75em">TransformBlock</code> and <code style="font-size:0.75em">ActionBlock</code></h4>
 
 ```csharp
+// TPL Dataflow — TransformBlock and ActionBlock for pipeline stages
+//
+// Technique: TransformBlock<TIn, TOut> transforms items with configurable
+//   parallelism. ActionBlock<T> is a terminal consumer. LinkTo connects
+//   blocks. Complete() + Completion signals end-of-pipeline.
+//
+// Benefits:
+//   - Independent parallelism per stage — I/O stages can have more concurrency
+//   - Built-in buffering and backpressure — slow stages don't OOM
+//   - Automatic linking — data flows between blocks without manual wiring
+//   - PropagateCompletion — shutdown cascades through the pipeline
+//
+// Anti-patterns:
+//   - Not calling Complete() — downstream blocks wait forever
+//   - Unbounded buffer — BoundedCapacity prevents OOM from fast producers
+//   - Too many parallel stages — diminishing returns, resource contention
+//
+// When to use:
+//   - Multi-stage ETL: extract (I/O) → transform (CPU) → load (I/O)
+//
+// When NOT to use:
+//   - Simple sequential processing — plain async/await is simpler
+
 // TPL Dataflow — build multi-stage concurrent pipelines with independent concurrency per stage
 //
 // WHAT: System.Threading.Tasks.Dataflow provides blocks that process items concurrently.
@@ -171,22 +191,7 @@ Console.WriteLine("  Pipeline complete.");
 <h4><code style="font-size:0.75em">BatchBlock</code> — size-bounded batching</h4>
 
 ```csharp
-// BatchBlock<T> — accumulates individual items and releases them as T[] arrays
-//
-// WHAT: collects items one by one, emits them as fixed-size arrays (batches)
-//   When you call Complete(), the remaining partial batch is flushed automatically.
-//
-// WHY: writing 1000 rows to a DB one at a time = 1000 round trips = slow.
-//   Batching into groups of 100 = 10 round trips = 100x fewer network calls.
-//   Also reduces lock contention and transaction overhead.
-//
-// WHEN TO USE: buffering API responses before DB insert, Kafka batch publishing,
-//   aggregating metrics before flushing to a monitoring endpoint
-// ANTI-PATTERNS:
-//   - Don't set batch size too large — you delay processing and increase memory
-//   - Don't forget Complete() — partial batch stays buffered forever without it
-//   - For time-based flushing (e.g., "flush every 5 seconds OR when 100 items"),
-//     use BatchBlock + Timer.TriggerBatch(), or switch to Rx.NET Buffer()
+// BatchBlock — collect individual items into fixed-size arrays
 
 var batchBlock = new BatchBlock<string>(3); // emit arrays of 3
 
@@ -212,21 +217,8 @@ Console.WriteLine("  All batches processed.");
 #### Multi-stage pipeline with real API
 
 ```csharp
-// Real API multi-stage pipeline — Fetch (IO) → Parse (CPU) → Display (IO)
-//
-// WHAT: three TransformBlock/ActionBlock stages linked together, hitting a real API.
-//   Stage 1 (IO-bound, 2 concurrent): HTTP GET to Twelve Data for each stock symbol.
-//   Stage 2 (CPU-bound, 1 sequential): parse the JSON response, extract price + change.
-//   Stage 3 (terminal): print each result.
-//
-// WHY: in production, each stage would have different resource constraints:
-//   - Fetch: limited by API rate limits (e.g., 8 req/min) → set MaxDegreeOfParallelism = 2
-//   - Parse: CPU-bound but fast → default parallelism is fine
-//   - Save to DB: limited by connection pool size → set parallelism to match pool
-//   Dataflow handles backpressure automatically — if parse is slower than fetch,
-//   fetch blocks until parse has capacity (bounded by BoundedCapacity option).
-//
-// GAIN: each stage scales independently; adding a new stage is just another LinkTo()
+// Multi-stage pipeline with real API — Fetch → Parse → Display
+
 var apiKey = TWELVE_DATA_KEY;
 
 // Stage 1: Fetch — async HTTP call, max 2 concurrent to respect Twelve Data rate limits
@@ -278,6 +270,28 @@ Console.WriteLine($"  Done in {sw.ElapsedMilliseconds}ms");
 #### Parallel fetch with rate limiting
 
 ```csharp
+// Parallel fetch with SemaphoreSlim rate limiting
+//
+// Technique: SemaphoreSlim(maxConcurrent) limits simultaneous API calls.
+//   WaitAsync blocks when limit reached. Release in finally ensures cleanup.
+//   Task.WhenAll runs all fetches concurrently within the limit.
+//
+// Benefits:
+//   - Prevents overwhelming APIs — respects rate limits
+//   - Maximum throughput within the concurrency constraint
+//   - Exception-safe — Release in finally prevents deadlocks
+//
+// Anti-patterns:
+//   - Unbounded concurrency — gets rate-limited or banned by APIs
+//   - Not releasing semaphore on error — deadlocks remaining tasks
+//   - Sequential fetching when parallel is possible — wastes time
+//
+// When to use:
+//   - Batch API ingestion with rate limits (3-10 concurrent requests)
+//
+// When NOT to use:
+//   - Single API call — no semaphore needed
+
 // Parallel fetch with SemaphoreSlim rate limiting
 //
 // WHAT: SemaphoreSlim(n) limits how many tasks can run a critical section concurrently.
@@ -336,25 +350,8 @@ Console.WriteLine($"\n  Fetched {results.Count} quotes in {sw.ElapsedMillisecond
 <h4><code style="font-size:0.75em">IAsyncEnumerable</code> for paginated FRED API</h4>
 
 ```csharp
-// IAsyncEnumerable<T> for paginated APIs — stream results without loading all into memory
-//
-// WHAT: IAsyncEnumerable<T> is an async version of IEnumerable<T>. The producer
-//   uses "yield return" inside an async method to emit items one at a time.
-//   The consumer uses "await foreach" to process items as they arrive.
-//
-// WHY: a paginated API with 50 pages × 100 items = 5000 records.
-//   Without streaming: fetch ALL pages into a List<T>, THEN process → 5000 items in memory.
-//   With IAsyncEnumerable: fetch page 1, yield 100 items, consumer processes them,
-//   fetch page 2, yield 100 more — only one page in memory at a time.
-//
-// WHEN TO USE: paginated REST APIs, database cursors, file streaming, real-time feeds
-// ANTI-PATTERNS:
-//   - Don't materialize to List (ToListAsync) unless you need random access — defeats the purpose
-//   - Don't forget [EnumeratorCancellation] — without it, WithCancellation() has no effect
-//   - Don't mix blocking I/O inside the async enumerator — use async APIs (GetStringAsync)
-//
-// [EnumeratorCancellation] attribute wires the CancellationToken from the consumer's
-// WithCancellation() call into the ct parameter of this method automatically.
+// IAsyncEnumerable for paginated APIs — stream pages without buffering all
+
 var fredKey = FRED_KEY;
 
 async IAsyncEnumerable<(string Id, string Title)> FetchFredSeriesAsync(
@@ -412,23 +409,8 @@ await foreach (var (id, title) in FetchFredSeriesAsync("GDP", limit: 8))
 #### Parallel fetch with Channel batching
 
 ```csharp
-// Channel<T> as a concurrent buffer between parallel producers and a batching consumer
-//
-// WHAT: Channel<T> is a thread-safe async queue. Writers push items in, readers pull them out.
-//   BoundedChannel(n): has a max capacity — writer blocks when full (backpressure).
-//   UnboundedChannel: grows indefinitely — no backpressure (risk of OOM if producer > consumer).
-//   Writer.Complete() signals "no more items" — ReadAllAsync() stops when channel is drained.
-//
-// WHY: decouples producers from consumers. Producers fetch data as fast as the API allows,
-//   consumer batches and writes to DB at its own pace. Neither blocks the other.
-//   If the consumer is slower, BoundedChannel applies backpressure to the producer.
-//
-// WHEN TO USE: producer-consumer with different speeds, fan-in (many producers, one consumer),
-//   buffering between pipeline stages, replacing BlockingCollection in async code
-// ANTI-PATTERNS:
-//   - Don't forget Writer.Complete() — ReadAllAsync() will hang forever
-//   - Don't use UnboundedChannel with a fast producer and slow consumer — memory leak
-//   - Don't read and write on the same thread without async — deadlock
+// Channel with parallel producers and batching consumer
+
 var finnhubKey = FINNHUB_KEY;
 var finnhubSymbols = new[] { "SAP", "ASML", "TTE", "UL", "DEO" };
 
@@ -478,6 +460,28 @@ await producer; // ensure producer completed without exceptions
 <h4><code style="font-size:0.75em">Process</code> — spawn external programs</h4>
 
 ```csharp
+// Process — spawn external programs and capture output
+//
+// Technique: Process.Start with RedirectStandardOutput captures the child
+//   process's stdout. WaitForExitAsync for non-blocking wait. ExitCode
+//   indicates success (0) or failure. Separate OS process — own memory.
+//
+// Benefits:
+//   - Language-agnostic — child can be Python, Go, Rust, shell script
+//   - Isolation — child crash doesn't crash the parent
+//   - Redirect captures stdout/stderr for processing
+//
+// Anti-patterns:
+//   - Shell=true with user input — command injection risk
+//   - Not checking ExitCode — silent failures
+//   - Large output via stdout — use files for large data exchange
+//
+// When to use:
+//   - Running CLI tools, cross-language orchestration, system commands
+//
+// When NOT to use:
+//   - .NET-to-.NET — use in-process calls or gRPC
+
 // System.Diagnostics.Process — spawn a child OS process, capture its output
 //
 // WHAT: Process.Start() creates a new operating system process (separate memory space).
@@ -530,19 +534,8 @@ Console.WriteLine($"  Parsed: source={source}, value={value}");
 #### Concurrent process execution
 
 ```csharp
-// Concurrent process execution — fan-out to multiple child processes simultaneously
-//
-// WHAT: launch N processes at once with Task.WhenAll, each in its own OS process.
-//   Each process has isolated memory — one can crash without affecting the others.
-//
-// WHY: true process-level parallelism across CPU cores, with fault isolation.
-//   A thread crash in C# can corrupt shared state; a process crash is contained.
-//   Use when: running untrusted code, invoking external executables (Python, bq, dbt),
-//   or when you need crash resilience (restart failed worker, keep others running).
-//
-// GAIN OVER THREADS: memory isolation, crash resilience, can run different runtimes
-// COST: higher startup overhead (~50-200ms per process vs ~1ms per thread),
-//   inter-process communication requires serialization (stdout, pipes, sockets)
+// Concurrent process execution — fan-out to multiple child processes
+
 async Task<string> RunPythonAsync(string expr)
 {
     var psi = new ProcessStartInfo

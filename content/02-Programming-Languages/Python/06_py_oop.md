@@ -17,7 +17,6 @@ status: complete
 # 06. Object-Oriented Programming - Python
 
 ```python
-# Imports used throughout this notebook
 import math
 from abc import ABC, abstractmethod
 from typing import Protocol, runtime_checkable, Optional
@@ -29,6 +28,28 @@ from dataclasses import dataclass, field
 #### Type definitions
 
 ```python
+# Class definition — blueprint with __init__, attributes, methods, __str__
+#
+# Technique: class Dog: defines a type. __init__ initializes instance
+#   attributes (self.name). Class attributes (species) are shared by all.
+#   __str__ returns human-readable string for print() and f-strings.
+#
+# Benefits:
+#   - Class attributes shared across instances — no duplication
+#   - __init__ ensures objects start in a valid state
+#   - __str__/__repr__ provide clean display and debugging output
+#
+# Anti-patterns:
+#   - Mutable class attributes (lists/dicts) — shared and mutated by all instances
+#   - Not defining __repr__ — defaults to unhelpful <Dog at 0x...>
+#   - __init__ doing heavy work — use factory methods for complex setup
+#
+# When to use:
+#   - Domain entities with state and behavior
+#
+# When NOT to use:
+#   - Simple data containers — use dataclass or namedtuple
+
 # Classes and objects — class is the blueprint; instances are created with ClassName()
 
 # Dog — class attribute shared by all, instance attributes unique to each, methods operate on self
@@ -56,7 +77,8 @@ class Dog:
 #### Using Dog — instance and class attributes
 
 ```python
-# Using Dog — create instances, access attributes, call methods
+# Using classes — instantiation, attribute access, method calls
+
 dog1 = Dog("Rex", 5)
 dog2 = Dog("Buddy", 3)
 
@@ -82,7 +104,8 @@ print(f"dog2.color:  {dog2.color}")                # None — default from __ini
 #### Class vs instance attribute shadowing
 
 ```python
-# Class vs instance attribute — class attr is shared; instance attr shadows it
+# Class vs instance attribute shadowing — shared vs per-instance state
+
 print(f"Dog.species:  {Dog.species}")             # access on class
 print(f"dog1.species: {dog1.species}")            # access on instance (falls back to class)
 
@@ -101,7 +124,8 @@ print(f"Dog.species:  {Dog.species}")             # still "Canis familiaris" (cl
 <h4><code style="font-size:0.75em">@property</code> — controlled access with validation</h4>
 
 ```python
-# @property — controlled access with validation; computed read-only properties
+# @property — controlled access with validation and computed attributes
+
 class Circle:
     def __init__(self, radius):
         self._radius = radius                     # convention: _ prefix = "private"
@@ -138,6 +162,28 @@ print(f"new radius: {c.radius}")
 #### Type definitions
 
 ```python
+# Inheritance — base class with methods, derived classes override
+#
+# Technique: class Dog(Animal) inherits from Animal. Override methods
+#   by redefining them. super().__init__() calls parent constructor.
+#   Python supports multiple inheritance via MRO (C3 linearization).
+#
+# Benefits:
+#   - Code reuse — shared behavior in the base class
+#   - Polymorphism — derived types substitutable for the base type
+#   - super() handles MRO correctly in multiple inheritance
+#
+# Anti-patterns:
+#   - Deep hierarchies (>3 levels) — prefer composition
+#   - Forgetting super().__init__() — parent state not initialized
+#   - Diamond inheritance without understanding MRO — confusing dispatch
+#
+# When to use:
+#   - IS-A relationships: Dog is an Animal, Circle is a Shape
+#
+# When NOT to use:
+#   - HAS-A relationships — use composition (attributes)
+
 # Inheritance and polymorphism — child classes extend a parent; method overriding enables runtime dispatch
 
 # Animal — base class with speak that subclasses can override
@@ -173,7 +219,8 @@ class Cat(Animal):
 #### Using inheritance
 
 ```python
-# Using inheritance — Dog and Cat extend Animal with their own speak
+# Using inheritance — instantiate subclasses, call overridden methods
+
 dog = Dog("Rex", "German Shepherd")
 cat = Cat("Whiskers")
 
@@ -191,7 +238,8 @@ print(f"dog.breed:    {dog.breed}")
 #### Polymorphism and type checking
 
 ```python
-# Polymorphism — pass a list of Animal; each calls its own overridden speak
+# Polymorphism and type checking — duck typing and isinstance
+
 def animal_roll_call(animals):
     """Works with ANY Animal — doesn't care which specific type."""
     for animal in animals:
@@ -217,7 +265,8 @@ print(f"issubclass(Dog, Animal): {issubclass(Dog, Animal)}")   # True
 #### Mixin
 
 ```python
-# Mixin: a class that adds a capability, doesn't stand on its own
+# Mixin — add capabilities via multiple inheritance
+
 class Flyable:
     name: str                          # declare so type checkers know about it
     def fly(self):
@@ -250,6 +299,28 @@ print(f"MRO:   {[c.__name__ for c in Duck.__mro__]}") # Method Resolution Order 
 #### Abstract class
 
 ```python
+# Abstract class (ABC) — enforced contract with optional shared implementation
+#
+# Technique: class Shape(ABC) with @abstractmethod defines methods that
+#   subclasses must implement. Concrete methods provide shared logic.
+#   Instantiating an abstract class raises TypeError.
+#
+# Benefits:
+#   - Enforces contract — TypeError if abstract method not implemented
+#   - Shared code in concrete methods — avoids duplication
+#   - Catches missing implementations at instantiation, not at call time
+#
+# Anti-patterns:
+#   - ABC with no shared code — use Protocol for structural typing
+#   - Forgetting @abstractmethod — method becomes optional
+#   - ABC with too many abstract methods — splits into smaller ABCs
+#
+# When to use:
+#   - When subclasses must share common state and implement specific methods
+#
+# When NOT to use:
+#   - Pure contract — use Protocol for duck-typing compatibility
+
 # Abstract class — Shape defines the contract
 # subclasses must implement area/perimeter
 
@@ -300,7 +371,8 @@ class Circle(Shape):
 #### Using abstract classes
 
 ```python
-# shape = Shape()  # TypeError! Can't instantiate abstract class
+# Using abstract classes — instantiate subclasses, call abstract methods
+
 rect = Rectangle(5, 3, "red")
 circ = Circle(4, "blue")
 
@@ -320,6 +392,15 @@ print(f"Total area: {total_area:.2f}")
 <h4><code style="font-size:0.75em">Protocol</code> — structural typing</h4>
 
 ```python
+# Protocol — structural typing without inheritance (duck typing formalized)
+
+// When to use:
+#   - Third-party classes that can't inherit your ABC
+#   - Duck typing with type checker support
+#
+# When NOT to use:
+#   - When shared implementation is needed — use ABC instead
+
 # Protocol — structural typing; any class with the right methods matches, no inheritance needed
 
 # Drawable — any class with a draw() method qualifies
@@ -350,8 +431,11 @@ print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
       Drawing textbox
     Button is Drawable? True
 
+#### Summary — ABC vs Protocol
+
 ```python
-# Summary — ABC vs Protocol
+# Summary — ABC vs Protocol comparison
+
 print("ABC:      class must explicitly inherit (class Rect(Shape))")
 print("Protocol: class just needs the right methods (no inheritance)")
 print("ABC:      has concrete methods + abstract methods (partial implementation)")
@@ -368,6 +452,28 @@ print("Protocol: pure contract (just method signatures)")
 #### Access conventions
 
 ```python
+# Encapsulation — naming conventions for access control
+#
+# Technique: Python uses conventions, not enforcement. name is public.
+#   _name is protected (convention). __name triggers name mangling
+#   (_ClassName__name) — harder to access accidentally.
+#
+# Benefits:
+#   - _prefix signals "internal use" — respected by IDEs and developers
+#   - __mangling prevents accidental override in subclasses
+#   - @property provides validated access to private backing fields
+#
+# Anti-patterns:
+#   - Accessing _private attrs from outside — violates the convention
+#   - Overusing __mangling — makes testing and inheritance harder
+#   - No access control at all — public everything loses encapsulation
+#
+# When to use:
+#   - _ for internal implementation details; __ for name-collision prevention
+#
+# When NOT to use:
+#   - __ for privacy alone — _ convention is sufficient in Python
+
 # Encapsulation — Python uses naming conventions instead of enforced access modifiers
 
 # BankAccount — public (name), protected (_balance), private (__pin via name mangling)
@@ -404,7 +510,8 @@ print(f"dir(acc) with __: {[a for a in dir(acc) if 'pin' in a.lower()]}")
 #### Access comparison
 
 ```python
-# Access comparison — Python conventions vs enforcement
+# Access convention comparison — Python naming vs C# access modifiers
+
 comparison = """
 name                public              accessible everywhere
 _name               protected           accessible in class + subclasses (convention in Python)
@@ -430,6 +537,29 @@ print("Python: conventions only — nothing is truly private")
 #### Type definitions
 
 ```python
+# Static and class methods — @classmethod receives cls, @staticmethod has no self
+#
+# Technique: @classmethod gets the class as first arg (cls) — enables
+#   factory methods and inheritance-aware construction. @staticmethod
+#   gets no implicit arg — just a function namespaced to the class.
+#
+# Benefits:
+#   - @classmethod factories: Employee.from_csv(line) creates instances
+#   - @classmethod respects inheritance — cls is the subclass when called on one
+#   - @staticmethod groups utility functions under the class namespace
+#
+# Anti-patterns:
+#   - @staticmethod when a module-level function is clearer
+#   - Instance method when self is never used — make it @staticmethod
+#   - Not using cls in @classmethod — should be @staticmethod instead
+#
+# When to use:
+#   - @classmethod for factories and inheritance-aware methods
+#   - @staticmethod for class-namespaced utilities
+#
+# When NOT to use:
+#   - @staticmethod for methods that need instance state — use regular method
+
 # Static and class methods — @classmethod receives cls for factories; @staticmethod has no self/cls
 
 # Employee — instance method (self), @classmethod (cls), @staticmethod (no self/cls)
@@ -471,7 +601,8 @@ class Employee:
 #### Using static and class methods
 
 ```python
-# Instance method — needs an object
+# Using static and class methods — factories and aggregate operations
+
 emp1 = Employee("Alice", 95000)
 emp1.give_raise(10)
 print(f"Instance: {emp1}")
@@ -499,7 +630,8 @@ print(f"Company:  {Employee.company}")
 <h4><code style="font-size:0.75em">@classmethod</code> inheritance — cls is the subclass</h4>
 
 ```python
-# @classmethod inheritance — cls refers to the subclass, enabling polymorphic factories
+# @classmethod inheritance — cls is the subclass, enabling polymorphic factories
+
 class Manager(Employee):
     pass
 
@@ -516,6 +648,27 @@ print(f"Type: {type(mgr).__name__}")       # Manager, not Employee
 #### Why dataclasses instead of dicts
 
 ```python
+# Why dataclasses over dicts — compile-time safety for known structures
+#
+# Technique: Dicts accept any key (including typos) and any value type —
+#   errors appear only at runtime. Dataclasses enforce field names and
+#   types at definition, with IDE autocomplete and type checker support.
+#
+# Benefits:
+#   - Typos caught by IDE and type checker — not at runtime
+#   - Autocomplete lists all valid fields — no memorizing string keys
+#   - Refactoring tools rename fields across the codebase
+#
+# Anti-patterns:
+#   - Dicts for fixed-structure data — loses safety and tooling
+#   - String keys when field names are known — dataclass is type-safe
+#
+# When to use:
+#   - Any data with a known schema: API responses, configs, DB rows
+#
+# When NOT to use:
+#   - Truly dynamic keys from runtime — dicts are appropriate
+
 # In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored
 # in databases. So why bother with classes for moving data around?
 #
@@ -540,9 +693,8 @@ print(f"Type: {type(mgr).__name__}")       # Manager, not Employee
 #### Dict — silent typos
 
 ```python
-# Dict — typos in keys pass silently and fail at runtime
+# Dict vs dataclass — typos pass silently with dicts
 
-# Dict: typo in key name is invisible until runtime
 record = {"customer_id": 123, "amout": 99.99}     # typo: "amout" not "amount"
 # total = record["amount"]                          # KeyError in production!
 
@@ -564,7 +716,8 @@ print(f"Dataclass typo: TypeError at creation time")
 #### Autocomplete, refactoring, and type safety
 
 ```python
-# Autocomplete and type safety — dataclasses give IDE support that dicts lack
+# Autocomplete, refactoring, and type safety — IDE benefits of dataclasses
+
 def transform_dict(record: dict) -> dict:
     # What keys does record have? Must read docs or trace the code.
     return record
@@ -589,7 +742,8 @@ print("Dataclass: rename the field → IDE highlights every broken usage")
 #### Dict — no validation
 
 ```python
-# Dict — no type validation; any value accepted for any key
+# Dict vs dataclass — dicts have no type validation
+
 bad_dict = {"customer_id": "not_a_number", "amount": "free"}  # no error!
 
 # Dataclass — at least type hints help IDE catch it
@@ -606,7 +760,8 @@ print("Pydantic:  runtime validation (auto-converts and rejects bad data)")
 #### When to use what
 
 ```python
-# When to use what — dict for dynamic keys, dataclass for known structure
+# When to use what — dict vs dataclass vs class decision guide
+
 recs = """
 USE CASE                        RECOMMENDATION
 ─────────────────────────────── ──────────────────────────
@@ -641,7 +796,8 @@ print(recs)
 <h4><code style="font-size:0.75em">@dataclass</code> declarations</h4>
 
 ```python
-# @dataclass — auto-generates __init__, __repr__, __eq__ from field declarations
+# @dataclass — auto-generated __init__, __repr__, __eq__ from field declarations
+
 @dataclass
 class Point:
     x: float
@@ -663,28 +819,8 @@ print(f"p1 == p3:  {p1 == p3}")
 <h4><code style="font-size:0.75em">field()</code> — customizing dataclass fields</h4>
 
 ```python
-# field() parameters — customize individual dataclass fields:
-#   default:          static default value (same as = value)
-#   default_factory:  callable that creates a NEW default per instance (for mutable types)
-#                     field(default_factory=list)  → fresh [] each time (SAFE)
-#                     tags: list = []              → shared [] across all instances (BUG!)
-#   init:             True/False — include in __init__ constructor? (default: True)
-#                     field(init=False) → not a parameter, set in __post_init__
-#   repr:             True/False — include in __repr__ output? (default: True)
-#                     field(repr=False) → hidden from print/logging
-#   compare:          True/False — include in __eq__ comparison? (default: True)
-#                     field(compare=False) → ignored when comparing two instances
-#   hash:             True/False/None — include in __hash__? (default: None = same as compare)
-#   kw_only:          True/False — must be passed as keyword argument? (Python 3.10+)
-#   metadata:         dict of arbitrary info (for tools/frameworks, not used by dataclass itself)
-#
-# When to use field():
-#   Simple value:     name: str = "default"              → no field() needed
-#   Mutable default:  tags: list = field(default_factory=list)  → MUST use field()
-#   Exclude from init: _id: int = field(init=False)       → computed, not a parameter
-#   Hide from repr:   _cache: dict = field(repr=False, default_factory=dict)
+# field() — customize individual dataclass fields
 
-# Employee — demonstrates default_factory, init=False, repr=False, and __post_init__
 @dataclass
 class Employee:
     name: str                                      # no default -> required for init
@@ -707,7 +843,8 @@ print(f"Hidden _id: {emp._id}")
 <h4><code style="font-size:0.75em">frozen=True</code> — immutable dataclass</h4>
 
 ```python
-# frozen=True — makes the dataclass immutable; assignment raises FrozenInstanceError
+# frozen=True — immutable dataclass that raises on assignment
+
 @dataclass(frozen=True)
 class Config:
     host: str
@@ -730,7 +867,8 @@ print(f"As dict key: {configs}")
 <h4><code style="font-size:0.75em">order=True</code> — comparable dataclass</h4>
 
 ```python
-# order=True — auto-generates comparison methods based on field order
+# order=True — auto-generated comparison methods for sortable dataclasses
+
 @dataclass(order=True)
 # field order in the class IS the sort priority
 class Version:
@@ -749,7 +887,8 @@ print(f"Max:    {max(versions)}")
 <h4><code style="font-size:0.75em">PipelineRecord</code> and boilerplate comparison</h4>
 
 ```python
-# PipelineRecord — real-world dataclass for ETL pipeline metadata
+# PipelineRecord and boilerplate comparison — real-world dataclass usage
+
 @dataclass
 class PipelineRecord:
     table_name: str
@@ -774,8 +913,11 @@ for r in records:
       orders: failed (ok=False)
       products: pending (ok=False)
 
+#### Summary — class vs dataclass vs frozen dataclass
+
 ```python
-# Summary — class vs dataclass vs frozen dataclass
+# Summary — class vs dataclass boilerplate comparison
+
 print("""
 class Point:
     def __init__(self, x, y):

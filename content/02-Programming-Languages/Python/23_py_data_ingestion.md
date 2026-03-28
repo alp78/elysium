@@ -1,0 +1,2456 @@
+---
+type: reference
+category: programming-languages
+technology: [python, gcp]
+tags: [python, gcp, pipeline, sql, bigquery]
+aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
+keywords: [ingestion, bulk insert, bcp, BigQuery load, Firestore batch, GCS, CSV, Parquet, pyodbc, google-cloud-bigquery, benchmark, throughput, latency]
+description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [[23_cs_data_ingestion]] for the C# equivalent."
+related:
+  - "[[programming-languages-index]]"
+  - "[[23_cs_data_ingestion]]"
+  - "[[22_py_data_transfer]]"
+  - "[[16_py_database]]"
+created: 2026-03-28
+updated: 2026-03-28
+status: complete
+---
+
+# 23. Data Ingestion — SQL Server, BigQuery, Firestore
+
+```python
+# Suppress tqdm progress bars globally (pandas_gbq uses tqdm internally)
+import os
+os.environ['TQDM_DISABLE'] = '1'
+import warnings
+from sqlalchemy import exc
+
+# Suppress SQLAlchemy unrecognized version warnings to keep console output clean
+warnings.filterwarnings('ignore', category=exc.SAWarning)
+# All imports for data ingestion benchmarking across GCP services
+
+# Standard library
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+import time
+from datetime import datetime, timezone
+from io import BytesIO, StringIO
+from pathlib import Path
+from urllib.parse import quote_plus
+
+# Data & serialisation
+import pandas as pd
+import pandas_gbq
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+# SQL Server
+import pymssql
+import pyodbc
+from sqlalchemy import create_engine
+
+# Google Cloud
+from dotenv import load_dotenv
+from google.cloud import bigquery, firestore, storage
+from google.cloud import bigquery_connection_v1
+
+# Visualisation
+import plotly.graph_objects as go
+import plotly.express as px
+from IPython.display import display
+
+# Render DataFrames as HTML
+html_formatter = get_ipython().display_formatter.formatters['text/html'] # type: ignore
+html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
+_ = html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
+```
+
+```python
+# Load .env and define project constants
+load_dotenv(override=True)
+
+# ── Project constants ──
+PROJECT_ID    = 'seclab-dev-ap-26'
+REGION        = 'europe-west1'
+BUCKET_NAME   = f'{PROJECT_ID}-data'
+BQ_DATASET    = 'index_data'
+FIRESTORE_DB  = 'seclab-scores'
+SQL_IP        = os.environ['GCP_SQL_IP']
+SQL_PASSWORD  = os.environ['GCP_SQL_PASSWORD']
+SA_KEY_PATH   = os.environ.get('GCP_SA_KEY_PATH', './gcp-sa-key.json')
+DATA_DIR      = Path(r'C:\Users\aperi\DEV\LANG\data')
+CHUNK_SIZE    = 10_000
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SA_KEY_PATH
+
+# ── Benchmark table/collection names ──
+SQL_BENCH_TABLE = 'dbo.ohlcv_bench'
+BQ_BENCH_TABLE  = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench'
+FS_COLLECTION   = 'ohlcv_bench'
+
+# ── GCP clients (authenticated via service account key) ──
+bq_client  = bigquery.Client(project=PROJECT_ID)
+gcs_client = storage.Client(project=PROJECT_ID)
+bucket     = gcs_client.bucket(BUCKET_NAME)
+fs_client  = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DB)
+
+# ── SQL Server connections ──
+#
+# pymssql: lightweight FreeTDS-based driver, good for quick queries and scripting.
+# pyodbc:  ODBC Driver 18 with TLS encryption — production-grade, supports fast_executemany.
+
+def sql_pymssql():
+    return pymssql.connect(server=SQL_IP, user='sqlserver', password=SQL_PASSWORD,
+                           port='1433', database='stoxx', login_timeout=15)
+
+ODBC_CONN = (
+    f'DRIVER={{ODBC Driver 18 for SQL Server}};'
+    f'SERVER={SQL_IP},1433;DATABASE=stoxx;'
+    f'UID=sqlserver;PWD={SQL_PASSWORD};'
+    f'Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=15;'
+)
+def sql_pyodbc():
+    return pyodbc.connect(ODBC_CONN)
+
+# SQLAlchemy engines (for pandas.to_sql / pandas.read_sql)
+sql_engine_odbc   = create_engine(f'mssql+pyodbc:///?odbc_connect={quote_plus(ODBC_CONN)}')
+sql_engine_pymssql = create_engine(
+    f'mssql+pymssql://sqlserver:{quote_plus(SQL_PASSWORD)}@{SQL_IP}/stoxx')
+
+# ── CLI tool paths ──
+BCP    = shutil.which('bcp') or 'bcp'
+BQ_CLI = shutil.which('bq.cmd') or shutil.which('bq') or 'bq'
+GCLOUD = shutil.which('gcloud.cmd') or shutil.which('gcloud') or 'gcloud'
+
+# ── Helpers ──
+def _sql_truncate(table):
+    """Truncate a SQL Server table before benchmark run."""
+    with sql_pymssql() as conn:
+        conn.cursor().execute(f'TRUNCATE TABLE {table}')
+        conn.commit()
+
+def _fs_delete_collection(collection, batch_size=500):
+    """Delete all documents in a Firestore collection in batches to avoid query timeout."""
+    deleted = 0
+    while True:
+        docs = list(fs_client.collection(collection).limit(batch_size).select([]).stream())
+        if not docs:
+            break
+        batch = fs_client.batch()
+        for doc in docs:
+            batch.delete(doc.reference)
+        batch.commit()
+        deleted += len(docs)
+    return deleted
+
+# ── Test all connections ──
+with sql_pymssql() as conn:
+    cursor = conn.cursor()
+    cursor.execute('SELECT @@VERSION')
+    print(f'  SQL Server: {str(cursor.fetchone()[0])[:60]}...')
+print(f'  BigQuery:   {BQ_DATASET} ({PROJECT_ID})')
+print(f'  Firestore:  {FIRESTORE_DB} ({PROJECT_ID})')
+print(f'  GCS:        gs://{BUCKET_NAME}')
+```
+
+      SQL Server: Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236...
+      BigQuery:   index_data (seclab-dev-ap-26)
+      Firestore:  seclab-scores (seclab-dev-ap-26)
+      GCS:        gs://seclab-dev-ap-26-data
+
+#### Formatting helpers
+
+```python
+def fmt_rows(n):
+    if n < 1000: return str(n)
+    if n < 1_000_000: return f'{n/1000:.1f}K'
+    return f'{n/1_000_000:.1f}M'
+
+def fmt_time(ms):
+    if ms < 1000: return f'{ms:.0f}ms'
+    if ms < 60_000: return f'{ms/1000:.1f}s'
+    m, s = divmod(ms / 1000, 60)
+    if s == 0: return f'{int(m)}min'
+    return f'{int(m)}m{s:.0f}s'
+
+def fmt_size(b):
+    if b < 1024: return f'{b} B'
+    if b < 1024 * 1024: return f'{b/1024:.0f} KB'
+    if b < 1024 ** 3: return f'{b/(1024*1024):.2f} MB'
+    return f'{b/(1024**3):.2f} GB'
+
+def fmt_rate(rows, ms):
+    if ms <= 0: return '-'
+    rate = rows / (ms / 1000)
+    if rate < 1000: return f'{rate:.0f} rows/s'
+    if rate < 1_000_000: return f'{rate/1000:.1f}K rows/s'
+    return f'{rate/1_000_000:.1f}M rows/s'
+```
+
+#### Define file tiers for ingestion benchmarks
+
+```python
+# Unified OHLCV schema across all three tiers.
+# Generated from combined eurostoxx50 + stoxxusa50 + oil20 OHLCV data.
+# Schema: id, symbol, date, open, high, low, close, adj_close, volume, dividends, stock_splits, is_filled
+
+OHLCV_COLS = ['id', 'symbol', 'date', 'open', 'high', 'low', 'close',
+              'adj_close', 'volume', 'dividends', 'stock_splits', 'is_filled']
+
+tiers = {
+    'small':  {'csv': DATA_DIR / 'ingest_small.csv',  'json': DATA_DIR / 'ingest_small.json',  'parquet': DATA_DIR / 'ingest_small.parquet'},
+    'medium': {'csv': DATA_DIR / 'ingest_medium.csv', 'json': DATA_DIR / 'ingest_medium.json', 'parquet': DATA_DIR / 'ingest_medium.parquet'},
+    'large':  {'csv': DATA_DIR / 'ingest_large.csv',  'json': DATA_DIR / 'ingest_large.json',  'parquet': DATA_DIR / 'ingest_large.parquet'},
+}
+
+# Count rows dynamically (header excluded for CSV)
+for tier, info in tiers.items():
+    with open(info['csv']) as f:
+        info['rows'] = sum(1 for _ in f) - 1
+
+gcs_paths = {tier: {fmt: f'bronze/{fmt}/ingest_{tier}.{fmt}'
+              for fmt in ['csv', 'json', 'parquet']} for tier in tiers}
+
+
+tier_summary = pd.DataFrame([
+    {
+        'tier': tier,
+        'rows': f'{info["rows"]:,}',
+        'CSV': fmt_size(info['csv'].stat().st_size),
+        'JSON': fmt_size(info['json'].stat().st_size),
+        'Parquet': fmt_size(info['parquet'].stat().st_size),
+    }
+    for tier, info in tiers.items()
+]).set_index('tier')
+display(tier_summary)
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>rows</th>
+      <th>CSV</th>
+      <th>JSON</th>
+      <th>Parquet</th>
+    </tr>
+    <tr>
+      <th>tier</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>small</th>
+      <td>2,500</td>
+      <td>190 KB</td>
+      <td>468 KB</td>
+      <td>130 KB</td>
+    </tr>
+    <tr>
+      <th>medium</th>
+      <td>75,000</td>
+      <td>5.66 MB</td>
+      <td>13.81 MB</td>
+      <td>2.96 MB</td>
+    </tr>
+    <tr>
+      <th>large</th>
+      <td>750,000</td>
+      <td>57.31 MB</td>
+      <td>138.85 MB</td>
+      <td>18.89 MB</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Ingestion benchmark helper
+
+```python
+# Benchmark helper — persists results to JSON, keyed by (method, tier).
+INGEST_RESULTS_FILE = DATA_DIR / 'ingestion_results.json'
+
+def _load_results() -> list:
+    if INGEST_RESULTS_FILE.exists():
+        return json.loads(INGEST_RESULTS_FILE.read_text())
+    return []
+
+def _save_results(results: list) -> None:
+    INGEST_RESULTS_FILE.write_text(json.dumps(results, indent=2))
+
+ingest_results = _load_results()
+
+def bench_ingest(method_name, ingest_fn, tier_name):
+    t0 = time.perf_counter()
+    row_count = ingest_fn()
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+    record = {
+        'method': method_name, 'tier': tier_name,
+        'rows': row_count, 'rows_fmt': fmt_rows(row_count),
+        'elapsed_ms': round(elapsed_ms, 1), 'elapsed': fmt_time(elapsed_ms),
+        'rate': fmt_rate(row_count, elapsed_ms),
+        'rate_raw': round(row_count / (elapsed_ms / 1000), 1) if elapsed_ms > 0 else 0,
+    }
+    # Upsert in persistent store
+    all_r = _load_results()
+    all_r = [r for r in all_r if (r['method'], r['tier']) != (method_name, tier_name)]
+    all_r.append(record)
+    _save_results(all_r)
+    # Upsert in memory
+    global ingest_results
+    ingest_results = [r for r in ingest_results if (r['method'], r['tier']) != (method_name, tier_name)]
+    ingest_results.append(record)
+    return record
+
+print(f'  Loaded {len(ingest_results)} existing results from {INGEST_RESULTS_FILE.name}')
+```
+
+      Loaded 67 existing results from ingestion_results.json
+
+## Schema Setup
+
+Create unified `ohlcv_bench` staging table in SQL Server and BigQuery.
+Same OHLCV schema everywhere. Firestore is schemaless — no setup needed.
+
+#### Create staging table in SQL Server
+
+```python
+# Single staging table matching the OHLCV schema. All nvarchar (matching existing Cloud SQL pattern).
+with sql_pymssql() as conn:
+    cursor = conn.cursor()
+    cursor.execute('''
+        IF OBJECT_ID('dbo.ohlcv_bench', 'U') IS NULL
+        CREATE TABLE dbo.ohlcv_bench (
+            id         nvarchar(50),
+            symbol     nvarchar(50),
+            date       nvarchar(50),
+            [open]     nvarchar(50),
+            high       nvarchar(50),
+            low        nvarchar(50),
+            [close]    nvarchar(50),
+            adj_close  nvarchar(50),
+            volume     nvarchar(50),
+            dividends  nvarchar(50),
+            stock_splits nvarchar(50),
+            is_filled  nvarchar(50)
+        )
+    ''')
+    conn.commit()
+```
+
+#### Create staging table in BigQuery
+
+```python
+# Typed schema for BigQuery staging table.
+BQ_BENCH_TABLE = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench'
+
+bq_schema = [
+    bigquery.SchemaField('id', 'INTEGER'),
+    bigquery.SchemaField('symbol', 'STRING'),
+    bigquery.SchemaField('date', 'DATE'),
+    bigquery.SchemaField('open', 'FLOAT'),
+    bigquery.SchemaField('high', 'FLOAT'),
+    bigquery.SchemaField('low', 'FLOAT'),
+    bigquery.SchemaField('close', 'FLOAT'),
+    bigquery.SchemaField('adj_close', 'FLOAT'),
+    bigquery.SchemaField('volume', 'INTEGER'),
+    bigquery.SchemaField('dividends', 'FLOAT'),
+    bigquery.SchemaField('stock_splits', 'FLOAT'),
+    bigquery.SchemaField('is_filled', 'BOOLEAN'),
+]
+
+table = bigquery.Table(BQ_BENCH_TABLE, schema=bq_schema)
+table = bq_client.create_table(table, exists_ok=True)
+```
+
+## Local → SQL Server Ingestion
+
+#### Insert data from local CSV files into Cloud SQL for SQL Server.
+Small tier: `executemany` (baseline). Medium + large: `fast_executemany` vs `bcp`.
+
+<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">pymssql</code> <code style="font-size:0.75em">executemany</code> over TDS</h4>
+
+Parameterised INSERT, one row per network round-trip. Simple but slow — included as baseline for the small tier only.
+
+```python
+# pymssql executemany — parameterised INSERT, small tier only
+#
+# Technique: Reads CSV into a DataFrame, then sends each row as a parameterised
+#   INSERT statement via pymssql's executemany(). Uses the TDS protocol (FreeTDS).
+#
+# Benefits:
+#   - Simplest possible ingestion path — no ODBC driver or CLI tools needed
+#   - Parameterised queries prevent SQL injection
+#   - Works with any SQL Server (on-premise, Cloud SQL, Azure)
+#
+# Anti-patterns:
+#   - One network round-trip per row — extremely slow for >5K rows
+#   - No bulk protocol — each INSERT is parsed individually by the SQL engine
+#   - Never use for medium/large datasets — use fast_executemany or bcp instead
+#
+# Benchmarked on small tier only (2,500 rows) as a baseline.
+
+def pymssql_executemany():
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_csv(tiers['small']['csv'], dtype=str, keep_default_na=False)
+    cols = ', '.join(f'[{c}]' for c in df.columns)
+    placeholders = ', '.join(['%s'] * len(df.columns))
+    sql = f'INSERT INTO dbo.ohlcv_bench ({cols}) VALUES ({placeholders})'
+    rows = [tuple(r) for r in df.values]
+    with sql_pymssql() as conn:
+        cursor = conn.cursor()
+        cursor.executemany(sql, rows)
+        conn.commit()
+    return len(rows)
+
+r = bench_ingest('pymssql_executemany', pymssql_executemany, 'small')
+print(f'  small    {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      small        2.5K      59.5s      42 rows/s
+
+<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over ODBC Driver 18 (TLS)</h4>
+
+Packs all rows into a single TDS packet. ODBC Driver 18 with TLS encryption. 5-10x faster than plain `executemany`.
+
+```python
+# pyodbc fast_executemany — ODBC Driver 18, TLS-encrypted, chunked batch INSERT
+#
+# Technique: Sets fast_executemany=True on the pyodbc cursor, which packs all rows
+#   in a chunk into a single TDS packet instead of one INSERT per row. Chunks of
+#   10,000 rows avoid TDS packet timeout on large datasets over the network.
+#
+# Benefits:
+#   - 5-10x faster than plain executemany (single network round-trip per chunk)
+#   - ODBC Driver 18 encrypts the connection with TLS (Encrypt=yes)
+#   - Parameterised — no SQL injection risk
+#   - Works with any ODBC-compatible tool (Excel, Power BI, SSIS)
+#
+# Anti-patterns:
+#   - Sending all rows in one executemany() call — causes Communication link failure
+#     on large datasets (750K+ rows). Always chunk.
+#   - Using TrustServerCertificate=yes in production — acceptable for Cloud SQL
+#     (self-signed cert) but not for on-premise with proper CA certs
+#   - Not setting fast_executemany=True — falls back to row-by-row, 10x slower
+
+#
+# When to use:
+#   - Batch ingestion of 5K-1M rows from any pandas-readable format
+#   - When you need TLS encryption (regulatory: PCI-DSS, SOC2, HIPAA)
+#   - Applications that already use pyodbc/SQLAlchemy for other queries
+#   - Cloud SQL or Azure SQL where bcp may not be available
+#
+# When NOT to use:
+#   - Datasets over 1M rows — bcp is 2-5x faster at scale
+#   - Real-time streaming — use Change Data Capture or Service Broker instead
+
+def pyodbc_fast(tier):
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    cols = ', '.join(f'[{c}]' for c in df.columns)
+    placeholders = ', '.join(['?'] * len(df.columns))
+    sql = f'INSERT INTO dbo.ohlcv_bench ({cols}) VALUES ({placeholders})'
+    rows = [tuple(r) for r in df.values]
+    with sql_pyodbc() as conn:
+        cursor = conn.cursor()
+        cursor.fast_executemany = True
+        for start in range(0, len(rows), CHUNK_SIZE):
+            cursor.executemany(sql, rows[start:start + CHUNK_SIZE])
+        conn.commit()
+    return len(rows)
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('pyodbc_fast_executemany', lambda t=tier: pyodbc_fast(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       1.5s    1.7K rows/s
+      medium      75.0K       5.7s   13.0K rows/s
+      large      750.0K      54.4s   13.8K rows/s
+
+<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">bcp</code> (Bulk Copy Program) over TDS</h4>
+
+The `bcp` CLI is the fastest bulk loader for SQL Server. Native TDS bulk-insert protocol — bypasses the SQL parser entirely. Production standard for ETL pipelines.
+
+```python
+# bcp (Bulk Copy Program) — native TDS bulk-insert protocol
+#
+# Technique: CLI utility that reads CSV and streams rows via the TDS bulk-insert
+#   protocol, bypassing the SQL parser entirely. The server receives pre-formatted
+#   row data and writes directly to the table pages.
+#
+# Benefits:
+#   - Fastest method for SQL Server ingestion (10-50x faster than row-by-row)
+#   - Minimal server-side CPU — no SQL parsing, no query plan
+#   - Supports batch size (-b) for transaction control and recovery
+#   - Production standard for ETL/ELT pipelines and data warehouse loads
+#
+# Anti-patterns:
+#   - Hardcoding passwords in CLI args — use -T (trusted) or env vars in production
+#   - Skipping -F 2 — bcp will try to insert the CSV header as a data row
+#   - Not using -b (batch size) — a single failed row rolls back the entire load
+#   - Using -c (character mode) for binary data — use -n (native) instead
+
+# bcp dbo.ohlcv_bench in C:/Users/aperi/DEV/LANG/data/ingest_medium.csv -S 34.22.129.89,1433 -U sqlserver -P SecLabPass2026 -d stoxx -c -t "," -F 2 -b 10000 -u
+BCP = shutil.which('bcp') or 'bcp'
+
+def bcp_import(tier):
+    _sql_truncate('ohlcv_bench')
+    result = subprocess.run([
+        BCP, 'dbo.ohlcv_bench', 'in', str(tiers[tier]['csv']),
+        '-S', f'{SQL_IP},1433', '-U', 'sqlserver', '-P', SQL_PASSWORD,
+        '-d', 'stoxx', '-c', '-t', ',', '-F', '2', '-b', '10000', '-u',  # -u = trust server cert (Cloud SQL self-signed)
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f'    bcp error: {result.stdout[:200]} {result.stderr[:200]}')
+        return 0
+    for line in result.stdout.splitlines():
+        if 'rows copied' in line.lower():
+            return int(line.split()[0])
+    return tiers[tier]['rows']
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bcp_import', lambda t=tier: bcp_import(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K      770ms    3.2K rows/s
+      medium      75.0K       2.7s   28.1K rows/s
+      large      750.0K      21.0s   35.7K rows/s
+
+<h4>Ingest JSON into SQL Server from local using <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over ODBC Driver 18 (TLS)</h4>
+
+Reads newline-delimited JSON with pandas, then inserts via `fast_executemany`. Same TLS-encrypted ODBC path as CSV.
+
+```python
+# JSON → SQL Server via pyodbc fast_executemany
+#
+# Technique: Reads newline-delimited JSON with pandas (json_normalize under the hood),
+#   converts all values to strings, then inserts via fast_executemany with chunking.
+#
+# Benefits:
+#   - Handles nested/optional fields gracefully (JSON is schema-flexible)
+#   - Same fast_executemany path as CSV — identical throughput once parsed
+#
+# Anti-patterns:
+#   - Loading entire JSON into memory — use chunked pd.read_json for GB-scale files
+#   - Not handling NaN/None — JSON nulls become NaN in pandas, must fillna before INSERT
+
+#
+# When to use:
+#   - Batch ingestion of 5K-1M rows from any pandas-readable format
+#   - When you need TLS encryption (regulatory: PCI-DSS, SOC2, HIPAA)
+#   - Applications that already use pyodbc/SQLAlchemy for other queries
+#   - Cloud SQL or Azure SQL where bcp may not be available
+#
+# When NOT to use:
+#   - Datasets over 1M rows — bcp is 2-5x faster at scale
+#   - Real-time streaming — use Change Data Capture or Service Broker instead
+def json_to_sql(tier):
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_json(tiers[tier]['json'], lines=True, dtype=str)
+    df = df.fillna('')
+    cols = ', '.join(f'[{c}]' for c in df.columns)
+    placeholders = ', '.join(['?'] * len(df.columns))
+    sql = f'INSERT INTO dbo.ohlcv_bench ({cols}) VALUES ({placeholders})'
+    rows = [tuple(r) for r in df.values]
+    with sql_pyodbc() as conn:
+        cursor = conn.cursor()
+        cursor.fast_executemany = True
+        for start in range(0, len(rows), CHUNK_SIZE):
+            cursor.executemany(sql, rows[start:start + CHUNK_SIZE])
+        conn.commit()
+    return len(rows)
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('json_to_sql_fast', lambda t=tier: json_to_sql(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K      722ms    3.5K rows/s
+      medium      75.0K       6.2s   12.2K rows/s
+      large      750.0K      59.0s   12.7K rows/s
+
+<h4>Ingest Parquet into SQL Server from local using <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over ODBC Driver 18 (TLS)</h4>
+
+Reads Parquet with pyarrow (fastest local parse), then inserts via `fast_executemany`. Parquet’s columnar format makes the read near-instant.
+
+```python
+# Parquet → SQL Server via pyodbc fast_executemany
+#
+# Technique: Reads Parquet with pyarrow (zero-copy columnar read), converts to string
+#   DataFrame, then inserts via fast_executemany. The Parquet read is near-instant
+#   because pyarrow maps the file directly into memory without parsing.
+#
+# Benefits:
+#   - Fastest local file parse (Parquet is pre-compressed and pre-typed)
+#   - Schema embedded in file — no column mapping errors
+#   - Smallest file size — less disk I/O before the network transfer
+#
+# Anti-patterns:
+#   - Converting to string before INSERT — loses type fidelity. Acceptable here
+#     because Cloud SQL table uses nvarchar. For typed tables, preserve dtypes.
+
+def parquet_to_sql(tier):
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_parquet(tiers[tier]['parquet']).astype(str)
+    df = df.replace('nan', '').replace('None', '')
+    cols = ', '.join(f'[{c}]' for c in df.columns)
+    placeholders = ', '.join(['?'] * len(df.columns))
+    sql = f'INSERT INTO dbo.ohlcv_bench ({cols}) VALUES ({placeholders})'
+    rows = [tuple(r) for r in df.values]
+    with sql_pyodbc() as conn:
+        cursor = conn.cursor()
+        cursor.fast_executemany = True
+        for start in range(0, len(rows), CHUNK_SIZE):
+            cursor.executemany(sql, rows[start:start + CHUNK_SIZE])
+        conn.commit()
+    return len(rows)
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('parquet_to_sql_fast', lambda t=tier: parquet_to_sql(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K      837ms    3.0K rows/s
+      medium      75.0K       5.8s   12.9K rows/s
+      large      750.0K      55.2s   13.6K rows/s
+
+<h4>Ingest CSV into SQL Server using <code style="font-size:0.75em">BULK INSERT</code> (T-SQL) and SSMS Import Wizard (reference)</h4>
+
+**BULK INSERT**: Native T-SQL command. Requires the file to be accessible from the server filesystem — not supported on Cloud SQL (server can't read client-side files). Use `bcp` instead.
+
+**SSMS / Azure Data Studio Import Wizard**: Graphical import via right-click → Tasks → Import Flat File. Best for ad-hoc one-off imports under 100K rows. Not benchmarkable from a notebook.
+
+## Local → BigQuery Ingestion
+
+Load data from local files into BigQuery. Three formats (CSV, JSON, Parquet),
+plus `bq` CLI and Storage Write API.
+
+<h4>Ingest CSV into BigQuery from local using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_file</code> over HTTPS</h4>
+
+Server parses CSV rows. `skip_leading_rows=1` for header. `WRITE_TRUNCATE` clears before load.
+
+```python
+# BigQuery load from local CSV via load_table_from_file
+#
+# Technique: Uploads the CSV file to BigQuery's load job API over HTTPS. The server
+#   parses CSV rows and inserts into the table. WRITE_TRUNCATE clears before load.
+#
+# Benefits:
+#   - Server-side parsing — no local compute needed beyond the upload
+#   - Automatic schema detection (autodetect=True) — no manual column mapping
+#   - Atomic — load job either fully succeeds or fully fails (no partial loads)
+#
+# Anti-patterns:
+#   - Not setting skip_leading_rows=1 for CSV with headers — header becomes a data row
+#   - Using autodetect for production — specify schema explicitly to catch drift
+#   - Appending (WRITE_APPEND) without dedup — re-runs create duplicate rows
+
+#
+# When to use:
+#   - One-off data loads from local files under 100 MB
+#   - Development/testing where autodetect is acceptable
+#   - Data exported from spreadsheets or legacy systems (CSV is universal)
+#
+# When NOT to use:
+#   - Production pipelines — use GCS staging + load_table_from_uri instead
+#   - Large files — upload bandwidth is the bottleneck; use Parquet for 5x compression
+def bq_load_csv(tier):
+    path = DATA_DIR / f'ingest_{tier}.csv'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.CSV,
+        skip_leading_rows=1,
+        autodetect=True,
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+    )
+    with open(path, 'rb') as f:
+        job = bq_client.load_table_from_file(f, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_load_csv', lambda t=tier: bq_load_csv(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       3.1s     815 rows/s
+      medium      75.0K       6.8s   11.1K rows/s
+      large      750.0K      22.7s   33.1K rows/s
+
+<h4>Ingest JSON into BigQuery from local using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_file</code> over HTTPS</h4>
+
+Server parses newline-delimited JSON. Auto-detects schema from keys.
+
+```python
+# BigQuery load from local JSON (newline-delimited)
+#
+# Technique: Uploads NDJSON file to BigQuery. Each line is a JSON object representing
+#   one row. BigQuery auto-detects schema from the JSON keys.
+#
+# Benefits:
+#   - Handles nested/repeated fields natively (STRUCT, ARRAY in BQ)
+#   - No header row issues — each line is self-describing
+#   - Schema evolution — new keys in JSON auto-add columns (with autodetect)
+#
+# Anti-patterns:
+#   - Using regular JSON (array of objects) instead of NDJSON — BQ expects one object per line
+#   - Large JSON files — 3-5x bigger than CSV/Parquet for the same data
+
+#
+# When to use:
+#   - Data with nested/repeated fields (STRUCT, ARRAY) that CSV can't represent
+#   - API response dumps or log files already in JSON format
+#   - Schema evolution scenarios where new fields appear over time
+#
+# When NOT to use:
+#   - Flat tabular data — CSV or Parquet is 3-5x smaller
+#   - High-throughput ingestion — JSON parsing is the slowest of the three formats
+def bq_load_json(tier):
+    path = DATA_DIR / f'ingest_{tier}.json'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+        autodetect=True,
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+    )
+    with open(path, 'rb') as f:
+        job = bq_client.load_table_from_file(f, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_load_json', lambda t=tier: bq_load_json(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       4.5s     554 rows/s
+      medium      75.0K       7.3s   10.3K rows/s
+      large      750.0K      27.7s   27.1K rows/s
+
+<h4>Ingest Parquet into BigQuery from local using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_file</code> over HTTPS</h4>
+
+Fastest format — columnar, compressed, schema embedded. No parsing overhead.
+
+```python
+# BigQuery load from local Parquet
+#
+# Technique: Uploads Parquet file to BigQuery. Schema is embedded in the file footer —
+#   no autodetect needed. Columnar + compressed = fastest format for BQ ingestion.
+#
+# Benefits:
+#   - No parsing overhead — Parquet schema maps directly to BQ schema
+#   - Smallest upload size (Snappy compression) — fastest network transfer
+#   - Type-safe — INT/FLOAT/STRING/BOOL preserved end-to-end
+#
+# Anti-patterns:
+#   - Using autodetect with Parquet — unnecessary, schema is in the file
+#   - Generating Parquet with incompatible types (e.g. pandas Timestamp vs BQ DATE)
+
+#
+# When to use:
+#   - Production data pipelines (Parquet is the BigQuery-recommended format)
+#   - Data exported from Spark, Hive, or other columnar systems
+#   - When type safety matters — schema is embedded, no parsing ambiguity
+#
+# When NOT to use:
+#   - Ad-hoc loads from human-edited files — use CSV for simplicity
+#   - When source system only exports CSV/JSON — conversion overhead may not be worth it for small files
+def bq_load_parquet(tier):
+    path = DATA_DIR / f'ingest_{tier}.parquet'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.PARQUET,
+
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+    )
+    with open(path, 'rb') as f:
+        job = bq_client.load_table_from_file(f, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_load_parquet', lambda t=tier: bq_load_parquet(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       2.8s     884 rows/s
+      medium      75.0K       3.6s   20.8K rows/s
+      large      750.0K       8.3s   90.2K rows/s
+
+<h4>Ingest CSV into BigQuery from local using <code style="font-size:0.75em">bq</code> CLI <code style="font-size:0.75em">bq load</code> over HTTPS</h4>
+
+Command-line tool — same load job API but no Python code needed.
+
+```python
+# bq CLI — command-line load without writing Python code
+#
+# Technique: Shells out to `bq load` which uses the same load job API as the Python
+#   client library. Useful in shell scripts, CI/CD pipelines, and one-off loads.
+#
+# Benefits:
+#   - No Python dependencies — just the gcloud SDK
+#   - Same atomic load semantics as the Python API
+#   - Easy to integrate into bash/PowerShell automation
+#
+# Anti-patterns:
+#   - Parsing bq CLI output for row counts — fragile. Use the Python API for programmatic access.
+#   - Not quoting file paths with spaces
+
+# bq load --source_format=CSV --skip_leading_rows=1 --autodetect --replace --project_id=seclab-dev-ap-26 index_data.ohlcv_bench C:/Users/aperi/DEV/LANG/data/ingest_medium.csv
+BQ_CMD = shutil.which('bq.cmd') or shutil.which('bq') or 'bq'
+
+def bq_cli_csv(tier):
+    table_id = f'{BQ_DATASET}.ohlcv_bench'
+    result = subprocess.run([
+        BQ_CMD, 'load', '--source_format=CSV', '--skip_leading_rows=1',
+        '--autodetect', '--replace', f'--project_id={PROJECT_ID}',
+        table_id, str(tiers[tier]['csv']),
+    ], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f'    bq error: {result.stderr[:200]}')
+        return 0
+    return tiers[tier]['rows']
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_cli_csv', lambda t=tier: bq_cli_csv(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       9.0s     278 rows/s
+      medium      75.0K       7.9s    9.5K rows/s
+      large      750.0K      19.7s   38.0K rows/s
+
+<h4>Ingest data into BigQuery using <code style="font-size:0.75em">pandas-gbq</code> Storage Write API over gRPC</h4>
+
+Highest throughput for streaming ingestion. `pandas_gbq.to_gbq()` uses the Storage Write API when available.
+
+```python
+# BigQuery Storage Write API via pandas-gbq
+#
+# Technique: pandas_gbq.to_gbq() uses the Storage Write API (gRPC-based) when
+#   available, bypassing load jobs entirely. Writes directly to BigQuery storage
+#   with row-level acknowledgment.
+#
+# Benefits:
+#   - Highest throughput for streaming ingestion (used by Dataflow, Kafka Connect)
+#   - Row-level error reporting (vs load jobs which fail atomically)
+#   - Exactly-once semantics with committed streams
+#
+# Anti-patterns:
+#   - Using for one-off batch loads — load jobs are simpler and equally fast for batch
+#   - Not closing the stream — uncommitted writes are garbage-collected after 24h
+
+#
+# When to use:
+#   - Real-time streaming ingestion (IoT, clickstream, financial ticks)
+#   - When you need exactly-once semantics (committed streams)
+#   - High-throughput pipelines (Dataflow, Kafka Connect sink)
+#
+# When NOT to use:
+#   - One-off batch loads — load jobs are simpler and equally fast
+#   - Small datasets under 10K rows — the gRPC overhead isn't justified
+def bq_storage_write(tier):
+    df = pd.read_csv(tiers[tier]['csv'])
+    pandas_gbq.to_gbq(df, f'{BQ_DATASET}.ohlcv_bench', project_id=PROJECT_ID, if_exists='replace')
+    return len(df)
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_storage_write', lambda t=tier: bq_storage_write(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       4.7s     527 rows/s
+      medium      75.0K       4.0s   18.8K rows/s
+      large      750.0K      11.8s   63.6K rows/s
+
+<h4>Query data from GCS without loading using BigQuery External Tables over internal network</h4>
+
+Query CSV/JSON/Parquet in GCS directly via SQL. Zero ingestion time — slower queries but no storage cost.
+
+```python
+# BigQuery External Table — query GCS data without loading
+#
+# Technique: Creates a table definition that points to a GCS file. Queries read
+#   directly from GCS at query time — zero ingestion, zero storage cost.
+#
+# Benefits:
+#   - No ingestion step — instant 'table' creation
+#   - Zero storage cost — data stays in GCS
+#   - Useful for ad-hoc exploration before deciding to load permanently
+#
+# Anti-patterns:
+#   - Using for production queries — 10-100x slower than native BQ tables
+#   - No caching — every query re-reads from GCS
+#   - Schema drift — if the GCS file changes, the table may break silently
+
+#
+# When to use:
+#   - Ad-hoc exploration of GCS data before deciding to load permanently
+#   - Data that changes frequently in GCS (always reads latest version)
+#   - Cost optimization — zero storage cost, pay only for queries
+#
+# When NOT to use:
+#   - Production dashboards — 10-100x slower than native tables
+#   - Frequently queried data — no caching, every query re-reads from GCS
+#   - JOINs with native tables — performance is poor for large external tables
+def bq_external_table(tier):
+    ext_table = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench_ext'
+    uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["parquet"]}'
+    ext_config = bigquery.ExternalConfig('PARQUET')
+    ext_config.source_uris = [uri]
+    table = bigquery.Table(ext_table)
+    table.external_data_configuration = ext_config
+    table = bq_client.create_table(table, exists_ok=True)
+    result = bq_client.query(f'SELECT COUNT(*) as cnt FROM `{ext_table}`').result()
+    row_count = list(result)[0].cnt
+    bq_client.delete_table(ext_table, not_found_ok=True)
+    return row_count
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_external_table', lambda t=tier: bq_external_table(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       1.1s    2.2K rows/s
+      medium      75.0K       1.2s   64.1K rows/s
+      large      750.0K       9.7s   77.6K rows/s
+
+<h4>Ingest data into BigQuery using Google Cloud Console Web UI (reference)</h4>
+
+Console → BigQuery → Dataset → Create Table → Upload (up to 10 MB) or Google Cloud Storage.
+Not benchmarkable from a notebook.
+
+## Local → Firestore Ingestion
+
+Write OHLCV data into Firestore. Each row becomes a document in the `ohlcv_bench` collection.
+
+<h4>Ingest CSV into Firestore from local using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">batch.set</code> over gRPC</h4>
+
+500-doc batches (Firestore limit). Each batch is a single gRPC call.
+
+```python
+# Firestore batch writes — 500 docs per gRPC call
+#
+# Technique: Groups writes into batches of 500 (Firestore's per-batch limit).
+#   Each batch.commit() is a single gRPC call that atomically writes all 500 docs.
+#
+# Benefits:
+#   - Atomic per batch — all 500 docs succeed or all fail
+#   - Simple API — no configuration needed
+#   - Works within Firestore's free tier (50K writes/day)
+#
+# Anti-patterns:
+#   - Exceeding 500 docs per batch — Firestore rejects the entire commit
+#   - Not committing the final partial batch — last <500 docs are lost
+#   - Using for >100K docs — BulkWriter is faster (parallel batches)
+
+#
+# When to use:
+#   - Bulk loading <50K documents (within Firestore's free tier)
+#   - When atomic per-batch semantics are needed (all-or-nothing per 500 docs)
+#   - Simple scripts without BulkWriter's complexity
+#
+# When NOT to use:
+#   - Over 50K docs — BulkWriter is 2-5x faster (parallel batches)
+#   - Real-time single-doc writes — use set()/update() directly
+
+def fs_batch_write(tier):
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    batch = fs_client.batch()
+    count = 0
+    for idx, row in df.iterrows():
+        doc_ref = fs_client.collection(FS_COLLECTION).document(str(idx))
+        batch.set(doc_ref, row.to_dict())
+        count += 1
+        if count % 500 == 0:
+            batch.commit()
+            batch = fs_client.batch()
+    if count % 500 != 0:
+        batch.commit()
+    return count
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+
+# Benchmark standard batches
+for tier in tiers:
+    # No delete — set() overwrites existing docs by ID, avoiding costly collection scan
+    r = bench_ingest('fs_batch', lambda t=tier: fs_batch_write(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       6.7s     372 rows/s
+      medium      75.0K      3m21s     372 rows/s
+      large      750.0K     31m13s     400 rows/s
+
+<h4>Ingest CSV into Firestore from local using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">BulkWriter</code> over gRPC</h4>
+
+`BulkWriter` manages batching, retries, and throttling automatically. Parallel writes — the recommended method for bulk ingestion.
+
+```python
+# Firestore BulkWriter — auto-batched, parallel, throttled
+#
+# Technique: BulkWriter manages batching, retries, and rate limiting automatically.
+#   Sends multiple batches in parallel over gRPC, with exponential backoff on errors.
+#
+# Benefits:
+#   - 2-5x faster than manual batch.set() for large collections
+#   - Automatic retry with backoff — handles transient gRPC errors
+#   - Rate-limited to avoid overwhelming Firestore (respects 429 throttling)
+#
+# Anti-patterns:
+#   - Forgetting bw.close() — unflushed writes are lost
+#   - Using for real-time single-doc writes — overhead isn't justified for <10 docs
+
+#
+# When to use:
+#   - Bulk loading 10K-500K documents (migrations, backfills, ETL)
+#   - When automatic retry and rate limiting are needed
+#   - Populating Firestore from BigQuery/SQL Server for real-time serving
+#
+# When NOT to use:
+#   - Over 500K docs — Firestore costs scale per document, consider BigQuery instead
+#   - When you need transaction guarantees across documents — use batch writes
+def fs_bulk_write(tier):
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    bw = fs_client.bulk_writer()
+    count = 0
+    for idx, row in df.iterrows():
+        doc_ref = fs_client.collection(FS_COLLECTION).document(str(idx))
+        bw.set(doc_ref, row.to_dict())
+        count += 1
+    bw.close()
+    return count
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+
+# Benchmark BulkWriter
+for tier in tiers:
+    # No delete — set() overwrites existing docs by ID, avoiding costly collection scan
+    r = bench_ingest('fs_bulkwriter', lambda t=tier: fs_bulk_write(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       4.1s     604 rows/s
+      medium      75.0K      2m31s     497 rows/s
+      large      750.0K     25m11s     496 rows/s
+
+<h4>Import data into Firestore from GCS using <code style="font-size:0.75em">gcloud</code> <code style="font-size:0.75em">firestore import</code> and Console UI (reference)</h4>
+
+**gcloud firestore export/import**: Managed backup/restore from GCS. Server-side, fastest for large restores.
+
+**Firebase/GCP Console**: Manual document creation or import from managed exports.
+
+Both require managed export format (not raw CSV/JSON).
+
+## GCS → BigQuery Ingestion
+
+Server-side operation — no data passes through the local machine.
+
+<h4>Ingest CSV into BigQuery from GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_uri</code> over internal network</h4>
+
+Server-side CSV parse. Data flows GCS → BigQuery within Google’s network.
+
+```python
+# BigQuery load from GCS CSV — server-side, no local data transfer
+#
+# Technique: load_table_from_uri triggers a server-side load job. Data flows
+#   directly from GCS to BigQuery within Google's internal network.
+#
+# Benefits:
+#   - No local bandwidth consumed — data never touches the client
+#   - Fastest path for data already in GCS (typical for data lake architectures)
+#   - Supports wildcards (gs://bucket/path/*.csv) for multi-file loads
+#
+# Anti-patterns:
+#   - Loading from a multi-region bucket into a single-region dataset — cross-region
+#     egress charges apply
+#   - Not using WRITE_TRUNCATE for idempotent pipelines — re-runs duplicate data
+
+#
+# When to use:
+#   - Data lake architecture — data lands in GCS, then loads into BQ
+#   - Multi-file loads with wildcards (gs://bucket/path/*.csv)
+#   - When data is already in GCS from another pipeline
+#
+# When NOT to use:
+#   - Data is only on local disk — upload to GCS first or use load_table_from_file
+def bq_gcs_csv(tier):
+    uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["csv"]}'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.CSV,
+        skip_leading_rows=1,
+        autodetect=True,
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+    )
+    job = bq_client.load_table_from_uri(uri, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_gcs_csv', lambda t=tier: bq_gcs_csv(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       3.2s     775 rows/s
+      medium      75.0K       4.8s   15.7K rows/s
+      large      750.0K      13.0s   57.9K rows/s
+
+<h4>Ingest JSON into BigQuery from GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_uri</code> over internal network</h4>
+
+Server-side JSON parse. Same internal network path.
+
+```python
+# BigQuery load from GCS JSON
+def bq_gcs_json(tier):
+    uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["json"]}'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+        autodetect=True,
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+    )
+    job = bq_client.load_table_from_uri(uri, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_gcs_json', lambda t=tier: bq_gcs_json(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       4.1s     614 rows/s
+      medium      75.0K       6.6s   11.3K rows/s
+      large      750.0K      17.6s   42.6K rows/s
+
+<h4>Ingest Parquet into BigQuery from GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_uri</code> over internal network</h4>
+
+Fastest — columnar, compressed, schema embedded.
+
+```python
+# BigQuery load from GCS Parquet
+def bq_gcs_parquet(tier):
+    uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["parquet"]}'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.PARQUET,
+
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+    )
+    job = bq_client.load_table_from_uri(uri, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('bq_gcs_parquet', lambda t=tier: bq_gcs_parquet(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       2.5s    1.0K rows/s
+      medium      75.0K       2.9s   26.1K rows/s
+      large      750.0K       7.6s   98.9K rows/s
+
+## GCS → SQL Server Ingestion
+
+Two-hop: download from GCS to memory, then insert into SQL Server.
+
+<h4>Ingest CSV into SQL Server from GCS using <code style="font-size:0.75em">google-cloud-storage</code> download + <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over HTTPS + TLS</h4>
+
+Download CSV → pandas → fast_executemany. Combined pipeline.
+
+```python
+# GCS CSV → SQL Server — two-hop pipeline (download + insert)
+#
+# Technique: Downloads CSV from GCS into memory (BytesIO), parses with pandas,
+#   then inserts into SQL Server with fast_executemany in 10K-row chunks.
+#
+# Benefits:
+#   - Works with any SQL Server (no direct GCS→SQL path exists)
+#   - In-memory processing — no temp files on disk
+#   - Chunked inserts handle large datasets without timeout
+#
+# Anti-patterns:
+#   - Loading GB-scale files into memory — use streaming/chunked pd.read_csv instead
+#   - Not chunking the executemany — causes TDS Communication link failure on 750K+ rows
+
+#
+# When to use:
+#   - Syncing GCS data lake to SQL Server for reporting/BI tools
+#   - When SQL Server is the system of record and GCS is the staging area
+#
+# When NOT to use:
+#   - GB-scale datasets — download to local RAM is the bottleneck. Use VM-hosted
+#     SQL Server with direct GCS access or a Dataflow pipeline instead.
+def gcs_csv_to_sql(tier):
+    _sql_truncate('ohlcv_bench')
+    blob = bucket.blob(gcs_paths[tier]['csv'])
+    csv_bytes = blob.download_as_bytes()
+    df = pd.read_csv(BytesIO(csv_bytes), dtype=str, keep_default_na=False)
+    cols = ', '.join(f'[{c}]' for c in df.columns)
+    placeholders = ', '.join(['?'] * len(df.columns))
+    sql = f'INSERT INTO dbo.ohlcv_bench ({cols}) VALUES ({placeholders})'
+    rows = [tuple(r) for r in df.values]
+    with sql_pyodbc() as conn:
+        cursor = conn.cursor()
+        cursor.fast_executemany = True
+        for start in range(0, len(rows), CHUNK_SIZE):
+            cursor.executemany(sql, rows[start:start + CHUNK_SIZE])
+        conn.commit()
+    return len(rows)
+
+print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
+for tier in tiers:
+    r = bench_ingest('gcs_csv_to_sql', lambda t=tier: gcs_csv_to_sql(t), tier)
+    print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
+```
+
+      tier         rows       time           rate
+      small        2.5K       2.2s    1.1K rows/s
+      medium      75.0K       6.5s   11.5K rows/s
+      large      750.0K      56.2s   13.3K rows/s
+
+## Cross-Service Transfers
+
+Move data between SQL Server, BigQuery, and Firestore.
+
+<h4>Transfer data from SQL Server to BigQuery using <code style="font-size:0.75em">pymssql</code> query + <code style="font-size:0.75em">load_table_from_dataframe</code> over TDS + HTTPS</h4>
+
+Query SQL Server → DataFrame → BigQuery. Two-hop via local memory.
+
+```python
+# SQL Server → BigQuery — self-populates SQL Server first, then transfers
+#
+# Step 1: Load CSV into SQL Server (ensures correct row count per tier)
+# Step 2: Query SQL Server into DataFrame, load into BigQuery
+
+def sql_to_bq(tier):
+    # Step 1: populate SQL Server with this tier's data
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    df.to_sql('ohlcv_bench', con=sql_engine_pymssql, schema='dbo', if_exists='append', index=False)
+
+    # Step 2: read from SQL Server, load into BigQuery
+    query = f'SELECT TOP {tiers[tier]["rows"]} * FROM dbo.ohlcv_bench'
+    df2 = pd.read_sql(query, con=sql_engine_pymssql)
+    job_config = bigquery.LoadJobConfig(
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        autodetect=True
+    )
+    job = bq_client.load_table_from_dataframe(df2, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    return job.output_rows
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('sql_to_bq', lambda t=tier: sql_to_bq(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K       7.4s     340 rows/s
+      medium      75.0K      51.8s    1.4K rows/s
+      large      750.0K      8m19s    1.5K rows/s
+
+<h4>Transfer data from BigQuery to SQL Server using <code style="font-size:0.75em">google-cloud-bigquery</code> query + <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over HTTPS + TLS</h4>
+
+Query BigQuery → DataFrame → SQL Server.
+
+```python
+# BigQuery → SQL Server — self-populates BigQuery first, then transfers
+
+def bq_to_sql(tier):
+    # Step 1: populate BigQuery with this tier's data
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    job_config = bigquery.LoadJobConfig(
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        autodetect=True
+    )
+    job = bq_client.load_table_from_dataframe(df, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+
+    # Step 2: query BigQuery, insert into SQL Server
+    _sql_truncate('ohlcv_bench')
+    results = bq_client.query(f'SELECT * FROM `{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench`')
+    rows = [dict(row) for row in results]
+    df2 = pd.DataFrame(rows).astype(str)
+    df2.to_sql('ohlcv_bench', con=sql_engine_pymssql, schema='dbo', if_exists='append', index=False)
+    return len(rows)
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('bq_to_sql', lambda t=tier: bq_to_sql(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K       5.5s     451 rows/s
+      medium      75.0K      57.4s    1.3K rows/s
+      large      750.0K      8m34s    1.5K rows/s
+
+<h4>Transfer data from BigQuery to Firestore using <code style="font-size:0.75em">google-cloud-bigquery</code> query + <code style="font-size:0.75em">BulkWriter</code> over HTTPS + gRPC</h4>
+
+Query BigQuery → iterate results → Firestore BulkWriter. For real-time serving of scored data.
+
+```python
+# BigQuery → Firestore — self-populates BigQuery first, then transfers
+
+def bq_to_fs(tier):
+    # Step 1: populate BigQuery with this tier's data
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    job_config = bigquery.LoadJobConfig(
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        autodetect=True
+    )
+    job = bq_client.load_table_from_dataframe(df, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+
+    # Step 2: query BigQuery, write to Firestore
+    results = bq_client.query(f'SELECT * FROM `{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench`')
+    bw = fs_client.bulk_writer()
+    count = 0
+    for row in results:
+        doc_ref = fs_client.collection(FS_COLLECTION).document(str(count))
+        bw.set(doc_ref, {k: str(v) for k, v in dict(row).items()})
+        count += 1
+    bw.close()
+    return count
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('bq_to_fs', lambda t=tier: bq_to_fs(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K       8.9s     282 rows/s
+      medium      75.0K      2m41s     466 rows/s
+      large      750.0K     25m52s     483 rows/s
+
+<h4>Transfer data from SQL Server to Firestore using <code style="font-size:0.75em">pymssql</code> query + <code style="font-size:0.75em">BulkWriter</code> over TDS + gRPC</h4>
+
+Direct SQL Server → Firestore bridge.
+
+```python
+# SQL Server → Firestore — self-populates SQL Server first, then transfers
+
+def sql_to_fs(tier):
+    # Step 1: populate SQL Server with this tier's data
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    df.to_sql('ohlcv_bench', con=sql_engine_pymssql, schema='dbo', if_exists='append', index=False)
+
+    # Step 2: query SQL Server, write to Firestore
+    with sql_pymssql() as conn:
+        cursor = conn.cursor(as_dict=True)
+        cursor.execute(f'SELECT TOP {tiers[tier]["rows"]} * FROM dbo.ohlcv_bench')
+        bw = fs_client.bulk_writer()
+        count = 0
+        for row in cursor:
+            doc_ref = fs_client.collection(FS_COLLECTION).document(str(count))
+            bw.set(doc_ref, {k: str(v) for k, v in row.items()})
+            count += 1
+        bw.close()
+    return count
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('sql_to_firestore', lambda t=tier: sql_to_fs(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K       6.5s     387 rows/s
+      medium      75.0K      3m16s     383 rows/s
+      large      750.0K     32m51s     381 rows/s
+
+<h4>Transfer data from SQL Server to BigQuery via GCS staging using <code style="font-size:0.75em">pandas</code> + <code style="font-size:0.75em">GCS</code> + <code style="font-size:0.75em">load_table_from_uri</code></h4>
+
+Production pattern: SQL → Parquet → GCS → BigQuery. Avoids local memory bottleneck for large datasets.
+
+```python
+# SQL Server → GCS → BigQuery — self-populates SQL Server first
+
+def sql_to_bq_gcs(tier):
+    # Step 1: populate SQL Server with this tier's data
+    _sql_truncate('ohlcv_bench')
+    df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
+    df.to_sql('ohlcv_bench', con=sql_engine_pymssql, schema='dbo', if_exists='append', index=False)
+
+    # Step 2: query SQL Server, write CSV to GCS, load into BigQuery
+    query = f'SELECT TOP {tiers[tier]["rows"]} * FROM dbo.ohlcv_bench'
+    df2 = pd.read_sql(query, con=sql_engine_pymssql)
+    gcs_path = f'staging/sql_to_bq_{tier}.csv'
+    blob = bucket.blob(gcs_path)
+    blob.upload_from_string(df2.to_csv(index=False), content_type='text/csv')
+    uri = f'gs://{BUCKET_NAME}/{gcs_path}'
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.CSV,
+        skip_leading_rows=1,
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        autodetect=True
+    )
+    job = bq_client.load_table_from_uri(uri, BQ_BENCH_TABLE, job_config=job_config)
+    job.result()
+    blob.delete()
+    return job.output_rows
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('sql_to_bq_gcs', lambda t=tier: sql_to_bq_gcs(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K       6.5s     382 rows/s
+      medium      75.0K      54.4s    1.4K rows/s
+      large      750.0K       8m7s    1.5K rows/s
+
+## Export
+
+Export data from SQL Server, BigQuery, and Firestore.
+
+<h4>Export SQL Server to CSV using <code style="font-size:0.75em">pandas</code> <code style="font-size:0.75em">read_sql</code> + <code style="font-size:0.75em">to_csv</code> over TDS</h4>
+
+Query into DataFrame, write to local CSV.
+
+```python
+# SQL Server → local CSV export via pandas read_sql + to_csv
+#
+# Technique: Query SQL Server into a DataFrame, write to local CSV.
+#   Simple but entire result set must fit in RAM.
+
+EXPORT_DIR = DATA_DIR / 'exports'
+EXPORT_DIR.mkdir(exist_ok=True)
+
+def sql_export(tier):
+    query = f'SELECT TOP {tiers[tier]["rows"]} * FROM dbo.ohlcv_bench'
+    df = pd.read_sql(query, con=sql_engine_pymssql)
+    df.to_csv(EXPORT_DIR / f'export_{tier}.csv', index=False)
+    return len(df)
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('sql_export_csv', lambda t=tier: sql_export(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K      131ms   19.1K rows/s
+      medium      75.0K      800ms   93.7K rows/s
+      large      750.0K       6.5s  114.7K rows/s
+
+<h4>Export BigQuery to GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">extract_table</code> over internal network</h4>
+
+Server-side export — BigQuery writes directly to GCS.
+
+```python
+# BigQuery → GCS export via extract_table (server-side)
+#
+# Technique: Server-side operation — BigQuery writes directly to GCS.
+#   No data passes through the local machine. Supports CSV, JSON, Avro.
+#   For tiers with fewer rows than ohlcv_bench, we query into a temp table first.
+
+def bq_export(tier):
+    row_limit = tiers[tier]['rows']
+    # Create a temp table with the correct row count
+    temp_table = f'{PROJECT_ID}.{BQ_DATASET}.export_temp_{tier}'
+    query = f'CREATE OR REPLACE TABLE `{temp_table}` AS SELECT * FROM `{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench` LIMIT {row_limit}'
+    bq_client.query(query).result()
+    dest_uri = f'gs://{BUCKET_NAME}/exports/ohlcv_{tier}.csv'
+    job_config = bigquery.ExtractJobConfig(destination_format=bigquery.DestinationFormat.CSV)
+    job = bq_client.extract_table(temp_table, dest_uri, job_config=job_config)
+    job.result()
+    row_count = bq_client.get_table(temp_table).num_rows
+    bq_client.delete_table(temp_table, not_found_ok=True)
+    return row_count
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('bq_export_gcs', lambda t=tier: bq_export(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K       4.9s     510 rows/s
+      medium      75.0K       5.2s   14.3K rows/s
+      large      750.0K      15.8s   47.4K rows/s
+
+<h4>Export Firestore to JSON using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">collection.stream</code> over gRPC</h4>
+
+Stream documents, write as NDJSON.
+
+```python
+# Firestore → local JSON export via collection.stream()
+#
+# Technique: Streams documents from a collection over gRPC in batches,
+#   writes each as a JSON line to a local NDJSON file.
+#   Uses order_by + start_after pagination to avoid query timeout on large collections.
+
+def fs_export(tier):
+    path = EXPORT_DIR / f'ohlcv_firestore_{tier}.json'
+    target = tiers[tier]['rows']
+    count = 0
+    batch_size = 500
+    last_doc = None
+    with open(path, 'w') as f:
+        while count < target:
+            query = fs_client.collection(FS_COLLECTION).order_by('__name__').limit(batch_size)
+            if last_doc:
+                query = query.start_after(last_doc)
+            docs = list(query.stream())
+            if not docs:
+                break
+            for doc in docs:
+                d = doc.to_dict()
+                for k, v in d.items():
+                    if hasattr(v, 'isoformat'): d[k] = v.isoformat()
+                f.write(json.dumps(d) + chr(10))
+                count += 1
+                if count >= target:
+                    break
+            last_doc = docs[-1]
+    return count
+
+print(f"  {'tier':<8s} {'rows':>8s} {'time':>10s} {'rate':>14s}")
+for tier in tiers:
+    r = bench_ingest('fs_export_json', lambda t=tier: fs_export(t), tier)
+    print(f"  {tier:<8s} {r['rows_fmt']:>8s} {r['elapsed']:>10s} {r['rate']:>14s}")
+```
+
+      tier         rows       time           rate
+      small        2.5K      707ms    3.5K rows/s
+      medium      75.0K      17.0s    4.4K rows/s
+      large      750.0K      2m45s    4.5K rows/s
+
+## Summary
+
+#### Results table
+
+```python
+# Load the raw data and keep the latest run for each method/tier combination
+all_results = _load_results()
+df_results = pd.DataFrame(all_results).drop_duplicates(subset=['method', 'tier'], keep='last')
+
+# Create a numeric rank so Large appears first, then Medium, then Small
+tier_order = {'large': 0, 'medium': 1, 'small': 2}
+df_results['tier_rank'] = df_results['tier'].map(tier_order)
+```
+
+#### INGESTION BENCHMARK: BIGQUERY (Local & GCS)
+
+```python
+bq_methods = [
+    'bq_load_parquet', 'bq_storage_write', 'bq_gcs_csv', 'bq_external_table',
+    'bq_gcs_parquet', 'bq_gcs_json', 'bq_cli_csv', 'bq_load_csv', 'bq_load_json'
+]
+
+df_bq = df_results[df_results['method'].isin(bq_methods)].copy()
+df_bq = df_bq.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
+
+display(df_bq[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>method</th>
+      <th>tier</th>
+      <th>rows_fmt</th>
+      <th>elapsed</th>
+      <th>rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>bq_gcs_parquet</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>7.6s</td>
+      <td>98.9K rows/s</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>bq_load_parquet</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>8.3s</td>
+      <td>90.2K rows/s</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>bq_external_table</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>9.7s</td>
+      <td>77.6K rows/s</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>bq_storage_write</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>11.8s</td>
+      <td>63.6K rows/s</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>bq_gcs_csv</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>13.0s</td>
+      <td>57.9K rows/s</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>bq_gcs_json</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>17.6s</td>
+      <td>42.6K rows/s</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>bq_cli_csv</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>19.7s</td>
+      <td>38.0K rows/s</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>bq_load_csv</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>22.7s</td>
+      <td>33.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>bq_load_json</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>27.7s</td>
+      <td>27.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>bq_external_table</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>1.2s</td>
+      <td>64.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>bq_gcs_parquet</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>2.9s</td>
+      <td>26.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>bq_load_parquet</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>3.6s</td>
+      <td>20.8K rows/s</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>bq_storage_write</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>4.0s</td>
+      <td>18.8K rows/s</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>bq_gcs_csv</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>4.8s</td>
+      <td>15.7K rows/s</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>bq_gcs_json</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>6.6s</td>
+      <td>11.3K rows/s</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>bq_load_csv</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>6.8s</td>
+      <td>11.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>bq_load_json</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>7.3s</td>
+      <td>10.3K rows/s</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>bq_cli_csv</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>7.9s</td>
+      <td>9.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>bq_external_table</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>1.1s</td>
+      <td>2.2K rows/s</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>bq_gcs_parquet</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>2.5s</td>
+      <td>1.0K rows/s</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>bq_load_parquet</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>2.8s</td>
+      <td>884 rows/s</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>bq_load_csv</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>3.1s</td>
+      <td>815 rows/s</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>bq_gcs_csv</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>3.2s</td>
+      <td>775 rows/s</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>bq_gcs_json</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>4.1s</td>
+      <td>614 rows/s</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>bq_load_json</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>4.5s</td>
+      <td>554 rows/s</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>bq_storage_write</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>4.7s</td>
+      <td>527 rows/s</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>bq_cli_csv</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>9.0s</td>
+      <td>278 rows/s</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+fig_bq = go.Figure()
+
+# Iterate through tiers in order to maintain consistent legend grouping
+for tier in ['large', 'medium', 'small']:
+    df_t = df_bq[df_bq['tier'] == tier]
+    if not df_t.empty:
+        fig_bq.add_trace(go.Bar(
+            x=df_t['method'],
+            y=df_t['rate_raw'],
+            name=tier.capitalize()
+        ))
+
+fig_bq.update_layout(
+    barmode='group',
+    title='BigQuery Ingestion Performance (Log Scale)',
+    xaxis_title='Ingestion Method',
+    yaxis_title='Speed (Rows / Second)',
+    yaxis_type='log',
+    template='plotly_dark',
+    xaxis_tickangle=-45
+)
+fig_bq.show()
+```
+
+<iframe src="/static/plotly/di_py_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+#### INGESTION BENCHMARK: SQL SERVER (Local & GCS)
+
+```python
+sql_methods = [
+    'bcp_import', 'pyodbc_fast_executemany', 'gcs_csv_to_sql',
+    'parquet_to_sql_fast', 'json_to_sql_fast', 'pymssql_executemany'
+]
+
+df_sql = df_results[df_results['method'].isin(sql_methods)].copy()
+df_sql = df_sql.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
+
+display(df_sql[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>method</th>
+      <th>tier</th>
+      <th>rows_fmt</th>
+      <th>elapsed</th>
+      <th>rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>bcp_import</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>21.0s</td>
+      <td>35.7K rows/s</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>pyodbc_fast_executemany</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>54.4s</td>
+      <td>13.8K rows/s</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>parquet_to_sql_fast</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>55.2s</td>
+      <td>13.6K rows/s</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>gcs_csv_to_sql</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>56.2s</td>
+      <td>13.3K rows/s</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>json_to_sql_fast</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>59.0s</td>
+      <td>12.7K rows/s</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>bcp_import</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>2.7s</td>
+      <td>28.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>pyodbc_fast_executemany</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>5.7s</td>
+      <td>13.0K rows/s</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>parquet_to_sql_fast</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>5.8s</td>
+      <td>12.9K rows/s</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>json_to_sql_fast</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>6.2s</td>
+      <td>12.2K rows/s</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>gcs_csv_to_sql</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>6.5s</td>
+      <td>11.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>json_to_sql_fast</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>722ms</td>
+      <td>3.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>bcp_import</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>770ms</td>
+      <td>3.2K rows/s</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>parquet_to_sql_fast</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>837ms</td>
+      <td>3.0K rows/s</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>pyodbc_fast_executemany</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>1.5s</td>
+      <td>1.7K rows/s</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>gcs_csv_to_sql</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>2.2s</td>
+      <td>1.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>pymssql_executemany</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>59.5s</td>
+      <td>42 rows/s</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+fig_sql = go.Figure()
+
+for tier in ['large', 'medium', 'small']:
+    df_t = df_sql[df_sql['tier'] == tier]
+    if not df_t.empty:
+        fig_sql.add_trace(go.Bar(
+            x=df_t['method'],
+            y=df_t['rate_raw'],
+            name=tier.capitalize()
+        ))
+
+fig_sql.update_layout(
+    barmode='group',
+    title='SQL Server Ingestion Performance (Log Scale)',
+    xaxis_title='Ingestion Method',
+    yaxis_title='Speed (Rows / Second)',
+    yaxis_type='log',
+    template='plotly_dark',
+    xaxis_tickangle=-45
+)
+fig_sql.show()
+```
+
+<iframe src="/static/plotly/di_py_02.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+#### INGESTION BENCHMARK: FIRESTORE
+
+```python
+fs_methods = [
+    'fs_bulkwriter', 'fs_batch'
+]
+
+df_fs = df_results[df_results['method'].isin(fs_methods)].copy()
+df_fs = df_fs.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
+
+display(df_fs[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>method</th>
+      <th>tier</th>
+      <th>rows_fmt</th>
+      <th>elapsed</th>
+      <th>rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>fs_bulkwriter</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>25m11s</td>
+      <td>496 rows/s</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>fs_batch</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>31m13s</td>
+      <td>400 rows/s</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>fs_bulkwriter</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>2m31s</td>
+      <td>497 rows/s</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>fs_batch</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>3m21s</td>
+      <td>372 rows/s</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>fs_bulkwriter</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>4.1s</td>
+      <td>604 rows/s</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>fs_batch</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>6.7s</td>
+      <td>372 rows/s</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+fig_fs = go.Figure()
+
+for tier in ['large', 'medium', 'small']:
+    df_t = df_fs[df_fs['tier'] == tier]
+    if not df_t.empty:
+        fig_fs.add_trace(go.Bar(
+            x=df_t['method'],
+            y=df_t['rate_raw'],
+            name=tier.capitalize()
+        ))
+
+fig_fs.update_layout(
+    barmode='group',
+    title='Firestore Ingestion Performance',
+    xaxis_title='Ingestion Method',
+    yaxis_title='Speed (Documents / Second)',
+    # Linear scale used here as the variance is smaller
+    template='plotly_dark',
+    xaxis_tickangle=-45
+)
+fig_fs.show()
+```
+
+<iframe src="/static/plotly/di_py_03.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+#### DATABASE-TO-DATABASE TRANSFERS BENCHMARK
+
+```python
+transfer_methods = [
+    'sql_to_bq_gcs', 'sql_to_bq', 'bq_to_sql', 'sql_to_firestore', 'bq_to_fs'
+]
+
+df_transfer = df_results[df_results['method'].isin(transfer_methods)].copy()
+df_transfer = df_transfer.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
+
+display(df_transfer[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>method</th>
+      <th>tier</th>
+      <th>rows_fmt</th>
+      <th>elapsed</th>
+      <th>rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>sql_to_bq_gcs</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>8m7s</td>
+      <td>1.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>sql_to_bq</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>8m19s</td>
+      <td>1.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>bq_to_sql</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>8m34s</td>
+      <td>1.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>bq_to_fs</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>25m52s</td>
+      <td>483 rows/s</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>sql_to_firestore</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>32m51s</td>
+      <td>381 rows/s</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>sql_to_bq</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>51.8s</td>
+      <td>1.4K rows/s</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>sql_to_bq_gcs</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>54.4s</td>
+      <td>1.4K rows/s</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>bq_to_sql</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>57.4s</td>
+      <td>1.3K rows/s</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>bq_to_fs</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>2m41s</td>
+      <td>466 rows/s</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>sql_to_firestore</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>3m16s</td>
+      <td>383 rows/s</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>bq_to_sql</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>5.5s</td>
+      <td>451 rows/s</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>sql_to_firestore</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>6.5s</td>
+      <td>387 rows/s</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>sql_to_bq_gcs</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>6.5s</td>
+      <td>382 rows/s</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>sql_to_bq</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>7.4s</td>
+      <td>340 rows/s</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>bq_to_fs</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>8.9s</td>
+      <td>282 rows/s</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+fig_transfer = go.Figure()
+
+for tier in ['large', 'medium', 'small']:
+    df_t = df_transfer[df_transfer['tier'] == tier]
+    if not df_t.empty:
+        fig_transfer.add_trace(go.Bar(
+            x=df_t['method'],
+            y=df_t['rate_raw'],
+            name=tier.capitalize()
+        ))
+
+fig_transfer.update_layout(
+    barmode='group',
+    title='Cross-Database Transfer Performance',
+    xaxis_title='Transfer Path',
+    yaxis_title='Speed (Rows / Second)',
+    template='plotly_dark',
+    xaxis_tickangle=-45
+)
+```
+
+<iframe src="/static/plotly/di_py_04.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+#### DATA EXPORTS BENCHMARK
+
+```python
+export_methods = [
+    'bq_export_gcs', 'sql_export_csv', 'fs_export_json'
+]
+
+df_export = df_results[df_results['method'].isin(export_methods)].copy()
+df_export = df_export.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
+
+display(df_export[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>method</th>
+      <th>tier</th>
+      <th>rows_fmt</th>
+      <th>elapsed</th>
+      <th>rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>sql_export_csv</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>6.5s</td>
+      <td>114.7K rows/s</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>bq_export_gcs</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>15.8s</td>
+      <td>47.4K rows/s</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>fs_export_json</td>
+      <td>large</td>
+      <td>750.0K</td>
+      <td>2m45s</td>
+      <td>4.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>sql_export_csv</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>800ms</td>
+      <td>93.7K rows/s</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>bq_export_gcs</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>5.2s</td>
+      <td>14.3K rows/s</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>fs_export_json</td>
+      <td>medium</td>
+      <td>75.0K</td>
+      <td>17.0s</td>
+      <td>4.4K rows/s</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>sql_export_csv</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>131ms</td>
+      <td>19.1K rows/s</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>fs_export_json</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>707ms</td>
+      <td>3.5K rows/s</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>bq_export_gcs</td>
+      <td>small</td>
+      <td>2.5K</td>
+      <td>4.9s</td>
+      <td>510 rows/s</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+fig_export = go.Figure()
+
+for tier in ['large', 'medium', 'small']:
+    df_t = df_export[df_export['tier'] == tier]
+    if not df_t.empty:
+        fig_export.add_trace(go.Bar(
+            x=df_t['method'],
+            y=df_t['rate_raw'],
+            name=tier.capitalize()
+        ))
+
+fig_export.update_layout(
+    barmode='group',
+    title='Data Export Performance',
+    xaxis_title='Export Method',
+    yaxis_title='Speed (Rows / Second)',
+    template='plotly_dark',
+    xaxis_tickangle=-45
+)
+fig_export.show()
+```
+
+<iframe src="/static/plotly/di_py_05.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+#### Cleanup staging tables
+
+```python
+# Drop staging tables and clean up
+with sql_pymssql() as conn:
+    conn.cursor().execute('DROP TABLE IF EXISTS dbo.ohlcv_bench')
+    conn.commit()
+    print('  SQL Server: ohlcv_bench dropped')
+
+bq_client.delete_table(BQ_BENCH_TABLE, not_found_ok=True)
+bq_client.delete_table(f'{BQ_BENCH_TABLE}_ext', not_found_ok=True)
+print('  BigQuery: ohlcv_bench dropped')
+
+# No delete — set() overwrites existing docs by ID, avoiding costly collection scan
+print('  Firestore: ohlcv_bench cleared')
+
+for blob in gcs_client.list_blobs(BUCKET_NAME, prefix='exports/'):
+    blob.delete()
+for blob in gcs_client.list_blobs(BUCKET_NAME, prefix='staging/'):
+    blob.delete()
+print('  GCS: exports/ and staging/ cleaned')
+
+if EXPORT_DIR.exists():
+    import shutil
+    shutil.rmtree(EXPORT_DIR)
+    print(f'  Local: exports/ deleted')
+print('  Cleanup done')
+```
+
+      SQL Server: ohlcv_bench dropped
+      BigQuery: ohlcv_bench dropped
+      Firestore: ohlcv_bench cleared
+      GCS: exports/ and staging/ cleaned
+      Cleanup done

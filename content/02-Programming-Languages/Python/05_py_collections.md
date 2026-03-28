@@ -21,6 +21,28 @@ status: complete
 #### Creation
 
 ```python
+# Lists — ordered, mutable, dynamic arrays
+#
+# Technique: list is Python's primary collection. Supports mixed types,
+#   duplicate values, and dynamic sizing. Initialize with [], list(), or
+#   comprehension. O(1) append, O(1) index access, O(n) insert/remove.
+#
+# Benefits:
+#   - Dynamic sizing — grows automatically, no capacity declaration
+#   - Rich API — append, insert, extend, remove, pop, sort, reverse
+#   - Indexable — O(1) access by position; supports negative indexing
+#
+# Anti-patterns:
+#   - Using list for O(1) membership tests — use set for large data
+#   - insert(0, x) frequently — O(n) shift; use deque.appendleft()
+#   - Modifying during iteration — use a copy or comprehension instead
+#
+# When to use:
+#   - General-purpose ordered collections, most day-to-day scenarios
+#
+# When NOT to use:
+#   - Frequent membership tests — use set; FIFO queues — use deque
+
 # Lists — Python's primary collection (dynamic array)
 #
 # KEY CONCEPTS:
@@ -30,6 +52,14 @@ status: complete
 # - 0-indexed. Supports negative indexing ([-1] = last element).
 # - Slicing: list[start:stop:step] — returns a new list.
 
+from collections import Counter
+from collections import defaultdict
+from collections import deque
+from collections import namedtuple
+from enum import Enum, IntEnum, auto
+from typing import NamedTuple
+import copy
+import heapq
 empty = []
 nums = [1, 2, 3, 4, 5]
 mixed = [1, "hello", True, 3.14, None]     # mixed types allowed
@@ -53,7 +83,7 @@ print(f"nested[1][0]: {nested[1][0]}")      # 2D access: row 1, col 0
     empty:      []
     nums:       [1, 2, 3, 4, 5]
     mixed:      [1, 'hello', True, 3.14, None]
-    nested:     [\[1, 2], [3, 4], [5, 6]]
+    nested:     [[1, 2], [3, 4], [5, 6]]
     from_range: [0, 1, 2, 3, 4]
     repeated:   [0, 0, 0, 0, 0]
     nums[0]:    1
@@ -65,7 +95,8 @@ print(f"nested[1][0]: {nested[1][0]}")      # 2D access: row 1, col 0
 #### Adding and removing elements
 
 ```python
-# Adding and removing — append, insert, extend to grow; remove, pop, del to shrink
+# Adding and removing — append, insert, extend, remove, pop, del
+
 lst = [1, 2, 3]
 lst.append(4)                               # add to end: [1, 2, 3, 4]
 lst.insert(0, 0)                            # insert at index: [0, 1, 2, 3, 4]
@@ -93,6 +124,7 @@ print(f"clear():    {lst}")
 
 ```python
 # Search and membership — in, index, count for finding elements
+
 lst = [10, 20, 30, 40, 30, 50]
 print(f"30 in lst:      {30 in lst}")       # True (membership check)
 print(f"99 in lst:      {99 in lst}")       # False
@@ -108,7 +140,8 @@ print(f"count(30):      {lst.count(30)}")   # 2 (how many times)
 #### Sorting
 
 ```python
-# Sorting — sorted() returns a new list; .sort() mutates in place
+# Sorting — sorted() returns new list, .sort() mutates in place
+
 nums = [3, 1, 4, 1, 5, 9, 2, 6]
 print(f"sorted():       {sorted(nums)}")            # returns NEW list, original unchanged
 print(f"original:       {nums}")                     # unchanged
@@ -132,26 +165,27 @@ print(f"case-insensitive: {sorted(['Banana', 'apple', 'Cherry'], key=str.lower)}
 #### Copying — shallow vs deep
 
 ```python
-# Shallow vs deep copy — shallow shares nested objects; deep is fully independent
+# Copying — shallow vs deep copy
+
 original = [[1, 2], [3, 4]]
 shallow = original.copy()                    # or: list(original) or original[:]
 shallow[0][0] = 99                           # modifies original too! (shared inner lists)
 print(f"original after shallow copy mutation: {original}")  # [[99, 2], [3, 4]]
 
-import copy
 original = [[1, 2], [3, 4]]
 deep = copy.deepcopy(original)               # fully independent copy
 deep[0][0] = 99
 print(f"original after deep copy mutation:   {original}")   # [[1, 2], [3, 4]] — unchanged
 ```
 
-    original after shallow copy mutation: [\[99, 2], [3, 4]]
-    original after deep copy mutation:   [\[1, 2], [3, 4]]
+    original after shallow copy mutation: [[99, 2], [3, 4]]
+    original after deep copy mutation:   [[1, 2], [3, 4]]
 
 #### List as stack
 
 ```python
-# List as stack — append pushes, pop removes from the end (LIFO)
+# List as stack — LIFO with append and pop
+
 stack = []
 stack.append("a")    # push
 stack.append("b")
@@ -170,6 +204,28 @@ print(f"stack:  {stack}")
 #### Creation
 
 ```python
+# Dictionaries — key-value mapping with O(1) lookup
+#
+# Technique: Hash-based mapping. Keys must be hashable (immutable).
+#   Insertion-ordered since Python 3.7. O(1) average lookup, insert,
+#   and delete. Initialize with {}, dict(), or comprehension.
+#
+# Benefits:
+#   - O(1) average lookup — far faster than list scan for large data
+#   - Insertion order preserved — iteration matches insertion sequence
+#   - Flexible initialization — literal, constructor, comprehension, zip
+#
+# Anti-patterns:
+#   - Mutable keys (lists, dicts) — TypeError; use tuples instead
+#   - Bracket access without checking key — KeyError; use .get()
+#   - dict for ordered data when list of tuples suffices
+#
+# When to use:
+#   - Config, caches, frequency counts, indexes, name-value mappings
+#
+# When NOT to use:
+#   - Ordered sequences — use list; unique values — use set
+
 # Dictionaries — key-value mapping
 #
 # KEY CONCEPTS:
@@ -200,7 +256,8 @@ print(f"comprehension: {comprehension}")
 #### Access and update
 
 ```python
-# Access and update — bracket syntax for read/write; .get() for safe access
+# Dict access and update — bracket, .get(), .setdefault(), .update()
+
 print(f"person['name']:    {person['name']}")          # KeyError if missing
 print(f"person.get('name'):{person.get('name')}")      # None if missing (safe)
 print(f"person.get('zip', 'N/A'): {person.get('zip', 'N/A')}")  # default value
@@ -220,7 +277,8 @@ print(f"Updated: {person}")
 #### Removing and iterating
 
 ```python
-# Removing and iterating — del, pop, popitem; iterate keys/values/items
+# Removing and iterating — del, pop, popitem, and key/value/item loops
+
 d = {"a": 1, "b": 2, "c": 3, "d": 4}
 del d["a"]                                             # delete key (KeyError if missing)
 popped = d.pop("b")                                    # remove and return (KeyError if missing)
@@ -258,7 +316,8 @@ print(f"len(d):       {len(d)}")
 #### Merging dicts
 
 ```python
-# Merging dicts — {**a, **b} or a | b (3.9+); later dict wins on conflicts
+# Merging dicts — {**a, **b}, |, and |= operators
+
 a = {"x": 1, "y": 2}
 b = {"y": 3, "z": 4}
 merged = {**a, **b}                                    # b overwrites a's 'y'
@@ -271,10 +330,8 @@ print(f"merged: {merged}")                             # {'x': 1, 'y': 3, 'z': 4
 <h4><code style="font-size:0.75em">defaultdict</code> and <code style="font-size:0.75em">Counter</code></h4>
 
 ```python
-# defaultdict — auto-creates missing keys with a factory function
-from collections import defaultdict
+# defaultdict — auto-create missing keys with a factory function
 
-# Group words by first letter
 words = ["apple", "banana", "avocado", "cherry", "blueberry"]
 groups = defaultdict(list)                             # missing key → empty list
 for word in words:
@@ -287,13 +344,13 @@ print(f"Groups: {dict(groups)}")
 #### Count occurrences
 
 ```python
-# Count occurrences — defaultdict(int) or Counter for frequency counting
+# Counting occurrences — defaultdict(int) and Counter
+
 counts = defaultdict(int)                              # missing key → 0
 for word in words:
     counts[word[0]] += 1
 print(f"Counts: {dict(counts)}")
 
-from collections import Counter
 text = "abracadabra"
 c = Counter(text)
 print(f"Counter:      {c}")
@@ -311,6 +368,28 @@ print(f"Total:        {c.total()}")
 #### Creation
 
 ```python
+# Sets — unordered unique elements with O(1) operations
+#
+# Technique: set stores unique hashable elements. Duplicates silently
+#   dropped on creation. O(1) average for add, remove, and in checks.
+#   frozenset is the immutable variant — can be dict keys or set elements.
+#
+# Benefits:
+#   - O(1) membership testing — far faster than list for large data
+#   - Automatic deduplication — set([1,1,2,2,3]) = {1,2,3}
+#   - Set algebra: union, intersection, difference built in
+#
+# Anti-patterns:
+#   - Using list + in for uniqueness — O(n); use set
+#   - Mutable elements (lists, dicts) — unhashable, raises TypeError
+#   - Relying on set order — unordered (though CPython 3.7+ has some order)
+#
+# When to use:
+#   - Deduplication, membership testing, set algebra operations
+#
+# When NOT to use:
+#   - Ordered data — use list; indexed access — use list or tuple
+
 # Sets — unordered unique elements
 #
 # KEY CONCEPTS:
@@ -340,7 +419,8 @@ print(f"comprehension:{comprehension}")
 #### Adding and removing
 
 ```python
-# Adding and removing — add/update to grow; remove/discard/pop to shrink
+# Set add and remove — add, update, remove, discard, pop
+
 s = {1, 2, 3}
 s.add(4)                               # add one element
 s.update([5, 6, 7])                    # add multiple
@@ -358,6 +438,7 @@ print(f"After removes:{s}")
 
 ```python
 # Set operations — union, intersection, difference, symmetric difference
+
 a = {1, 2, 3, 4, 5}
 b = {4, 5, 6, 7, 8}
 
@@ -387,7 +468,8 @@ print(f"a.isdisjoint(b): {a.isdisjoint({10, 20})}")  # no common elements
 #### Data comparison use case
 
 ```python
-# Data comparison — use set difference to find items in one set but not another
+# Data comparison — set difference for finding missing/extra items
+
 prod_ids = {"P001", "P002", "P003", "P004"}
 warehouse_ids = {"P002", "P003", "P005"}
 
@@ -405,7 +487,8 @@ print(f"All unique:        {prod_ids | warehouse_ids}")
 <h4><code style="font-size:0.75em">frozenset</code></h4>
 
 ```python
-# frozenset — immutable set; can be used as dict key or inside another set
+# frozenset — immutable set for use as dict keys or set elements
+
 fs = frozenset([1, 2, 3])
 # fs.add(4)  # Error! Immutable
 print(f"frozenset:    {fs}")
@@ -423,6 +506,27 @@ print(f"As dict key:  {cache}")
 #### Tuple basics
 
 ```python
+# Tuples — ordered, immutable sequences
+#
+# Technique: (1, 2, 3) or tuple() creates an immutable sequence. Single
+#   element requires trailing comma: (1,). Supports indexing, slicing,
+#   unpacking. Hashable (if all elements are hashable) — valid as dict keys.
+#
+# Benefits:
+#   - Immutable — safe to share, use as dict keys, pass without copy concerns
+#   - Unpacking: x, y = point — clean multi-value assignment
+#   - Lighter than list — less memory, faster creation
+#
+# Anti-patterns:
+#   - Using tuple when mutability is needed — use list instead
+#   - Forgetting trailing comma for single-element: (1) is int, not tuple
+#
+# When to use:
+#   - Fixed data, dict keys, function return values, database rows
+#
+# When NOT to use:
+#   - When you need add/remove — use list
+
 # Tuples — ordered, IMMUTABLE sequences
 #
 # KEY CONCEPTS:
@@ -451,7 +555,8 @@ print(f"person:   {person}")
 #### Tuple unpacking
 
 ```python
-# Tuple unpacking — assign each element to a variable in one statement
+# Tuple unpacking — destructure into separate variables
+
 x, y = point
 name, age, city = person
 print(f"Unpacked: x={x}, y={y}")
@@ -475,8 +580,7 @@ print(f"first={first}, last={last}")
 <h4><code style="font-size:0.75em">namedtuple</code> and <code style="font-size:0.75em">NamedTuple</code></h4>
 
 ```python
-# namedtuple and NamedTuple — tuples with named fields for readable access
-from collections import namedtuple
+# namedtuple and NamedTuple — tuples with named field access
 
 Point = namedtuple("Point", ["x", "y"])
 p = Point(3, 4)
@@ -492,13 +596,11 @@ print(f"_asdict: {p._asdict()}")        # convert to dict
 #### Immutability
 
 ```python
-# p.x = 10  # AttributeError!
+# Tuple immutability — _replace for non-destructive updates
 
-# _replace creates a NEW tuple with changed values
 p2 = p._replace(x=10)
 print(f"_replace: {p2}")
 
-from typing import NamedTuple
 
 class Employee(NamedTuple):
     name: str
@@ -518,8 +620,7 @@ print(f"  name: {emp.name}, salary: ${emp.salary:,.0f}")
 <h4><code style="font-size:0.75em">Enum</code></h4>
 
 ```python
-# Enum — a set of named constants; values accessed by name, iterable
-from enum import Enum, IntEnum, auto
+# Enum — named constants with type safety and iteration
 
 class Color(Enum):
     RED = 1
@@ -549,6 +650,7 @@ print(f"Color['BLUE']:   {Color['BLUE']}")     # lookup by name
 
 ```python
 # Iterating over enum — loop yields each member in declaration order
+
 for color in Color:
     print(f"  {color.name} = {color.value}")
 ```
@@ -560,7 +662,8 @@ for color in Color:
 #### Comparison
 
 ```python
-# Comparison — enum members compare by identity; use .value for the underlying int
+# Enum comparison — identity vs value comparison
+
 print(f"RED == RED: {Color.RED == Color.RED}")
 print(f"RED == 1:   {Color.RED == 1}")          # False! Enum != int
 ```
@@ -571,7 +674,8 @@ print(f"RED == 1:   {Color.RED == 1}")          # False! Enum != int
 <h4><code style="font-size:0.75em">IntEnum</code> and pipeline status</h4>
 
 ```python
-# IntEnum — enum that is also an int; supports arithmetic and comparison with ints
+# IntEnum — integer-compatible enum for arithmetic and comparison
+
 class Priority(IntEnum):
     LOW = 1
     MEDIUM = 2
@@ -597,7 +701,31 @@ if status == PipelineStatus.RUNNING:
 
 ## Stacks, Queues & Deques
 
+#### Stacks, queues, and deques overview
+
 ```python
+# Stacks, queues, and deques — specialized access patterns
+#
+# Technique: Stack (LIFO): list with append/pop. Queue (FIFO): deque
+#   with append/popleft. Deque: double-ended with O(1) both ends.
+#   PriorityQueue: heapq for min-heap ordering.
+#
+# Benefits:
+#   - Each type enforces a specific access pattern — prevents misuse
+#   - deque is O(1) at both ends — list.pop(0) is O(n)
+#   - heapq provides priority ordering without sorting
+#
+# Anti-patterns:
+#   - list.pop(0) for FIFO — O(n); use deque.popleft() which is O(1)
+#   - Using list as both stack and queue — confusing semantics
+#
+# When to use:
+#   - Stack: DFS, undo, backtracking; Queue: BFS, task processing
+#   - Deque: sliding windows, both-ends access; heapq: priority ordering
+#
+# When NOT to use:
+#   - Random access — use list; sorted unique — use SortedSet
+
 # Stacks, Queues & Deques
 #
 # KEY CONCEPTS:
@@ -606,14 +734,13 @@ if status == PipelineStatus.RUNNING:
 #   Use collections.deque (NOT list — list.pop(0) is O(n), deque.popleft() is O(1)).
 # - Deque (double-ended queue): efficiently add/remove from BOTH ends.
 # - Priority Queue: items come out in priority order, not insertion order (heapq module).
-
-from collections import deque
 ```
 
 #### Stack (LIFO)
 
 ```python
-# Stack (LIFO) — append pushes, pop removes from the end
+# Stack (LIFO) — list with append/pop from the end
+
 stack = []
 stack.append("first")       # push
 stack.append("second")
@@ -632,7 +759,8 @@ print(f"Peek:  {stack[-1]}")       # look at top without removing
 #### Queue (FIFO)
 
 ```python
-# Queue (FIFO) — append adds to back, popleft removes from front
+# Queue (FIFO) — deque with append/popleft
+
 queue = deque()
 queue.append("first")       # enqueue (add to right)
 queue.append("second")
@@ -651,8 +779,7 @@ print(f"Peek:     {queue[0]}")          # look at front without removing
 <h4><code style="font-size:0.75em">deque</code> — double-ended queue</h4>
 
 ```python
-# As STACK (LIFO): append() + pop()      → last in, first out
-# Full deque:      appendleft()/append() + popleft()/pop()  → both ends
+# deque — double-ended queue with O(1) operations on both ends
 
 d = deque([1, 2, 3])
 d.append(4)                 # add right: [1, 2, 3, 4]
@@ -676,7 +803,8 @@ print(f"Rotate(-2):{list(d)}")
 <h4><code style="font-size:0.75em">deque</code> with <code style="font-size:0.75em">maxlen</code></h4>
 
 ```python
-# deque with maxlen — fixed-size buffer; adding beyond capacity drops the opposite end
+# deque with maxlen — fixed-size circular buffer
+
 d = deque(maxlen=3)          # fixed-size buffer
 d.append(1); d.append(2); d.append(3);
 d.append(4)                 # [2, 3, 4] — 1 was auto-removed
@@ -688,10 +816,8 @@ print(f"maxlen=3:  {list(d)}")
 <h4>Priority queue — <code style="font-size:0.75em">heapq</code></h4>
 
 ```python
-# Priority queue with heapq — smallest item is always popped first (min-heap)
-import heapq
+# heapq — priority queue using a min-heap on a regular list
 
-# heapq works on a regular list — always keeps smallest on top
 pq = []
 heapq.heappush(pq, (3, "low priority"))
 heapq.heappush(pq, (1, "high priority"))
@@ -709,7 +835,8 @@ print(f"Pop:     {heapq.heappop(pq)}")     # (2, "medium priority")
 #### ETL task queue
 
 ```python
-# ETL task queue — process extract/transform jobs in FIFO order
+# ETL task queue — deque for FIFO job processing
+
 task_queue = deque()
 task_queue.append({"task": "extract", "table": "users"})
 task_queue.append({"task": "extract", "table": "orders"})
@@ -729,6 +856,24 @@ while task_queue:
 #### Collection cheat sheet
 
 ```python
+# Collection cheat sheet — ordered, mutable, duplicates, lookup complexity
+#
+# Technique: Reference table comparing all collection types by ordering,
+#   mutability, duplicate handling, and lookup complexity.
+#
+# Benefits:
+#   - Single-page comparison for choosing the right collection
+#   - Complexity column shows O(1) vs O(n) tradeoffs
+#
+# Anti-patterns:
+#   - Choosing by familiarity alone — match collection to access pattern
+#
+# When to use:
+#   - Quick lookup when selecting a collection type
+#
+# When NOT to use:
+#   - N/A — this is a reference table
+
 # Collection cheat sheet — ordered, mutable, duplicates, and lookup complexity
 comparison = """
 Collection    | Ordered | Mutable | Duplicates | Lookup  | Use When
@@ -768,7 +913,8 @@ print(comparison)
 #### Decision guide
 
 ```python
-# Decision guide — choose the right collection based on your access pattern
+# Decision guide — choose the right collection by access pattern
+
 guide = """
 Need ordered items?
   ├─ Need to modify? → list
@@ -813,7 +959,8 @@ print(guide)
 #### Common DE patterns
 
 ```python
-# Common DE patterns — which collection for which job
+# Common data engineering patterns — collection selection by use case
+
 print("ETL records:      list[dict]   or  list[namedtuple]")
 print("Config/params:    dict")
 print("Deduplication:    set")

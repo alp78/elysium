@@ -16,7 +16,31 @@ status: complete
 
 ## 1. Timing & Benchmarking
 
+#### Stopwatch timing and BenchmarkDotNet
+
 ```csharp
+// Timing and benchmarking — measure execution time accurately
+//
+// Technique: Stopwatch for high-resolution wall-clock timing in code.
+//   BenchmarkDotNet for production-grade micro-benchmarks with warm-up,
+//   statistical analysis, and GC tracking. Always measure before optimizing.
+//
+// Benefits:
+//   - Stopwatch uses hardware counters — sub-microsecond resolution
+//   - BenchmarkDotNet handles warm-up, JIT, and GC automatically
+//   - Prevents premature optimization — data-driven decisions
+//
+// Anti-patterns:
+//   - DateTime.Now for timing — 15ms resolution, not suitable for benchmarks
+//   - Single-run timing — JIT and caching skew first run; use multiple iterations
+//   - Optimizing without measuring — guessing where bottlenecks are
+//
+// When to use:
+//   - Comparing algorithm alternatives, validating optimizations
+//
+// When NOT to use:
+//   - Production monitoring — use Application Insights or Prometheus instead
+
 // Timing & Benchmarking — measure how long code takes.
 //
 // KEY CONCEPTS:
@@ -30,6 +54,8 @@ status: complete
 using System.Diagnostics;
 
 // --- Stopwatch (manual timing) ---
+using System.Buffers;
+using System.Collections.Generic;
 int SlowSum(int n) {
     int total = 0;
     for (int i = 0; i < n; i++) total += i;
@@ -71,10 +97,10 @@ MeasureTime(() => {
       [LINQ ToArray] 0.47ms
       [Manual loop] 0.19ms
 
+#### Comparing alternatives — List vs Array vs Dictionary
+
 ```csharp
-// Comparing alternatives: List vs Array vs Dictionary lookup
-//
-// RULE: Always compare on the SAME data, SAME machine.
+// Comparing alternatives — benchmark the same operation across data structures
 
 var data = Enumerable.Range(0, 100_000).ToList();
 var dataArr = data.ToArray();
@@ -95,7 +121,31 @@ MeasureTime(() => dataDict.ContainsKey(99_999), "Dict.ContainsKey (O(1))");
 
 ## 2. Memory Measurement
 
+#### GC.GetTotalMemory — measure managed heap allocations
+
 ```csharp
+// Memory measurement — understand the cost of allocations
+//
+// Technique: GC.GetTotalMemory(forceFullCollection: true) returns total
+//   managed heap size. Measure before and after allocation to get the
+//   delta. GC.GetGCMemoryInfo() provides detailed GC statistics.
+//
+// Benefits:
+//   - Quick allocation measurement without external tools
+//   - forceFullCollection gives accurate snapshot (no pending garbage)
+//   - Reveals hidden allocations from LINQ, closures, boxing
+//
+// Anti-patterns:
+//   - Not forcing GC before measurement — stale garbage inflates numbers
+//   - Measuring in Debug — allocations differ from Release builds
+//   - Ignoring LOH (Large Object Heap) — objects >85KB allocated differently
+//
+// When to use:
+//   - Comparing memory footprint of data structures and approaches
+//
+// When NOT to use:
+//   - Production memory monitoring — use dotMemory or Application Insights
+
 // Memory Measurement — understand the cost of allocations.
 //
 // KEY CONCEPTS:
@@ -146,14 +196,10 @@ Console.WriteLine($"StringBuilder:   {(after - before) / 1024.0:F0} KB (O(n))");
     String += (10K): 11472 KB (O(n²) allocations!)
     StringBuilder:   180 KB (O(n))
 
+#### Value types vs reference types — stack vs heap allocation
+
 ```csharp
-// Value Types vs Reference Types: stack vs heap
-//
-// struct = value type, lives on stack (no GC), copied on assignment.
-// class = reference type, lives on heap (GC), shared reference.
-//
-// RULE: Use struct for small, immutable data (Point, Color, DateTime).
-//       Use class for large or mutable objects.
+// Value types vs reference types — stack vs heap memory impact
 
 struct PointStruct(int x, int y) { public int X = x; public int Y = y; }
 class PointClass(int x, int y) { public int X = x; public int Y = y; }
@@ -161,7 +207,11 @@ class PointClass(int x, int y) { public int X = x; public int Y = y; }
 // Struct array: contiguous memory, no GC overhead per element
 ```
 
+#### struct vs class memory benchmark
+
 ```csharp
+// struct vs class memory — concrete allocation comparison
+
 GC.Collect();
 long before = GC.GetTotalMemory(true);
 var structArr = new PointStruct[100_000];
@@ -185,7 +235,31 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 
 ## 3. Span<T> & Zero-Allocation Patterns
 
+#### Span and zero-allocation patterns
+
 ```csharp
+// Span<T> — zero-allocation slicing for high-performance parsing
+//
+// Technique: Span<T> is a stack-only view into contiguous memory.
+//   Slicing creates a new view (no copy). ReadOnlySpan<char> for string
+//   parsing without substring allocations. stackalloc for stack arrays.
+//
+// Benefits:
+//   - Zero allocation — no GC pressure from slicing operations
+//   - Works with arrays, strings, and stack memory uniformly
+//   - Orders of magnitude faster for heavy parsing (CSV, protocols)
+//
+// Anti-patterns:
+//   - Span in class fields — stack-only, compiler error
+//   - Span across await — not allowed (stack frame may be gone)
+//   - Using Span for simple operations — overhead of understanding isn't worth it
+//
+// When to use:
+//   - High-throughput parsing, buffer processing, protocol handling
+//
+// When NOT to use:
+//   - General string manipulation — Substring is simpler
+
 // Span<T> — zero-allocation slicing of arrays, strings, and stack memory.
 //
 // KEY CONCEPTS:
@@ -230,7 +304,30 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 
 ## 4. Big-O Complexity & Collection Performance
 
+#### Big-O complexity and collection performance cheat sheet
+
 ```csharp
+// Collection performance cheat sheet — Big-O for common operations
+//
+// Technique: Reference table showing time complexity for each operation
+//   (lookup, insert, remove, iterate) on each collection type (List,
+//   Array, Dictionary, HashSet, SortedDictionary, LinkedList).
+//
+// Benefits:
+//   - Quick lookup for choosing the right collection by access pattern
+//   - Shows why Dictionary/HashSet are O(1) for lookup vs List O(n)
+//   - Covers edge cases: List.Insert(0) is O(n), LinkedList is O(1)
+//
+// Anti-patterns:
+//   - List.Contains in hot loops — O(n); switch to HashSet for O(1)
+//   - SortedDictionary when order doesn't matter — Dictionary is faster
+//
+// When to use:
+//   - Choosing collections based on performance requirements
+//
+// When NOT to use:
+//   - N/A — this is a reference table
+
 // Collection Performance Cheat Sheet
 //
 // | Operation        | List<T> | Array   | Dict<K,V> | HashSet | SortedDict | LinkedList |
@@ -250,8 +347,6 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 //              Use SortedDictionary when you need sorted keys.
 //              NEVER use List.Contains() on large data.
 
-using System.Diagnostics;
-using System.Collections.Generic;
 
 int n = 100_000;
 var list = Enumerable.Range(0, n).ToList();
@@ -274,7 +369,30 @@ MeasureTime(() => sorted.ContainsKey(n - 1), "SortedDict (O(log n))");
 
 ## 5. Golden Rules of Performance
 
+#### Golden rules of C# performance
+
 ```csharp
+// Golden rules of performance — principles before micro-optimization
+//
+// Technique: Ten rules: measure first, avoid premature optimization,
+//   prefer built-in APIs, minimize allocations, use value types for
+//   small data, pool buffers, use Span for parsing, batch I/O.
+//
+// Benefits:
+//   - Prioritizes high-impact optimizations over micro-optimizations
+//   - Measure-first approach prevents wasted effort
+//   - Covers the 80/20 of C# performance improvements
+//
+// Anti-patterns:
+//   - Optimizing without profiling — solving the wrong problem
+//   - Micro-optimizing cold paths — only hot paths matter
+//
+// When to use:
+//   - Before any optimization work — review these rules first
+//
+// When NOT to use:
+//   - N/A — these principles are always applicable
+
 // GOLDEN RULES OF C# PERFORMANCE
 //
 // 1. MEASURE BEFORE OPTIMIZING
@@ -320,7 +438,6 @@ MeasureTime(() => sorted.ContainsKey(n - 1), "SortedDict (O(log n))");
 //     ImmutableArray<T> for thread-safe collections.
 
 // Demo: ArrayPool (reuse instead of allocate)
-using System.Buffers;
 
 var pool = ArrayPool<int>.Shared;
 int[] rented = pool.Rent(1024); // May return larger array
@@ -336,7 +453,32 @@ try {
 
 ## 6. Absolute No-Go's
 
+#### Absolute no-go's — patterns that should never appear in production
+
 ```csharp
+// Absolute no-go's — code patterns that are always wrong in production
+//
+// Technique: Catalog of patterns that cause severe performance or
+//   correctness issues: string += in loops (O(n squared)), catching
+//   Exception broadly, async void, nested Task.Result (deadlock).
+//
+// Benefits:
+//   - Clear list of things to check in code review
+//   - Each anti-pattern has the correct alternative
+//   - Prevents the most common C# production bugs
+//
+// Anti-patterns:
+//   - String concatenation in loops — use StringBuilder
+//   - Catching Exception — catch specific types
+//   - async void — use async Task
+//   - .Result/.Wait() — use await
+//
+// When to use:
+//   - Code review checklist, onboarding documentation
+//
+// When NOT to use:
+//   - N/A — these rules are always applicable
+
 // ABSOLUTE NO-GO'S — things that should NEVER appear in production C# code.
 //
 // 1. STRING CONCATENATION IN A LOOP
@@ -396,7 +538,32 @@ try {
 
 ## 7. Code Smells & Anti-Patterns
 
+#### Code smells and anti-patterns
+
 ```csharp
+// Code smells — design issues that indicate deeper problems
+//
+// Technique: Catalog of common smells: god class (too many methods),
+//   primitive obsession (string for email), deep nesting, feature envy,
+//   magic numbers, boolean parameters, dead code.
+//
+// Benefits:
+//   - Recognition guide — spot smells during code review
+//   - Each smell has a concrete refactoring solution
+//   - Prevents technical debt accumulation
+//
+// Anti-patterns:
+//   - God class — split by single responsibility
+//   - Primitive obsession — wrap in value objects
+//   - Magic numbers — extract to named constants
+//   - Deep nesting — extract to methods, use guard clauses
+//
+// When to use:
+//   - Code review, refactoring planning, design improvement
+//
+// When NOT to use:
+//   - Premature refactoring — fix smells when they cause real problems
+
 // CODE SMELLS IN C#
 //
 // 1. GOD CLASS
@@ -435,9 +602,11 @@ record Email {
 }
 ```
 
+#### Primitive obsession vs value objects — demo
+
 ```csharp
-// Demo: Primitive Obsession vs Value Object
-// BAD:
+// Primitive obsession vs value objects — concrete refactoring example
+
 string email = "alice@example.com";  // Just a string, no validation
 
 // GOOD:
@@ -457,7 +626,31 @@ try {
 
 ## 8. Nullable Reference Types & Static Analysis
 
+#### Nullable reference types and static analysis
+
 ```csharp
+// Nullable reference types (NRT) — compile-time null safety
+//
+// Technique: #nullable enable turns on compiler null analysis. string?
+//   marks nullable, string is non-nullable. Compiler warns on potential
+//   null dereference. The null-forgiving operator (!) suppresses warnings.
+//
+// Benefits:
+//   - Catches NullReferenceException at compile time, not runtime
+//   - Documents nullable intent in the type system
+//   - Works with existing code — enable gradually per file
+//
+// Anti-patterns:
+//   - Ignoring nullable warnings — defeats the purpose
+//   - Overusing ! (null-forgiving) — hides real null risks
+//   - Not enabling NRT in new projects — missing free bug prevention
+//
+// When to use:
+//   - Every new C# project — NRT is on by default since .NET 6
+//
+// When NOT to use:
+//   - N/A — NRT should always be enabled
+
 // Nullable Reference Types (NRT) — C#'s answer to the billion-dollar mistake.
 //
 // KEY CONCEPTS:
@@ -499,7 +692,32 @@ Console.WriteLine($"Chained: {result ?? "(null)"}");
 
 ## 9. LINQ Performance Pitfalls
 
+#### LINQ performance pitfalls
+
 ```csharp
+// LINQ performance pitfalls — common traps in LINQ pipelines
+//
+// Technique: Multiple enumeration (calling .Count() then .ToList() scans
+//   twice), deferred execution surprises, OrderBy vs Sort (allocation
+//   difference), materialization timing with ToList/ToArray.
+//
+// Benefits:
+//   - Awareness prevents common LINQ performance mistakes
+//   - Each pitfall has a concrete fix
+//   - Profiling reveals which LINQ calls are costly
+//
+// Anti-patterns:
+//   - Multiple enumeration — materialize with ToList() if reused
+//   - .Count() > 0 instead of .Any() — Any() short-circuits
+//   - OrderBy in a loop — sort once outside the loop
+//   - Deferred query as return value — callers may enumerate multiple times
+//
+// When to use:
+//   - Reviewing LINQ-heavy code for performance issues
+//
+// When NOT to use:
+//   - Simple LINQ on small data — these pitfalls matter at scale
+
 // LINQ is elegant but has performance traps.
 //
 // PITFALLS:
@@ -547,7 +765,31 @@ MeasureTime(() => {
 
 ## 10. Code Quality Tools
 
+#### Code quality tools for C#
+
 ```csharp
+// Code quality tools — static analysis, linting, and formatting
+//
+// Technique: .NET analyzers (Roslyn) catch bugs at compile time. StyleCop
+//   enforces coding standards. dotnet format auto-formats code. SonarQube
+//   for continuous inspection. EditorConfig for team-wide settings.
+//
+// Benefits:
+//   - Automated — catches issues before code review
+//   - Consistent style — no formatting debates in PRs
+//   - Security — analyzers detect common vulnerabilities
+//
+// Anti-patterns:
+//   - No static analysis — relies entirely on human code review
+//   - Suppressing all warnings — defeats the purpose
+//   - Different formatting per developer — merge conflicts
+//
+// When to use:
+//   - Every C# project — configure in CI/CD pipeline
+//
+// When NOT to use:
+//   - N/A — quality tools are always beneficial
+
 // Code Quality Tools for C#
 //
 // | Tool                  | Purpose                           | Config            |

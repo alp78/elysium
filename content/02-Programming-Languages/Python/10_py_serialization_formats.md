@@ -18,7 +18,6 @@ status: complete
 # 10. Serialization Formats - Python
 
 ```python
-# Imports used throughout this notebook
 import os
 import csv
 import json
@@ -40,6 +39,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from IPython.display import display
+import fastavro
+import random
 html_formatter = get_ipython().display_formatter.formatters['text/html'] # type: ignore
 html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
 html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
@@ -49,7 +50,32 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 ## Parquet Files
 
+#### Parquet overview — columnar format for analytics
+
 ```python
+# Parquet — columnar binary format for analytics and data lakes
+#
+# Technique: Parquet stores data column-by-column with per-column
+#   compression. Schema is embedded in the file footer. Supports
+#   column pruning, predicate pushdown, and partitioning.
+#
+# Benefits:
+#   - Columnar — read only needed columns (projection pushdown)
+#   - Compressed — 5-10x smaller than CSV for typical data
+#   - Typed schema — no parsing overhead, self-describing
+#   - Standard — BigQuery, Spark, DuckDB, Athena all read Parquet natively
+#
+# Anti-patterns:
+#   - Parquet for simple data exchange — CSV is more universal
+#   - Small files (<1MB) — Parquet overhead exceeds benefit
+#   - Frequent appends — Parquet is immutable; use Avro/JSONL for streaming
+#
+# When to use:
+#   - Data lake storage, analytics pipelines, large datasets
+#
+# When NOT to use:
+#   - Streaming/append workloads — use Avro or JSONL
+
 # Parquet Files — columnar storage for analytics & data lakes
 #
 # KEY CONCEPTS:
@@ -70,7 +96,8 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 #### Write parquet from Arrow table
 
 ```python
-# Write parquet from Arrow table
+# Write parquet from Arrow table — column-oriented creation
+
 print("=== Write parquet from Arrow table ===")
 # Data Engineering scenario: write pipeline output to a parquet file in a data lake.
 
@@ -116,7 +143,8 @@ print(f"  Rows: {table.num_rows}, Columns: {table.num_columns}")
 #### Read entire parquet file
 
 ```python
-# Read entire parquet file
+# Read entire parquet file — schema discovery and full table load
+
 print("\n=== Read entire parquet file ===")
 
 table_read = pq.read_table(parquet_file)  # returns an Arrow table
@@ -144,7 +172,8 @@ print(f"\n  Data:\n{table_read.to_pandas()}")  # convert to pandas DataFrame for
 #### Read specific columns only (column pruning)
 
 ```python
-# Read specific columns only (column pruning)
+# Column pruning — read only selected columns from parquet
+
 print("\n=== Column pruning (read only selected columns) ===")
 # Data Engineering key feature: only read the columns you need.
 # On a 100-column table, this can be 50x faster than CSV.
@@ -164,7 +193,8 @@ print(f"  Sum: {sum(partial.column('revenue').to_pylist()):.2f}")
 #### Read with row filter (predicate pushdown)
 
 ```python
-# Row filter (predicate pushdown) — parquet skips non-matching row groups at read time
+# Predicate pushdown — filter rows at read time via row group statistics
+
 filtered = pq.read_table(
     parquet_file,
     filters=[("event_type", "==", "purchase")]
@@ -197,8 +227,8 @@ for i, field in enumerate(schema_read):
 #### Hive-style partitioning
 
 ```python
-# Hive-style partitioning — splits files into subdirectories by column value
-# BigQuery, Spark, Athena, dbt all understand this layout
+# Hive-style partitioning — split files into subdirectories by column value
+
 partitioned_dir = tmp_dir / "events_partitioned"
 pq.write_to_dataset(
     table,
@@ -225,7 +255,8 @@ print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
 <h4>Parquet in memory — <code style="font-size:0.75em">BytesIO</code></h4>
 
 ```python
-# Parquet in memory — write to BytesIO for cloud upload without temp files
+# Parquet in memory — BytesIO for cloud upload without temp files
+
 buffer = BytesIO()
 pq.write_table(table, buffer)
 print(f"  Buffer size: {buffer.tell()} bytes")
@@ -242,7 +273,8 @@ print(f"  Read from memory: {table_from_mem.num_rows} rows")
 #### CSV vs Parquet comparison
 
 ```python
-# CSV vs Parquet — size and feature comparison
+# CSV vs Parquet comparison — size, features, and use cases
+
 csv_file = tmp_dir / "events.csv"
 table.to_pandas().to_csv(csv_file, index=False)
 
@@ -282,6 +314,27 @@ Use case             Simple exchange, legacy      Data lakes, analytics, BigQuer
 #### Avro and Protobuf overview
 
 ```python
+# Enterprise serialization overview — Avro and Protobuf vs JSON/pickle
+#
+# Technique: Compares binary formats (Avro, Protobuf) with text (JSON)
+#   and Python-native (pickle). Binary formats provide schema enforcement,
+#   cross-language support, and compact serialization.
+#
+# Benefits:
+#   - Schema enforcement — catches type mismatches at serialization time
+#   - Cross-language — same schema generates code for any language
+#   - Compact — 3-10x smaller than JSON for the same data
+#
+# Anti-patterns:
+#   - JSON for high-throughput pipelines — binary formats are faster
+#   - pickle for cross-language data — Python-only format
+#
+# When to use:
+#   - Understanding when to upgrade from JSON to binary formats
+#
+# When NOT to use:
+#   - N/A — this is a conceptual overview
+
 # Enterprise serialization — cross-language binary formats with schema evolution
 #
 # WHY NOT JSON/PICKLE:
@@ -330,26 +383,8 @@ print("struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols
 #### Avro with fastavro
 
 ```python
-# Apache Avro with fastavro — fast binary serialization with embedded schema
-#
-# WHAT: Avro is a row-based binary format where the schema is embedded in the file.
-#   Unlike Protobuf (separate .proto), Avro files are self-describing.
-#   fastavro is the fast Python implementation (C extension, 10x faster than avro-python3).
-#
-# WHY:
-#   - Schema embedded in file — any consumer reads it without external metadata
-#   - Schema evolution — add/remove fields without breaking readers
-#   - THE standard for Kafka messages (Confluent Schema Registry)
-#   - Supported by Spark, Flink, Hive, BigQuery
-#
-# WHEN TO USE: Kafka streaming, data lake storage, ETL intermediate format
-# AVRO vs PROTOBUF vs PARQUET:
-#   Avro:    row-based, self-describing, best for streaming/Kafka
-#   Protobuf: binary, external schema, best for gRPC/microservices
-#   Parquet:  columnar, best for analytics (column pruning)
-import fastavro
+# Apache Avro with fastavro — binary serialization with embedded schema
 
-# Define Avro schema as a Python dict
 avro_schema = {
     "type": "record",
     "name": "StockQuote",
@@ -378,7 +413,8 @@ for f in avro_schema["fields"]:
 #### Write and read Avro file
 
 ```python
-# Write Avro records to a file — schema is embedded in the file header
+# Write and read Avro file — records with embedded schema
+
 avro_dir = tempfile.mkdtemp(prefix="avro_py_")
 avro_file = os.path.join(avro_dir, "quotes.avro")
 
@@ -419,6 +455,8 @@ shutil.rmtree(avro_dir)
 #### Avro in memory and schema evolution
 
 ```python
+# Avro in memory and schema evolution — BytesIO and field addition
+
 # Avro in memory — serialize to BytesIO for Kafka or API payloads
 avro_buffer = BytesIO()
 fastavro.writer(avro_buffer, parsed_schema, records)
@@ -458,29 +496,8 @@ print("""
 #### Protobuf in Python — manual message building
 
 ```python
-# Protocol Buffers (Protobuf) — cross-language binary serialization
-#
-# WHAT: Protobuf defines message schemas in .proto files. The protoc compiler
-#   generates Python/Java/Go/C# classes from the schema. You serialize instances
-#   to compact binary bytes and deserialize back with full type safety.
-#
-# HOW IT WORKS (production workflow):
-#   1. Define schema: message StockQuote { string symbol = 1; double price = 2; }
-#   2. Compile: protoc --python_out=. stock.proto → generates stock_pb2.py
-#   3. Use: quote = StockQuote(symbol="SAP.DE", price=166.52)
-#          data = quote.SerializeToString()  # bytes
-#          parsed = StockQuote.FromString(data)  # back to object
-#
-# WHY: 60-80% smaller than JSON, 10-100x faster to parse, strict schema,
-#   backward/forward compatible (add fields without breaking old consumers).
-#
-# WHEN TO USE: gRPC services, Kafka events, high-frequency data feeds,
-#   mobile APIs (bandwidth matters), inter-service communication
-#
-# In this cell we build a protobuf message MANUALLY using the descriptor API
-# (without running protoc). In production, always use protoc-generated classes.
+# Protobuf in Python — manual message building with struct
 
-# Define the schema programmatically (normally protoc generates this)
 DESCRIPTOR = descriptor_pb2.FileDescriptorProto(
     name="stock_quote.proto",
     package="stoxx",
@@ -547,10 +564,7 @@ print(f"  Savings:       {(1 - len(binary)/json_size)*100:.0f}%")
 #### Protobuf with protoc (production pattern)
 
 ```python
-# Production protobuf workflow — how it looks with protoc-generated code
-#
-# This cell shows the PATTERN you'd use in a real project.
-# The code below is not executable without running protoc first.
+# Production Protobuf workflow — protoc-generated code pattern
 
 print("""
   ── Step 1: Define schema (stock_quote.proto) ──
@@ -625,8 +639,28 @@ print("""
 #### Generate test data
 
 ```python
+# Generate OHLCV test data — three sizes for format benchmarking
+#
+# Technique: Create synthetic OHLCV records matching the stoxx database
+#   schema. Three tiers: 100 (small), 10K (medium), 100K (large).
+#   Fixed random seed (42) for reproducible benchmarks.
+#
+# Benefits:
+#   - Reproducible — fixed seed gives consistent results
+#   - Realistic schema — matches actual financial data structure
+#   - Three sizes reveal scaling characteristics of each format
+#
+# Anti-patterns:
+#   - Benchmarking with tiny data only — doesn't reveal scaling
+#   - Unrealistic schemas — results won't transfer to production
+#
+# When to use:
+#   - Comparing serialization format performance
+#
+# When NOT to use:
+#   - Production decisions — benchmark with actual production data
+
 # Generate OHLCV test data — same schema as stoxx database
-import random
 random.seed(42)
 
 symbols = ["SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","SIE.DE","ALV.DE",
@@ -661,7 +695,8 @@ print(f"  Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}"
 #### Run benchmarks
 
 ```python
-# Benchmark all 5 formats: CSV, JSON, Parquet, Avro, Protobuf (struct)
+# Run benchmarks — write/read all 5 formats at all 3 sizes
+
 bench_dir = tempfile.mkdtemp(prefix="bench_py_")
 results = []  # (format, size_label, records, write_ms, read_ms, file_bytes)
 
@@ -770,11 +805,8 @@ print("  All benchmarks complete.")
 #### Results — performance matrix
 
 ```python
-# Performance table — pandas .style with green/red coloring and bucket separators
-import pandas as pd
-from IPython.display import display
+# Results table — pandas styled DataFrame with performance metrics
 
-# Build DataFrame from results
 df_bench = pd.DataFrame(results, columns=["Format", "File", "Records", "Write_ms", "Read_ms", "Bytes"])
 df_bench["Bucket"] = df_bench["File"].str.extract(r"(small|medium|large)")
 df_bench["File_Size"] = df_bench["Bytes"].apply(
@@ -1005,8 +1037,11 @@ display(
   </tbody>
 </table>
 
+#### Write vs Read speed chart — Plotly grouped bar
+
 ```python
-# Plotly grouped bar chart — Write ms + Read ms per format (large bucket)
+# Write/Read speed chart — Plotly grouped bar for large tier
+
 colors = {"CSV": "#4285F4", "JSON": "#FBBC05", "Parquet": "#34A853", "Avro": "#EA4335", "Protobuf": "#9C27B0"}
 large = df_bench[df_bench["Bucket"] == "large"].sort_values("Bytes")
 
@@ -1027,9 +1062,8 @@ fig.show()
 #### Compression comparison
 
 ```python
-# Compression comparison — file size per format (large bucket) with Plotly bar chart
+# Compression comparison — file size per format for large tier
 
-# Build compression DataFrame
 csv_bytes = df_bench[(df_bench["Format"] == "CSV") & (df_bench["Bucket"] == "large")]["Bytes"].iloc[0]
 comp = df_bench[df_bench["Bucket"] == "large"][["Format", "Bytes"]].sort_values("Bytes").copy()
 comp["vs_CSV"] = ((1 - comp["Bytes"] / csv_bytes) * 100).round(1).apply(lambda x: f"{x:+.1f}%")
@@ -1086,8 +1120,11 @@ display(
   </tbody>
 </table>
 
+#### File size bar chart — Plotly horizontal bars
+
 ```python
-# Plotly horizontal bar chart — file size per format
+# File size bar chart — Plotly horizontal bars for visual comparison
+
 colors_list = [colors.get(f, "#999") for f in comp["Format"]]
 fig2 = go.Figure(go.Bar(
     x=comp["Size_MB"].values,
@@ -1114,6 +1151,7 @@ fig2.show()
 
 ```python
 # Recommendation matrix — best format for each scenario
+
 print("""
   ═══ WHEN TO USE WHAT ═══
 

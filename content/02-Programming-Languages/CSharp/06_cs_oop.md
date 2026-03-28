@@ -21,6 +21,28 @@ status: complete
 #### Type declarations
 
 ```csharp
+// Class declarations — auto-properties, constructors, methods, ToString
+//
+// Technique: Classes define types with auto-properties (get/set), constructors
+//   for initialization, methods for behavior, and ToString for display.
+//   In notebooks, type declarations must be in their own cell.
+//
+// Benefits:
+//   - Auto-properties eliminate boilerplate backing fields
+//   - Constructor enforces required initialization at creation
+//   - ToString integrates with Console.WriteLine and $"" interpolation
+//
+// Anti-patterns:
+//   - Public fields instead of properties — loses validation and encapsulation
+//   - Constructors doing heavy work — use factory methods or init logic
+//   - Not overriding ToString — defaults to type name, not useful
+//
+// When to use:
+//   - Any domain entity or data structure with behavior
+//
+// When NOT to use:
+//   - Simple data carriers — use record instead
+
 // Classes and objects — type declarations must be in their own cell in notebooks
 
 // Dog — basic class with auto-properties, constructor, methods, and ToString
@@ -68,7 +90,8 @@ class Circle
 #### Using Dog
 
 ```csharp
-// Using Dog — create instances, call methods, check ToString
+// Using classes — instantiation, method calls, and string representation
+
 var dog1 = new Dog("Rex", 5);
 var dog2 = new Dog("Buddy", 3);
 
@@ -91,7 +114,8 @@ Console.WriteLine($"Older?:      {dog1.IsOlderThan(dog2)}");
 #### Using Circle — property with validation
 
 ```csharp
-// Using Circle — property validation prevents invalid state
+// Property validation — prevent invalid state via setter logic
+
 var c = new Circle(5);
 Console.WriteLine($"Radius: {c.Radius}");
 Console.WriteLine($"Area:   {c.Area:F2}");
@@ -110,6 +134,28 @@ Console.WriteLine($"New radius: {c.Radius}");
 #### Type declarations
 
 ```csharp
+// Inheritance — base class with virtual methods, derived classes override
+//
+// Technique: virtual marks a method for overriding. override in child
+//   provides a new implementation. base.Method() calls parent version.
+//   Single inheritance only — C# classes extend one base class.
+//
+// Benefits:
+//   - Code reuse — shared behavior in the base class
+//   - Polymorphism — derived types substitutable for the base type
+//   - virtual/override is explicit — no accidental method hiding
+//
+// Anti-patterns:
+//   - Deep inheritance hierarchies (>3 levels) — prefer composition
+//   - Forgetting virtual — method won't dispatch polymorphically
+//   - new keyword hiding instead of override — breaks polymorphism
+//
+// When to use:
+//   - IS-A relationships: Dog is an Animal, Circle is a Shape
+//
+// When NOT to use:
+//   - HAS-A relationships — use composition (fields/properties)
+
 // Inheritance and polymorphism — child classes extend a parent; virtual/override enable runtime dispatch
 
 // Animal — base class with a virtual method that subclasses can override
@@ -156,7 +202,8 @@ class Cat : Animal
 #### Using inheritance
 
 ```csharp
-// Using inheritance — Dog and Cat extend Animal with their own Speak
+// Using inheritance — instantiate derived classes and call overridden methods
+
 var dog = new Dog("Rex", "German Shepherd");
 var cat = new Cat("Whiskers");
 
@@ -174,7 +221,8 @@ Console.WriteLine($"dog.Breed:    {dog.Breed}");
 #### Polymorphism — AnimalRollCall
 
 ```csharp
-// Polymorphism — pass an array of Animal; each calls its own overridden Speak
+// Polymorphism — operate on base type, dispatch to derived implementation
+
 void AnimalRollCall(Animal[] animals)
 {
     foreach (var animal in animals)
@@ -192,7 +240,9 @@ AnimalRollCall(animals);
 <h4>Type checking with <code style="font-size:0.75em">is</code> and <code style="font-size:0.75em">as</code></h4>
 
 ```csharp
-// Type checking — is tests type; as casts safely (returns null on failure)
+#nullable enable
+// Type checking — is, as, and pattern matching for safe downcasting
+
 Animal a = new Dog("Rex", "Shepherd");
 Console.WriteLine($"a is Dog:    {a is Dog}");             // True
 Console.WriteLine($"a is Animal: {a is Animal}");          // True
@@ -216,16 +266,33 @@ Console.WriteLine($"as Cat: {maybeCat?.Name ?? "null"}");
     as Dog: Rex
     as Cat: null
 
-    
-    (12,4): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-    
-    (13,4): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-
 ## Abstract Classes & Interfaces
 
 #### Abstract class
 
 ```csharp
+// Abstract class — contract with optional shared implementation
+//
+// Technique: abstract class cannot be instantiated. abstract methods
+//   must be overridden by derived classes. Concrete methods provide
+//   shared implementation. Can have fields, constructors, and state.
+//
+// Benefits:
+//   - Enforces a contract — derived classes must implement abstract methods
+//   - Shared code — concrete methods avoid duplication in derived classes
+//   - Constructor initializes shared state for all derived types
+//
+// Anti-patterns:
+//   - Abstract class with no shared code — use interface instead
+//   - Too many abstract methods — interface is more appropriate
+//   - Deep abstract hierarchies — prefer composition over inheritance
+//
+// When to use:
+//   - When derived classes share common state and behavior
+//
+// When NOT to use:
+//   - Pure contract with no shared code — use interface
+
 // Abstract classes — can't be instantiated; define a contract with abstract methods and shared logic with concrete methods
 
 // Shape — abstract base with Area/Perimeter that subclasses must implement
@@ -279,7 +346,8 @@ class CircleShape : Shape
 #### Interface declarations
 
 ```csharp
-// Interface declarations — a pure contract with no implementation
+// Interface declarations — pure contract with no implementation
+
 interface IDrawable                          // convention: prefix with I
 {
     string Draw();                           // no body, no access modifier (always public)
@@ -310,7 +378,8 @@ class TextBox : IDrawable                    // only IDrawable, not IResizable
 #### Using abstract classes
 
 ```csharp
-// var shape = new Shape();  // Compile error! Can't instantiate abstract class
+// Using abstract classes — instantiate derived types, call abstract methods
+
 var rect = new Rectangle(5, 3, "red");
 var circ = new CircleShape(4, "blue");
 
@@ -330,7 +399,8 @@ Console.WriteLine($"Total area: {totalArea:F2}");
 #### Using interfaces and polymorphism
 
 ```csharp
-// Using interfaces — Button implements both IClickable and IDrawable
+// Using interfaces and polymorphism — multiple interface implementation
+
 var btn = new Button("OK", 1.0);
 var txt = new TextBox();
 
@@ -354,8 +424,11 @@ Console.WriteLine($"  TextBox is IResizable? {txt is IResizable}");  // False
       Resized button: Drawing button 'OK' size=2.0
       TextBox is IResizable? False
 
+#### Summary — abstract class vs interface
+
 ```csharp
-// Summary — abstract class vs interface
+// Summary — abstract class vs interface comparison
+
 Console.WriteLine("Abstract class:  can have fields, constructors, concrete methods");
 Console.WriteLine("Interface:       only method signatures (pure contract)");
 Console.WriteLine("Abstract class:  single inheritance only (one parent)");
@@ -376,6 +449,28 @@ Console.WriteLine("Use interface:   when classes share behavior contract (IDrawa
 #### Access modifiers
 
 ```csharp
+// Encapsulation and access modifiers — controlling visibility
+//
+// Technique: public (everyone), private (class only), protected (class +
+//   derived), internal (same assembly), protected internal, private protected.
+//   Properties expose controlled access; fields are typically private.
+//
+// Benefits:
+//   - Information hiding — internal details can change without breaking callers
+//   - Validation in property setters — enforce invariants
+//   - Minimal public surface — easier to maintain and evolve
+//
+// Anti-patterns:
+//   - Public fields — bypasses validation and encapsulation
+//   - Everything public — exposes implementation details
+//   - protected for non-inheritance scenarios — use private
+//
+// When to use:
+//   - Every class — choose the most restrictive access that works
+//
+// When NOT to use:
+//   - N/A — access modifiers are always applicable
+
 // Encapsulation & Access Modifiers
 //
 // KEY CONCEPTS:
@@ -387,201 +482,97 @@ Console.WriteLine("Use interface:   when classes share behavior contract (IDrawa
 //   protected internal: protected OR internal
 //   private protected:  protected AND internal (subclass in same assembly only)
 // - Properties with private set: read from outside, write only inside the class.
-// - init-only properties: can only be set during construction ({ get; init; }).
-
-Console.WriteLine(@"
-Modifier            | Same Class | Subclass | Same Assembly | Everywhere
---------------------+------------+----------+---------------+-----------
-public              |     ✓      |    ✓     |      ✓        |     ✓
-private (default)   |     ✓      |    ✗     |      ✗        |     ✗
-protected           |     ✓      |    ✓     |      ✗        |     ✗
-internal            |     ✓      |    ✗     |      ✓        |     ✗
-protected internal  |     ✓      |    ✓     |      ✓        |     ✗
-private protected   |     ✓      |  ✓*      |      ✗        |     ✗
-                                   * only in same assembly
-");
+// - init-only properties: can only be set during construction ({ get; init; }).;
 ```
-
-    
-    Modifier            | Same Class | Subclass | Same Assembly | Everywhere
-    --------------------+------------+----------+---------------+-----------
-    public              |     ✓      |    ✓     |      ✓        |     ✓
-    private (default)   |     ✓      |    ✗     |      ✗        |     ✗
-    protected           |     ✓      |    ✓     |      ✗        |     ✗
-    internal            |     ✓      |    ✗     |      ✓        |     ✗
-    protected internal  |     ✓      |    ✓     |      ✓        |     ✗
-    private protected   |     ✓      |  ✓*      |      ✗        |     ✗
-                                       * only in same assembly
-
-#### Encapsulation example and property patterns
-
-```csharp
-// Encapsulation example — access modifiers control what callers can see and modify
-Console.WriteLine(@"
-class BankAccount
-{
-    public string Owner { get; }                    // anyone can read
-    public decimal Balance { get; private set; }    // read outside, write only inside
-    private int _pin;                               // only this class can access
-
-    public void Deposit(decimal amount)             // public method — the controlled API
-    {
-        if (amount > 0)
-            Balance += amount;                      // private set allows internal write
-    }
-
-    private bool ValidatePin(int pin)               // private — internal logic only
-    {
-        return pin == _pin;
-    }
-}
-");
-Console.WriteLine("{ get; set; }          — read/write from anywhere");
-Console.WriteLine("{ get; private set; }  — read anywhere, write only inside class");
-Console.WriteLine("{ get; protected set; }— read anywhere, write in class + subclasses");
-Console.WriteLine("{ get; init; }         — read anywhere, set ONLY during construction");
-Console.WriteLine("{ get; }               — read-only, set only in constructor");
-Console.WriteLine("C#: private is enforced — compiler rejects external access");
-```
-
-    
-    class BankAccount
-    {
-        public string Owner { get; }                    // anyone can read
-        public decimal Balance { get; private set; }    // read outside, write only inside
-        private int _pin;                               // only this class can access
-    
-        public void Deposit(decimal amount)             // public method — the controlled API
-        {
-            if (amount > 0)
-                Balance += amount;                      // private set allows internal write
-        }
-    
-        private bool ValidatePin(int pin)               // private — internal logic only
-        {
-            return pin == _pin;
-        }
-    }
-    
-    { get; set; }          — read/write from anywhere
-    { get; private set; }  — read anywhere, write only inside class
-    { get; protected set; }— read anywhere, write in class + subclasses
-    { get; init; }         — read anywhere, set ONLY during construction
-    { get; }               — read-only, set only in constructor
-    C#: private is enforced — compiler rejects external access
 
 #### OOP theory — access modifiers and abstract vs interface
 
 ```csharp
-// ============================================================
-// ACCESS MODIFIERS — who can see what
-// ============================================================
+// Access modifier reference — visibility rules and usage guidelines
 //
-// Think of it like a building:
-//   public    = front door (anyone can enter)
-//   private   = locked room (only people inside this room)
-//   protected = family-only room (this room + children's rooms)
-//   internal  = building-only (anyone in this building/project, not outsiders)
+// Technique: Six access levels control who can see a member. Default
+//   for class members is private. Default for top-level types is internal.
+//   Choose the most restrictive level that works.
 //
-// Modifier            | Same Class | Subclass | Same Project | Other Projects
-// --------------------+------------+----------+--------------+----------------
-// public              |     ✓      |    ✓     |      ✓       |      ✓
-// private             |     ✓      |    ✗     |      ✗       |      ✗
-// protected           |     ✓      |    ✓     |      ✗       |      ✗
-// internal            |     ✓      |    ✗     |      ✓       |      ✗
-// protected internal  |     ✓      |    ✓     |      ✓       |      ✗
-// private protected   |     ✓      |    ✓*    |      ✗       |      ✗
-//                                   * only if subclass is in the same project
+// Benefits:
+//   - Minimal public surface — easier to maintain and evolve
+//   - Private implementation can change without breaking callers
 //
-// DEFAULTS (what you get if you don't specify):
-//   class members:  private
-//   class itself:   internal
-//   interface members: public (always, can't change)
+// Anti-patterns:
+//   - Defaulting to public — exposes implementation details
+//   - protected for non-inheritance scenarios — use private
 //
-// RULES OF THUMB:
-//   - Make everything private by default. Only expose what's needed.
-//   - Use public for your API surface (what callers use).
-//   - Use private for implementation details (how it works internally).
-//   - Use protected when subclasses need access but outsiders don't.
-//   - Use internal for things shared within your project but hidden from consumers.
+// When to use:
+//   - Every class — set access explicitly on every member
 //
-// PROPERTY PATTERNS:
-//   { get; set; }           public read + write
-//   { get; private set; }   public read, only class can write
-//   { get; protected set; } public read, class + subclasses can write
-//   { get; init; }          public read, write ONLY during construction
-//   { get; }                public read, set only in constructor (truly immutable)
+// When NOT to use:
+//   - N/A — access modifiers are always applicable
+
+Console.WriteLine(@"
+  ═══ ACCESS MODIFIERS ═══
+
+  Modifier             Visible To                              Use For
+  ───────────────────── ─────────────────────────────────────── ──────────────────────────────
+  public               Everyone                                API surface, DTOs, interfaces
+  private              Same class only (default for members)   Implementation details, fields
+  protected            Same class + derived classes            Base class internals for children
+  internal             Same assembly/project                   Implementation shared within project
+  protected internal   Same assembly OR derived classes        Broad internal access
+  private protected    Derived classes in same assembly only   Narrow internal inheritance
+
+  RULES OF THUMB:
+  - Fields:      always private (expose via property if needed)
+  - Properties:  public get, private/protected set
+  - Methods:     public for API, private for implementation
+  - Classes:     internal by default, public only if needed outside assembly
+  - init-only:   { get; init; } — set only during construction
+");
 ```
 
+#### Abstract class vs interface decision guide
+
 ```csharp
-// ============================================================
-// ABSTRACT CLASS vs INTERFACE — when to use which
-// ============================================================
+// Abstract class vs interface — detailed comparison and decision criteria
 //
-// ABSTRACT CLASS = "is a" relationship + shared implementation
-//   - Use when classes share COMMON CODE (not just a contract).
-//   - Can have fields, constructors, concrete methods, and abstract methods.
-//   - Single inheritance only — a class can have ONE abstract parent.
-//   - Example: Shape → Rectangle, Circle
-//     Why abstract class? Because Describe() is shared code.
-//     Rectangle and Circle ARE shapes with shared behavior.
+// Technique: Abstract classes provide shared implementation + contract.
+//   Interfaces define pure contracts. Classes can implement multiple
+//   interfaces but inherit only one abstract class.
 //
-// INTERFACE = "can do" capability contract
-//   - Use when classes share a CAPABILITY but are otherwise unrelated.
-//   - Pure contract: only method signatures (no fields, no constructors).
-//   - Multiple implementation — a class can implement MANY interfaces.
-//   - Example: IDrawable → Button, Chart, Map
-//     Why interface? Button, Chart, Map are NOT related types.
-//     They just all happen to be drawable.
+// Benefits:
+//   - Abstract: shared code in base, constructor, fields, state
+//   - Interface: multiple implementation, loose coupling, testability
 //
-// REAL-WORLD EXAMPLES:
+// Anti-patterns:
+//   - Abstract with no shared code — interface is lighter
+//   - Interface when shared implementation needed — code duplication
 //
-// 1. Data pipeline — ABSTRACT CLASS
-//    abstract class DataSource
-//    {
-//        public string Name { get; }                        // shared field
-//        protected abstract Task<DataFrame> ExtractAsync();  // child implements
-//        public async Task RunAsync()                        // shared orchestration
-//        {
-//            var data = await ExtractAsync();                // child provides this
-//            await Validate(data);                           // shared logic
-//            await Save(data);                               // shared logic
-//        }
-//    }
-//    class PostgresSource : DataSource { /* implements ExtractAsync */ }
-//    class BigQuerySource : DataSource { /* implements ExtractAsync */ }
-//    → All sources share the same Run/Validate/Save pipeline, only Extract differs.
+// When to use:
+//   - Abstract: IS-A with shared behavior (Shape → Rectangle, Circle)
+//   - Interface: CAN-DO capabilities (IDrawable, IClickable, IDisposable)
 //
-// 2. Capabilities — INTERFACE
-//    interface ISerializable { byte[] Serialize(); }
-//    interface ILoggable     { void Log(string message); }
-//    interface IRetryable    { Task RetryAsync(int attempts); }
-//
-//    class ApiClient : ISerializable, IRetryable { ... }
-//    class FileWriter : ILoggable { ... }
-//    class PipelineStep : ILoggable, IRetryable, ISerializable { ... }
-//    → Unrelated classes, but each declares which capabilities it supports.
-//
-// 3. Mixed — ABSTRACT CLASS + INTERFACES
-//    abstract class DataSource : ILoggable, IRetryable
-//    {
-//        public void Log(string msg) { ... }               // shared implementation
-//        public abstract Task RetryAsync(int attempts);    // child decides retry strategy
-//        protected abstract Task<Data> ExtractAsync();
-//    }
-//    → Abstract class for shared "is a" relationship, interfaces for capabilities.
-//
-// DECISION TREE:
-//   Do the classes share actual CODE (fields, methods, constructor logic)?
-//     YES → abstract class
-//     NO  → interface
-//   Does a class need MULTIPLE "parents"?
-//     YES → interfaces (can implement many)
-//     NO  → either works, prefer interface for flexibility
-//   Will the contract evolve over time (add methods later)?
-//     YES → abstract class (can add concrete methods without breaking children)
-//     YES → interface with default methods (C# 8+, but controversial)
-//     NO  → interface is fine
+// When NOT to use:
+//   - Abstract when multiple inheritance needed — C# only allows one base class
+
+Console.WriteLine(@"
+  ═══ ABSTRACT CLASS vs INTERFACE ═══
+
+  Feature                Abstract Class              Interface
+  ────────────────────── ─────────────────────────── ───────────────────────────
+  Can instantiate?       No                          No
+  Fields/state?          Yes                         No (constants only)
+  Constructor?           Yes                         No
+  Concrete methods?      Yes (shared implementation) Yes (default methods, C# 8+)
+  Access modifiers?      Any                         Public only (implicit)
+  Multiple inheritance?  No (single base class)      Yes (implement many)
+  When to use            IS-A + shared code          CAN-DO capability contract
+
+  DECISION GUIDE:
+  - Need shared fields/constructor/state?          → Abstract class
+  - Need multiple capabilities on one class?       → Interfaces
+  - Building a framework with extension points?    → Abstract class
+  - Defining a contract for DI/testing?            → Interface
+  - Both shared code AND multiple implementation?  → Abstract + interfaces
+");
 ```
 
 ## Static Members
@@ -589,6 +580,28 @@ Console.WriteLine("C#: private is enforced — compiler rejects external access"
 #### Type declarations
 
 ```csharp
+// Static members — shared state and behavior on the class itself
+//
+// Technique: static fields/properties are shared by all instances — one
+//   copy exists per type. static methods don't need an instance to call.
+//   static constructors run once when the type is first used.
+//
+// Benefits:
+//   - Shared counters, caches, configuration accessible via ClassName.Member
+//   - Factory methods: Employee.FromCsv(line) creates instances
+//   - No instance needed — utility methods like Math.Sqrt()
+//
+// Anti-patterns:
+//   - Mutable static state shared across threads — race conditions
+//   - Static methods that should be instance methods — testability suffers
+//   - God classes with many static methods — violates single responsibility
+//
+// When to use:
+//   - Counters, factories, utility methods, constants, caches
+//
+// When NOT to use:
+//   - When instance-level state is needed — use regular members
+
 // Static Members — belong to the CLASS, not to instances
 //
 // KEY CONCEPTS:
@@ -636,7 +649,8 @@ class Employee
 #### Using static members
 
 ```csharp
-// Using static members — shared state and factory methods
+// Using static members — shared state and factory methods in action
+
 var emp1 = new Employee("Alice", 95000);
 emp1.GiveRaise(10);
 Console.WriteLine($"Instance: {emp1}");
@@ -660,6 +674,27 @@ Console.WriteLine($"Company:  {Employee.Company}");  // static property on CLASS
 #### Why records instead of dictionaries
 
 ```csharp
+// Why records over dictionaries — compile-time safety vs runtime errors
+//
+// Technique: Dictionary<string, object> accepts any key (including typos)
+//   and any value type — errors only appear at runtime. Records enforce
+//   property names and types at compile time.
+//
+// Benefits:
+//   - Records catch typos at compile time — "amout" is a build error
+//   - IntelliSense provides autocomplete for record properties
+//   - Refactoring tools rename properties across the codebase
+//
+// Anti-patterns:
+//   - Dictionaries for known-structure data — loses compile-time safety
+//   - String keys for fixed schemas — records are type-safe alternatives
+//
+// When to use:
+//   - Any data with a known, fixed structure (API responses, configs, DTOs)
+//
+// When NOT to use:
+//   - Truly dynamic keys determined at runtime — dictionaries are appropriate
+
 // Dictionary — typo is silent, fails at runtime:
 var record = new Dictionary<string, object>
 {
@@ -682,7 +717,8 @@ Console.WriteLine("Record typo: compile error → caught before code even runs")
 #### Autocomplete and refactoring
 
 ```csharp
-// Autocomplete and refactoring — records give IDE support that dicts lack
+// Autocomplete and refactoring — IDE support records provide over dicts
+
 Console.WriteLine("Dictionary:  no autocomplete — must memorize string keys");
 Console.WriteLine("Record:      IDE shows all properties on '.' → full autocomplete");
 Console.WriteLine("             record Order(int CustomerId, double Amount)");
@@ -703,7 +739,8 @@ Console.WriteLine("Record:      right-click → Rename → all usages updated au
 #### Type safety and equality
 
 ```csharp
-// Dictionary — no type checking:
+// Type safety — records enforce types, dictionaries accept anything
+
 var bad = new Dictionary<string, object>
 {
     ["customer_id"] = "not_a_number",   // object accepts anything — no error!
@@ -730,7 +767,8 @@ Console.WriteLine("Records:         == compares VALUES (all fields checked autom
 #### When to use what
 
 ```csharp
-// When to use what — dict for dynamic keys, record for known structure
+// When to use what — dict vs record vs class decision guide
+
 Console.WriteLine(@"
 USE CASE                         RECOMMENDATION
 ──────────────────────────────── ──────────────────────────
@@ -764,17 +802,7 @@ Unknown/dynamic JSON schema      JsonDocument or Dictionary
 #### Record type declarations
 
 ```csharp
-// Records — auto-generated immutable data types (C# 9+)
-//
-// KEY CONCEPTS:
-// - record: a reference type with auto-generated Equals, GetHashCode, ToString, and
-// - Positional record: record Point(double X, double Y) — one-line declaration.
-//   Auto-generates constructor, properties, Deconstruct, ToString, Equals.
-// - with expression: creates a copy with some values changed (non-destructive).
-// - init-only property ({ get; init; }): can only be set during construction.
-// - In DE: records are perfect for DTOs, configuration, API responses, immutable state.
-// - DTO (Data Transfer Object): an object that only carries data, no logic.
-//   Just a container for moving data between layers (DB → API → pipeline).
+// Record types — immutable data with auto-generated equality and ToString
 
 record Point(double X, double Y);
 record Employee(string Name, string Department, double Salary = 50000);
@@ -794,7 +822,8 @@ record PipelineRecord(string TableName, int RowCount, string Status = "pending")
 #### Value equality and deconstruction
 
 ```csharp
-// Value equality and deconstruction — records compare by value, not reference
+// Value equality and deconstruction — records compare by content
+
 var p1 = new Point(3.0, 4.0);
 var p2 = new Point(3.0, 4.0);
 var p3 = new Point(1.0, 2.0);
@@ -816,7 +845,8 @@ Console.WriteLine($"Deconstructed: x={x}, y={y}");
 <h4>Non-destructive mutation — <code style="font-size:0.75em">with</code> expression</h4>
 
 ```csharp
-// Non-destructive mutation — with expression creates a copy with changes
+// Non-destructive mutation — with expression creates modified copies
+
 var emp = new Employee("Alice", "Engineering", 95000);
 var promoted = emp with { Salary = 110000 };               // creates NEW record
 Console.WriteLine($"Original:  {emp}");
@@ -837,7 +867,8 @@ Console.WriteLine($"ConnStr: {config.ConnectionString}");
 <h4>Record struct and <code style="font-size:0.75em">PipelineRecord</code></h4>
 
 ```csharp
-// Record struct and PipelineRecord — value-type records for lightweight data
+// Record struct and domain records — value-type records for lightweight data
+
 var versions = new[] { new Version(2, 0, 0), new Version(1, 9, 5), new Version(2, 1, 0) };
 // record structs don't auto-implement IComparable, but have value equality
 Console.WriteLine($"v1 == v2: {new Version(1, 0, 0) == new Version(1, 0, 0)}");  // True
@@ -857,8 +888,11 @@ foreach (var r in records)
       orders: failed (ok=False)
       products: pending (ok=False)
 
+#### Summary — class vs record vs struct
+
 ```csharp
 // Summary — class vs record vs record struct vs struct
+
 Console.WriteLine("class:         mutable, identity-based equality, most OOP scenarios");
 Console.WriteLine("record:        immutable, value-based equality, DTOs, config, events");
 Console.WriteLine("record struct: same as record but value type (stack, no GC)");

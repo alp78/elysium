@@ -32,9 +32,35 @@ Topics covered:
 //
 // Run this cell ONCE before any cells that use NuGet packages.
 
+#r "nuget: Microsoft.Data.SqlClient"
+#r "nuget: Microsoft.Data.Sqlite"
+#r "nuget: System.Data.Odbc"
+#r "nuget: Dapper"
+#r "nuget: Microsoft.EntityFrameworkCore"
+#r "nuget: Microsoft.EntityFrameworkCore.InMemory"
+#r "nuget: DuckDB.NET.Data.Full, 1.3.0"
+#r "nuget: Plotly.NET, 5.1.0"
+#r "nuget: Plotly.NET.Interactive, 5.0.0"
+#r "nuget: Plotly.NET.CSharp, 0.13.0"
+#r "nuget: Polars.NET"
+#r "nuget: Polars.NET.Native.win-x64"
+using DuckDB.NET.Data;
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
+using System.Data.Odbc;
+using System.Data;
+using Microsoft.DotNet.Interactive.Formatting;
+using Microsoft.EntityFrameworkCore;
+using Plotly.NET;
+using Plotly.NET.CSharp;
+using Plotly.NET.LayoutObjects;
+using Polars.CSharp;
+using static Polars.CSharp.Polars;
+
 
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
@@ -45,33 +71,92 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
-Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
+
+
+// extension method to .Head() datatables
+static DataTable Head(this DataTable dt, int n = 5) 
+    => dt.AsEnumerable().Take(n).CopyToDataTable();
+
+
+// Register Polars DataFrame/Series HTML formatters (transparent for dark theme)
+Formatter.Register<DataFrame>((df, writer) =>
+{
+    var html = df.ToHtml();
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
+    var css = @"<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>";
+    writer.Write(css + html);
+}, "text/html");
+Formatter.Register<Polars.CSharp.Series>((s, writer) =>
+{
+    var sdf = DataFrame.FromSeries(s);
+    var shtml = sdf.ToHtml();
+    shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @">""(.+?)""<", @">$1<");
+    var scss = @"<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>";
+    writer.Write(scss + shtml);
+}, "text/html");
 ```
 
-    WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
+#### DataTable helper for query display
+
+```csharp
+// Helper: execute SQL query and return a DataTable for styled display
+DataTable QueryToTable(SqlConnection c, string sql)
+{
+    var dt = new DataTable();
+    var cmd = new SqlCommand(sql, c);
+    using var reader = cmd.ExecuteReader();
+    dt.Load(reader);
+    return dt;
+}
+
+DataTable QueryToTable(SqliteConnection c, string sql)
+{
+    var dt = new DataTable();
+    var cmd = c.CreateCommand();
+    cmd.CommandText = sql;
+    using var reader = cmd.ExecuteReader();
+    dt.Load(reader);
+    return dt;
+}
+```
 
 ## 1. SQLite — Lightweight Embedded Database
 
+#### SQLite — create in-memory database and trades table
+
+SQLite uses the ADO.NET pattern: `SqliteConnection`, `SqliteCommand`, `SqliteDataReader`.
+`DataSource=:memory:` creates an in-memory database. Parameterised queries use `@param`
+named placeholders. Python equivalent: `sqlite3.connect(":memory:")`.
+
 ```csharp
-#r "nuget: Microsoft.Data.Sqlite"
-
-using Microsoft.Data.Sqlite;
-
-// SQLite in C# — Microsoft.Data.Sqlite
+// SQLite in C# — in-memory database with ADO.NET pattern
 //
-// KEY CONCEPTS:
-// - SqliteConnection, SqliteCommand, SqliteDataReader — ADO.NET pattern.
-//   Python equivalent: sqlite3.connect(), cursor.execute(), cursor.fetchall()
-// - Parameterized queries: use @param named placeholders.
-//   Python equivalent: ? positional placeholders.
-// - using statement: auto-disposes connection (like Python context manager).
-// - DataSource=:memory: for in-memory DB.
+// Technique: SqliteConnection/SqliteCommand/SqliteDataReader follow the
+//   standard ADO.NET provider pattern. Same API as SqlClient, OdbcConnection.
+//   @param named placeholders prevent SQL injection.
+//
+// Benefits:
+//   - Zero setup — in-memory, no server needed
+//   - Same ADO.NET API as SQL Server — portable knowledge
+//   - Parameterised queries — safe from injection
+//   - Transactions with BEGIN/COMMIT/ROLLBACK
+//
+// Anti-patterns:
+//   - String concatenation for SQL — injection risk
+//   - Not disposing connections — resource leak; use using
+//   - SQLite for concurrent writes — single-writer lock
+//
+// When to use:
+//   - Tests, prototyping, embedded apps, local caches
+//
+// When NOT to use:
+//   - Concurrent multi-user access — use SQL Server or PostgreSQL
 
-// ─── Create in-memory database ───
 var conn = new SqliteConnection("DataSource=:memory:");
 conn.Open();
 
-// ─── CREATE TABLE ───
 var cmd = conn.CreateCommand();
 cmd.CommandText = @"
     CREATE TABLE trades (
@@ -84,8 +169,15 @@ cmd.CommandText = @"
     )";
 cmd.ExecuteNonQuery();
 Console.WriteLine("Created table: trades");
+```
 
-// ─── INSERT (parameterized — @param placeholders) ───
+    Created table: trades
+
+#### SQLite — INSERT with parameterised queries using `@param` placeholders
+
+```csharp
+// INSERT — parameterised to prevent SQL injection
+
 var trades = new (string id, string ticker, string side, int qty, double price, string date)[]
 {
     ("TRD_001", "ASML.AS", "BUY",  100, 685.40, "2026-03-15"),
@@ -109,63 +201,61 @@ foreach (var t in trades)
     cmd.ExecuteNonQuery();
 }
 Console.WriteLine($"Inserted {trades.Length} trades");
+```
 
-// ─── SELECT ───
-Console.WriteLine("\n=== All Trades ===");
-cmd = conn.CreateCommand();
-cmd.CommandText = "SELECT *, quantity * price AS notional FROM trades ORDER BY trade_date, trade_id";
-using (var reader = cmd.ExecuteReader())
-{
-    while (reader.Read())
-    {
-        var notional = reader.GetDouble(reader.GetOrdinal("notional"));
-        Console.WriteLine($"  {reader["trade_id"],-8} | {reader["ticker"],-8} | {reader["side"],-4} | "
-            + $"{reader["quantity"],5} | {reader["price"],10:N2} | {notional,12:N2} | {reader["trade_date"]}");
-    }
-}
+    Inserted 6 trades
 
-// ─── WHERE with parameters ───
-Console.WriteLine("\n=== ASML Trades Only ===");
-cmd = conn.CreateCommand();
-cmd.CommandText = "SELECT * FROM trades WHERE ticker = @ticker";
-cmd.Parameters.AddWithValue("@ticker", "ASML.AS");
-using (var reader = cmd.ExecuteReader())
-{
-    while (reader.Read())
-        Console.WriteLine($"  {reader["trade_id"]} | {reader["side"]} | {reader["quantity"]} @ {Convert.ToDouble(reader["price"]):N2}");
-}
+#### SQLite — SELECT with computed columns and WHERE filter
 
-// ─── Aggregate queries ───
-Console.WriteLine("\n=== Portfolio Summary ===");
-cmd = conn.CreateCommand();
-cmd.CommandText = @"
-    SELECT ticker,
-           SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END) AS net_shares,
-           ROUND(SUM(CASE WHEN side='BUY' THEN quantity*price ELSE -quantity*price END), 2) AS net_notional,
-           COUNT(*) AS trade_count
-    FROM trades GROUP BY ticker ORDER BY net_notional DESC";
-using (var reader = cmd.ExecuteReader())
-{
-    while (reader.Read())
-        Console.WriteLine($"  {reader["ticker"],-8} | {Convert.ToInt64(reader["net_shares"]),6} shares | "
-            + $"{Convert.ToDouble(reader["net_notional"]),12:N2} | {reader["trade_count"]} trades");
-}
+```csharp
+// SELECT all trades with computed notional column
 
-// ─── UPDATE ───
+QueryToTable(conn, "SELECT *, ROUND(quantity * price, 2) AS notional FROM trades ORDER BY trade_date, trade_id")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">trade_id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ticker</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">side</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">quantity</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">price</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">trade_date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">notional</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_001</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BUY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">685.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-15</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">68540</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_002</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">MC.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BUY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">890.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-15</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">44510</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_003</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SELL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">75</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">245.8</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-15</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18435</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_004</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SELL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">690</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20700</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_005</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">RMS.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BUY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2850</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57000</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_006</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SIE.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BUY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">200</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">198.5</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-17</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">39700</td></tr></tbody></table>
+
+#### SQLite — aggregate queries with GROUP BY for portfolio summary
+
+```csharp
+// Aggregate — net position per ticker
+
+QueryToTable(conn, @"
+    SELECT ticker AS Ticker,
+           SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END) AS [Net Shares],
+           ROUND(SUM(CASE WHEN side='BUY' THEN quantity*price ELSE -quantity*price END), 2) AS [Net Notional],
+           COUNT(*) AS [Trade Count]
+    FROM trades GROUP BY ticker ORDER BY [Net Notional] DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Ticker</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Net Shares</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Net Notional</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Trade Count</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">RMS.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57000</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">70</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">47840</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">MC.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">44510</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SIE.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">200</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">39700</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-75</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-18435</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr></tbody></table>
+
+#### SQLite — UPDATE and DELETE rows
+
+```csharp
+// UPDATE price
 cmd = conn.CreateCommand();
 cmd.CommandText = "UPDATE trades SET price = @price WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@price", 700.00);
 cmd.Parameters.AddWithValue("@id", "TRD_004");
-Console.WriteLine($"\nUpdated TRD_004 price -> $700.00 ({cmd.ExecuteNonQuery()} row affected)");
+Console.WriteLine($"Updated TRD_004 price -> $700.00 ({cmd.ExecuteNonQuery()} row affected)");
 
-// ─── DELETE ───
+// DELETE
 cmd = conn.CreateCommand();
 cmd.CommandText = "DELETE FROM trades WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@id", "TRD_006");
 Console.WriteLine($"Deleted TRD_006 ({cmd.ExecuteNonQuery()} row affected)");
+```
 
-// ─── Transaction ───
-Console.WriteLine("\n=== Transaction Example ===");
+    Updated TRD_004 price -> $700.00 (1 row affected)
+    Deleted TRD_006 (1 row affected)
+
+#### SQLite — transaction with atomic multi-row insert and rollback
+
+```csharp
+// Transaction — both inserts succeed or both roll back
+
+Console.WriteLine("=== Transaction Example ===");
 using (var tx = conn.BeginTransaction())
 {
     try
@@ -208,146 +298,412 @@ Console.WriteLine($"\nTotal trades: {cmd.ExecuteScalar()}");
 conn.Close();
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.Sqlite, 10.0.5</span></li></ul></div></div>
-
-    Created table: trades
-    Inserted 6 trades
-    
-    === All Trades ===
-      TRD_001  | ASML.AS  | BUY  |   100 |     685.40 |    68'540.00 | 2026-03-15
-      TRD_002  | MC.PA    | BUY  |    50 |     890.20 |    44'510.00 | 2026-03-15
-      TRD_003  | SAP.DE   | SELL |    75 |     245.80 |    18'435.00 | 2026-03-15
-      TRD_004  | ASML.AS  | SELL |    30 |     690.00 |    20'700.00 | 2026-03-16
-      TRD_005  | RMS.PA   | BUY  |    20 |   2'850.00 |    57'000.00 | 2026-03-16
-      TRD_006  | SIE.DE   | BUY  |   200 |     198.50 |    39'700.00 | 2026-03-17
-    
-    === ASML Trades Only ===
-      TRD_001 | BUY | 100 @ 685.40
-      TRD_004 | SELL | 30 @ 690.00
-    
-    === Portfolio Summary ===
-      RMS.PA   |     20 shares |    57'000.00 | 1 trades
-      ASML.AS  |     70 shares |    47'840.00 | 2 trades
-      MC.PA    |     50 shares |    44'510.00 | 1 trades
-      SIE.DE   |    200 shares |    39'700.00 | 1 trades
-      SAP.DE   |    -75 shares |   -18'435.00 | 1 trades
-    
-    Updated TRD_004 price -> $700.00 (1 row affected)
-    Deleted TRD_006 (1 row affected)
-    
     === Transaction Example ===
       Transaction committed (2 trades inserted)
     
     Total trades: 7
 
-## 2. SQL Server — Index Data (Medallion Architecture)
+#### SQLite — PRAGMA overview and connection setup
+
+PRAGMAs configure SQLite behavior per connection. Set them right after `Open()`.
+WAL mode enables concurrent readers. Cache and mmap control memory usage.
 
 ```csharp
-#r "nuget: Microsoft.Data.SqlClient"
-
-using Microsoft.Data.SqlClient;
-
-// SQL Server with ADO.NET (SqlClient) — connecting to the stoxx database.
+// SQLite PRAGMA settings — tune performance, concurrency, and durability
 //
-// DATABASE: stoxx (index provider index data)
-// Architecture: Bronze (raw) → Silver (cleaned) → Gold (computed scores)
-// Indices: Euro Stoxx 50, STOXX Asia/Pacific 50, STOXX USA 50, Oil & Gas 20
+// Technique: PRAGMA commands configure SQLite behavior per connection.
+//   WAL mode allows concurrent reads during writes. Cache size controls
+//   how much data SQLite keeps in memory. Synchronous controls durability.
+//
+// Benefits:
+//   - WAL mode — readers don't block writers (default is exclusive lock)
+//   - Larger cache — fewer disk reads for repeated queries
+//   - busy_timeout — retry instead of failing on lock contention
+//   - mmap_size — memory-mapped I/O for faster reads on large files
+//
+// Anti-patterns:
+//   - synchronous=OFF in production — data loss on crash
+//   - No busy_timeout — immediate SQLITE_BUSY error on contention
+//   - Default journal_mode=DELETE — WAL is faster for most workloads
+//
+// When to use:
+//   - Every SQLite connection — set PRAGMAs right after Open()
+//
+// When NOT to use:
+//   - In-memory databases — WAL and sync settings have no effect
 
-var connStr = "Server=localhost,1434;Database=stoxx;"
-    + "User Id=sa;Password=EsgDev2026Pass1;"
-    + "Encrypt=True;TrustServerCertificate=True;";
-
-using (var conn = new SqlConnection(connStr))
-{
-    conn.Open();
-    Console.WriteLine("Connected to SQL Server: stoxx database");
-
-    // ─── List tables by schema (bronze/silver/gold) ───
-    Console.WriteLine("\n=== Tables by Schema ===");
-    var cmd = new SqlCommand(@"
-        SELECT s.name AS schema_name, t.name AS table_name, p.rows
-        FROM sys.tables t
-        JOIN sys.schemas s ON t.schema_id = s.schema_id
-        JOIN sys.partitions p ON t.object_id = p.object_id AND p.index_id IN (0, 1)
-        ORDER BY s.name, t.name", conn);
-
-    var currentSchema = "";
-    using (var reader = cmd.ExecuteReader())
-    {
-        while (reader.Read())
-        {
-            var schema = reader.GetString(0);
-            if (schema != currentSchema)
-            {
-                currentSchema = schema;
-                Console.WriteLine($"\n  [{schema.ToUpper()}]");
-            }
-            Console.WriteLine($"    {reader.GetString(1),-30} {reader.GetInt64(2),10:N0} rows");
-        }
-    }
-
-    // ─── Index universe ───
-    Console.WriteLine("\n=== Index Universe ===");
-    cmd = new SqlCommand("SELECT index_key, display_name, currency FROM bronze.dim_index ORDER BY display_name", conn);
-    using (var reader = cmd.ExecuteReader())
-    {
-        while (reader.Read())
-            Console.WriteLine($"  {reader.GetString(0),-20} {reader.GetString(1),-30} {(reader.IsDBNull(2) ? "" : reader.GetString(2))}");
-    }
-}
+var pragmaConn = new SqliteConnection("DataSource=:memory:");
+pragmaConn.Open();
+var cmd = pragmaConn.CreateCommand();
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.SqlClient, 7.0.0</span></li></ul></div></div>
-
-    Connected to SQL Server: stoxx database
-    
-    === Tables by Schema ===
-    
-      [BRONZE]
-        dim_country                           212 rows
-        dim_index                               4 rows
-        eurostoxx50_ohlcv                      50 rows
-        index_dim                             169 rows
-        oil20_ohlcv                            19 rows
-        pulse                                  40 rows
-        pulse_tickers                          40 rows
-        signals_daily                         169 rows
-        signals_quarterly                     169 rows
-        stoxxasia50_ohlcv                      50 rows
-        stoxxusa50_ohlcv                       50 rows
-        trading_calendar                   29'335 rows
-    
-      [GOLD]
-        index_performance                   5'281 rows
-        scores_daily                          466 rows
-        scores_quarterly                      170 rows
-    
-      [SILVER]
-        eurostoxx50_ohlcv                  66'355 rows
-        index_dim                             169 rows
-        oil20_ohlcv                        24'738 rows
-        signals_daily                         466 rows
-        signals_quarterly                     177 rows
-        stoxxasia50_ohlcv                  64'045 rows
-        stoxxusa50_ohlcv                   65'100 rows
-    
-    === Index Universe ===
-      euro_stoxx_50        Euro Stoxx 50                  €
-      oil_20               Oil & Gas 20                   $
-      stoxx_asia_50        STOXX Asia/Pacific 50          
-      stoxx_usa_50         STOXX USA 50                   $
+#### SQLite — `journal_mode=WAL` for concurrent reads
 
 ```csharp
-#r "nuget: Microsoft.Data.SqlClient"
+// WAL (Write-Ahead Log) allows concurrent reads during writes
+// DELETE (default): exclusive lock during writes, readers blocked
+cmd.CommandText = "PRAGMA journal_mode=WAL";
+Console.WriteLine($"journal_mode:    {cmd.ExecuteScalar()}");
+```
 
-using Microsoft.Data.SqlClient;
+    journal_mode:    memory
 
-// SQL Server — exploring a real index provider database.
+#### SQLite — `synchronous` for durability vs speed
+
+```csharp
+// FULL: fsync after every commit (safest, slowest)
+// NORMAL: fsync at critical moments (good balance for WAL)
+// OFF: no fsync (fastest, risk of corruption on crash)
+cmd.CommandText = "PRAGMA synchronous=NORMAL";
+cmd.ExecuteNonQuery();
+cmd.CommandText = "PRAGMA synchronous";
+Console.WriteLine($"synchronous:     {cmd.ExecuteScalar()} (0=OFF, 1=NORMAL, 2=FULL)");
+```
+
+    synchronous:     1 (0=OFF, 1=NORMAL, 2=FULL)
+
+#### SQLite — `cache_size` for in-memory page cache
+
+```csharp
+// Negative value = KB, positive = pages (default page = 4096 bytes)
+// -20000 = 20MB cache
+cmd.CommandText = "PRAGMA cache_size=-20000";
+cmd.ExecuteNonQuery();
+cmd.CommandText = "PRAGMA cache_size";
+Console.WriteLine($"cache_size:      {cmd.ExecuteScalar()} (negative = KB)");
+
+// Page size — must be set BEFORE creating tables (on new databases)
+cmd.CommandText = "PRAGMA page_size";
+Console.WriteLine($"page_size:       {cmd.ExecuteScalar()} bytes");
+```
+
+    cache_size:      -20000 (negative = KB)
+    page_size:       4096 bytes
+
+#### SQLite — `busy_timeout` for lock contention retry
+
+```csharp
+// Wait up to N ms for a lock instead of failing immediately
+// Without this, concurrent access gets SQLITE_BUSY error instantly
+cmd.CommandText = "PRAGMA busy_timeout=5000";
+cmd.ExecuteNonQuery();
+cmd.CommandText = "PRAGMA busy_timeout";
+Console.WriteLine($"busy_timeout:    {cmd.ExecuteScalar()} ms");
+```
+
+    busy_timeout:    5000 ms
+
+#### SQLite — `mmap_size` for memory-mapped I/O
+
+```csharp
+// Map up to N bytes of the database file into memory
+// 0 = disabled, 268435456 = 256MB
+// Faster reads on large files — OS pages data on demand
+cmd.CommandText = "PRAGMA mmap_size=268435456";
+cmd.ExecuteNonQuery();
+cmd.CommandText = "PRAGMA mmap_size";
+Console.WriteLine($"mmap_size:       {Convert.ToInt64(cmd.ExecuteScalar()) / 1024 / 1024} MB");
+```
+
+    mmap_size:       0 MB
+
+#### SQLite — `temp_store` and `foreign_keys`
+
+```csharp
+// Temp store — where temporary tables/indexes are stored
+// 0=DEFAULT, 1=FILE, 2=MEMORY
+cmd.CommandText = "PRAGMA temp_store=MEMORY";
+cmd.ExecuteNonQuery();
+cmd.CommandText = "PRAGMA temp_store";
+Console.WriteLine($"temp_store:      {cmd.ExecuteScalar()} (0=DEFAULT, 1=FILE, 2=MEMORY)");
+
+// Foreign keys — DISABLED by default in SQLite (!)
+// Must enable explicitly on every connection
+cmd.CommandText = "PRAGMA foreign_keys=ON";
+cmd.ExecuteNonQuery();
+cmd.CommandText = "PRAGMA foreign_keys";
+Console.WriteLine($"foreign_keys:    {cmd.ExecuteScalar()} (0=OFF, 1=ON)");
+```
+
+    temp_store:      2 (0=DEFAULT, 1=FILE, 2=MEMORY)
+    foreign_keys:    1 (0=OFF, 1=ON)
+
+#### SQLite — CREATE TABLE for index demos
+
+```csharp
+// Create OHLCV table for index performance demos
+
+cmd = pragmaConn.CreateCommand();
+cmd.CommandText = @"
+    CREATE TABLE IF NOT EXISTS ohlcv (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        symbol     TEXT NOT NULL,
+        date       TEXT NOT NULL,
+        open       REAL,
+        high       REAL,
+        low        REAL,
+        close      REAL,
+        volume     INTEGER
+    )";
+cmd.ExecuteNonQuery();
+Console.WriteLine("Created table: ohlcv");
+```
+
+    Created table: ohlcv
+
+#### SQLite — INSERT 5000 sample OHLCV rows
+
+```csharp
+// Insert 5000 rows of synthetic OHLCV data
+
+var rng = new Random(42);
+var symbols = new[] { "ASML.AS", "SAP.DE", "MC.PA", "SIE.DE", "TTE.PA" };
+var baseDate = new DateTime(2024, 1, 1);
+for (int i = 0; i < 5000; i++)
+{
+    var sym = symbols[i % symbols.Length];
+    var dt = baseDate.AddDays(i / symbols.Length).ToString("yyyy-MM-dd");
+    var price = 100 + rng.NextDouble() * 200;
+    cmd.CommandText = $"INSERT INTO ohlcv (symbol, date, open, high, low, close, volume) "
+        + $"VALUES ('{sym}', '{dt}', {price:F2}, {price * 1.02:F2}, {price * 0.98:F2}, {price * 1.01:F2}, {rng.Next(100000, 5000000)})";
+    cmd.ExecuteNonQuery();
+}
+Console.WriteLine("Inserted 5000 OHLCV rows");
+```
+
+    Inserted 5000 OHLCV rows
+
+#### SQLite — EXPLAIN QUERY PLAN without index (full table scan)
+
+```csharp
+// EXPLAIN QUERY PLAN shows whether SQLite uses an index or full table scan
+// Drop any existing indexes first to show the "before" state
+
+// Drop indexes if they exist from a previous run
+try { cmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol"; cmd.ExecuteNonQuery(); } catch {}
+try { cmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol_date"; cmd.ExecuteNonQuery(); } catch {}
+
+
+QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
+
+// INTERPRETING EXPLAIN QUERY PLAN:
+//   SCAN ohlcv         = full table scan (reads every row) — slow, no index used
+//   SEARCH ohlcv       = index lookup (reads only matching rows) — fast
+//   USING INDEX idx    = which index is being used
+//   USING COVERING INDEX = index has all needed columns, no table access at all
 //
-// DATABASE: stoxx (index provider index data)
-// Architecture: Bronze (raw) → Silver (cleaned) → Gold (computed scores)
-// Indices: Euro Stoxx 50, STOXX Asia/Pacific 50, STOXX USA 50, Oil & Gas 20
-// ~169 stocks, OHLCV history from 2021, daily/quarterly signals, composite scores.
+// Goal: turn SCAN into SEARCH by creating the right index.
+// "SCAN" on a 5000-row table is fine. On 50M rows it is a disaster.
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">parent</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">notused</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">detail</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">216</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SCAN ohlcv</td></tr></tbody></table>
+
+#### SQLite — CREATE INDEX (single, composite, unique)
+
+```csharp
+// CREATE INDEX speeds up WHERE, JOIN, ORDER BY
+
+Console.WriteLine("=== Creating Indexes ===");
+
+// Single column index — speeds up WHERE symbol = ?
+cmd.CommandText = "CREATE INDEX idx_ohlcv_symbol ON ohlcv(symbol)";
+cmd.ExecuteNonQuery();
+Console.WriteLine("  Created: idx_ohlcv_symbol (single column)");
+
+// Composite index — covers WHERE symbol = ? AND date > ?
+cmd.CommandText = "CREATE INDEX idx_ohlcv_symbol_date ON ohlcv(symbol, date)";
+cmd.ExecuteNonQuery();
+Console.WriteLine("  Created: idx_ohlcv_symbol_date (composite)");
+
+// Unique index — enforces no duplicate (symbol, date) pairs
+// cmd.CommandText = "CREATE UNIQUE INDEX idx_ohlcv_unique ON ohlcv(symbol, date)";
+// Would fail here because our sample data has duplicates
+Console.WriteLine("  UNIQUE INDEX: prevents duplicate (symbol, date) pairs");
+```
+
+    === Creating Indexes ===
+      Created: idx_ohlcv_symbol (single column)
+      Created: idx_ohlcv_symbol_date (composite)
+      UNIQUE INDEX: prevents duplicate (symbol, date) pairs
+
+#### SQLite — EXPLAIN QUERY PLAN with index (index scan)
+
+```csharp
+// Same query now uses the composite index instead of full table scan
+
+QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
+
+
+
+// OUTPUT: SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)
+//
+// Before index: SCAN ohlcv        = reads all 5000 rows, checks each one
+// After index:  SEARCH ... USING INDEX = jumps directly to matching rows
+//
+// The composite index idx_ohlcv_symbol_date covers both WHERE conditions:
+//   symbol=?  (exact match on first column of index)
+//   date>?    (range scan on second column of index)
+// On 50M rows this is the difference between 50ms and 50 seconds.
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">parent</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">notused</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">detail</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)</td></tr></tbody></table>
+
+#### SQLite — ANALYZE to update query planner statistics
+
+```csharp
+// ANALYZE collects statistics about index selectivity
+// The query planner uses these to choose the best index for each query
+// Run after bulk inserts or significant data changes
+
+cmd.CommandText = "ANALYZE";
+cmd.ExecuteNonQuery();
+Console.WriteLine("ANALYZE: query planner statistics updated");
+```
+
+    ANALYZE: query planner statistics updated
+
+#### SQLite — list all indexes and tables with row counts
+
+```csharp
+// sqlite_master — list all indexes
+
+Console.WriteLine("=== Indexes ===");
+QueryToTable(pragmaConn, "SELECT name AS [Index Name], tbl_name AS [Table] FROM sqlite_master WHERE type = 'index' ORDER BY tbl_name, name")
+```
+
+    === Indexes ===
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index Name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">idx_ohlcv_symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ohlcv</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">idx_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ohlcv</td></tr></tbody></table>
+
+#### SQLite — list tables with row counts
+
+```csharp
+// SQLite — list tables with row counts
+
+var tableNames = new List<string>();
+var countCmd = pragmaConn.CreateCommand();
+countCmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name";
+using (var r = countCmd.ExecuteReader())
+    while (r.Read()) tableNames.Add(r.GetString(0));
+
+var dt = new DataTable();
+dt.Columns.Add("Table");
+dt.Columns.Add("Rows", typeof(long));
+foreach (var table in tableNames)
+{
+    countCmd.CommandText = $"SELECT COUNT(*) FROM [{table}]";
+    dt.Rows.Add(table, Convert.ToInt64(countCmd.ExecuteScalar()));
+}
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Rows</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5000</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sqlite_sequence</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sqlite_stat1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td></tr></tbody></table>
+
+#### SQLite — database size
+
+```csharp
+// SQLite — database size (page_count * page_size)
+
+countCmd.CommandText = "PRAGMA page_count";
+var pageCount = Convert.ToInt64(countCmd.ExecuteScalar());
+countCmd.CommandText = "PRAGMA page_size";
+var pageSize = Convert.ToInt64(countCmd.ExecuteScalar());
+Console.WriteLine($"Database: {pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB");
+```
+
+    Database: 135 pages x 4096 bytes = 540.0 KB
+
+#### SQLite — VACUUM, REINDEX, and integrity check
+
+```csharp
+// VACUUM — rebuild and compact the database file after DELETEs
+// Reclaims unused pages. On in-memory DB this is a no-op.
+cmd.CommandText = "VACUUM";
+cmd.ExecuteNonQuery();
+Console.WriteLine("VACUUM: database file compacted");
+
+// REINDEX — rebuild all indexes from scratch
+// Use after bulk updates that may have fragmented indexes
+cmd.CommandText = "REINDEX";
+cmd.ExecuteNonQuery();
+Console.WriteLine("REINDEX: all indexes rebuilt");
+
+// Integrity check — verify database consistency
+// Returns "ok" if everything is fine, or a list of problems
+cmd.CommandText = "PRAGMA integrity_check";
+Console.WriteLine($"Integrity:   {cmd.ExecuteScalar()}");
+
+pragmaConn.Close();
+```
+
+    VACUUM: database file compacted
+    REINDEX: all indexes rebuilt
+    Integrity:   ok
+
+#### SQLite — PRAGMA reference
+
+Quick reference of all important SQLite PRAGMAs — set these right after `Open()`.
+
+```csharp
+// SQLite PRAGMA quick reference
+//
+// PRAGMA                  Value               Effect
+// ─────────────────────── ──────────────────── ────────────────────────────────────────
+// journal_mode            WAL                 Concurrent reads + one writer
+// synchronous             NORMAL              Balance of speed and safety
+// cache_size              -20000 (20MB)       In-memory page cache
+// page_size               4096                Disk block alignment (set before CREATE)
+// busy_timeout            5000 (5s)           Retry on lock instead of failing
+// mmap_size               268435456 (256MB)   Memory-mapped I/O for large files
+// temp_store              MEMORY              Temp tables in RAM
+// foreign_keys            ON                  Enforce FK constraints (OFF by default!)
+// auto_vacuum             FULL or INCREMENTAL Auto-reclaim space on DELETE
+// wal_autocheckpoint      1000                WAL checkpoint every N pages
+//
+// MAINTENANCE:
+// ANALYZE                                     Update query planner statistics
+// VACUUM                                      Rebuild and compact database file
+// REINDEX                                     Rebuild all indexes
+// PRAGMA integrity_check                      Verify database consistency
+//
+// INDEXING:
+// CREATE INDEX idx ON t(col)                  Single column index
+// CREATE INDEX idx ON t(col1, col2)           Composite (covers multi-column WHERE)
+// CREATE UNIQUE INDEX idx ON t(col1, col2)    Unique constraint via index
+// DROP INDEX idx                              Remove an index
+// EXPLAIN QUERY PLAN SELECT ...               Show whether index is used
+```
+
+## 2. SQL Server
+
+#### SQL Server — connect and list schemas/tables
+
+Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
+`sys.schemas` to discover the medallion architecture: bronze (raw), silver (cleaned),
+gold (computed scores). `sys.partitions` gives approximate row counts.
+
+```csharp
+// SQL Server with ADO.NET (SqlClient) — connect to live database
+//
+// Technique: SqlConnection + SqlCommand + SqlDataReader follow the same
+//   ADO.NET pattern as SQLite. Connection string specifies server, database,
+//   authentication. Always use parameterised queries (@param) for safety.
+//
+// Benefits:
+//   - Same ADO.NET API as SQLite — portable knowledge
+//   - Parameterised queries prevent SQL injection
+//   - sys.* catalog views give full metadata without external tools
+//
+// Anti-patterns:
+//   - String concatenation in SQL — injection risk
+//   - Not disposing connections — pool exhaustion
+//   - SELECT * in production — always list columns explicitly
+//
+// When to use:
+//   - Direct SQL queries, scripts, notebooks, lightweight services
+//
+// When NOT to use:
+//   - Complex ORM scenarios — use Dapper or EF Core
 
 var connStr = "Server=localhost,1434;Database=stoxx;"
     + "User Id=sa;Password=EsgDev2026Pass1;"
@@ -357,245 +713,2810 @@ var conn = new SqlConnection(connStr);
 conn.Open();
 Console.WriteLine("Connected to SQL Server: stoxx database");
 
-// ─── List tables by schema (bronze/silver/gold) ───
-Console.WriteLine("\n=== Tables by Schema ===");
-var cmd = new SqlCommand(@"
-    SELECT s.name AS schema_name, t.name AS table_name, p.rows
+// List all schemas and tables with row counts
+QueryToTable(conn, @"
+    SELECT s.name AS [Schema], t.name AS [Table],
+           FORMAT(p.rows, 'N0') AS Rows
     FROM sys.tables t
     JOIN sys.schemas s ON t.schema_id = s.schema_id
     JOIN sys.partitions p ON t.object_id = p.object_id AND p.index_id IN (0, 1)
-    ORDER BY s.name, t.name", conn);
-
-var currentSchema = "";
-using (var reader = cmd.ExecuteReader())
-{
-    while (reader.Read())
-    {
-        var schema = reader.GetString(0);
-        if (schema != currentSchema)
-        {
-            currentSchema = schema;
-            Console.WriteLine($"\n  [{schema.ToUpper()}]");
-        }
-        Console.WriteLine($"    {reader.GetString(1),-30} {reader.GetInt64(2),10:N0} rows");
-    }
-}
-
-// ─── Index universe ───
-Console.WriteLine("\n=== Index Universe ===");
-cmd = new SqlCommand("SELECT index_key, display_name, currency FROM bronze.dim_index ORDER BY display_name", conn);
-using (var reader = cmd.ExecuteReader())
-{
-    while (reader.Read())
-        Console.WriteLine($"  {reader.GetString(0),-20} {reader.GetString(1),-30} {(reader.IsDBNull(2) ? "" : reader.GetString(2))}");
-}
-
-conn.Close();
+    ORDER BY s.name, t.name")
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Microsoft.Data.SqlClient, 7.0.0</span></li></ul></div></div>
-
     Connected to SQL Server: stoxx database
-    
-    === Tables by Schema ===
-    
-      [BRONZE]
-        dim_country                           212 rows
-        dim_index                               4 rows
-        eurostoxx50_ohlcv                      50 rows
-        index_dim                             169 rows
-        oil20_ohlcv                            19 rows
-        pulse                                  40 rows
-        pulse_tickers                          40 rows
-        signals_daily                         169 rows
-        signals_quarterly                     169 rows
-        stoxxasia50_ohlcv                      50 rows
-        stoxxusa50_ohlcv                       50 rows
-        trading_calendar                   29'335 rows
-    
-      [GOLD]
-        index_performance                   5'281 rows
-        scores_daily                          466 rows
-        scores_quarterly                      170 rows
-    
-      [SILVER]
-        eurostoxx50_ohlcv                  66'355 rows
-        index_dim                             169 rows
-        oil20_ohlcv                        24'738 rows
-        signals_daily                         466 rows
-        signals_quarterly                     177 rows
-        stoxxasia50_ohlcv                  64'045 rows
-        stoxxusa50_ohlcv                   65'100 rows
-    
-    === Index Universe ===
-      euro_stoxx_50        Euro Stoxx 50                  €
-      oil_20               Oil & Gas 20                   $
-      stoxx_asia_50        STOXX Asia/Pacific 50          
-      stoxx_usa_50         STOXX USA 50                   $
 
-## 3. ODBC Provider
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Schema</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Rows</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dim_country</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">212</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dim_index</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">19</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pulse</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">40</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pulse_tickers</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">40</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">signals_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">signals_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">29,335</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">index_performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5,281</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">scores_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">466</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">scores_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">170</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">66,355</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">24,738</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">signals_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">466</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">signals_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">177</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">64,045</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65,100</td></tr></tbody></table>
+
+#### SQL Server — SELECT with parameterised queries
 
 ```csharp
-#r "nuget: System.Data.Odbc"
+// Parameterised query — @param prevents SQL injection
 
-using System.Data.Odbc;
+QueryToTable(conn, @"
+    SELECT TOP 10 symbol AS Symbol, CONVERT(VARCHAR, date, 23) AS Date,
+           FORMAT([open], 'N2') AS [Open], FORMAT(high, 'N2') AS High,
+           FORMAT(low, 'N2') AS Low, FORMAT([close], 'N2') AS [Close],
+           FORMAT(volume, 'N0') AS Volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol = 'SAP.DE'
+    ORDER BY date DESC")
+```
 
-// ODBC Provider — alternative to SqlClient, same driver as Python pyodbc.
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Open</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">High</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Low</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-12</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">163.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.74</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">162.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.52</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">806,722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-11</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">167.10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">168.96</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">163.02</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.44</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2,953,782</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">171.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">172.88</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.46</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3,187,246</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-09</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">173.72</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">173.86</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">168.52</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">171.88</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1,990,823</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-06</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">173.66</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">175.10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">170.24</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">172.74</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3,347,221</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-05</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">167.50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">172.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.48</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">170.98</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2,961,032</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-04</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.22</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.22</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.94</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">167.38</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2,443,582</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-03</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">161.28</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.48</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3,971,985</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-02</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.62</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">164.86</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">167.10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2,776,438</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-02-27</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">172.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">173.34</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">168.28</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">170.96</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2,673,448</td></tr></tbody></table>
+
+#### SQL Server — aggregate queries and GROUP BY
+
+```csharp
+// Aggregate — average close price and total volume per symbol
+
+QueryToTable(conn, @"
+    SELECT TOP 10 symbol AS Symbol,
+           COUNT(*) AS [Trading Days],
+           FORMAT(AVG(CAST([close] AS FLOAT)), 'N2') AS [Avg Close],
+           FORMAT(SUM(CAST(volume AS BIGINT)), 'N0') AS [Total Volume]
+    FROM silver.eurostoxx50_ohlcv
+    GROUP BY symbol
+    ORDER BY SUM(CAST(volume AS BIGINT)) DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Trading Days</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Avg Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Total Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3.15</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">115,704,541,969</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAN.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1329</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4.43</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">55,513,641,918</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ENEL.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">6.82</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">32,600,561,934</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BBVA.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1329</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">8.65</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">22,133,773,194</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">UCG.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">28.46</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18,366,801,099</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ENI.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">13.40</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">17,141,570,967</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">INGA.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1331</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">14.04</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">17,041,577,555</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IBE.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1329</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">12.26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">15,994,295,949</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DTE.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1324</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">22.43</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10,029,411,390</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NDA-FI.HE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1306</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10.85</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7,020,342,991</td></tr></tbody></table>
+
+#### SQL Server — CREATE TABLE for demo
+
+```csharp
+// Create a staging table for INSERT/UPDATE/DELETE demos
+
+var sqlCmd = new SqlCommand(@"
+    IF OBJECT_ID('dbo.trades_demo', 'U') IS NOT NULL DROP TABLE dbo.trades_demo;
+    CREATE TABLE dbo.trades_demo (
+        trade_id   NVARCHAR(20) PRIMARY KEY,
+        ticker     NVARCHAR(10) NOT NULL,
+        side       NVARCHAR(4) NOT NULL,
+        quantity   INT NOT NULL,
+        price      DECIMAL(10,2) NOT NULL,
+        trade_date DATE NOT NULL DEFAULT GETDATE()
+    )", conn);
+sqlCmd.ExecuteNonQuery();
+Console.WriteLine("Created dbo.trades_demo");
+```
+
+    Created dbo.trades_demo
+
+#### SQL Server — INSERT with parameterised values
+
+```csharp
+// INSERT — parameterised to prevent SQL injection
+
+var sqlCmd = new SqlCommand("INSERT INTO dbo.trades_demo VALUES (@id, @t, @s, @q, @p, @d)", conn);
+sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
+sqlCmd.Parameters.AddWithValue("@t", "ASML.AS");
+sqlCmd.Parameters.AddWithValue("@s", "BUY");
+sqlCmd.Parameters.AddWithValue("@q", 100);
+sqlCmd.Parameters.AddWithValue("@p", 685.40);
+sqlCmd.Parameters.AddWithValue("@d", "2026-03-15");
+Console.WriteLine($"INSERT: {sqlCmd.ExecuteNonQuery()} row");
+```
+
+    INSERT: 1 row
+
+#### SQL Server — UPDATE with parameterised WHERE
+
+```csharp
+// UPDATE — change price for a specific trade
+
+var sqlCmd = new SqlCommand("UPDATE dbo.trades_demo SET price = @p WHERE trade_id = @id", conn);
+sqlCmd.Parameters.AddWithValue("@p", 700.00);
+sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
+Console.WriteLine($"UPDATE: {sqlCmd.ExecuteNonQuery()} row");
+```
+
+    UPDATE: 1 row
+
+#### SQL Server — DELETE with parameterised WHERE
+
+```csharp
+// DELETE — remove a specific trade
+
+var sqlCmd = new SqlCommand("DELETE FROM dbo.trades_demo WHERE trade_id = @id", conn);
+sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
+Console.WriteLine($"DELETE: {sqlCmd.ExecuteNonQuery()} row");
+```
+
+    DELETE: 1 row
+
+#### SQL Server — DROP TABLE cleanup
+
+```csharp
+// Cleanup — drop the demo table
+
+var sqlCmd = new SqlCommand("DROP TABLE dbo.trades_demo", conn);
+sqlCmd.ExecuteNonQuery();
+Console.WriteLine("Dropped dbo.trades_demo");
+```
+
+    Dropped dbo.trades_demo
+
+#### SQL Server — transactions with BEGIN/COMMIT/ROLLBACK
+
+```csharp
+// Explicit transaction — both inserts succeed or both roll back
+
+var sqlCmd = new SqlCommand(@"
+    IF OBJECT_ID('dbo.tx_demo', 'U') IS NOT NULL DROP TABLE dbo.tx_demo;
+    CREATE TABLE dbo.tx_demo (id INT PRIMARY KEY, val NVARCHAR(50))", conn);
+sqlCmd.ExecuteNonQuery();
+
+var tx = conn.BeginTransaction();
+try
+{
+    new SqlCommand("INSERT INTO dbo.tx_demo VALUES (1, 'first')", conn, tx).ExecuteNonQuery();
+    new SqlCommand("INSERT INTO dbo.tx_demo VALUES (2, 'second')", conn, tx).ExecuteNonQuery();
+    tx.Commit();
+    Console.WriteLine("Transaction committed (2 rows inserted)");
+}
+catch (Exception ex)
+{
+    tx.Rollback();
+    Console.WriteLine($"Transaction rolled back: {ex.Message}");
+}
+
+sqlCmd = new SqlCommand("SELECT COUNT(*) FROM dbo.tx_demo", conn);
+Console.WriteLine($"Rows in tx_demo: {sqlCmd.ExecuteScalar()}");
+sqlCmd = new SqlCommand("DROP TABLE dbo.tx_demo", conn);
+sqlCmd.ExecuteNonQuery();
+```
+
+    Transaction committed (2 rows inserted)
+    Rows in tx_demo: 2
+
+#### SQL Server — list all indexes on a table
+
+```csharp
+// List indexes — sys.indexes + sys.index_columns + sys.columns
+
+QueryToTable(conn, @"
+    SELECT i.name AS [Index Name],
+           i.type_desc AS [Type],
+           CASE WHEN i.is_unique = 1 THEN 'Yes' ELSE 'No' END AS [Unique],
+           STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS Columns
+    FROM sys.indexes i
+    JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+    JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+    WHERE i.object_id = OBJECT_ID('silver.eurostoxx50_ohlcv')
+    GROUP BY i.name, i.type_desc, i.is_unique
+    ORDER BY i.name")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index Name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Unique</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Columns</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_eurostoxx50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol, date</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__eurostox__3213E83FDF67D274</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">id</td></tr></tbody></table>
+
+#### SQL Server — benchmark full table scan with Stopwatch
+
+```csharp
+// Full table aggregate — scans all rows, GROUP BY forces sort/hash
 //
-// KEY DIFFERENCES from SqlClient:
-// - Uses ODBC Driver 18 (same driver as Python pyodbc).
-// - ? positional placeholders (same as Python), not @param.
-// - System.Data.Odbc is built into .NET — no NuGet needed.
-// - SqlClient is preferred for SQL Server-specific features.
-// - ODBC is useful for cross-database portability.
+// This reads every 8KB page in the table. Elapsed time scales with table size.
+// If 0ms, data is fully cached in the SQL Server buffer pool.
+
+var sw = new System.Diagnostics.Stopwatch();
+
+sw.Restart();
+var sqlCmd = new SqlCommand(@"
+    SELECT symbol,
+           COUNT(*) AS trading_days,
+           ROUND(AVG(CAST([close] AS FLOAT)), 2) AS avg_close,
+           ROUND(STDEV(CAST([close] AS FLOAT)), 2) AS close_stdev,
+           SUM(CAST(volume AS BIGINT)) AS total_volume
+    FROM silver.eurostoxx50_ohlcv
+    GROUP BY symbol
+    ORDER BY total_volume DESC", conn);
+int rows1 = 0;
+using (var reader = sqlCmd.ExecuteReader())
+    while (reader.Read()) rows1++;
+sw.Stop();
+Console.WriteLine($"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms");
+```
+
+    Full table scan: 50 symbols | 17 ms
+
+#### SQL Server — benchmark indexed single-symbol lookup
+
+```csharp
+// Indexed seek — reads only pages matching symbol = @Symbol
+//
+// With an index on symbol, SQL Server jumps directly to matching rows.
+// Should be significantly faster than the full scan above.
+// If similar speed, the table may be small enough to fit in cache entirely.
+
+sw.Restart();
+var sqlCmd = new SqlCommand(@"
+    SELECT TOP 100 symbol, date, [close], volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol = @Symbol
+    ORDER BY date DESC", conn);
+sqlCmd.Parameters.AddWithValue("@Symbol", "ASML.AS");
+int rows2 = 0;
+using (var reader = sqlCmd.ExecuteReader())
+    while (reader.Read()) rows2++;
+sw.Stop();
+Console.WriteLine($"Index seek:      {rows2} rows | {sw.ElapsedMilliseconds} ms");
+```
+
+    Index seek:      100 rows | 6 ms
+
+#### SQL Server — benchmark cross-table JOIN
+
+```csharp
+// Cross-table JOIN — combines ohlcv with dim_index
+
+sw.Restart();
+var joinResult = QueryToTable(conn, @"
+    SELECT d.display_name AS [Index], COUNT(*) AS [OHLCV Rows],
+           CONVERT(VARCHAR, MIN(o.date), 23) AS [First Date],
+           CONVERT(VARCHAR, MAX(o.date), 23) AS [Last Date]
+    FROM silver.eurostoxx50_ohlcv o
+    CROSS JOIN bronze.dim_index d
+    WHERE d.index_key = 'euro_stoxx_50'
+    GROUP BY d.display_name");
+sw.Stop();
+Console.WriteLine($"JOIN completed in {sw.ElapsedMilliseconds} ms");
+joinResult
+```
+
+    JOIN completed in 9 ms
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">OHLCV Rows</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">First Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Last Date</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Euro Stoxx 50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">66355</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-04</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-12</td></tr></tbody></table>
+
+#### SQL Server — table sizes and page counts for I/O context
+
+```csharp
+// Table sizes — rows, MB, and 8KB page counts
+//
+// A full table scan reads total_pages * 8KB of data.
+// An index seek reads only the pages containing matching rows.
+// If the entire table fits in the buffer pool, physical reads = 0.
+
+QueryToTable(conn, @"
+    SELECT s.name + '.' + t.name AS [Table],
+           FORMAT(SUM(p.rows), 'N0') AS Rows,
+           CAST(SUM(a.total_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS [Size MB],
+           FORMAT(SUM(a.total_pages), 'N0') AS [Pages (8KB)]
+    FROM sys.tables t
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    JOIN sys.indexes i ON t.object_id = i.object_id
+    JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+    JOIN sys.allocation_units a ON p.partition_id = a.container_id
+    WHERE s.name IN ('bronze', 'silver', 'gold')
+    GROUP BY s.name, t.name
+    ORDER BY SUM(a.total_pages) DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Rows</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Size MB</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Pages (8KB)</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">132,710</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7.95</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1,018</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">128,090</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7.70</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">986</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">130,200</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7.39</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">946</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">49,476</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.83</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">362</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.95</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">250</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.95</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">250</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">38</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.89</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">242</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58,670</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.77</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">226</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.52</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">194</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">676</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.02</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">130</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold.index_performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10,562</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.89</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">114</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">676</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.77</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold.scores_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">932</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.45</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold.scores_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">340</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.27</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">34</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.signals_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">338</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">26</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.signals_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">932</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">26</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.signals_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">338</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">26</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.signals_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">354</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.14</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.pulse</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.14</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.pulse_tickers</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.14</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.dim_country</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">212</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.07</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">9</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.dim_index</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.07</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">9</td></tr></tbody></table>
+
+#### SQL Server — database size
+
+```csharp
+// Database size
+
+QueryToTable(conn, @"
+    SELECT DB_NAME() AS [Database],
+           CAST(SUM(size) * 8.0 / 1024 AS DECIMAL(10,2)) AS [Size MB]
+    FROM sys.database_files")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Database</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Size MB</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxx</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">272.00</td></tr></tbody></table>
+
+#### SQL Server — table sizes (Top 10)
+
+```csharp
+// Table sizes (Top 10 by size)
+
+QueryToTable(conn, @"
+    SELECT TOP 10
+           s.name + '.' + t.name AS [Table],
+           FORMAT(SUM(p.rows), 'N0') AS Rows,
+           CAST(SUM(a.total_pages) * 8.0 / 1024 AS DECIMAL(10,2)) AS [Size MB]
+    FROM sys.tables t
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    JOIN sys.indexes i ON t.object_id = i.object_id
+    JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+    JOIN sys.allocation_units a ON p.partition_id = a.container_id
+    GROUP BY s.name, t.name
+    ORDER BY SUM(a.total_pages) DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Rows</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Size MB</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">132,710</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7.95</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">128,090</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7.70</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">130,200</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7.39</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">49,476</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.83</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.95</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.95</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">38</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.89</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58,670</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.77</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.52</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">676</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.02</td></tr></tbody></table>
+
+#### SQL Server — index fragmentation and maintenance
+
+```csharp
+// Index fragmentation — what it is, why it happens, and how to fix it
+//
+// WHAT IS FRAGMENTATION?
+//   SQL Server stores index data in 8KB pages organized as a B-tree.
+//   When you INSERT/UPDATE/DELETE, pages split and their physical order
+//   diverges from their logical order. This is fragmentation.
+//
+// WHY IT MATTERS:
+//   Fragmented indexes force SQL Server to read pages out of order,
+//   turning efficient sequential I/O into random I/O. A 50% fragmented
+//   index can be 2-5x slower for range scans than a 0% one.
+//   It also wastes space — half-empty pages waste buffer pool memory.
+//
+// WHY IT HAPPENS:
+//   - INSERT into the middle of an index → page split
+//   - UPDATE that changes the index key → delete + insert = split
+//   - DELETE leaves gaps → pages become partially empty
+//   - Random GUIDs as clustered key → constant splits (worst case)
+//   - Sequential keys (IDENTITY, date) → append-only, minimal splits
+//
+// HOW TO FIX:
+//   REORGANIZE: online, lightweight, moves pages into order. Good for 10-30%.
+//   REBUILD: offline (or online with Enterprise), recreates the entire index.
+//            Resets fragmentation to 0%. Good for >30%.
+//
+// MAINTENANCE FREQUENCY:
+//   - OLTP (frequent writes): check weekly, maintain indexes >10%
+//   - Data warehouse (batch loads): rebuild after each ETL load
+//   - Read-heavy (few writes): check monthly, rarely needs maintenance
+//   - Schedule via SQL Agent job or Azure Maintenance Plan
+//   - Always run UPDATE STATISTICS after REBUILD — stale stats = bad plans
+//
+// RULES OF THUMB:
+//   < 10%  → do nothing
+//   10-30% → ALTER INDEX idx ON schema.table REORGANIZE
+//   > 30%  → ALTER INDEX idx ON schema.table REBUILD
+//   < 1000 pages → don't bother (too small to matter)
+
+QueryToTable(conn, @"
+    SELECT TOP 10
+           OBJECT_NAME(ips.object_id) AS [Table],
+           i.name AS [Index],
+           ips.index_type_desc AS [Type],
+           CAST(ROUND(ips.avg_fragmentation_in_percent, 1) AS DECIMAL(5,1)) AS [Frag %],
+           ips.page_count AS Pages,
+           CASE
+               WHEN ips.avg_fragmentation_in_percent < 10 THEN 'OK'
+               WHEN ips.avg_fragmentation_in_percent < 30 THEN 'REORGANIZE'
+               ELSE 'REBUILD'
+           END AS Action
+    FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
+    JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
+    WHERE ips.page_count > 10
+    ORDER BY ips.avg_fragmentation_in_percent DESC")
+
+
+// INTERPRETING THE RESULTS:
+//
+// 95-98% fragmentation on bronze tables (trading_calendar, ohlcv):
+//   These tables were bulk-loaded (INSERT from CSV/API) without sorting.
+//   Bulk inserts in random order cause massive page splits.
+//   CLUSTERED INDEX at 98% means the physical row order is almost
+//   completely random relative to the index key — every range scan
+//   jumps across the entire file instead of reading sequentially.
+//
+// 47-49% fragmentation on silver tables:
+//   Silver tables were built from bronze via INSERT...SELECT.
+//   Partial ordering from the source means partial fragmentation.
+//   Still above 30% — REBUILD is recommended.
+//
+// Small page counts (20-51 pages):
+//   These are tiny tables. Fragmentation matters less here because
+//   the entire table fits in the buffer pool cache. But rebuilding
+//   is instant and costs nothing, so do it anyway.
+//
+// Larger tables (213-252 pages = ~2MB):
+//   At this size, fragmentation starts to have measurable impact.
+//   Sequential scans read 2x more pages than necessary at 47% frag.
+//   REBUILD will cut scan time significantly.
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Frag %</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Pages</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Action</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK_trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98.7</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">149</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_eurostoxx50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_stoxxusa50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__oil20_oh__3213E83F22CF352A</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">95.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_oil20_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">95.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_stoxxasia50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">94.1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxasia50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">49.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">247</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxusa50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">47.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">213</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_eurostoxx50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">47.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">252</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_oil20_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">46.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">78</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr></tbody></table>
+
+#### SQL Server — find all indexes needing REBUILD (>30% fragmented)
+
+```csharp
+// Query fragmented indexes above the 30% threshold
+
+var sqlCmd = new SqlCommand(@"
+    SELECT s.name AS schema_name, OBJECT_NAME(ips.object_id) AS table_name,
+           i.name AS index_name,
+           ROUND(ips.avg_fragmentation_in_percent, 1) AS frag_pct
+    FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
+    JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
+    JOIN sys.tables t ON ips.object_id = t.object_id
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    WHERE ips.avg_fragmentation_in_percent > 30
+      AND ips.page_count > 10
+      AND i.name IS NOT NULL
+    ORDER BY ips.avg_fragmentation_in_percent DESC", conn);
+
+var indexesToRebuild = new List<(string schema, string table, string index, double frag)>();
+using (var reader = sqlCmd.ExecuteReader())
+    while (reader.Read())
+        indexesToRebuild.Add((
+            reader["schema_name"].ToString()!,
+            reader["table_name"].ToString()!,
+            reader["index_name"].ToString()!,
+            Convert.ToDouble(reader["frag_pct"])));
+
+Console.WriteLine($"Found {indexesToRebuild.Count} indexes to rebuild (>30% fragmentation)");
+```
+
+    Found 12 indexes to rebuild (>30% fragmentation)
+
+#### SQL Server — ALTER INDEX REBUILD on each fragmented index
+
+```csharp
+// REBUILD recreates the index from scratch — fragmentation goes to 0%
+
+var sw = System.Diagnostics.Stopwatch.StartNew();
+foreach (var (schema, table, index, frag) in indexesToRebuild)
+{
+    var rebuildSql = $"ALTER INDEX [{index}] ON [{schema}].[{table}] REBUILD";
+    new SqlCommand(rebuildSql, conn).ExecuteNonQuery();
+    Console.WriteLine($"  REBUILT: [{schema}].[{table}].[{index}] (was {frag}%)");
+}
+sw.Stop();
+Console.WriteLine($"\nAll {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms");
+```
+
+      REBUILT: [bronze].[trading_calendar].[PK_trading_calendar] (was 98.7%)
+      REBUILT: [bronze].[eurostoxx50_ohlcv].[IX_bronze_eurostoxx50_ohlcv_symbol_date] (was 98%)
+      REBUILT: [bronze].[stoxxusa50_ohlcv].[IX_bronze_stoxxusa50_ohlcv_symbol_date] (was 98%)
+      REBUILT: [bronze].[oil20_ohlcv].[PK__oil20_oh__3213E83F22CF352A] (was 95%)
+      REBUILT: [bronze].[oil20_ohlcv].[IX_bronze_oil20_ohlcv_symbol_date] (was 95%)
+      REBUILT: [bronze].[stoxxasia50_ohlcv].[IX_bronze_stoxxasia50_ohlcv_symbol_date] (was 94.1%)
+      REBUILT: [silver].[stoxxasia50_ohlcv].[IX_silver_stoxxasia50_ohlcv_symbol_date] (was 49.4%)
+      REBUILT: [silver].[stoxxusa50_ohlcv].[IX_silver_stoxxusa50_ohlcv_symbol_date] (was 47.4%)
+      REBUILT: [silver].[eurostoxx50_ohlcv].[IX_silver_eurostoxx50_ohlcv_symbol_date] (was 47.2%)
+      REBUILT: [silver].[oil20_ohlcv].[IX_silver_oil20_ohlcv_symbol_date] (was 46.2%)
+      REBUILT: [gold].[index_performance].[UX_gold_index_performance] (was 31.8%)
+      REBUILT: [gold].[scores_daily].[PK__scores_d__3213E83F41C788A9] (was 30.4%)
+    
+    All 12 indexes rebuilt in 167 ms
+
+#### SQL Server — UPDATE STATISTICS after rebuild
+
+```csharp
+// Stale statistics = bad query plans. Always update after REBUILD.
+
+foreach (var (schema, table, _, _) in indexesToRebuild.DistinctBy(x => x.schema + "." + x.table))
+{
+    new SqlCommand($"UPDATE STATISTICS [{schema}].[{table}]", conn).ExecuteNonQuery();
+    Console.WriteLine($"  STATS UPDATED: [{schema}].[{table}]");
+}
+```
+
+      STATS UPDATED: [bronze].[trading_calendar]
+      STATS UPDATED: [bronze].[eurostoxx50_ohlcv]
+      STATS UPDATED: [bronze].[stoxxusa50_ohlcv]
+      STATS UPDATED: [bronze].[oil20_ohlcv]
+      STATS UPDATED: [bronze].[stoxxasia50_ohlcv]
+      STATS UPDATED: [silver].[stoxxasia50_ohlcv]
+      STATS UPDATED: [silver].[stoxxusa50_ohlcv]
+      STATS UPDATED: [silver].[eurostoxx50_ohlcv]
+      STATS UPDATED: [silver].[oil20_ohlcv]
+      STATS UPDATED: [gold].[index_performance]
+      STATS UPDATED: [gold].[scores_daily]
+
+#### SQL Server — verify fragmentation after rebuild
+
+```csharp
+// Verify fragmentation is now 0% after rebuild
+
+QueryToTable(conn, @"
+    SELECT TOP 10
+           s.name + '.' + OBJECT_NAME(ips.object_id) AS [Table],
+           i.name AS [Index],
+           ips.index_type_desc AS [Type],
+           CAST(ROUND(ips.avg_fragmentation_in_percent, 1) AS DECIMAL(5,1)) AS [Frag %],
+           ips.page_count AS Pages
+    FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
+    JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
+    JOIN sys.tables t ON ips.object_id = t.object_id
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    WHERE ips.page_count > 10
+    ORDER BY ips.avg_fragmentation_in_percent DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Frag %</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Pages</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">bronze.index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__index_di__3213E83FDB4E5BA9</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">13.6</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">88</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold.index_performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">UX_gold_index_performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5.3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">19</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">gold.index_performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__index_pe__3213E83FBBB2393E</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4.9</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">81</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__stoxxusa__3213E83FC84E3F24</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">724</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.index_dim</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__index_di__3213E83F590AA69E</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">85</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxusa50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.6</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">163</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxasia50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.5</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">183</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__stoxxasi__3213E83F66A8DE5E</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">729</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__eurostox__3213E83FDF67D274</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">757</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">silver.oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__oil20_oh__3213E83F544EB286</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">275</td></tr></tbody></table>
+
+#### SQL Server — index usage statistics
+
+```csharp
+// Which indexes are actually used? sys.dm_db_index_usage_stats
+// Unused indexes waste disk space and slow down writes.
+
+QueryToTable(conn, @"
+    SELECT TOP 10
+           OBJECT_NAME(s.object_id) AS [Table],
+           i.name AS [Index],
+           s.user_seeks AS Seeks, s.user_scans AS Scans,
+           s.user_lookups AS Lookups, s.user_updates AS Updates
+    FROM sys.dm_db_index_usage_stats s
+    JOIN sys.indexes i ON s.object_id = i.object_id AND s.index_id = i.index_id
+    WHERE s.database_id = DB_ID()
+    ORDER BY s.user_seeks + s.user_scans DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Seeks</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Scans</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Lookups</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Updates</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__eurostox__3213E83FDF67D274</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dim_index</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__dim_inde__D02D09ED2DACF7AF</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dim_country</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__dim_coun__F701889525414513</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pulse_tickers</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__pulse_ti__3213E83FF5E3765E</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__stoxxusa__3213E83FC84E3F24</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxusa50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">scores_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__scores_d__3213E83F41C788A9</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">scores_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">UX_gold_scores_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">signals_daily</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__signals___3213E83F7466104F</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">signals_quarterly</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__signals___3213E83FD922C308</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr></tbody></table>
+
+#### SQL Server — provoke missing index recommendations
+
+Missing index DMVs only populate when SQL Server sees queries that WOULD have
+benefited from an index that doesn’t exist. After an index REBUILD, the DMV
+stats reset. We run queries on unindexed columns to generate recommendations.
+
+```csharp
+// Run queries on columns without indexes to trigger missing index recommendations
+// SQL Server tracks these in sys.dm_db_missing_index_details
+
+// Query 1: filter on close price (no index on close)
+new SqlCommand(@"
+    SELECT symbol, date, [close], volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE [close] > 500
+    ORDER BY [close] DESC", conn).ExecuteReader().Close();
+
+// Query 2: filter on volume (no index on volume)
+new SqlCommand(@"
+    SELECT symbol, date, volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE volume > 5000000
+    ORDER BY volume DESC", conn).ExecuteReader().Close();
+
+// Query 3: filter on date range without covering index
+new SqlCommand(@"
+    SELECT symbol, date, [close], high - low AS daily_range
+    FROM silver.eurostoxx50_ohlcv
+    WHERE date BETWEEN '2025-01-01' AND '2025-06-30'
+    ORDER BY date", conn).ExecuteReader().Close();
+
+// Run each a few times to increase the impact score
+for (int i = 0; i < 5; i++)
+{
+    new SqlCommand("SELECT * FROM silver.eurostoxx50_ohlcv WHERE [close] > 500", conn).ExecuteReader().Close();
+    new SqlCommand("SELECT * FROM silver.eurostoxx50_ohlcv WHERE volume > 5000000", conn).ExecuteReader().Close();
+}
+
+Console.WriteLine("Ran 13 queries on unindexed columns to provoke recommendations");
+```
+
+    Ran 13 queries on unindexed columns to provoke recommendations
+
+#### SQL Server — missing index recommendations from the query optimizer
+
+```csharp
+// sys.dm_db_missing_index_details — SQL Server’s built-in index advisor
+//
+// HOW IT WORKS:
+//   Every time the query optimizer compiles a plan, it checks whether an
+//   index would have reduced the cost. If yes, it records:
+//   - equality_columns: columns in WHERE col = ? (should be index key)
+//   - inequality_columns: columns in WHERE col > ? (range scan key)
+//   - included_columns: columns in SELECT (add as INCLUDE to avoid key lookup)
+//   - avg_user_impact: estimated % improvement if the index existed
+//
+// WHEN IT’S EMPTY:
+//   - After server restart or index REBUILD — DMV stats are in-memory only
+//   - If all queries already have good indexes
+//   - If no queries have run since the last stats reset
+//
+// HOW TO USE THE RECOMMENDATIONS:
+//   CREATE INDEX IX_table_col ON schema.table (equality_cols, inequality_cols)
+//       INCLUDE (included_columns)
+
+QueryToTable(conn, @"
+    SELECT TOP 5
+           OBJECT_NAME(d.object_id) AS [Table],
+           ISNULL(d.equality_columns, '-') AS [Equality Columns],
+           ISNULL(d.inequality_columns, '-') AS [Inequality Columns],
+           ISNULL(d.included_columns, '-') AS [Include Columns],
+           CAST(ROUND(s.avg_user_impact, 1) AS DECIMAL(5,1)) AS [Impact %],
+           s.user_seeks + s.user_scans AS [Queries]
+    FROM sys.dm_db_missing_index_details d
+    JOIN sys.dm_db_missing_index_groups g ON d.index_handle = g.index_handle
+    JOIN sys.dm_db_missing_index_group_stats s ON g.index_group_handle = s.group_handle
+    WHERE d.database_id = DB_ID()
+    ORDER BY s.avg_user_impact * (s.user_seeks + s.user_scans) DESC")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Equality Columns</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Inequality Columns</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Include Columns</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Impact %</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Queries</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[close]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[symbol], [date], [open], [high], [low], [adj_close], [volume], [dividends], [stock_splits], [is_filled]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65.7</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[volume]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[symbol], [date], [open], [high], [low], [close], [adj_close], [dividends], [stock_splits], [is_filled]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65.7</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[close]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[symbol], [date], [volume]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">66.7</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[date]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[symbol], [high], [low], [close]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65.1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">-</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[volume]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[symbol], [date]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">37.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td></tr></tbody></table>
+
+#### SQL Server — server configuration and version
+
+```csharp
+// Server metadata — version, edition, collation, configuration
+
+QueryToTable(conn, @"
+    SELECT
+        SUBSTRING(@@VERSION, 1, CHARINDEX(' (', @@VERSION) - 1) AS [Version],
+        CAST(SERVERPROPERTY('Edition') AS NVARCHAR(100)) AS Edition,
+        CAST(SERVERPROPERTY('Collation') AS NVARCHAR(100)) AS Collation,
+        CAST(SERVERPROPERTY('ProductLevel') AS NVARCHAR(20)) AS [Level]")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Version</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Edition</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Collation</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Level</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Microsoft SQL Server 2022</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Developer Edition (64-bit)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL_Latin1_General_CP1_CI_AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">RTM</td></tr></tbody></table>
+
+#### SQL Server — key configuration settings
+
+```csharp
+// Key server configuration from sys.configurations
+
+QueryToTable(conn, @"
+    SELECT name AS [Setting],
+           CAST(value_in_use AS NVARCHAR(30)) AS [Value],
+           CASE name
+               WHEN 'max server memory (MB)' THEN 'Max RAM for buffer pool (2147483647 = unlimited)'
+               WHEN 'max degree of parallelism' THEN 'Max CPU cores per query (0 = all cores)'
+               WHEN 'cost threshold for parallelism' THEN 'Query cost before parallel plan (5 = default)'
+               ELSE ''
+           END AS [Meaning]
+    FROM sys.configurations
+    WHERE name IN ('max server memory (MB)', 'max degree of parallelism',
+                   'cost threshold for parallelism')
+    ORDER BY name")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Setting</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Value</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Meaning</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">cost threshold for parallelism</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Query cost before parallel plan (5 = default)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">max degree of parallelism</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Max CPU cores per query (0 = all cores)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">max server memory (MB)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2147483647</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Max RAM for buffer pool (2147483647 = unlimited)</td></tr></tbody></table>
+
+#### SQL Server — active sessions and blocking
+
+```csharp
+// Active sessions — who is connected and what are they doing
+
+QueryToTable(conn, @"
+    SELECT s.session_id AS SID,
+           s.login_name AS [Login],
+           ISNULL(s.host_name, '') AS Host,
+           LEFT(ISNULL(s.program_name, ''), 30) AS Program,
+           s.status AS Status,
+           DB_NAME(s.database_id) AS [Database]
+    FROM sys.dm_exec_sessions s
+    WHERE s.is_user_process = 1
+    ORDER BY s.session_id")
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">SID</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Login</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Host</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Program</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Status</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Database</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">53</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NT AUTHORITY\SYSTEM</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">8482aae8ad0a</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQLServerCEIP</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sleeping</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">master</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">55</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sa</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ELYSIUM</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Core Microsoft SqlClient Data </td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sleeping</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxx</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">56</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sa</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ELYSIUM</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Core Microsoft SqlClient Data </td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">running</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxx</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sa</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ELYSIUM</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Core Microsoft SqlClient Data </td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">sleeping</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxx</td></tr></tbody></table>
+
+#### SQL Server — administration reference
+
+Quick reference of essential SQL Server DMVs and commands for monitoring,
+tuning, and troubleshooting.
+
+```csharp
+// SQL Server administration quick reference
+//
+// METADATA:
+//   sys.tables, sys.schemas, sys.columns        Table/column metadata
+//   sys.indexes, sys.index_columns              Index definitions
+//   sys.partitions                              Row counts per partition
+//   OBJECT_ID('schema.table')                   Get object ID for DMV queries
+//
+// INDEX MANAGEMENT:
+//   sys.dm_db_index_physical_stats               Fragmentation analysis
+//   sys.dm_db_index_usage_stats                  Index usage (seeks/scans/updates)
+//   sys.dm_db_missing_index_details              Missing index recommendations
+//   ALTER INDEX idx ON table REORGANIZE           Defragment online (10-30%)
+//   ALTER INDEX idx ON table REBUILD              Full rebuild (>30%)
+//   UPDATE STATISTICS table                       Refresh query planner stats
+//
+// PERFORMANCE:
+//   SET STATISTICS IO ON                          Show logical/physical reads
+//   SET STATISTICS TIME ON                        Show CPU/elapsed time
+//   sys.dm_exec_query_stats                       Top queries by CPU/reads
+//   sys.dm_exec_cached_plans                      Cached execution plans
+//   DBCC FREEPROCCACHE                            Clear plan cache (dev only!)
+//
+// MONITORING:
+//   sys.dm_exec_sessions                          Active connections
+//   sys.dm_exec_requests                          Currently running queries
+//   sys.dm_os_wait_stats                          Wait type analysis
+//   sp_who2                                       Quick session overview
+//
+// MAINTENANCE:
+//   DBCC CHECKDB                                  Integrity check
+//   DBCC SHRINKDATABASE                           Reclaim space (use sparingly)
+//   sp_spaceused 'table'                         Table size
+//   BACKUP DATABASE db TO DISK = 'path'           Full backup
+//
+// CONFIGURATION:
+//   sys.configurations                            Server settings
+//   sp_configure 'max server memory', 4096        Set max memory (MB)
+//   sp_configure 'max degree of parallelism', 4   Set MAXDOP
+//   RECONFIGURE                                   Apply sp_configure changes
+```
+
+#### SQL Server — ODBC Provider with positional parameters
+
+```csharp
+// ODBC Provider — same driver as Python pyodbc, ? positional params
 
 var odbcConnStr = "Driver={ODBC Driver 18 for SQL Server};"
     + "Server=localhost,1434;Database=stoxx;"
     + "UID=sa;PWD=EsgDev2026Pass1;"
     + "Encrypt=yes;TrustServerCertificate=yes;";
 
-using (var conn = new OdbcConnection(odbcConnStr))
+var odbcResult = new DataTable();
+using (var odbcConn = new OdbcConnection(odbcConnStr))
 {
-    conn.Open();
-    Console.WriteLine("=== ODBC Provider (same driver as Python pyodbc) ===");
-
-    // ? positional params — same as Python pyodbc
-    var cmd = new OdbcCommand("SELECT TOP 5 symbol, short_name, composite_score FROM gold.scores_daily WHERE _index = ? ORDER BY composite_rank", conn);
-    cmd.Parameters.AddWithValue("@p1", "euro_stoxx_50");
-
-    using (var r = cmd.ExecuteReader())
-    {
-        while (r.Read())
-            Console.WriteLine($"  {r["symbol"],-10} {(r.IsDBNull(1) ? "" : r.GetString(1)),-20} {Convert.ToDouble(r["composite_score"]):F4}");
-    }
+    odbcConn.Open();
+    var odbcCmd = new OdbcCommand(
+        "SELECT TOP 5 symbol, short_name, composite_score "
+        + "FROM gold.scores_daily WHERE _index = ? "
+        + "ORDER BY composite_rank", odbcConn);
+    odbcCmd.Parameters.AddWithValue("@p1", "euro_stoxx_50");
+    odbcResult.Load(odbcCmd.ExecuteReader());
 }
-
-// ─── SqlClient vs ODBC ───
-Console.WriteLine("\n=== SqlClient vs ODBC ===");
-Console.WriteLine($"{"Feature",-20} {"SqlClient",-25} {"ODBC",-25}");
-Console.WriteLine(new string('─', 70));
-Console.WriteLine($"{"NuGet needed",-20} {"Yes (SqlClient)",-25} {"No (built-in)",-25}");
-Console.WriteLine($"{"Parameters",-20} {"@named",-25} {"? positional",-25}");
-Console.WriteLine($"{"SQL Server features",-20} {"Full",-25} {"Standard ODBC only",-25}");
-Console.WriteLine($"{"Python equivalent",-20} {"—",-25} {"pyodbc",-25}");
-Console.WriteLine($"{"Connection string",-20} {"Server=...",-25} {"Driver=...",-25}");
+odbcResult
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>System.Data.Odbc, 10.0.5</span></li></ul></div></div>
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">short_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">composite_score</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BNP.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BNP PARIBAS ACT.A</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.6839467847784353</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BNP.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BNP PARIBAS ACT.A</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.6639711356464837</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BNP.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BNP PARIBAS ACT.A</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.6795985859619491</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DTE.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DEUTSCHE TELEKOM AG</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.5150053634526331</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DTE.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DEUTSCHE TELEKOM AG</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0.5214424751678984</td></tr></tbody></table>
 
-    === ODBC Provider (same driver as Python pyodbc) ===
-      BNP.PA     BNP PARIBAS ACT.A    0.6839
-      BNP.PA     BNP PARIBAS ACT.A    0.6640
-      BNP.PA     BNP PARIBAS ACT.A    0.6796
-      DTE.DE     DEUTSCHE TELEKOM AG  0.5150
-      DTE.DE     DEUTSCHE TELEKOM AG  0.5214
-    
-    === SqlClient vs ODBC ===
-    Feature              SqlClient                 ODBC                     
-    ──────────────────────────────────────────────────────────────────────
-    NuGet needed         Yes (SqlClient)           No (built-in)            
-    Parameters           @named                    ? positional             
-    SQL Server features  Full                      Standard ODBC only       
-    Python equivalent    —                         pyodbc                   
-    Connection string    Server=...                Driver=...
+#### SQL Server — SqlClient vs ODBC comparison
+
+```csharp
+// SqlClient vs ODBC comparison
+
+var cmp = new DataTable();
+cmp.Columns.Add("Feature");
+cmp.Columns.Add("SqlClient");
+cmp.Columns.Add("ODBC");
+cmp.Rows.Add("NuGet needed", "Yes (Microsoft.Data.SqlClient)", "No (System.Data.Odbc built-in)");
+cmp.Rows.Add("Parameters", "@named", "? positional (like Python)");
+cmp.Rows.Add("SQL Server features", "Full (bulk copy, Always Encrypted)", "Standard ODBC only");
+cmp.Rows.Add("Python equivalent", "—", "pyodbc");
+cmp.Rows.Add("Connection string", "Server=host;Database=db;...", "Driver={ODBC Driver 18};Server=...");
+cmp.Rows.Add("Best for", "SQL Server-specific apps", "Cross-database portability");
+cmp
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Feature</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">SqlClient</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ODBC</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NuGet needed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes (Microsoft.Data.SqlClient)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">No (System.Data.Odbc built-in)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parameters</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">@named</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">? positional (like Python)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server features</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full (bulk copy, Always Encrypted)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Standard ODBC only</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Python equivalent</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pyodbc</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Connection string</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Server=host;Database=db;...</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Driver={ODBC Driver 18};Server=...</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Best for</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server-specific apps</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Cross-database portability</td></tr></tbody></table>
 
 ## 4. Dapper — Micro-ORM
 
+Dapper sits between raw ADO.NET and full Entity Framework. You write SQL (full control),
+Dapper maps results to typed C# objects (no manual `reader.GetString(0)`).
+
+**The problem with ADO.NET:**
 ```csharp
-// Dapper — lightweight ORM that maps SQL results to C# objects.
-//
-// NOTE: Dapper is a NuGet package — in a notebook it triggers CS1701 warnings
-// (suppressed by the WarningLevel=0 cell above). In a real project it works cleanly.
-// Here we show both the Dapper API and the ADO.NET equivalent side by side.
-//
-// KEY CONCEPTS:
-// - conn.Query<T>(sql): executes SQL, maps each row to T automatically.
-//   Python equivalent: pd.read_sql() returning a DataFrame.
-// - conn.QueryFirst<T>(sql): single result.
-// - conn.Execute(sql, @params): for INSERT/UPDATE/DELETE.
-// - Dapper maps column names to property names automatically.
-// - Much lighter than Entity Framework — you write SQL, Dapper maps results.
-
-Console.WriteLine("=== Dapper API Reference ===");
-Console.WriteLine();
-Console.WriteLine("// Install:");
-Console.WriteLine("//   dotnet add package Dapper");
-Console.WriteLine("//   dotnet add package Microsoft.Data.SqlClient");
-Console.WriteLine();
-Console.WriteLine("// ─── Query into typed list ───");
-Console.WriteLine("// var prices = conn.Query<OhlcvRow>(sql, new { Symbol = \"ASML.AS\" });");
-Console.WriteLine("// foreach (var p in prices)");
-Console.WriteLine("//     Console.WriteLine($\"{p.Symbol} | {p.Date:yyyy-MM-dd} | {p.Close}\");");
-Console.WriteLine();
-Console.WriteLine("// ─── Query with parameters ───");
-Console.WriteLine("// var scores = conn.Query<ScoreRow>(sql, new { Index = \"euro_stoxx_50\" });");
-Console.WriteLine();
-Console.WriteLine("// ─── Scalar ───");
-Console.WriteLine("// var count = conn.ExecuteScalar<long>(\"SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv\");");
-Console.WriteLine();
-Console.WriteLine("// ─── Insert ───");
-Console.WriteLine("// conn.Execute(insertSql, new { TradeId = \"TRD_001\", Ticker = \"AAPL\" });");
-Console.WriteLine();
-Console.WriteLine("// ─── DTOs ───");
-Console.WriteLine("// record OhlcvRow(string Symbol, DateTime Date, double Close, long Volume);");
-Console.WriteLine("// record ScoreRow(string Symbol, double CompositeScore, int CompositeRank);");
-
-Console.WriteLine();
-Console.WriteLine("=== ADO.NET vs Dapper vs Entity Framework ===");
-Console.WriteLine();
-Console.WriteLine($"{"Feature",-20} {"ADO.NET (raw)",-20} {"Dapper",-20} {"EF Core",-20}");
-Console.WriteLine(new string('─', 80));
-Console.WriteLine($"{"SQL control",-20} {"Full",-20} {"Full",-20} {"LINQ (auto-gen)",-20}");
-Console.WriteLine($"{"Mapping",-20} {"Manual (reader)",-20} {"Auto (col→prop)",-20} {"Auto (navigation)",-20}");
-Console.WriteLine($"{"Performance",-20} {"Fastest",-20} {"~Same as ADO.NET",-20} {"Slower (tracking)",-20}");
-Console.WriteLine($"{"Boilerplate",-20} {"Lots",-20} {"Minimal",-20} {"Minimal",-20}");
-Console.WriteLine($"{"Best for",-20} {"Notebooks, scripts",-20} {"Services, APIs",-20} {"Large apps, CRUD",-20}");
-Console.WriteLine($"{"Python equiv",-20} {"pyodbc",-20} {"pd.read_sql()",-20} {"SQLAlchemy ORM",-20}");
+// 10 lines of boilerplate per query
+var cmd = new SqlCommand(sql, conn);
+using var reader = cmd.ExecuteReader();
+while (reader.Read()) {
+    var row = new OhlcvRow(
+        reader.GetString(0),      // which column is 0? hope you remember
+        reader.GetDateTime(1),    // wrong index = runtime crash
+        reader.GetDouble(2),      // manual cast for every column
+    );
+}
 ```
 
-    === Dapper API Reference ===
-    
-    // Install:
-    //   dotnet add package Dapper
-    //   dotnet add package Microsoft.Data.SqlClient
-    
-    // ─── Query into typed list ───
-    // var prices = conn.Query<OhlcvRow>(sql, new { Symbol = "ASML.AS" });
-    // foreach (var p in prices)
-    //     Console.WriteLine($"{p.Symbol} | {p.Date:yyyy-MM-dd} | {p.Close}");
-    
-    // ─── Query with parameters ───
-    // var scores = conn.Query<ScoreRow>(sql, new { Index = "euro_stoxx_50" });
-    
-    // ─── Scalar ───
-    // var count = conn.ExecuteScalar<long>("SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv");
-    
-    // ─── Insert ───
-    // conn.Execute(insertSql, new { TradeId = "TRD_001", Ticker = "AAPL" });
-    
-    // ─── DTOs ───
-    // record OhlcvRow(string Symbol, DateTime Date, double Close, long Volume);
-    // record ScoreRow(string Symbol, double CompositeScore, int CompositeRank);
-    
-    === ADO.NET vs Dapper vs Entity Framework ===
-    
-    Feature              ADO.NET (raw)        Dapper               EF Core             
-    ────────────────────────────────────────────────────────────────────────────────
-    SQL control          Full                 Full                 LINQ (auto-gen)     
-    Mapping              Manual (reader)      Auto (col→prop)      Auto (navigation)   
-    Performance          Fastest              ~Same as ADO.NET     Slower (tracking)   
-    Boilerplate          Lots                 Minimal              Minimal             
-    Best for             Notebooks, scripts   Services, APIs       Large apps, CRUD    
-    Python equiv         pyodbc               pd.read_sql()        SQLAlchemy ORM
+**What Dapper gives you:**
+```csharp
+// 1 line — same performance, typed result
+var rows = conn.Query<OhlcvRow>(sql, new { Symbol = "ASML.AS" });
+rows.First().Close   // double, not object — IntelliSense, refactoring, compile-time safety
+```
 
-## 5. Summary
+**Key difference:** ADO.NET returns **untyped rows** (`object` values, index-based access).
+Dapper returns **typed objects** (real C# instances with properties). Same difference as
+`dict` vs `dataclass` in Python, or `pd.read_sql()` returning a DataFrame vs raw `cursor.fetchall()`.
+
+| | ADO.NET | Dapper |
+|---|---|---|
+| Access a field | `reader["close"]` → `object`, must cast | `row.Close` → `double` directly |
+| Typo in column | Runtime crash | Compile error |
+| LINQ on results | Not on DataReader | Full LINQ: `.Where()`, `.OrderBy()` |
+| Parameters | `cmd.Parameters.AddWithValue` per param | `new { Symbol = "ASML" }` one-liner |
+| Performance | Fastest | ~Same (IL emission, not reflection) |
+| Python equivalent | `pyodbc cursor.fetchall()` | `pd.read_sql()` returning DataFrame |
+
+#### Dapper — NuGet setup and record DTOs
+
+```csharp
+// Dapper setup — define record DTOs that Dapper maps columns to
+//
+// Technique: Define a record/class whose property names match SQL column
+//   aliases. Dapper matches by name (case-insensitive). No attributes,
+//   no configuration — just matching names.
+//
+// Benefits:
+//   - Auto-mapping — no reader.GetString(0) per column
+//   - Parameterised — anonymous objects prevent SQL injection
+//   - ~Same performance as raw ADO.NET (IL emission, not reflection)
+//   - Full LINQ on results — .Where(), .OrderBy(), .GroupBy()
+//
+// Anti-patterns:
+//   - Column name mismatch — use AS aliases to match property names
+//   - Not disposing connections — use using or connection pooling
+//   - Dapper for complex object graphs — use EF Core for navigation props
+//
+// When to use:
+//   - Services/APIs with known SQL, data pipelines, any typed query
+//
+// When NOT to use:
+//   - Complex CRUD with relationships — EF Core is more productive
+
+// DTOs — Dapper maps columns to these by matching property names
+record OhlcvRow(string Symbol, DateTime Date, double Open, double High, double Low, double Close, long Volume);
+record IndexInfo(string IndexKey, string DisplayName, string Currency);
+record ScoreRow(string Symbol, double CompositeScore, int CompositeRank);
+record TradeRow(string TradeId, string Ticker, string Side, int Quantity, decimal Price);
+```
+
+```csharp
+var dapperConn = new SqlConnection(
+    "Server=localhost,1434;Database=stoxx;"
+    + "User Id=sa;Password=EsgDev2026Pass1;"
+    + "Encrypt=True;TrustServerCertificate=True;");
+dapperConn.Open();
+```
+
+#### Dapper — `Query<T>` returns typed list from SQL
+
+```csharp
+// Query<T> — returns IEnumerable<T>, maps each row to a record
+// Column aliases must match property names (case-insensitive)
+
+var indices = dapperConn.Query<IndexInfo>(
+    "SELECT index_key AS IndexKey, display_name AS DisplayName, currency AS Currency FROM bronze.dim_index ORDER BY display_name");
+
+var dt = new DataTable();
+dt.Columns.Add("Index Key"); dt.Columns.Add("Display Name"); dt.Columns.Add("Currency");
+foreach (var idx in indices)
+    dt.Rows.Add(idx.IndexKey, idx.DisplayName, idx.Currency);
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index Key</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Display Name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Currency</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">euro_stoxx_50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Euro Stoxx 50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">€</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil_20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Oil & Gas 20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">$</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxx_asia_50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">STOXX Asia/Pacific 50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxx_usa_50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">STOXX USA 50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">$</td></tr></tbody></table>
+
+#### Dapper — parameterised queries with anonymous objects
+
+```csharp
+// Parameters as anonymous object — @param in SQL maps to object properties
+// No cmd.Parameters.AddWithValue boilerplate
+
+var prices = dapperConn.Query<OhlcvRow>(@"
+    SELECT TOP 5 symbol AS Symbol, date AS Date,
+           [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol = @Symbol
+    ORDER BY date DESC",
+    new { Symbol = "ASML.AS" });    // anonymous object maps to @Symbol
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Date"); dt.Columns.Add("Open");
+dt.Columns.Add("High"); dt.Columns.Add("Low"); dt.Columns.Add("Close"); dt.Columns.Add("Volume");
+foreach (var p in prices)
+    dt.Rows.Add(p.Symbol, $"{p.Date:yyyy-MM-dd}", $"{p.Open:F2}", $"{p.High:F2}", $"{p.Low:F2}", $"{p.Close:F2}", $"{p.Volume:N0}");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Open</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">High</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Low</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-12</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1194.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1202.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1187.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1190.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">128'223</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-11</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1188.40</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1210.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1174.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1198.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">562'904</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1188.40</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1208.40</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1172.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1200.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">800'815</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-09</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1072.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1147.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1060.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1147.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">689'086</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-06</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1186.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1192.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1112.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1147.00</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">857'271</td></tr></tbody></table>
+
+#### Dapper — multiple parameters and WHERE IN
+
+```csharp
+// Multiple parameters — each property becomes a @param
+
+var filtered = dapperConn.Query<OhlcvRow>(@"
+    SELECT TOP 10 symbol AS Symbol, date AS Date,
+           [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol = @Symbol AND volume > @MinVolume
+    ORDER BY volume DESC",
+    new { Symbol = "SAP.DE", MinVolume = 3_000_000 });
+
+// WHERE IN — pass a list, Dapper expands to (val1, val2, val3)
+var multiSymbol = dapperConn.Query<OhlcvRow>(@"
+    SELECT TOP 10 symbol AS Symbol, date AS Date,
+           [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol IN @Symbols
+    ORDER BY date DESC",
+    new { Symbols = new[] { "ASML.AS", "SAP.DE", "MC.PA" } });
+
+Console.WriteLine($"Filtered (SAP + vol>3M): {filtered.Count()} rows");
+Console.WriteLine($"Multi-symbol IN:         {multiSymbol.Count()} rows");
+```
+
+    Filtered (SAP + vol>3M): 10 rows
+    Multi-symbol IN:         10 rows
+
+#### Dapper — `QueryFirst`, `QuerySingle`, `ExecuteScalar`
+
+```csharp
+// QueryFirst<T> — returns first row (throws if empty)
+// QueryFirstOrDefault<T> — returns first row or null/default
+// QuerySingle<T> — returns exactly one row (throws if 0 or >1)
+// ExecuteScalar<T> — returns a single value (COUNT, SUM, MAX)
+
+var latest = dapperConn.QueryFirst<OhlcvRow>(@"
+    SELECT TOP 1 symbol AS Symbol, date AS Date,
+           [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol = @Symbol ORDER BY date DESC",
+    new { Symbol = "SAP.DE" });
+
+var rowCount = dapperConn.ExecuteScalar<long>("SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv");
+var stockCount = dapperConn.ExecuteScalar<long>("SELECT COUNT(DISTINCT symbol) FROM silver.eurostoxx50_ohlcv");
+var maxVol = dapperConn.ExecuteScalar<long>("SELECT MAX(volume) FROM silver.eurostoxx50_ohlcv");
+
+var dt = new DataTable();
+dt.Columns.Add("Metric"); dt.Columns.Add("Value");
+dt.Rows.Add("Latest SAP.DE", $"{latest.Date:yyyy-MM-dd} | Close: {latest.Close:F2} | Vol: {latest.Volume:N0}");
+dt.Rows.Add("Total OHLCV rows", $"{rowCount:N0}");
+dt.Rows.Add("Distinct stocks", $"{stockCount}");
+dt.Rows.Add("Max volume", $"{maxVol:N0}");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Metric</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Value</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Latest SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-12 | Close: 166.52 | Vol: 806'722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Total OHLCV rows</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">66'355</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Distinct stocks</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Max volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">376'391'539</td></tr></tbody></table>
+
+#### Dapper — `Execute` for INSERT, UPDATE, DELETE
+
+```csharp
+// Execute — returns number of affected rows (for INSERT/UPDATE/DELETE)
+
+// Create demo table
+dapperConn.Execute(@"
+    IF OBJECT_ID('dbo.dapper_trades', 'U') IS NOT NULL DROP TABLE dbo.dapper_trades;
+    CREATE TABLE dbo.dapper_trades (
+        trade_id NVARCHAR(20) PRIMARY KEY,
+        ticker   NVARCHAR(10),
+        side     NVARCHAR(4),
+        quantity INT,
+        price    DECIMAL(10,2))");
+
+// INSERT single row
+var inserted = dapperConn.Execute(
+    "INSERT INTO dbo.dapper_trades VALUES (@TradeId, @Ticker, @Side, @Quantity, @Price)",
+    new { TradeId = "TRD_001", Ticker = "ASML.AS", Side = "BUY", Quantity = 100, Price = 685.40m });
+Console.WriteLine($"INSERT: {inserted} row");
+
+// INSERT multiple rows — pass a list, Dapper executes once per item
+var batch = new[] {
+    new { TradeId = "TRD_002", Ticker = "SAP.DE",  Side = "SELL", Quantity = 75,  Price = 245.80m },
+    new { TradeId = "TRD_003", Ticker = "MC.PA",   Side = "BUY",  Quantity = 50,  Price = 890.20m },
+    new { TradeId = "TRD_004", Ticker = "RMS.PA",  Side = "BUY",  Quantity = 20,  Price = 2850.0m },
+};
+var batchInserted = dapperConn.Execute(
+    "INSERT INTO dbo.dapper_trades VALUES (@TradeId, @Ticker, @Side, @Quantity, @Price)", batch);
+Console.WriteLine($"BATCH INSERT: {batchInserted} rows");
+
+// UPDATE
+var updated = dapperConn.Execute(
+    "UPDATE dbo.dapper_trades SET price = @Price WHERE trade_id = @TradeId",
+    new { Price = 700.00m, TradeId = "TRD_001" });
+Console.WriteLine($"UPDATE: {updated} row");
+
+// DELETE
+var deleted = dapperConn.Execute(
+    "DELETE FROM dbo.dapper_trades WHERE trade_id = @TradeId",
+    new { TradeId = "TRD_004" });
+Console.WriteLine($"DELETE: {deleted} row");
+```
+
+    INSERT: 1 row
+    BATCH INSERT: 3 rows
+    UPDATE: 1 row
+    DELETE: 1 row
+
+#### Dapper — verify trades table after INSERT/UPDATE/DELETE
+
+```csharp
+// Query the trades we just modified
+
+var dt = new DataTable();
+dt.Columns.Add("Trade ID"); dt.Columns.Add("Ticker"); dt.Columns.Add("Side");
+dt.Columns.Add("Qty"); dt.Columns.Add("Price");
+foreach (var t in dapperConn.Query<TradeRow>(
+    "SELECT trade_id AS TradeId, ticker AS Ticker, side AS Side, quantity AS Quantity, price AS Price FROM dbo.dapper_trades ORDER BY trade_id"))
+    dt.Rows.Add(t.TradeId, t.Ticker, t.Side, t.Quantity, $"{t.Price:F2}");
+
+// Cleanup
+dapperConn.Execute("DROP TABLE dbo.dapper_trades");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Trade ID</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Ticker</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Side</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Qty</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Price</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_001</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BUY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">100</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">700.00</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_002</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SELL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">75</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">245.80</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TRD_003</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">MC.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BUY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">890.20</td></tr></tbody></table>
+
+#### Dapper — aggregate queries with LINQ on results
+
+```csharp
+// Dapper returns IEnumerable<T> — full LINQ works on results
+// This is impossible with raw ADO.NET DataReader
+
+var allPrices = dapperConn.Query<OhlcvRow>(@"
+    SELECT symbol AS Symbol, date AS Date,
+           [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE date >= '2025-01-01'").ToList();
+
+// LINQ aggregation on typed objects — not possible with DataReader
+var summary = allPrices
+    .GroupBy(r => r.Symbol)
+    .Select(g => new {
+        Symbol = g.Key,
+        Days = g.Count(),
+        AvgClose = g.Average(r => r.Close),
+        MaxVolume = g.Max(r => r.Volume),
+    })
+    .OrderByDescending(s => s.AvgClose)
+    .Take(5);
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Days"); dt.Columns.Add("Avg Close"); dt.Columns.Add("Max Volume");
+foreach (var s in summary)
+    dt.Rows.Add(s.Symbol, s.Days, $"{s.AvgClose:F2}", $"{s.MaxVolume:N0}");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Days</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Avg Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Max Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">RMS.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">305</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2274.84</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">200'686</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">RHM.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">303</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1539.54</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1'665'353</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ADYEN.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">305</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1441.14</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">758'895</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">305</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">797.70</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2'619'138</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ARGX.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">305</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">618.03</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1'507'897</td></tr></tbody></table>
+
+#### Dapper — dynamic queries (no DTO needed)
+
+```csharp
+// Query without a DTO — returns dynamic objects
+// Useful for ad-hoc queries where defining a record is overkill
+
+var dynamic = dapperConn.Query(
+    "SELECT TOP 3 symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv ORDER BY volume DESC");
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Date"); dt.Columns.Add("Close"); dt.Columns.Add("Volume");
+foreach (var row in dynamic)
+    dt.Rows.Add(row.symbol, $"{row.date:yyyy-MM-dd}", $"{row.close:F2}", $"{row.volume:N0}");
+dt
+
+// dynamic = no IntelliSense, no compile-time safety
+// Use only for throwaway queries — prefer typed records for production
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-08-08</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.34</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">376'391'539</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAN.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-10-20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3.36</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">367'211'467</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-05-31</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">317'362'978</td></tr></tbody></table>
+
+#### ADO.NET vs Dapper vs Entity Framework — comparison
+
+```csharp
+// When to use what — decision guide
+
+var dt = new DataTable();
+dt.Columns.Add("Feature"); dt.Columns.Add("ADO.NET (raw)"); dt.Columns.Add("Dapper"); dt.Columns.Add("EF Core");
+dt.Rows.Add("SQL control", "Full — you write SQL", "Full — you write SQL", "LINQ — auto-generated SQL");
+dt.Rows.Add("Result type", "DataReader (untyped)", "IEnumerable<T> (typed)", "IQueryable<T> (tracked)");
+dt.Rows.Add("Mapping", "Manual reader.GetXxx()", "Auto by column name", "Auto + navigation props");
+dt.Rows.Add("Parameters", "cmd.Parameters.Add()", "new { Param = val }", "LINQ variables");
+dt.Rows.Add("LINQ on results", "No", "Yes (in-memory)", "Yes (translated to SQL)");
+dt.Rows.Add("Performance", "Fastest", "~Same as ADO.NET", "Slower (change tracking)");
+dt.Rows.Add("Batch insert", "SqlBulkCopy", "Execute(sql, list)", "AddRange + SaveChanges");
+dt.Rows.Add("Boilerplate", "Lots", "Minimal", "Minimal");
+dt.Rows.Add("Best for", "Notebooks, scripts", "Services, APIs, pipelines", "Large apps, CRUD");
+dt.Rows.Add("Python equiv", "pyodbc cursor", "pd.read_sql() → DataFrame", "SQLAlchemy ORM");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Feature</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ADO.NET (raw)</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Dapper</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">EF Core</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL control</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full — you write SQL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full — you write SQL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LINQ — auto-generated SQL</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Result type</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DataReader (untyped)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IEnumerable<T> (typed)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IQueryable<T> (tracked)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Mapping</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Manual reader.GetXxx()</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Auto by column name</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Auto + navigation props</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parameters</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">cmd.Parameters.Add()</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">new { Param = val }</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LINQ variables</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LINQ on results</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">No</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes (in-memory)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes (translated to SQL)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Performance</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Fastest</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">~Same as ADO.NET</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Slower (change tracking)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Batch insert</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SqlBulkCopy</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute(sql, list)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">AddRange + SaveChanges</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Boilerplate</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Lots</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Minimal</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Minimal</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Best for</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Notebooks, scripts</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Services, APIs, pipelines</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Large apps, CRUD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Python equiv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pyodbc cursor</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">pd.read_sql() → DataFrame</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQLAlchemy ORM</td></tr></tbody></table>
+
+## 5. Entity Framework Core — Full ORM
+
+EF Core is the **dominant ORM in .NET** — used by ~60-70% of .NET applications.
+Unlike Dapper (you write SQL, it maps results), EF Core generates SQL from LINQ
+and manages the full object lifecycle: change tracking, migrations, relationships.
+
+**How it works:**
+1. Define **entity classes** (C# classes = database tables)
+2. Define a **DbContext** (connection + table mappings + configuration)
+3. Write **LINQ queries** — EF Core translates to SQL automatically
+4. **Change tracking** — modify objects in memory, call `SaveChanges()`, EF generates INSERT/UPDATE/DELETE
+5. **Migrations** — `dotnet ef migrations add` generates SQL schema changes from code
+
+| | Dapper | EF Core |
+|---|---|---|
+| You write | SQL | LINQ |
+| SQL generated by | You | EF Core |
+| Navigation properties | No | `order.Customer.Address.City` |
+| Change tracking | No | Automatic |
+| Migrations | Manual SQL scripts | `dotnet ef migrations add` |
+| Performance | Fastest | Slower (tracking overhead) |
+| Best for | Data pipelines, complex SQL | CRUD apps, business logic |
+
+**NOTEBOOK LIMITATION:** EF Core requires `dotnet ef` CLI tools and a real project
+structure for migrations. In notebooks, we demonstrate the API patterns with an
+in-memory database. In production, use SQL Server/PostgreSQL with migrations.
+
+#### EF Core — NuGet packages and entity classes
+
+```csharp
+// EF Core setup — entities, DbContext, and in-memory provider
+//
+// Technique: Define entity classes (= tables) with properties (= columns).
+//   DbContext maps entities to tables via DbSet<T> properties.
+//   In-memory provider for notebooks; SQL Server provider for production.
+//
+// Benefits:
+//   - LINQ queries — no SQL strings, compile-time checked
+//   - Navigation properties — order.Customer.Name traverses relationships
+//   - Change tracking — modify objects, SaveChanges() generates SQL
+//   - Migrations — schema changes from code, version-controlled
+//
+// Anti-patterns:
+//   - Lazy loading without understanding N+1 queries
+//   - Not using AsNoTracking() for read-only queries
+//   - Loading entire tables into memory — use IQueryable, not ToList()
+//
+// When to use:
+//   - CRUD applications, business logic with complex relationships
+//
+// When NOT to use:
+//   - Complex analytics SQL (window functions, CTEs) — use Dapper
+//   - Bulk operations (100K+ rows) — use SqlBulkCopy or Dapper
+
+
+
+// Entity classes — each class = one database table
+// Properties = columns. Navigation properties = foreign key relationships.
+
+public class Stock
+{
+    public int Id { get; set; }
+    public string Symbol { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Sector { get; set; } = "";
+    public List<Price> Prices { get; set; } = new();  // navigation: one stock has many prices
+}
+
+public class Price
+{
+    public int Id { get; set; }
+    public int StockId { get; set; }                   // foreign key
+    public Stock Stock { get; set; } = null!;           // navigation: each price belongs to one stock
+    public DateTime Date { get; set; }
+    public double Close { get; set; }
+    public long Volume { get; set; }
+}
+
+public class Trade
+{
+    public int Id { get; set; }
+    public string TradeId { get; set; } = "";
+    public int StockId { get; set; }
+    public Stock Stock { get; set; } = null!;
+    public string Side { get; set; } = "";
+    public int Quantity { get; set; }
+    public decimal Price { get; set; }
+    public DateTime TradeDate { get; set; }
+}
+```
+
+#### EF Core — DbContext definition
+
+```csharp
+// DbContext — the bridge between C# objects and the database
+//
+// STRUCTURE:
+//   DbSet<Stock> Stocks   → maps to the "Stocks" table
+//   DbSet<Price> Prices   → maps to the "Prices" table
+//   DbSet<Trade> Trades   → maps to the "Trades" table
+//
+// OnConfiguring: chooses the database provider
+//   UseInMemoryDatabase("name")   → in-memory (for notebooks/tests)
+//   UseSqlServer(connStr)         → SQL Server (production)
+//   UseNpgsql(connStr)            → PostgreSQL
+//
+// OnModelCreating: configures relationships and constraints
+//   HasOne / WithMany   → one-to-many relationship (Stock has many Prices)
+//   HasForeignKey       → which property is the FK column
+//   HasIndex + IsUnique → unique constraint (no duplicate symbols)
+//
+// EF Core conventions:
+//   - Property named "Id" or "StockId" → auto-detected as primary key
+//   - DbSet<Stock> "Stocks" → table name = "Stocks"
+//   - Navigation property Stock + StockId → FK auto-detected
+//   - OnModelCreating overrides conventions when auto-detection isn't enough
+
+public class TradingContext : DbContext
+{
+    // Each DbSet = one table. LINQ queries on these generate SQL.
+    public DbSet<Stock> Stocks { get; set; }
+    public DbSet<Price> Prices { get; set; }
+    public DbSet<Trade> Trades { get; set; }
+
+    // Database provider — swap this line for production
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseInMemoryDatabase("TradingDemo");
+        // Production: options.UseSqlServer("Server=localhost,1434;Database=stoxx;...");
+
+    protected override void OnModelCreating(ModelBuilder model)
+    {
+        // One-to-many: one Stock has many Prices
+        // Price.StockId is the FK column, Stock.Prices is the navigation collection
+        model.Entity<Price>()
+            .HasOne(p => p.Stock)          // each Price belongs to one Stock
+            .WithMany(s => s.Prices)       // each Stock has many Prices
+            .HasForeignKey(p => p.StockId);// Price.StockId is the FK
+
+        // One-to-many: each Trade references one Stock
+        // No inverse navigation on Stock (WithMany() with no arg)
+        model.Entity<Trade>()
+            .HasOne(t => t.Stock)
+            .WithMany()                    // Stock doesn't have a Trades collection
+            .HasForeignKey(t => t.StockId);
+
+        // Unique index on Symbol — prevents duplicate tickers
+        model.Entity<Stock>()
+            .HasIndex(s => s.Symbol)
+            .IsUnique();
+    }
+}
+```
+
+#### EF Core — seed data with `Add`, `AddRange`, `SaveChanges`
+
+- **`Add(entity)`** — marks a single object for insertion. EF Core starts tracking it in the `Added` state. No SQL is executed yet.
+- **`AddRange(entities)`** — same as `Add` but for multiple objects at once. More efficient than calling `Add` in a loop.
+- **`SaveChanges()`** — flushes ALL pending changes to the database in one transaction. Generates the actual INSERT/UPDATE/DELETE SQL. Returns the number of affected rows.
+
+The pattern is always: modify objects in memory → call `SaveChanges()` once → EF generates SQL and executes in a transaction. If any statement fails, the entire transaction rolls back.
+
+```csharp
+// Create context and seed data
+// SaveChanges() generates INSERT statements automatically
+
+var db = new TradingContext();
+db.Database.EnsureDeleted();   // clean slate for re-runs
+db.Database.EnsureCreated();
+
+// Add stocks
+var asml = new Stock { Symbol = "ASML.AS", Name = "ASML Holding", Sector = "Technology" };
+var sap  = new Stock { Symbol = "SAP.DE",  Name = "SAP SE",        Sector = "Technology" };
+var mc   = new Stock { Symbol = "MC.PA",   Name = "LVMH",          Sector = "Consumer" };
+var tte  = new Stock { Symbol = "TTE.PA",  Name = "TotalEnergies",  Sector = "Energy" };
+db.Stocks.AddRange(asml, sap, mc, tte);
+db.SaveChanges();
+
+// Add prices
+var rng = new Random(42);
+foreach (var stock in new[] { asml, sap, mc, tte })
+{
+    var basePrice = stock.Symbol switch { "ASML.AS" => 700, "SAP.DE" => 240, "MC.PA" => 850, _ => 60 };
+    for (int d = 0; d < 30; d++)
+    {
+        var close = basePrice + (rng.NextDouble() - 0.5) * 20;
+        db.Prices.Add(new Price
+        {
+            StockId = stock.Id,
+            Date = new DateTime(2025, 3, 1).AddDays(d),
+            Close = Math.Round(close, 2),
+            Volume = rng.Next(500_000, 5_000_000),
+        });
+    }
+}
+db.SaveChanges();
+
+Console.WriteLine($"Seeded: {db.Stocks.Count()} stocks, {db.Prices.Count()} prices");
+```
+
+    Seeded: 4 stocks, 120 prices
+
+#### EF Core — LINQ queries (no SQL strings)
+
+EF Core translates LINQ to SQL automatically. You never write SQL —
+the compiler checks your queries at build time. Wrong property name = compile error,
+not runtime crash.
+
+```csharp
+// Simple query — WHERE + OrderBy + Take
+
+var techStocks = db.Stocks
+    .Where(s => s.Sector == "Technology")
+    .OrderBy(s => s.Symbol)
+    .ToList();
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Name"); dt.Columns.Add("Sector");
+foreach (var s in techStocks)
+    dt.Rows.Add(s.Symbol, s.Name, s.Sector);
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Sector</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML Holding</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Technology</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP SE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Technology</td></tr></tbody></table>
+
+#### EF Core — navigation properties (joins without SQL)
+
+```csharp
+// Navigation properties — traverse relationships without writing JOIN
+// stock.Prices navigates the one-to-many relationship automatically
+
+var stocksWithPrices = db.Stocks
+    .Include(s => s.Prices)    // eager load related prices (generates LEFT JOIN)
+    .OrderBy(s => s.Symbol)
+    .ToList();
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Name"); dt.Columns.Add("Price Count");
+dt.Columns.Add("Latest Close"); dt.Columns.Add("Avg Close");
+foreach (var s in stocksWithPrices)
+{
+    var latest = s.Prices.OrderByDescending(p => p.Date).FirstOrDefault();
+    var avg = s.Prices.Any() ? s.Prices.Average(p => p.Close) : 0;
+    dt.Rows.Add(s.Symbol, s.Name, s.Prices.Count, $"{latest?.Close:F2}", $"{avg:F2}");
+}
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Price Count</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Latest Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Avg Close</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML Holding</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">704.13</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">697.98</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">MC.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LVMH</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">858.81</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">849.20</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP SE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">243.02</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">238.71</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TTE.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">TotalEnergies</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">55.83</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">60.31</td></tr></tbody></table>
+
+#### EF Core — aggregate queries with GroupBy
+
+```csharp
+// GroupBy + aggregation — translated to SQL GROUP BY
+
+var sectorSummary = db.Stocks
+    .Include(s => s.Prices)
+    .ToList()   // materialize first for in-memory grouping
+    .GroupBy(s => s.Sector)
+    .Select(g => new
+    {
+        Sector = g.Key,
+        Stocks = g.Count(),
+        TotalPriceRows = g.Sum(s => s.Prices.Count),
+        AvgClose = g.SelectMany(s => s.Prices).Average(p => p.Close),
+    })
+    .OrderByDescending(x => x.AvgClose);
+
+var dt = new DataTable();
+dt.Columns.Add("Sector"); dt.Columns.Add("Stocks"); dt.Columns.Add("Price Rows"); dt.Columns.Add("Avg Close");
+foreach (var s in sectorSummary)
+    dt.Rows.Add(s.Sector, s.Stocks, s.TotalPriceRows, $"{s.AvgClose:F2}");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Sector</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Stocks</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Price Rows</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Avg Close</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Consumer</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">849.20</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Technology</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">468.34</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Energy</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">60.31</td></tr></tbody></table>
+
+#### EF Core — change tracking and `SaveChanges()`
+
+Modify objects in memory — EF Core tracks all changes and generates
+the correct INSERT/UPDATE/DELETE SQL when you call `SaveChanges()`.
+
+```csharp
+// INSERT — Add + SaveChanges generates INSERT
+db.Trades.Add(new Trade
+{
+    TradeId = "TRD_001", StockId = asml.Id,
+    Side = "BUY", Quantity = 100, Price = 685.40m,
+    TradeDate = DateTime.Today
+});
+db.SaveChanges();
+Console.WriteLine("INSERT: TRD_001 added");
+
+// UPDATE — modify a tracked entity + SaveChanges generates UPDATE
+var trade = db.Trades.First(t => t.TradeId == "TRD_001");
+trade.Price = 700.00m;
+db.SaveChanges();
+Console.WriteLine($"UPDATE: TRD_001 price -> {trade.Price}");
+
+// DELETE — Remove + SaveChanges generates DELETE
+db.Trades.Remove(trade);
+db.SaveChanges();
+Console.WriteLine("DELETE: TRD_001 removed");
+
+Console.WriteLine($"Trades remaining: {db.Trades.Count()}");
+```
+
+    INSERT: TRD_001 added
+    UPDATE: TRD_001 price -> 700.00
+    DELETE: TRD_001 removed
+    Trades remaining: 0
+
+#### EF Core — `AsNoTracking()` for read-only performance
+
+```csharp
+// AsNoTracking() — skip change tracking for read-only queries
+// 2-3x faster for large result sets because EF doesn't snapshot each entity
+
+var readOnly = db.Prices
+    .AsNoTracking()                        // no change tracking overhead
+    .Where(p => p.Close > 700)
+    .OrderByDescending(p => p.Close)
+    .Take(5)
+    .ToList();
+
+var dt = new DataTable();
+dt.Columns.Add("Stock ID"); dt.Columns.Add("Date"); dt.Columns.Add("Close"); dt.Columns.Add("Volume");
+foreach (var p in readOnly)
+    dt.Rows.Add(p.StockId, $"{p.Date:yyyy-MM-dd}", $"{p.Close:F2}", $"{p.Volume:N0}");
+dt
+
+// RULE: always use AsNoTracking() for queries that only READ data
+// Only skip it when you need to modify and SaveChanges() the entities
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Stock ID</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2025-03-06</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">859.87</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1'046'270</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2025-03-18</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">859.75</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4'017'367</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2025-03-27</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">858.95</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4'146'515</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2025-03-30</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">858.81</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3'740'448</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2025-03-12</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">858.52</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4'303'796</td></tr></tbody></table>
+
+#### EF Core — raw SQL escape hatch with `FromSqlRaw`
+
+```csharp
+// FromSqlRaw — raw SQL escape hatch inside EF Core
+//
+// NOT AVAILABLE with InMemory provider — requires a relational database
+// (SQL Server, PostgreSQL, SQLite file). Shown as reference for production use.
+//
+// USAGE (with SQL Server provider):
+//   var results = db.Stocks
+//       .FromSqlRaw("SELECT * FROM Stocks WHERE Sector = {0}", "Technology")
+//       .AsNoTracking()
+//       .ToList();
+//
+// KEY RULES:
+//   - Can only return entity types (must match a DbSet<T>)
+//   - Use {0}, {1} placeholders — auto-parameterised (safe from injection)
+//   - NEVER use string interpolation ($"...{var}...") — injection risk
+//   - Can chain LINQ after: .FromSqlRaw(sql).Where(s => s.Active).OrderBy(...)
+//   - Results are tracked by default — add .AsNoTracking() for read-only
+//
+// FromSqlInterpolated — same but with $ interpolation (auto-parameterised):
+//   var sector = "Technology";
+//   db.Stocks.FromSqlInterpolated($"SELECT * FROM Stocks WHERE Sector = {sector}")
+//   → safe: {sector} becomes @p0 parameter, NOT string concatenation
+//
+// WHEN TO USE:
+//   - Complex queries LINQ can't express (CTEs, PIVOT, window functions)
+//   - Stored procedures: db.Stocks.FromSqlRaw("EXEC sp_GetActiveStocks")
+//   - Performance-critical queries where hand-tuned SQL matters
+//
+// ALTERNATIVE: use Dapper alongside EF Core for raw SQL queries
+//   var results = conn.Query<StockDto>(sql, new { Sector = "Technology" });
+
+// Demo with LINQ instead (works with InMemory provider)
+var techStocks = db.Stocks
+    .Where(s => s.Sector == "Technology")    // LINQ → generates WHERE clause
+    .AsNoTracking()
+    .ToList();
+
+Console.WriteLine("=== LINQ query (InMemory) — FromSqlRaw requires relational provider ===");
+foreach (var s in techStocks)
+    Console.WriteLine($"  {s.Symbol,-10} {s.Name,-20} {s.Sector}");
+```
+
+    === LINQ query (InMemory) — FromSqlRaw requires relational provider ===
+      ASML.AS    ASML Holding         Technology
+      SAP.DE     SAP SE               Technology
+
+#### EF Core — migrations workflow (reference)
+
+Migrations are the killer feature of EF Core — schema changes are version-controlled
+C# code, not ad-hoc SQL scripts. Not executable in notebooks (requires project + CLI),
+but this is the production workflow.
+
+```csharp
+// EF Core migrations workflow — reference (not executable in notebooks)
+//
+// SETUP:
+//   dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+//   dotnet add package Microsoft.EntityFrameworkCore.Design
+//   dotnet tool install dotnet-ef
+//
+// WORKFLOW:
+//   1. Modify entity classes (add property, change type, add table)
+//   2. dotnet ef migrations add AddVolumeColumn
+//      → generates C# migration file with Up() and Down() methods
+//   3. dotnet ef database update
+//      → applies pending migrations to the database
+//   4. dotnet ef migrations script
+//      → generates SQL script (for DBA review in production)
+//
+// PRODUCTION CONNECTION (SQL Server):
+//   protected override void OnConfiguring(DbContextOptionsBuilder options)
+//       => options.UseSqlServer(
+//           "Server=localhost,1434;Database=stoxx;User Id=sa;Password=...;");
+//
+// MIGRATION BEST PRACTICES:
+//   - One migration per logical change (not one per deployment)
+//   - Always test Down() — rollbacks must work
+//   - Generate SQL scripts for production (dotnet ef migrations script)
+//   - Never edit a migration after it has been applied
+//   - Use HasData() for seed data that should be in every environment
+//
+// EXAMPLE MIGRATION (auto-generated):
+//   public partial class AddVolumeColumn : Migration
+//   {
+//       protected override void Up(MigrationBuilder migrationBuilder)
+//           => migrationBuilder.AddColumn<long>("Volume", "Prices");
+//
+//       protected override void Down(MigrationBuilder migrationBuilder)
+//           => migrationBuilder.DropColumn("Volume", "Prices");
+//   }
+```
+
+#### EF Core — when to use EF Core vs Dapper
+
+```csharp
+// Decision guide — EF Core vs Dapper
+
+var dt = new DataTable();
+dt.Columns.Add("Scenario"); dt.Columns.Add("Use"); dt.Columns.Add("Why");
+dt.Rows.Add("CRUD app with 50 tables", "EF Core", "Navigation properties, migrations, change tracking");
+dt.Rows.Add("Complex analytics query", "Dapper", "Window functions, CTEs, hand-tuned SQL");
+dt.Rows.Add("Bulk insert 100K rows", "Dapper + SqlBulkCopy", "EF SaveChanges is row-by-row");
+dt.Rows.Add("Microservice API", "Either", "Dapper for perf, EF Core for productivity");
+dt.Rows.Add("Schema migrations", "EF Core", "dotnet ef migrations — version-controlled schema");
+dt.Rows.Add("Notebook / script", "Dapper or ADO.NET", "No project structure needed");
+dt.Rows.Add("Read-only dashboard", "Dapper", "AsNoTracking helps but Dapper is still faster");
+dt.Rows.Add("Multi-table transaction", "EF Core", "SaveChanges wraps all changes in one transaction");
+dt.Rows.Add("Cross-database query", "Dapper", "EF Core is one DbContext per database");
+dt.Rows.Add("Both in same project", "Yes — common", "EF for CRUD, Dapper for reporting queries");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Scenario</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Use</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Why</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CRUD app with 50 tables</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Navigation properties, migrations, change tracking</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Complex analytics query</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Window functions, CTEs, hand-tuned SQL</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Bulk insert 100K rows</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper + SqlBulkCopy</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF SaveChanges is row-by-row</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Microservice API</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Either</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper for perf, EF Core for productivity</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Schema migrations</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dotnet ef migrations — version-controlled schema</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Notebook / script</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper or ADO.NET</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">No project structure needed</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Read-only dashboard</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">AsNoTracking helps but Dapper is still faster</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Multi-table transaction</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SaveChanges wraps all changes in one transaction</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Cross-database query</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Dapper</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF Core is one DbContext per database</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Both in same project</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Yes — common</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">EF for CRUD, Dapper for reporting queries</td></tr></tbody></table>
+
+## 6. DuckDB — Embedded Analytical SQL Database
+
+DuckDB is an **embedded columnar database** — no server, runs in-process.
+Full SQL (window functions, CTEs, QUALIFY, PIVOT) and direct file queries.
+
+This section demonstrates **all the ways to interact with DuckDB from C#**:
+- ADO.NET (`DuckDBConnection`, `DuckDBCommand`, `DuckDBDataReader`)
+- DuckDB Appender (fastest bulk loader)
+- Dapper (typed query mapping)
+- Performance comparison vs SQL Server
+
+### 6.1 DuckDB with ADO.NET
+
+#### DuckDB ADO.NET — open in-memory connection and CREATE TABLE with typed schema
+
+```csharp
+// DuckDB with ADO.NET — same pattern as SQLite and SqlClient
+//
+// Technique: DuckDBConnection/DuckDBCommand/DuckDBDataReader implement
+//   the standard ADO.NET interfaces. Identical API to SQLite —
+//   if you know one, you know the other.
+//
+// Benefits:
+//   - Same API as SQLite/SqlClient — no new patterns to learn
+//   - Columnar engine — 10-100x faster for analytical queries
+//   - Full SQL:2003 — window functions, CTEs, QUALIFY, PIVOT
+//
+// Anti-patterns:
+//   - DuckDB for OLTP (frequent row updates) — use SQL Server
+//   - Concurrent writers — DuckDB is single-writer
+//
+// When to use:
+//   - Analytics, notebooks, ETL validation, file queries
+//
+// When NOT to use:
+//   - Multi-user transactional systems — use SQL Server/PostgreSQL
+
+var duck = new DuckDBConnection("Data Source=:memory:");
+duck.Open();
+
+var dkCmd = duck.CreateCommand();
+dkCmd.CommandText = @"
+    CREATE OR REPLACE TABLE ohlcv (
+        symbol VARCHAR NOT NULL, date DATE NOT NULL,
+        open DOUBLE, high DOUBLE, low DOUBLE, close DOUBLE,
+        volume BIGINT
+    )";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("DuckDB connected + table created");
+```
+
+    DuckDB connected + table created
+
+#### DuckDB ADO.NET — INSERT rows from SQL Server using parameterised DuckDBCommand
+
+```csharp
+// Read from SQL Server with ADO.NET, insert into DuckDB with parameterised INSERT
+
+var conn = new SqlConnection("Server=localhost,1434;Database=stoxx;User Id=sa;Password=EsgDev2026Pass1;Encrypt=True;TrustServerCertificate=True;");
+conn.Open();
+
+var sqlCmd = new SqlCommand(
+    "SELECT symbol, date, [open], high, low, [close], volume FROM silver.eurostoxx50_ohlcv", conn);
+
+int rowCount = 0;
+using (var reader = sqlCmd.ExecuteReader())
+{
+    var ins = duck.CreateCommand();
+    while (reader.Read())
+    {
+        ins.CommandText = "INSERT INTO ohlcv VALUES ($1, $2, $3, $4, $5, $6, $7)";
+        ins.Parameters.Clear();
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetString(0) });
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetDateTime(1) });
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetDouble(2) });
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetDouble(3) });
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetDouble(4) });
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetDouble(5) });
+        ins.Parameters.Add(new DuckDBParameter { Value = reader.GetInt64(6) });
+        ins.ExecuteNonQuery();
+        rowCount++;
+    }
+}
+
+dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv";
+Console.WriteLine($"Loaded {dkCmd.ExecuteScalar()} rows from SQL Server");
+```
+
+    Loaded 66355 rows from SQL Server
+
+#### DuckDB ADO.NET — SELECT rows into DataTable with ExecuteReader
+
+```csharp
+// ExecuteReader — standard row-by-row iteration
+
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT symbol, date, close, volume FROM ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">12-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.52</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">806722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">11-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.44</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2953782</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.6</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3187246</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">09-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">171.88</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1990823</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">06-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">172.74</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3347221</td></tr></tbody></table>
+
+#### DuckDB ADO.NET — get single values with ExecuteScalar (COUNT, MAX)
+
+```csharp
+// ExecuteScalar — returns a single value (COUNT, MAX, etc.)
+
+dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv";
+Console.WriteLine($"Row count:      {dkCmd.ExecuteScalar()}");
+
+dkCmd.CommandText = "SELECT COUNT(DISTINCT symbol) FROM ohlcv";
+Console.WriteLine($"Distinct stocks: {dkCmd.ExecuteScalar()}");
+
+dkCmd.CommandText = "SELECT MAX(close) FROM ohlcv";
+Console.WriteLine($"Max close:      {dkCmd.ExecuteScalar()}");
+```
+
+    Row count:      66355
+    Distinct stocks: 50
+    Max close:      2839
+
+#### DuckDB ADO.NET — filter rows with $1 $2 positional parameters
+
+```csharp
+// $1, $2 positional parameters — safe from injection
+
+dkCmd.CommandText = "SELECT symbol, date, close FROM ohlcv WHERE symbol = $1 AND close > $2 ORDER BY close DESC LIMIT 5";
+dkCmd.Parameters.Clear();
+dkCmd.Parameters.Add(new DuckDBParameter { Value = "ASML.AS" });
+dkCmd.Parameters.Add(new DuckDBParameter { Value = 700.0 });
+
+var dt = new DataTable();
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">25-Feb-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1288.4</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">24-Feb-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1263.4</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20-Feb-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1255.6</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">23-Feb-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1249.2</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18-Feb-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1244.8</td></tr></tbody></table>
+
+#### DuckDB ADO.NET — UPDATE a row with ExecuteNonQuery
+
+```csharp
+// UPDATE — same SQL syntax
+
+dkCmd.CommandText = "UPDATE ohlcv SET close = 999.99 WHERE symbol = 'SAP.DE' AND date = (SELECT MAX(date) FROM ohlcv WHERE symbol = 'SAP.DE')";
+dkCmd.Parameters.Clear();
+Console.WriteLine($"UPDATE: {dkCmd.ExecuteNonQuery()} row");
+
+// Verify
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT symbol, date, close FROM ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 3";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+    UPDATE: 1 row
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">12-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">999.99</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">11-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.44</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.6</td></tr></tbody></table>
+
+#### DuckDB ADO.NET — DELETE rows with ExecuteNonQuery
+
+```csharp
+// DELETE
+
+dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv WHERE symbol = 'SAP.DE'";
+Console.WriteLine($"Before DELETE: {dkCmd.ExecuteScalar()} SAP.DE rows");
+
+dkCmd.CommandText = "DELETE FROM ohlcv WHERE symbol = 'SAP.DE' AND date < '2023-01-01'";
+Console.WriteLine($"DELETE: {dkCmd.ExecuteNonQuery()} rows");
+
+dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv WHERE symbol = 'SAP.DE'";
+Console.WriteLine($"After DELETE:  {dkCmd.ExecuteScalar()} SAP.DE rows");
+```
+
+    Before DELETE: 1324 SAP.DE rows
+    DELETE: 512 rows
+    After DELETE:  812 SAP.DE rows
+
+#### DuckDB ADO.NET — inspect schema with DESCRIBE and information_schema
+
+```csharp
+// Schema inspection — same as PostgreSQL
+
+Console.WriteLine("=== DESCRIBE ===");
+var dt = new DataTable();
+dkCmd.CommandText = "DESCRIBE ohlcv";
+dkCmd.Parameters.Clear();
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+    === DESCRIBE ===
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">null</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">key</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">default</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">extra</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NO</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NO</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">high</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">low</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr></tbody></table>
+
+#### DuckDB ADO.NET — show query plan with EXPLAIN ANALYZE
+
+```csharp
+// EXPLAIN ANALYZE — query plan with actual timing
+
+dkCmd.CommandText = "EXPLAIN ANALYZE SELECT symbol, AVG(close) FROM ohlcv GROUP BY symbol";
+using (var reader = dkCmd.ExecuteReader())
+    while (reader.Read())
+        Console.WriteLine(reader.GetString(1));
+```
+
+    ┌─────────────────────────────────────┐
+    │┌───────────────────────────────────┐│
+    ││    Query Profiling Information    ││
+    │└───────────────────────────────────┘│
+    └─────────────────────────────────────┘
+    EXPLAIN ANALYZE SELECT symbol, AVG(close) FROM ohlcv GROUP BY symbol
+    ┌────────────────────────────────────────────────┐
+    │┌──────────────────────────────────────────────┐│
+    ││              Total Time: 0.0022s             ││
+    │└──────────────────────────────────────────────┘│
+    └────────────────────────────────────────────────┘
+    ┌───────────────────────────┐
+    │           QUERY           │
+    └─────────────┬─────────────┘
+    ┌─────────────┴─────────────┐
+    │      EXPLAIN_ANALYZE      │
+    │    ────────────────────   │
+    │           0 Rows          │
+    │          (0.00s)          │
+    └─────────────┬─────────────┘
+    ┌─────────────┴─────────────┐
+    │         PROJECTION        │
+    │    ────────────────────   │
+    │__internal_decompress_strin│
+    │           g(#0)           │
+    │             #1            │
+    │                           │
+    │          50 Rows          │
+    │          (0.00s)          │
+    └─────────────┬─────────────┘
+    ┌─────────────┴─────────────┐
+    │       HASH_GROUP_BY       │
+    │    ────────────────────   │
+    │         Groups: #0        │
+    │    Aggregates: avg(#1)    │
+    │                           │
+    │          50 Rows          │
+    │          (0.00s)          │
+    └─────────────┬─────────────┘
+    ┌─────────────┴─────────────┐
+    │         PROJECTION        │
+    │    ────────────────────   │
+    │           symbol          │
+    │           close           │
+    │                           │
+    │         65843 Rows        │
+    │          (0.00s)          │
+    └─────────────┬─────────────┘
+    ┌─────────────┴─────────────┐
+    │         PROJECTION        │
+    │    ────────────────────   │
+    │__internal_compress_string_│
+    │        hugeint(#0)        │
+    │             #1            │
+    │                           │
+    │         65843 Rows        │
+    │          (0.00s)          │
+    └─────────────┬─────────────┘
+    ┌─────────────┴─────────────┐
+    │         TABLE_SCAN        │
+    │    ────────────────────   │
+    │        Table: ohlcv       │
+    │   Type: Sequential Scan   │
+    │                           │
+    │        Projections:       │
+    │           symbol          │
+    │           close           │
+    │                           │
+    │         65843 Rows        │
+    │          (0.00s)          │
+    └───────────────────────────┘
+
+### 6.2 DuckDB Appender — fastest bulk loader
+
+#### DuckDB Appender — INSERT rows without SQL using CreateRow and AppendValue
+
+```csharp
+// DuckDB Appender — writes directly to columnar storage
+//
+// Technique: CreateAppender("table") returns a bulk writer that
+//   bypasses SQL parsing. CreateRow().AppendValue().EndRow() per row.
+//   Close() flushes. 10-100x faster than parameterised INSERT.
+//
+// Benefits:
+//   - Fastest way to load data into DuckDB
+//   - No SQL parsing per row — direct columnar write
+//   - Type-safe — AppendValue checks types
+//
+// When to use:
+//   - Bulk loading from any source (SQL Server, CSV, API)
+//
+// When NOT to use:
+//   - Single row inserts — regular INSERT is fine
+
+// Create a fresh table for the appender demo
+dkCmd.CommandText = "CREATE OR REPLACE TABLE appender_demo (symbol VARCHAR, date DATE, close DOUBLE, volume BIGINT)";
+dkCmd.Parameters.Clear();
+dkCmd.ExecuteNonQuery();
+
+using (var appender = duck.CreateAppender("appender_demo"))
+{
+    var row = appender.CreateRow();
+    row.AppendValue("ASML.AS").AppendValue(new DateOnly(2025, 3, 15)).AppendValue(685.40).AppendValue(2500000L);
+    row.EndRow();
+
+    row = appender.CreateRow();
+    row.AppendValue("SAP.DE").AppendValue(new DateOnly(2025, 3, 15)).AppendValue(245.80).AppendValue(1800000L);
+    row.EndRow();
+
+    row = appender.CreateRow();
+    row.AppendValue("MC.PA").AppendValue(new DateOnly(2025, 3, 15)).AppendValue(890.20).AppendValue(900000L);
+    row.EndRow();
+}
+
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT * FROM appender_demo";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">15-Mar-25</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">685.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2500000</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">15-Mar-25</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">245.8</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1800000</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">MC.PA</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">15-Mar-25</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">890.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">900000</td></tr></tbody></table>
+
+#### DuckDB Appender — stream SqlDataReader into DuckDB with bulk CreateRow loop
+
+```csharp
+// Appender bulk load — stream from SqlDataReader directly into DuckDB
+
+dkCmd.CommandText = "CREATE OR REPLACE TABLE ohlcv_fast AS SELECT * FROM ohlcv LIMIT 0";
+dkCmd.ExecuteNonQuery();
+
+var sw = System.Diagnostics.Stopwatch.StartNew();
+var bulkCmd = new SqlCommand(
+    "SELECT symbol, date, [open], high, low, [close], volume FROM silver.eurostoxx50_ohlcv", conn);
+
+int bulkCount = 0;
+using (var reader = bulkCmd.ExecuteReader())
+using (var appender = duck.CreateAppender("ohlcv_fast"))
+{
+    while (reader.Read())
+    {
+        var row = appender.CreateRow();
+        row.AppendValue(reader.GetString(0));
+        row.AppendValue(DateOnly.FromDateTime(reader.GetDateTime(1)));
+        row.AppendValue(reader.GetDouble(2));
+        row.AppendValue(reader.GetDouble(3));
+        row.AppendValue(reader.GetDouble(4));
+        row.AppendValue(reader.GetDouble(5));
+        row.AppendValue(reader.GetInt64(6));
+        row.EndRow();
+        bulkCount++;
+    }
+}
+sw.Stop();
+
+Console.WriteLine($"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms");
+```
+
+    Appender: loaded 66355 rows in 62 ms
+
+### 6.3 DuckDB with Dapper
+
+#### DuckDB Dapper — define record DTO for typed mapping
+
+```csharp
+// Record DTO for Dapper typed queries against DuckDB
+
+record DuckOhlcv(string Symbol, string Date, double Close, long Volume);
+```
+
+#### DuckDB Dapper — SELECT into typed records with Query<T>
+
+```csharp
+// Dapper works with DuckDB — same as SQL Server or SQLite
+// DuckDBConnection implements DbConnection, so Dapper recognises it
+
+var top5 = duck.Query<DuckOhlcv>(
+    "SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume FROM ohlcv ORDER BY volume DESC LIMIT 5");
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Date"); dt.Columns.Add("Close"); dt.Columns.Add("Volume");
+foreach (var r in top5)
+    dt.Rows.Add(r.Symbol, r.Date, $"{r.Close:F2}", $"{r.Volume:N0}");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-08-08</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.34</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">376'391'539</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAN.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-10-20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3.36</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">367'211'467</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-05-31</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">317'362'978</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-03-13</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2.33</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">311'886'033</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAN.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-11-03</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3.31</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">306'973'344</td></tr></tbody></table>
+
+#### DuckDB Dapper — filter with anonymous object parameters (@Symbol, @MinClose)
+
+```csharp
+// Dapper with DuckDB — parameterised queries
+//
+// LIMITATION: DuckDB uses $1 $2 positional params, not @named.
+// Dapper sends @name which DuckDB interprets as a type cast operator.
+// Workaround: use string interpolation (safe when values are not user input)
+// or use ADO.NET with $1 positional params for user-facing queries.
+
+var symbol = "ASML.AS";
+var minClose = 700.0;
+var filtered = duck.Query<DuckOhlcv>(
+    $"SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume "
+    + $"FROM ohlcv WHERE symbol = '{symbol}' AND close > {minClose} ORDER BY close DESC LIMIT 5");
+
+var dt = new DataTable();
+dt.Columns.Add("Symbol"); dt.Columns.Add("Date"); dt.Columns.Add("Close"); dt.Columns.Add("Volume");
+foreach (var r in filtered)
+    dt.Rows.Add(r.Symbol, r.Date, $"{r.Close:F2}", $"{r.Volume:N0}");
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-02-25</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1288.40</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">514'749</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-02-24</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1263.40</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">690'480</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-02-20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1255.60</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">565'504</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-02-23</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1249.20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">479'494</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ASML.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-02-18</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1244.80</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">523'222</td></tr></tbody></table>
+
+#### DuckDB Dapper — INSERT, UPDATE, DELETE with Execute and anonymous objects
+
+```csharp
+// Dapper Execute for INSERT/UPDATE/DELETE
+// DuckDB does not support @named params — use literal values
+
+// INSERT
+var inserted = duck.Execute(
+    "INSERT INTO ohlcv VALUES ('TEST.XX', '2025-01-01', 100.0, 105.0, 95.0, 102.0, 1000000)");
+Console.WriteLine($"Dapper INSERT: {inserted} row");
+
+// UPDATE
+var updated = duck.Execute(
+    "UPDATE ohlcv SET close = 110.0 WHERE symbol = 'TEST.XX'");
+Console.WriteLine($"Dapper UPDATE: {updated} row");
+
+// DELETE
+var deleted = duck.Execute(
+    "DELETE FROM ohlcv WHERE symbol = 'TEST.XX'");
+Console.WriteLine($"Dapper DELETE: {deleted} row");
+```
+
+    Dapper INSERT: 1 row
+    Dapper UPDATE: 1 row
+    Dapper DELETE: 1 row
+
+#### DuckDB Dapper — SELECT single row with QueryFirst<T> and single value with ExecuteScalar
+
+```csharp
+// QueryFirst — single row (no @params, DuckDB limitation)
+
+var latest = duck.QueryFirst<DuckOhlcv>(
+    "SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume "
+    + "FROM ohlcv WHERE symbol = 'ASML.AS' ORDER BY date DESC LIMIT 1");
+Console.WriteLine($"QueryFirst: {latest.Symbol} | {latest.Date} | {latest.Close:F2}");
+
+// ExecuteScalar
+var count = duck.ExecuteScalar<long>("SELECT COUNT(*) FROM ohlcv");
+Console.WriteLine($"ExecuteScalar: {count} rows");
+```
+
+    QueryFirst: ASML.AS | 2026-03-12 | 1190.80
+    ExecuteScalar: 65843 rows
+
+### 6.4 DuckDB-Specific SQL Features
+
+#### DuckDB SQL — export query results to Parquet and CSV with COPY TO
+
+```csharp
+// COPY TO — export query results to file
+
+dkCmd.CommandText = @"
+    COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
+          FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
+    TO 'C:/Users/aperi/DEV/LANG/data/duckdb_export.parquet' (FORMAT PARQUET)";
+dkCmd.Parameters.Clear();
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Exported to duckdb_export.parquet");
+
+dkCmd.CommandText = @"
+    COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
+          FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
+    TO 'C:/Users/aperi/DEV/LANG/data/duckdb_export.csv' (FORMAT CSV, HEADER)";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Exported to duckdb_export.csv");
+```
+
+    Exported to duckdb_export.parquet
+    Exported to duckdb_export.csv
+
+#### DuckDB SQL — load data from Parquet file with INSERT INTO ... SELECT FROM
+
+```csharp
+// Load data from Parquet file into a new DuckDB table
+// CREATE TABLE AS SELECT auto-detects schema from the file
+
+dkCmd.CommandText = "CREATE OR REPLACE TABLE from_parquet AS SELECT * FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'";
+dkCmd.Parameters.Clear();
+dkCmd.ExecuteNonQuery();
+
+dkCmd.CommandText = "SELECT COUNT(*) FROM from_parquet";
+Console.WriteLine($"Loaded from Parquet: {dkCmd.ExecuteScalar()} rows");
+
+// Show auto-detected schema
+var dt = new DataTable();
+dkCmd.CommandText = "DESCRIBE from_parquet";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+    Loaded from Parquet: 66355 rows
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">null</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">key</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">default</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">extra</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">id</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">high</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">low</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">adj_close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dividends</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stock_splits</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">is_filled</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BOOLEAN</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr></tbody></table>
+
+#### DuckDB SQL — create table directly from CSV file with CREATE TABLE AS SELECT
+
+```csharp
+// One-liner: create table directly from a file
+
+dkCmd.CommandText = "CREATE OR REPLACE TABLE ohlcv_from_csv AS SELECT * FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv'";
+dkCmd.ExecuteNonQuery();
+
+dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv_from_csv";
+Console.WriteLine($"Created from CSV: {dkCmd.ExecuteScalar()} rows");
+
+dkCmd.CommandText = "DESCRIBE ohlcv_from_csv";
+var dt = new DataTable();
+dt.Load(dkCmd.ExecuteReader());
+dt
+
+// DuckDB auto-detects column types from the CSV content
+```
+
+    Created from CSV: 66355 rows
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">null</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">key</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">default</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">extra</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">id</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">high</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">low</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">adj_close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">dividends</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stock_splits</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">is_filled</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BOOLEAN</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">YES</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td></tr></tbody></table>
+
+#### DuckDB SQL — profile all columns with SUMMARIZE (min, max, avg, nulls)
+
+```csharp
+// SUMMARIZE — min, max, avg, nulls, distinct per column in one call
+
+var dt = new DataTable();
+dkCmd.CommandText = "SUMMARIZE ohlcv";
+dt.Load(dkCmd.ExecuteReader());
+dt
+
+// Equivalent of pandas df.describe() in one SQL command
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">min</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">max</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">approx_unique</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">avg</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">std</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">q25</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">q50</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">q75</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">count</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">null_percentage</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">WKL.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-04</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2026-03-12</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1516</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-08-09 13:12:43.762283</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent"></td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2022-04-25</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2023-08-10</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2024-11-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.601</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2926.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">25981</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">197.74364532144514</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">364.4699500693946</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">29.516213068894928</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">70.31475017274542</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">188.63608762992362</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">high</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.6628</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2957.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">30967</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">200.07710156888447</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">369.2103309370757</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">29.899639613590537</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">71.04163364730812</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">190.78985690530178</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">low</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.5842</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2813.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">34449</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">195.27775719058997</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">359.3127051878782</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">29.291640677307946</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">69.50168287298162</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">186.0791768916689</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1.6066</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2839.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">31506</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">197.74997440122425</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">364.3846830497668</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">29.47347149787374</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">69.66141927075263</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">188.31922598476882</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">376391539</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">75668</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">5971114.79628814</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16215225.87082861</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">505631</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1403981</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4116754</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">65843</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td></tr></tbody></table>
+
+#### DuckDB SQL — reference of DuckDB-specific features (QUALIFY, PIVOT, EXCLUDE, SAMPLE)
+
+```csharp
+// DuckDB-specific SQL — quick reference
+//
+// QUALIFY   — filter on window function result (no CTE needed)
+//   SELECT *, ROW_NUMBER() OVER (...) AS rn FROM t QUALIFY rn <= 3
+//
+// PIVOT / UNPIVOT — rows ↔ columns
+//   PIVOT t ON category USING SUM(amount)
+//
+// EXCLUDE / REPLACE in SELECT
+//   SELECT * EXCLUDE (volume) FROM ohlcv
+//   SELECT * REPLACE (ROUND(close, 2) AS close) FROM ohlcv
+//
+// SAMPLE — random sampling
+//   SELECT * FROM ohlcv USING SAMPLE 10%
+//
+// LIST / STRUCT / MAP types
+//   SELECT symbol, LIST(close ORDER BY date) FROM ohlcv GROUP BY symbol
+//
+// CREATE OR REPLACE — idempotent DDL
+// DESCRIBE / SUMMARIZE — schema + data profiling
+// COPY FROM / TO — bulk import/export (Parquet, CSV, JSON)
+// Direct file queries: SELECT * FROM 'file.parquet'
+
+Console.WriteLine("See comments above for DuckDB-specific SQL features");
+```
+
+    See comments above for DuckDB-specific SQL features
+
+### 6.5 DuckDB Indexes and Tuning
+
+#### DuckDB — CREATE INDEX (ART index for point lookups)
+
+```csharp
+// DuckDB indexes are optional — the columnar engine is already fast for scans.
+// Indexes use ART (Adaptive Radix Tree) — different from SQL Server B-tree.
+// They speed up equality filters (WHERE symbol = ?) but NOT range scans.
+//
+// DuckDB also uses zone maps (min/max per row group) automatically —
+// these give free predicate pushdown without explicit indexes.
+
+dkCmd.CommandText = "CREATE INDEX idx_ohlcv_symbol ON ohlcv(symbol)";
+dkCmd.Parameters.Clear();
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Created: idx_ohlcv_symbol (ART index)");
+
+// Unique index
+dkCmd.CommandText = "CREATE UNIQUE INDEX idx_ohlcv_sym_date ON ohlcv(symbol, date)";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Created: idx_ohlcv_sym_date (UNIQUE, composite)");
+```
+
+    Created: idx_ohlcv_symbol (ART index)
+    Created: idx_ohlcv_sym_date (UNIQUE, composite)
+
+#### DuckDB — list all indexes
+
+```csharp
+// List indexes on a table
+
+var dt = new DataTable();
+dkCmd.CommandText = @"
+    SELECT index_name, table_name, is_unique
+    FROM duckdb_indexes()
+    ORDER BY table_name, index_name";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">index_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">table_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">is_unique</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">idx_ohlcv_sym_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">True</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">idx_ohlcv_symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr></tbody></table>
+
+#### DuckDB — DROP INDEX
+
+```csharp
+// Drop an index
+
+dkCmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Dropped: idx_ohlcv_symbol");
+
+// Verify
+dkCmd.CommandText = "SELECT index_name FROM duckdb_indexes()";
+using (var r = dkCmd.ExecuteReader())
+    while (r.Read())
+        Console.WriteLine($"  Remaining: {r.GetString(0)}");
+```
+
+    Dropped: idx_ohlcv_symbol
+      Remaining: idx_ohlcv_sym_date
+
+#### DuckDB — PRAGMA database_size and memory usage
+
+```csharp
+// Database size and memory usage
+
+var dt = new DataTable();
+dkCmd.CommandText = "CALL pragma_database_size()";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">database_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">database_size</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">block_size</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">total_blocks</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">used_blocks</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">free_blocks</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">wal_size</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">memory_usage</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">memory_limit</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">memory</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0 bytes</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0 bytes</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">31.2 MiB</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50.0 GiB</td></tr></tbody></table>
+
+#### DuckDB — pragma_storage_info — compression and row groups per column
+
+```csharp
+// Storage info — row groups, compression, and size per column
+
+var storageInfo = new DataTable();
+dkCmd.CommandText = "CALL pragma_storage_info('ohlcv')";
+storageInfo.Load(dkCmd.ExecuteReader());
+
+// Remove stats column (shown separately) and any all-null columns
+var clean = storageInfo.Copy();
+var dropCols = new List<string>();
+foreach (DataColumn col in clean.Columns)
+{
+    if (col.ColumnName == "stats") { dropCols.Add(col.ColumnName); continue; }
+    if (clean.AsEnumerable().All(r => r[col] == DBNull.Value || r[col]?.ToString() == ""))
+        dropCols.Add(col.ColumnName);
+}
+foreach (var col in dropCols) clean.Columns.Remove(col);
+clean.AsEnumerable().Take(10).CopyToDataTable()
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">row_group_id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_path</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">segment_id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">segment_type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">start</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">count</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">compression</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">has_updates</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">persistent</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3276</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3276</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">26538</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">29814</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">25764</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">55578</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10778</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[0, 0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16384</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[0, 0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16384</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">49972</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[1]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2048</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[1]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2048</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">64308</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[1, 0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16384</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[1, 0]</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16384</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">49972</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Uncompressed</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">False</td></tr></tbody></table>
+
+#### DuckDB — zone map stats per row group and segment
+
+**Row group**: DuckDB splits tables into chunks of ~122K rows called row groups.
+Each row group is independent — columns are stored and compressed separately within it.
+If your table has < 122K rows, everything is in row_group_id = 0.
+
+**Segment**: Within a row group, each column is further split into segments —
+compression blocks that DuckDB manages independently. Each segment has its own
+zone map (min/max stats) and compression type. DuckDB uses these zone maps for
+predicate pushdown: `WHERE close > 500` skips segments where `max(close) < 500`
+without reading any data.
+
+Hierarchy: **Table → Row Group (122K rows) → Column → Segment (compression block + zone map)**
+
+```csharp
+// Storage stats — zone map min/max per column per segment
+//
+// WHAT IS A SEGMENT?
+//   Within each row group, each column is split into segments —
+//   compression blocks that DuckDB manages independently.
+//   Each segment has its own zone map (min/max) and compression type.
+//
+//   Row Group 0 (all rows, since < 122K)
+//    └─ Column "symbol"
+//        ├─ Segment 0: Min ASML.AS, Max RMS.PA (data block)
+//        ├─ Segment 1: Min ABI.BR, Max UCG.MI (data block)
+//        ├─ Segment 2: Min BAS.DE, Max VOW.DE (data block)
+//        ├─ Segment 3: dictionary metadata (no min/max)
+//        └─ ...
+//
+//   When you query WHERE symbol = 'SAP.DE', DuckDB checks each segment's
+//   zone map and skips segments where SAP.DE can't exist.
+//   Entries with only [Has Null/No Null] are dictionary/metadata segments.
+
+var statsOnly = new DataTable();
+statsOnly.Columns.Add("row_group_id");
+statsOnly.Columns.Add("column_name");
+statsOnly.Columns.Add("segment_id");
+statsOnly.Columns.Add("segment_type");
+statsOnly.Columns.Add("stats");
+foreach (DataRow row in storageInfo.Rows)
+    statsOnly.Rows.Add(row["row_group_id"], row["column_name"], row["segment_id"], row["segment_type"], row["stats"]);
+statsOnly.AsEnumerable().OrderBy(r => r["segment_id"].ToString()).Take(20).CopyToDataTable()
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">row_group_id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">column_name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">segment_id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">segment_type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">stats</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: ASML.AS, Max: RMS.PA, Has Unicode: false, Max String Length: 7][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 2021-01-04, Max: 2026-03-04][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 394.7, Max: 1300.0][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">high</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 407.2, Max: 1312.8][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">high</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">low</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 375.75, Max: 1264.2][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">low</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 397.45, Max: 1288.4][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">close</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BIGINT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 48392, Max: 2713321][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">volume</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VARCHAR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: ABI.BR, Max: UCG.MI, Has Unicode: false, Max String Length: 7][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">symbol</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 2021-01-04, Max: 2026-03-12][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DOUBLE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Min: 1.601, Max: 2926.0][Has Null: false, Has No Null: true]</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">open</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">VALIDITY</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[Has Null: false, Has No Null: true]</td></tr></tbody></table>
+
+#### DuckDB — memory_limit and threads configuration
+
+```csharp
+// DuckDB configuration — memory limit and thread count
+
+// Show current settings
+var dt = new DataTable();
+dkCmd.CommandText = @"
+    SELECT name, value, description
+    FROM duckdb_settings()
+    WHERE name IN ('memory_limit', 'threads', 'default_order',
+                   'enable_object_cache', 'max_memory',
+                   'worker_threads', 'enable_progress_bar')
+    ORDER BY name";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">value</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">description</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">default_order</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">asc</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">The order type used when none is specified (ASC or DESC)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">enable_object_cache</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NULL</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">[PLACEHOLDER] Legacy setting - does nothing</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">enable_progress_bar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">false</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Enables the progress bar, printing progress to the terminal for long queries</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">max_memory</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50.0 GiB</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">The maximum memory of the system (e.g. 1GB)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">memory_limit</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50.0 GiB</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">The maximum memory of the system (e.g. 1GB)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">threads</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">The number of total threads used by the system.</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">worker_threads</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">The number of total threads used by the system.</td></tr></tbody></table>
+
+#### DuckDB — SET memory_limit and threads
+
+```csharp
+// Tune DuckDB for your workload
+//
+// HOW TO DECIDE:
+//
+// memory_limit (default: 80% of system RAM)
+//   - Controls how much RAM DuckDB can use for query execution
+//   - Too low: DuckDB spills to disk (slow) or fails on large queries
+//   - Too high: competes with other processes (SQL Server, Python, OS)
+//   - RULE: set to 50% of RAM if running alongside SQL Server
+//           set to 80% if DuckDB is the only heavy process
+//   - Check: if queries fail with "Out of Memory", increase this
+//   - Check: if OS starts swapping, decrease this
+//
+// threads (default: number of CPU cores)
+//   - Controls parallelism — how many cores DuckDB uses per query
+//   - More threads = faster for large scans and aggregates
+//   - Too many: steals CPU from other services on the same machine
+//   - RULE: set to N-2 cores if running alongside other services
+//           set to all cores if DuckDB is the only workload
+//   - For notebooks: 4 threads is usually enough
+//
+// enable_object_cache (default: false)
+//   - Caches scanned data between queries — second query on same data is instant
+//   - Costs memory — cached data stays in RAM until evicted
+//   - RULE: enable for interactive notebooks (re-running queries on same data)
+//           disable for one-shot ETL pipelines (data is read once)
+//
+// HOW TO KNOW IF TUNING IS NEEDED:
+//   1. Query is slow → run EXPLAIN ANALYZE → check if any operator spills to disk
+//   2. "Out of Memory" error → increase memory_limit or reduce query scope
+//   3. CPU at 100% on all cores → reduce threads if other services need CPU
+//   4. Same query runs twice as fast the second time → object cache is helping
+//   5. Query on Parquet file is slow → check file size vs memory_limit
+
+// Set memory limit
+dkCmd.CommandText = "SET memory_limit = '4GB'";
+dkCmd.Parameters.Clear();
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Set memory_limit = 4GB");
+
+// Set thread count
+dkCmd.CommandText = "SET threads = 4";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Set threads = 4");
+
+// Enable object cache for interactive notebook use
+dkCmd.CommandText = "SET enable_object_cache = true";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("Set enable_object_cache = true");
+
+// Verify
+dkCmd.CommandText = "SELECT name, value FROM duckdb_settings() WHERE name IN ('memory_limit', 'threads', 'enable_object_cache') ORDER BY name";
+var dt = new DataTable();
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+    Set memory_limit = 4GB
+    Set threads = 4
+    Set enable_object_cache = true
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">name</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">value</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">enable_object_cache</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NULL</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">memory_limit</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3.7 GiB</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">threads</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4</td></tr></tbody></table>
+
+#### DuckDB — VACUUM ANALYZE (reclaim space and update stats)
+
+```csharp
+// VACUUM — reclaim space from deleted rows
+// ANALYZE — update statistics for the query optimizer
+
+dkCmd.CommandText = "VACUUM";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("VACUUM: space reclaimed");
+
+dkCmd.CommandText = "VACUUM ANALYZE";
+dkCmd.ExecuteNonQuery();
+Console.WriteLine("VACUUM ANALYZE: stats updated + space reclaimed");
+
+// CHECKPOINT — force write of WAL to main storage (file-based DBs only)
+// dkCmd.CommandText = "CHECKPOINT";
+// dkCmd.ExecuteNonQuery();
+// Not needed for in-memory databases
+```
+
+    VACUUM: space reclaimed
+    VACUUM ANALYZE: stats updated + space reclaimed
+
+#### DuckDB — tuning reference
+
+Quick reference of all DuckDB tuning and maintenance commands.
+
+```csharp
+// DuckDB tuning and maintenance reference
+//
+// INDEXES:
+//   CREATE INDEX idx ON t(col)              ART index for equality lookups
+//   CREATE UNIQUE INDEX idx ON t(col)       Unique constraint
+//   DROP INDEX idx                          Remove index
+//   duckdb_indexes()                        List all indexes
+//
+// STORAGE:
+//   CALL pragma_database_size()             Database size
+//   CALL pragma_storage_info('table')       Per-column compression + row groups
+//   SUMMARIZE table                         Min/max/avg/nulls per column
+//   DESCRIBE table                          Column names and types
+//
+// MEMORY & THREADS:
+//   SET memory_limit = '4GB'                Max memory for query execution
+//   SET threads = 4                         Parallelism level
+//   SET enable_object_cache = true          Reuse scan results between queries
+//
+// MAINTENANCE:
+//   VACUUM                                  Reclaim space from deletions
+//   VACUUM ANALYZE                          Reclaim space + update statistics
+//   CHECKPOINT                              Force WAL flush (file-based DBs)
+//   FORCE CHECKPOINT                        Force even if no changes
+//
+// EXPLAIN:
+//   EXPLAIN sql                             Show query plan (no execution)
+//   EXPLAIN ANALYZE sql                     Show plan + actual execution times
+//
+// KEY DIFFERENCES FROM SQL SERVER:
+//   - Indexes are optional (columnar engine + zone maps handle most cases)
+//   - ART indexes, not B-trees (fast for equality, not for ranges)
+//   - No ALTER INDEX REBUILD — DuckDB auto-compresses
+//   - No UPDATE STATISTICS — use VACUUM ANALYZE
+//   - No DBCC CHECKDB — DuckDB uses checksums internally
+//   - Memory limit instead of buffer pool — SET memory_limit
+```
+
+### 6.6 DuckDB vs SQL Server Performance
+
+#### DuckDB vs SQL Server — benchmark GROUP BY, LAG window, full scan side by side
+
+```csharp
+// Time the same queries on DuckDB vs SQL Server
+
+var sw = new System.Diagnostics.Stopwatch();
+var perf = new DataTable();
+perf.Columns.Add("Engine"); perf.Columns.Add("Query"); perf.Columns.Add("Time (ms)");
+
+// GROUP BY + AVG
+sw.Restart();
+dkCmd.CommandText = "SELECT symbol, COUNT(*), ROUND(AVG(close), 2) FROM ohlcv GROUP BY symbol";
+dkCmd.Parameters.Clear();
+using (var r = dkCmd.ExecuteReader()) while (r.Read()) { }
+sw.Stop();
+perf.Rows.Add("DuckDB", "GROUP BY + AVG", sw.ElapsedMilliseconds);
+
+sw.Restart();
+var sqlBench = new SqlCommand("SELECT symbol, COUNT(*), ROUND(AVG(CAST([close] AS FLOAT)), 2) FROM silver.eurostoxx50_ohlcv GROUP BY symbol", conn);
+using (var r = sqlBench.ExecuteReader()) while (r.Read()) { }
+sw.Stop();
+perf.Rows.Add("SQL Server", "GROUP BY + AVG", sw.ElapsedMilliseconds);
+
+// LAG window function
+sw.Restart();
+dkCmd.CommandText = "SELECT symbol, date, close, LAG(close) OVER (PARTITION BY symbol ORDER BY date) FROM ohlcv";
+using (var r = dkCmd.ExecuteReader()) while (r.Read()) { }
+sw.Stop();
+perf.Rows.Add("DuckDB", "LAG() window", sw.ElapsedMilliseconds);
+
+sw.Restart();
+sqlBench = new SqlCommand("SELECT symbol, date, [close], LAG([close]) OVER (PARTITION BY symbol ORDER BY date) FROM silver.eurostoxx50_ohlcv", conn);
+using (var r = sqlBench.ExecuteReader()) while (r.Read()) { }
+sw.Stop();
+perf.Rows.Add("SQL Server", "LAG() window", sw.ElapsedMilliseconds);
+
+// Full scan
+sw.Restart();
+dkCmd.CommandText = "SELECT * FROM ohlcv";
+using (var r = dkCmd.ExecuteReader()) while (r.Read()) { }
+sw.Stop();
+perf.Rows.Add("DuckDB", "Full table scan", sw.ElapsedMilliseconds);
+
+sw.Restart();
+sqlBench = new SqlCommand("SELECT * FROM silver.eurostoxx50_ohlcv", conn);
+using (var r = sqlBench.ExecuteReader()) while (r.Read()) { }
+sw.Stop();
+perf.Rows.Add("SQL Server", "Full table scan", sw.ElapsedMilliseconds);
+
+perf
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Engine</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Query</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Time (ms)</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DuckDB</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">GROUP BY + AVG</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">GROUP BY + AVG</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">16</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DuckDB</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LAG() window</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">8</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">LAG() window</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">106</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DuckDB</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full table scan</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SQL Server</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Full table scan</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">37</td></tr></tbody></table>
+
+#### DuckDB vs SQL Server — Plotly grouped bar chart of benchmark results
+
+```csharp
+// Grouped bar chart
+
+var duckRows = perf.AsEnumerable().Where(r => r["Engine"].ToString() == "DuckDB").ToList();
+var sqlRows = perf.AsEnumerable().Where(r => r["Engine"].ToString() == "SQL Server").ToList();
+
+var duckBar = Plotly.NET.CSharp.Chart.Column<double, string, string>(
+    values: duckRows.Select(r => Convert.ToDouble(r["Time (ms)"])).ToArray(),
+    Keys: duckRows.Select(r => r["Query"].ToString()).ToArray(),
+    Name: "DuckDB", MarkerColor: Color.fromHex("#4285F4"));
+
+var sqlBar = Plotly.NET.CSharp.Chart.Column<double, string, string>(
+    values: sqlRows.Select(r => Convert.ToDouble(r["Time (ms)"])).ToArray(),
+    Keys: sqlRows.Select(r => r["Query"].ToString()).ToArray(),
+    Name: "SQL Server", MarkerColor: Color.fromHex("#EA4335"));
+
+Plotly.NET.CSharp.Chart.Combine(new[] { duckBar, sqlBar })
+    .WithTitle("DuckDB vs SQL Server — Query Performance (ms)")
+    .WithYAxisStyle(Title.init("Time (ms)"))
+    .WithSize(800, 450)
+    .WithLayout(Layout.init<string>(
+        PaperBGColor: Color.fromString("transparent"),
+        PlotBGColor: Color.fromString("transparent"),
+        Font: Font.init(Color: Color.fromHex("#cccccc"))))
+```
+
+<iframe src="/static/plotly/db_cs_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+#### DuckDB — when to use ADO.NET vs Appender vs Dapper for each operation
+
+```csharp
+// Which DuckDB interface for which job
+
+var cmp = new DataTable();
+cmp.Columns.Add("Operation"); cmp.Columns.Add("ADO.NET"); cmp.Columns.Add("Appender"); cmp.Columns.Add("Dapper");
+cmp.Rows.Add("SELECT rows", "ExecuteReader + DataTable", "—", "Query<T> (typed)");
+cmp.Rows.Add("Single value", "ExecuteScalar", "—", "ExecuteScalar<T>");
+cmp.Rows.Add("Single row", "ExecuteReader + Read()", "—", "QueryFirst<T>");
+cmp.Rows.Add("INSERT 1 row", "ExecuteNonQuery", "CreateRow (overkill)", "Execute + anon obj");
+cmp.Rows.Add("Bulk INSERT", "Loop + ExecuteNonQuery", "CreateRow loop (fastest)", "Execute + list");
+cmp.Rows.Add("UPDATE", "ExecuteNonQuery", "—", "Execute + anon obj");
+cmp.Rows.Add("DELETE", "ExecuteNonQuery", "—", "Execute + anon obj");
+cmp.Rows.Add("Parameters", "$1, $2 positional", "— (no SQL)", "@Named (anon obj)");
+cmp.Rows.Add("Best for", "DDL, schema ops", "Bulk loading", "Typed queries, CRUD");
+cmp
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Operation</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">ADO.NET</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Appender</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Dapper</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SELECT rows</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteReader + DataTable</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Query<T> (typed)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Single value</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteScalar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteScalar<T></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Single row</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteReader + Read()</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">QueryFirst<T></td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">INSERT 1 row</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CreateRow (overkill)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + anon obj</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Bulk INSERT</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Loop + ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CreateRow loop (fastest)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + list</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">UPDATE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + anon obj</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DELETE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ExecuteNonQuery</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">—</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Execute + anon obj</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parameters</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">$1, $2 positional</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">— (no SQL)</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">@Named (anon obj)</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Best for</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DDL, schema ops</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Bulk loading</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Typed queries, CRUD</td></tr></tbody></table>
+
+## 7. Querying Files — DuckDB SQL vs Polars.NET DataFrame
+
+Both DuckDB and Polars can query Parquet, CSV, and JSON files directly.
+This section pairs each operation side by side: DuckDB (SQL) then Polars (DataFrame API).
+
+### Read Parquet
+
+#### DuckDB — read Parquet file with SELECT
+
+```csharp
+// DuckDB reads Parquet directly — no import, predicate pushdown
+
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5";
+dkCmd.Parameters.Clear();
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">04-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1513937</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">05-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.18</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1382722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">06-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58.77</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1370204</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">07-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1469911</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">08-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.86</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1428681</td></tr></tbody></table>
+
+#### Polars — read Parquet file with ReadParquet and Select
+
+```csharp
+// Polars equivalent: read Parquet, select same 4 columns, show 5 rows
+
+var df = DataFrame.ReadParquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet");
+df.Select("symbol", "date", "close", "volume").Head(5)
+```
+
+    Shape: (66355, 12)
+
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+
+### Read CSV
+
+#### DuckDB — read CSV file with SELECT
+
+```csharp
+// DuckDB reads CSV directly — auto-detects schema and headers
+
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv' LIMIT 5";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">04-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1513937</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">05-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.18</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1382722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">06-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58.77</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1370204</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">07-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1469911</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">08-Jan-21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.86</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1428681</td></tr></tbody></table>
+
+#### Polars — read CSV file with ReadCsv and Select
+
+```csharp
+// Polars equivalent: read CSV, select same 4 columns, show 5 rows
+
+var csvDf = DataFrame.ReadCsv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv");
+csvDf.Select("symbol", "date", "close", "volume").Head(5)
+```
+
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
+
+### Read JSON
+
+#### DuckDB — read JSON file with SELECT
+
+```csharp
+// DuckDB reads JSON/JSONL directly
+
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.json' LIMIT 5";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-04T00:00:00.000</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.21</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1513937</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-05T00:00:00.000</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.18</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1382722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-06T00:00:00.000</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58.77</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1370204</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-07T00:00:00.000</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">58.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1469911</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ABI.BR</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2021-01-08T00:00:00.000</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">57.86</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1428681</td></tr></tbody></table>
+
+#### Polars — read JSON file with ReadJson and Select
+
+```csharp
+// Polars equivalent: read JSON, select same 4 columns, show 5 rows
+
+var jsonDf = DataFrame.ReadJson("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.json");
+jsonDf.Select("symbol", "date", "close", "volume").Head(5)
+```
+
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>utf8view</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04T00:00:00.000</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05T00:00:00.000</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06T00:00:00.000</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>2021-01-07T00:00:00.000</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>2021-01-08T00:00:00.000</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
+
+### Filter rows
+
+#### DuckDB — filter rows with WHERE and ORDER BY
+
+```csharp
+// DuckDB: WHERE symbol = 'SAP.DE'
+
+var dt = new DataTable();
+dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">date</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">12-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">166.52</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">806722</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">11-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">165.44</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2953782</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">169.6</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3187246</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">09-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">171.88</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1990823</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAP.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">06-Mar-26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">172.74</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3347221</td></tr></tbody></table>
+
+#### Polars — filter with Filter() and Select()
+
+```csharp
+// Polars equivalent: filter symbol = SAP.DE, select same columns, sort, limit 5
+
+df.Filter(Col("symbol") == Lit("SAP.DE"))
+    .Select("symbol", "date", "close", "volume")
+    .Sort("date", descending: true)
+    .Head(5)
+```
+
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>SAP.DE</td><td>2026-03-12</td><td>166.52</td><td>806722</td></tr><tr><td>SAP.DE</td><td>2026-03-11</td><td>165.44</td><td>2953782</td></tr><tr><td>SAP.DE</td><td>2026-03-10</td><td>169.6</td><td>3187246</td></tr><tr><td>SAP.DE</td><td>2026-03-09</td><td>171.88</td><td>1990823</td></tr><tr><td>SAP.DE</td><td>2026-03-06</td><td>172.74</td><td>3347221</td></tr></tbody></table></div>
+
+### Group and aggregate
+
+#### DuckDB — aggregate with GROUP BY, COUNT, AVG, SUM
+
+```csharp
+// DuckDB: GROUP BY + AVG + COUNT
+
+var dt = new DataTable();
+dkCmd.CommandText = @"
+    SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close,
+           SUM(volume) AS total_volume
+    FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'
+    GROUP BY symbol ORDER BY total_volume DESC LIMIT 10";
+dt.Load(dkCmd.ExecuteReader());
+dt
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">symbol</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">days</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">avg_close</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">total_volume</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ISP.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3.15</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">115704541969</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SAN.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1329</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">4.43</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">55513641918</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ENEL.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">6.82</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">32600561934</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">BBVA.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1329</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">8.65</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">22133773194</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">UCG.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">28.46</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">18366801099</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">ENI.MI</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1321</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">13.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">17141570967</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">INGA.AS</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1331</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">14.04</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">17041577555</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IBE.MC</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1329</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">12.26</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">15994295949</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">DTE.DE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1324</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">22.43</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10029411390</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NDA-FI.HE</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">1306</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">10.85</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">7020342991</td></tr></tbody></table>
+
+#### Polars — aggregate with GroupBy and Agg
+
+```csharp
+// Polars equivalent: group by symbol, count, avg close, sum volume, top 10
+
+df.GroupBy("symbol")
+    .Agg(
+        Col("close").Count().Alias("days"),
+        Col("close").Mean().Alias("avg_close"),
+        Col("volume").Sum().Alias("total_volume")
+    )
+    .Sort("total_volume", descending: true)
+    .Head(10)
+```
+
+<style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
+<style>
+.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
+.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
+.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
+.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
+.pl-dataframe tr:hover { background-color: #f1f1f1; }
+.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
+.pl-null { color: #d0d0d0; font-style: italic; }
+.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
+</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>days<span class='pl-dtype'>uint32</span></th><th>avg_close<span class='pl-dtype'>double</span></th><th>total_volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ISP.MI</td><td>1321</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>1329</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>1321</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>1329</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>1321</td><td>28.45710447</td><td>18366801099</td></tr><tr><td>ENI.MI</td><td>1321</td><td>13.39762453</td><td>17141570967</td></tr><tr><td>INGA.AS</td><td>1331</td><td>14.03818783</td><td>17041577555</td></tr><tr><td>IBE.MC</td><td>1329</td><td>12.25531151</td><td>15994295949</td></tr><tr><td>DTE.DE</td><td>1324</td><td>22.43009743</td><td>10029411390</td></tr><tr><td>NDA-FI.HE</td><td>1306</td><td>10.84807887</td><td>7020342991</td></tr></tbody></table></div>
+
+### Performance — DuckDB query across CSV vs Parquet vs JSON
+
+#### DuckDB — benchmark same aggregate on CSV vs Parquet vs JSON
+
+```csharp
+// Compare DuckDB query speed across file formats
+
+var sw = new System.Diagnostics.Stopwatch();
+var results = new DataTable();
+results.Columns.Add("Format"); results.Columns.Add("Rows"); results.Columns.Add("Time (ms)");
+
+foreach (var (format, path) in new[] {
+    ("CSV",     "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv"),
+    ("Parquet", "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet"),
+    ("JSON",    "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.json"),
+})
+{
+    sw.Restart();
+    dkCmd.CommandText = $"SELECT symbol, COUNT(*), ROUND(AVG(close), 2) FROM '{path}' GROUP BY symbol";
+    int rows = 0;
+    using (var reader = dkCmd.ExecuteReader())
+        while (reader.Read()) rows++;
+    sw.Stop();
+    results.Rows.Add(format, rows, sw.ElapsedMilliseconds);
+}
+results
+
+// Parquet is fastest — columnar format + predicate pushdown
+// CSV requires full parse; JSON requires parse + type inference
+```
+
+<table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Format</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Rows</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Time (ms)</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CSV</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">55</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">Parquet</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">JSON</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">50</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">76</td></tr></tbody></table>
+
+### DuckDB vs Polars.NET — reference
+
+#### DuckDB vs Polars — operation mapping reference
+
+```csharp
+// DuckDB vs Polars.NET — same operations, different syntax
+//
+// Operation          DuckDB (SQL)                              Polars.NET (DataFrame API)
+// ──────────────────  ──────────────────────────────────────  ──────────────────────────────────────────────────
+// Read Parquet       SELECT * FROM 'file.parquet'              DataFrame.ReadParquet(path)
+// Read CSV           SELECT * FROM 'file.csv'                  DataFrame.ReadCsv(path)
+// Read JSON          SELECT * FROM 'file.json'                 DataFrame.ReadJson(path)
+// Filter             WHERE col = 'val'                         df.Filter(Col("col") == Lit("val"))
+// Select             SELECT col1, col2                         df.Select("col1", "col2")
+// Sort               ORDER BY col DESC                         df.Sort("col", descending: true)
+// Limit              LIMIT 10                                  df.Head(10)
+// Group + Agg        GROUP BY ... AVG(col)                     df.GroupBy("col").Agg(Col("col").Mean())
+// Add column         SELECT *, a-b AS c                        df.WithColumns((Col("a")-Col("b")).Alias("c"))
+// Window function    LAG() OVER (PARTITION BY ...)              Not available — use DuckDB
+// CTE                WITH cte AS (...)                          Not available — use DuckDB
+// Export             COPY (...) TO 'file.parquet'              df.WriteParquet(path)
+```
+
+#### DuckDB vs Polars — decision guide
+
+```csharp
+// Decision guide
+//
+// Scenario                                 Use            Why
+// ─────────────────────────────────────────  ──────────────  ────────────────────────────────────────
+// Complex SQL (joins, CTEs, windows)       DuckDB         Full SQL:2003 support
+// Ad-hoc file exploration                  DuckDB         SQL on files, no code needed
+// DataFrame transforms                    Polars.NET     Method chaining, lazy eval
+// ML pipeline preprocessing               Polars.NET     DataFrame API integrates with ML
+// Export results to Parquet                Either         DuckDB COPY or Polars WriteParquet
+// Notebook data exploration               DuckDB         Write SQL directly, instant results
+// Production ETL validation               DuckDB         SQL assertions on file data
+// Both in same project                    Yes            DuckDB for SQL, Polars for transforms
+```
+
+## 8. Summary
 
 ```csharp
 // Summary — C# database cheat sheet
 //
 // SQLITE (Microsoft.Data.Sqlite):
 // new SqliteConnection("DataSource=:memory:")    In-memory DB
-// cmd.Parameters.AddWithValue("@p", value)       Named parameter
+// sqlCmd.Parameters.AddWithValue("@p", value)       Named parameter
 // reader.GetString(0), reader.GetInt32(1)        Typed column access
 // reader["column_name"]                          Name-based access
 // conn.BeginTransaction() + tx.Commit()          Explicit transaction
@@ -603,9 +3524,9 @@ Console.WriteLine($"{"Python equiv",-20} {"pyodbc",-20} {"pd.read_sql()",-20} {"
 // SQL SERVER (Microsoft.Data.SqlClient):
 // new SqlConnection(connStr)                     Connect
 // new SqlCommand(sql, conn)                      Create command
-// cmd.ExecuteReader()                            SELECT → reader
-// cmd.ExecuteNonQuery()                          INSERT/UPDATE/DELETE
-// cmd.ExecuteScalar()                            Single value
+// sqlCmd.ExecuteReader()                            SELECT → reader
+// sqlCmd.ExecuteNonQuery()                          INSERT/UPDATE/DELETE
+// sqlCmd.ExecuteScalar()                            Single value
 //
 // DAPPER (micro-ORM):
 // conn.Query<T>(sql, @params)                    SQL → List<T>

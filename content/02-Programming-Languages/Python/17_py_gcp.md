@@ -64,6 +64,24 @@ status: complete
 
 import os
 
+from datetime import datetime
+from datetime import datetime, timedelta
+from google.api import metric_pb2
+from google.cloud import bigquery
+from google.cloud import firestore
+from google.cloud import firestore, bigquery
+from google.cloud import monitoring_v3
+from google.cloud import pubsub_v1
+from google.cloud import secretmanager
+from google.cloud import storage
+from google.protobuf.timestamp_pb2 import Timestamp
+import google.cloud.logging as cloud_logging
+import io
+import json, time
+import pandas as pd
+import threading
+import time
+import yfinance as yf
 PROJECT_ID = "index-lab-2"
 REGION = "europe-west1"
 BUCKET_NAME = f"{PROJECT_ID}-index-data"
@@ -97,11 +115,6 @@ print(f"Region:  {REGION}")
 #
 # Pipeline step: fetch OHLCV from yfinance → upload CSV to GCS bronze layer.
 
-from google.cloud import storage
-import yfinance as yf
-import pandas as pd
-from datetime import datetime, timedelta
-import io
 
 # Create GCS client — authenticates using GOOGLE_APPLICATION_CREDENTIALS
 # In the pipeline: this client handles all object storage operations
@@ -196,9 +209,6 @@ print(f"  Tickers: {sorted(df_check["symbol"].unique())}")
 #
 # Pipeline step: load OHLCV from GCS into BigQuery bronze → compute silver/gold.
 
-from google.cloud import bigquery
-from datetime import datetime
-import pandas as pd
 
 # Create BigQuery client — all queries and loads go through this
 bq = bigquery.Client(project=PROJECT_ID)
@@ -318,8 +328,6 @@ for row in results:
 #
 # Pipeline step: after loading BigQuery, publish 'batch_ready' event.
 
-from google.cloud import pubsub_v1
-import json, time
 
 TOPIC = "pipeline-events"
 SUBSCRIPTION = "pipeline-events-sub"
@@ -403,8 +411,6 @@ else:
 # Pipeline step: write latest gold scores to Firestore,
 # then listen for real-time pulse updates from the scheduler.
 
-from google.cloud import firestore, bigquery
-from datetime import datetime
 
 # Create Firestore client — connects to the document database
 # Pipeline role: Firestore serves as the REAL-TIME layer
@@ -482,9 +488,6 @@ if pulse_count == 0:
 # IMPORTANT: run pulse_scheduler.py in a separate terminal first:
 #   python pulse_scheduler.py --minutes 5
 
-from google.cloud import firestore
-import threading
-import time
 
 # Create Firestore client — connects to the document database
 # Pipeline role: Firestore serves as the REAL-TIME layer
@@ -585,7 +588,6 @@ if events_received:
 #
 # Pipeline step: retrieve DB credentials securely (never hardcode in code).
 
-from google.cloud import secretmanager
 
 # Create Secret Manager client
 # Pipeline role: ALL credentials come from here — never hardcoded
@@ -676,11 +678,6 @@ print('\n  Deleted: index-notebook-demo')
 #
 # Pipeline step: log pipeline events, write custom metrics for row counts.
 
-from google.cloud import monitoring_v3
-from google.api import metric_pb2
-from google.protobuf.timestamp_pb2 import Timestamp
-import google.cloud.logging as cloud_logging
-import time
 
 # ─── Cloud Logging ───
 print("=== Cloud Logging ===")

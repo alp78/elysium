@@ -17,13 +17,13 @@ status: complete
 # 12. Async & Concurrency - C#
 
 ```csharp
-// Imports used throughout this notebook
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Net.Http;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using System.Runtime.CompilerServices;
 ```
 
 ## Async and Await
@@ -31,6 +31,28 @@ using System.Security.Cryptography;
 #### Async and await basics
 
 ```csharp
+// Async/await — Task-based Asynchronous Pattern (TAP)
+//
+// Technique: async marks a method as asynchronous, returning Task<T>.
+//   await pauses until the task completes, releasing the thread.
+//   The thread pool handles other work while awaiting.
+//
+// Benefits:
+//   - Non-blocking I/O — thread is free while waiting for network/disk
+//   - Scalable — one thread can service many concurrent requests
+//   - Natural syntax — reads like synchronous code
+//
+// Anti-patterns:
+//   - .Result or .Wait() — deadlocks in UI/web contexts; always await
+//   - async void — exceptions are unobservable; use async Task
+//   - await in a loop when Task.WhenAll works — sequential instead of concurrent
+//
+// When to use:
+//   - I/O-bound operations: HTTP calls, DB queries, file I/O
+//
+// When NOT to use:
+//   - CPU-bound work — use Task.Run or Parallel instead
+
 // Async & Await — the Task-based Asynchronous Pattern (TAP)
 //
 // KEY CONCEPTS:
@@ -48,7 +70,8 @@ using System.Security.Cryptography;
 #### Basic async method
 
 ```csharp
-// Basic async method
+// Basic async method — async Task<T> with await Task.Delay
+
 async Task<Dictionary<string, object>> FetchDataAsync(string source, double delaySeconds)
 {
     Console.WriteLine($"  [{DateTime.Now:HH:mm:ss}] Starting fetch: {source}");
@@ -65,7 +88,8 @@ async Task<Dictionary<string, object>> FetchDataAsync(string source, double dela
 #### Sequential vs concurrent
 
 ```csharp
-// Sequential — each fetch waits for the previous one
+// Sequential vs concurrent — await one-by-one vs Task.WhenAll
+
 Console.WriteLine("=== Sequential (one after another) ===");
 var sw = Stopwatch.StartNew();
 var r1 = await FetchDataAsync("users_api", 1.0);
@@ -84,8 +108,11 @@ Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)")
       [06:37:00] Completed fetch: products_api
       Total: 2.32s (sum of all delays)
 
+#### Concurrent execution with Task.WhenAll
+
 ```csharp
-// Concurrent — all fetches run at the same time
+// Concurrent execution — start all tasks, await them together
+
 Console.WriteLine("\n=== Concurrent (Task.WhenAll) ===");
 sw.Restart();
 var t1 = FetchDataAsync("users_api", 1.0);      // start task (don't await yet)
@@ -112,14 +139,6 @@ Console.WriteLine($"  Results: {results.Length} dictionaries");
 
 ```csharp
 // Task.WhenAll vs Task.WhenAny — waiting strategies
-//
-// Task.WhenAll(tasks): wait until ALL complete. Returns all results.
-// Task.WhenAny(tasks): wait until the FIRST one completes. Returns that task.
-//
-// Error handling:
-// - Task.WhenAll unwraps AggregateException in await — only first inner exception surfaces.
-// - To get ALL errors, store the Task and check .Exception (see 08_ErrorHandling).
-
 
 async Task<string> FetchTableAsync(string name, double delay, bool fail = false)
 {
@@ -132,7 +151,8 @@ async Task<string> FetchTableAsync(string name, double delay, bool fail = false)
 #### Task.WhenAll with error handling
 
 ```csharp
-// Task.WhenAll with error handling
+// Task.WhenAll with error handling — catch failures from parallel tasks
+
 Console.WriteLine("=== Task.WhenAll (error handling) ===");
 var allTask = Task.WhenAll(
     FetchTableAsync("events", 0.3),
@@ -158,7 +178,7 @@ catch
 #### Task.WhenAny — first to complete wins
 
 ```csharp
-// Scenario: query multiple replicas, use the fastest response.
+// Task.WhenAny — first to complete wins (racing replicas)
 
 Console.WriteLine("\n=== Task.WhenAny (first wins) ===");
 var tasks = new[]
@@ -181,14 +201,7 @@ Console.WriteLine($"  First to finish: {await fastest}");
 <h4><code style="font-size:0.75em">CancellationToken</code></h4>
 
 ```csharp
-// Cancellation — CancellationToken
-//
-// CancellationTokenSource: creates a token you can cancel.
-// CancellationToken: passed to async methods so they can check for cancellation.
-// When cancelled, the method throws OperationCanceledException.
-//
-// Data Engineering scenario: cancel a long BigQuery export if it takes > 5s.
-
+// CancellationToken — cooperative cancellation for async operations
 
 async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
 {
@@ -206,7 +219,8 @@ async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
 #### Cancel after timeout
 
 ```csharp
-// Cancel after timeout
+// Cancel after timeout — automatic cancellation with CancelAfter
+
 Console.WriteLine("=== CancellationToken (timeout) ===");
 // CancelAfter: automatically cancel after specified time
 var cts = new CancellationTokenSource();
@@ -233,7 +247,8 @@ catch (OperationCanceledException)
 #### Manual cancellation
 
 ```csharp
-// Manual cancellation
+// Manual cancellation — cancel on demand from external trigger
+
 Console.WriteLine("\n=== Manual cancellation ===");
 var cts2 = new CancellationTokenSource();
 
@@ -266,19 +281,12 @@ catch (OperationCanceledException)
       [Supervisor] Cancelling export...
       Export was manually cancelled
 
-#### Real-world async patterns
-
-```csharp
-// Async patterns for Data Engineering
-//
-// 1. SemaphoreSlim: limit concurrent requests (don't overwhelm an API).
-// 2. Retry with backoff: retry failed tasks with exponential delay.
-```
+## Async patterns
 
 #### SemaphoreSlim — rate limiting
 
 ```csharp
-// Scenario: API allows max 3 concurrent requests.
+// SemaphoreSlim — limit concurrent async operations (rate limiting)
 
 async Task<string> FetchWithLimitAsync(SemaphoreSlim sem, string url)
 {
@@ -319,7 +327,8 @@ Console.WriteLine($"    ... ({results.Length - 3} more)");
 #### Retry with exponential backoff
 
 ```csharp
-// Retry with exponential backoff
+// Retry with exponential backoff — recover from transient failures
+
 var attemptCount = 0;
 
 async Task<string> FlakyApiAsync(string endpoint)
@@ -363,8 +372,7 @@ Console.WriteLine($"  Success on attempt {attemptCount}: {apiResult}");
 #### Channel<T> — async producer-consumer
 
 ```csharp
-// BoundedChannel: fixed capacity (producer waits when full).
-// UnboundedChannel: unlimited capacity (producer never waits).
+// Channel<T> — async producer-consumer pipeline
 
 Console.WriteLine("\n=== Channel<T> (async producer-consumer) ===");
 var channel = Channel.CreateBounded<Dictionary<string, string>>(5);  // max 5 items buffered
@@ -417,22 +425,7 @@ Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeco
 
 ```csharp
 // IAsyncEnumerable<T> — async streaming with yield return
-//
-// WHAT: an async version of IEnumerable<T>. The method yields items one at a time
-//   using "yield return" inside an async method. The consumer pulls items with "await foreach".
-//   Each yield pauses the producer until the consumer calls MoveNextAsync().
-//
-// WHY: process data as it arrives without buffering everything in memory.
-//   Paginated API: fetch page 1 → yield items → fetch page 2 → yield items → ...
-//   Only one page is in memory at a time, regardless of total dataset size.
-//
-// WHEN TO USE: paginated REST APIs, streaming DB queries, reading large files line by line
-// ANTI-PATTERNS:
-//   - Don't call .ToList() on the stream unless you need all items — defeats streaming
-//   - Don't do heavy work inside the producer — keep it to fetch + yield
-//   - Don't forget that yield return suspends the method — local variables survive across yields
 
-// Simulate a paginated API that returns pages of data
 async IAsyncEnumerable<string> FetchPagesAsync(int totalPages, int itemsPerPage)
 {
     for (int page = 1; page <= totalPages; page++)
@@ -469,22 +462,8 @@ Console.WriteLine($"  Total: {count} items in {sw.ElapsedMilliseconds}ms");
 <h4><code style="font-size:0.75em">IAsyncEnumerable</code> with cancellation and LINQ</h4>
 
 ```csharp
-// IAsyncEnumerable with CancellationToken — gracefully stop an infinite or long stream
-//
-// WHAT: [EnumeratorCancellation] attribute wires the token from .WithCancellation(ct)
-//   on the consumer side to the ct parameter on the producer side automatically.
-//   When the token is cancelled, the next await inside the producer throws OperationCanceledException.
-//
-// WHY: infinite generators (real-time feeds, polling loops) need a way to stop cleanly.
-//   Without cancellation, await foreach runs forever. With it, the consumer can say "stop after 5s".
-//
-// WHEN TO USE: long-running streams, polling APIs with timeout, user-cancellable operations
-// ANTI-PATTERNS:
-//   - Don't forget [EnumeratorCancellation] — .WithCancellation() silently does nothing without it
-//   - Don't catch OperationCanceledException inside the producer — let it propagate to the consumer
-using System.Runtime.CompilerServices;
+// IAsyncEnumerable with cancellation and LINQ — graceful stream termination
 
-// Infinite generator — yields 0, 1, 2, ... forever until cancelled
 async IAsyncEnumerable<int> GenerateNumbersAsync(
     [EnumeratorCancellation] CancellationToken ct = default)
 {
@@ -534,6 +513,28 @@ await foreach (var item in FetchPagesAsync(10, 3))
 <h4><code style="font-size:0.75em">Task.Run</code> and <code style="font-size:0.75em">Parallel</code></h4>
 
 ```csharp
+// Task.Run and Parallel — CPU-bound parallelism on the thread pool
+//
+// Technique: Task.Run offloads work to a thread pool thread. Parallel.ForEach
+//   partitions a collection and processes chunks on multiple threads.
+//   Use for CPU-bound work (hashing, compression, parsing).
+//
+// Benefits:
+//   - Utilizes all CPU cores — linear speedup for embarrassingly parallel work
+//   - Thread pool managed by .NET — no manual thread creation
+//   - Parallel.ForEach auto-partitions for optimal load balancing
+//
+// Anti-patterns:
+//   - Task.Run for I/O-bound work — use async/await instead (no thread needed)
+//   - Too many Task.Run calls — thread pool exhaustion
+//   - Shared mutable state without locking — race conditions
+//
+// When to use:
+//   - CPU-bound: hashing, compression, image processing, parsing
+//
+// When NOT to use:
+//   - I/O-bound work — async/await is more efficient
+
 // Task.Run & Parallel — CPU-bound parallelism
 //
 // KEY CONCEPTS:
@@ -549,6 +550,7 @@ await foreach (var item in FetchPagesAsync(10, 3))
 
 ```csharp
 // Task.Run — offload CPU work to thread pool
+
 string ComputeHash(byte[] data)
 {
     // CPU-bound: compute SHA-256 hash repeatedly
@@ -591,7 +593,7 @@ Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(parHashes)}");
 #### Parallel.ForEach — partition and process
 
 ```csharp
-// Blocks the calling thread until all items are processed.
+// Parallel.ForEach — partition and process collection items in parallel
 
 Console.WriteLine("\n=== Parallel.ForEach ===");
 var hashResults = new string[payloads.Length];
@@ -614,18 +616,13 @@ Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(hashResults)}");
 <h4><code style="font-size:0.75em">Parallel.ForEachAsync</code> and PLINQ</h4>
 
 ```csharp
-// Parallel.ForEachAsync & PLINQ
-//
-// Parallel.ForEachAsync (.NET 6+): process items concurrently with async lambdas.
-//   Great for I/O-bound work with controlled parallelism.
-//
-// PLINQ (Parallel LINQ): add .AsParallel() to a LINQ query for multi-core execution.
+// Parallel.ForEachAsync and PLINQ — async parallelism and parallel LINQ
 ```
 
 #### Parallel.ForEachAsync — async I/O with controlled concurrency
 
 ```csharp
-// Scenario: fetch metadata for 10 tables, max 3 concurrent.
+// Parallel.ForEachAsync — async I/O with controlled concurrency
 
 Console.WriteLine("=== Parallel.ForEachAsync (max 3 concurrent) ===");
 var tables = Enumerable.Range(0, 10).Select(i => $"table_{i:D2}").ToArray();
@@ -656,8 +653,7 @@ foreach (var t in fetchedTables.Take(3))
 #### PLINQ (Parallel LINQ)
 
 ```csharp
-// .AsParallel() partitions the data and processes chunks on multiple threads.
-// Order is NOT guaranteed unless you add .AsOrdered().
+// PLINQ — parallel LINQ for CPU-bound data processing
 
 Console.WriteLine("\n=== PLINQ (.AsParallel()) ===");
 
@@ -709,6 +705,27 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 #### Thread basics
 
 ```csharp
+// Threading — low-level thread creation and management
+//
+// Technique: new Thread(method) creates an OS thread. .Start() begins
+//   execution. .Join() blocks until the thread completes. Prefer Task.Run
+//   for most scenarios — threads are expensive to create.
+//
+// Benefits:
+//   - Full control — set priority, apartment state, stack size
+//   - No thread pool dependency — dedicated thread for long-running work
+//
+// Anti-patterns:
+//   - Creating threads for short work — use Task.Run (thread pool)
+//   - Not joining threads — orphaned threads may prevent shutdown
+//   - Shared mutable state without synchronization — race conditions
+//
+// When to use:
+//   - Long-running background work, COM interop, dedicated I/O threads
+//
+// When NOT to use:
+//   - Short tasks — Task.Run uses the thread pool efficiently
+
 // Threading — low-level thread management
 //
 // KEY CONCEPTS:
@@ -727,6 +744,8 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 #### Basic threading
 
 ```csharp
+// Basic threading — create, start, join, and collect results
+
 #nullable enable
 // Basic threading
 Console.WriteLine("=== Basic Threads ===");
@@ -768,16 +787,14 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
 <h4><code style="font-size:0.75em">lock</code> and <code style="font-size:0.75em">Interlocked</code></h4>
 
 ```csharp
-// lock & Interlocked — preventing race conditions
-//
-// Race condition: two threads read-modify-write a shared variable simultaneously,
-// causing lost updates. The lock keyword prevents this.
+// lock and Interlocked — preventing race conditions on shared state
 ```
 
 #### Race condition demo (WITHOUT lock)
 
 ```csharp
-// Race condition demo (WITHOUT lock)
+// Race condition demo — without lock shows data corruption
+
 var unsafeCounter = 0;
 
 void IncrementUnsafe()
@@ -804,7 +821,8 @@ Console.WriteLine($"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ?
 #### Fixed with lock
 
 ```csharp
-// Fixed with lock
+// Fixed with lock — mutual exclusion prevents lost updates
+
 var safeCounter = 0;
 var lockObj = new object();  // lock requires a reference type object
 
@@ -838,8 +856,7 @@ Console.WriteLine($"  Got:      {safeCounter:N0}  (correct — lock prevents rac
 #### Interlocked — lock-free atomic operations
 
 ```csharp
-// Faster than lock for simple operations (increment, add, exchange).
-// Uses CPU-level atomic instructions — no context switching.
+// Interlocked — lock-free atomic operations using CPU instructions
 
 var atomicCounter = 0;
 
@@ -868,22 +885,13 @@ Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operatio
 #### Concurrent collections
 
 ```csharp
-// Concurrent collections — thread-safe data structures
-//
-// System.Collections.Concurrent provides collections designed for multi-threaded access.
-// No manual locking needed — the collection handles synchronization internally.
-//
-// KEY TYPES:
-// - ConcurrentDictionary<K,V>: thread-safe dictionary. AddOrUpdate, GetOrAdd.
-// - ConcurrentBag<T>: unordered thread-safe collection. Good for collecting results.
-// - ConcurrentQueue<T>: thread-safe FIFO queue. TryDequeue (never blocks).
-// - BlockingCollection<T>: wraps a concurrent collection + blocks on Take() when empty.
+// Concurrent collections — thread-safe data structures without manual locking
 ```
 
 #### ConcurrentDictionary — thread-safe aggregation
 
 ```csharp
-// Scenario: multiple threads process events and aggregate counts by type.
+// ConcurrentDictionary — thread-safe aggregation with AddOrUpdate
 
 Console.WriteLine("=== ConcurrentDictionary (thread-safe aggregation) ===");
 var eventCounts = new ConcurrentDictionary<string, int>();
@@ -914,7 +922,7 @@ Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");
 #### BlockingCollection — producer-consumer with threads
 
 ```csharp
-// CompleteAdding() signals consumers that no more items will come.
+// BlockingCollection — producer-consumer with blocking threads
 
 Console.WriteLine("\n=== BlockingCollection (producer-consumer) ===");
 var collection = new BlockingCollection<string>(boundedCapacity: 5);
@@ -972,6 +980,27 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 <h4><code style="font-size:0.75em">ReaderWriterLockSlim</code></h4>
 
 ```csharp
+// ReaderWriterLockSlim — many readers OR one writer
+//
+// Technique: EnterReadLock allows multiple concurrent readers. EnterWriteLock
+//   gives exclusive access (blocks readers and other writers). Optimized
+//   for read-heavy workloads where writes are infrequent.
+//
+// Benefits:
+//   - Concurrent reads — much higher throughput than exclusive lock
+//   - Exclusive writes — data integrity guaranteed during updates
+//   - UpgradeableReadLock — promote reader to writer without releasing
+//
+// Anti-patterns:
+//   - ReaderWriterLockSlim for write-heavy workloads — lock is simpler and faster
+//   - Not releasing in finally — deadlock on exception
+//
+// When to use:
+//   - Read-heavy shared caches, configuration, lookup tables
+//
+// When NOT to use:
+//   - Write-heavy workloads — simple lock is better
+
 // ReaderWriterLockSlim — allows many concurrent readers OR one exclusive writer
 //
 // WHAT: a synchronization primitive optimized for read-heavy workloads.
@@ -1036,21 +1065,8 @@ Console.WriteLine($"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.K
 <h4><code style="font-size:0.75em">ManualResetEventSlim</code> and <code style="font-size:0.75em">CountdownEvent</code></h4>
 
 ```csharp
-// ManualResetEventSlim — a gate that threads wait at until signaled
-//
-// WHAT: starts non-signaled (gate closed). Threads calling Wait() block.
-//   Set() opens the gate — ALL waiting threads proceed. Gate stays open.
-//   Reset() closes the gate again (manual reset — you control when it closes).
-//   "Slim" = lightweight, no OS kernel object unless needed (faster for short waits).
-//
-// WHY: coordinate startup — workers wait for initialization to complete.
-//   Without signaling: workers poll a shared flag in a loop (wastes CPU).
-//   With ManualResetEvent: workers sleep efficiently until the signal arrives.
-//
-// WHEN TO USE: "everyone wait until X is ready", gate/barrier patterns, init coordination
-// ANTI-PATTERNS:
-//   - Don't forget to call Set() — waiting threads block forever
-//   - Don't use for one-at-a-time signaling — use AutoResetEvent or SemaphoreSlim instead
+// ManualResetEventSlim and CountdownEvent — thread signaling
+
 var gate = new ManualResetEventSlim(false); // starts closed — threads will block
 
 var workers = Enumerable.Range(0, 3).Select(i => Task.Run(() =>
@@ -1106,23 +1122,8 @@ Console.WriteLine("  Main: all 3 workers finished setup, proceeding");
 <h4><code style="font-size:0.75em">Barrier</code> — phased synchronization</h4>
 
 ```csharp
-// Barrier — phased synchronization where all participants must reach a checkpoint
-//
-// WHAT: Barrier(n, postPhaseAction) creates a synchronization point for n participants.
-//   SignalAndWait(): "I'm done with this phase — wait for everyone else."
-//   When all n participants call SignalAndWait(), the postPhaseAction runs, then all proceed.
-//   CurrentPhaseNumber increments after each phase.
-//
-// WHY: multi-phase ETL where all workers must finish phase 1 before any starts phase 2.
-//   Without Barrier: use N CountdownEvents + manual reset — complex and error-prone.
-//   With Barrier: one primitive handles multi-phase coordination automatically.
-//
-// WHEN TO USE: parallel simulations with time steps, multi-phase data processing,
-//   any algorithm where workers must synchronize between phases
-// ANTI-PATTERNS:
-//   - Don't change participant count at runtime without AddParticipant/RemoveParticipant
-//   - Don't mix Barrier with async/await — SignalAndWait is blocking (thread-affine)
-//   - Don't use for single-phase sync — CountdownEvent is simpler
+// Barrier — phased synchronization where all participants reach a checkpoint
+
 var barrier = new Barrier(
     3, // 3 participants
     b => Console.WriteLine($"  === All workers reached phase {b.CurrentPhaseNumber} ===")
@@ -1161,23 +1162,8 @@ await Task.WhenAll(phasedWorkers);
 <h4><code style="font-size:0.75em">PeriodicTimer</code> — modern scheduled polling</h4>
 
 ```csharp
-// PeriodicTimer — modern .NET 6+ async-friendly timer for scheduled polling
-//
-// WHAT: PeriodicTimer(interval) ticks at fixed intervals. WaitForNextTickAsync()
-//   returns true on each tick, false if the timer is disposed. Integrates with
-//   async/await natively — no callback delegates, no thread pool threads.
-//
-// WHY: replaces legacy System.Timers.Timer and System.Threading.Timer which use
-//   callbacks on thread pool threads (risk of overlapping if tick takes > interval).
-//   PeriodicTimer waits for the consumer to finish before starting the next interval,
-//   so ticks never overlap. Supports CancellationToken for clean shutdown.
-//
-// WHEN TO USE: poll an API every N seconds, check queue depth, refresh cache,
-//   heartbeat monitoring, periodic data export
-// ANTI-PATTERNS:
-//   - Don't use Thread.Sleep in a loop — wastes a thread; PeriodicTimer is async
-//   - Don't use Task.Delay in a loop — drift accumulates; PeriodicTimer compensates for drift
-//   - Don't forget to Dispose — timer keeps running otherwise
+// PeriodicTimer — modern .NET 6+ async-friendly scheduled polling
+
 var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100)); // tick every 100ms
 var timerCts = new CancellationTokenSource(350); // auto-cancel after 350ms
 int ticks = 0;
@@ -1206,35 +1192,5 @@ timer.Dispose(); // release the timer
 #### Choosing the right concurrency tool
 
 ```csharp
-// Summary — choosing the right concurrency tool in C#
-//
-// ┌────────────────────────┬──────────────────┬────────────────────┬────────────────────────┐
-// ├────────────────────────┼──────────────────┼────────────────────┼────────────────────────┤
-// │ async/await          │ I/O-bound        │ Thread pool        │ asyncio                │
-// │ Task.Run()           │ CPU offload       │ Thread pool        │ ThreadPoolExecutor     │
-// │ Parallel.ForEach     │ CPU parallelism   │ Thread pool        │ ProcessPoolExecutor    │
-// │ Parallel.ForEachAsync│ I/O + throttle    │ Async + pool       │ Semaphore + gather     │
-// │ PLINQ                │ Data transforms   │ Thread pool        │ multiprocessing.map    │
-// │ Channel<T>           │ Async messaging   │ Async producer/    │ asyncio.Queue          │
-// │                      │                  │ consumer           │                        │
-// │ Thread + lock        │ Low-level control│ Manual threads     │ threading.Thread+Lock  │
-// │ Interlocked          │ Atomic counters   │ Lock-free          │ (no equivalent)        │
-// │ ConcurrentDictionary │ Shared state      │ Lock-free dict     │ (no equivalent)        │
-// │ BlockingCollection   │ Thread messaging  │ Blocking queue     │ queue.Queue            │
-// └────────────────────────┴──────────────────┴────────────────────┴────────────────────────┘
-//
-// Decision tree:
-//   1. Is the work I/O-bound or CPU-bound?
-//      - I/O → async/await (or Parallel.ForEachAsync for throttling)
-//      - CPU → Parallel.ForEach or Task.Run
-//   2. Need producer-consumer pattern?
-//      - Async → Channel<T>
-//      - Threads → BlockingCollection<T>
-//   3. Need shared state across threads?
-//      - Simple counters → Interlocked
-//      - Key-value → ConcurrentDictionary
-//      - Complex state → lock
-//
-// C# has NO GIL. Threads execute truly in parallel on multiple cores.
-// In C#, Task.Run() and Parallel.ForEach() give real multi-core parallelism.
+// Choosing the right concurrency tool — decision reference
 ```

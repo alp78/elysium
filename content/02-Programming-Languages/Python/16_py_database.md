@@ -17,423 +17,1208 @@ status: complete
 # 16. Database - Python
 
 Topics covered:
-- SQLite CRUD (built-in, zero setup)
-- SQL Server with pyodbc (index data, medallion architecture)
-- Parameterized Queries & SQL Injection Prevention
-- pandas Integration
+- SQLite (built-in, zero setup)
+- SQL Server with pyodbc (ODBC Driver 18)
+- pandas integration (pd.read_sql, to_sql)
 - SQLAlchemy ORM
-- Real-world Index Provider Queries (index provider)
-
-## 1. SQLite — Built-in, Zero Setup
+- DuckDB (embedded analytical SQL)
+- Querying Files — DuckDB vs Polars/Pandas
 
 ```python
-# SQLite — Python's built-in embedded database.
-#
-# KEY CONCEPTS:
-# - sqlite3: built-in module, no install needed. Creates a file-based DB.
-#   C# equivalent: Microsoft.Data.Sqlite
-# - Connection → Cursor → Execute → Fetch → Close
-# - :memory: creates an in-memory DB (lost when connection closes)
-# - Parameterized queries: use ? placeholders, NEVER f-strings with SQL.
-#   Prevents SQL injection — critical for any data pipeline.
-# - context manager: `with` auto-commits on success, rolls back on error.
-
 import sqlite3
+import pyodbc
+import pandas as pd
+import urllib.parse
+import duckdb
+import polars as pl
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session, DeclarativeBase, Mapped, mapped_column
+from datetime import date as Date, datetime
+import time
 
-# ─── Create in-memory database ───
-conn = sqlite3.connect(':memory:')
-conn.row_factory = sqlite3.Row  # access columns by name (like dict)
+DATA = "C:/Users/aperi/DEV/LANG/data"
+
+
+# Polars: strip quotes from string values in HTML display
+_html_fmt = get_ipython().display_formatter.formatters["text/html"]
+_html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="index").to_html())
+```
+
+## 1. SQLite — Built-in Embedded Database
+
+#### SQLite — connect and CREATE TABLE
+
+```python
+# SQLite — Python's built-in embedded database
+#
+# Technique: sqlite3.connect(":memory:") for in-memory, or a file path.
+#   cursor.execute(sql, params) for queries. ? placeholders for parameters.
+#   context manager (with conn:) auto-commits or rolls back.
+#
+# Benefits:
+#   - Built-in — no pip install, no server, works everywhere
+#   - Same SQL as SQL Server for basic operations
+#   - context manager handles commit/rollback automatically
+#
+# Anti-patterns:
+#   - f-strings in SQL — injection risk; always use ? parameters
+#   - Not closing connections — resource leak
+#   - SQLite for concurrent writes — single-writer lock
+#
+# When to use:
+#   - Tests, prototyping, embedded apps, local caches
+#
+# When NOT to use:
+#   - Concurrent multi-user access — use SQL Server or PostgreSQL
+
+conn = sqlite3.connect(":memory:")
+conn.row_factory = sqlite3.Row  # dict-like row access
 cur = conn.cursor()
 
-# ─── CREATE TABLE ───
-cur.execute('''
+cur.execute("""
     CREATE TABLE trades (
         trade_id   TEXT PRIMARY KEY,
         ticker     TEXT NOT NULL,
         side       TEXT NOT NULL CHECK(side IN ('BUY', 'SELL')),
         quantity   INTEGER NOT NULL CHECK(quantity > 0),
         price      REAL NOT NULL CHECK(price > 0),
-        trade_date TEXT NOT NULL DEFAULT (date('now')),
-        notional   REAL GENERATED ALWAYS AS (quantity * price) STORED
-    )
-''')
-print('Created table: trades')
-
-# ─── INSERT (parameterized — ? placeholders) ───
-trades_data = [
-    ('TRD_001', 'ASML.AS', 'BUY',  100, 685.40, '2026-03-15'),
-    ('TRD_002', 'MC.PA',   'BUY',   50, 890.20, '2026-03-15'),
-    ('TRD_003', 'SAP.DE',  'SELL',  75, 245.80, '2026-03-15'),
-    ('TRD_004', 'ASML.AS', 'SELL',  30, 690.00, '2026-03-16'),
-    ('TRD_005', 'RMS.PA',  'BUY',   20, 2850.0, '2026-03-16'),
-    ('TRD_006', 'SIE.DE',  'BUY',  200, 198.50, '2026-03-17'),
-]
-cur.executemany(
-    'INSERT INTO trades (trade_id, ticker, side, quantity, price, trade_date) VALUES (?, ?, ?, ?, ?, ?)',
-    trades_data
-)
-conn.commit()
-print(f'Inserted {len(trades_data)} trades')
-
-# ─── SELECT ───
-print('\n=== All Trades ===')
-for row in cur.execute('SELECT * FROM trades ORDER BY trade_date, trade_id'):
-    print(f"  {row['trade_id']} | {row['ticker']:8s} | {row['side']:4s} | "
-          f"{row['quantity']:>5d} | ${row['price']:>10,.2f} | ${row['notional']:>12,.2f} | {row['trade_date']}")
-
-# ─── WHERE with parameters ───
-print('\n=== ASML Trades Only ===')
-for row in cur.execute('SELECT * FROM trades WHERE ticker = ?', ('ASML.AS',)):
-    print(f"  {row['trade_id']} | {row['side']} | {row['quantity']} @ ${row['price']:,.2f}")
-
-# ─── Aggregate queries ───
-print('\n=== Portfolio Summary ===')
-cur.execute('''
-    SELECT ticker,
-           SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END) AS net_shares,
-           ROUND(SUM(CASE WHEN side='BUY' THEN notional ELSE -notional END), 2) AS net_notional,
-           COUNT(*) AS trade_count
-    FROM trades
-    GROUP BY ticker
-    ORDER BY net_notional DESC
-''')
-for row in cur.fetchall():
-    print(f"  {row['ticker']:8s} | {row['net_shares']:>6d} shares | ${row['net_notional']:>12,.2f} | {row['trade_count']} trades")
-
-# ─── UPDATE ───
-cur.execute('UPDATE trades SET price = ? WHERE trade_id = ?', (700.00, 'TRD_004'))
-conn.commit()
-print(f'\nUpdated TRD_004 price → $700.00 ({cur.rowcount} row affected)')
-
-# ─── DELETE ───
-cur.execute('DELETE FROM trades WHERE trade_id = ?', ('TRD_006',))
-conn.commit()
-print(f'Deleted TRD_006 ({cur.rowcount} row affected)')
-
-# ─── Transaction with context manager ───
-print('\n=== Transaction Example ===')
-try:
-    with conn:
-        conn.execute('INSERT INTO trades (trade_id, ticker, side, quantity, price) VALUES (?, ?, ?, ?, ?)',
-                     ('TRD_007', 'TTE.PA', 'BUY', 150, 58.30))
-        conn.execute('INSERT INTO trades (trade_id, ticker, side, quantity, price) VALUES (?, ?, ?, ?, ?)',
-                     ('TRD_008', 'BNP.PA', 'BUY', 80, 72.10))
-    print('  Transaction committed (2 trades inserted)')
-except Exception as e:
-    print(f'  Transaction rolled back: {e}')
-
-# Final count
-count = cur.execute('SELECT COUNT(*) FROM trades').fetchone()[0]
-print(f'\nTotal trades: {count}')
-
-conn.close()
+        trade_date TEXT NOT NULL DEFAULT (Date('now'))
+    )""")
+print("Created table: trades")
 ```
 
     Created table: trades
-    Inserted 6 trades
-    
-    === All Trades ===
-      TRD_001 | ASML.AS  | BUY  |   100 | $    685.40 | $   68,540.00 | 2026-03-15
-      TRD_002 | MC.PA    | BUY  |    50 | $    890.20 | $   44,510.00 | 2026-03-15
-      TRD_003 | SAP.DE   | SELL |    75 | $    245.80 | $   18,435.00 | 2026-03-15
-      TRD_004 | ASML.AS  | SELL |    30 | $    690.00 | $   20,700.00 | 2026-03-16
-      TRD_005 | RMS.PA   | BUY  |    20 | $  2,850.00 | $   57,000.00 | 2026-03-16
-      TRD_006 | SIE.DE   | BUY  |   200 | $    198.50 | $   39,700.00 | 2026-03-17
-    
-    === ASML Trades Only ===
-      TRD_001 | BUY | 100 @ $685.40
-      TRD_004 | SELL | 30 @ $690.00
-    
-    === Portfolio Summary ===
-      RMS.PA   |     20 shares | $   57,000.00 | 1 trades
-      ASML.AS  |     70 shares | $   47,840.00 | 2 trades
-      MC.PA    |     50 shares | $   44,510.00 | 1 trades
-      SIE.DE   |    200 shares | $   39,700.00 | 1 trades
-      SAP.DE   |    -75 shares | $  -18,435.00 | 1 trades
-    
-    Updated TRD_004 price → $700.00 (1 row affected)
-    Deleted TRD_006 (1 row affected)
-    
-    === Transaction Example ===
-      Transaction committed (2 trades inserted)
-    
-    Total trades: 7
 
-## 2. SQL Server — Index Data (Medallion Architecture)
+#### SQLite — INSERT with ? parameterised queries
 
 ```python
-# SQL Server with pyodbc — connecting to a real index provider database.
-#
-# KEY CONCEPTS:
-# - pyodbc: ODBC driver for Python. Connects to SQL Server, PostgreSQL, etc.
-#   C# equivalent: Microsoft.Data.SqlClient (ADO.NET)
-# - Connection string: server, database, credentials, encryption settings.
-# - Parameterized queries: use ? placeholders (same as SQLite).
-# - cursor.description: column names/types from the result set.
-#
-# DATABASE: stoxx (index provider index data)
-# Architecture: Bronze (raw) → Silver (cleaned) → Gold (computed scores)
-# Indices: Euro Stoxx 50, STOXX Asia/Pacific 50, STOXX USA 50, Oil & Gas 20
-# ~169 stocks, OHLCV history from 2021, daily/quarterly signals, composite scores.
+# INSERT with ? placeholders — prevents SQL injection
 
-import pyodbc
+trades = [
+    ("TRD_001", "ASML.AS", "BUY",  100, 685.40, "2026-03-15"),
+    ("TRD_002", "MC.PA",   "BUY",   50, 890.20, "2026-03-15"),
+    ("TRD_003", "SAP.DE",  "SELL",  75, 245.80, "2026-03-15"),
+    ("TRD_004", "ASML.AS", "SELL",  30, 690.00, "2026-03-16"),
+    ("TRD_005", "RMS.PA",  "BUY",   20, 2850.0, "2026-03-16"),
+    ("TRD_006", "SIE.DE",  "BUY",  200, 198.50, "2026-03-17"),
+]
+cur.executemany("INSERT INTO trades VALUES (?,?,?,?,?,?)", trades)
+conn.commit()
+print(f"Inserted {len(trades)} trades")
+```
 
-CONN_STR = (
-    'Driver={ODBC Driver 18 for SQL Server};'
-    'Server=localhost,1434;'
-    'Database=stoxx;'
-    'UID=sa;'
-    'PWD=EsgDev2026Pass1;'
-    'Encrypt=yes;'
-    'TrustServerCertificate=yes;'
-)
+    Inserted 6 trades
 
-conn = pyodbc.connect(CONN_STR)
-cur = conn.cursor()
-print('Connected to SQL Server: stoxx database')
+#### SQLite — SELECT into pandas DataFrame
 
-# ─── Explore: list tables by schema (bronze/silver/gold) ───
-print('\n=== Tables by Schema ===')
-cur.execute('''
-    SELECT s.name AS schema_name, t.name AS table_name, p.rows
-    FROM sys.tables t
-    JOIN sys.schemas s ON t.schema_id = s.schema_id
-    JOIN sys.partitions p ON t.object_id = p.object_id AND p.index_id IN (0, 1)
-    ORDER BY s.name, t.name
-''')
-current_schema = ''
-for row in cur.fetchall():
-    if row.schema_name != current_schema:
-        current_schema = row.schema_name
-        print(f'\n  [{current_schema.upper()}]')
-    print(f'    {row.table_name:30s} {row.rows:>10,d} rows')
+```python
+# SELECT — display as pandas DataFrame
 
-# ─── Index universe: which indices are tracked? ───
-print('\n=== Index Universe ===')
-cur.execute('SELECT index_key, display_name, currency FROM bronze.dim_index ORDER BY display_name')
-for row in cur.fetchall():
-    print(f'  {row.index_key:20s} {row.display_name:30s} {row.currency}')
+pd.read_sql("SELECT *, quantity * price AS notional FROM trades ORDER BY trade_date, trade_id", conn)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>trade_id</th>
+      <th>ticker</th>
+      <th>side</th>
+      <th>quantity</th>
+      <th>price</th>
+      <th>trade_date</th>
+      <th>notional</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>TRD_001</td>
+      <td>ASML.AS</td>
+      <td>BUY</td>
+      <td>100</td>
+      <td>685.4</td>
+      <td>2026-03-15</td>
+      <td>68540.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TRD_002</td>
+      <td>MC.PA</td>
+      <td>BUY</td>
+      <td>50</td>
+      <td>890.2</td>
+      <td>2026-03-15</td>
+      <td>44510.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>TRD_003</td>
+      <td>SAP.DE</td>
+      <td>SELL</td>
+      <td>75</td>
+      <td>245.8</td>
+      <td>2026-03-15</td>
+      <td>18435.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>TRD_004</td>
+      <td>ASML.AS</td>
+      <td>SELL</td>
+      <td>30</td>
+      <td>690.0</td>
+      <td>2026-03-16</td>
+      <td>20700.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>TRD_005</td>
+      <td>RMS.PA</td>
+      <td>BUY</td>
+      <td>20</td>
+      <td>2850.0</td>
+      <td>2026-03-16</td>
+      <td>57000.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>TRD_006</td>
+      <td>SIE.DE</td>
+      <td>BUY</td>
+      <td>200</td>
+      <td>198.5</td>
+      <td>2026-03-17</td>
+      <td>39700.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQLite — SELECT with WHERE parameter
+
+```python
+# WHERE with ? parameter
+
+pd.read_sql("SELECT * FROM trades WHERE ticker = ?", conn, params=("ASML.AS",))
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>trade_id</th>
+      <th>ticker</th>
+      <th>side</th>
+      <th>quantity</th>
+      <th>price</th>
+      <th>trade_date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>TRD_001</td>
+      <td>ASML.AS</td>
+      <td>BUY</td>
+      <td>100</td>
+      <td>685.4</td>
+      <td>2026-03-15</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TRD_004</td>
+      <td>ASML.AS</td>
+      <td>SELL</td>
+      <td>30</td>
+      <td>690.0</td>
+      <td>2026-03-16</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQLite — aggregate with GROUP BY
+
+```python
+# Aggregate — net position per ticker
+
+pd.read_sql("""
+    SELECT ticker,
+           SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END) AS net_shares,
+           ROUND(SUM(CASE WHEN side='BUY' THEN quantity*price ELSE -quantity*price END), 2) AS net_notional,
+           COUNT(*) AS trade_count
+    FROM trades GROUP BY ticker ORDER BY net_notional DESC""", conn)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ticker</th>
+      <th>net_shares</th>
+      <th>net_notional</th>
+      <th>trade_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>RMS.PA</td>
+      <td>20</td>
+      <td>57000.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>70</td>
+      <td>47840.0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>MC.PA</td>
+      <td>50</td>
+      <td>44510.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SIE.DE</td>
+      <td>200</td>
+      <td>39700.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>-75</td>
+      <td>-18435.0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQLite — UPDATE and DELETE
+
+```python
+# UPDATE
+cur.execute("UPDATE trades SET price = ? WHERE trade_id = ?", (700.00, "TRD_004"))
+print(f"UPDATE: {cur.rowcount} row")
+
+# DELETE
+cur.execute("DELETE FROM trades WHERE trade_id = ?", ("TRD_006",))
+print(f"DELETE: {cur.rowcount} row")
+conn.commit()
+```
+
+    UPDATE: 1 row
+    DELETE: 1 row
+
+#### SQLite — transaction with context manager
+
+```python
+# Transaction — with conn: auto-commits, rolls back on exception
+
+try:
+    with conn:
+        conn.execute("INSERT INTO trades VALUES (?,?,?,?,?,?)",
+            ("TRD_007", "TTE.PA", "BUY", 150, 58.30, Date.today().isoformat()))
+        conn.execute("INSERT INTO trades VALUES (?,?,?,?,?,?)",
+            ("TRD_008", "BNP.PA", "BUY", 80, 72.10, Date.today().isoformat()))
+    print("Transaction committed (2 trades)")
+except Exception as e:
+    print(f"Transaction rolled back: {e}")
+
+print(f"Total trades: {conn.execute('SELECT COUNT(*) FROM trades').fetchone()[0]}")
+```
+
+    Transaction committed (2 trades)
+    Total trades: 7
+
+#### SQLite — PRAGMA settings for performance
+
+```python
+# PRAGMA — configure SQLite per connection
+
+for pragma, value in [
+    ("journal_mode", "WAL"),
+    ("synchronous", "NORMAL"),
+    ("cache_size", "-20000"),
+    ("busy_timeout", "5000"),
+    ("foreign_keys", "ON"),
+]:
+    cur.execute(f"PRAGMA {pragma}={value}")
+    result = cur.execute(f"PRAGMA {pragma}").fetchone()[0]
+    print(f"  {pragma:20s} = {result}")
+```
+
+      journal_mode         = memory
+      synchronous          = 1
+      cache_size           = -20000
+      busy_timeout         = 5000
+      foreign_keys         = 1
+
+#### SQLite — CREATE INDEX and EXPLAIN QUERY PLAN
+
+```python
+# Create index and compare query plans
+
+cur.execute("CREATE INDEX IF NOT EXISTS idx_trades_ticker ON trades(ticker)")
+print("Created: idx_trades_ticker")
+
+# EXPLAIN QUERY PLAN
+plan = cur.execute("EXPLAIN QUERY PLAN SELECT * FROM trades WHERE ticker = 'ASML.AS'").fetchall()
+for row in plan:
+    print(f"  {dict(row)}")
 
 conn.close()
+```
+
+    Created: idx_trades_ticker
+      {'id': 3, 'parent': 0, 'notused': 0, 'detail': 'SEARCH trades USING INDEX idx_trades_ticker (ticker=?)'}
+
+## 2. SQL Server — pyodbc (ODBC Driver 18)
+
+#### SQL Server — connect and list schemas/tables
+
+```python
+# SQL Server with pyodbc + SQLAlchemy engine
+#
+# Technique: pyodbc.connect() for direct cursor operations (INSERT/UPDATE/DELETE).
+#   SQLAlchemy create_engine() for pd.read_sql() (avoids the DBAPI2 warning).
+#   Both use the same ODBC Driver 18 connection underneath.
+#
+# Benefits:
+#   - pyodbc cursor for DML — direct, fast, rowcount available
+#   - SQLAlchemy engine for pd.read_sql — no warnings, connection pooling
+#
+# Anti-patterns:
+#   - pd.read_sql with raw pyodbc — works but triggers UserWarning
+#   - f-strings in SQL — injection risk; use ? or :param
+#
+# When to use:
+#   - Direct SQL queries, scripts, notebooks
+#
+# When NOT to use:
+#   - ORM scenarios — use SQLAlchemy ORM
+
+import urllib.parse
+
+conn_str = (
+    'Driver={ODBC Driver 18 for SQL Server};'
+    'Server=localhost,1434;Database=stoxx;'
+    'UID=sa;PWD=EsgDev2026Pass1;'
+    'Encrypt=yes;TrustServerCertificate=yes;'
+)
+
+# pyodbc connection for DML (INSERT/UPDATE/DELETE)
+sql_conn = pyodbc.connect(conn_str)
+cur = sql_conn.cursor()
+
+# SQLAlchemy engine for pd.read_sql (no warnings)
+odbc_params = urllib.parse.quote_plus(conn_str)
+sql_engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
+
+print("Connected to SQL Server: stoxx database")
 ```
 
     Connected to SQL Server: stoxx database
-    
-    === Tables by Schema ===
-    
-      [BRONZE]
-        dim_country                           212 rows
-        dim_index                               4 rows
-        eurostoxx50_ohlcv                      50 rows
-        index_dim                             169 rows
-        oil20_ohlcv                            19 rows
-        pulse                                  40 rows
-        pulse_tickers                          40 rows
-        signals_daily                         169 rows
-        signals_quarterly                     169 rows
-        stoxxasia50_ohlcv                      50 rows
-        stoxxusa50_ohlcv                       50 rows
-        trading_calendar                   29,335 rows
-    
-      [GOLD]
-        index_performance                   5,281 rows
-        scores_daily                          466 rows
-        scores_quarterly                      170 rows
-    
-      [SILVER]
-        eurostoxx50_ohlcv                  66,355 rows
-        index_dim                             169 rows
-        oil20_ohlcv                        24,738 rows
-        signals_daily                         466 rows
-        signals_quarterly                     177 rows
-        stoxxasia50_ohlcv                  64,045 rows
-        stoxxusa50_ohlcv                   65,100 rows
-    
-    === Index Universe ===
-      euro_stoxx_50        Euro Stoxx 50                  €
-      oil_20               Oil & Gas 20                   $
-      stoxx_asia_50        STOXX Asia/Pacific 50          
-      stoxx_usa_50         STOXX USA 50                   $
+
+#### SQL Server — SELECT with parameterised query
 
 ```python
-# ─── Real-world index provider queries ───
-# These are the types of queries an index provider like index provider runs daily:
-# constituent analysis, performance tracking, rebalancing signals.
+# Parameterised query — ? placeholder
 
-import pyodbc
-
-conn = pyodbc.connect(
-    'Driver={ODBC Driver 18 for SQL Server};'
-    'Server=localhost,1434;Database=stoxx;'
-    'UID=sa;PWD=EsgDev2026Pass1;'
-    'Encrypt=yes;TrustServerCertificate=yes;'
-)
-cur = conn.cursor()
-
-# ─── 1. Index constituents with sector breakdown ───
-print('=== Euro Stoxx 50: Sector Breakdown ===')
-cur.execute('''
-    SELECT sector, COUNT(*) AS stocks, 
-           STRING_AGG(symbol, ', ') AS tickers
-    FROM silver.index_dim
-    WHERE _index = 'euro_stoxx_50' AND is_current = 1
-    GROUP BY sector
-    ORDER BY stocks DESC
-''')
-for row in cur.fetchall():
-    print(f'  {row.sector:30s} {row.stocks:>3d}  [{row.tickers[:60]}]')
-
-# ─── 2. Latest OHLCV prices (top movers) ───
-print('\n=== Euro Stoxx 50: Latest Prices (Top 10 by Volume) ===')
-cur.execute('''
-    SELECT TOP 10 o.symbol, d.short_name, o.date, 
-           o.[close], o.volume,
-           ROUND((o.[close] - o.[open]) / o.[open] * 100, 2) AS day_change_pct
-    FROM silver.eurostoxx50_ohlcv o
-    JOIN silver.index_dim d ON o.symbol = d.symbol AND d._index = 'euro_stoxx_50'
-    WHERE o.date = (SELECT MAX(date) FROM silver.eurostoxx50_ohlcv)
-    ORDER BY o.volume DESC
-''')
-print(f'{"Symbol":10s} {"Name":20s} {"Date":12s} {"Close":>10s} {"Volume":>12s} {"Change%":>8s}')
-print('─' * 78)
-for row in cur.fetchall():
-    print(f'{row.symbol:10s} {(row.short_name or "")[:20]:20s} {str(row.date):12s} '
-          f'{row.close:>10,.2f} {row.volume:>12,d} {row.day_change_pct:>+8.2f}%')
-
-# ─── 3. Gold layer: composite stock scores (value + momentum + sentiment) ───
-print('\n=== Gold: Top 10 Composite Scores (Euro Stoxx 50) ===')
-cur.execute('''
-    SELECT TOP 10 symbol, short_name, sector,
-           composite_score, composite_rank,
-           relative_value_score, momentum_score, sentiment_score,
-           current_price, index_weight
-    FROM gold.scores_daily
-    WHERE _index = 'euro_stoxx_50'
-      AND score_date = (SELECT MAX(score_date) FROM gold.scores_daily WHERE _index = 'euro_stoxx_50')
-    ORDER BY composite_rank
-''')
-print(f'{"Rank":>4s} {"Symbol":10s} {"Name":18s} {"Composite":>10s} {"Value":>7s} {"Momentum":>9s} {"Sentiment":>10s} {"Weight":>7s}')
-print('─' * 82)
-for row in cur.fetchall():
-    print(f'{row.composite_rank:>4d} {row.symbol:10s} {(row.short_name or "")[:18]:18s} '
-          f'{row.composite_score:>10.4f} {row.relative_value_score:>7.3f} '
-          f'{row.momentum_score:>9.3f} {row.sentiment_score:>10.3f} '
-          f'{(row.index_weight or 0)*100:>6.2f}%')
-
-# ─── 4. Index performance (gold layer) ───
-print('\n=== Gold: Index Performance (Last 5 Trading Days) ===')
-cur.execute('''
-    SELECT TOP 5 _index, perf_date,
-           ROUND(daily_return * 100, 3) AS daily_ret_pct,
-           ROUND(ytd_return * 100, 2) AS ytd_pct,
-           ROUND(rolling_30d_volatility * 100, 2) AS vol_30d_pct,
-           stocks_count, avg_pe, avg_dividend_yield
-    FROM gold.index_performance
-    WHERE _index = 'euro_stoxx_50'
-    ORDER BY perf_date DESC
-''')
-print(f'{"Date":12s} {"Daily%":>8s} {"YTD%":>8s} {"Vol30d%":>8s} {"#Stocks":>8s} {"Avg PE":>8s} {"DivYld":>7s}')
-print('─' * 65)
-for row in cur.fetchall():
-    print(f'{str(row.perf_date):12s} {row.daily_ret_pct:>+8.3f} {row.ytd_pct:>+8.2f} '
-          f'{row.vol_30d_pct:>8.2f} {row.stocks_count:>8d} '
-          f'{row.avg_pe or 0:>8.1f} {(row.avg_dividend_yield or 0)*100:>6.2f}%')
-
-# ─── 5. Cross-index comparison ───
-print('\n=== Cross-Index: Latest Performance ===')
-cur.execute('''
-    SELECT p._index, d.display_name,
-           ROUND(p.ytd_return * 100, 2) AS ytd_pct,
-           ROUND(p.rolling_30d_return * 100, 2) AS ret_30d_pct,
-           ROUND(p.rolling_30d_volatility * 100, 2) AS vol_30d_pct,
-           p.stocks_count, p.avg_pe
-    FROM gold.index_performance p
-    JOIN bronze.dim_index d ON p._index = d.index_key
-    WHERE p.perf_date = (
-        SELECT MAX(perf_date) FROM gold.index_performance WHERE _index = p._index
-    )
-    ORDER BY ytd_pct DESC
-''')
-print(f'{"Index":25s} {"YTD%":>8s} {"30d Ret%":>9s} {"30d Vol%":>9s} {"Stocks":>7s} {"Avg PE":>7s}')
-print('─' * 70)
-for row in cur.fetchall():
-    print(f'{row.display_name:25s} {row.ytd_pct:>+8.2f} {row.ret_30d_pct:>+9.2f} '
-          f'{row.vol_30d_pct:>9.2f} {row.stocks_count:>7d} {row.avg_pe or 0:>7.1f}')
-
-conn.close()
+pd.read_sql("""
+    SELECT TOP 10 symbol, date, [open], high, low, [close], volume
+    FROM silver.eurostoxx50_ohlcv
+    WHERE symbol = ?
+    ORDER BY date DESC""", sql_engine, params=("SAP.DE",))
 ```
 
-    === Euro Stoxx 50: Sector Breakdown ===
-      Financial Services              11  [NDA-FI.HE, ISP.MI, MUV2.DE, INGA.AS, CS.PA, ALV.DE, BBVA.MC,]
-      Industrials                     10  [DHL.DE, AIR.PA, DG.PA, RHM.DE, ENR.DE, SAF.PA, SU.PA, SIE.DE]
-      Consumer Cyclical                9  [MC.PA, RMS.PA, PRX.AS, RACE.MI, BMW.DE, MBG.DE, VOW.DE, ADS.]
-      Technology                       5  [DSY.PA, ADYEN.AS, ASML.AS, SAP.DE, IFX.DE]
-      Healthcare                       4  [BAYN.DE, ARGX.BR, EL.PA, SAN.PA]
-      Consumer Defensive               4  [AD.AS, BN.PA, OR.PA, ABI.BR]
-      Energy                           2  [TTE.PA, ENI.MI]
-      Basic Materials                  2  [AI.PA, BAS.DE]
-      Utilities                        2  [ENEL.MI, IBE.MC]
-      Communication Services           1  [DTE.DE]
-    
-    === Euro Stoxx 50: Latest Prices (Top 10 by Volume) ===
-    Symbol     Name                 Date              Close       Volume  Change%
-    ──────────────────────────────────────────────────────────────────────────────
-    ISP.MI     INTESA SANPAOLO      2026-03-12         5.20   16,904,468    -1.18%
-    SAN.MC     BANCO SANTANDER S.A. 2026-03-12         9.62    8,210,717    -1.82%
-    ENEL.MI    ENEL                 2026-03-12         9.36    6,181,446    -1.00%
-    ENI.MI     ENI                  2026-03-12        21.34    4,902,953    +0.05%
-    BBVA.MC    BANCO BILBAO VIZCAYA 2026-03-12        18.17    4,682,093    -3.09%
-    UCG.MI     UNICREDIT            2026-03-12        65.95    2,145,710    -1.86%
-    INGA.AS    ING GROEP N.V.       2026-03-12        22.91    1,581,321    -1.76%
-    IBE.MC     ACCIONES IBERDROLA   2026-03-12        19.20    1,539,201    +0.29%
-    BAS.DE     BASF SE              2026-03-12        47.71    1,483,587    +3.05%
-    TTE.PA     TOTALENERGIES        2026-03-12        69.77    1,417,322    -0.34%
-    
-    === Gold: Top 10 Composite Scores (Euro Stoxx 50) ===
-    Rank Symbol     Name                Composite   Value  Momentum  Sentiment  Weight
-    ──────────────────────────────────────────────────────────────────────────────────
-       1 BNP.PA     BNP PARIBAS ACT.A      0.6796   1.497     0.460      0.081   1.94%
-       2 VOW.DE     VOLKSWAGEN AG          0.5756   1.028    -0.382      1.081   0.93%
-       3 DTE.DE     DEUTSCHE TELEKOM A     0.4870   0.226     0.706      0.529   3.13%
-       4 TTE.PA     TOTALENERGIES          0.3913   0.585     1.307     -0.719   2.95%
-       5 ABI.BR     AB INBEV               0.3852   0.251     0.537      0.368   2.43%
-       6 IFX.DE     INFINEON TECHNOLOG     0.3487   0.084     0.302      0.661   1.06%
-       7 SAN.MC     BANCO SANTANDER S.     0.3106  -0.037     0.450      0.519   2.78%
-       8 DG.PA      VINCI                  0.2928   0.957     0.489     -0.568   1.43%
-       9 ISP.MI     INTESA SANPAOLO        0.2852   0.553    -0.208      0.511   1.80%
-      10 BAYN.DE    Bayer AG               0.2724   0.349     0.642     -0.174   0.77%
-    
-    === Gold: Index Performance (Last 5 Trading Days) ===
-    Date           Daily%     YTD%  Vol30d%  #Stocks   Avg PE  DivYld
-    ─────────────────────────────────────────────────────────────────
-    2026-03-12     -0.656    -2.39    18.06       50     14.0   2.90%
-    2026-03-11     -0.703    -1.75    18.02       50     14.0   2.90%
-    2026-03-10     +2.531    -1.05    18.01       50     14.0   2.90%
-    2026-03-09     -0.674    -3.49    16.29       50     14.2  15.00%
-    2026-03-06     -0.997    -2.84    16.22       49     14.2  15.00%
-    
-    === Cross-Index: Latest Performance ===
-    Index                         YTD%  30d Ret%  30d Vol%  Stocks  Avg PE
-    ──────────────────────────────────────────────────────────────────────
-    Oil & Gas 20                +27.70    +15.33     21.93      19    16.1
-    STOXX Asia/Pacific 50        +5.45     +2.68     23.30      50    15.8
-    STOXX USA 50                 +3.71     +0.60     13.32      50    20.8
-    Euro Stoxx 50                -2.39     -2.08     18.06      50    14.0
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-## 3. pandas Integration
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>open</th>
+      <th>high</th>
+      <th>low</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>163.00</td>
+      <td>166.74</td>
+      <td>162.80</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>167.10</td>
+      <td>168.96</td>
+      <td>163.02</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>171.60</td>
+      <td>172.88</td>
+      <td>166.46</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>173.72</td>
+      <td>173.86</td>
+      <td>168.52</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>173.66</td>
+      <td>175.10</td>
+      <td>170.24</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>SAP.DE</td>
+      <td>2026-03-05</td>
+      <td>167.50</td>
+      <td>172.80</td>
+      <td>166.48</td>
+      <td>170.98</td>
+      <td>2961032</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>SAP.DE</td>
+      <td>2026-03-04</td>
+      <td>169.22</td>
+      <td>169.22</td>
+      <td>165.94</td>
+      <td>167.38</td>
+      <td>2443582</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>SAP.DE</td>
+      <td>2026-03-03</td>
+      <td>165.60</td>
+      <td>166.16</td>
+      <td>161.28</td>
+      <td>165.48</td>
+      <td>3971985</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>SAP.DE</td>
+      <td>2026-03-02</td>
+      <td>166.62</td>
+      <td>169.10</td>
+      <td>164.86</td>
+      <td>167.10</td>
+      <td>2776438</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>SAP.DE</td>
+      <td>2026-02-27</td>
+      <td>172.00</td>
+      <td>173.34</td>
+      <td>168.28</td>
+      <td>170.96</td>
+      <td>2673448</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQL Server — aggregate with GROUP BY
 
 ```python
-# pandas + SQL — the standard way to work with database data in Python.
-#
-# KEY CONCEPTS:
-# - pd.read_sql(): execute SQL and return a DataFrame.
-# - df.to_sql(): write a DataFrame to a database table.
-# - Best practice: pass a SQLAlchemy engine (not raw pyodbc connection).
-#   Raw pyodbc works at runtime but triggers Pylance type warnings.
+# Aggregate — top 10 stocks by volume
 
-import pandas as pd
-from sqlalchemy import create_engine, text
-import urllib.parse
+pd.read_sql("""
+    SELECT TOP 10 symbol,
+           COUNT(*) AS trading_days,
+           ROUND(AVG(CAST([close] AS FLOAT)), 2) AS avg_close,
+           SUM(CAST(volume AS BIGINT)) AS total_volume
+    FROM silver.eurostoxx50_ohlcv
+    GROUP BY symbol
+    ORDER BY total_volume DESC""", sql_engine)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>trading_days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.15</td>
+      <td>115704541969</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.43</td>
+      <td>55513641918</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.82</td>
+      <td>32600561934</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.65</td>
+      <td>22133773194</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.46</td>
+      <td>18366801099</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.40</td>
+      <td>17141570967</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.04</td>
+      <td>17041577555</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.26</td>
+      <td>15994295949</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.43</td>
+      <td>10029411390</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.85</td>
+      <td>7020342991</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQL Server — INSERT, UPDATE, DELETE
+
+```python
+# INSERT
+cur.execute("""
+    IF OBJECT_ID('dbo.trades_demo', 'U') IS NOT NULL DROP TABLE dbo.trades_demo;
+    CREATE TABLE dbo.trades_demo (
+        trade_id NVARCHAR(20) PRIMARY KEY, ticker NVARCHAR(10),
+        side NVARCHAR(4), quantity INT, price DECIMAL(10,2))""")
+cur.execute("INSERT INTO dbo.trades_demo VALUES (?,?,?,?,?)",
+    "TRD_001", "ASML.AS", "BUY", 100, 685.40)
+print(f"INSERT: {cur.rowcount} row")
+
+# UPDATE
+cur.execute("UPDATE dbo.trades_demo SET price = ? WHERE trade_id = ?", 700.00, "TRD_001")
+print(f"UPDATE: {cur.rowcount} row")
+
+# DELETE
+cur.execute("DELETE FROM dbo.trades_demo WHERE trade_id = ?", "TRD_001")
+print(f"DELETE: {cur.rowcount} row")
+
+cur.execute("DROP TABLE dbo.trades_demo")
+sql_conn.commit()
+```
+
+    INSERT: 1 row
+    UPDATE: 1 row
+    DELETE: 1 row
+
+#### SQL Server — list indexes on a table
+
+```python
+# List indexes — sys.indexes + sys.index_columns
+
+pd.read_sql("""
+    SELECT i.name AS index_name, i.type_desc, i.is_unique,
+           STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS columns
+    FROM sys.indexes i
+    JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+    JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+    WHERE i.object_id = OBJECT_ID('silver.eurostoxx50_ohlcv')
+    GROUP BY i.name, i.type_desc, i.is_unique
+    ORDER BY i.name""", sql_engine)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>index_name</th>
+      <th>type_desc</th>
+      <th>is_unique</th>
+      <th>columns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>IX_silver_eurostoxx50_ohlcv_symbol_date</td>
+      <td>NONCLUSTERED</td>
+      <td>True</td>
+      <td>symbol, date</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>PK__eurostox__3213E83FDF67D274</td>
+      <td>CLUSTERED</td>
+      <td>True</td>
+      <td>id</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQL Server — index fragmentation
+
+```python
+# Index fragmentation — sys.dm_db_index_physical_stats
+
+pd.read_sql("""
+    SELECT TOP 10 OBJECT_NAME(ips.object_id) AS [table],
+           i.name AS [index], ips.index_type_desc AS type,
+           ROUND(ips.avg_fragmentation_in_percent, 1) AS frag_pct,
+           ips.page_count AS pages,
+           CASE WHEN ips.avg_fragmentation_in_percent < 10 THEN 'OK'
+                WHEN ips.avg_fragmentation_in_percent < 30 THEN 'REORGANIZE'
+                ELSE 'REBUILD' END AS action
+    FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
+    JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
+    WHERE ips.page_count > 10
+    ORDER BY ips.avg_fragmentation_in_percent DESC""", sql_engine)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>table</th>
+      <th>index</th>
+      <th>type</th>
+      <th>frag_pct</th>
+      <th>pages</th>
+      <th>action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>index_dim</td>
+      <td>PK__index_di__3213E83FDB4E5BA9</td>
+      <td>CLUSTERED INDEX</td>
+      <td>13.6</td>
+      <td>88</td>
+      <td>REORGANIZE</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>index_performance</td>
+      <td>UX_gold_index_performance</td>
+      <td>NONCLUSTERED INDEX</td>
+      <td>5.3</td>
+      <td>19</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>index_performance</td>
+      <td>PK__index_pe__3213E83FBBB2393E</td>
+      <td>CLUSTERED INDEX</td>
+      <td>4.9</td>
+      <td>81</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>stoxxusa50_ohlcv</td>
+      <td>PK__stoxxusa__3213E83FC84E3F24</td>
+      <td>CLUSTERED INDEX</td>
+      <td>1.4</td>
+      <td>724</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>index_dim</td>
+      <td>PK__index_di__3213E83F590AA69E</td>
+      <td>CLUSTERED INDEX</td>
+      <td>1.2</td>
+      <td>85</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>stoxxusa50_ohlcv</td>
+      <td>IX_silver_stoxxusa50_ohlcv_symbol_date</td>
+      <td>NONCLUSTERED INDEX</td>
+      <td>0.6</td>
+      <td>163</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>stoxxasia50_ohlcv</td>
+      <td>IX_silver_stoxxasia50_ohlcv_symbol_date</td>
+      <td>NONCLUSTERED INDEX</td>
+      <td>0.5</td>
+      <td>183</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>stoxxasia50_ohlcv</td>
+      <td>PK__stoxxasi__3213E83F66A8DE5E</td>
+      <td>CLUSTERED INDEX</td>
+      <td>0.4</td>
+      <td>729</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>eurostoxx50_ohlcv</td>
+      <td>PK__eurostox__3213E83FDF67D274</td>
+      <td>CLUSTERED INDEX</td>
+      <td>0.4</td>
+      <td>757</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>oil20_ohlcv</td>
+      <td>PK__oil20_oh__3213E83F544EB286</td>
+      <td>CLUSTERED INDEX</td>
+      <td>0.4</td>
+      <td>275</td>
+      <td>OK</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQL Server — database and table sizes
+
+```python
+# Database and table sizes
+
+print("=== Database Size ===")
+display(pd.read_sql("SELECT DB_NAME() AS db, CAST(SUM(size)*8.0/1024 AS DECIMAL(10,2)) AS size_mb FROM sys.database_files", sql_engine))
+
+print("\n=== Table Sizes ===")
+pd.read_sql("""
+    SELECT TOP 10 s.name + '.' + t.name AS [table],
+           FORMAT(SUM(p.rows), 'N0') AS rows,
+           CAST(SUM(a.total_pages)*8.0/1024 AS DECIMAL(10,2)) AS size_mb
+    FROM sys.tables t
+    JOIN sys.schemas s ON t.schema_id = s.schema_id
+    JOIN sys.indexes i ON t.object_id = i.object_id
+    JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
+    JOIN sys.allocation_units a ON p.partition_id = a.container_id
+    GROUP BY s.name, t.name ORDER BY SUM(a.total_pages) DESC""", sql_engine)
+```
+
+    === Database Size ===
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>db</th>
+      <th>size_mb</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>stoxx</td>
+      <td>272.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+    
+    === Table Sizes ===
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>table</th>
+      <th>rows</th>
+      <th>size_mb</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>silver.eurostoxx50_ohlcv</td>
+      <td>132,710</td>
+      <td>7.52</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>silver.stoxxasia50_ohlcv</td>
+      <td>128,090</td>
+      <td>7.27</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>silver.stoxxusa50_ohlcv</td>
+      <td>130,200</td>
+      <td>7.08</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>silver.oil20_ohlcv</td>
+      <td>49,476</td>
+      <td>2.77</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>bronze.trading_calendar</td>
+      <td>58,670</td>
+      <td>1.58</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>bronze.index_dim</td>
+      <td>676</td>
+      <td>1.02</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>gold.index_performance</td>
+      <td>10,562</td>
+      <td>1.02</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>silver.index_dim</td>
+      <td>676</td>
+      <td>0.77</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>bronze.eurostoxx50_ohlcv</td>
+      <td>100</td>
+      <td>0.33</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>gold.scores_daily</td>
+      <td>932</td>
+      <td>0.33</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### SQL Server — server info and configuration
+
+```python
+# Server metadata
+
+display(pd.read_sql("""
+    SELECT SUBSTRING(@@VERSION, 1, CHARINDEX(' (', @@VERSION)-1) AS version,
+           CAST(SERVERPROPERTY('Edition') AS NVARCHAR(100)) AS edition,
+           CAST(SERVERPROPERTY('Collation') AS NVARCHAR(100)) AS collation""", sql_engine))
+
+pd.read_sql("""
+    SELECT name AS setting, CAST(value_in_use AS NVARCHAR(30)) AS value
+    FROM sys.configurations
+    WHERE name IN ('max server memory (MB)', 'max degree of parallelism', 'cost threshold for parallelism')
+    ORDER BY name""", sql_engine)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>version</th>
+      <th>edition</th>
+      <th>collation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Microsoft SQL Server 2022</td>
+      <td>Developer Edition (64-bit)</td>
+      <td>SQL_Latin1_General_CP1_CI_AS</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>setting</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>cost threshold for parallelism</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>max degree of parallelism</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>max server memory (MB)</td>
+      <td>2147483647</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+## 3. pandas Integration — pd.read_sql and to_sql
+
+#### pandas — read_sql into DataFrame with SQLAlchemy engine
+
+```python
+# pandas + SQLAlchemy engine — the standard pattern
+#
+# Technique: pd.read_sql(sql, engine) executes SQL and returns DataFrame.
+#   SQLAlchemy engine handles connection pooling and dialect translation.
+#   pd.read_sql works with raw pyodbc too but SQLAlchemy is preferred.
+#
+# Benefits:
+#   - One-liner: SQL result → DataFrame ready for analysis
+#   - SQLAlchemy engine handles connection lifecycle
+#   - Works with any database SQLAlchemy supports
+#
+# Anti-patterns:
+#   - pd.read_sql with raw pyodbc — works but triggers Pylance warnings
+#   - Reading entire large table — add WHERE/LIMIT clauses
+#
+# When to use:
+#   - Any time you need SQL results as a DataFrame
+#
+# When NOT to use:
+#   - Streaming large results row by row — use cursor.fetchmany()
 
 odbc_params = urllib.parse.quote_plus(
     'Driver={ODBC Driver 18 for SQL Server};'
@@ -441,264 +1226,2986 @@ odbc_params = urllib.parse.quote_plus(
     'UID=sa;PWD=EsgDev2026Pass1;'
     'Encrypt=yes;TrustServerCertificate=yes;'
 )
-engine = create_engine(f'mssql+pyodbc:///?odbc_connect={odbc_params}')
+engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
 
-# ─── Read SQL into DataFrame ───
-print('=== OHLCV DataFrame ===')
-df = pd.read_sql(text('''
-    SELECT symbol, date, [open], high, low, [close], volume
-    FROM silver.eurostoxx50_ohlcv
-    WHERE symbol = 'ASML.AS'
-      AND date >= '2026-01-01'
-    ORDER BY date DESC
-'''), engine)
-print(df.head(10).to_string(index=False))
-print(f'\nShape: {df.shape}')
-
-# ─── Analytics with pandas ───
-print('\n=== ASML 2026 Stats ===')
-print(f"  Mean close:  {df['close'].mean():.2f}")
-print(f"  Std close:   {df['close'].std():.2f}")
-print(f"  Max volume:  {df['volume'].max():,}")
-print(f"  Trading days: {len(df)}")
-
-# ─── Gold scores as DataFrame ───
-print('\n=== Gold Scores DataFrame ===')
-scores_df = pd.read_sql(text('''
-    SELECT symbol, short_name, sector,
-           composite_score, composite_rank,
-           relative_value_score, momentum_score, sentiment_score,
-           current_price, index_weight
-    FROM gold.scores_daily
-    WHERE _index = 'euro_stoxx_50'
-      AND score_date = (SELECT MAX(score_date) FROM gold.scores_daily WHERE _index = 'euro_stoxx_50')
-    ORDER BY composite_rank
-'''), engine)
-print(scores_df[['symbol', 'short_name', 'composite_score', 'composite_rank']].head(10).to_string(index=False))
-
-# ─── Sector aggregation with pandas ───
-print('\n=== Sector Average Scores ===')
-sector_avg = scores_df.groupby('sector').agg(
-    stocks=('symbol', 'count'),
-    avg_composite=('composite_score', 'mean'),
-    avg_value=('relative_value_score', 'mean'),
-    avg_momentum=('momentum_score', 'mean'),
-).sort_values('avg_composite', ascending=False)
-print(sector_avg.to_string())
-
-engine.dispose()
+pd.read_sql("SELECT TOP 5 symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv ORDER BY date DESC", engine)
 ```
 
-    === OHLCV DataFrame ===
-     symbol       date   open   high    low  close  volume
-    ASML.AS 2026-03-12 1194.8 1202.2 1187.8 1190.8  128223
-    ASML.AS 2026-03-11 1188.4 1210.8 1174.0 1198.8  562904
-    ASML.AS 2026-03-10 1188.4 1208.4 1172.2 1200.0  800815
-    ASML.AS 2026-03-09 1072.0 1147.6 1060.2 1147.6  689086
-    ASML.AS 2026-03-06 1186.0 1192.6 1112.8 1147.0  857271
-    ASML.AS 2026-03-05 1198.6 1220.0 1183.0 1186.0  778081
-    ASML.AS 2026-03-04 1171.0 1210.8 1167.6 1199.8  714587
-    ASML.AS 2026-03-03 1186.6 1187.4 1144.0 1161.8  941945
-    ASML.AS 2026-03-02 1192.8 1231.4 1180.0 1210.4  871267
-    ASML.AS 2026-02-27 1234.8 1239.8 1201.6 1233.4 1010698
-    
-    Shape: (50, 7)
-    
-    === ASML 2026 Stats ===
-      Mean close:  1170.42
-      Std close:   64.71
-      Max volume:  1,388,174
-      Trading days: 50
-    
-    === Gold Scores DataFrame ===
-     symbol               short_name  composite_score  composite_rank
-     BNP.PA        BNP PARIBAS ACT.A         0.679599               1
-     VOW.DE            VOLKSWAGEN AG         0.575610               2
-     DTE.DE      DEUTSCHE TELEKOM AG         0.487049               3
-     TTE.PA            TOTALENERGIES         0.391287               4
-     ABI.BR                 AB INBEV         0.385210               5
-     IFX.DE INFINEON TECHNOLOGIES AG         0.348704               6
-     SAN.MC     BANCO SANTANDER S.A.         0.310633               7
-      DG.PA                    VINCI         0.292751               8
-     ISP.MI          INTESA SANPAOLO         0.285183               9
-    BAYN.DE                 Bayer AG         0.272386              10
-    
-    === Sector Average Scores ===
-                            stocks  avg_composite     avg_value  avg_momentum
-    sector                                                                   
-    Communication Services       1       0.487049  2.260062e-01      0.706384
-    Energy                       2       0.328570  5.743741e-01      1.642615
-    Healthcare                   4       0.081186 -7.001288e-02     -0.372232
-    Technology                   5       0.052242  1.278304e-02     -0.653610
-    Industrials                 10       0.050393 -4.440892e-17     -0.020382
-    Financial Services          11      -0.009482  5.328448e-02      0.160204
-    Basic Materials              2      -0.010562  7.408002e-02      0.263210
-    Consumer Defensive           4      -0.061023 -5.551115e-17      0.401726
-    Consumer Cyclical            9      -0.101304  8.635068e-17     -0.479260
-    Utilities                    2      -0.101744  2.387998e-01      0.693479
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.80</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>MC.PA</td>
+      <td>2026-03-12</td>
+      <td>494.35</td>
+      <td>171997</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RMS.PA</td>
+      <td>2026-03-12</td>
+      <td>1906.00</td>
+      <td>18681</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>OR.PA</td>
+      <td>2026-03-12</td>
+      <td>360.80</td>
+      <td>82621</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### pandas — to_sql to write DataFrame to database
+
+```python
+# to_sql — write DataFrame to a database table
+
+sample = pd.DataFrame({
+    "ticker": ["TEST1", "TEST2", "TEST3"],
+    "price": [100.0, 200.0, 300.0],
+    "volume": [1000, 2000, 3000],
+})
+
+sample.to_sql("pandas_demo", engine, schema="dbo", if_exists="replace", index=False)
+print("Written to dbo.pandas_demo")
+
+# Read back
+display(pd.read_sql("SELECT * FROM dbo.pandas_demo", engine))
+
+# Cleanup
+with engine.connect() as c:
+    c.execute(text("DROP TABLE dbo.pandas_demo"))
+    c.commit()
+```
+
+    Written to dbo.pandas_demo
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ticker</th>
+      <th>price</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>TEST1</td>
+      <td>100.0</td>
+      <td>1000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TEST2</td>
+      <td>200.0</td>
+      <td>2000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>TEST3</td>
+      <td>300.0</td>
+      <td>3000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 ## 4. SQLAlchemy — ORM
 
+#### SQLAlchemy — define ORM model classes
+
 ```python
-# SQLAlchemy — Python's standard ORM and SQL toolkit.
+# SQLAlchemy ORM — Python's equivalent of EF Core
 #
-# KEY CONCEPTS:
-# - Engine: connection factory. create_engine(url) returns an Engine.
-#   C# equivalent: IDbConnection / IHttpClientFactory pattern.
-# - Connection URL: dialect+driver://user:pass@host:port/db
-# - text(): wrap raw SQL strings for parameterized execution.
-# - ORM mode: define Python classes that map to tables (like EF Core).
-# - Core mode: use SQL expression language (like Dapper).
-# - Session: unit of work — tracks changes, commits/rollbacks.
-#   C# equivalent: DbContext in Entity Framework.
+# Technique: Define model classes inheriting from DeclarativeBase.
+#   Mapped[type] declares typed columns. Session manages transactions.
+#   session.add() + session.commit() generates INSERT SQL automatically.
 #
-# We use Core mode (raw SQL via text()) here — most common in DE pipelines.
-# ORM mode is better for web apps with complex relationships.
+# Benefits:
+#   - Python classes = database tables — type-safe, autocomplete
+#   - Session tracks changes — commit generates INSERT/UPDATE/DELETE
+#   - Alembic for migrations (like EF Core dotnet ef)
+#
+# Anti-patterns:
+#   - N+1 queries — use joinedload() or selectinload()
+#   - Session per query — reuse sessions within a request
+#
+# When to use:
+#   - CRUD applications, complex relationships
+#
+# When NOT to use:
+#   - Complex analytics SQL — use raw SQL or DuckDB
 
-from sqlalchemy import create_engine, text
-import urllib.parse
+class Base(DeclarativeBase):
+    pass
 
-# ─── Create engine with ODBC connection ───
-# SQLAlchemy uses a URL format. For SQL Server with pyodbc:
-# mssql+pyodbc://user:pass@host:port/db?driver=ODBC+Driver+18+for+SQL+Server
+class StockPrice(Base):
+    __tablename__ = "stock_prices"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    symbol: Mapped[str] = mapped_column()
+    trade_date: Mapped[Date] = mapped_column()
+    close: Mapped[float] = mapped_column()
+    volume: Mapped[int] = mapped_column()
 
-odbc_params = urllib.parse.quote_plus(
-    'Driver={ODBC Driver 18 for SQL Server};'
-    'Server=localhost,1434;Database=stoxx;'
-    'UID=sa;PWD=EsgDev2026Pass1;'
-    'Encrypt=yes;TrustServerCertificate=yes;'
-)
-engine = create_engine(f'mssql+pyodbc:///?odbc_connect={odbc_params}')
-
-# ─── Execute raw SQL with text() ───
-# text() enables parameterized queries (:param syntax).
-# C# equivalent: Dapper conn.Query<T>(sql, new { Param = value })
-
-print('=== SQLAlchemy: Index Universe ===')
-with engine.connect() as conn:
-    result = conn.execute(text('SELECT index_key, display_name, currency FROM bronze.dim_index ORDER BY display_name'))
-    for row in result:
-        print(f'  {row.index_key:20s} {row.display_name:30s} {row.currency}')
-
-# ─── Parameterized query with :named params ───
-# Different from pyodbc (?) — SQLAlchemy uses :name style.
-
-print('\n=== SQLAlchemy: Top 5 Scores (parameterized) ===')
-with engine.connect() as conn:
-    result = conn.execute(text('''
-        SELECT TOP 5 symbol, short_name, composite_score, composite_rank
-        FROM gold.scores_daily
-        WHERE _index = :idx
-          AND score_date = (SELECT MAX(score_date) FROM gold.scores_daily WHERE _index = :idx)
-        ORDER BY composite_rank
-    '''), {'idx': 'euro_stoxx_50'})
-    for row in result:
-        print(f'  {row.composite_rank:>3d} {row.symbol:10s} {(row.short_name or "")[:20]:20s} {row.composite_score:.4f}')
-
-# ─── pandas + SQLAlchemy (preferred over raw pyodbc) ───
-# pd.read_sql() works with both pyodbc connections AND SQLAlchemy engines.
-# SQLAlchemy is the recommended approach (pyodbc triggers deprecation warnings).
-
-import pandas as pd
-
-print('\n=== pandas + SQLAlchemy ===')
-df = pd.read_sql(
-    text('SELECT symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv WHERE symbol = :sym AND date >= :dt ORDER BY date DESC'),
-    engine,
-    params={'sym': 'ASML.AS', 'dt': '2026-03-01'},
-)
-print(df.head(5).to_string(index=False))
-print(f'\nShape: {df.shape}')
-
-# ─── Comparison: pyodbc vs SQLAlchemy ───
-print('\n=== pyodbc vs SQLAlchemy ===')
-print('''
-Feature              pyodbc                SQLAlchemy
-───────────────────  ──────────────────    ──────────────────
-Level                Low-level (raw SQL)   Toolkit + ORM
-Param style          ? positional          :named
-Connection           pyodbc.connect()      create_engine()
-pandas integration   Direct conn           Preferred (engine)
-Transaction          conn.commit()         with conn.begin()
-ORM support          No                    Yes (declarative)
-C# equivalent        ADO.NET raw           Entity Framework
-''')
+# Create in-memory SQLite for demo
+orm_engine = create_engine("sqlite:///:memory:")
+Base.metadata.create_all(orm_engine)
+print("ORM tables created")
 ```
 
-    === SQLAlchemy: Index Universe ===
-      euro_stoxx_50        Euro Stoxx 50                  €
-      oil_20               Oil & Gas 20                   $
-      stoxx_asia_50        STOXX Asia/Pacific 50          
-      stoxx_usa_50         STOXX USA 50                   $
-    
-    === SQLAlchemy: Top 5 Scores (parameterized) ===
-        1 BNP.PA     BNP PARIBAS ACT.A    0.6796
-        2 VOW.DE     VOLKSWAGEN AG        0.5756
-        3 DTE.DE     DEUTSCHE TELEKOM AG  0.4870
-        4 TTE.PA     TOTALENERGIES        0.3913
-        5 ABI.BR     AB INBEV             0.3852
-    
-    === pandas + SQLAlchemy ===
-     symbol       date  close  volume
-    ASML.AS 2026-03-12 1190.8  128223
-    ASML.AS 2026-03-11 1198.8  562904
-    ASML.AS 2026-03-10 1200.0  800815
-    ASML.AS 2026-03-09 1147.6  689086
-    ASML.AS 2026-03-06 1147.0  857271
-    
-    Shape: (9, 4)
-    
-    === pyodbc vs SQLAlchemy ===
-    
-    Feature              pyodbc                SQLAlchemy
-    ───────────────────  ──────────────────    ──────────────────
-    Level                Low-level (raw SQL)   Toolkit + ORM
-    Param style          ? positional          :named
-    Connection           pyodbc.connect()      create_engine()
-    pandas integration   Direct conn           Preferred (engine)
-    Transaction          conn.commit()         with conn.begin()
-    ORM support          No                    Yes (declarative)
-    C# equivalent        ADO.NET raw           Entity Framework
+    ORM tables created
 
-## 5. Summary
+#### SQLAlchemy — INSERT with session.add() and commit()
 
 ```python
-# Summary — Python database cheat sheet
+# session.add() tracks the object, commit() generates INSERT
+
+with Session(orm_engine) as session:
+    session.add_all([
+        StockPrice(symbol="ASML.AS", trade_date=Date(2025, 3, 15), close=685.40, volume=2500000),
+        StockPrice(symbol="SAP.DE",  trade_date=Date(2025, 3, 15), close=245.80, volume=1800000),
+        StockPrice(symbol="MC.PA",   trade_date=Date(2025, 3, 15), close=890.20, volume=900000),
+    ])
+    session.commit()
+    print(f"Inserted {session.query(StockPrice).count()} rows")
+```
+
+    Inserted 3 rows
+
+#### SQLAlchemy — SELECT with session.query() and filter()
+
+```python
+# ORM query — filter, order, limit
+
+with Session(orm_engine) as session:
+    results = session.query(StockPrice).filter(
+        StockPrice.symbol == "ASML.AS"
+    ).order_by(StockPrice.trade_date.desc()).all()
+
+    for r in results:
+        print(f"  {r.symbol} | {r.trade_date} | {r.close} | {r.volume}")
+```
+
+      ASML.AS | 2025-03-15 | 685.4 | 2500000
+
+#### SQLAlchemy — UPDATE and DELETE
+
+```python
+# UPDATE — modify tracked object + commit
+with Session(orm_engine) as session:
+    stock = session.query(StockPrice).filter(StockPrice.symbol == "SAP.DE").first()
+    stock.close = 999.99
+    session.commit()
+    print(f"Updated SAP.DE close to {stock.close}")
+
+# DELETE
+with Session(orm_engine) as session:
+    stock = session.query(StockPrice).filter(StockPrice.symbol == "MC.PA").first()
+    session.delete(stock)
+    session.commit()
+    print(f"Deleted MC.PA, remaining: {session.query(StockPrice).count()}")
+```
+
+    Updated SAP.DE close to 999.99
+    Deleted MC.PA, remaining: 2
+
+#### SQLAlchemy — raw SQL with text()
+
+```python
+# Raw SQL escape hatch — when ORM is too verbose
+
+with engine.connect() as c:
+    result = c.execute(text("""
+        SELECT TOP 5 symbol, date, [close], volume
+        FROM silver.eurostoxx50_ohlcv
+        WHERE symbol = :symbol
+        ORDER BY date DESC"""), {"symbol": "ASML.AS"})
+    df = pd.DataFrame(result.fetchall(), columns=result.keys())
+df
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+## 5. DuckDB — Embedded Analytical SQL Database
+
+#### DuckDB — connect and CREATE TABLE
+
+```python
+# DuckDB — embedded columnar database for analytics
 #
-# SQLITE (built-in):
-# sqlite3.connect(':memory:')            In-memory DB
-# sqlite3.connect('file.db')             File-based DB
-# conn.row_factory = sqlite3.Row         Dict-like row access
-# cur.execute('SELECT ...', (param,))    Parameterized query (?)
-# cur.executemany(sql, data_list)         Batch insert
-# with conn: ...                          Auto commit/rollback
+# Technique: duckdb.connect(":memory:") for in-memory. Full SQL:2003
+#   with window functions, CTEs, QUALIFY, PIVOT. Queries files directly.
 #
-# SQL SERVER (pyodbc):
-# pyodbc.connect(conn_str)               Connect to SQL Server
-# cur.execute(sql, params)               Parameterized query (?)
-# cur.fetchall() / cur.fetchone()        Get results
-# cur.description                        Column metadata
+# Benefits:
+#   - No server — embedded, in-process
+#   - Columnar engine — 10-100x faster for analytics
+#   - SQL on files — SELECT * FROM 'data.parquet'
+#   - Returns pandas DataFrames natively with .df()
 #
-# PANDAS INTEGRATION:
-# pd.read_sql(sql, conn)                 SQL → DataFrame
-# df.to_sql('table', conn)               DataFrame → SQL table
+# Anti-patterns:
+#   - DuckDB for OLTP — use SQL Server
+#   - Concurrent writers — single-writer
 #
-# SQLALCHEMY:
-# create_engine(url)                    Create connection factory
-# text('SELECT ... WHERE x = :param')   Parameterized SQL
-# conn.execute(text(sql), params)        Execute with named params
-# pd.read_sql(text(sql), engine)         DataFrame via SQLAlchemy
-# Session()                              ORM unit of work
+# When to use:
+#   - Analytics, notebooks, ETL validation, file queries
 #
-# C# EQUIVALENTS:
-# sqlite3            → Microsoft.Data.Sqlite
-# pyodbc             → Microsoft.Data.SqlClient (ADO.NET)
-# pd.read_sql()      → Dapper / EF Core
-# ? placeholder      → @param (named parameters)
-# with conn:          → using var transaction = conn.BeginTransaction()
+# When NOT to use:
+#   - Multi-user transactional systems
+
+duck = duckdb.connect(":memory:")
+duck.execute("""
+    CREATE OR REPLACE TABLE ohlcv (
+        symbol VARCHAR, date DATE, open DOUBLE,
+        high DOUBLE, low DOUBLE, close DOUBLE, volume BIGINT
+    )""")
+print("DuckDB connected + table created")
+```
+
+    DuckDB connected + table created
+
+#### DuckDB — load data from SQL Server
+
+```python
+# Load from SQL Server via pyodbc into DuckDB
+
+cur = sql_conn.cursor()
+cur.execute("SELECT symbol, date, [open], high, low, [close], volume FROM silver.eurostoxx50_ohlcv")
+rows = cur.fetchall()
+
+duck.executemany("INSERT INTO ohlcv VALUES (?,?,?,?,?,?,?)",
+    [(r[0], r[1], float(r[2]), float(r[3]), float(r[4]), float(r[5]), int(r[6])) for r in rows])
+
+print(f"Loaded {duck.execute('SELECT COUNT(*) FROM ohlcv').fetchone()[0]} rows")
+```
+
+    Loaded 66355 rows
+
+#### DuckDB — SELECT with .df() for pandas DataFrame
+
+```python
+# .df() returns a pandas DataFrame directly
+
+duck.execute("SELECT symbol, date, close, volume FROM ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### DuckDB — aggregate with GROUP BY
+
+```python
+# Aggregate — returns DataFrame with .df()
+
+duck.execute("""
+    SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close,
+           SUM(volume) AS total_volume
+    FROM ohlcv GROUP BY symbol ORDER BY total_volume DESC LIMIT 10""").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.15</td>
+      <td>1.157045e+11</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.43</td>
+      <td>5.551364e+10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.82</td>
+      <td>3.260056e+10</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.65</td>
+      <td>2.213377e+10</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.46</td>
+      <td>1.836680e+10</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.40</td>
+      <td>1.714157e+10</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.04</td>
+      <td>1.704158e+10</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.26</td>
+      <td>1.599430e+10</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.43</td>
+      <td>1.002941e+10</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.85</td>
+      <td>7.020343e+09</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### DuckDB — window function: LAG for daily returns
+
+```python
+# Window function — not available in SQLite
+
+duck.execute("""
+    SELECT symbol, date, close,
+           LAG(close) OVER (PARTITION BY symbol ORDER BY date) AS prev_close,
+           ROUND((close - LAG(close) OVER (PARTITION BY symbol ORDER BY date))
+               / LAG(close) OVER (PARTITION BY symbol ORDER BY date) * 100, 2) AS daily_return_pct
+    FROM ohlcv WHERE symbol = 'ASML.AS' ORDER BY date DESC LIMIT 10""").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>prev_close</th>
+      <th>daily_return_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>1198.8</td>
+      <td>-0.67</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>1200.0</td>
+      <td>-0.10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>1147.6</td>
+      <td>4.57</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>1147.0</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>1186.0</td>
+      <td>-3.29</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ASML.AS</td>
+      <td>2026-03-05</td>
+      <td>1186.0</td>
+      <td>1199.8</td>
+      <td>-1.15</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ASML.AS</td>
+      <td>2026-03-04</td>
+      <td>1199.8</td>
+      <td>1161.8</td>
+      <td>3.27</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>ASML.AS</td>
+      <td>2026-03-03</td>
+      <td>1161.8</td>
+      <td>1210.4</td>
+      <td>-4.02</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>ASML.AS</td>
+      <td>2026-03-02</td>
+      <td>1210.4</td>
+      <td>1233.4</td>
+      <td>-1.86</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>ASML.AS</td>
+      <td>2026-02-27</td>
+      <td>1233.4</td>
+      <td>1232.4</td>
+      <td>0.08</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### DuckDB — CTE for annualized volatility
+
+```python
+# CTE — multi-step query with WITH clause
+
+duck.execute("""
+    WITH daily_returns AS (
+        SELECT symbol, date, close,
+               (close - LAG(close) OVER (PARTITION BY symbol ORDER BY date))
+                   / LAG(close) OVER (PARTITION BY symbol ORDER BY date) AS daily_return
+        FROM ohlcv
+    )
+    SELECT symbol, COUNT(*) AS days,
+           ROUND(STDDEV(daily_return) * SQRT(252) * 100, 2) AS annualized_vol_pct
+    FROM daily_returns WHERE daily_return IS NOT NULL
+    GROUP BY symbol ORDER BY annualized_vol_pct DESC""").df().head()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>annualized_vol_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ADYEN.AS</td>
+      <td>1330</td>
+      <td>50.30</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ENR.DE</td>
+      <td>1323</td>
+      <td>50.05</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RHM.DE</td>
+      <td>1323</td>
+      <td>40.85</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>PRX.AS</td>
+      <td>1330</td>
+      <td>39.72</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ARGX.BR</td>
+      <td>1330</td>
+      <td>39.31</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### DuckDB — SUMMARIZE for data profiling
+
+```python
+# SUMMARIZE — min, max, avg, nulls per column (like df.describe())
+
+duck.execute("SUMMARIZE ohlcv").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>column_name</th>
+      <th>column_type</th>
+      <th>min</th>
+      <th>max</th>
+      <th>approx_unique</th>
+      <th>avg</th>
+      <th>std</th>
+      <th>q25</th>
+      <th>q50</th>
+      <th>q75</th>
+      <th>count</th>
+      <th>null_percentage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>symbol</td>
+      <td>VARCHAR</td>
+      <td>ABI.BR</td>
+      <td>WKL.AS</td>
+      <td>51</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>date</td>
+      <td>DATE</td>
+      <td>2021-01-04</td>
+      <td>2026-03-12</td>
+      <td>1516</td>
+      <td>2023-08-05 00:56:42.354005</td>
+      <td>None</td>
+      <td>2022-04-18</td>
+      <td>2023-08-03</td>
+      <td>2024-11-18</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>open</td>
+      <td>DOUBLE</td>
+      <td>1.601</td>
+      <td>2926.0</td>
+      <td>25981</td>
+      <td>197.04052021550623</td>
+      <td>363.15048392741096</td>
+      <td>29.930344462822518</td>
+      <td>70.8604402884613</td>
+      <td>186.65713779329147</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>high</td>
+      <td>DOUBLE</td>
+      <td>1.6628</td>
+      <td>2957.0</td>
+      <td>30967</td>
+      <td>199.3641240087415</td>
+      <td>367.87382913761434</td>
+      <td>30.068306831207472</td>
+      <td>72.02633138035323</td>
+      <td>188.90002243109896</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>low</td>
+      <td>DOUBLE</td>
+      <td>1.5842</td>
+      <td>2813.0</td>
+      <td>34449</td>
+      <td>194.58578157938368</td>
+      <td>358.0116429653678</td>
+      <td>29.540408575528527</td>
+      <td>70.56671193226995</td>
+      <td>184.58818143270173</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>close</td>
+      <td>DOUBLE</td>
+      <td>1.6066</td>
+      <td>2839.0</td>
+      <td>31796</td>
+      <td>197.03490037675851</td>
+      <td>363.0520470243142</td>
+      <td>29.9986535648785</td>
+      <td>71.37319289597315</td>
+      <td>186.44747792079016</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>volume</td>
+      <td>BIGINT</td>
+      <td>0</td>
+      <td>376391539</td>
+      <td>75668</td>
+      <td>5942123.6909501925</td>
+      <td>16156185.534943895</td>
+      <td>510041</td>
+      <td>1415355</td>
+      <td>4094451</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### DuckDB — COPY TO export to Parquet
+
+```python
+# Export query results to Parquet
+
+duck.execute(f"""
+    COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
+          FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
+    TO '{DATA}/duckdb_py_export.parquet' (FORMAT PARQUET)""")
+print("Exported to duckdb_py_export.parquet")
+```
+
+    Exported to duckdb_py_export.parquet
+
+#### DuckDB vs SQL Server — benchmark same queries
+
+```python
+# Benchmark: DuckDB vs SQL Server
+
+results = []
+for label, fn in [
+    ("DuckDB GROUP BY",   lambda: duck.execute("SELECT symbol, AVG(close) FROM ohlcv GROUP BY symbol").fetchall()),
+    ("SQL Server GROUP BY", lambda: pd.read_sql("SELECT symbol, AVG(CAST([close] AS FLOAT)) FROM silver.eurostoxx50_ohlcv GROUP BY symbol", sql_engine)),
+    ("DuckDB LAG()",      lambda: duck.execute("SELECT symbol, date, close, LAG(close) OVER (PARTITION BY symbol ORDER BY date) FROM ohlcv").fetchall()),
+    ("SQL Server LAG()",  lambda: pd.read_sql("SELECT symbol, date, [close], LAG([close]) OVER (PARTITION BY symbol ORDER BY date) FROM silver.eurostoxx50_ohlcv", sql_engine)),
+]:
+    start = time.perf_counter()
+    fn()
+    elapsed = (time.perf_counter() - start) * 1000
+    results.append({"Engine": label.split()[0], "Query": " ".join(label.split()[1:]), "Time (ms)": round(elapsed, 1)})
+
+pd.DataFrame(results)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Engine</th>
+      <th>Query</th>
+      <th>Time (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>DuckDB</td>
+      <td>GROUP BY</td>
+      <td>3.2</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SQL</td>
+      <td>Server GROUP BY</td>
+      <td>17.2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>DuckDB</td>
+      <td>LAG()</td>
+      <td>23.9</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SQL</td>
+      <td>Server LAG()</td>
+      <td>181.3</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+## 6. Querying Files — DuckDB vs Polars vs Pandas
+
+### Read Parquet
+
+#### DuckDB — read Parquet file with SELECT
+
+```python
+# DuckDB reads Parquet directly
+
+duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — read Parquet file with pl.read_parquet()
+
+```python
+# Polars reads Parquet
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "date", "close", "volume").head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_57f24">
+  <thead>
+    <tr>
+      <th id="T_57f24_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_57f24_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_57f24_level0_col2" class="col_heading level0 col2" >close</th>
+      <th id="T_57f24_level0_col3" class="col_heading level0 col3" >volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_57f24_row0_col0" class="data row0 col0" >ABI.BR</td>
+      <td id="T_57f24_row0_col1" class="data row0 col1" >2021-01-04 00:00:00</td>
+      <td id="T_57f24_row0_col2" class="data row0 col2" >57.210000</td>
+      <td id="T_57f24_row0_col3" class="data row0 col3" >1513937</td>
+    </tr>
+    <tr>
+      <td id="T_57f24_row1_col0" class="data row1 col0" >ABI.BR</td>
+      <td id="T_57f24_row1_col1" class="data row1 col1" >2021-01-05 00:00:00</td>
+      <td id="T_57f24_row1_col2" class="data row1 col2" >57.180000</td>
+      <td id="T_57f24_row1_col3" class="data row1 col3" >1382722</td>
+    </tr>
+    <tr>
+      <td id="T_57f24_row2_col0" class="data row2 col0" >ABI.BR</td>
+      <td id="T_57f24_row2_col1" class="data row2 col1" >2021-01-06 00:00:00</td>
+      <td id="T_57f24_row2_col2" class="data row2 col2" >58.770000</td>
+      <td id="T_57f24_row2_col3" class="data row2 col3" >1370204</td>
+    </tr>
+    <tr>
+      <td id="T_57f24_row3_col0" class="data row3 col0" >ABI.BR</td>
+      <td id="T_57f24_row3_col1" class="data row3 col1" >2021-01-07 00:00:00</td>
+      <td id="T_57f24_row3_col2" class="data row3 col2" >58.400000</td>
+      <td id="T_57f24_row3_col3" class="data row3 col3" >1469911</td>
+    </tr>
+    <tr>
+      <td id="T_57f24_row4_col0" class="data row4 col0" >ABI.BR</td>
+      <td id="T_57f24_row4_col1" class="data row4 col1" >2021-01-08 00:00:00</td>
+      <td id="T_57f24_row4_col2" class="data row4 col2" >57.860000</td>
+      <td id="T_57f24_row4_col3" class="data row4 col3" >1428681</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — read Parquet file with pd.read_parquet()
+
+```python
+# Pandas reads Parquet
+
+pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close", "volume"]).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Read CSV
+
+#### DuckDB — read CSV file with SELECT
+
+```python
+# DuckDB reads CSV directly
+
+duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv' LIMIT 5").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — read CSV file with pl.read_csv()
+
+```python
+# Polars reads CSV
+
+pl.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv").select("symbol", "date", "close", "volume").head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_2e8ac">
+  <thead>
+    <tr>
+      <th id="T_2e8ac_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_2e8ac_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_2e8ac_level0_col2" class="col_heading level0 col2" >close</th>
+      <th id="T_2e8ac_level0_col3" class="col_heading level0 col3" >volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_2e8ac_row0_col0" class="data row0 col0" >ABI.BR</td>
+      <td id="T_2e8ac_row0_col1" class="data row0 col1" >2021-01-04</td>
+      <td id="T_2e8ac_row0_col2" class="data row0 col2" >57.210000</td>
+      <td id="T_2e8ac_row0_col3" class="data row0 col3" >1513937</td>
+    </tr>
+    <tr>
+      <td id="T_2e8ac_row1_col0" class="data row1 col0" >ABI.BR</td>
+      <td id="T_2e8ac_row1_col1" class="data row1 col1" >2021-01-05</td>
+      <td id="T_2e8ac_row1_col2" class="data row1 col2" >57.180000</td>
+      <td id="T_2e8ac_row1_col3" class="data row1 col3" >1382722</td>
+    </tr>
+    <tr>
+      <td id="T_2e8ac_row2_col0" class="data row2 col0" >ABI.BR</td>
+      <td id="T_2e8ac_row2_col1" class="data row2 col1" >2021-01-06</td>
+      <td id="T_2e8ac_row2_col2" class="data row2 col2" >58.770000</td>
+      <td id="T_2e8ac_row2_col3" class="data row2 col3" >1370204</td>
+    </tr>
+    <tr>
+      <td id="T_2e8ac_row3_col0" class="data row3 col0" >ABI.BR</td>
+      <td id="T_2e8ac_row3_col1" class="data row3 col1" >2021-01-07</td>
+      <td id="T_2e8ac_row3_col2" class="data row3 col2" >58.400000</td>
+      <td id="T_2e8ac_row3_col3" class="data row3 col3" >1469911</td>
+    </tr>
+    <tr>
+      <td id="T_2e8ac_row4_col0" class="data row4 col0" >ABI.BR</td>
+      <td id="T_2e8ac_row4_col1" class="data row4 col1" >2021-01-08</td>
+      <td id="T_2e8ac_row4_col2" class="data row4 col2" >57.860000</td>
+      <td id="T_2e8ac_row4_col3" class="data row4 col3" >1428681</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — read CSV file with pd.read_csv()
+
+```python
+# Pandas reads CSV
+
+pd.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv", usecols=["symbol", "date", "close", "volume"]).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Filter rows
+
+#### DuckDB — filter with WHERE
+
+```python
+# DuckDB filter
+
+duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — filter with filter() and select()
+
+```python
+# Polars filter
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", "volume").sort("date", descending=True).head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_3261d">
+  <thead>
+    <tr>
+      <th id="T_3261d_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_3261d_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_3261d_level0_col2" class="col_heading level0 col2" >close</th>
+      <th id="T_3261d_level0_col3" class="col_heading level0 col3" >volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_3261d_row0_col0" class="data row0 col0" >SAP.DE</td>
+      <td id="T_3261d_row0_col1" class="data row0 col1" >2026-03-12 00:00:00</td>
+      <td id="T_3261d_row0_col2" class="data row0 col2" >166.520000</td>
+      <td id="T_3261d_row0_col3" class="data row0 col3" >806722</td>
+    </tr>
+    <tr>
+      <td id="T_3261d_row1_col0" class="data row1 col0" >SAP.DE</td>
+      <td id="T_3261d_row1_col1" class="data row1 col1" >2026-03-11 00:00:00</td>
+      <td id="T_3261d_row1_col2" class="data row1 col2" >165.440000</td>
+      <td id="T_3261d_row1_col3" class="data row1 col3" >2953782</td>
+    </tr>
+    <tr>
+      <td id="T_3261d_row2_col0" class="data row2 col0" >SAP.DE</td>
+      <td id="T_3261d_row2_col1" class="data row2 col1" >2026-03-10 00:00:00</td>
+      <td id="T_3261d_row2_col2" class="data row2 col2" >169.600000</td>
+      <td id="T_3261d_row2_col3" class="data row2 col3" >3187246</td>
+    </tr>
+    <tr>
+      <td id="T_3261d_row3_col0" class="data row3 col0" >SAP.DE</td>
+      <td id="T_3261d_row3_col1" class="data row3 col1" >2026-03-09 00:00:00</td>
+      <td id="T_3261d_row3_col2" class="data row3 col2" >171.880000</td>
+      <td id="T_3261d_row3_col3" class="data row3 col3" >1990823</td>
+    </tr>
+    <tr>
+      <td id="T_3261d_row4_col0" class="data row4 col0" >SAP.DE</td>
+      <td id="T_3261d_row4_col1" class="data row4 col1" >2026-03-06 00:00:00</td>
+      <td id="T_3261d_row4_col2" class="data row4 col2" >172.740000</td>
+      <td id="T_3261d_row4_col3" class="data row4 col3" >3347221</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — filter with boolean indexing
+
+```python
+# Pandas filter
+
+df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close", "volume"])
+df[df["symbol"] == "SAP.DE"].sort_values("date", ascending=False).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>57061</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>57060</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>57059</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>57058</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>57057</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Group and aggregate
+
+#### DuckDB — aggregate with GROUP BY
+
+```python
+# DuckDB aggregate
+
+duck.execute("""
+    SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close, SUM(volume) AS total_volume
+    FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'
+    GROUP BY symbol ORDER BY total_volume DESC LIMIT 10""").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.15</td>
+      <td>1.157045e+11</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.43</td>
+      <td>5.551364e+10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.82</td>
+      <td>3.260056e+10</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.65</td>
+      <td>2.213377e+10</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.46</td>
+      <td>1.836680e+10</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.40</td>
+      <td>1.714157e+10</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.04</td>
+      <td>1.704158e+10</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.26</td>
+      <td>1.599430e+10</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.43</td>
+      <td>1.002941e+10</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.85</td>
+      <td>7.020343e+09</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — aggregate with group_by() and agg()
+
+```python
+# Polars aggregate
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").group_by("symbol").agg(
+    pl.col("close").count().alias("days"),
+    pl.col("close").mean().alias("avg_close"),
+    pl.col("volume").sum().alias("total_volume"),
+).sort("total_volume", descending=True).head(10)
+```
+
+<style type="text/css">
+</style>
+<table id="T_7825e">
+  <thead>
+    <tr>
+      <th id="T_7825e_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_7825e_level0_col1" class="col_heading level0 col1" >days</th>
+      <th id="T_7825e_level0_col2" class="col_heading level0 col2" >avg_close</th>
+      <th id="T_7825e_level0_col3" class="col_heading level0 col3" >total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_7825e_row0_col0" class="data row0 col0" >ISP.MI</td>
+      <td id="T_7825e_row0_col1" class="data row0 col1" >1321</td>
+      <td id="T_7825e_row0_col2" class="data row0 col2" >3.147987</td>
+      <td id="T_7825e_row0_col3" class="data row0 col3" >115704541969</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row1_col0" class="data row1 col0" >SAN.MC</td>
+      <td id="T_7825e_row1_col1" class="data row1 col1" >1329</td>
+      <td id="T_7825e_row1_col2" class="data row1 col2" >4.425848</td>
+      <td id="T_7825e_row1_col3" class="data row1 col3" >55513641918</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row2_col0" class="data row2 col0" >ENEL.MI</td>
+      <td id="T_7825e_row2_col1" class="data row2 col1" >1321</td>
+      <td id="T_7825e_row2_col2" class="data row2 col2" >6.820438</td>
+      <td id="T_7825e_row2_col3" class="data row2 col3" >32600561934</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row3_col0" class="data row3 col0" >BBVA.MC</td>
+      <td id="T_7825e_row3_col1" class="data row3 col1" >1329</td>
+      <td id="T_7825e_row3_col2" class="data row3 col2" >8.651954</td>
+      <td id="T_7825e_row3_col3" class="data row3 col3" >22133773194</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row4_col0" class="data row4 col0" >UCG.MI</td>
+      <td id="T_7825e_row4_col1" class="data row4 col1" >1321</td>
+      <td id="T_7825e_row4_col2" class="data row4 col2" >28.457104</td>
+      <td id="T_7825e_row4_col3" class="data row4 col3" >18366801099</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row5_col0" class="data row5 col0" >ENI.MI</td>
+      <td id="T_7825e_row5_col1" class="data row5 col1" >1321</td>
+      <td id="T_7825e_row5_col2" class="data row5 col2" >13.397625</td>
+      <td id="T_7825e_row5_col3" class="data row5 col3" >17141570967</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row6_col0" class="data row6 col0" >INGA.AS</td>
+      <td id="T_7825e_row6_col1" class="data row6 col1" >1331</td>
+      <td id="T_7825e_row6_col2" class="data row6 col2" >14.038188</td>
+      <td id="T_7825e_row6_col3" class="data row6 col3" >17041577555</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row7_col0" class="data row7 col0" >IBE.MC</td>
+      <td id="T_7825e_row7_col1" class="data row7 col1" >1329</td>
+      <td id="T_7825e_row7_col2" class="data row7 col2" >12.255312</td>
+      <td id="T_7825e_row7_col3" class="data row7 col3" >15994295949</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row8_col0" class="data row8 col0" >DTE.DE</td>
+      <td id="T_7825e_row8_col1" class="data row8 col1" >1324</td>
+      <td id="T_7825e_row8_col2" class="data row8 col2" >22.430097</td>
+      <td id="T_7825e_row8_col3" class="data row8 col3" >10029411390</td>
+    </tr>
+    <tr>
+      <td id="T_7825e_row9_col0" class="data row9 col0" >NDA-FI.HE</td>
+      <td id="T_7825e_row9_col1" class="data row9 col1" >1306</td>
+      <td id="T_7825e_row9_col2" class="data row9 col2" >10.848079</td>
+      <td id="T_7825e_row9_col3" class="data row9 col3" >7020342991</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — aggregate with groupby() and agg()
+
+```python
+# Pandas aggregate
+
+df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet")
+df.groupby("symbol").agg(
+    days=("close", "count"),
+    avg_close=("close", "mean"),
+    total_volume=("volume", "sum"),
+).sort_values("total_volume", ascending=False).head(10)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+    <tr>
+      <th>symbol</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>ISP.MI</th>
+      <td>1321</td>
+      <td>3.147987</td>
+      <td>115704541969</td>
+    </tr>
+    <tr>
+      <th>SAN.MC</th>
+      <td>1329</td>
+      <td>4.425848</td>
+      <td>55513641918</td>
+    </tr>
+    <tr>
+      <th>ENEL.MI</th>
+      <td>1321</td>
+      <td>6.820438</td>
+      <td>32600561934</td>
+    </tr>
+    <tr>
+      <th>BBVA.MC</th>
+      <td>1329</td>
+      <td>8.651954</td>
+      <td>22133773194</td>
+    </tr>
+    <tr>
+      <th>UCG.MI</th>
+      <td>1321</td>
+      <td>28.457104</td>
+      <td>18366801099</td>
+    </tr>
+    <tr>
+      <th>ENI.MI</th>
+      <td>1321</td>
+      <td>13.397625</td>
+      <td>17141570967</td>
+    </tr>
+    <tr>
+      <th>INGA.AS</th>
+      <td>1331</td>
+      <td>14.038188</td>
+      <td>17041577555</td>
+    </tr>
+    <tr>
+      <th>IBE.MC</th>
+      <td>1329</td>
+      <td>12.255312</td>
+      <td>15994295949</td>
+    </tr>
+    <tr>
+      <th>DTE.DE</th>
+      <td>1324</td>
+      <td>22.430097</td>
+      <td>10029411390</td>
+    </tr>
+    <tr>
+      <th>NDA-FI.HE</th>
+      <td>1306</td>
+      <td>10.848079</td>
+      <td>7020342991</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Select specific columns from file
+
+#### DuckDB — select columns with SELECT
+
+```python
+# DuckDB — project specific columns directly from file
+
+duck.execute("SELECT symbol, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>57.21</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>57.18</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>58.77</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>58.40</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>57.86</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — select columns with select()
+
+```python
+# Polars — project specific columns
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "close").head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_c37ba">
+  <thead>
+    <tr>
+      <th id="T_c37ba_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_c37ba_level0_col1" class="col_heading level0 col1" >close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_c37ba_row0_col0" class="data row0 col0" >ABI.BR</td>
+      <td id="T_c37ba_row0_col1" class="data row0 col1" >57.210000</td>
+    </tr>
+    <tr>
+      <td id="T_c37ba_row1_col0" class="data row1 col0" >ABI.BR</td>
+      <td id="T_c37ba_row1_col1" class="data row1 col1" >57.180000</td>
+    </tr>
+    <tr>
+      <td id="T_c37ba_row2_col0" class="data row2 col0" >ABI.BR</td>
+      <td id="T_c37ba_row2_col1" class="data row2 col1" >58.770000</td>
+    </tr>
+    <tr>
+      <td id="T_c37ba_row3_col0" class="data row3 col0" >ABI.BR</td>
+      <td id="T_c37ba_row3_col1" class="data row3 col1" >58.400000</td>
+    </tr>
+    <tr>
+      <td id="T_c37ba_row4_col0" class="data row4 col0" >ABI.BR</td>
+      <td id="T_c37ba_row4_col1" class="data row4 col1" >57.860000</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — select columns with usecols
+
+```python
+# Pandas — project specific columns (usecols reads only those from disk)
+
+pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "close"]).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>57.21</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>57.18</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>58.77</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>58.40</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>57.86</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Sort and limit directly from file
+
+#### DuckDB — sort with ORDER BY and LIMIT
+
+```python
+# DuckDB — sort by close descending, top 5
+
+duck.execute("SELECT symbol, date, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' ORDER BY close DESC LIMIT 5").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>RMS.PA</td>
+      <td>2025-02-14</td>
+      <td>2839.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>RMS.PA</td>
+      <td>2025-02-13</td>
+      <td>2816.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RMS.PA</td>
+      <td>2025-02-17</td>
+      <td>2809.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>RMS.PA</td>
+      <td>2025-02-18</td>
+      <td>2806.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ADYEN.AS</td>
+      <td>2021-08-24</td>
+      <td>2766.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — sort with sort() and head()
+
+```python
+# Polars — sort by close descending, top 5
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "date", "close").sort("close", descending=True).head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_6be2d">
+  <thead>
+    <tr>
+      <th id="T_6be2d_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_6be2d_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_6be2d_level0_col2" class="col_heading level0 col2" >close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_6be2d_row0_col0" class="data row0 col0" >RMS.PA</td>
+      <td id="T_6be2d_row0_col1" class="data row0 col1" >2025-02-14 00:00:00</td>
+      <td id="T_6be2d_row0_col2" class="data row0 col2" >2839.000000</td>
+    </tr>
+    <tr>
+      <td id="T_6be2d_row1_col0" class="data row1 col0" >RMS.PA</td>
+      <td id="T_6be2d_row1_col1" class="data row1 col1" >2025-02-13 00:00:00</td>
+      <td id="T_6be2d_row1_col2" class="data row1 col2" >2816.000000</td>
+    </tr>
+    <tr>
+      <td id="T_6be2d_row2_col0" class="data row2 col0" >RMS.PA</td>
+      <td id="T_6be2d_row2_col1" class="data row2 col1" >2025-02-17 00:00:00</td>
+      <td id="T_6be2d_row2_col2" class="data row2 col2" >2809.000000</td>
+    </tr>
+    <tr>
+      <td id="T_6be2d_row3_col0" class="data row3 col0" >RMS.PA</td>
+      <td id="T_6be2d_row3_col1" class="data row3 col1" >2025-02-18 00:00:00</td>
+      <td id="T_6be2d_row3_col2" class="data row3 col2" >2806.000000</td>
+    </tr>
+    <tr>
+      <td id="T_6be2d_row4_col0" class="data row4 col0" >ADYEN.AS</td>
+      <td id="T_6be2d_row4_col1" class="data row4 col1" >2021-08-24 00:00:00</td>
+      <td id="T_6be2d_row4_col2" class="data row4 col2" >2766.000000</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — sort with sort_values() and head()
+
+```python
+# Pandas — sort by close descending, top 5
+
+pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close"]).sort_values("close", ascending=False).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>51473</th>
+      <td>RMS.PA</td>
+      <td>2025-02-14</td>
+      <td>2839.0</td>
+    </tr>
+    <tr>
+      <th>51472</th>
+      <td>RMS.PA</td>
+      <td>2025-02-13</td>
+      <td>2816.0</td>
+    </tr>
+    <tr>
+      <th>51474</th>
+      <td>RMS.PA</td>
+      <td>2025-02-17</td>
+      <td>2809.0</td>
+    </tr>
+    <tr>
+      <th>51475</th>
+      <td>RMS.PA</td>
+      <td>2025-02-18</td>
+      <td>2806.0</td>
+    </tr>
+    <tr>
+      <th>4150</th>
+      <td>ADYEN.AS</td>
+      <td>2021-08-24</td>
+      <td>2766.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Multiple filters (AND / OR) directly from file
+
+#### DuckDB — multi-condition filter with WHERE AND
+
+```python
+# DuckDB — WHERE with AND + OR
+
+duck.execute("""
+    SELECT symbol, date, close, volume
+    FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'
+    WHERE symbol = 'ASML.AS' AND close > 700
+    ORDER BY date DESC LIMIT 5""").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — multi-condition filter with & and |
+
+```python
+# Polars — AND filter with &
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter(
+    (pl.col("symbol") == "ASML.AS") & (pl.col("close") > 700)
+).select("symbol", "date", "close", "volume").sort("date", descending=True).head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_77b1c">
+  <thead>
+    <tr>
+      <th id="T_77b1c_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_77b1c_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_77b1c_level0_col2" class="col_heading level0 col2" >close</th>
+      <th id="T_77b1c_level0_col3" class="col_heading level0 col3" >volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_77b1c_row0_col0" class="data row0 col0" >ASML.AS</td>
+      <td id="T_77b1c_row0_col1" class="data row0 col1" >2026-03-12 00:00:00</td>
+      <td id="T_77b1c_row0_col2" class="data row0 col2" >1190.800000</td>
+      <td id="T_77b1c_row0_col3" class="data row0 col3" >128223</td>
+    </tr>
+    <tr>
+      <td id="T_77b1c_row1_col0" class="data row1 col0" >ASML.AS</td>
+      <td id="T_77b1c_row1_col1" class="data row1 col1" >2026-03-11 00:00:00</td>
+      <td id="T_77b1c_row1_col2" class="data row1 col2" >1198.800000</td>
+      <td id="T_77b1c_row1_col3" class="data row1 col3" >562904</td>
+    </tr>
+    <tr>
+      <td id="T_77b1c_row2_col0" class="data row2 col0" >ASML.AS</td>
+      <td id="T_77b1c_row2_col1" class="data row2 col1" >2026-03-10 00:00:00</td>
+      <td id="T_77b1c_row2_col2" class="data row2 col2" >1200.000000</td>
+      <td id="T_77b1c_row2_col3" class="data row2 col3" >800815</td>
+    </tr>
+    <tr>
+      <td id="T_77b1c_row3_col0" class="data row3 col0" >ASML.AS</td>
+      <td id="T_77b1c_row3_col1" class="data row3 col1" >2026-03-09 00:00:00</td>
+      <td id="T_77b1c_row3_col2" class="data row3 col2" >1147.600000</td>
+      <td id="T_77b1c_row3_col3" class="data row3 col3" >689086</td>
+    </tr>
+    <tr>
+      <td id="T_77b1c_row4_col0" class="data row4 col0" >ASML.AS</td>
+      <td id="T_77b1c_row4_col1" class="data row4 col1" >2026-03-06 00:00:00</td>
+      <td id="T_77b1c_row4_col2" class="data row4 col2" >1147.000000</td>
+      <td id="T_77b1c_row4_col3" class="data row4 col3" >857271</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — multi-condition filter with & and |
+
+```python
+# Pandas — AND filter with &
+
+df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close", "volume"])
+df[(df["symbol"] == "ASML.AS") & (df["close"] > 700)].sort_values("date", ascending=False).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>11964</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>11963</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>11962</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>11961</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>11960</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Add computed column directly from file
+
+#### DuckDB — computed column with SELECT expression
+
+```python
+# DuckDB — add daily range column
+
+duck.execute("""
+    SELECT symbol, date, high, low, ROUND(high - low, 2) AS daily_range
+    FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'
+    WHERE symbol = 'ASML.AS'
+    ORDER BY daily_range DESC LIMIT 5""").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>high</th>
+      <th>low</th>
+      <th>daily_range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2024-10-15</td>
+      <td>804.6</td>
+      <td>665.0</td>
+      <td>139.6</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-01-28</td>
+      <td>1309.0</td>
+      <td>1185.4</td>
+      <td>123.6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-02-26</td>
+      <td>1304.3</td>
+      <td>1210.8</td>
+      <td>93.5</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2024-08-05</td>
+      <td>749.9</td>
+      <td>657.0</td>
+      <td>92.9</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2025-04-07</td>
+      <td>596.2</td>
+      <td>508.4</td>
+      <td>87.8</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — computed column with with_columns()
+
+```python
+# Polars — add daily range column
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter(
+    pl.col("symbol") == "ASML.AS"
+).with_columns(
+    (pl.col("high") - pl.col("low")).round(2).alias("daily_range")
+).select("symbol", "date", "high", "low", "daily_range").sort("daily_range", descending=True).head(5)
+```
+
+<style type="text/css">
+</style>
+<table id="T_2922f">
+  <thead>
+    <tr>
+      <th id="T_2922f_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_2922f_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_2922f_level0_col2" class="col_heading level0 col2" >high</th>
+      <th id="T_2922f_level0_col3" class="col_heading level0 col3" >low</th>
+      <th id="T_2922f_level0_col4" class="col_heading level0 col4" >daily_range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_2922f_row0_col0" class="data row0 col0" >ASML.AS</td>
+      <td id="T_2922f_row0_col1" class="data row0 col1" >2024-10-15 00:00:00</td>
+      <td id="T_2922f_row0_col2" class="data row0 col2" >804.600000</td>
+      <td id="T_2922f_row0_col3" class="data row0 col3" >665.000000</td>
+      <td id="T_2922f_row0_col4" class="data row0 col4" >139.600000</td>
+    </tr>
+    <tr>
+      <td id="T_2922f_row1_col0" class="data row1 col0" >ASML.AS</td>
+      <td id="T_2922f_row1_col1" class="data row1 col1" >2026-01-28 00:00:00</td>
+      <td id="T_2922f_row1_col2" class="data row1 col2" >1309.000000</td>
+      <td id="T_2922f_row1_col3" class="data row1 col3" >1185.400000</td>
+      <td id="T_2922f_row1_col4" class="data row1 col4" >123.600000</td>
+    </tr>
+    <tr>
+      <td id="T_2922f_row2_col0" class="data row2 col0" >ASML.AS</td>
+      <td id="T_2922f_row2_col1" class="data row2 col1" >2026-02-26 00:00:00</td>
+      <td id="T_2922f_row2_col2" class="data row2 col2" >1304.300000</td>
+      <td id="T_2922f_row2_col3" class="data row2 col3" >1210.800000</td>
+      <td id="T_2922f_row2_col4" class="data row2 col4" >93.500000</td>
+    </tr>
+    <tr>
+      <td id="T_2922f_row3_col0" class="data row3 col0" >ASML.AS</td>
+      <td id="T_2922f_row3_col1" class="data row3 col1" >2024-08-05 00:00:00</td>
+      <td id="T_2922f_row3_col2" class="data row3 col2" >749.900000</td>
+      <td id="T_2922f_row3_col3" class="data row3 col3" >657.000000</td>
+      <td id="T_2922f_row3_col4" class="data row3 col4" >92.900000</td>
+    </tr>
+    <tr>
+      <td id="T_2922f_row4_col0" class="data row4 col0" >ASML.AS</td>
+      <td id="T_2922f_row4_col1" class="data row4 col1" >2025-04-07 00:00:00</td>
+      <td id="T_2922f_row4_col2" class="data row4 col2" >596.200000</td>
+      <td id="T_2922f_row4_col3" class="data row4 col3" >508.400000</td>
+      <td id="T_2922f_row4_col4" class="data row4 col4" >87.800000</td>
+    </tr>
+  </tbody>
+</table>
+
+#### Pandas — computed column with assign()
+
+```python
+# Pandas — add daily range column
+
+df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "high", "low"])
+df[df["symbol"] == "ASML.AS"].assign(daily_range=lambda d: round(d["high"] - d["low"], 2)).sort_values("daily_range", ascending=False).head(5)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>high</th>
+      <th>low</th>
+      <th>daily_range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>11606</th>
+      <td>ASML.AS</td>
+      <td>2024-10-15</td>
+      <td>804.6</td>
+      <td>665.0</td>
+      <td>139.6</td>
+    </tr>
+    <tr>
+      <th>11933</th>
+      <td>ASML.AS</td>
+      <td>2026-01-28</td>
+      <td>1309.0</td>
+      <td>1185.4</td>
+      <td>123.6</td>
+    </tr>
+    <tr>
+      <th>11954</th>
+      <td>ASML.AS</td>
+      <td>2026-02-26</td>
+      <td>1304.3</td>
+      <td>1210.8</td>
+      <td>93.5</td>
+    </tr>
+    <tr>
+      <th>11555</th>
+      <td>ASML.AS</td>
+      <td>2024-08-05</td>
+      <td>749.9</td>
+      <td>657.0</td>
+      <td>92.9</td>
+    </tr>
+    <tr>
+      <th>11727</th>
+      <td>ASML.AS</td>
+      <td>2025-04-07</td>
+      <td>596.2</td>
+      <td>508.4</td>
+      <td>87.8</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### Window function directly from file (DuckDB only)
+
+#### DuckDB — LAG() window function on Parquet file
+
+```python
+# DuckDB — daily returns with LAG() directly on Parquet (not possible in Polars/Pandas without loading)
+
+duck.execute("""
+    SELECT symbol, date, close,
+           LAG(close) OVER (PARTITION BY symbol ORDER BY date) AS prev_close,
+           ROUND((close - LAG(close) OVER (PARTITION BY symbol ORDER BY date))
+               / LAG(close) OVER (PARTITION BY symbol ORDER BY date) * 100, 2) AS daily_return_pct
+    FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'
+    WHERE symbol = 'ASML.AS'
+    ORDER BY date DESC LIMIT 10""").df()
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>prev_close</th>
+      <th>daily_return_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>1198.8</td>
+      <td>-0.67</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>1200.0</td>
+      <td>-0.10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>1147.6</td>
+      <td>4.57</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>1147.0</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>1186.0</td>
+      <td>-3.29</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ASML.AS</td>
+      <td>2026-03-05</td>
+      <td>1186.0</td>
+      <td>1199.8</td>
+      <td>-1.15</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ASML.AS</td>
+      <td>2026-03-04</td>
+      <td>1199.8</td>
+      <td>1161.8</td>
+      <td>3.27</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>ASML.AS</td>
+      <td>2026-03-03</td>
+      <td>1161.8</td>
+      <td>1210.4</td>
+      <td>-4.02</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>ASML.AS</td>
+      <td>2026-03-02</td>
+      <td>1210.4</td>
+      <td>1233.4</td>
+      <td>-1.86</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>ASML.AS</td>
+      <td>2026-02-27</td>
+      <td>1233.4</td>
+      <td>1232.4</td>
+      <td>0.08</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+#### Polars — equivalent with shift() (must load data first)
+
+```python
+# Polars — LAG equivalent with shift().over() (data must be loaded, not lazy on file)
+
+pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter(
+    pl.col("symbol") == "ASML.AS"
+).sort("date").with_columns(
+    pl.col("close").shift(1).over("symbol").alias("prev_close")
+).with_columns(
+    ((pl.col("close") - pl.col("prev_close")) / pl.col("prev_close") * 100).round(2).alias("daily_return_pct")
+).select("symbol", "date", "close", "prev_close", "daily_return_pct").sort("date", descending=True).head(10)
+```
+
+<style type="text/css">
+</style>
+<table id="T_1b014">
+  <thead>
+    <tr>
+      <th id="T_1b014_level0_col0" class="col_heading level0 col0" >symbol</th>
+      <th id="T_1b014_level0_col1" class="col_heading level0 col1" >date</th>
+      <th id="T_1b014_level0_col2" class="col_heading level0 col2" >close</th>
+      <th id="T_1b014_level0_col3" class="col_heading level0 col3" >prev_close</th>
+      <th id="T_1b014_level0_col4" class="col_heading level0 col4" >daily_return_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="T_1b014_row0_col0" class="data row0 col0" >ASML.AS</td>
+      <td id="T_1b014_row0_col1" class="data row0 col1" >2026-03-12 00:00:00</td>
+      <td id="T_1b014_row0_col2" class="data row0 col2" >1190.800000</td>
+      <td id="T_1b014_row0_col3" class="data row0 col3" >1198.800000</td>
+      <td id="T_1b014_row0_col4" class="data row0 col4" >-0.670000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row1_col0" class="data row1 col0" >ASML.AS</td>
+      <td id="T_1b014_row1_col1" class="data row1 col1" >2026-03-11 00:00:00</td>
+      <td id="T_1b014_row1_col2" class="data row1 col2" >1198.800000</td>
+      <td id="T_1b014_row1_col3" class="data row1 col3" >1200.000000</td>
+      <td id="T_1b014_row1_col4" class="data row1 col4" >-0.100000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row2_col0" class="data row2 col0" >ASML.AS</td>
+      <td id="T_1b014_row2_col1" class="data row2 col1" >2026-03-10 00:00:00</td>
+      <td id="T_1b014_row2_col2" class="data row2 col2" >1200.000000</td>
+      <td id="T_1b014_row2_col3" class="data row2 col3" >1147.600000</td>
+      <td id="T_1b014_row2_col4" class="data row2 col4" >4.570000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row3_col0" class="data row3 col0" >ASML.AS</td>
+      <td id="T_1b014_row3_col1" class="data row3 col1" >2026-03-09 00:00:00</td>
+      <td id="T_1b014_row3_col2" class="data row3 col2" >1147.600000</td>
+      <td id="T_1b014_row3_col3" class="data row3 col3" >1147.000000</td>
+      <td id="T_1b014_row3_col4" class="data row3 col4" >0.050000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row4_col0" class="data row4 col0" >ASML.AS</td>
+      <td id="T_1b014_row4_col1" class="data row4 col1" >2026-03-06 00:00:00</td>
+      <td id="T_1b014_row4_col2" class="data row4 col2" >1147.000000</td>
+      <td id="T_1b014_row4_col3" class="data row4 col3" >1186.000000</td>
+      <td id="T_1b014_row4_col4" class="data row4 col4" >-3.290000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row5_col0" class="data row5 col0" >ASML.AS</td>
+      <td id="T_1b014_row5_col1" class="data row5 col1" >2026-03-05 00:00:00</td>
+      <td id="T_1b014_row5_col2" class="data row5 col2" >1186.000000</td>
+      <td id="T_1b014_row5_col3" class="data row5 col3" >1199.800000</td>
+      <td id="T_1b014_row5_col4" class="data row5 col4" >-1.150000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row6_col0" class="data row6 col0" >ASML.AS</td>
+      <td id="T_1b014_row6_col1" class="data row6 col1" >2026-03-04 00:00:00</td>
+      <td id="T_1b014_row6_col2" class="data row6 col2" >1199.800000</td>
+      <td id="T_1b014_row6_col3" class="data row6 col3" >1161.800000</td>
+      <td id="T_1b014_row6_col4" class="data row6 col4" >3.270000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row7_col0" class="data row7 col0" >ASML.AS</td>
+      <td id="T_1b014_row7_col1" class="data row7 col1" >2026-03-03 00:00:00</td>
+      <td id="T_1b014_row7_col2" class="data row7 col2" >1161.800000</td>
+      <td id="T_1b014_row7_col3" class="data row7 col3" >1210.400000</td>
+      <td id="T_1b014_row7_col4" class="data row7 col4" >-4.020000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row8_col0" class="data row8 col0" >ASML.AS</td>
+      <td id="T_1b014_row8_col1" class="data row8 col1" >2026-03-02 00:00:00</td>
+      <td id="T_1b014_row8_col2" class="data row8 col2" >1210.400000</td>
+      <td id="T_1b014_row8_col3" class="data row8 col3" >1233.400000</td>
+      <td id="T_1b014_row8_col4" class="data row8 col4" >-1.860000</td>
+    </tr>
+    <tr>
+      <td id="T_1b014_row9_col0" class="data row9 col0" >ASML.AS</td>
+      <td id="T_1b014_row9_col1" class="data row9 col1" >2026-02-27 00:00:00</td>
+      <td id="T_1b014_row9_col2" class="data row9 col2" >1233.400000</td>
+      <td id="T_1b014_row9_col3" class="data row9 col3" >1232.400000</td>
+      <td id="T_1b014_row9_col4" class="data row9 col4" >0.080000</td>
+    </tr>
+  </tbody>
+</table>
+
+### Performance — format comparison
+
+#### DuckDB — benchmark same query on CSV vs Parquet vs JSON
+
+```python
+# Format comparison timing
+
+results = []
+for fmt, path in [("CSV", "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv"),
+                  ("Parquet", "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet"),
+                  ("JSON", "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.json")]:
+    start = time.perf_counter()
+    rows = duck.execute(f"SELECT symbol, COUNT(*), AVG(close) FROM '{path}' GROUP BY symbol").fetchall()
+    elapsed = (time.perf_counter() - start) * 1000
+    results.append({"Format": fmt, "Rows": len(rows), "Time (ms)": round(elapsed, 1)})
+pd.DataFrame(results)
+```
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Format</th>
+      <th>Rows</th>
+      <th>Time (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>CSV</td>
+      <td>50</td>
+      <td>59.8</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Parquet</td>
+      <td>50</td>
+      <td>3.1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>JSON</td>
+      <td>50</td>
+      <td>76.7</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### DuckDB vs Polars vs Pandas — reference
+
+#### Operation mapping — DuckDB SQL vs Polars vs Pandas
+
+```python
+# DuckDB vs Polars vs Pandas — operation mapping
 #
-# MEDALLION ARCHITECTURE:
-# Bronze: raw ingested data (latest batch, minimal transforms)
-# Silver: cleaned, deduplicated, SCD-2 tracking, full history
-# Gold:   computed scores, aggregated metrics, ready for consumption
+# Operation        DuckDB SQL                         Polars                              Pandas
+# ───────────────  ───────────────────────────────────  ───────────────────────────────────  ───────────────────────────────────
+# Read Parquet     SELECT FROM 'file.parquet'          pl.read_parquet(path)                pd.read_parquet(path)
+# Read CSV         SELECT FROM 'file.csv'              pl.read_csv(path)                    pd.read_csv(path)
+# Filter           WHERE col = 'val'                   df.filter(pl.col("c")==v)            df[df["c"]==v]
+# Select cols      SELECT a, b                         df.select("a","b")                   df[["a","b"]]
+# Sort             ORDER BY col DESC                   df.sort("c", descending=True)        df.sort_values("c", ascending=False)
+# Limit            LIMIT 10                            df.head(10)                          df.head(10)
+# Group + Agg      GROUP BY ... AVG(c)                 df.group_by("c").agg(...)            df.groupby("c").agg(...)
+# Window           LAG() OVER (PARTITION BY ...)        pl.col("c").shift(1).over("g")       df.groupby("g")["c"].shift(1)
+# Export           COPY TO 'file.parquet'              df.write_parquet(path)                df.to_parquet(path)
+# Lazy eval        No                                   pl.scan_parquet(path)                No
+# Returns          .df() → pandas DataFrame            Polars DataFrame                     pandas DataFrame
 ```

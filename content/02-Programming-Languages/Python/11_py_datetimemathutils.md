@@ -18,11 +18,51 @@ status: complete
 
 ## Date and Time
 
+#### Creating date and time objects
+
 ```python
+# Creating date and time objects — datetime, date, time, timedelta
+#
+# Technique: datetime.now() for local time. datetime.now(timezone.utc) for
+#   UTC. date.today() for date-only. datetime(y,m,d,h,m,s) for specific
+#   moments. Naive datetimes have no timezone — aware ones include tzinfo.
+#
+# Benefits:
+#   - Separate types: datetime (full), date (date-only), time (time-only)
+#   - timedelta for arithmetic — add/subtract days, hours, seconds
+#   - timezone.utc gives an aware UTC datetime with no external library
+#
+# Anti-patterns:
+#   - datetime.now() for storage — timezone-naive; use datetime.now(timezone.utc)
+#   - Comparing naive and aware datetimes — TypeError
+#
+# When to use:
+#   - datetime.now(timezone.utc) for timestamps; date.today() for calendar dates
+#
+# When NOT to use:
+#   - datetime.now() for cross-timezone systems — use timezone-aware
+
 # Creating date and time objects
 from datetime import datetime, date, time, timedelta
 
 # Current date and time
+from collections import Counter
+from datetime import timedelta
+from datetime import timezone
+from dateutil.relativedelta import relativedelta
+from zoneinfo import ZoneInfo  # Python 3.9+ (built-in)
+import configparser
+import json
+import logging
+import math
+import os
+import random
+import shutil
+import statistics
+import sys
+import tempfile
+import time
+import tomllib  # read-only, built-in since Python 3.11
 now = datetime.now()             # local time (naive - no timezone)
 today = date.today()             # date only
 current_time = datetime.now().time()  # time only
@@ -57,7 +97,8 @@ print(f"With microseconds: {dt_micro}")
 #### Accessing date/time components
 
 ```python
-# Accessing date/time components
+# Accessing date/time components — year, month, day, hour, etc.
+
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
 
 print("=== Components ===")
@@ -90,9 +131,7 @@ print(f"Week number: {dt.isocalendar()[1]}")
 #### Timestamp (Unix epoch) conversions
 
 ```python
-# Timestamp (Unix epoch) conversions
-import time
-from datetime import timezone
+# Unix timestamp conversions — datetime to/from epoch seconds
 
 now = datetime.now()
 
@@ -130,8 +169,7 @@ print(f"Seconds since epoch: {(now_utc - epoch).total_seconds():.0f}")
 #### Parsing strings -> datetime (strptime)
 
 ```python
-# Parsing strings -> datetime (strptime)
-# strptime = "string parse time"
+# Parsing strings to datetime — strptime (string parse time)
 
 s1 = "2024-03-15 14:30:45"
 s2 = "15/03/2024"
@@ -167,8 +205,7 @@ print(f"'{s6}' -> {dt6}")
 #### Formatting datetime -> string (strftime)
 
 ```python
-# Formatting datetime -> string (strftime)
-# strftime = "string format time"
+# Formatting datetime to string — strftime (string format time)
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
 
@@ -203,8 +240,11 @@ print(f"Compact:        {dt.strftime('%Y%m%d%H%M%S')}")
     RFC 2822:       Fri, 15 Mar 2024 14:30:45
     Compact:        20240315143045
 
+#### strftime code reference
+
 ```python
-# All strftime Codes
+# strftime code reference — complete list of format codes
+
 codes = {
     "%Y": "4-digit year",      "%y": "2-digit year",
     "%m": "Month (01-12)",     "%B": "Month name (full)",
@@ -247,7 +287,8 @@ for code, desc in codes.items():
 #### ISO 8601 conversions
 
 ```python
-# ISO 8601 conversions
+# ISO 8601 conversions — isoformat() and fromisoformat()
+
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
 
 # datetime -> ISO 8601 string
@@ -280,11 +321,8 @@ print(f"With Z (UTC):    {from_iso_z}")
 #### Timezone management
 
 ```python
-# Timezone management
-from datetime import timezone
-from zoneinfo import ZoneInfo  # Python 3.9+ (built-in)
+# Timezone management — naive vs aware, zoneinfo, UTC
 
-# Naive vs aware datetimes
 naive = datetime(2024, 3, 15, 14, 30, 45)
 print(f"Naive (no tz):   {naive}, tzinfo={naive.tzinfo}")
 
@@ -313,7 +351,8 @@ print(f"India:           {india_dt}")
 #### Converting between timezones
 
 ```python
-# Converting between timezones
+# Converting between timezones — astimezone() for instant conversion
+
 utc_now = datetime.now(timezone.utc)
 print(f"\nUTC now:         {utc_now}")
 print(f"-> New York:     {utc_now.astimezone(ZoneInfo('America/New_York'))}")
@@ -338,7 +377,8 @@ print(f"-> São Paulo:    {utc_now.astimezone(ZoneInfo('America/Sao_Paulo'))}")
 <h4><code style="font-size:0.75em">DateTimeOffset</code> equivalent — localize naive datetime</h4>
 
 ```python
-# Make naive datetime timezone-aware
+# Make naive datetime timezone-aware — replace(tzinfo=) or localize
+
 naive = datetime(2024, 3, 15, 14, 30, 45)
 aware = naive.replace(tzinfo=ZoneInfo("US/Eastern"))
 print(f"\nNaive -> aware:  {aware}")
@@ -356,8 +396,7 @@ print(f"Fixed +5:30:     {dt_offset}")
 #### Date/time arithmetic with timedelta
 
 ```python
-# Date/time arithmetic with timedelta
-from datetime import timedelta
+# Date/time arithmetic with timedelta — add and subtract intervals
 
 dt = datetime(2024, 3, 15, 14, 30, 45)
 
@@ -410,14 +449,14 @@ print(f"dt1 > dt2:   {dt1 > dt2}")
 #### Arithmetic on different date/time objects
 
 ```python
-# Arithmetic on different date/time objects
-from datetime import datetime, date, time, timedelta
+# Arithmetic on different date/time objects — what supports what
 ```
 
 #### datetime: supports full arithmetic
 
 ```python
-# datetime: supports full arithmetic
+# datetime arithmetic — full add/subtract with timedelta
+
 dt = datetime(2024, 3, 15, 14, 30, 45)
 print("=== datetime arithmetic ===")
 print(f"Original:        {dt}")
@@ -443,7 +482,8 @@ print(f"Combined:        {dt + timedelta(days=1, hours=2, minutes=30, seconds=15
 #### date: only days, no hours/minutes
 
 ```python
-# date: only days, no hours/minutes
+# date arithmetic — only days, no hours or minutes
+
 d = date(2024, 3, 15)
 print(f"\n=== date arithmetic ===")
 print(f"Original:        {d}")
@@ -469,7 +509,8 @@ print(f"Diff {d} to {d2}: {diff.days} days")
 #### time: NO arithmetic support
 
 ```python
-# time: NO arithmetic support
+# time has NO arithmetic support — must convert to datetime first
+
 t = time(14, 30, 45)
 print(f"\n=== time arithmetic ===")
 print(f"Original:        {t}")
@@ -491,7 +532,8 @@ print(f"- 45m:           {new_time2}")
 #### timestamp: just a float, arithmetic is trivial
 
 ```python
-# timestamp: just a float, arithmetic is trivial
+# Timestamp arithmetic — float math on epoch seconds
+
 ts = datetime(2024, 3, 15, 14, 30, 45).timestamp()
 print(f"\n=== timestamp arithmetic ===")
 print(f"Original:        {ts}")
@@ -514,9 +556,7 @@ print(f"Back to datetime: {datetime.fromtimestamp(ts + 86400)}")
 #### No built-in AddMonths/AddYears
 
 ```python
-# Use dateutil for month/year arithmetic
-# pip install python-dateutil (already in most environments)
-from dateutil.relativedelta import relativedelta
+# dateutil.relativedelta — month and year arithmetic
 
 dt = datetime(2024, 1, 31, 14, 30, 0)
 print(f"\n=== Month/Year arithmetic (dateutil) ===")
@@ -542,8 +582,28 @@ print(f"+ 1y 2m 3d:      {dt + relativedelta(years=1, months=2, days=3)}")
 #### Basic math
 
 ```python
+# Basic math — abs, max, min are built-in; clamp with max(lo, min(val, hi))
+#
+# Technique: abs(), max(), min() are built-in (no import). Clamp pattern:
+#   max(lo, min(val, hi)). math module adds floor, ceil, sqrt, log, pow,
+#   trig functions. No separate Math class — functions are module-level.
+#
+# Benefits:
+#   - Built-ins (abs, max, min) need no import — always available
+#   - max/min accept any number of arguments: max(a, b, c, d)
+#   - math module covers all standard mathematical functions
+#
+# Anti-patterns:
+#   - numpy for scalar math — math module is sufficient and faster
+#   - Manual clamp with if/else — max(lo, min(val, hi)) is one line
+#
+# When to use:
+#   - All numeric computation — built-ins and math module
+#
+# When NOT to use:
+#   - Vectorized array math — use numpy instead
+
 # Basic math — abs, max, min are built-in; clamp uses max(lo, min(val, hi))
-import math
 
 print(f"abs(-42):        {abs(-42)}")
 print(f"max(10, 20):     {max(10, 20)}")
@@ -559,7 +619,8 @@ print(f"clamp(15, 0,10): {max(0, min(15, 10))}")
 #### Rounding
 
 ```python
-# Rounding — floor rounds down, ceil rounds up, round uses banker's rounding by default
+# Rounding — floor, ceil, round with banker's rounding default
+
 print(f"math.floor(3.7):     {math.floor(3.7)}")       # → 3
 print(f"math.ceil(3.2):      {math.ceil(3.2)}")         # → 4
 print(f"round(3.5):          {round(3.5)}")              # → 4 (banker's)
@@ -578,7 +639,8 @@ print(f"int(3.9):            {int(3.9)}")
 #### Powers, roots, and logarithms
 
 ```python
-# Powers and roots — ** operator for ints; math.pow returns float; math.isqrt for integer sqrt
+# Powers, roots, logarithms — ** operator, math.sqrt, math.log
+
 print(f"2 ** 10:             {2 ** 10}")                 # 1024 (operator)
 print(f"math.pow(2, 10):     {math.pow(2, 10)}")         # 1024.0 (returns float)
 print(f"pow(2, 10):          {pow(2, 10)}")               # 1024 (built-in, returns int)
@@ -605,7 +667,8 @@ print(f"math.exp(1):         {math.exp(1)}")
 #### Trigonometry and constants
 
 ```python
-# Trigonometry — all functions use radians; degrees/radians convert between them
+# Trigonometry and constants — pi, e, tau, sin, cos, atan2
+
 print(f"math.pi:             {math.pi}")
 print(f"math.e:              {math.e}")
 print(f"math.tau:            {math.tau}")                 # 2π
@@ -628,7 +691,8 @@ print(f"math.radians(180):   {math.radians(180)}")
 #### Special float values
 
 ```python
-# Special values — inf, nan; always check with isnan/isinf, never == nan
+# Special float values — inf, nan, and detection functions
+
 print(f"math.inf:            {math.inf}")
 print(f"math.nan:            {math.nan}")
 print(f"math.isnan(nan):     {math.isnan(math.nan)}")
@@ -645,9 +709,8 @@ print(f"math.isfinite(42):   {math.isfinite(42)}")
 #### Percentile calculation
 
 ```python
-# Data Engineering example: compute percentile rank
-# Common for scoring, normalization, anomaly detection.
-import statistics
+# Percentile calculation — statistics module for distribution analysis
+
 latencies = [12.5, 45.2, 3.1, 78.9, 22.0, 15.3, 99.1, 6.7, 33.4, 51.8]
 latencies.sort()
 print(f"\n=== DE: Percentile Calculation ===")
@@ -671,9 +734,7 @@ print(f"P95:       {quantiles[-1]:.2f} ms")
 #### random module
 
 ```python
-# random module — pseudo-random number generation.
-# NOT cryptographically secure. For crypto: import secrets.
-import random
+# random module — pseudo-random numbers with seed for reproducibility
 
 random.seed(42)  # seed for reproducibility (like C# new Random(42))
 
@@ -716,12 +777,12 @@ print(f"Shuffled:  {items}")
 #### Weighted random
 
 ```python
-# Weighted random — common for A/B testing, load balancing
+# Weighted random — random.choices with weights for non-uniform sampling
+
 events = ["page_view", "click", "purchase", "signup"]
 weights = [60, 25, 10, 5]  # percentage weights
 picks = random.choices(events, weights=weights, k=20)
 print(f"\nWeighted picks (20): {picks}")
-from collections import Counter
 print(f"Distribution: {dict(Counter(picks))}")
 ```
 
@@ -732,8 +793,8 @@ print(f"Distribution: {dict(Counter(picks))}")
 #### Synthetic test data generation
 
 ```python
-# Data Engineering example: generate synthetic test data
-# Common for testing pipelines, load testing, staging environments.
+# Synthetic test data generation — realistic event records for pipelines
+
 print("\n=== DE: Synthetic Event Data ===")
 event_types = ["page_view", "click", "purchase", "signup"]
 regions = ["us-east-1", "eu-west-1", "ap-south-1"]
@@ -764,7 +825,32 @@ for i in range(8):
 
 ## Logging
 
+#### Logging overview — levels, handlers, formatters
+
 ```python
+# logging module — Python's built-in structured logging framework
+#
+# Technique: Loggers form a hierarchy (root > app > app.module). Handlers
+#   direct output (console, file, network). Formatters control message
+#   layout. Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL.
+#
+# Benefits:
+#   - Built-in — no external dependency
+#   - Hierarchical — set level on parent, children inherit
+#   - Lazy evaluation — logger.info("msg %s", val) only formats if level active
+#   - Multiple handlers — same logger can write to console AND file
+#
+# Anti-patterns:
+#   - print() for logging — no levels, timestamps, or filtering
+#   - f-string in log calls — always evaluated, even if level is filtered
+#   - basicConfig in library code — should only be in the entry point
+#
+# When to use:
+#   - Every production application — logging is a best practice
+#
+# When NOT to use:
+#   - N/A — always use logging instead of print for production
+
 # logging module — Python's built-in logging framework.
 #
 # KEY CONCEPTS:
@@ -776,8 +862,6 @@ for i in range(8):
 # WARNING: In Jupyter, logging config can be tricky because the root logger
 # may already have handlers. We reset handlers to get clean output.
 
-import logging
-import sys
 
 # ── Basic logging setup ──
 logger = logging.getLogger("PipelineDemo")
@@ -811,29 +895,14 @@ logger.critical("Critical: pipeline halted")                   # shown
 #### Structured logging & logging best practices
 
 ```python
-# Structured logging & logging best practices
-#
-# Python's built-in logging uses %-style or {}-style formatting:
-#   logger.info("Processed %d rows from %s", row_count, table)  # %-style (traditional)
-#   logger.info("Processed %(count)d rows", {"count": 42})       # dict-style
-#
-# For true structured logging (JSON output for ELK/GCP/Datadog), use:
-#   - python-json-logger: formats log records as JSON
-#   - structlog: full structured logging library
-#
-# Rule: use logger.info("msg %s", val), NOT logger.info(f"msg {val}")
-# f-string evaluates immediately even if the level is filtered out.
-# %-style defers formatting until the message is actually emitted.
-
-import logging
-import sys
-import json
+# Structured logging and best practices — templates, not f-strings
 ```
 
 #### Simulating a pipeline run with logging
 
 ```python
-# ── Simulate a pipeline run ──
+# Simulating a pipeline run with logging — practical ETL example
+
 logger = logging.getLogger("ETL")
 logger.setLevel(logging.INFO)
 logger.handlers.clear()
@@ -843,7 +912,6 @@ handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)-8s] %(name)s: 
                                        datefmt="%H:%M:%S"))
 logger.addHandler(handler)
 
-import random
 rng = random.Random(42)
 tables = ["events_raw", "users", "transactions"]
 
@@ -869,8 +937,8 @@ logger.info("Pipeline completed")
 #### JSON log formatter
 
 ```python
-# In production, you want JSON logs so log aggregators can parse them.
-# Here's a minimal JSON formatter without extra dependencies.
+# JSON log formatter — machine-parseable logs for ELK/CloudWatch/Datadog
+
 print("\n=== JSON log output (for ELK / GCP Logging / Datadog) ===")
 
 class JsonFormatter(logging.Formatter):
@@ -903,10 +971,33 @@ json_logger.warning("Schema drift detected in %s", "users")
 
 ## Configuration and Environment Variables
 
+#### Environment variables — reading and setting
+
 ```python
+# Environment variables — os.environ for process-level configuration
+#
+# Technique: os.environ["KEY"] raises KeyError if missing. os.environ.get("KEY",
+#   default) returns default silently. os.environ["KEY"] = value sets for
+#   the current process. Standard for Docker, K8s, CI/CD.
+#
+# Benefits:
+#   - Universal — works across all platforms and deployment targets
+#   - No files — values set by the runtime environment
+#   - Secure for secrets — not stored in source code
+#
+# Anti-patterns:
+#   - Hardcoding secrets in code — use env vars or secret managers
+#   - os.environ["KEY"] without handling KeyError — crashes if missing
+#   - Setting env vars in code — only affects the current process
+#
+# When to use:
+#   - Connection strings, API keys, deployment-specific config
+#
+# When NOT to use:
+#   - Complex structured config — use config files + env var overrides
+
 # Environment variables — the simplest config mechanism.
 # Used everywhere: Docker, Kubernetes, CI/CD, cloud functions.
-import os
 
 print("=== Environment Variables ===")
 
@@ -945,8 +1036,11 @@ print(f"After delete:  {os.getenv('PIPELINE_ENV', 'not set')}")
     PIPELINE_ENV:  staging
     After delete:  not set
 
+#### List all environment variables
+
 ```python
-# List all env vars (first 10)
+# List all environment variables — diagnostic inspection
+
 for i, (key, val) in enumerate(os.environ.items()):
     if i >= 10: break
     if len(val) > 60: val = val[:60] + "..."
@@ -969,28 +1063,14 @@ print(f"  ... ({len(os.environ)} total)")
 #### Configuration files
 
 ```python
-# Configuration files — configparser, .env files, TOML
-#
-# Python has several config approaches:
-# 1. configparser — built-in, reads INI-style files
-# 2. python-dotenv — reads .env files into os.environ
-# 3. tomllib — built-in (Python 3.11+), reads TOML files
-# 4. pydantic-settings — typed config with env var + file support
-#
-# In Data Engineering:
-# - .env files for local dev (never committed to git)
-# - Env vars in Docker/K8s for production
-# - TOML/YAML for pipeline config (dbt, Airflow)
-
-import configparser
-import tempfile
-import os
+# Configuration files — configparser, .env, TOML for structured settings
 ```
 
 <h4><code style="font-size:0.75em">configparser</code> — INI-style config</h4>
 
 ```python
-# ── configparser: INI-style config (built-in) ──
+# configparser — INI-style configuration (built-in, no dependencies)
+
 print("=== configparser (INI-style) ===")
 
 tmp_dir = tempfile.mkdtemp(prefix="config_demo_")
@@ -1040,7 +1120,8 @@ print(f"Timeout:        {config.getint('pipeline', 'timeout', fallback=30)}")
 #### Reading configparser sections and keys
 
 ```python
-# List all sections and keys
+# Reading configparser — sections, keys, and type-safe access
+
 print(f"\nSections: {config.sections()}")
 print(f"Pipeline keys: {list(config['pipeline'].keys())}")
 ```
@@ -1052,10 +1133,9 @@ print(f"Pipeline keys: {list(config['pipeline'].keys())}")
 #### TOML — modern config format
 
 ```python
-# ── TOML: modern config format (Python 3.11+ built-in) ──
-# TOML is used by pyproject.toml, Rust (Cargo.toml), and many modern tools.
+# TOML — modern configuration format (built-in since Python 3.11)
+
 print("\n=== TOML (Python 3.11+ built-in) ===")
-import tomllib  # read-only, built-in since Python 3.11
 
 toml_path = os.path.join(tmp_dir, "pipeline.toml")
 with open(toml_path, "w") as f:
@@ -1094,6 +1174,11 @@ print(f"DB port:  {toml_config['database']['port']}")   # native int!
 <h4><code style="font-size:0.75em">.env</code> files</h4>
 
 ```python
+# .env files — local secrets with python-dotenv
+
+// When NOT to use:
+#   - Production — use container env vars or cloud secret managers
+
 # .env files hold secrets for local dev. NEVER commit to git.
 # python-dotenv loads them into os.environ.
 print("\n=== .env files (pattern) ===")
@@ -1113,7 +1198,6 @@ with open(env_path) as f:
             # In production: os.environ[key] = val
 
 # Cleanup
-import shutil
 shutil.rmtree(tmp_dir)
 print(f"\nCleaned up: {tmp_dir}")
 ```

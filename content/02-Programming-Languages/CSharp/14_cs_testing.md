@@ -64,6 +64,12 @@ using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 
+#r "nuget: Microsoft.Data.SqlClient"
+#r "nuget: Microsoft.Extensions.DependencyInjection"
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
+using System.IO;
+using System.Text.RegularExpressions;
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
     BindingFlags.NonPublic | BindingFlags.Instance);
@@ -91,13 +97,11 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 // WHY stubs instead of real xUnit: .NET Interactive notebooks have assembly version
 //   conflicts with xUnit's NuGet package. The stubs give us the same API surface
 //   so the test code is copy-pasteable into a real xUnit project.
-using System.IO;
 #nullable enable
 // Lightweight Assert class — same API as xUnit, zero dependencies.
 // In a real project you'd use xUnit with `dotnet test`.
 // In notebooks, this avoids NuGet assembly version warnings.
 
-using System.Text.RegularExpressions;
 
 
 // Attribute stubs for notebook use (real xUnit uses [Fact] and [Theory])
@@ -1128,8 +1132,6 @@ RunTest("Catches invalid prices", () =>
 //   - Don't run integration tests in production DB — use staging/test instance
 //   - Don't mutate shared test data — use transactions that rollback
 //   - In CI: use Testcontainers for ephemeral, isolated DB instances
-#r "nuget: Microsoft.Data.SqlClient"
-using Microsoft.Data.SqlClient;
 
 var connStr = "Data Source=localhost,1434;Initial Catalog=stoxx;"
             + "User ID=sa;Password=EsgDev2026Pass1;"
@@ -1376,8 +1378,6 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 //
 // WHY: forgetting AddScoped<IFoo, Foo>() in DI setup crashes at runtime
 //   with "No service for type IFoo". This test catches it before deployment.
-#r "nuget: Microsoft.Extensions.DependencyInjection"
-using Microsoft.Extensions.DependencyInjection;
 
 
 // Register services

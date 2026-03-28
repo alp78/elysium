@@ -17,7 +17,6 @@ status: complete
 # 09. File I/O & Serialization - Python
 
 ```python
-# Imports used throughout this notebook
 import os
 import csv
 import json
@@ -62,7 +61,31 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 ## Read, Write, Append Files
 
+#### File I/O overview — modes, encoding, context managers
+
 ```python
+# File I/O — open(), modes, encoding, and the with statement
+#
+# Technique: open(path, mode) returns a file object. Modes: 'r' (read),
+#   'w' (write/truncate), 'a' (append), 'x' (exclusive create), 'b' (binary).
+#   Always use with for automatic close, even on exceptions.
+#
+# Benefits:
+#   - with statement guarantees cleanup — no resource leaks
+#   - Explicit encoding= avoids platform-dependent defaults
+#   - Mode string is concise: 'rb' = read binary, 'wt' = write text
+#
+# Anti-patterns:
+#   - open() without with — file handle leak if exception occurs
+#   - Omitting encoding= — defaults vary by OS
+#   - 'w' mode on existing files without backup — truncates immediately
+#
+# When to use:
+#   - All file operations — always use with open() as f:
+#
+# When NOT to use:
+#   - N/A — with statement is always the correct pattern
+
 # File I/O — Read, Write, Append
 #
 # KEY CONCEPTS:
@@ -76,8 +99,8 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 #### Create a temp directory for all demos
 
 ```python
-# tempfile.mkdtemp() creates a real directory on disk, returns its path.
-# We use this so demos don't pollute your project folder.
+# Temp directory — isolated workspace for file demos
+
 tmp_dir = Path(tempfile.mkdtemp(prefix="fileio_"))
 print(f"Working dir: {tmp_dir}\n")
 ```
@@ -87,7 +110,8 @@ print(f"Working dir: {tmp_dir}\n")
 #### Write a file — mode 'w' (creates new or TRUNCATES existing)
 
 ```python
-# Write a file — mode 'w' (creates new or TRUNCATES existing)
+# Write file — mode 'w' creates new or truncates existing
+
 print("=== Write file (mode='w') ===")
 # Data Engineering scenario: write pipeline output to a staging file
 staging_file = tmp_dir / "pipeline_output.txt"  # Path / operator joins paths (like os.path.join)
@@ -111,7 +135,8 @@ print(f"  Size: {staging_file.stat().st_size} bytes")  # .stat() returns file me
 #### Read entire file — mode 'r'
 
 ```python
-# Read entire file — mode 'r'
+# Read entire file — mode 'r' loads all content into a string
+
 print("\n=== Read entire file ===")
 
 # Method 1: read() — returns the entire file as one string
@@ -133,6 +158,7 @@ print(f"  Path.read_text(): {len(content)} chars")
 
 ```python
 # Read line by line — memory efficient for large files
+
 print("\n=== Read line by line (memory efficient) ===")
 # For large files (multi-GB data lake exports), don't read all into memory.
 # Iterating the file object yields one line at a time — uses almost no memory.
@@ -153,7 +179,8 @@ with open(staging_file, "r", encoding="utf-8") as f:
 #### readlines() vs readline()
 
 ```python
-# readlines() vs readline()
+# readlines() vs readline() — bulk vs single-line reading
+
 print("\n=== readlines() vs readline() ===")
 
 with open(staging_file, "r", encoding="utf-8") as f:
@@ -180,7 +207,8 @@ with open(staging_file, "r", encoding="utf-8") as f:
 #### Append — mode 'a' (adds to end, never truncates)
 
 ```python
-# Append — mode 'a' (adds to end, never truncates)
+# Append — mode 'a' adds to end, never truncates
+
 print("\n=== Append file (mode='a') ===")
 # Data Engineering scenario: append new pipeline results to the log
 
@@ -204,7 +232,8 @@ print(f"  Last line: {lines[-1]!r}")
 #### Create (exclusive) — mode 'x' (fail if file already exists)
 
 ```python
-# Create (exclusive) — mode 'x' (fail if file already exists)
+# Exclusive create — mode 'x' fails if file already exists
+
 print("\n=== Exclusive create (mode='x') ===")
 # Prevents accidental overwrites — useful for ensuring unique output files
 
@@ -228,7 +257,8 @@ except FileExistsError:
 #### Binary mode — 'rb' / 'wb'
 
 ```python
-# Binary mode — 'rb' / 'wb'
+# Binary mode — 'rb' / 'wb' for non-text data
+
 print("\n=== Binary mode ===")
 # Use binary mode for: images, parquet files, protobuf, avro, compressed archives.
 # No encoding parameter — you work with bytes, not strings.
@@ -251,7 +281,8 @@ with open(bin_file, "rb") as f:     # 'rb' = read binary
 #### pathlib — modern file path operations
 
 ```python
-# pathlib — modern file path operations
+# pathlib — modern file path operations replacing os.path
+
 print("\n=== pathlib.Path operations ===")
 # pathlib.Path is the modern replacement for os.path.join, os.path.exists, etc.
 
@@ -297,7 +328,30 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
 
 ## CSV Files
 
+#### CSV overview — csv module and DictReader/DictWriter
+
 ```python
+# CSV files — the standard tabular interchange format
+#
+# Technique: csv module handles quoting, escaping, and delimiters
+#   automatically. csv.reader/writer for list-based rows. csv.DictReader/
+#   DictWriter for dict-based rows with named columns.
+#
+# Benefits:
+#   - Built-in — no external dependency for standard CSV
+#   - Handles edge cases — embedded commas, quotes, newlines
+#   - DictReader gives named access — row["name"] not row[0]
+#
+# Anti-patterns:
+#   - Manual split(',') — breaks on quoted commas
+#   - Positional indexing with csv.reader — fragile if columns reorder
+#
+# When to use:
+#   - All CSV read/write — always use the csv module
+#
+# When NOT to use:
+#   - Large CSV (>100MB) — use pandas, polars, or DuckDB
+
 # CSV Files — the bread and butter of data engineering
 #
 # KEY CONCEPTS:
@@ -312,6 +366,7 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
 
 ```python
 # csv.writer — write CSV rows as lists
+
 print("=== csv.writer (list-based) ===")
 # Data Engineering scenario: export pipeline results to CSV for downstream consumers
 
@@ -349,7 +404,8 @@ print(f"  Content:\n{csv_file.read_text(encoding='utf-8')}")
 #### csv.reader — read CSV rows as lists
 
 ```python
-# csv.reader — read CSV rows as lists
+# csv.reader — read CSV rows as lists of strings
+
 print("=== csv.reader (list-based) ===")
 
 with open(csv_file, "r", encoding="utf-8") as f:
@@ -374,7 +430,8 @@ with open(csv_file, "r", encoding="utf-8") as f:
 #### csv.DictReader — read rows as dictionaries (preferred in DE)
 
 ```python
-# csv.DictReader — read rows as dictionaries (preferred in DE)
+# csv.DictReader — read rows as dictionaries with named columns
+
 print("\n=== csv.DictReader (dict-based) ===")
 # DictReader uses the first row as keys. Each subsequent row is an OrderedDict.
 # Access columns by name — safer and more readable than row[2].
@@ -403,6 +460,7 @@ with open(csv_file, "r", encoding="utf-8") as f:
 
 ```python
 # csv.DictWriter — write rows from dictionaries
+
 print("\n=== csv.DictWriter (dict-based) ===")
 # Data Engineering scenario: transform and write enriched records
 
@@ -436,7 +494,8 @@ print(f"  Content:\n{enriched_file.read_text(encoding='utf-8')}")
 #### Custom delimiters — pipe-delimited, tab-delimited
 
 ```python
-# Custom delimiters — pipe-delimited, tab-delimited
+# Custom delimiters — pipe-delimited and tab-delimited formats
+
 print("=== Custom delimiters (pipe, tab) ===")
 
 # Pipe-delimited (common in legacy data warehouses)
@@ -463,7 +522,8 @@ for row in reader:
 #### Handling edge cases — quoting, embedded commas, newlines
 
 ```python
-# Handling edge cases — quoting, embedded commas, newlines
+# CSV edge cases — quoting, embedded commas, and newlines in fields
+
 print("\n=== Edge cases (quoting, embedded commas) ===")
 # csv module handles these automatically — no manual splitting needed
 
@@ -484,7 +544,8 @@ for row in reader:
 #### StringIO — CSV in memory (no disk I/O)
 
 ```python
-# StringIO — CSV in memory (no disk I/O)
+# StringIO — CSV in memory without disk I/O
+
 print("\n=== StringIO — CSV in memory ===")
 # Data Engineering scenario: build CSV payload for an API call or S3 upload
 # without writing to disk first.
@@ -513,6 +574,27 @@ print(f"  {csv_string.strip()}")
 #### json.dumps — dict → JSON string
 
 ```python
+# json.dumps — serialize dict to JSON string
+#
+# Technique: json.dumps(obj, indent=2, sort_keys=True) converts Python
+#   dicts/lists to a JSON string. indent for pretty printing. default=
+#   parameter handles non-serializable types (datetime, Decimal).
+#
+# Benefits:
+#   - One function call — dict to JSON string
+#   - indent makes output human-readable for configs and debugging
+#   - sort_keys ensures consistent output for diffing
+#
+# Anti-patterns:
+#   - Manual string building for JSON — fragile, no escaping
+#   - Ignoring non-serializable types — TypeError at runtime
+#
+# When to use:
+#   - API payloads, message queue messages, config generation
+#
+# When NOT to use:
+#   - High-throughput — use orjson for 3-10x speed
+
 tmp_dir = Path(tempfile.mkdtemp(prefix="json_yaml_"))
 
 # json.dumps — dict → JSON string
@@ -570,7 +652,8 @@ print(json_str)
 #### json.loads — JSON string → dict
 
 ```python
-# json.loads — JSON string → dict
+# json.loads — parse JSON string to dict
+
 print("\n=== json.loads (JSON string → dict) ===")
 # Data Engineering scenario: parse an API response or Kafka message
 
@@ -605,7 +688,8 @@ print(f"  Cache hit: {data['statistics']['cache_hit']}")  # Python bool
 #### json.dump / json.load — write/read JSON files
 
 ```python
-# json.dump / json.load — write/read JSON files
+# json.dump / json.load — write and read JSON files
+
 print("\n=== json.dump / json.load (file I/O) ===")
 
 json_file = tmp_dir / "pipeline_config.json"
@@ -632,7 +716,8 @@ print(f"  Source: {loaded['source']['dataset']}.{loaded['source']['table']}")
 #### Handling non-serializable types (datetime, Decimal, custom objects)
 
 ```python
-# Handling non-serializable types (datetime, Decimal, custom objects)
+# Custom JSON serialization — handling datetime, Decimal, custom objects
+
 print("\n=== Custom JSON serialization (datetime, Decimal) ===")
 # json.dumps() fails on datetime, Decimal, set, etc. by default.
 # Fix: provide a 'default' function that converts unsupported types.
@@ -676,7 +761,8 @@ print(json_str)
 #### JSON Lines (JSONL) — one JSON object per line
 
 ```python
-# JSON Lines (JSONL) — one JSON object per line
+# JSON Lines (JSONL) — one JSON object per line for streaming
+
 print("\n=== JSON Lines (JSONL) — streaming format ===")
 # JSONL is the standard format for:
 # - BigQuery exports / imports
@@ -715,6 +801,27 @@ with open(jsonl_file, "r", encoding="utf-8") as f:
 #### yaml.safe_load — YAML string → dict
 
 ```python
+# yaml.safe_load — parse YAML string into Python dict
+#
+# Technique: yaml.safe_load(yaml_string) parses YAML into dicts, lists,
+#   and scalars. safe_load prevents arbitrary code execution (unlike
+#   yaml.load which can instantiate any Python object).
+#
+# Benefits:
+#   - Safe — no arbitrary code execution from malicious YAML
+#   - Automatic type detection — numbers, booleans, dates parsed natively
+#   - Handles comments, anchors, multi-line strings
+#
+# Anti-patterns:
+#   - yaml.load() without Loader — security risk, can execute arbitrary code
+#   - yaml.safe_load on untrusted YAML without size limits — DoS risk
+#
+# When to use:
+#   - Always use safe_load (never yaml.load without SafeLoader)
+#
+# When NOT to use:
+#   - JSON data — use json.loads instead
+
 tmp_dir = Path(tempfile.mkdtemp(prefix="yaml_"))
 
 # yaml.safe_load — YAML string → dict
@@ -771,7 +878,8 @@ print(f"  Tags:     {config['tags']}")
 #### yaml.dump — dict → YAML string
 
 ```python
-# yaml.dump — dict → YAML string
+# yaml.dump — serialize dict to YAML string
+
 print("\n=== yaml.dump (dict → YAML) ===")
 # Data Engineering scenario: generate a config file programmatically
 
@@ -806,7 +914,8 @@ print(yaml_str)
 #### Write/read YAML files
 
 ```python
-# Write/read YAML files
+# YAML file I/O — read and write YAML files
+
 print("=== YAML file I/O ===")
 
 yaml_file = tmp_dir / "pipeline_config.yaml"
@@ -829,7 +938,8 @@ print(f"  Loaded: {loaded_config['pipeline']['name']}")
 #### Multi-document YAML (--- separator)
 
 ```python
-# Multi-document YAML (--- separator)
+# Multi-document YAML — multiple documents in one file separated by ---
+
 print("\n=== Multi-document YAML ===")
 # Some tools (dbt, K8s) use multiple YAML documents in one file, separated by '---'
 
@@ -858,7 +968,8 @@ for doc in docs:
 #### JSON vs YAML comparison
 
 ```python
-# JSON vs YAML comparison
+# JSON vs YAML comparison — when to use each format
+
 print("\n=== JSON vs YAML ===")
 print("""
 Feature           JSON                    YAML
@@ -892,7 +1003,30 @@ Multi-document    No                      Yes (--- separator)
 
 ## Serialization, Deserialization, and Streams
 
+#### Serialization overview — object to bytes/string and back
+
 ```python
+# Serialization — converting objects to bytes/string for storage or transfer
+#
+# Technique: Serialization converts in-memory objects to a persistent format.
+#   JSON for text interchange. pickle for Python-native binary. struct
+#   for C-compatible fixed-size records. StringIO/BytesIO for in-memory streams.
+#
+# Benefits:
+#   - Decouples data from runtime — persist, transmit, cache
+#   - Multiple formats for different needs — text vs binary vs compact
+#   - Streams enable uniform I/O API for file, memory, and network
+#
+# Anti-patterns:
+#   - pickle for cross-language data — Python-only, security risk
+#   - JSON for large numeric arrays — binary formats are 10x smaller
+#
+# When to use:
+#   - JSON for interchange; pickle for caching; struct for binary protocols
+#
+# When NOT to use:
+#   - pickle from untrusted sources — arbitrary code execution risk
+
 # Serialization, Deserialization & Streams
 #
 # KEY CONCEPTS:
@@ -917,7 +1051,8 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="serial_"))
 #### StringIO — in-memory text stream
 
 ```python
-# StringIO — in-memory text stream
+# StringIO — in-memory text stream with file-like API
+
 print("=== StringIO (in-memory text stream) ===")
 # StringIO behaves exactly like a file opened in text mode ('r'/'w'),
 # but lives entirely in memory — no disk I/O.
@@ -949,7 +1084,8 @@ buffer.close()                       # free the buffer (or use 'with')
 #### BytesIO — in-memory binary stream
 
 ```python
-# BytesIO — in-memory binary stream
+# BytesIO — in-memory binary stream with file-like API
+
 print("\n=== BytesIO (in-memory binary stream) ===")
 # BytesIO behaves like a file opened in binary mode ('rb'/'wb').
 # Use case: build binary payloads (parquet, protobuf, images) for cloud upload.
@@ -975,7 +1111,8 @@ print(f"  Type: {type(raw)}")        # bytes
 #### Streams as function arguments
 
 ```python
-# Streams as function arguments
+# Streams as function arguments — write once, use with file or memory
+
 print("\n=== Streams as function arguments ===")
 # Data Engineering scenario: a function that writes CSV, accepting any file-like object.
 # Can be called with a real file OR a StringIO — same interface.
@@ -1016,13 +1153,8 @@ print(f"  Disk file: {disk_file.name} ({disk_file.stat().st_size} bytes)")
 #### Define dataclass (your domain model)
 
 ```python
-# @dataclass — auto-generates __init__, __repr__, __eq__ from field annotations
-# use a dataclass instead of a plain dict for serialization:
-#   - typo in a field name = immediate error, not a silent bug at 3am
-#   - IDE autocomplete knows every field and its type
-#   - type checking catches wrong types before runtime (str vs int)
-#   - asdict() converts to dict for json.dumps; from_dict() reconstructs it
-#   - the class IS the schema — anyone reading the code sees the data shape
+# Dataclass for serialization — typed domain model with field annotations
+
 @dataclass
 class PipelineRun:
     """Represents a single execution of a data pipeline."""
@@ -1037,7 +1169,8 @@ class PipelineRun:
 #### Serialize: dataclass → dict → JSON string
 
 ```python
-# Serialize: dataclass → dict → JSON string
+# Serialize — dataclass to dict to JSON string
+
 print("\n=== Serialize: dataclass → JSON ===")
 
 run = PipelineRun(
@@ -1071,7 +1204,8 @@ print(json_str)
 #### Deserialize: JSON string → dict → dataclass
 
 ```python
-# Deserialize: JSON string → dict → dataclass
+# Deserialize — JSON string to dict to dataclass
+
 print("\n=== Deserialize: JSON → dataclass ===")
 
 json_input = '{"pipeline_id":"etl_purchases","status":"failed","rows_processed":0,"started_at":"2024-01-15T04:00:00","cost_usd":0.01,"error_message":"Source table not found"}'
@@ -1097,7 +1231,8 @@ print(f"  Type:     {type(run2)}")
 #### pickle.dumps / pickle.loads — serialize to/from bytes
 
 ```python
-# pickle.dumps / pickle.loads — serialize to/from bytes
+# pickle.dumps / pickle.loads — serialize any Python object to bytes
+
 print("\n=== pickle.dumps / pickle.loads ===")
 # pickle can serialize almost ANY Python object — including dataclasses,
 # lambdas, nested structures, custom classes.
@@ -1124,7 +1259,8 @@ print(f"  Type: {type(unpickled)}")
 #### pickle.dump / pickle.load — serialize to/from file
 
 ```python
-# pickle.dump / pickle.load — serialize to/from file
+# pickle.dump / pickle.load — serialize to/from binary files
+
 print("\n=== pickle file I/O ===")
 
 pkl_file = tmp_dir / "pipeline_run.pkl"
@@ -1148,7 +1284,8 @@ print(f"  Loaded: {loaded_run.pipeline_id}, {loaded_run.rows_processed:,} rows")
 #### When to use pickle vs JSON
 
 ```python
-# When to use pickle vs JSON
+# Pickle vs JSON comparison — when to use each
+
 print("\n=== Pickle vs JSON ===")
 print("""
 Feature         pickle                          JSON
@@ -1194,6 +1331,7 @@ print("="*60)
 
 ```python
 # struct.pack / struct.unpack — fixed-size binary records
+
 print("\n=== struct.pack / struct.unpack ===")
 # struct converts Python values ↔ C-compatible binary data.
 # Format codes: 'i' = 32-bit int, 'f' = 32-bit float, 'd' = 64-bit double,
@@ -1228,6 +1366,27 @@ print(f"  Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert
 #### Character encoding — UTF-8, ASCII, Latin-1
 
 ```python
+# Character encoding — UTF-8, ASCII, Latin-1 conversion
+#
+# Technique: str.encode('utf-8') converts string to bytes. bytes.decode('utf-8')
+#   converts back. UTF-8 is variable-width (1-4 bytes per char). ASCII is
+#   7-bit. Latin-1 maps bytes 0-255 directly.
+#
+# Benefits:
+#   - Explicit encoding prevents silent character corruption
+#   - UTF-8 handles all Unicode — the universal encoding
+#   - errors='replace' or 'ignore' for graceful handling of bad bytes
+#
+# Anti-patterns:
+#   - Default encoding — varies by platform; always specify explicitly
+#   - ASCII for non-English text — silently loses characters
+#
+# When to use:
+#   - File I/O, network protocols, hashing, encryption
+#
+# When NOT to use:
+#   - String manipulation — work with str, encode at I/O boundaries
+
 # Character encoding — converting between strings and raw bytes
 #
 # WHAT: str.encode("utf-8") converts a Python string to bytes.
@@ -1281,19 +1440,8 @@ print(f"  UTF-16:  {len(utf16)} bytes (includes 2-byte BOM)")
 #### Base64 encoding
 
 ```python
-# Base64 — encode binary data as printable ASCII text
-#
-# WHAT: base64.b64encode(bytes) converts bytes to A-Z, a-z, 0-9, +, /, =.
-#   base64.b64decode(text) converts back. Every 3 bytes become 4 chars (33% overhead).
-#
-# WHY: binary data (images, protobuf, tokens) can't be safely embedded in JSON/XML/URLs.
-#   Base64 makes it text-safe. Common in: JWT tokens, API keys, inline images, email.
-#
-# ANTI-PATTERNS:
-#   - Base64 is NOT encryption — trivially reversible
-#   - Don't Base64-encode large files — 33% overhead, use binary transfer
+# Base64 encoding — binary data as printable ASCII text
 
-# Encode text as Base64
 original = "SAP.DE|2024-03-12|166.52"
 b64 = base64.b64encode(original.encode("utf-8"))
 decoded = base64.b64decode(b64).decode("utf-8")
@@ -1319,13 +1467,8 @@ print(f"  URL-safe: {url_safe.decode()}")
 #### Hexadecimal encoding
 
 ```python
-# Hexadecimal — represent bytes as 0-9, a-f pairs
-#
-# WHAT: bytes.hex() converts each byte to 2 hex characters.
-#   bytes.fromhex(hex_string) converts back.
-#   Standard for: hashes (SHA-256), MAC addresses, color codes, debugging.
+# Hexadecimal encoding — bytes as 0-9, a-f character pairs
 
-# Encode bytes as hex
 raw = b"\xde\xad\xbe\xef\xca\xfe"
 hex_str = raw.hex()
 back = bytes.fromhex(hex_str)
@@ -1349,14 +1492,7 @@ print(f"  Length:    {len(sha)} hex chars = {len(sha)//2} bytes")
 #### URL encoding
 
 ```python
-# URL encoding — escape special characters for safe use in URLs
-#
-# WHAT: urllib.parse.quote(text) converts spaces, &, =, € to %XX form.
-#   urllib.parse.unquote(encoded) decodes back.
-#   quote_plus encodes space as + (HTML form style).
-#
-# WHY: URLs have reserved characters (&, =, ?, /). Without encoding,
-#   ?query=SAP&price=166 is ambiguous — is "price" a parameter or part of "query"?
+# URL encoding — escape special characters for safe URL use
 
 raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance"
 encoded = quote(raw)
@@ -1383,6 +1519,27 @@ print(f"  Full URL: https://api.example.com/quote?{qs}")
 <h4><code style="font-size:0.75em">aiofiles</code> — non-blocking file operations</h4>
 
 ```python
+# aiofiles — async file I/O for concurrent Python applications
+#
+# Technique: aiofiles wraps standard open() with async/await support.
+#   async with aiofiles.open() as f: enables non-blocking file reads.
+#   Essential for asyncio-based web servers and concurrent pipelines.
+#
+# Benefits:
+#   - Non-blocking — other coroutines run during file I/O wait
+#   - Same API as standard open — just add async/await
+#   - Higher throughput for I/O-bound concurrent applications
+#
+# Anti-patterns:
+#   - aiofiles in synchronous scripts — overhead without benefit
+#   - Mixing sync and async file I/O — stick to one pattern
+#
+# When to use:
+#   - asyncio web servers, concurrent file processing pipelines
+#
+# When NOT to use:
+#   - Synchronous scripts and notebooks — standard open is simpler
+
 # aiofiles — async file I/O for concurrent Python applications
 #
 # WHAT: aiofiles wraps standard open() with async/await support.
@@ -1432,6 +1589,27 @@ shutil.rmtree(tmp)
 <h4><code style="font-size:0.75em">orjson</code> — fast JSON serialization</h4>
 
 ```python
+# orjson — high-performance JSON serialization (3-10x faster than json)
+#
+# Technique: orjson.dumps(obj) returns bytes (not str). orjson.loads(data)
+#   parses. Handles datetime, numpy, and dataclasses natively. Written
+#   in Rust. Drop-in replacement for most json.dumps/loads calls.
+#
+# Benefits:
+#   - 3-10x faster than stdlib json — significant for high-throughput
+#   - Native datetime/numpy support — no custom default= function
+#   - Returns bytes — avoids str→bytes conversion for network I/O
+#
+# Anti-patterns:
+#   - orjson for small/infrequent JSON — stdlib json is fine
+#   - Expecting str return — orjson.dumps returns bytes
+#
+# When to use:
+#   - High-throughput APIs, large JSON payloads, ML pipelines
+#
+# When NOT to use:
+#   - Simple scripts — stdlib json has no dependency
+
 # orjson — drop-in replacement for json, written in Rust, 3-10x faster
 #
 # WHAT: orjson.dumps(obj) returns bytes (not str). orjson.loads(data) parses.
@@ -1484,6 +1662,28 @@ print(f"  Speedup: {std_time/orj_time:.1f}x")
 <h4><code style="font-size:0.75em">pydantic</code> — typed models with validation</h4>
 
 ```python
+# Pydantic — typed models with automatic validation from JSON/dict
+#
+# Technique: class Model(BaseModel) defines fields with types. Pydantic
+#   validates on construction: wrong types raise ValidationError.
+#   model_dump() → dict, model_dump_json() → JSON string. Automatic
+#   type coercion (str "42" → int 42 when annotated as int).
+#
+# Benefits:
+#   - Runtime validation — catches type errors at construction
+#   - Automatic coercion — "42" → 42 for int fields
+#   - JSON schema generation — model_json_schema() for API docs
+#
+# Anti-patterns:
+#   - Using dict for validated API input — no type checking
+#   - Pydantic for simple internal data — dataclass is lighter
+#
+# When to use:
+#   - API request/response models, config validation, ETL schemas
+#
+# When NOT to use:
+#   - Internal data without validation needs — dataclass is sufficient
+
 # Pydantic — parse JSON/dict into strongly typed models with automatic validation
 #
 # WHAT: define a model class inheriting from BaseModel. Pydantic automatically:
@@ -1533,6 +1733,27 @@ except ValidationError as e:
 <h4><code style="font-size:0.75em">polars</code> and <code style="font-size:0.75em">DuckDB</code> — vectorized CSV</h4>
 
 ```python
+# Polars and DuckDB — high-performance CSV parsing (10-100x faster)
+#
+# Technique: polars.read_csv uses Rust multi-threading. DuckDB read_csv_auto
+#   uses C++ with SIMD. Both are 10-100x faster than csv module for large
+#   files. Automatic type inference and parallel I/O.
+#
+# Benefits:
+#   - Multi-threaded — saturates all CPU cores during parsing
+#   - Columnar — access specific columns without reading entire rows
+#   - Type inference — automatically detects int, float, date, string
+#
+# Anti-patterns:
+#   - csv module for multi-GB files — 10x slower than polars/DuckDB
+#   - pandas.read_csv for very large files — polars uses less memory
+#
+# When to use:
+#   - Large CSV files (>100MB), data analysis, ETL pipelines
+#
+# When NOT to use:
+#   - Small files or simple row processing — csv module is sufficient
+
 # High-performance CSV — bypass the standard csv module for large files
 #
 # WHAT: Polars (Rust-based) and DuckDB (C++-based) parse CSV using
@@ -1594,6 +1815,27 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
 <h4><code style="font-size:0.75em">fsspec</code> — unified filesystem interface</h4>
 
 ```python
+# fsspec / smart_open — unified filesystem for local + cloud storage
+#
+# Technique: fsspec provides a single open() API that works with local
+#   files, S3, GCS, Azure Blob, HDFS, and HTTP. smart_open wraps it with
+#   simpler syntax. Same code for local dev and cloud production.
+#
+# Benefits:
+#   - Write once — same code for local and cloud storage
+#   - Supports streaming — read/write large files without full download
+#   - Pluggable backends — add new storage without code changes
+#
+# Anti-patterns:
+#   - Separate code paths for local vs cloud — fsspec unifies them
+#   - Downloading entire file to process — fsspec streams directly
+#
+# When to use:
+#   - Pipelines that run locally and in cloud, multi-cloud storage
+#
+# When NOT to use:
+#   - Local-only scripts — standard open() is simpler
+
 # fsspec / smart_open — unified file interface for local + cloud storage
 #
 # WHAT: fsspec provides a single open() API that works with local files,

@@ -21,7 +21,6 @@ status: complete
 #### String (string) - immutable sequence of Unicode characters
 
 ```csharp
-// Setup — using directives and string vs char: double quotes for string, single quotes for char
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -41,7 +40,8 @@ Console.WriteLine($"Char:           '{c1}' (type: {c1.GetType().Name})");
 #### Verbatim & Raw Strings
 
 ```csharp
-// Verbatim strings (@) — no escape processing; backslashes are literal
+// Verbatim strings (@"") — disable escape sequence processing
+
 string s2 = @"C:\Users\new\test";
 string s3 = "C:\\Users\\new\\test";
 Console.WriteLine($"Verbatim:       {s2}");
@@ -56,7 +56,8 @@ Console.WriteLine($"Same? {s2 == s3}");
 #### Multiline Strings
 
 ```csharp
-// Verbatim or raw string literals (C# 11+)
+// Multiline strings — verbatim (@"") and raw string literals (C# 11+)
+
 string s4 = @"This is
 a multiline
 string";
@@ -81,7 +82,8 @@ Console.WriteLine($"Raw string literal:\n{s5}");
 #### String from Other Types
 
 ```csharp
-// Convert other types to string — ToString() on any value type, Convert.ToString() for nullables
+#nullable enable
+// Type-to-string conversion — ToString(), Convert.ToString(), and $""
 Console.WriteLine($"42.ToString():      '{42.ToString()}'");
 Console.WriteLine($"3.14.ToString():    '{3.14.ToString()}'");
 Console.WriteLine($"true.ToString():    '{true.ToString()}'");
@@ -98,13 +100,11 @@ Console.WriteLine($"obj?.ToString():    '{obj?.ToString() ?? "(null)"}'");
     Convert.ToString(): '42'
     obj?.ToString():    '(null)'
 
-    
-    (8,7): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
-
 #### Repetition & Concatenation
 
 ```csharp
-// No * operator for strings — use constructor or string.Concat
+// String repetition and concatenation — no * operator in C#
+
 Console.WriteLine($"new string('*', 5):  '{new string('*', 5)}'");
 Console.WriteLine($"string.Concat(Enumerable.Repeat(\"ha\", 3)): '{string.Concat(Enumerable.Repeat("ha", 3))}'");
 Console.WriteLine($"\"hello\" + \" \" + \"world\": '{"hello" + " " + "world"}'");
@@ -117,7 +117,8 @@ Console.WriteLine($"\"hello\" + \" \" + \"world\": '{"hello" + " " + "world"}'")
 #### Empty String & Null Checks
 
 ```csharp
-// Empty string & null checks — string.Empty, IsNullOrEmpty, IsNullOrWhiteSpace
+// Empty string and null checks — three distinct states
+
 string empty = "";
 Console.WriteLine($"empty == \"\":       {empty == ""}");
 Console.WriteLine($"string.Empty:      \"{string.Empty}\"");
@@ -141,7 +142,8 @@ Console.WriteLine($"string.IsNullOrWhiteSpace(\"\"): {string.IsNullOrWhiteSpace(
 #### String Immutability
 
 ```csharp
-// String immutability — strings cannot be modified in place; every operation returns a new string
+// String immutability — every operation returns a new string object
+
 string s = "hello";
 // s[0] = 'H';  // Compile error! Strings are immutable
 s = 'H' + s.Substring(1);  // must create a new string
@@ -155,7 +157,27 @@ Console.WriteLine($"Modified: {s}");
 #### Indexing (0-based)
 
 ```csharp
-// Indexing & slicing — s[i] returns char; s[^i] counts from end; s[a..b] returns substring
+// Indexing and slicing — s[i], s[^i], and s[a..b] range syntax
+//
+// Technique: s[i] returns a char at position i. s[^i] indexes from the
+//   end (^1 = last char). s[a..b] returns a substring (Range syntax, C# 8+).
+//   Ranges are exclusive on the right: s[0..5] = first 5 chars.
+//
+// Benefits:
+//   - ^i eliminates s[s.Length - i] boilerplate for end-relative access
+//   - Range syntax s[2..5] is more readable than Substring(2, 3)
+//   - Consistent with array slicing — same syntax for strings and arrays
+//
+// Anti-patterns:
+//   - Forgetting ranges are right-exclusive — s[0..5] is indices 0-4
+//   - Using Substring when range syntax is available (C# 8+)
+//   - No step/stride support — must use LINQ for every-nth-char
+//
+// When to use:
+//   - Extracting substrings, accessing characters, end-relative indexing
+//
+// When NOT to use:
+//   - Pattern extraction — use Regex or Split instead of index math
 
 string s = "Hello, World!";
 //           0123456789...
@@ -184,7 +206,8 @@ Console.WriteLine($"s[7..12]: '{s[7..12]}'");    // World
 #### Substring & Stride
 
 ```csharp
-// Substring — older API, same purpose as range slicing
+// Substring and stride — older API and LINQ-based character stepping
+
 Console.WriteLine($"Substring(7):    '{s.Substring(7)}'");      // World!
 Console.WriteLine($"Substring(7,5):  '{s.Substring(7, 5)}'");    // World
 
@@ -207,9 +230,8 @@ Console.WriteLine($"Reversed:   '{new string(arr)}'");
 #### Out of range — throws IndexOutOfRangeException
 
 ```csharp
-// Out of range — throws IndexOutOfRangeException for index; ArgumentOutOfRangeException for range
-// Console.WriteLine(s[100]);   // IndexOutOfRangeException!
-// Console.WriteLine(s[0..100]); // ArgumentOutOfRangeException!
+// Out-of-range access — exception types for index vs range
+
 Console.WriteLine("s[100]    → IndexOutOfRangeException");
 Console.WriteLine("s[0..100] → ArgumentOutOfRangeException (range must be within bounds)");
 ```
@@ -220,7 +242,8 @@ Console.WriteLine("s[0..100] → ArgumentOutOfRangeException (range must be with
 #### Iterate over characters
 
 ```csharp
-// Iterate over characters — foreach on a string yields each char
+// Character iteration — foreach yields each char in the string
+
 Console.Write("Chars: ");
 foreach (char ch in s[..5])
     Console.Write($"{ch} ");
@@ -232,7 +255,8 @@ Console.WriteLine();
 #### Index + character — LINQ Select with index
 
 ```csharp
-// Index + character — LINQ Select with index, deconstruct into (char, index) tuple
+// Enumerated iteration — LINQ Select with index for (char, index) pairs
+
 Console.WriteLine("Enumerated (LINQ):");
 foreach (var (ch, i) in s[..5].Select((c, i) => (c, i)))
     Console.WriteLine($"  [{i}] = '{ch}'");
@@ -248,7 +272,8 @@ foreach (var (ch, i) in s[..5].Select((c, i) => (c, i)))
 #### Index + character — plain for loop
 
 ```csharp
-// Index + character — plain for loop with integer index
+// For-loop iteration — classic index-based character access
+
 Console.WriteLine("Enumerated (for loop):");
 for (int i = 0; i < 5; i++)
     Console.WriteLine($"  [{i}] = '{s[i]}'");
@@ -266,6 +291,26 @@ for (int i = 0; i < 5; i++)
 #### Case Methods
 
 ```csharp
+// Case methods — ToUpper, ToLower, ToTitleCase for case conversion
+//
+// Technique: ToUpper()/ToLower() convert all characters. ToTitleCase()
+//   (via CultureInfo.CurrentCulture.TextInfo) capitalizes each word.
+//   No built-in swapcase or casefold — use LINQ for custom transforms.
+//
+// Benefits:
+//   - Culture-aware — ToUpper(CultureInfo) handles locale-specific rules
+//   - ToTitleCase handles word boundary detection automatically
+//
+// Anti-patterns:
+//   - Using ToUpper() for case-insensitive comparison — use StringComparison.OrdinalIgnoreCase
+//   - Ignoring culture — Turkish 'i' uppercases to 'İ', not 'I'
+//
+// When to use:
+//   - Display formatting, normalization, case-insensitive search prep
+//
+// When NOT to use:
+//   - Case-insensitive comparison — use string.Equals with OrdinalIgnoreCase
+
 #nullable enable
 
 string s = "  Hello, World!  ";
@@ -285,7 +330,8 @@ Console.WriteLine($"ToTitleCase(): '{CultureInfo.CurrentCulture.TextInfo.ToTitle
 #### Whitespace & Padding
 
 ```csharp
-// Whitespace & padding — Trim removes whitespace; Pad fills to a given width
+// Whitespace and padding — Trim, PadLeft, PadRight
+
 Console.WriteLine($"Trim():        '{s.Trim()}'");           // both sides
 Console.WriteLine($"TrimStart():   '{s.TrimStart()}'");      // left only
 Console.WriteLine($"TrimEnd():     '{s.TrimEnd()}'");        // right only
@@ -308,7 +354,8 @@ Console.WriteLine($"PadLeft(8,'0'):'{"42".PadLeft(8, '0')}'");      // zero-pad 
 #### Character & String Checks
 
 ```csharp
-// C# uses char-level checks or LINQ — no direct string.isalpha() etc.
+// Character and string checks — char.IsLetter, LINQ-based string tests
+
 Console.WriteLine($"  char.IsLetter('A'):    {char.IsLetter('A')}");
 Console.WriteLine($"  char.IsDigit('5'):     {char.IsDigit('5')}");
 Console.WriteLine($"  char.IsWhiteSpace(' '):{char.IsWhiteSpace(' ')}");
@@ -339,7 +386,8 @@ Console.WriteLine($"  All ASCII:    {"Hello".All(c => c < 128)}");
 #### Searching
 
 ```csharp
-// Searching — IndexOf, LastIndexOf, Contains, StartsWith, EndsWith; returns -1 when not found
+// Searching — IndexOf, LastIndexOf, Contains, StartsWith, EndsWith
+
 s = "Hello, World! Hello, C#!";
 Console.WriteLine($"IndexOf(\"Hello\"):     {s.IndexOf("Hello")}");        // 0
 Console.WriteLine($"IndexOf(\"Hello\",1):   {s.IndexOf("Hello", 1)}");     // 14
@@ -366,7 +414,8 @@ Console.WriteLine($"Count \"Hello\":       {count}");
 #### Replace, Split & Join
 
 ```csharp
-// Replace & Split — Replace substitutes all occurrences; Split breaks on delimiter
+// Replace and Split — substitution and tokenization
+
 Console.WriteLine($"Replace:           '{s.Replace("Hello", "Hi")}'");
 // No max count parameter — replaces ALL (use Regex for first-only)
 
@@ -390,7 +439,8 @@ Console.WriteLine($"Split(' '):        [{string.Join(", ", words.Split(' '))}]")
 #### StringSplitOptions
 
 ```csharp
-// Split options & Join — RemoveEmptyEntries skips blanks; TrimEntries strips whitespace; Join combines
+// StringSplitOptions and Join — control Split behavior and reassembly
+
 Console.WriteLine($"RemoveEmpty:       [{string.Join(", ", "a,,b,,c".Split(',', StringSplitOptions.RemoveEmptyEntries))}]");
 Console.WriteLine($"TrimEntries:       [{string.Join(", ", " a , b , c ".Split(',', StringSplitOptions.TrimEntries))}]");
 
@@ -412,7 +462,8 @@ Console.WriteLine($"Concat:            '{string.Concat(parts)}'");
 #### Encoding
 
 ```csharp
-// Encoding — convert strings to byte arrays and back using UTF8 or ASCII
+// Encoding — convert between strings and byte arrays
+
 byte[] utf8 = System.Text.Encoding.UTF8.GetBytes("hello");
 byte[] ascii = System.Text.Encoding.ASCII.GetBytes("hello");
 Console.WriteLine($"UTF8:  [{string.Join(", ", utf8)}]");
@@ -426,8 +477,26 @@ Console.WriteLine($"Back:  '{System.Text.Encoding.UTF8.GetString(utf8)}'");
 
 ## String Formatting
 
+#### String formatting setup — declare format demo variables
+
 ```csharp
-// String Formatting — interpolation, String.Format, and format specifiers
+// String formatting setup — declare variables for format demonstrations
+//
+// Technique: Declare name, age, double, and percentage variables in a
+//   separate cell for reuse across formatting demo cells.
+//
+// Benefits:
+//   - Keeps formatting cells focused on the format specifiers
+//
+// Anti-patterns:
+//   - Re-declaring variables in every demo cell
+//
+// When to use:
+//   - When multiple cells share the same test data
+//
+// When NOT to use:
+//   - Self-contained cells — declare inline
+
 // (moved from 01_Basics and extended)
 
 string name = "Alice";
@@ -439,7 +508,8 @@ double pct = 0.856;
 #### String Interpolation (recommended)
 
 ```csharp
-// String interpolation — $"..." embeds expressions directly; String.Format uses positional {0} placeholders
+// String interpolation — $"" and String.Format for value embedding
+
 Console.WriteLine($"Name: {name}, Age: {age}");
 Console.WriteLine($"Expression: {age + 1}");
 Console.WriteLine($"Method call: {name.ToUpper()}");
@@ -457,7 +527,8 @@ Console.WriteLine(string.Format("Name: {0}, Age: {1}, {0} again", name, age));
 #### Numeric Format Specifiers
 
 ```csharp
-// Numeric format specifiers — F (fixed), N (number), E (scientific), G (general), P (percent), C (currency)
+// Numeric format specifiers — F, N, E, G, P, C, X, D for display formatting
+
 Console.WriteLine($"Fixed 2 dec:    {n.ToString("F2")}");
 Console.WriteLine($"Fixed 0 dec:    {n.ToString("F0")}");
 Console.WriteLine($"Comma sep:      {n.ToString("N2")}");
@@ -494,7 +565,8 @@ Console.WriteLine($"Octal:          {Convert.ToString(x, 8)}");
 #### Alignment & Culture-Specific Formatting
 
 ```csharp
-// Alignment & culture-specific formatting — comma alignment in interpolation; CultureInfo for locale-aware output
+// Alignment and culture-specific formatting — layout and locale control
+
 string s = "hi";
 Console.WriteLine($"Left 10:        '{s,-10}'");            // negative = left-align
 Console.WriteLine($"Right 10:       '{s,10}'");             // positive = right-align
@@ -526,7 +598,29 @@ Console.WriteLine($"GBP: {amt.ToString("C2", new CultureInfo("en-GB"))}");
 #### Performance: + vs StringBuilder
 
 ```csharp
-// StringBuilder — mutable string buffer for efficient building
+// StringBuilder — mutable string buffer for efficient concatenation
+//
+// Technique: StringBuilder modifies an internal char buffer in place.
+//   Append/AppendLine/Insert/Replace avoid creating new string objects.
+//   Pre-allocate capacity for known sizes: new StringBuilder(1024).
+//
+// Benefits:
+//   - O(n) for n appends vs O(n²) for string + in a loop
+//   - Pre-allocated capacity avoids buffer resizing
+//   - Dramatically faster for >10 concatenations
+//
+// Anti-patterns:
+//   - Using StringBuilder for 2-3 concatenations — + is fine and simpler
+//   - Not calling .ToString() — StringBuilder is not a string
+//   - Forgetting to pre-allocate capacity for large known sizes
+//
+// When to use:
+//   - Building strings in loops, large template assembly, CSV generation
+//
+// When NOT to use:
+//   - Simple concatenation (2-5 strings) — + or $"" is cleaner
+//   - Joining collections — string.Join is optimized for that
+
 // string is IMMUTABLE — each + creates a new string object
 // StringBuilder modifies in-place, much faster for loops
 
@@ -557,7 +651,8 @@ Console.WriteLine($"StringBuilder is {t1/t2:F1}x faster");
 #### StringBuilder API
 
 ```csharp
-// StringBuilder API — Append, AppendLine, Insert, Replace, and pre-allocated capacity
+// StringBuilder API — Append, AppendLine, Insert, Replace, Remove
+
 sb = new StringBuilder("Hello");
 sb.Append(", ");                          // append string
 sb.Append("World!");
@@ -585,7 +680,8 @@ Console.WriteLine($"Pre-alloc capacity: {sb2.Capacity}");
 #### Join & Concat
 
 ```csharp
-// Joining with LINQ — string.Join over IEnumerable; use + for 2-5 strings, StringBuilder for loops
+// Join and Concat — efficient collection-to-string conversion
+
 var items = Enumerable.Range(0, 5).Select(i => $"item_{i}");
 Console.WriteLine($"Join: '{string.Join(", ", items)}'");
 Console.WriteLine($"Concat: '{string.Concat(Enumerable.Range(0, 5))}'");
@@ -607,6 +703,28 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 #### Regex.Match() — First Match
 
 ```csharp
+// Regex.Match and Matches — find patterns in text
+//
+// Technique: Regex.Match returns the first match (check .Success).
+//   Regex.Matches returns all matches as MatchCollection. Pattern syntax
+//   uses @"" verbatim strings to avoid double-escaping backslashes.
+//
+// Benefits:
+//   - Match.Success avoids null checks — always returns a Match object
+//   - Matches returns all occurrences in one call
+//   - Groups[0] is the full match; Groups[1..n] are capture groups
+//
+// Anti-patterns:
+//   - Not checking .Success before reading .Value — empty match is not null
+//   - Using IndexOf for pattern matching — Regex is more expressive
+//   - Recompiling the same pattern in a loop — cache with new Regex()
+//
+// When to use:
+//   - Extracting structured data: emails, phones, dates, IPs from text
+//
+// When NOT to use:
+//   - Simple Contains/StartsWith checks — string methods are faster
+
 string text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210.";
 
 // Regex.Match & Matches — find first or all matches; check Success before reading Value
@@ -638,7 +756,8 @@ Console.WriteLine($"IsMatch(mixed):  {Regex.IsMatch("123a5", @"^\d+$")}");    //
 #### Capture Groups
 
 ```csharp
-// Capture groups — numbered groups[1..n] access sub-matches; named groups use (?<name>...)
+// Capture groups — extract sub-matches with numbered and named groups
+
 match = Regex.Match(text, @"(\d{3})-(\d{3})-(\d{4})");
 if (match.Success)
 {
@@ -667,7 +786,8 @@ if (match.Success)
 #### Replace, Split & Compile
 
 ```csharp
-// Replace, Split & Compile — MatchEvaluator for dynamic replacement; Compiled flag for repeated use
+// Regex Replace, Split, and Compiled — advanced pattern operations
+
 Console.WriteLine(Regex.Replace(text, @"\d{3}-\d{3}-\d{4}", "***-***-****"));
 
 // Replace with function (MatchEvaluator)
@@ -696,7 +816,8 @@ Console.WriteLine(phonePat.Replace(text, "REDACTED"));
 #### Regex Syntax Reference
 
 ```csharp
-// Regex syntax reference — characters, quantifiers, anchors, groups, lookaround, character classes
+// Regex syntax reference — characters, quantifiers, anchors, groups
+
 Console.WriteLine(@"
   CHARACTERS
   .         Any character (except newline)
@@ -768,7 +889,8 @@ Console.WriteLine(@"
 #### Regex Flags
 
 ```csharp
-// Regex flags — IgnoreCase, Multiline, Singleline affect how patterns match
+// Regex flags — IgnoreCase, Multiline, Singleline for match behavior
+
 string text = "Hello\nworld\nHELLO";
 
 // IgnoreCase — case-insensitive matching
@@ -790,7 +912,8 @@ Console.WriteLine($"Singleline:  {Regex.IsMatch(text, @"Hello.world", RegexOptio
 #### IgnorePatternWhitespace — verbose patterns with inline comments
 
 ```csharp
-// IgnorePatternWhitespace — whitespace in pattern is ignored, allowing multi-line patterns with # comments
+// IgnorePatternWhitespace — verbose regex with inline comments
+
 var pattern = new Regex(@"
     (\d{3})     # area code
     [-.]        # separator
@@ -807,7 +930,8 @@ if (m2.Success) Console.WriteLine($"Verbose:     {m2.Groups[1]}-{m2.Groups[2]}-{
 #### Combine flags
 
 ```csharp
-// Combine flags — use | to combine multiple RegexOptions
+// Combining regex flags — use | to apply multiple RegexOptions
+
 var combined = Regex.Matches(text, @"^hello", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 Console.WriteLine($"Combined:    {string.Join(", ", combined.Select(m => m.Value))}");
 ```
@@ -817,7 +941,8 @@ Console.WriteLine($"Combined:    {string.Join(", ", combined.Select(m => m.Value
 #### RegexOptions Reference
 
 ```csharp
-// RegexOptions flags reference — all available options and their effects
+// RegexOptions reference — all available flags and their effects
+
 Console.WriteLine("IgnoreCase              — case-insensitive matching");
 Console.WriteLine("Multiline               — ^ and $ match line boundaries");
 Console.WriteLine("Singleline              — . matches newline characters");
@@ -840,7 +965,8 @@ Console.WriteLine("NonBacktracking         — .NET 7+, guaranteed linear time (
 #### Common Regex Patterns
 
 ```csharp
-// Common regex patterns — ready-to-use patterns for email, URL, IP, date, time, color, phone, zip, password
+// Common regex patterns — ready-to-use patterns for validation
+
 var patterns = new (string name, string pat)[] {
     ("email",           @"^[\w.+-]+@[\w-]+\.[\w.]+$"),
     ("URL",             @"https?://[\w./\-?=&#]+"),

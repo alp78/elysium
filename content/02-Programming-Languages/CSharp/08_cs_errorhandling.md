@@ -21,6 +21,28 @@ status: complete
 #### Basic try / catch
 
 ```csharp
+// Basic try/catch — structured exception handling
+//
+// Technique: Wrap risky code in try { }. Catch specific exception types
+//   in catch (ExceptionType ex) { }. The catch block handles the error.
+//   Unmatched exceptions propagate up the call stack.
+//
+// Benefits:
+//   - Separates normal flow from error handling — cleaner code
+//   - Catch specific types — handle each error appropriately
+//   - ex.Message and ex.StackTrace provide diagnostic details
+//
+// Anti-patterns:
+//   - Catch (Exception) everywhere — hides bugs, catches too broadly
+//   - Empty catch blocks — silently swallows errors
+//   - Using exceptions for flow control — slow, use TryParse/if instead
+//
+// When to use:
+//   - I/O operations, parsing external data, network calls
+//
+// When NOT to use:
+//   - Expected conditions — use TryParse, if/else, or null checks
+
 // Basic try/catch — wrap risky code in try; catch handles specific exception types
 using System.IO;
 
@@ -40,7 +62,8 @@ catch (IndexOutOfRangeException ex)
 #### Multiple catch blocks
 
 ```csharp
-// Multiple catch blocks — matched top to bottom; most specific first, Exception last
+// Multiple catch blocks — match most specific exception first
+
 void ParseRow(string input)
 {
     try
@@ -101,7 +124,8 @@ LoadFile("C:\\Windows\\System32");
 <h4><code style="font-size:0.75em">catch when</code> — conditional catch</h4>
 
 ```csharp
-// catch when — adds a boolean condition; only catches if condition is true
+// catch when — conditional catch with boolean guard
+
 void ParseValue(string input, bool strict)
 {
     try
@@ -129,8 +153,8 @@ catch (InvalidOperationException ex) { Console.WriteLine($"  Strict caught: {ex.
 #### finally — always runs
 
 ```csharp
-// finally — runs whether try succeeded or threw
-// used for cleanup (connections, locks)
+// finally — guaranteed cleanup whether try succeeded or threw
+
 void ProcessWithCleanup(bool throwError)
 {
     Console.WriteLine("  Opening resource...");
@@ -168,7 +192,8 @@ ProcessWithCleanup(true);
 <h4><code style="font-size:0.75em">throw</code> vs <code style="font-size:0.75em">throw ex</code> — preserving the stack trace</h4>
 
 ```csharp
-// throw vs throw ex — throw preserves stack trace; throw ex resets it; wrap with new for context
+// throw vs throw ex — preserving the original stack trace
+
 void Wrapper()
 {
     try
@@ -198,6 +223,27 @@ catch (InvalidOperationException ex)
 #### Exception hierarchy and properties
 
 ```csharp
+// Exception hierarchy — inheritance tree and diagnostic properties
+//
+// Technique: All exceptions inherit from Exception. SystemException covers
+//   most built-in errors. Properties: Message (description), StackTrace
+//   (call chain), InnerException (wrapped cause), Data (key-value context).
+//
+// Benefits:
+//   - Hierarchical catching — catch base type to handle entire family
+//   - InnerException chains preserve the full error history
+//   - Data dictionary attaches diagnostic context without custom types
+//
+// Anti-patterns:
+//   - Catching Exception when a specific type is known — too broad
+//   - Ignoring InnerException — the root cause may be buried
+//
+// When to use:
+//   - Understanding which exception type to catch for a given operation
+//
+// When NOT to use:
+//   - N/A — this is a reference for the exception type system
+
 // Exception hierarchy — all exceptions inherit from Exception; SystemException covers most built-ins
 #nullable enable
 //
@@ -234,6 +280,8 @@ catch (ArgumentException ex)
 #### Common exceptions in data engineering
 
 ```csharp
+// Common exceptions in data engineering — parse, key, overflow, null
+
 # nullable enable
 // Common DE exceptions — FormatException, KeyNotFoundException, OverflowException, NullReferenceException
 
@@ -289,7 +337,8 @@ Console.WriteLine($"  FirstOrDefault on empty: {safe}");
 <h4><code style="font-size:0.75em">Exception.Data</code> — attaching context</h4>
 
 ```csharp
-// Exception.Data — attach extra key/value context before re-throwing
+// Exception.Data — attach key-value diagnostic context before re-throwing
+
 try
 {
     var ex2 = new FormatException("Invalid salary value");
@@ -317,6 +366,27 @@ catch (FormatException ex)
 #### Type declarations
 
 ```csharp
+// Custom exception classes — domain-specific exceptions with structured context
+//
+// Technique: CsvParseException inherits Exception and adds RowNumber,
+//   ColumnName, RawValue properties. PipelineException wraps any exception
+//   with pipeline name and stage. Both preserve InnerException chain.
+//
+// Benefits:
+//   - Structured context — RowNumber, ColumnName directly on the exception
+//   - Type-safe catching — catch (CsvParseException) vs generic Exception
+//   - InnerException chain preserves the full error history
+//
+// Anti-patterns:
+//   - Custom exceptions without additional context — use built-in types
+//   - Too many custom exception types — group related errors
+//
+// When to use:
+//   - Domain errors with structured diagnostic fields (row, column, stage)
+//
+// When NOT to use:
+//   - Generic errors — built-in FormatException, IOException suffice
+
 // CsvParseException — domain exception for CSV parsing failures with structured context
 
 public class CsvParseException : Exception
@@ -360,7 +430,8 @@ public class PipelineException : Exception
 #### Using custom exceptions
 
 ```csharp
-// Using custom exceptions — catch low-level FormatException, wrap with domain context
+// Using custom exceptions — catch low-level, wrap with domain context
+
 int ParseSalary(string value, int rowNum)
 {
     try
@@ -399,7 +470,8 @@ foreach (var (row, idx) in rows.Select((r, i) => (r, i + 1)))
 #### Pipeline-level exception wrapping
 
 ```csharp
-// Pipeline wrapping — catch domain exception, wrap with pipeline name and stage
+// Pipeline-level exception wrapping — name and stage context
+
 void RunPipeline(string name)
 {
     try
@@ -433,6 +505,8 @@ catch (PipelineException ex)
 <h4><code style="font-size:0.75em">using</code> statement and declaration</h4>
 
 ```csharp
+// using statement — automatic Dispose() for IDisposable resources
+
 # nullable enable
 
 // using statement — calls Dispose() automatically at end of block, even on exception
@@ -470,7 +544,8 @@ Console.WriteLine("  using(var r = ...) { body }  ≡  try { body } finally { r.
 <h4>Custom <code style="font-size:0.75em">IDisposable</code></h4>
 
 ```csharp
-// Using the custom IDisposable
+// Custom IDisposable — CsvWriter with guaranteed file cleanup
+
 var outFile = Path.GetTempFileName();
 using (var csv = new CsvWriter(outFile))
 {
@@ -523,6 +598,27 @@ public class CsvWriter : IDisposable
 #### Type declarations
 
 ```csharp
+// ParseResult record — structured result for error accumulation
+//
+// Technique: record ParseResult(Name, Salary, IsValid, Error) captures
+//   both successful parses and failures. Process all rows, partition
+//   results into valid/invalid, route errors to dead-letter.
+//
+// Benefits:
+//   - No exceptions for expected bad data — faster than try/catch per row
+//   - All errors collected — not just the first one
+//   - Dead-letter pattern — bad records saved for investigation
+//
+// Anti-patterns:
+//   - Throwing exceptions for each bad row — 1000x slower at scale
+//   - Stopping on first error — misses subsequent errors in the batch
+//
+// When to use:
+//   - ETL parsing where bad records are expected and must be collected
+//
+// When NOT to use:
+//   - When every error should halt processing — throw immediately
+
 // ParseResult — record for accumulating parse outcomes (valid records + errors)
 #nullable enable
 record ParseResult(string Name, int Salary, bool IsValid, string? Error);
@@ -531,7 +627,8 @@ record ParseResult(string Name, int Salary, bool IsValid, string? Error);
 <h4><code style="font-size:0.75em">TryParse</code> pattern</h4>
 
 ```csharp
-// TryParse — returns false instead of throwing; much faster for expected bad data at scale
+// TryParse pattern — return false instead of throwing on invalid input
+
 string[] values = { "42", "bad", "100", "", "999" };
 foreach (var v in values)
 {
@@ -556,7 +653,8 @@ Console.WriteLine($"  Date parsed: {date:yyyy-MM-dd}");
 #### Error accumulation — ETL pattern
 
 ```csharp
-// Error accumulation — collect all errors, continue processing; route bad records to dead-letter
+// Error accumulation — ETL pattern collecting all errors, not just first
+
 ParseResult ParseEmployee(string csvLine, int rowNum)
 {
     var parts = csvLine.Split(',');
@@ -598,7 +696,8 @@ foreach (var r in bad)  Console.WriteLine($"    ERROR: {r.Error}");
 <h4><code style="font-size:0.75em">AggregateException</code> — parallel errors</h4>
 
 ```csharp
-// AggregateException — wraps ALL failures from parallel tasks; Flatten() for a flat list
+// AggregateException — collect all errors from parallel/async operations
+
 var tasks = new[]
 {
     Task.Run(() => { throw new FormatException("Bad value in file A"); }),
@@ -624,7 +723,8 @@ catch
 #### Retry pattern for transient errors
 
 ```csharp
-// Retry pattern — retry transient failures (network, DB) with exponential backoff
+// Retry pattern — exponential backoff for transient failures
+
 async Task<T> WithRetry<T>(Func<Task<T>> operation, int maxAttempts = 3, int delayMs = 100)
 {
     for (int attempt = 1; attempt <= maxAttempts; attempt++)

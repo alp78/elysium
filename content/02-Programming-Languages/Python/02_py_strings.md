@@ -27,6 +27,7 @@ import time
 
 # No separate char type — a single character is just a string of length 1
 # Single quotes, double quotes — identical
+import locale
 s1 = 'hello'
 s2 = "hello"
 print(f"Single quotes:  '{s1}'")
@@ -37,7 +38,8 @@ print(f"Same? {s1 == s2}")
 #### Multiline & Raw Strings
 
 ```python
-# Triple quotes — multiline strings
+# Multiline and raw strings — triple quotes and r"" prefix
+
 s3 = """This is
 a multiline
 string"""
@@ -66,6 +68,8 @@ print(f"Same? {s5 == s6}")
 #### String from Other Types
 
 ```python
+# Type-to-string conversion — str(), repetition, and empty checks
+
 print(f"str(42):        '{str(42)}'")
 print(f"str(3.14):      '{str(3.14)}'")
 print(f"str(True):      '{str(True)}'")
@@ -99,8 +103,8 @@ print(f"bool('a'):      {bool('a')}")      # True (truthy)
 #### String Immutability
 
 ```python
-s = "hello"
-# s[0] = 'H'  # TypeError! Strings are immutable
+# String immutability — strings cannot be modified in place
+
 s = 'H' + s[1:]  # must create a new string
 print(f"Modified: {s}")
 ```
@@ -112,7 +116,27 @@ print(f"Modified: {s}")
 #### Indexing (0-based)
 
 ```python
-s = "Hello, World!"
+# Indexing and slicing — s[i], s[-i], s[a:b], s[a:b:step]
+#
+# Technique: s[i] accesses by index (0-based). s[-1] is the last character.
+#   s[a:b] slices from a to b (exclusive). s[::2] takes every 2nd char.
+#   s[::-1] reverses the string. Slicing never raises IndexError.
+#
+# Benefits:
+#   - Negative indexing eliminates len(s)-1 boilerplate
+#   - Slices are forgiving — out-of-range indices are silently clamped
+#   - Step parameter enables stride, reversal, and subsampling
+#
+# Anti-patterns:
+#   - Forgetting slices are right-exclusive — s[0:5] is indices 0-4
+#   - Using s[len(s)-1] instead of s[-1] — less Pythonic
+#
+# When to use:
+#   - Extracting substrings, accessing characters, reversing strings
+#
+# When NOT to use:
+#   - Pattern extraction — use regex or split instead of index math
+
 #     0123456789...
 
 print(f"s[0]:     '{s[0]}'")        # H
@@ -145,7 +169,8 @@ print(f"s[2:10:2]:'{s[2:10:2]}'")   # lo o (slice with step)
 #### Out of Range & Iteration
 
 ```python
-# Slicing is forgiving, indexing is not
+# Out-of-range behavior and character iteration
+
 print(f"s[0:100]: '{s[0:100]}'")     # Hello, World! (no error!)
 # print(s[100])                       # IndexError!
 
@@ -175,6 +200,27 @@ for i, ch in enumerate(s[:5]):
 #### Case Methods  — Case, Whitespace, Checking, Searching, Replacing
 
 ```python
+# Case methods — upper, lower, title, capitalize, swapcase, casefold
+#
+# Technique: Built-in methods for case conversion. casefold() is more
+#   aggressive than lower() — handles Unicode: "Strasse".casefold() = "strasse"
+#   from German "Strasse". title() capitalizes first letter of each word.
+#
+# Benefits:
+#   - casefold() is the correct way to do case-insensitive comparison
+#   - title()/capitalize() handle word boundaries automatically
+#   - All are Unicode-aware — work correctly with non-ASCII characters
+#
+# Anti-patterns:
+#   - Using lower() for case-insensitive comparison — casefold() handles more Unicode
+#   - Comparing upper() results — casefold() is designed for this purpose
+#
+# When to use:
+#   - Display formatting, case-insensitive search, normalization
+#
+# When NOT to use:
+#   - Locale-sensitive case rules — use locale module for Turkish i, etc.
+
 s = "  Hello, World!  "
 
 print(f"upper():       '{'hello world'.upper()}'")
@@ -195,7 +241,8 @@ print(f"casefold():    '{'Straße'.casefold()}'")       # aggressive lowercase f
 #### Whitespace & Padding
 
 ```python
-print(f"strip():       '{s.strip()}'")           # both sides
+# Whitespace and padding — strip, ljust, rjust, center, zfill
+
 print(f"lstrip():      '{s.lstrip()}'")          # left only
 print(f"rstrip():      '{s.rstrip()}'")          # right only
 print(f"strip('!'):    '{'Hello!!'.strip('!')}'")  # strip specific chars
@@ -219,6 +266,8 @@ print(f"zfill(8):      '{'42'.zfill(8)}'")       # zero-pad numbers
 #### String Type Checks
 
 ```python
+# String type checks — isalpha, isdigit, isalnum, isspace, and more
+
 checks = {
     "isalpha()":    "Hello",
     "isdigit()":    "12345",
@@ -255,7 +304,8 @@ for method, example in checks.items():
 #### Searching
 
 ```python
-s = "Hello, World! Hello, Python!"
+# Searching — find, index, count, startswith, endswith, in
+
 print(f"find('Hello'):      {s.find('Hello')}")        # 0 (first occurrence)
 print(f"find('Hello', 1):   {s.find('Hello', 1)}")     # 14 (start from index 1)
 print(f"rfind('Hello'):     {s.rfind('Hello')}")       # 14 (last occurrence)
@@ -280,7 +330,8 @@ print(f"'World' in s:       {'World' in s}")            # True (membership)
 #### Replace, Split & Join
 
 ```python
-# replace — substitute occurrences; optional third arg limits how many
+# Replace, split, and join — substitution, tokenization, and reassembly
+
 print(f"replace:           '{s.replace('Hello', 'Hi')}'")
 print(f"replace(max=1):    '{s.replace('Hello', 'Hi', 1)}'")
 
@@ -345,7 +396,8 @@ print(f"expandtabs(4):     '{tab_str.expandtabs(4)}'")
 #### Translate & Encode
 
 ```python
-# maketrans + translate — character-level replacement
+# Translate and encode — character-level replacement and byte conversion
+
 table = str.maketrans("aeiou", "12345")
 print(f"translate(vowels): '{'hello world'.translate(table)}'")
 
@@ -367,6 +419,29 @@ print(f"encode('ascii'):   {'hello'.encode('ascii')}")
 #### f-strings (recommended, Python 3.6+)
 
 ```python
+# f-strings — inline expression embedding (Python 3.6+)
+#
+# Technique: f"..." embeds any expression in {braces}. Supports format
+#   specifiers: f"{n:.2f}", method calls: f"{s.upper()}", and expressions:
+#   f"{a + 1}". Also shows .format() and % operator for comparison.
+#
+# Benefits:
+#   - Most readable — expressions are inline, no positional placeholders
+#   - Any expression allowed: f"{len(items)}", f"{x if x else 'N/A'}"
+#   - Faster than .format() — compiled to efficient bytecode
+#
+# Anti-patterns:
+#   - .format() in new code when f-strings work — f-strings are cleaner
+#   - f-strings in SQL or shell commands — injection risk
+#   - %-formatting in new code — legacy, error-prone with tuple/dict
+#
+# When to use:
+#   - f-strings for all new code; .format() when template is a variable
+#
+# When NOT to use:
+#   - SQL/command strings — use parameterised queries
+#   - Logging — use logger.info("msg %s", val) for lazy evaluation
+
 name, age = "Alice", 30
 n = 1234567.89123
 pct = 0.856
@@ -394,6 +469,8 @@ print("Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14))
 #### Numeric Format Specifiers
 
 ```python
+# Numeric format specifiers — .2f, .2e, ,.2f, .1%, d, x, o, b
+
 print(f"Fixed 2 dec:    {n:.2f}")
 print(f"Fixed 0 dec:    {n:.0f}")
 print(f"Comma sep:      {n:,.2f}")
@@ -428,6 +505,8 @@ print(f"Zero-padded:    {x:08d}")
 #### Alignment & Locale Currency
 
 ```python
+# Alignment and locale currency — layout control and locale-aware output
+
 s = "hi"
 print(f"Left 10:        '{s:<10}'")
 print(f"Right 10:       '{s:>10}'")
@@ -436,7 +515,6 @@ print(f"Fill char:      '{s:*^10}'")
 print(f"Sign always:    {42:+d}")
 print(f"Space for pos:  {42: d}")
 
-import locale
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
     print(f"US:  {locale.currency(1234567.89, grouping=True)}")
@@ -466,7 +544,29 @@ except ImportError:
 
 ## Efficient String Building
 
+#### Efficient string building — why + in loops is slow
+
 ```python
+# String building overview — immutability makes + in loops O(n squared)
+#
+# Technique: Strings are immutable — each += copies the entire string.
+#   For n concatenations, this is O(n squared) total work. Use "".join()
+#   or io.StringIO for O(n) string building.
+#
+# Benefits:
+#   - Understanding this prevents major performance bottlenecks
+#   - join() and StringIO are the standard efficient alternatives
+#
+# Anti-patterns:
+#   - += in loops — each iteration copies the growing string
+#   - Assuming Python optimizes string += — CPython may, but it's not guaranteed
+#
+# When to use:
+#   - Always consider the building strategy for >10 concatenations
+#
+# When NOT to use:
+#   - 2-5 string concatenations — + is fine for small numbers
+
 # Efficient String Building
 # Strings are IMMUTABLE — each + creates a new string object
 # For many concatenations, use join() or io.StringIO instead
@@ -475,6 +575,8 @@ except ImportError:
 #### BAD: O(n²) — each + copies the entire string
 
 ```python
+# Performance comparison — + in loop vs join()
+
 start = time.perf_counter()
 result = ""
 for i in range(50000):
@@ -497,6 +599,8 @@ print(f"join is {t1/t2:.1f}x faster")
 #### io.StringIO & List Building
 
 ```python
+# io.StringIO and list building — two efficient string assembly patterns
+
 buf = io.StringIO()
 buf.write("Hello")
 buf.write(", ")
@@ -523,6 +627,8 @@ print(f"Comprehension: '{result}'")
 #### Small number of concatenations — readability wins
 
 ```python
+# Small concatenation — + is fine for 2-5 strings
+
 first = "Hello"
 last = "World"
 full = first + " " + last    # perfectly fine
@@ -535,16 +641,34 @@ print("Rule: use + for 2-5 strings, join() for loops/many strings")
 
 ## Regular Expressions
 
+#### Regex setup — import and test text
+
 ```python
-# Regular Expressions — comprehensive reference
+# Regex setup — declare test text for pattern matching demonstrations
+#
+# Technique: Define a multi-format test string containing emails, phone
+#   numbers, and other patterns for regex demonstrations.
+#
+# Benefits:
+#   - Single test string reused across all regex demo cells
+#
+# Anti-patterns:
+#   - Re-declaring test data in every cell — wastes space
+#
+# When to use:
+#   - When multiple cells demonstrate patterns on the same text
+#
+# When NOT to use:
+#   - Self-contained cells — declare test data inline
+
 text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
 ```
 
 #### re.search() — First Match
 
 ```python
-# re.search — scans through the string and returns the first match anywhere in it.
-# match.group() is the matched text; start()/end() are its position in the string.
+# re.search, re.findall, re.match — find patterns in text
+
 match = re.search(r'\d{3}-\d{3}-\d{4}', text)
 if match:
     print(f"Found: {match.group()} at [{match.start()}:{match.end()}]")
@@ -571,8 +695,8 @@ print(f"fullmatch digits: {bool(re.fullmatch(r'\d+', '123a5'))}")
 #### Capture Groups
 
 ```python
-# Capture groups — parentheses (...) in a pattern mark a sub-expression whose matched text
-# is stored separately. group(0) is the full match; group(1), group(2)... are the captures.
+# Capture groups — extract sub-matches with () and (?P<name>...)
+
 match = re.search(r'(\d{3})-(\d{3})-(\d{4})', text)
 if match:
     print(f"Full:     {match.group(0)}")
@@ -591,14 +715,8 @@ if match:
 #### Replace, Split & Compile
 
 ```python
-# re.sub — replace all pattern matches in a string.
-# The replacement can be a string (with \1 backreferences to capture groups)
-# or a callable that receives each match object and returns the replacement.
-# re.split — split a string on a pattern rather than a fixed delimiter.
-# re.compile — pre-compile a pattern into a reusable object; avoids recompiling
-# on every call, which matters when the same pattern is used many times.
+# re.sub, re.split, re.compile — replace, split, and precompile patterns
 
-# Plain substitution
 print(re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text))
 
 # Replace with a function — doubles every number found
@@ -633,6 +751,8 @@ print(phone_pat.sub('REDACTED', text))
 #### Regex Syntax Reference
 
 ```python
+# Regex syntax reference — characters, quantifiers, anchors, groups
+
 syntax = r"""
   CHARACTERS
   .         Any character (except newline)
@@ -705,6 +825,8 @@ print(syntax)
 #### Regex Flags
 
 ```python
+# Regex flags — IGNORECASE, MULTILINE, DOTALL, VERBOSE
+
 text = "Hello\nworld\nHELLO"
 print(f"IGNORECASE: {re.findall(r'hello', text, re.IGNORECASE)}")
 print(f"MULTILINE:  {re.findall(r'^\\w+', text, re.MULTILINE)}")
@@ -733,6 +855,8 @@ print(f"Combined:   {re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE)}"
 #### Common Regex Patterns
 
 ```python
+# Common regex patterns — ready-to-use patterns for validation
+
 patterns = {
     "email":          r'^[\w.+-]+@[\w-]+\.[\w.]+$',
     "URL":            r'https?://[\w./\-?=&#]+',

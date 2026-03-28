@@ -55,6 +55,28 @@ using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 
+#r "nuget: Google.Cloud.BigQuery.V2"
+#r "nuget: Google.Cloud.Firestore"
+#r "nuget: Google.Cloud.Monitoring.V3"
+#r "nuget: Google.Cloud.PubSub.V1"
+#r "nuget: Google.Cloud.SecretManager.V1"
+#r "nuget: Google.Cloud.Storage.V1"
+#r "nuget: Microsoft.Bcl.AsyncInterfaces"
+using Google.Api;
+using Google.Apis.Auth.OAuth2;
+using Google.Cloud.BigQuery.V2;
+using Google.Cloud.Firestore;
+using Google.Cloud.Monitoring.V3;
+using Google.Cloud.PubSub.V1;
+using Google.Cloud.SecretManager.V1;
+using Google.Cloud.Storage.V1;
+using Google.Protobuf.WellKnownTypes;
+using Google.Protobuf;
+using System.IO;
+using System.Net.Http.Headers;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
     BindingFlags.NonPublic | BindingFlags.Instance);
@@ -74,14 +96,6 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
 ```csharp
-#r "nuget: Google.Cloud.Storage.V1"
-#r "nuget: Google.Cloud.BigQuery.V2"
-#r "nuget: Google.Cloud.PubSub.V1"
-#r "nuget: Microsoft.Bcl.AsyncInterfaces"
-#r "nuget: Google.Cloud.Firestore"
-#r "nuget: Google.Cloud.SecretManager.V1"
-#r "nuget: Google.Cloud.Monitoring.V3"
-
 // GCP Authentication — how C# connects to Google Cloud.
 //
 // KEY CONCEPTS:
@@ -90,7 +104,6 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 // - GoogleCredential.GetApplicationDefault() reads the ADC chain.
 // - Python equivalent: same env var, Client(project=...) pattern.
 
-using Google.Apis.Auth.OAuth2;
 
 var projectId = "index-lab-2";
 var region = "europe-west1";
@@ -103,8 +116,6 @@ Console.WriteLine($"Project: {projectId}");
 Console.WriteLine($"Bucket:  {bucketName}");
 ```
 
-<div><div></div><div></div><div><strong>Installed Packages</strong><ul><li><span>Google.Cloud.BigQuery.V2, 3.11.0</span></li><li><span>Google.Cloud.Firestore, 4.2.0</span></li><li><span>Google.Cloud.Monitoring.V3, 3.16.0</span></li><li><span>Google.Cloud.PubSub.V1, 3.33.0</span></li><li><span>Google.Cloud.SecretManager.V1, 2.7.0</span></li><li><span>Google.Cloud.Storage.V1, 4.14.0</span></li><li><span>Microsoft.Bcl.AsyncInterfaces, 10.0.5</span></li></ul></div></div>
-
     Authenticated: UserCredential
     Project: index-lab-2
     Bucket:  index-lab-2-index-data
@@ -114,10 +125,6 @@ Console.WriteLine($"Bucket:  {bucketName}");
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here.
 
 ```csharp
-using System.IO;
-using Google.Cloud.Storage.V1;
-using System.Text;
-
 // Cloud Storage — upload/download/list objects.
 // Python equivalent: from google.cloud import storage
 
@@ -180,8 +187,6 @@ Console.WriteLine($"\n  Deleted: {blobName}");
 **Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
 
 ```csharp
-using Google.Cloud.BigQuery.V2;
-
 // BigQuery — serverless analytics warehouse.
 // Python equivalent: from google.cloud import bigquery
 
@@ -242,9 +247,6 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture.
 
 ```csharp
-using Google.Cloud.PubSub.V1;
-using Google.Protobuf;
-
 // Pub/Sub — publish and pull messages.
 // Python equivalent: from google.cloud import pubsub_v1
 
@@ -314,11 +316,6 @@ if (ackIds.Count > 0)
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
 ```csharp
-using Google.Cloud.Firestore;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-
 // Firestore -- NoSQL document database.
 // Python equivalent: from google.cloud import firestore
 //
@@ -417,10 +414,6 @@ Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
       Cleaned up 3 score documents
 
 ```csharp
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-
 // Firestore Real-Time Polling via REST API.
 //
 // The SDK's Listen() also hits the AsyncInterfaces bug on .NET 10.
@@ -536,9 +529,6 @@ Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
 
 ```csharp
-using Google.Cloud.SecretManager.V1;
-using Google.Protobuf;
-
 // Secret Manager — secure credential storage.
 // Python equivalent: from google.cloud import secretmanager
 
@@ -578,10 +568,6 @@ foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.Li
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
 
 ```csharp
-using Google.Cloud.Monitoring.V3;
-using Google.Api;
-using Google.Protobuf.WellKnownTypes;
-
 // Cloud Monitoring — write custom metrics and structured logs.
 // Python equivalent: from google.cloud import monitoring_v3
 

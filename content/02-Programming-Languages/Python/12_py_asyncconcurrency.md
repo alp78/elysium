@@ -17,7 +17,6 @@ status: complete
 # 12. Async & Concurrency - Python
 
 ```python
-# Imports used throughout this notebook
 import asyncio
 import time
 import os
@@ -39,6 +38,28 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_compl
 #### Async and await basics
 
 ```python
+# Async/await — cooperative concurrency with asyncio
+#
+# Technique: async def declares a coroutine. await pauses until the awaited
+#   coroutine completes, releasing the event loop to run other tasks.
+#   asyncio.run() starts the event loop (or await in notebooks).
+#
+# Benefits:
+#   - Single-threaded concurrency — no race conditions by default
+#   - I/O-bound speedup — await during network/disk waits
+#   - Clean syntax — reads like synchronous code
+#
+# Anti-patterns:
+#   - Blocking calls (time.sleep, requests.get) in async — blocks the event loop
+#   - asyncio.run() inside a running event loop — RuntimeError in notebooks
+#   - Missing await — coroutine is created but never executed
+#
+# When to use:
+#   - I/O-bound: HTTP calls, DB queries, file I/O, websockets
+#
+# When NOT to use:
+#   - CPU-bound work — use ProcessPoolExecutor (GIL blocks threads)
+
 # Async & Await — cooperative concurrency with asyncio
 #
 # KEY CONCEPTS:
@@ -59,7 +80,8 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_compl
 #### Basic coroutine
 
 ```python
-# Basic coroutine
+# Basic coroutine — async def with await asyncio.sleep
+
 async def fetch_data(source: str, delay: float) -> dict:
     """Simulate fetching data from a source with network latency."""
     print(f"  [{time.strftime('%H:%M:%S')}] Starting fetch: {source}")
@@ -71,7 +93,8 @@ async def fetch_data(source: str, delay: float) -> dict:
 #### Sequential vs concurrent
 
 ```python
-# Sequential — each fetch waits for the previous one
+# Sequential vs concurrent — await one-by-one vs asyncio.gather
+
 async def sequential():
     print("=== Sequential (one after another) ===")
     start = time.perf_counter()
@@ -124,15 +147,7 @@ print(f"\nResults match: {seq_results == conc_results}")
 <h4><code style="font-size:0.75em">asyncio.gather</code> and <code style="font-size:0.75em">TaskGroup</code></h4>
 
 ```python
-# asyncio.gather vs asyncio.TaskGroup — running multiple coroutines
-#
-# gather(): classic approach — returns results in order. If one fails, others may still run.
-# TaskGroup (Python 3.11+): structured concurrency — if one fails, ALL are cancelled.
-#
-# Rule of thumb:
-#   - gather(): when you want all results and handle errors yourself.
-#   - TaskGroup: when failure of one task means the whole batch is invalid.
-
+# asyncio.gather vs TaskGroup — two approaches to concurrent execution
 
 async def fetch_table(name: str, delay: float, fail: bool = False) -> dict:
     """Simulate a BigQuery table fetch."""
@@ -145,7 +160,8 @@ async def fetch_table(name: str, delay: float, fail: bool = False) -> dict:
 #### asyncio.gather with error handling
 
 ```python
-# asyncio.gather with error handling
+# asyncio.gather with return_exceptions — collect all results including errors
+
 print("=== asyncio.gather (return_exceptions=True) ===")
 results = await asyncio.gather(
     fetch_table("events", 0.3),
@@ -168,7 +184,8 @@ for r in results:
 #### TaskGroup (Python 3.11+) — structured concurrency
 
 ```python
-# TaskGroup (Python 3.11+) — structured concurrency
+# TaskGroup (Python 3.11+) — structured concurrency with auto-cancellation
+
 print("\n=== TaskGroup (structured concurrency) ===")
 try:
     async with asyncio.TaskGroup() as tg:
@@ -199,19 +216,13 @@ except* RuntimeError as eg:
 #### Async patterns for data engineering
 
 ```python
-# Async patterns for Data Engineering pipelines
-#
-# Common patterns:
-# 1. Semaphore: limit concurrent requests (don't overwhelm an API).
-# 2. Timeout: cancel slow tasks (don't let a pipeline hang forever).
-# 3. Retry: retry failed tasks with exponential backoff.
-# 4. Producer-consumer: decouple data production from processing with asyncio.Queue.
+# Async patterns for data engineering — semaphore, timeout, retry, queue
 ```
 
 #### Semaphore — rate limiting
 
 ```python
-# Scenario: fetch from an API that allows max 3 concurrent requests.
+# Semaphore — limit concurrent async operations (rate limiting)
 
 async def fetch_with_limit(sem: asyncio.Semaphore, url: str) -> str:
     async with sem:  # blocks if 3 tasks already inside
@@ -243,7 +254,7 @@ print(f"    ... ({len(results) - 3} more)")
 #### Timeout — cancel slow tasks
 
 ```python
-# Scenario: BigQuery query that should finish in 2s or we abort.
+# Timeout — cancel slow tasks with asyncio.wait_for
 
 async def slow_query(table: str) -> dict:
     await asyncio.sleep(5.0)  # simulate a very slow query
@@ -264,7 +275,7 @@ except asyncio.TimeoutError:
 #### Retry with exponential backoff
 
 ```python
-# Scenario: flaky API that fails intermittently.
+# Retry with exponential backoff — recover from transient failures
 
 attempt_count = 0
 
@@ -302,7 +313,7 @@ print(f"  Success on attempt {attempt_count}: {result}")
 #### Producer-Consumer with asyncio.Queue
 
 ```python
-# Scenario: one task produces events, multiple workers process them.
+# Producer-Consumer with asyncio.Queue — async pipeline pattern
 
 async def async_producer(queue: asyncio.Queue, n: int):
     """Generate events and put them in the queue."""
@@ -355,22 +366,7 @@ print(f"    ... ({len(results) - 4} more)")
 <h4>Async generators — <code style="font-size:0.75em">async def</code> with <code style="font-size:0.75em">yield</code></h4>
 
 ```python
-# Async generators — async def with yield for streaming data from async sources
-#
-# WHAT: an async generator is an async function that uses "yield" instead of "return".
-#   It produces items one at a time. The consumer uses "async for" to pull items.
-#   Each yield suspends the generator until the consumer asks for the next item.
-#
-# WHY: process data as it arrives without buffering everything in memory.
-#   Paginated API: fetch page 1 → yield items → fetch page 2 → yield items → ...
-#   Only one page is in memory at a time, regardless of total dataset size.
-#
-# WHEN TO USE: paginated REST APIs, streaming DB cursors, reading large files async
-# ANTI-PATTERNS:
-#   - Don't collect into a list (async for x in gen: lst.append(x)) unless you need all items
-#   - Don't use time.sleep inside async generators — use await asyncio.sleep
-#   - Don't forget that break inside async for properly cleans up the generator
-
+# Async generators — async def with yield for streaming data
 
 async def fetch_pages(total_pages: int, items_per_page: int):
     """Simulate a paginated API — yields items one at a time across pages."""
@@ -414,22 +410,7 @@ async for item in fetch_pages(10, 3):
 <h4><code style="font-size:0.75em">asyncio.as_completed</code> — process fastest results first</h4>
 
 ```python
-# asyncio.as_completed — yields futures in the order they FINISH, not the order submitted
-#
-# WHAT: given a list of coroutines/tasks, as_completed returns an iterator of futures.
-#   Each future yields as soon as it resolves — the fastest result comes first.
-#   Contrast with gather(): waits for ALL to finish, returns results in submission order.
-#
-# WHY: if you dispatch 50 API requests, some take 100ms and some take 5s.
-#   With gather: you wait 5s for ALL, then process all 50 at once.
-#   With as_completed: you start processing the 100ms results immediately,
-#   feeding them to a downstream DB while slower requests are still in flight.
-#
-# WHEN TO USE: latency-sensitive pipelines, first-result-wins patterns, progress reporting
-# ANTI-PATTERNS:
-#   - Don't confuse with concurrent.futures.as_completed (threads) — this is asyncio version
-#   - Don't forget to await each future from the iterator
-
+# asyncio.as_completed — process results in completion order
 
 async def fetch_with_delay(name: str, delay: float) -> str:
     """Simulate an API call with variable latency."""
@@ -462,27 +443,8 @@ for coro in asyncio.as_completed(tasks):
 <h4><code style="font-size:0.75em">asyncio.Lock</code> and <code style="font-size:0.75em">asyncio.Event</code></h4>
 
 ```python
-# asyncio.Lock and asyncio.Event — async-safe synchronization primitives
-#
-# WHAT: asyncio.Lock is like threading.Lock but for coroutines. It protects shared
-#   state when an await happens during a state update (context switch point).
-#   asyncio.Event is like threading.Event — coroutines wait() until set() is called.
-#
-# WHY asyncio.Lock is needed even though asyncio is single-threaded:
-#   Between two awaits, another coroutine can run. If both modify shared state,
-#   you get a logical race condition (not a thread race — a coroutine interleaving).
-#   Example: read token → await refresh → write token. Without lock, another coroutine
-#   could read the stale token between your read and write.
-#
-# WHEN TO USE:
-#   Lock: protecting token caches, connection pools, shared counters across coroutines
-#   Event: "pause all workers until ready", shutdown signaling, init coordination
-# ANTI-PATTERNS:
-#   - Don't use threading.Lock in async code — it blocks the event loop
-#   - Don't hold asyncio.Lock across long awaits — starves other coroutines
-#   - Always use "async with lock:" not "lock.acquire()/release()" — exception-safe
+# asyncio.Lock and asyncio.Event — async-safe synchronization
 
-# asyncio.Lock — protect a shared token cache during async refresh
 token_cache = {"access_token": "old_token", "expires_at": 0}
 lock = asyncio.Lock()
 
@@ -538,6 +500,28 @@ await asyncio.gather(*worker_tasks)
 ```python
 # concurrent.futures — thread and process pools for parallelism
 #
+# Technique: ThreadPoolExecutor for I/O-bound parallelism (HTTP, file, DB).
+#   ProcessPoolExecutor for CPU-bound parallelism (bypasses GIL). Both
+#   provide map() for bulk operations and submit() for individual tasks.
+#
+# Benefits:
+#   - ThreadPoolExecutor: concurrent I/O without async — works with blocking libraries
+#   - ProcessPoolExecutor: true multi-core — each process has its own GIL
+#   - Uniform API — swap Thread for Process pool with one line change
+#
+# Anti-patterns:
+#   - ThreadPoolExecutor for CPU-bound — GIL limits to ~1 core
+#   - ProcessPoolExecutor for I/O — overhead of process creation, pickling
+#   - Not setting max_workers — defaults may spawn too many threads
+#
+# When to use:
+#   - Threads for I/O-bound; Processes for CPU-bound
+#
+# When NOT to use:
+#   - Simple async I/O — asyncio is lighter than thread pools
+
+# concurrent.futures — thread and process pools for parallelism
+#
 # KEY CONCEPTS:
 # - ThreadPoolExecutor: pool of threads. Good for I/O-bound work (HTTP, file, DB).
 #   Threads share memory but are limited by the GIL (Global Interpreter Lock) for CPU work.
@@ -556,7 +540,7 @@ await asyncio.gather(*worker_tasks)
 #### ThreadPoolExecutor — I/O-bound work
 
 ```python
-# Scenario: fetch data from multiple API endpoints.
+# ThreadPoolExecutor — I/O-bound parallelism with blocking libraries
 
 def fetch_sync(url: str) -> dict:
     """Simulate a blocking HTTP call (like requests.get)."""
@@ -590,6 +574,7 @@ print(f"  {len(thread_results)} fetches in {time.perf_counter() - start:.2f}s")
 
 ```python
 # submit() + as_completed() — process results as they finish
+
 print("\n=== submit + as_completed (results as they arrive) ===")
 with ThreadPoolExecutor(max_workers=5) as pool:
     # submit() returns a Future for each task
@@ -615,15 +600,7 @@ with ThreadPoolExecutor(max_workers=5) as pool:
 <h4><code style="font-size:0.75em">ProcessPoolExecutor</code></h4>
 
 ```python
-# ProcessPoolExecutor — CPU-bound parallelism with true multi-core execution
-#
-# WHAT: each worker is a separate OS process with its own Python interpreter and GIL.
-#   Data is serialized (pickled) between processes — keep payloads small.
-#   Best for: heavy computation, parsing, hashing, compression, ML inference.
-#
-# NOTEBOOK LIMITATION: ProcessPoolExecutor can't pickle notebook-defined functions
-#   on Windows. The ProcessPool demo runs via a temp .py script (as it would in production).
-
+# ProcessPoolExecutor — CPU-bound parallelism bypassing the GIL
 
 def cpu_heavy(data: bytes) -> str:
     """CPU-bound work: compute SHA-256 hash of a large payload."""
@@ -648,9 +625,8 @@ print(f"  {len(seq_hashes)} hashes in {seq_time:.2f}s")
 <h4><code style="font-size:0.75em">ThreadPoolExecutor</code> — GIL limits CPU-bound speedup</h4>
 
 ```python
-# ThreadPoolExecutor for CPU-bound work — demonstrates the GIL limitation
-# Threads share the GIL, so CPU-bound work gets minimal speedup from threads.
-# For I/O-bound work (HTTP, DB) threads ARE effective because the GIL is released during I/O.
+# ThreadPoolExecutor for CPU-bound — demonstrates GIL limitation
+
 print(f"=== ThreadPoolExecutor ({os.cpu_count()} workers) ===")
 start = time.perf_counter()
 with ThreadPoolExecutor(max_workers=os.cpu_count()) as pool:
@@ -669,9 +645,8 @@ print(f"  Results match: {seq_hashes == thread_hashes}")
 <h4><code style="font-size:0.75em">ProcessPoolExecutor</code> — true multi-core speedup</h4>
 
 ```python
-# ProcessPoolExecutor — each worker has its own GIL, so CPU-bound work scales with cores
-# Runs via a temp .py script because notebook-defined functions can't be pickled on Windows.
-# In a real .py script, ProcessPoolExecutor works directly — no temp file needed.
+# ProcessPoolExecutor — true multi-core speedup for CPU-bound work
+
 script = textwrap.dedent("""
     from concurrent.futures import ProcessPoolExecutor
     import hashlib, time, os
@@ -718,7 +693,8 @@ os.unlink(tmp_script)
 #### Comparison table
 
 ```python
-# Comparison table
+# Comparison table — asyncio vs threads vs processes
+
 print("""
 === When to use what ===
 
@@ -743,22 +719,7 @@ ProcessPoolExecutor   CPU-bound work    No (separate)  Parallel.ForEach()
 
 ```python
 # Inter-process communication — subprocess for cross-process data exchange
-#
-# WHAT: subprocess.run() spawns a child OS process, captures its stdout/stderr.
-#   The parent sends data via arguments/stdin, the child returns data via stdout (JSON).
-#   Each process has its own memory space — crash in child doesn't affect parent.
-#
-# WHY: strict memory isolation + crash resilience. Use when:
-#   - Running untrusted or crash-prone code in isolation
-#   - Invoking external tools (gcloud, bq, dbt) from Python
-#   - Bypassing the GIL for CPU-bound work when ProcessPoolExecutor doesn't fit
-#
-# ANTI-PATTERNS:
-#   - Don't pass secrets via command-line arguments (visible in ps/task manager) — use stdin
-#   - Don't forget to check returncode — child may have crashed silently
-#   - Don't use shell=True with user input — command injection risk
 
-# Spawn a Python subprocess that computes and returns JSON
 result = subprocess.run(
     ["python", "-c", "import json; print(json.dumps({'source': 'child', 'pid': __import__('os').getpid(), 'result': sum(range(100))}))"],
     capture_output=True, text=True, timeout=10,
@@ -790,7 +751,31 @@ for expr, result in results:
 
 ## Threading and Concurrency
 
+#### Threading overview — low-level thread management
+
 ```python
+# threading module — OS-level threads for concurrent execution
+#
+# Technique: threading.Thread(target=func, args=()) creates a thread.
+#   .start() begins execution. .join() waits for completion. Threads
+#   share memory — use Lock for shared mutable state.
+#
+# Benefits:
+#   - True concurrency for I/O-bound work — GIL is released during I/O
+#   - Shared memory — threads access same variables (with synchronization)
+#   - Lower overhead than processes — no pickling, no process creation
+#
+# Anti-patterns:
+#   - Threads for CPU-bound — GIL limits to ~1 core
+#   - Shared mutable state without locks — race conditions
+#   - Not joining threads — main may exit before workers finish
+#
+# When to use:
+#   - I/O-bound parallelism when asyncio isn't an option
+#
+# When NOT to use:
+#   - CPU-bound — use multiprocessing; async I/O — use asyncio
+
 # threading module — low-level thread management
 #
 # KEY CONCEPTS:
@@ -808,7 +793,8 @@ for expr, result in results:
 #### Basic threading
 
 ```python
-# Basic threading
+# Basic threading — create, start, join, and collect results
+
 def worker(name: str, delay: float, results: list):
     """A simple worker that simulates work and appends to shared list."""
     print(f"  [{threading.current_thread().name}] {name} starting")
@@ -845,17 +831,14 @@ print(f"  Active threads: {threading.active_count()}")
 #### Locks
 
 ```python
-# Locks — preventing race conditions
-#
-# A race condition occurs when two threads read-modify-write shared data
-# at the same time, causing lost updates.
-# Lock (mutex) ensures only one thread enters the critical section at a time.
+# Locks — preventing race conditions on shared mutable state
 ```
 
 #### Race condition demo (WITHOUT lock)
 
 ```python
-# Race condition demo (WITHOUT lock)
+# Race condition demo — without lock shows data corruption
+
 counter_unsafe = 0
 
 def increment_unsafe(n: int):
@@ -881,7 +864,8 @@ print(f"  Got:      {counter_unsafe:,}  {'(WRONG — race condition!)' if counte
 #### Fixed with Lock
 
 ```python
-# Fixed with Lock
+# Fixed with Lock — mutual exclusion prevents lost updates
+
 counter_safe = 0
 lock = threading.Lock()
 
@@ -908,27 +892,19 @@ print(f"  Got:      {counter_safe:,}  (correct — lock prevents race)")
 #### Note on performance
 
 ```python
-# The lock version is SLOWER because threads serialize on the lock.
-# This is the fundamental trade-off: correctness vs speed.
-# If you need both, redesign to avoid shared mutable state (use queues, immutable data).
+# Lock performance tradeoff — correctness vs speed
 ```
 
 #### Thread-safe data structures and patterns
 
 ```python
-# Thread-safe data structures and patterns
-#
-# KEY CONCEPTS:
-# - queue.Queue: thread-safe FIFO queue. No explicit locking needed.
-#   The go-to pattern for producer-consumer with threads.
-# - threading.Event: flag that one thread sets and others wait for.
-#   Useful for signaling "data is ready" or "please stop".
+# Thread-safe data structures — queue.Queue for producer-consumer
 ```
 
 #### Thread-safe Queue — producer-consumer
 
 ```python
-# Scenario: one thread reads events from a source, multiple workers process them.
+# Thread-safe Queue — producer-consumer with multiple workers
 
 def thread_producer(q: queue.Queue, n: int, stop_event: threading.Event):
     """Produce events and put them in the queue."""
@@ -985,7 +961,8 @@ for w, c in sorted(worker_counts.items()):
 #### threading.Event — coordinating threads
 
 ```python
-# threading.Event — coordinating threads
+# threading.Event — coordinating threads with signals
+
 print("\n=== threading.Event (coordination) ===")
 data_ready = threading.Event()
 shared_data = {}
@@ -1022,34 +999,5 @@ print("  Both threads done")
 #### Summary
 
 ```python
-# Summary — choosing the right concurrency tool
-#
-# Python has THREE concurrency models. Choose based on your workload:
-#
-# ┌─────────────────────┬──────────────────┬────────────────────┬──────────────────────┐
-# ├─────────────────────┼──────────────────┼────────────────────┼──────────────────────┤
-# │ asyncio             │ I/O (async libs) │ 1 thread           │ async/await          │
-# │ ThreadPoolExecutor  │ I/O (sync libs)  │ N threads          │ Task.Run()           │
-# │ ProcessPoolExecutor │ CPU-bound        │ N processes        │ Parallel.ForEach()   │
-# │ threading.Thread    │ Low-level control│ Manual threads     │ new Thread()         │
-# │ threading.Lock      │ Shared state     │ N/A (any threads)  │ lock keyword          │
-# │ queue.Queue         │ Thread messaging │ N/A (any threads)  │ ConcurrentQueue<T>   │
-# │ asyncio.Queue       │ Async messaging  │ 1 thread           │ Channel<T>           │
-# └─────────────────────┴──────────────────┴────────────────────┴──────────────────────┘
-#
-# Decision tree:
-#   1. Is the work I/O-bound or CPU-bound?
-#      - I/O → go to 2
-#      - CPU → ProcessPoolExecutor (bypass the GIL)
-#   2. Are your libraries async (aiohttp, asyncpg, etc.)?
-#      - Yes → asyncio
-#      - No  → ThreadPoolExecutor (wrap sync calls)
-#   3. Need fine-grained thread control?
-#      - Yes → threading.Thread + Lock/Event/Queue
-#      - No  → use the high-level executors above
-#
-# Data Engineering rule of thumb:
-#   - API calls, DB queries, file I/O → asyncio or ThreadPool
-#   - Parsing, hashing, compression, ML → ProcessPool
-#   - Kafka/Pub/Sub consumers → asyncio (async client) or threading (sync client)
+# Summary — choosing the right concurrency tool in Python
 ```

@@ -18,8 +18,6 @@ status: complete
 # 10. Serialization Formats - C#
 
 ```csharp
-// Suppress CS1701/CS1702 warnings and import all namespaces used in this notebook
-
 using System.IO;
 using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
@@ -33,6 +31,31 @@ using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
 
+#r "nuget: Apache.Avro, 1.12.0"
+#r "nuget: Google.Protobuf"
+#r "nuget: Parquet.Net, 5.5.0"
+#r "nuget: Plotly.NET, 5.1.0"
+#r "nuget: Plotly.NET.CSharp, 0.13.0"
+#r "nuget: Plotly.NET.Interactive, 5.0.0"
+#r "nuget: Polars.NET"
+#r "nuget: Polars.NET.Native.win-x64"
+using Avro.File;
+using Avro.Generic;
+using Avro.IO;
+using Avro;
+using Google.Protobuf.Reflection;
+using Google.Protobuf.WellKnownTypes;
+using Google.Protobuf;
+using Microsoft.DotNet.Interactive.Formatting;
+using Parquet.Data;
+using Parquet.Schema;
+using Parquet.Serialization;
+using Parquet;
+using Plotly.NET.CSharp;
+using Plotly.NET.Interactive;
+using Plotly.NET.LayoutObjects;
+using Plotly.NET;
+using Polars.CSharp;
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
     BindingFlags.NonPublic | BindingFlags.Instance);
@@ -52,12 +75,28 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 #### NuGet package and type declarations
 
 ```csharp
-#r "nuget: Parquet.Net, 5.5.0"
+// Parquet.Net NuGet and type declarations — columnar format for data lakes
+//
+// Technique: #r "nuget: Parquet.Net" adds the Parquet library. Define a
+//   record/class matching the Parquet schema. Parquet.Net maps properties
+//   to parquet columns automatically via class serialization API.
+//
+// Benefits:
+//   - NuGet integration — one line to add the dependency
+//   - Type-safe — record properties map directly to parquet columns
+//   - Supports both low-level DataColumn API and high-level class serialization
+//
+// Anti-patterns:
+//   - Not pinning NuGet version — builds may break on updates
+//   - Mismatched property types vs parquet schema — runtime errors
+//
+// When to use:
+//   - Any notebook reading/writing Parquet files
+//
+// When NOT to use:
+//   - N/A — NuGet setup is required for Parquet.Net
 
-using Parquet;
-using Parquet.Data;
-using Parquet.Schema;
-using Parquet.Serialization;
+
 
 // EventRecord — Parquet.Net maps properties to parquet columns
 public class EventRecord
@@ -73,7 +112,8 @@ public class EventRecord
 #### Write parquet — DataColumn API
 
 ```csharp
-// Write parquet — define schema, then write one column at a time (columnar format)
+// Write parquet — DataColumn API for columnar file creation
+
 var tmpDir = Path.Combine(Path.GetTempPath(), "parquet_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 
@@ -114,7 +154,8 @@ Console.WriteLine($"  Written: {Path.GetFileName(parquetFile)} ({new FileInfo(pa
 #### Read parquet — DataColumn API
 
 ```csharp
-// Read parquet — schema is embedded in the file; read columns individually
+// Read parquet — schema discovery and column-based reading
+
 using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
@@ -145,7 +186,8 @@ using (Stream fs = File.OpenRead(parquetFile))
 #### Class serialization and deserialization
 
 ```csharp
-// Class serialization — serialize a list of objects directly to parquet (simpler API)
+// Class serialization — serialize/deserialize objects directly to parquet
+
 var events = new List<EventRecord>
 {
     new() { EventId = "evt_001", EventType = "page_view", UserId = 1001, Revenue = 0.0, IsMobile = true },
@@ -177,9 +219,8 @@ foreach (var e in loaded)
 <h4>Metadata, <code style="font-size:0.75em">MemoryStream</code>, and CSV vs Parquet</h4>
 
 ```csharp
-// Parquet metadata — read schema and row count without loading any data
-// Instant even for huge files — reads only the footer (a few KB).
-// Use case: validate schema before processing, check row count, inspect compression.
+// Parquet metadata — read schema and row count without loading data
+
 using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
@@ -199,9 +240,8 @@ using (Stream fs = File.OpenRead(parquetFile))
 <h4>Parquet in memory — <code style="font-size:0.75em">MemoryStream</code></h4>
 
 ```csharp
-// Parquet in memory — write to MemoryStream for cloud upload without temp files
-// MemoryStream.ToArray() gives you byte[] ready for GCS/S3/ADLS upload.
-// No disk I/O, no temp file cleanup — the bytes live in memory until uploaded.
+// Parquet in memory — MemoryStream for cloud upload without temp files
+
 {
     var memStream = new MemoryStream();
     await ParquetSerializer.SerializeAsync(events, memStream);
@@ -220,9 +260,8 @@ using (Stream fs = File.OpenRead(parquetFile))
 #### CSV vs Parquet comparison
 
 ```csharp
-// CSV vs Parquet — when to use each format
-// CSV: human-readable, simple exchange, legacy systems, small files
-// Parquet: columnar, compressed, typed schema, data lakes, analytics at scale
+// CSV vs Parquet comparison — when to use each format
+
 Console.WriteLine(@"
 Feature              CSV                         Parquet
 ──────────────────────────────────────────────────────────────
@@ -253,9 +292,28 @@ Directory.Delete(tmpDir, recursive: true);
 #### Protobuf with Google.Protobuf NuGet
 
 ```csharp
-#r "nuget: Google.Protobuf"
-using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
+// Protocol Buffers — cross-language binary serialization with schema
+//
+// Technique: Protobuf uses .proto files to define schemas. protoc generates
+//   typed C# classes. Serialize with WriteTo/ToByteArray. Deserialize with
+//   Parser.ParseFrom. Schema is external — not embedded in the data.
+//
+// Benefits:
+//   - Compact — 3-10x smaller than JSON for the same data
+//   - Fast — binary encoding, no parsing overhead
+//   - Cross-language — same .proto generates C#, Python, Java, Go code
+//   - Schema evolution — add fields without breaking old consumers
+//
+// Anti-patterns:
+//   - Protobuf without schema management — consumers can't decode without .proto
+//   - Using for human-readable data — binary format is not inspectable
+//
+// When to use:
+//   - gRPC, microservice communication, Kafka messages, mobile APIs
+//
+// When NOT to use:
+//   - Config files — use JSON/YAML; human-readable exchange — use JSON
+
 
 // Protocol Buffers (Protobuf) — cross-language binary serialization with schema
 //
@@ -286,12 +344,8 @@ Console.WriteLine("  Google.Protobuf loaded.");
 #### Dynamic protobuf messages
 
 ```csharp
-// Build a protobuf message dynamically — without protoc-generated classes
-// In production, protoc generates strongly-typed classes. This approach
-// demonstrates the same binary format using the descriptor API.
-using Google.Protobuf.Reflection;
+// Dynamic protobuf messages — runtime message construction without protoc
 
-// Build a FileDescriptor programmatically (normally protoc does this)
 var fileDescProto = new Google.Protobuf.Reflection.FileDescriptorProto
 {
     Name = "stock_quote.proto",
@@ -355,9 +409,8 @@ Console.WriteLine($"  Decoded:   symbol={sym}, price={price}, volume={vol}");
 #### Production protobuf pattern
 
 ```csharp
-// Production protobuf workflow — how it looks with protoc-generated code
-//
-// This cell shows the PATTERN. The code is not executable without running protoc.
+// Production protobuf pattern — protoc-generated code workflow
+
 Console.WriteLine(@"
   ── Step 1: Define schema (stock_quote.proto) ──
 
@@ -439,11 +492,28 @@ Console.WriteLine(@"
 #### Avro schema and serialization
 
 ```csharp
-#r "nuget: Apache.Avro, 1.12.0"
-using Avro;
-using Avro.Generic;
-using Avro.IO;
-using Avro.File;
+// Apache Avro — binary serialization with embedded schema
+//
+// Technique: Define schema in JSON format. GenericRecord API creates records
+//   matching the schema. Schema is embedded in the file header — readers
+//   don't need external schema to decode. Standard in Kafka and Hadoop.
+//
+// Benefits:
+//   - Self-describing — schema embedded in every file
+//   - Schema evolution — add/remove fields with compatibility rules
+//   - Compact binary — smaller than JSON, comparable to Protobuf
+//   - Kafka standard — Schema Registry manages versions
+//
+// Anti-patterns:
+//   - Avro without schema registry in Kafka — version conflicts
+//   - JSON schema strings without validation — runtime parse errors
+//
+// When to use:
+//   - Kafka messages, Hadoop/Spark pipelines, schema-evolving data
+//
+// When NOT to use:
+//   - Simple files — Parquet is better for analytics; JSON for interchange
+
 
 // Apache Avro — binary serialization with embedded schema for data engineering
 //
@@ -499,9 +569,7 @@ foreach (var f in schema.Fields)
 #### Write Avro file
 
 ```csharp
-// Write Avro records to a file — schema is embedded in the file header
-// GenericRecord is the dynamic API (no code generation needed).
-// In production with generated classes, you'd use SpecificRecord instead.
+// Write Avro file — GenericRecord API with embedded schema
 
 var tmpDir = Path.Combine(Path.GetTempPath(), "avro_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
@@ -547,8 +615,7 @@ Console.WriteLine($"  Records: {records.Count}, Size: {fileSize} bytes");
 #### Read Avro file
 
 ```csharp
-// Read Avro file — schema is read from the file header automatically
-// No need to provide the schema externally — the file is self-describing
+// Read Avro file — schema read automatically from file header
 
 using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 {
@@ -580,10 +647,8 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 #### Avro in memory and size comparison
 
 ```csharp
-// Avro in memory — serialize to MemoryStream for Kafka or API payloads
-// Compare sizes: Avro vs JSON vs Protobuf
+// Avro in memory and size comparison — MemoryStream and format benchmarks
 
-// Serialize to MemoryStream (no file)
 var avroMs = new MemoryStream();
 var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
 
@@ -623,17 +688,6 @@ Directory.Delete(tmpDir, recursive: true);
 
 ```csharp
 // Schema evolution — add fields without breaking existing consumers
-//
-// WHAT: Avro supports schema evolution rules:
-//   - Add a field with a default → old files read fine (missing field gets default)
-//   - Remove a field with a default → new readers ignore extra data
-//   - Rename via aliases → old name still recognized
-//   - CANNOT change field type (string → int breaks everything)
-//
-// WHY: in production Kafka, producers and consumers evolve independently.
-//   Producer adds a "sector" field → old consumers ignore it.
-//   Consumer expects "sector" → old messages return the default value.
-//   No downtime, no coordinated deploys.
 
 Console.WriteLine(@"
   Schema Evolution Rules:
@@ -678,6 +732,27 @@ Console.WriteLine(@"
 #### Generate test data
 
 ```csharp
+// Generate OHLCV test data — three sizes for benchmarking
+//
+// Technique: Create synthetic OHLCV (Open/High/Low/Close/Volume) records
+//   matching the stoxx database schema. Three tiers: 100 (small), 10K
+//   (medium), 100K (large) for meaningful performance comparison.
+//
+// Benefits:
+//   - Reproducible — fixed random seed (42) for consistent benchmarks
+//   - Realistic schema — matches actual financial data structure
+//   - Three sizes reveal scaling characteristics of each format
+//
+// Anti-patterns:
+//   - Benchmarking with tiny data only — doesn't reveal scaling issues
+//   - Unrealistic schemas — benchmark results won't transfer to production
+//
+// When to use:
+//   - Comparing serialization format performance with realistic data
+//
+// When NOT to use:
+//   - Production benchmarks — use actual production data and queries
+
 // Generate OHLCV test data — same schema as stoxx database
 // Three sizes: 100 (small), 10K (medium), 100K (large)
 var rng = new Random(42);
@@ -726,6 +801,7 @@ record OhlcvRecord(string Symbol, string Date, double Open, double High, double 
 
 ```csharp
 // Benchmark helpers — write/read each format and measure time + size
+
 var benchDir = Path.Combine(Path.GetTempPath(), "bench_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(benchDir);
 
@@ -758,7 +834,8 @@ Console.WriteLine("  Benchmark helpers ready.");
 #### CSV benchmark
 
 ```csharp
-// CSV benchmark — text-based, row-oriented
+// CSV benchmark — text-based, row-oriented baseline
+
 void WriteCsv(string path, List<OhlcvRecord> data)
 {
     using var w = new StreamWriter(path, false, Encoding.UTF8);
@@ -791,7 +868,8 @@ Console.WriteLine("  CSV done.");
 #### JSON benchmark
 
 ```csharp
-// JSON benchmark — text-based, self-describing
+// JSON benchmark — text-based, self-describing format
+
 var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
 void WriteJson(string path, List<OhlcvRecord> data)
@@ -822,7 +900,8 @@ Console.WriteLine("  JSON done.");
 #### Parquet benchmark
 
 ```csharp
-// Parquet benchmark — columnar, compressed, typed
+// Parquet benchmark — columnar, compressed, typed format
+
 void WriteParquet(string path, List<OhlcvRecord> data)
 {
     var schema = new ParquetSchema(
@@ -866,7 +945,8 @@ Console.WriteLine("  Parquet done.");
 #### Avro benchmark
 
 ```csharp
-// Avro benchmark — row-based binary, self-describing
+// Avro benchmark — row-based binary with embedded schema
+
 var avroSchema = (RecordSchema)Schema.Parse(@"{
   ""type"": ""record"", ""name"": ""OhlcvRecord"", ""namespace"": ""bench"",
   ""fields"": [
@@ -918,7 +998,8 @@ Console.WriteLine("  Avro done.");
 #### Protobuf benchmark
 
 ```csharp
-// Protobuf benchmark — binary, external schema, compact
+// Protobuf benchmark — binary with external schema, most compact
+
 void WriteProto(string path, List<OhlcvRecord> data)
 {
     using var fs = File.OpenWrite(path);
@@ -951,8 +1032,7 @@ Console.WriteLine("  Protobuf done.");
 #### Results — performance matrix
 
 ```csharp
-// Performance table — formatted console output grouped by bucket
-// (C# notebooks don't have pandas styling, so we use formatted text + Plotly charts)
+// Performance results table — write/read speed and file size per format
 
 Console.WriteLine("\n  \u2550\u2550\u2550 FORMAT PERFORMANCE BENCHMARK \u2550\u2550\u2550");
 
@@ -1023,26 +1103,15 @@ foreach (var bucket in new[] { "large", "medium", "small" })
 #### Performance and compression charts
 
 ```csharp
-// Load NuGet packages for DataFrame + Plotly charts
-#r "nuget: Polars.NET"
-#r "nuget: Polars.NET.Native.win-x64"
-#r "nuget: Plotly.NET, 5.1.0"
-#r "nuget: Plotly.NET.Interactive, 5.0.0"
-#r "nuget: Plotly.NET.CSharp, 0.13.0"
+// Performance charts — NuGet packages for DataFrame and Plotly visualization
 
-using Plotly.NET;
-using Plotly.NET.CSharp;
-using Plotly.NET.LayoutObjects;
-using Plotly.NET.Interactive;
-using Polars.CSharp;
 using static Polars.CSharp.Polars;
 ```
 
 #### Results DataFrame
 
 ```csharp
-// Register styled HTML formatter for Polars DataFrame — matches pandas .style output
-using Microsoft.DotNet.Interactive.Formatting;
+// Results DataFrame — styled HTML table for benchmark results
 
 Formatter.Register<DataFrame>(df =>
 {
@@ -1107,7 +1176,8 @@ Console.WriteLine("  DataFrame formatter registered.");
 #### Results
 
 ```csharp
-// Display benchmark results — same columns and order as the Python pandas table
+// Results display — benchmark DataFrame with formatted columns
+
 DataFrame.From(results.Select(r => {
     var sz = r.FileBytes < 1024 * 1024
         ? $"{r.FileBytes / 1024.0:F1} KB"
@@ -1128,8 +1198,8 @@ DataFrame.From(results.Select(r => {
 #### Write vs Read speed — 100K records
 
 ```csharp
-// Plotly.NET.CSharp — Write speed per format (large bucket)
-// Chart.Column: values first, Keys as named parameter
+// Write vs Read speed chart — Plotly bar chart for 100K records
+
 var large = results.Where(r => r.Size == "large").OrderBy(r => r.WriteMs).ToList();
 var fmtNames = large.Select(r => r.Format).ToArray();
 
@@ -1161,7 +1231,8 @@ Plotly.NET.CSharp.Chart.Combine(new[] {
 #### File size comparison — 100K records
 
 ```csharp
-// Plotly.NET.CSharp — File size per format (horizontal bars)
+// File size comparison — horizontal bar chart for 100K records
+
 var sizeMB = large.Select(r => Math.Round(r.FileBytes / (1024.0 * 1024), 2)).ToArray();
 
 Plotly.NET.CSharp.Chart.Bar<double, string, string>(
@@ -1183,6 +1254,7 @@ Plotly.NET.CSharp.Chart.Bar<double, string, string>(
 
 ```csharp
 // Recommendation matrix — best format for each scenario
+
 Console.WriteLine(@"
   ═══ WHEN TO USE WHAT ═══
 
