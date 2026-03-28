@@ -414,7 +414,7 @@ gcloud datastream streams create orders-cdc-stream \
 
 ## Key Streaming Patterns
 
-### Event Sourcing
+### Streaming Pattern — Event Sourcing
 
 In event sourcing, the system's state is derived entirely from an immutable log of events — the events are the source of truth, not the current state in a database table.
 
@@ -433,7 +433,7 @@ order_id | status          ─────────────────�
 
 Benefits: complete audit trail, point-in-time state reconstruction, natural CDC (the event log IS the change log).
 
-### CQRS (Command Query Responsibility Segregation)
+### Streaming Pattern — CQRS (Command Query Responsibility Segregation)
 
 CQRS separates the write model (commands that change state) from the read model (queries that read state). [[real-time-nosql-pipelines|Firestore]] is a natural fit for the read-side materialized view in CQRS, providing real-time sync to client applications. In a streaming context:
 
@@ -449,7 +449,7 @@ Emits event to topic                                  - customer_order_history
 
 CQRS is powerful but adds system complexity. Use it when your read and write models have fundamentally different requirements (e.g., high-throughput writes but complex aggregation queries).
 
-### Exactly-Once Semantics
+### Streaming Pattern — Exactly-Once Semantics
 
 Distributed streaming systems can guarantee one of three delivery semantics:
 
@@ -600,7 +600,7 @@ IoT devices        ──►  IoT Core       ──►             ──►  Bi
 Files on GCS       ──►                                ──►  Firestore
 ```
 
-#### Why this stack
+#### GCP Streaming to BigQuery — why this stack
 - **Pub/Sub** is serverless, globally distributed, and deeply integrated with every GCP service. It handles spikes without capacity planning. See [[pubsub-topics-and-subscriptions]] for setup and [[pubsub-messaging]] for publish/consume patterns.
 - **Dataflow** (Apache Beam runner) is fully managed — no cluster to size, patch, or scale. It auto-scales workers based on backlog. The unified batch+stream model means one Beam pipeline handles both historical backfill and live streaming.
 - **BigQuery** is the serving layer — serverless SQL, no indexes to manage, sub-second query latency on petabytes, native streaming insert API.

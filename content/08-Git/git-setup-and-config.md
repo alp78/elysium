@@ -57,61 +57,61 @@ Git is a distributed version control system. It tracks every change to every fil
 
 Understanding Git's terminology is the foundation for everything else. These terms appear throughout all Git documentation and team communication.
 
-### Repository (repo)
+### Git Repository (repo)
 A folder tracked by Git. Contains your files plus a hidden `.git` directory that stores the entire history.
 
 *In plain English:* Think of it as a project folder with a complete memory of every change ever made.
 
-### Commit
+### Git Commit
 A snapshot of all tracked files at a point in time, identified by a unique SHA hash (e.g., `cd97a43`).
 
 *In plain English:* A save point in a video game. You can always go back to any previous save.
 
-### Branch
+### Git Branch
 A movable pointer to a commit. Branches let you work on features without affecting the main code.
 
 *In plain English:* A parallel universe where you can experiment freely. If it works, you merge it back into reality.
 
 See [[git-branching-and-merging]] for full branch management commands.
 
-### Remote
+### Git Remote
 A copy of the repository on a server (e.g., GitHub). Named `origin` by default.
 
 *In plain English:* The shared copy on GitHub that everyone syncs with. Your source of truth.
 
-### Staging Area (index)
+### Git Staging Area (index)
 A buffer between your working directory and the next commit. You choose which changes to include.
 
 *In plain English:* A staging table before loading to production. You pick exactly what goes in.
 
-### HEAD
+### Git HEAD
 A pointer to the current commit you're looking at. Usually points to the tip of your current branch.
 
 *In plain English:* Your "you are here" marker on the timeline.
 
-### Working Directory
+### Git Working Directory
 The actual files on your disk that you edit.
 
 *In plain English:* What you see in your file explorer / VS Code.
 
-### Clone
+### Git Clone
 A complete copy of a remote repository, including all history.
 
 *In plain English:* Downloading the entire project with its full memory.
 
-### Fork
+### Git Fork
 A personal copy of someone else's repository on GitHub.
 
 *In plain English:* Making your own copy of someone else's project to experiment with.
 
-### Pull Request (PR)
+### Git Pull Request (PR)
 A request to merge your branch into another branch, with a review interface.
 
 *In plain English:* Raising your hand and saying "I've finished this work, please review and merge it."
 
 See [[pull-requests-and-code-review]] for the full PR workflow.
 
-### SHA / Hash
+### Git SHA / Hash
 A 40-character hexadecimal string (often abbreviated to 7 chars) that uniquely identifies a commit.
 
 *In plain English:* A fingerprint for a commit. No two commits have the same one.

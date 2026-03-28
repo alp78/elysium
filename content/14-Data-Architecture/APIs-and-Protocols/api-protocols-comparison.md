@@ -126,7 +126,7 @@ GraphQL is a query language for APIs, developed by Facebook and now widely adopt
 
 When the data model is continuous rather than discrete — market tick data, sensor telemetry, log streams, live order books — request-response protocols become inefficient or impossible. You cannot poll a WebSocket feed; you cannot replicate a live order book over REST without hammering rate limits. The protocols below are purpose-built for continuous data flows.
 
-### WebSocket
+### Streaming Protocol — WebSocket
 
 WebSocket establishes a full-duplex persistent TCP connection, negotiated via an HTTP/1.1 upgrade handshake. Once the connection is open, both client and server can send frames at any time without the overhead of repeated HTTP headers. This makes it the standard protocol for real-time financial data: live price feeds, order book updates, and execution reports from exchanges all arrive over WebSocket connections.
 

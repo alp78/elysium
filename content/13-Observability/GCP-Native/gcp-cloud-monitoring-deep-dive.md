@@ -1679,7 +1679,7 @@ Cloud Monitoring can alert when the error budget burn rate is too high — the s
 
 ## Cloud Monitoring vs Datadog — Feature Parity
 
-### Comprehensive Comparison Table
+### Cloud Monitoring vs Datadog — Comprehensive Comparison Table
 
 | Capability | Cloud Monitoring | Datadog | Notes |
 |---|---|---|---|

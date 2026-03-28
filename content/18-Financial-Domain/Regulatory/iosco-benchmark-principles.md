@@ -54,24 +54,24 @@ updated: 2026-03-23
 
 ## Compliance Checkpoints for Data Engineers
 
-### Every Pipeline Run
+### IOSCO Compliance — Every Pipeline Run
 - [ ] Source data hash recorded in lineage table
 - [ ] Row count and null rate within expected bounds
 - [ ] Weights sum to 1.00000000
 - [ ] No missing constituents
 
-### Weekly
+### IOSCO Compliance — Weekly Checks
 - [ ] Vendor SLA compliance reviewed
 - [ ] Data quality metrics trending correctly
 - [ ] No unresolved quarantined records
 
-### Quarterly
+### IOSCO Compliance — Quarterly Reviews
 - [ ] Reproducibility test on randomly selected historical dates
 - [ ] Cross-system reconciliation (SQL Server vs BigQuery)
 - [ ] Corporate action audit review
 - [ ] ESG score coverage assessment
 
-### Annually
+### IOSCO Compliance — Annual Reviews
 - [ ] Full methodology review with oversight function
 - [ ] Data source review (are vendors still appropriate?)
 - [ ] Quality metric trends over the year

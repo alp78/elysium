@@ -712,7 +712,7 @@ def _write_to_bigquery(row: dict) -> None:
         raise RuntimeError(f"BigQuery streaming insert errors: {errors}")
 ```
 
-#### Deploy command
+#### Firestore Cloud Function — deploy command
 
 ```bash
 gcloud functions deploy process-firestore-event \
@@ -835,7 +835,7 @@ if __name__ == "__main__":
     run()
 ```
 
-#### Run on Dataflow
+#### Firestore + BigQuery Beam Pipeline — run on Dataflow
 
 ```bash
 python streaming_pipeline.py \

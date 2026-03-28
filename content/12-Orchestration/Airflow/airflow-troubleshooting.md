@@ -588,7 +588,7 @@ DETAIL: Process 12345 waits for ShareLock on transaction 67890; blocked by proce
         Process 23456 waits for ShareLock on transaction 12345; blocked by process 12345.
 ```
 
-#### Root Causes and Fixes — Stuck in Running (Zombie Tasks)
+#### Deadlock in Metadata Database — Root Causes and Fixes
 
 **Root Cause 1: Too many concurrent database writes**
 
@@ -960,7 +960,7 @@ AttributeError: 'MyCustomOperator' object has no attribute 'serialize'
 
 **Root Cause:** DAG serialization stores DAG definitions in the Metadata DB as JSON, allowing the Webserver to display DAGs without parsing Python files. Custom Operators or objects that are not JSON-serializable break this.
 
-#### Fix — Scheduler Logs
+#### Fix — DAG Serialization Issues
 
 ```python
 # Custom Operators must inherit from BaseOperator properly

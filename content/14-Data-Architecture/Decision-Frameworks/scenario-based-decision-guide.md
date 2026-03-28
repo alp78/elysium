@@ -139,7 +139,7 @@ graph LR
 
 ## Scenario 2: Real-Time Streaming Pipeline
 
-### Business Need
+### Streaming Pipeline — Business Need
 
 > "We need to process events as they arrive (sub-minute latency) and make them queryable immediately."
 

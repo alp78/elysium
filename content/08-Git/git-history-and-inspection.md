@@ -54,7 +54,7 @@ git log --oneline --graph --decorate -20
 # --decorate — show branch names, tags, HEAD pointer alongside each commit
 ```
 
-### Useful Log Formats
+### git log — Useful Log Formats
 
 ```bash
 # Show commit count per author
@@ -104,7 +104,7 @@ git diff --name-only main...HEAD
 # --name-only — list only the file names, not the full diff
 ```
 
-### Diff Output Interpretation
+### git diff — Output Interpretation
 
 ```
 diff --git a/pipeline/load.py b/pipeline/load.py
@@ -130,7 +130,7 @@ git blame src/transform.py
 # In plain English: Who wrote each line of this file? (Not for blaming — for understanding context.)
 ```
 
-#### blame output format
+#### git blame — output format
 
 ```
 ^cd97a43 (alice 2026-03-10 14:22:31 +0100  42) def transform_ohlcv(df):

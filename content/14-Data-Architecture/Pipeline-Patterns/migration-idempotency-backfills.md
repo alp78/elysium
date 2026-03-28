@@ -688,7 +688,7 @@ Cloud Dataflow (Apache Beam pipeline)
 | **Session** | Gap-based, dynamic size | Group trades by activity bursts (e.g., around earnings announcements) |
 | **Global** | Single window for all time | Cumulative daily statistics (reset at market open) |
 
-#### Apache Beam pipeline for real-time index calculation
+#### Apache Beam on Dataflow — real-time index calculation pipeline
 
 ```python
 import apache_beam as beam

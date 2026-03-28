@@ -334,7 +334,7 @@ ORDER BY 2 DESC;
 
 ## BigQuery SQL Patterns
 
-### SAFE_DIVIDE
+### BigQuery SQL — SAFE_DIVIDE
 
 ```sql
 -- Avoids ZeroDivisionError at the SQL engine level — returns NULL instead
@@ -346,7 +346,7 @@ SELECT
 FROM {{ ref('int_esg_scores_validated') }}
 ```
 
-### DATE_TRUNC
+### BigQuery SQL — DATE_TRUNC
 
 ```sql
 -- Truncate to period start
@@ -363,7 +363,7 @@ DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
 DATE_DIFF(end_date, start_date, DAY)
 ```
 
-### STRUCT and ARRAY
+### BigQuery SQL — STRUCT and ARRAY
 
 Useful for packing provider-level score breakdowns without a separate table:
 
@@ -387,7 +387,7 @@ GROUP BY isin, score_date, esg_components
 > [!note] STRUCT/ARRAY limitations
 > Nested types work well for analytical queries but are not compatible with `dbt-sqlserver`. Any model using STRUCT/ARRAY must live in a BigQuery-specific folder or be guarded by `target.type` checks. See [[dbt-cross-adapter-patterns]] for the dispatch pattern.
 
-### MERGE DML (manual)
+### BigQuery SQL — MERGE DML (manual)
 
 When the dbt incremental MERGE is not granular enough, write explicit MERGE in a post-hook or operation:
 

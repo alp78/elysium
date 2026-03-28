@@ -1642,7 +1642,7 @@ print("  -x                       Stop on first failure")
 >
 > **C# equivalents:** `assert` → `Assert.Equal` | `@pytest.fixture` → constructor + `IDisposable` | `@parametrize` → `[Theory]` + `[InlineData]` | `unittest.mock` → Moq
 
-#### Typical project layout
+#### GitHub Actions CI/CD — typical project layout
 ```
 trading_pipeline/
 ├── src/

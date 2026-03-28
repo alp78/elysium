@@ -80,7 +80,7 @@ docker run -d \
 
 Container log source tagging and the Postgres integration check are configured via Docker labels applied when containers are launched:
 
-#### On airflow-postgres
+#### Docker Autodiscovery — airflow-postgres labels
 
 ```bash
 -l com.datadoghq.ad.logs='[{"source":"postgresql","service":"airflow-postgres"}]'
@@ -89,7 +89,7 @@ Container log source tagging and the Postgres integration check are configured v
 -l com.datadoghq.ad.instances='[{"host":"%%host%%","port":"5432","username":"airflow","password":"airflow"}]'
 ```
 
-#### On airflow-webserver, scheduler, triggerer
+#### Docker Autodiscovery — airflow-webserver, scheduler, triggerer labels
 
 ```bash
 -l com.datadoghq.ad.logs='[{"source":"airflow","service":"airflow-<component>"}]'

@@ -108,7 +108,7 @@ Container logs on the Airflow VM are collected automatically via the Docker sock
 
 With `DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true`, the agent collects stdout/stderr from **all** Docker containers on the host.
 
-### Container Log Source Tagging
+### Airflow Container Log Source Tagging
 
 Container-specific log source (for Datadog's built-in log parsing pipelines) is configured via Docker autodiscovery labels:
 
@@ -122,7 +122,7 @@ Container-specific log source (for Datadog's built-in log parsing pipelines) is 
 
 The `source` field maps to Datadog's built-in log parsing pipelines — `airflow` activates Airflow-specific parsing, `postgresql` activates Postgres parsing.
 
-### Viewing Container Logs
+### Viewing Airflow Container Logs in Datadog
 
 In Datadog: **Logs > Explorer** → filter by:
 - `source:airflow` — all Airflow container logs

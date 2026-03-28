@@ -222,7 +222,7 @@ ORDER BY create_date;
 
 ## Part 3: TLS Encryption for Connections
 
-#### Network path — client → IAP tunnel → VM → SQL Server
+#### TLS Encryption — network path client → IAP tunnel → VM → SQL Server
 
 ```
 ┌─────────────────────┐    IAP Tunnel     ┌─────────────────────┐

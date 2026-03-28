@@ -2538,7 +2538,7 @@ print(f"  {'MATCH ✓ — pipeline verified end-to-end' if match else 'MISMATCH 
       Original MD5:  054b516bca00fe7ebcfeb6516a5d3789
       MATCH ✓ — pipeline verified end-to-end
 
-#### Pipeline summary
+#### Parallel upload, merge, verify — pipeline summary
 
 ```python
 # End-to-end pipeline timing summary

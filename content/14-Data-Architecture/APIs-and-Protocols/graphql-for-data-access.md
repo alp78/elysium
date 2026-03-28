@@ -1355,7 +1355,7 @@ async def fetch_all_constituents(base_url: str, index_code: str) -> list[dict]:
 
 ## Authentication and Authorization in Resolvers
 
-### Context-Based Auth
+### GraphQL Authentication — Context-Based Auth
 
 ```python
 # context.py — attach the authenticated user to every request
@@ -1573,7 +1573,7 @@ Client → API Gateway (supergraph)
             └── Risk Subgraph      (owns: RiskMetrics, VaR)
 ```
 
-### Subgraph Schema (Index Service)
+### GraphQL Federation — Subgraph Schema (Index Service)
 
 ```graphql
 # index-subgraph/schema.graphql
@@ -1592,7 +1592,7 @@ type Constituent @key(fields: "symbol") {
 }
 ```
 
-### Subgraph Schema (Pricing Service)
+### GraphQL Federation — Subgraph Schema (Pricing Service)
 
 ```graphql
 # pricing-subgraph/schema.graphql
@@ -1612,7 +1612,7 @@ type Price {
 }
 ```
 
-### Python Subgraph with Strawberry Federation
+### GraphQL Federation — Python Subgraph with Strawberry
 
 ```python
 # pricing_subgraph.py
@@ -1654,7 +1654,7 @@ schema = Schema(query=Query, types=[Constituent])
 
 Data engineers use the GitHub GraphQL API daily. Examples below show common automation patterns.
 
-### Setup
+### GitHub GraphQL API — Setup and Authentication
 
 ```python
 # github_client.py
@@ -1679,7 +1679,7 @@ async def github_query(query: str, variables: dict = None) -> dict:
         return result["data"]
 ```
 
-### Find Latest Release of a Factor Model
+### GitHub GraphQL API — Find Latest Release of a Factor Model
 
 ```graphql
 query GetLatestRelease($owner: String!, $repo: String!) {
@@ -1723,7 +1723,7 @@ async def get_latest_model_release(owner: str, repo: str) -> dict:
     return {"tag": release["tagName"], "published": release["publishedAt"], "assets": assets}
 ```
 
-### Find Open PRs with a Specific Label
+### GitHub GraphQL API — Find Open PRs with a Specific Label
 
 ```graphql
 query GetPipelinePRs($owner: String!, $repo: String!, $label: String!) {
@@ -1760,7 +1760,7 @@ async def get_pipeline_prs(owner: str, repo: str) -> list[dict]:
     return data["repository"]["pullRequests"]["nodes"]
 ```
 
-### Create a Pull Request Programmatically
+### GitHub GraphQL API — Create a Pull Request Programmatically
 
 ```graphql
 mutation CreatePR(
@@ -1820,7 +1820,7 @@ async def create_rebalance_pr(
     return data["createPullRequest"]["pullRequest"]
 ```
 
-### Monitor CI Status
+### GitHub GraphQL API — Monitor CI Status
 
 ```graphql
 query GetCIStatus($owner: String!, $repo: String!, $branch: String!) {

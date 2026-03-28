@@ -299,7 +299,7 @@ Binary formats provide schema enforcement, cross-language support, and compact s
 | pickle | Medium | Fast | No | No | Never in prod |
 | struct | Tiny | Fastest | Manual | Manual | IoT, binary protocols |
 
-#### Avro with fastavro
+#### Avro serialization with fastavro
 
 ```python
 # Apache Avro with fastavro — binary serialization with embedded schema

@@ -2395,7 +2395,7 @@ Document databases store data as self-contained documents (typically JSON) organ
 
 For detailed Firestore operations, Python SDK patterns, real-time listeners, and querying, see [[firestore-data-model-and-operations]].
 
-### When to Use
+### Firestore Document Modeling — When to Use
 
 - **Pipeline configuration and state stores** — each pipeline has different parameters
 - **Feature flags and runtime settings** — need real-time reads, flexible schema
@@ -2403,14 +2403,14 @@ For detailed Firestore operations, Python SDK patterns, real-time listeners, and
 - **Real-time sync to frontend applications** — Firestore's real-time listeners push changes instantly
 - **Rapid prototyping** — no migrations, no schema files, just write documents
 
-### When NOT to Use
+### Firestore Document Modeling — When NOT to Use
 
 - Analytical queries across many documents (document databases are not built for aggregation at scale)
 - Transactions spanning multiple collections (Firestore supports transactions but with limits)
 - When referential integrity matters — document databases do not enforce foreign keys
 - When you need JOINs — document databases denormalize by design; if you need joins, use a relational model
 
-### Financial Index Provider — Index Configuration Store
+### Firestore Document Model — Index Configuration Store
 
 ```python
 # ============================================================
@@ -2470,7 +2470,7 @@ For detailed Firestore operations, Python SDK patterns, real-time listeners, and
 }
 ```
 
-### Pipeline State Store
+### Firestore Document Model — Pipeline State Store
 
 ```python
 # Document path: pipeline_state/daily_index_calculation
@@ -2501,7 +2501,7 @@ For detailed Firestore operations, Python SDK patterns, real-time listeners, and
 }
 ```
 
-### Subcollection Pattern — Constituents Under an Index
+### Firestore Subcollection Pattern — Constituents Under an Index
 
 Firestore supports subcollections — collections nested under a document. This models parent-child relationships naturally.
 

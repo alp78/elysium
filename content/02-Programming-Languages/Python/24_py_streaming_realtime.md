@@ -259,7 +259,7 @@ print(f'  WebSocket server running on ws://localhost:{WS_PORT}')
 
       WebSocket server running on ws://localhost:8765
 
-#### websockets.connect — WebSocket client, receive ticks for 3 seconds
+#### websockets.connect — WebSocket streaming client, receive ticks
 
 ```python
 # WebSocket client — one-way latency (send_ts embedded by server)
@@ -853,7 +853,7 @@ except Exception:
 Production patterns for large-scale data movement that go beyond what a notebook can demonstrate.
 Included as architecture reference — no runnable code.
 
-#### Enterprise MFT (Managed File Transfer)
+#### Enterprise Streaming — MFT (Managed File Transfer)
 
 **What:** Dedicated gateways that handle large file transfers with multiplexing, packet-level resume,
 bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway, GoAnywhere.

@@ -1460,7 +1460,7 @@ grpcurl -plaintext -d '{"symbols": ["AAPL"]}' \
 
 ## gRPC on GCP
 
-### Cloud Run
+### gRPC on Cloud Run
 
 Cloud Run natively supports gRPC since all requests are HTTP/2. No special configuration is needed beyond enabling HTTP/2.
 
@@ -1497,7 +1497,7 @@ grpcurl \
   marketdata.v1.MarketDataService/GetPrice
 ```
 
-### Cloud Endpoints / API Gateway
+### gRPC via Cloud Endpoints / API Gateway
 
 Cloud Endpoints supports gRPC transcoding — exposing a gRPC service via HTTP/JSON for REST clients.
 
@@ -1514,7 +1514,7 @@ http:
       get: /v1/prices/{symbols}
 ```
 
-### Dataflow / Pub/Sub Integration
+### gRPC with Dataflow and Pub/Sub Integration
 
 ```python
 # Use gRPC within a Beam pipeline to call an enrichment service

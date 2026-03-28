@@ -130,7 +130,7 @@ gcloud run jobs list --region=europe-west1 --format=json | jq '.[].metadata.name
 
 ## Authentication and Configuration
 
-### gcloud auth
+### gcloud auth — Authentication Commands
 
 | Command | Description |
 |---|---|
@@ -719,7 +719,7 @@ gcloud compute addresses delete prices-api-ip --region=europe-west1 --quiet
 
 ## BigQuery (bq CLI)
 
-### Anatomy
+### BigQuery bq CLI — Anatomy
 
 ```
 bq [GLOBAL_FLAGS] COMMAND [COMMAND_FLAGS] [ARGS]
@@ -961,7 +961,7 @@ bq extract \
 
 ---
 
-### Datasets
+### BigQuery Datasets — bq mk, bq ls, bq show
 
 ```bash
 # List datasets in the active project
@@ -1006,7 +1006,7 @@ bq update --source /tmp/dataset.json fin-prod-project:market_data
 
 ---
 
-### Tables
+### BigQuery Tables — bq mk, bq show, bq head, bq rm
 
 ```bash
 # List tables in a dataset
@@ -1070,7 +1070,7 @@ bq rm -f --table fin-staging-project:market_data.old_table  # Skip confirmation
 
 ---
 
-### Jobs
+### BigQuery Jobs — bq ls -j, bq show, bq cancel
 
 ```bash
 # List recent jobs
@@ -2086,7 +2086,7 @@ gcloud secrets update bloomberg-api-key \
 
 ## Firestore
 
-### Databases
+### Firestore Databases — gcloud firestore databases list, create, delete
 
 ```bash
 # List Firestore databases in a project
@@ -2119,7 +2119,7 @@ gcloud firestore databases delete \
 
 ---
 
-### Indexes
+### Firestore Indexes — gcloud firestore indexes composite list, create
 
 ```bash
 # List composite indexes
@@ -2155,7 +2155,7 @@ gcloud firestore indexes composite delete INDEX_ID \
 
 ---
 
-### Export and Import
+### Firestore Export and Import — gcloud firestore export, import
 
 Firestore export/import writes to GCS and is used for backups and cross-project migrations.
 

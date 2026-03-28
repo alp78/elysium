@@ -1110,7 +1110,7 @@ gh pr merge 42 --squash -t "feat: login" -b "Implements OAuth"
 
 ---
 
-### Pull Request Commands
+### GitHub CLI — Pull Request Commands
 
 ```bash
 # List / view
@@ -1152,7 +1152,7 @@ gh pr lock 42 --reason resolved
 
 ---
 
-### Issue Commands
+### GitHub CLI — Issue Commands
 
 ```bash
 gh issue list                          # Open issues
@@ -1179,7 +1179,7 @@ gh issue delete 99 --yes
 
 ---
 
-### Workflow Commands
+### GitHub CLI — Workflow Commands
 
 ```bash
 gh workflow list                        # List all workflows
@@ -1212,7 +1212,7 @@ gh run download RUN_ID -n ARTIFACT_NAME
 
 ---
 
-### Release Commands
+### GitHub CLI — Release Commands
 
 ```bash
 gh release list                         # List releases
@@ -1237,7 +1237,7 @@ gh release delete TAG --cleanup-tag --yes  # Also delete the git tag
 
 ---
 
-### Repo Commands
+### GitHub CLI — Repo Commands
 
 ```bash
 gh repo clone OWNER/REPO               # Clone a repo
@@ -1269,7 +1269,7 @@ gh repo set-default OWNER/REPO         # Set default repo for gh commands
 
 ---
 
-### Auth Commands
+### GitHub CLI — Auth Commands
 
 ```bash
 gh auth login                          # Interactive login (browser or token)

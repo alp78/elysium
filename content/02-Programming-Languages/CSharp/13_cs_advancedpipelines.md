@@ -202,7 +202,7 @@ Console.WriteLine("  All batches processed.");
       Batch of 2: [G, H]
       All batches processed.
 
-#### Multi-stage pipeline with real API
+#### TPL Dataflow — multi-stage pipeline with real API
 
 ```csharp
 // Multi-stage pipeline with real API — Fetch → Parse → Display

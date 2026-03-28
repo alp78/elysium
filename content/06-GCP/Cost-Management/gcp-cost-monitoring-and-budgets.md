@@ -1081,7 +1081,7 @@ gcloud monitoring metrics list --filter="metric.type=compute.googleapis.com/inst
 
 A complete set of SQL views for a billing dashboard. Connect these to Looker Studio or Grafana.
 
-### Daily Spend by Service
+### BigQuery Cost Dashboard — Daily Spend by Service
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_daily_spend_by_service` AS
@@ -1097,7 +1097,7 @@ WHERE cost_type = 'regular'
 GROUP BY usage_date, service;
 ```
 
-### Month-over-Month Comparison
+### BigQuery Cost Dashboard — Month-over-Month Comparison
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_mom_comparison` AS
@@ -1131,7 +1131,7 @@ WHERE curr.invoice_month = FORMAT_DATE('%Y%m', CURRENT_DATE())
 ORDER BY delta DESC;
 ```
 
-### Top 10 Most Expensive Resources
+### BigQuery Cost Dashboard — Top 10 Most Expensive Resources
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_top_resources` AS
@@ -1152,7 +1152,7 @@ ORDER BY total_cost DESC
 LIMIT 10;
 ```
 
-### Cost per Pipeline (via Labels)
+### BigQuery Cost Dashboard — Cost per Pipeline (via Labels)
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_cost_per_pipeline` AS
@@ -1170,7 +1170,7 @@ GROUP BY pipeline, environment, service
 ORDER BY total_cost DESC;
 ```
 
-### Projected Monthly Spend
+### BigQuery Cost Dashboard — Projected Monthly Spend
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_monthly_projection` AS
@@ -1223,7 +1223,7 @@ ORDER BY projected_monthly_spend DESC;
 
 ## Terraform for Cost Controls
 
-### Budget Resource
+### Terraform Cost Controls — Budget Resource
 
 ```hcl
 # terraform/modules/billing/budget.tf
@@ -1274,7 +1274,7 @@ resource "google_pubsub_topic" "billing_alerts" {
 }
 ```
 
-### Enforce Labels on All Resources
+### Terraform Cost Controls — Enforce Labels on All Resources
 
 ```hcl
 # terraform/modules/labels/variables.tf
@@ -1314,7 +1314,7 @@ resource "google_storage_bucket" "data" {
 }
 ```
 
-### Machine Type Variables (Easy Right-Sizing)
+### Terraform Cost Controls — Machine Type Variables (Right-Sizing)
 
 ```hcl
 # terraform/environments/prod/variables.tf
@@ -1358,7 +1358,7 @@ resource "google_compute_instance_template" "worker" {
 }
 ```
 
-### Organization Policy to Enforce Labels
+### Terraform Cost Controls — Organization Policy to Enforce Labels
 
 ```hcl
 # Require specific labels on all GCE instances via org policy

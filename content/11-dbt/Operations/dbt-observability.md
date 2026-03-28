@@ -30,7 +30,7 @@ dbt produces rich execution artifacts after every run. A complete observability 
 
 All files land in the `target/` directory. In CI/CD they are uploaded to GCS for retention and cross-job sharing.
 
-### Key Fields in `run_results.json`
+### dbt Artifacts — Key Fields in run_results.json
 
 ```json
 {
@@ -227,7 +227,7 @@ Generates an HTML report with test result history, anomaly trend charts, and mod
 
 ## Monitoring dbt in Datadog
 
-### Custom Metric Naming Convention
+### dbt Datadog Monitoring — Custom Metric Naming Convention
 
 ```
 dbt.model.execution_time_seconds   (gauge)   — tagged: node_name, status
@@ -238,7 +238,7 @@ dbt.pipeline.success               (gauge)   — 1 = success, 0 = failure
 dbt.source.freshness_minutes_lag   (gauge)   — from sources.json
 ```
 
-### Source Freshness Metric
+### dbt Datadog Monitoring — Source Freshness Metric
 
 ```python
 import json
@@ -265,7 +265,7 @@ for result in sources["results"]:
 
 ## Alerting: Airflow Callback → Datadog → Slack
 
-### Airflow Failure Callback
+### dbt Alerting — Airflow Failure Callback to Datadog
 
 ```python
 import requests

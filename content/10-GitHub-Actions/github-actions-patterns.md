@@ -545,7 +545,7 @@ jobs:
 
 ## Terraform CI/CD
 
-### Plan on PR (with Comment)
+### Terraform CI/CD — Plan on PR (with Comment)
 
 ```yaml
 # .github/workflows/terraform-plan.yml
@@ -650,7 +650,7 @@ jobs:
           retention-days: 7
 ```
 
-### Apply on Merge
+### Terraform CI/CD — Apply on Merge to Main
 
 ```yaml
 # .github/workflows/terraform-apply.yml
@@ -690,7 +690,7 @@ jobs:
       - run: terraform apply -auto-approve -no-color
 ```
 
-### Drift Detection (Scheduled)
+### Terraform CI/CD — Drift Detection (Scheduled)
 
 ```yaml
 # .github/workflows/terraform-drift.yml

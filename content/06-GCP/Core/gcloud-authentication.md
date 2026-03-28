@@ -22,7 +22,7 @@ There are three authentication flows: interactive login for humans, Application 
 
 ## Authentication Commands
 
-#### gcloud auth login — interactive login for human users
+#### gcloud auth login — interactive authentication for human users
 
 ```bash
 # Interactive login (you, the human)

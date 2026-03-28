@@ -6319,7 +6319,7 @@ ohlcv_pl.head(3)
 ---
 ## Boolean Indexing (Single Condition)
 
-### Pandas — bracket notation
+### Pandas Boolean Indexing — bracket notation filtering
 
 - **Head**: Return the first N rows.
 
@@ -7504,7 +7504,7 @@ ohlcv_pl.filter(
 ---
 ## Null / NaN Filtering
 
-### Pandas
+### Pandas Null / NaN Filtering
 
 - **Null Detection**: Check which values are missing (Pandas).
 - **Head**: Return the first N rows.
@@ -8001,7 +8001,7 @@ scores_pd[scores_pd["ev_ebitda_zscore"].notna()].head()
   </tbody>
 </table>
 
-### Polars
+### Polars Null / NaN Filtering
 
 - **Filter**: Keep only rows matching a condition.
 - **Null Detection**: Check which values are missing (Polars).
@@ -8208,7 +8208,7 @@ ohlcv_pl.with_columns(
 ---
 ## String Accessor Filtering
 
-### Pandas <code style="font-size:0.75em">.str</code>
+### Pandas String Accessor Filtering — <code style="font-size:0.75em">.str</code>
 
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **Head**: Return the first N rows.
@@ -8417,7 +8417,7 @@ ohlcv_pd[ohlcv_pd["symbol"].str.contains("DE")].head()
   </tbody>
 </table>
 
-### Polars <code style="font-size:0.75em">.str</code>
+### Polars String Accessor Filtering — <code style="font-size:0.75em">.str</code>
 
 - **Filter**: Keep only rows matching a condition.
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
@@ -8453,7 +8453,7 @@ ohlcv_pl.filter(pl.col("symbol").str.contains("DE")).head()
 ---
 ## Datetime Accessor Filtering
 
-### Pandas <code style="font-size:0.75em">.dt</code>
+### Pandas Datetime Accessor Filtering — <code style="font-size:0.75em">.dt</code>
 
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
@@ -8768,7 +8768,7 @@ ohlcv_pd[ohlcv_pd["date"].dt.dayofweek == 0].head()
   </tbody>
 </table>
 
-### Polars <code style="font-size:0.75em">.dt</code>
+### Polars Datetime Accessor Filtering — <code style="font-size:0.75em">.dt</code>
 
 - **Filter**: Keep only rows matching a condition.
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().

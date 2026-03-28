@@ -148,7 +148,7 @@ The isolation level controls what a transaction can see when other transactions 
 
 RCSI is the most important concurrency improvement for mixed read/write workloads. It eliminates reader-writer blocking entirely by giving readers a snapshot of the data from the version store (in TempDB) rather than taking shared locks. The [[server-configuration]] page covers the full RCSI setup alongside other non-negotiable instance settings.
 
-#### RCSI behavior — readers never block writers, writers never block readers
+#### RCSI isolation behavior — readers never block writers, writers never block readers
 - `SELECT` statements do NOT acquire S locks → cannot block `INSERT`/`UPDATE`/`DELETE`
 - `INSERT`/`UPDATE`/`DELETE` still acquire X locks → can still block each other
 - Readers see the last committed version of each row, never a mid-transaction state

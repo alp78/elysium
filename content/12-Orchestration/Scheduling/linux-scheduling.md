@@ -1315,7 +1315,7 @@ Use this decision table to select the right scheduler for a given task:
 | **Infrastructure req** | Linux machine | Linux machine with systemd | Kubernetes cluster or Cloud Composer | GCP project |
 | **Ideal use cases** | Log rotation, health checks, backups, quick ETL | Service-lifecycle-aware tasks | Multi-step ETL, pipeline DAGs, data warehouse loads | Trigger Pub/Sub, invoke APIs on schedule |
 
-#### Decision flowchart
+#### Cron vs Airflow vs Cloud Scheduler — decision flowchart
 
 ```
 Is the task a single command or script on one Linux machine?

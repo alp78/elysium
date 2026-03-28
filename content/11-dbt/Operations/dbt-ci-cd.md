@@ -352,7 +352,7 @@ jobs:
 
 ## CD via Airflow: Git Pull vs Docker Rebuild
 
-### Pattern A: Git Pull on Worker
+### Airflow CD Pattern A — Git Pull on Worker
 
 The Airflow worker clones or pulls the latest `main` branch before each DAG run. Simple, but couples Airflow worker access to GitHub.
 
@@ -367,7 +367,7 @@ pull_dbt = BashOperator(
 
 **Risk:** A broken commit on `main` breaks the next scheduled run. Mitigate by tagging releases and checking out tags instead of `main`.
 
-### Pattern B: Docker Image Rebuild
+### Airflow CD Pattern B — Docker Image Rebuild
 
 The CD workflow builds a new Docker image with the dbt project baked in, pushes it to Artifact Registry, and updates the Cloud Run Job or KubernetesPodOperator image reference.
 

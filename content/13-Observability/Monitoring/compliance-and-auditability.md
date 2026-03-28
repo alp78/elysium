@@ -1219,7 +1219,7 @@ The reproducibility test is executed. The `pipeline_lineage_metadata` row for th
 > [!warning] Regulatory Requirement — EU BMR (Regulation (EU) 2016/1011)
 > The European Benchmarks Regulation applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams. For a detailed breakdown of the regulation's scope and applicability, see [[eu-bmr-benchmark-regulation]].
 
-### Article 11 — Input Data Governance
+### EU BMR Compliance — Article 11 Input Data Governance
 
 > [!important] Article 11(1) — Sufficiency and Representativeness
 > Input data must be sufficient and representative of the economic reality the benchmark is intended to measure. The administrator must document the criteria for selecting input data and the hierarchy of data sources.
@@ -1256,7 +1256,7 @@ CREATE TABLE dbo.input_data_tier_log
 CREATE INDEX IX_idtl_calc_date ON dbo.input_data_tier_log (calc_date, index_code);
 ```
 
-### Article 21 — Record Retention
+### EU BMR Compliance — Article 21 Record Retention
 
 > [!warning] Regulatory Requirement — 5-Year Minimum Retention
 > Article 21 requires administrators to retain records for at least five years. Records must include: all input data, the methodology and its basis, all calculations and their results, subscriber identity, and any identified significant changes to the benchmark.
@@ -1317,7 +1317,7 @@ ORDER BY
     j.name, s.step_id;
 ```
 
-### Oversight Function
+### EU BMR Compliance — Oversight Function
 
 > [!important] BMR Article 5 — Oversight Function
 > The administrator must establish and maintain a permanent and effective oversight function. The oversight function must oversee all aspects of the benchmark provision and, in particular, any outsourced functions.
@@ -1348,7 +1348,7 @@ CREATE TABLE dbo.oversight_signoff
 );
 ```
 
-### Complaint Handling
+### EU BMR Compliance — Complaint Handling
 
 > [!important] BMR Article 14 — Complaints Procedure
 > The administrator must have a written complaints procedure allowing benchmark users to submit complaints about whether a benchmark is representative, the methodology, proposed changes, and their application in specific cases. Complaints and the administrator's responses must be retained.
@@ -1374,7 +1374,7 @@ CREATE TABLE dbo.bmr_complaints
 );
 ```
 
-### Annual Review Checklist
+### EU BMR Compliance — Annual Review Checklist
 
 > [!note] BMR Article 11(1)(e) — Annual Review of Methodology
 > The administrator must review the methodology at least once a year and document the review outcome.
@@ -1820,7 +1820,7 @@ def _notify_subscribers(
 
 ## Datadog Integration for Compliance Monitoring
 
-### Custom Metrics
+### Compliance Monitoring — Custom Metrics in Datadog
 
 All metrics are emitted as `GAUGE` or `COUNT` with mandatory tags `index_code`, `calc_date`, `env`, and `run_id`. This ensures every metric can be correlated back to the specific pipeline run that produced it.
 

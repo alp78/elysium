@@ -329,8 +329,11 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     const contentText = pageData?.content ?? ""
 
     // Build breadcrumb path and heading separately (no highlighting in result list)
-    const breadcrumb = pageSlug.replace(/\//g, " › ")
+    const pathParts = pageSlug.replace(/\//g, " › ")
     const heading = sectionTitle || pageTitle
+    const breadcrumb = sectionTitle && sectionTitle !== pageTitle
+      ? `${pathParts} › ${sectionTitle}`
+      : pathParts
 
     return {
       id: result.id,

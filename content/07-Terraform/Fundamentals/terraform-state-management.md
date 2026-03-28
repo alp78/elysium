@@ -92,7 +92,7 @@ Lock Info:
   Created:   2026-03-22 14:00:00
 ```
 
-#### terraform force-unlock — remove stale lock after crashed apply
+#### State Locking — terraform force-unlock after crashed apply
 
 ```bash
 # Force-unlock the state (use with caution — verify no other apply is running first)

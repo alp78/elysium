@@ -33,7 +33,7 @@ for splitting the data          (usually PRIMARY for simple     as its storage t
                                 setups)
 ```
 
-#### Partition layout — yearly boundaries for market_data time-series
+#### Partitioning layout — yearly boundaries for market_data time-series
 
 ```
 Partition 1: trade_date < '2021-01-01'   (pre-2021 historical)
@@ -282,7 +282,7 @@ WHERE object_id = OBJECT_ID('dbo.market_data_partitioned')
 ORDER BY partition_number;
 ```
 
-#### ALTER PARTITION FUNCTION MERGE RANGE — remove old partitions
+#### Sliding Window — ALTER PARTITION FUNCTION MERGE RANGE remove old partitions
 
 ```sql
 -- Before removing: switch out the old partition to the archive table (see above)

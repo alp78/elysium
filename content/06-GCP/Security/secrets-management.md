@@ -84,7 +84,7 @@ db_password = get_secret("db-password", "data-platform-prod")
 
 ## Airflow Integration
 
-### Connections Backed by Secret Manager
+### Airflow Connections Backed by Secret Manager
 
 ```python
 # In airflow.cfg or docker-compose environment:
@@ -102,7 +102,7 @@ db_password = get_secret("db-password", "data-platform-prod")
 
 ## GitHub Actions
 
-### Workload Identity Federation (Keyless)
+### GitHub Actions — Workload Identity Federation (Keyless)
 
 ```yaml
 # No service account key needed
@@ -112,7 +112,7 @@ db_password = get_secret("db-password", "data-platform-prod")
     service_account: sa-ci@PROJECT_ID.iam.gserviceaccount.com
 ```
 
-### Repository Secrets
+### GitHub Actions — Repository Secrets
 
 Store in GitHub Settings > Secrets and variables > Actions:
 - `WIF_PROVIDER` — Workload Identity provider resource name

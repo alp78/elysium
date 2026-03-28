@@ -725,7 +725,7 @@ terraform import google_cloud_run_v2_service.data_api \
 
 ---
 
-### State Drift (Manual Console Changes)
+### Team Blocking — State Drift (Manual Console Changes)
 
 **What happens**
 
@@ -1083,7 +1083,7 @@ git push
 
 ---
 
-### Module Version Breaking Changes
+### Terraform Module Version Breaking Changes
 
 **What happens**
 

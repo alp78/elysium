@@ -199,7 +199,7 @@ async with aiohttp.ClientSession() as session:
 
 ## Async Batching
 
-#### asyncio.Queue + asyncio.wait_for — time and count bounded batching
+#### Async Batching — asyncio.Queue + asyncio.wait_for, time and count bounded
 
 ```python
 # Async batching — accumulate items by count OR time, whichever comes first

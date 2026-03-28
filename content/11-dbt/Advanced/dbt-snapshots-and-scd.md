@@ -453,7 +453,7 @@ where esg_provider_id in ('MSCI', 'SUSTAINALYTICS', 'ISS', 'REFINITIV')
 {% endsnapshot %}
 ```
 
-#### Audit query — show the full rating history for a specific ISIN
+#### ESG Snapshot Audit — show full rating history for a specific ISIN
 
 ```sql
 select

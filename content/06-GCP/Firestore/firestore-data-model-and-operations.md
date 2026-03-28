@@ -897,7 +897,7 @@ resource "google_firestore_database" "pipeline_state" {
 }
 ```
 
-### Composite Index
+### Terraform Firestore — Composite Index
 
 ```hcl
 resource "google_firestore_index" "runs_by_status_and_time" {
@@ -922,7 +922,7 @@ resource "google_firestore_index" "runs_by_status_and_time" {
 }
 ```
 
-### Seed a Config Document
+### Terraform Firestore — Seed a Config Document
 
 ```hcl
 resource "google_firestore_document" "pipeline_config" {
@@ -1258,7 +1258,7 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 | Best for DE | Pipeline state, config | Analytics queries | Structured transactional data | IoT, time-series, wide rows |
 | Companion service | BigQuery (analytics) | Firestore (hot path) | — | BigQuery (export) |
 
-#### Decision guidance
+#### Firestore vs Alternatives — decision guidance
 - Need real-time updates or listeners → **Firestore**
 - Need SQL analytics on large datasets → **BigQuery** (see [[querying-and-cost-optimization]])
 - Need ACID transactions with foreign keys → **Cloud SQL**

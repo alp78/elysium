@@ -825,7 +825,7 @@ Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");
         view: 25'000
       Total: 100'000
 
-#### BlockingCollection — producer-consumer with threads
+#### BlockingCollection — thread concurrency producer-consumer
 
 ```csharp
 // BlockingCollection — producer-consumer with blocking threads

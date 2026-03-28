@@ -87,7 +87,7 @@ Create these in **Monitors → New Monitor → Metric**:
 | Queued Duration Spike | `airflow.dag.*.queued_duration.95percentile` | > 60,000,000 (60s) | P4 (Low) |
 | Triggerer Down | `airflow.triggerer_heartbeat` | No data for 5 min | P3 (Medium) |
 
-### Monitor Priority Guide
+### Airflow Monitor Priority Guide
 
 | Priority | Use For | Response Time |
 |----------|---------|---------------|

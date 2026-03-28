@@ -78,7 +78,7 @@ git tag -n
 
 ## Pushing Tags to GitHub
 
-#### git push origin v1.0.0 — push a single tag to remote
+#### git push origin v1.0.0 — push a single tag to GitHub
 
 ```bash
 git push origin v1.0.0

@@ -59,7 +59,7 @@ Operational reference covering the full DataOps lifecycle for stock index calcul
 
 ## Parallel Backtesting Architecture
 
-### The Problem
+### Parallel Backtesting — The Problem
 
 Every change to a calculation engine — whether it is a bug fix, a methodology update, a new corporate action handler, or a refactored capping algorithm — must be proven numerically identical (or intentionally different within documented tolerances) against the full published history of an index before that change is promoted to production.
 

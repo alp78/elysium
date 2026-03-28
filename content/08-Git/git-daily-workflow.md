@@ -152,7 +152,7 @@ Use present tense imperative ("add", "fix", "update" — not "added", "fixed"). 
 
 ## Step 4: Push (Upload to GitHub)
 
-#### git push — upload local commits to remote
+#### git push — upload local commits to GitHub
 
 ```bash
 git push
@@ -180,7 +180,7 @@ git push origin --delete feat/old-branch
 
 ## Step 5: Pull (Download from GitHub)
 
-#### git pull — download and merge the team's latest changes
+#### git pull — download and merge latest changes from GitHub
 
 ```bash
 git pull

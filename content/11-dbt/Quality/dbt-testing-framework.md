@@ -99,7 +99,7 @@ packages:
     version: [">=1.1.0", "<2.0.0"]
 ```
 
-### unique_combination_of_columns
+### dbt-utils test — unique_combination_of_columns
 
 ```yaml
 tests:
@@ -111,7 +111,7 @@ tests:
 
 Generates a hash of the column combination and checks for duplicates. More efficient than a surrogate key uniqueness check at scale.
 
-### accepted_range
+### dbt-utils test — accepted_range
 
 ```yaml
 columns:
@@ -143,7 +143,7 @@ columns:
             severity: warn   # flag extreme returns without failing the pipeline
 ```
 
-### expression_is_true
+### dbt-utils test — expression_is_true
 
 Tests that a SQL expression evaluates to true for every row.
 
@@ -169,7 +169,7 @@ packages:
     version: [">=0.10.0", "<1.0.0"]
 ```
 
-### Row count and statistical tests
+### dbt-expectations — row count and statistical tests
 
 ```yaml
 # Applied at model level in the tests: block
@@ -220,7 +220,7 @@ models:
               regex: "^(MSCI|SUSTAINALYTICS|ISS|REFINITIV)$"
 ```
 
-### expect_column_pair relationship
+### dbt-expectations — expect_column_pair relationship
 
 ```yaml
 tests:

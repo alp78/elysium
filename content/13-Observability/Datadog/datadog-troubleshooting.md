@@ -34,7 +34,7 @@ docker exec dd-agent agent status
 docker logs dd-agent --tail 50
 ```
 
-#### Common issues
+#### Datadog Agent Not Appearing — common issues and fixes
 
 - **No container:** API key is empty in VM metadata. Check `terraform output` and re-apply.
 - **"Invalid API key":** Wrong key in `terraform.tfvars`. API keys are 32 chars, not 40. The Application key is 40 chars — do not confuse them.

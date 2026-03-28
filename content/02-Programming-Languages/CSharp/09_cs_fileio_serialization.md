@@ -673,7 +673,7 @@ Multi-document    No                      Yes (--- separator)
 
 For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro across the full pipeline, see [[serialization-formats]]. The `GZipStream` and `DeflateStream` wrappers used with these streams map to the codec decisions covered in [[compression]].
 
-#### System.IO Stream hierarchy — FileStream, MemoryStream, StreamReader
+#### Serialization Streams — System.IO hierarchy FileStream, MemoryStream, StreamReader
 
 > [!info] Stream hierarchy
 > - `Stream` — abstract base class

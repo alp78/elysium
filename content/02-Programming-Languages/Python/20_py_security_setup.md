@@ -105,7 +105,7 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## GitHub Repository
 
-#### gh repo create — public repo for Workload Identity Federation demos
+#### GitHub gh repo create — public repo for Workload Identity Federation demos
 
 ```python
 # Workload Identity Federation allows GitHub Actions to authenticate to GCP

@@ -86,7 +86,7 @@ def check_slow_models(**context):
 
 ## BigQuery Tuning
 
-### Partition Pruning
+### BigQuery Tuning — Partition Pruning
 
 Partitioned tables are only useful if queries filter on the partition column — see [[querying-and-cost-optimization]] for broader BigQuery cost strategies. Verify pruning is happening in the query plan:
 
@@ -124,7 +124,7 @@ In dbt model config, declare the partition column and ensure downstream models f
 
 `require_partition_filter = true` raises a query error if a consumer queries without a partition predicate — preventing accidental full-table scans in BI tools.
 
-### Clustering
+### BigQuery Tuning — Clustering
 
 Clustering physically sorts data within each partition by the specified columns. Effective for:
 - High-cardinality filter columns (`issuer_id`, `isin`).
@@ -142,7 +142,7 @@ Cluster on the columns most commonly used in `WHERE` and `JOIN`:
 
 > [!tip] BigQuery automatically re-clusters tables over time as data is inserted. No manual maintenance is required. Monitor clustering effectiveness with `INFORMATION_SCHEMA.TABLE_STORAGE`.
 
-### Slot Usage and Reservation
+### BigQuery Tuning — Slot Usage and Reservation
 
 For large transformation jobs (e.g., daily full-refresh of a 500M-row historical fact table), reserve dedicated slots to avoid slot contention from concurrent workloads:
 
@@ -161,7 +161,7 @@ OPTIONS (
 
 Monitor slot consumption with the Datadog BigQuery integration or a Looker Studio dashboard on `INFORMATION_SCHEMA.JOBS`.
 
-### Approximate Aggregations
+### BigQuery Tuning — Approximate Aggregations (APPROX_COUNT_DISTINCT)
 
 For exploratory or non-regulatory models, `APPROX_COUNT_DISTINCT` is 2–10× faster than `COUNT(DISTINCT ...)` and consumes far fewer slots:
 
@@ -377,7 +377,7 @@ Use ephemeral only for models with no fan-out (used by exactly one downstream mo
 
 Before deploying a refactored model, verify that the output is identical to the original using the `dbt-audit-helper` package.
 
-### Installation
+### dbt-audit-helper Installation
 
 ```yaml
 # packages.yml
@@ -386,7 +386,7 @@ packages:
     version: [">=0.11.0", "<0.12.0"]
 ```
 
-### Row-Level Comparison
+### dbt-audit-helper — Row-Level Comparison
 
 ```sql
 -- analyses/audit_fct_index_weights.sql
@@ -407,7 +407,7 @@ in_b_not_a      0 rows   ← no spurious new rows
 in_both         182,400 rows
 ```
 
-### Column-Level Comparison
+### dbt-audit-helper — Column-Level Comparison
 
 ```sql
 {{

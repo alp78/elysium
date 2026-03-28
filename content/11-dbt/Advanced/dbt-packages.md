@@ -61,7 +61,7 @@ dbt deps --lock                   # Write packages.lock.yml (dbt 1.7+)
 > [!important] Always pin versions in production
 > Floating version ranges (`>=1.0.0`) are acceptable for development. For production pipelines serving regulatory reporting, pin to an exact version or a narrow range and commit `packages.lock.yml` to version control. This prevents silent upgrades from changing macro behaviour between deployments.
 
-### `packages.lock.yml`
+### dbt packages.lock.yml — dependency lock file
 
 Available in dbt Core 1.7+. Records the exact resolved version of every package and its dependencies.
 
@@ -83,7 +83,7 @@ Commit this file. CI should run `dbt deps --check` to verify the lock file is up
 
 The foundational utility package. Provides general-purpose macros used across every dbt project.
 
-### Most Used in Financial Pipelines
+### dbt-utils — Most Used Macros in Financial Pipelines
 
 | Macro | Use case |
 | ----- | -------- |
@@ -97,7 +97,7 @@ The foundational utility package. Provides general-purpose macros used across ev
 | `get_column_values` | Macro-time column value discovery |
 | `union_relations` | Union multiple similarly-structured source tables |
 
-### `union_relations` for Multi-Provider Sources
+### dbt-utils union_relations — multi-provider source merging
 
 When multiple index providers deliver constituent data in the same schema:
 
@@ -116,7 +116,7 @@ When multiple index providers deliver constituent data in the same schema:
 }}
 ```
 
-### `get_column_values` at Macro Time
+### dbt-utils get_column_values — dynamic column lists at macro time
 
 ```sql
 {% set index_families = dbt_utils.get_column_values(
@@ -143,7 +143,7 @@ group by 1
 
 Port of Great Expectations to dbt tests. Provides 50+ test macros with richer failure messages than native dbt tests.
 
-### Key Tests for Financial Data
+### dbt-expectations — key tests for financial data quality
 
 ```yaml
 models:
@@ -203,7 +203,7 @@ models:
 
 Generates YAML schema stubs from existing tables or already-materialised models. Eliminates manual typing of column definitions for wide tables (ESG raw data often has 80+ columns).
 
-### Generate Source YAML
+### dbt-codegen — generate source YAML from database
 
 ```bash
 # Generate source YAML for a raw schema
@@ -235,7 +235,7 @@ sources:
           - name: _loaded_at
 ```
 
-### Generate Model YAML
+### dbt-codegen — generate model YAML from SQL
 
 ```bash
 # Generate schema YAML for an already-run model
@@ -243,7 +243,7 @@ dbt run-operation generate_model_yaml \
   --args '{"model_names": ["stg_msci__esg_scores", "fct_index_performance"]}'
 ```
 
-### Generate Base Models
+### dbt-codegen — generate base models from source tables
 
 ```bash
 # Generate a staging model SQL file from a source table
@@ -289,7 +289,7 @@ select * from renamed
 
 Compares two relations and surfaces differences. Essential when migrating a legacy transformation to dbt, or promoting a refactored model to replace an existing one.
 
-### `compare_relations`
+### dbt-audit-helper compare_relations — diff two models row by row
 
 Compares all rows between two tables and categorises differences:
 
@@ -317,7 +317,7 @@ Result categories:
 | `in_b_only` | Row exists in new table only (added) |
 | `in_both_and_different` | Row exists in both but at least one column differs |
 
-### `compare_column_values`
+### dbt-audit-helper compare_column_values — column-level diff
 
 For numeric columns, shows a frequency distribution of differences — useful for spotting systematic rounding errors in return calculations:
 
@@ -331,7 +331,7 @@ dbt run-operation audit_helper.compare_column_values \
   }'
 ```
 
-### Migration Validation Workflow
+### dbt-audit-helper — migration validation workflow
 
 ```bash
 # 1. Build the new model alongside the old one (different name)

@@ -43,7 +43,7 @@ from pydantic import ConfigDict, EmailStr
 from typing import Literal
 ```
 
-#### requests — sync GET and response parsing
+#### requests — REST API sync GET and response parsing
 
 One function per HTTP method: `requests.get/post/put/delete`. `params=` for query strings, `json=` for JSON body (auto-sets `Content-Type`), `headers=` for custom headers. `resp.json()` parses response; `resp.raise_for_status()` throws on 4xx/5xx. For concurrent calls, use `httpx.AsyncClient` instead.
 

@@ -221,7 +221,7 @@ Console.WriteLine($"  WebSocket server running on ws://localhost:{WS_PORT}");
 
       WebSocket server running on ws://localhost:8775
 
-#### WebSocket client — receive ticks for 3 seconds
+#### WebSocket streaming client — receive ticks for 3 seconds
 
 ```csharp
 // WebSocket client — one-way latency (send_ts embedded by server)
@@ -656,7 +656,7 @@ catch { Console.WriteLine($"  Topic already deleted"); }
 
 Production patterns for large-scale data movement. Included as architecture reference — no runnable code.
 
-#### Enterprise MFT (Managed File Transfer)
+#### Enterprise Streaming — MFT (Managed File Transfer)
 
 **What:** Dedicated gateways for large file transfers with multiplexing, packet-level resume, encryption, audit.
 

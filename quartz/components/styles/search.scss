@@ -216,20 +216,21 @@
             text-align: left;
             outline: none;
             font-weight: 400 !important;
-            color: var(--darkgray) !important;
+            color: var(--gray) !important;
             text-decoration: none !important;
 
             &:hover,
             &:focus,
             &.focus {
               background: var(--lightgray);
+              color: var(--dark) !important;
             }
 
             & > h3 {
               margin: 0;
               font-size: 0.85em;
               font-weight: 400 !important;
-              color: var(--dark) !important;
+              color: inherit !important;
               display: block;
               overflow: hidden;
               text-overflow: ellipsis;

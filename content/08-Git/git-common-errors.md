@@ -407,7 +407,7 @@ git pull --rebase origin main
 
 `--rebase` replays your local commits on top of the fetched changes instead of merging. Instead of creating merge commits, puts your changes on top cleanly.
 
-#### Make it the default for all future pulls
+#### git config pull.rebase true — avoid merge commits on pull
 
 ```bash
 git config --global pull.rebase true

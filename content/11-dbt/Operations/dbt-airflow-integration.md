@@ -57,13 +57,13 @@ dbt_run = BashOperator(
 
 [astronomer-cosmos](https://github.com/astronomer/astronomer-cosmos) parses the dbt project's `manifest.json` at DAG parse time and generates one Airflow task per dbt node (model, seed, snapshot, test). Dependencies between tasks mirror the dbt DAG.
 
-### Installation
+### Airflow astronomer-cosmos Installation
 
 ```bash
 pip install astronomer-cosmos[dbt-bigquery]
 ```
 
-### DAG Definition
+### Airflow astronomer-cosmos DAG Definition
 
 ```python
 from datetime import datetime
@@ -308,7 +308,7 @@ bash_command=(
 
 ## Handling dbt Failures in Airflow
 
-### Failure Callback
+### dbt Airflow Failure Callback — on_failure_callback
 
 ```python
 from airflow.models import TaskInstance

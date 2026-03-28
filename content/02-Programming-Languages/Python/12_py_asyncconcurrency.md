@@ -902,4 +902,4 @@ print("  Both threads done")
       Processor: got 5 rows, processing
       Both threads done
 
-#### Summary
+#### Threading and Concurrency — Summary and Decision Guide

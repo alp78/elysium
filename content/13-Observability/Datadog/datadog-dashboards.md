@@ -350,7 +350,7 @@ A custom dashboard definition is stored at `infra/datadog/airflow_dashboard.json
 2. Inside the dashboard, click the gear icon (⚙️) → **Import Dashboard JSON**
 3. Paste the contents of `infra/datadog/airflow_dashboard.json`
 
-### Dashboard Widgets (11 total)
+### Airflow Dashboard Widgets (11 total)
 
 | Widget | Type | Metric(s) |
 |--------|------|-----------|

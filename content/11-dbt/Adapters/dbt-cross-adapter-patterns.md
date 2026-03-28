@@ -389,7 +389,7 @@ dbt compile --target bigquery --profiles-dir ci/profiles --select marts
 
 Moving a dbt project from SQL Server to BigQuery involves three categories of change: authentication, SQL syntax, and materialization config.
 
-### Step 1 — Audit adapter-specific SQL
+### BigQuery Migration Step 1 — Audit adapter-specific SQL
 
 ```bash
 # Find all models with T-SQL-specific functions
@@ -400,7 +400,7 @@ grep -rn "sys\.|OBJECT_ID|INFORMATION_SCHEMA" macros/ models/
 
 Create a migration checklist from the grep output. Each hit is a conversion task.
 
-### Step 2 — Function mapping
+### BigQuery Migration Step 2 — Function mapping
 
 | T-SQL | BigQuery Standard SQL | Notes |
 |---|---|---|
@@ -422,7 +422,7 @@ Create a migration checklist from the grep output. Each hit is a conversion task
 | `LEN(str)` | `LENGTH(str)` | |
 | `STUFF(str, pos, len, rep)` | `CONCAT(SUBSTR(str,1,pos-1), rep, SUBSTR(str,pos+len))` | No direct equivalent |
 
-### Step 3 — Incremental strategy migration
+### BigQuery Migration Step 3 — Incremental strategy
 
 SQL Server `delete+insert` maps most directly to BigQuery `merge`. Map `unique_key` across:
 
@@ -446,7 +446,7 @@ config:
 
 Add `partition_by` and `cluster_by` at this stage — do not migrate without them or the BigQuery tables will be unpartitioned full-table-scan targets.
 
-### Step 4 — Post-hook migration
+### BigQuery Migration Step 4 — Post-hook migration
 
 SQL Server post-hook indexes have no direct equivalent in BigQuery (clustering is declared in config, not DDL). Remove all `CREATE INDEX` post-hooks and replace with `cluster_by` in the model config.
 
@@ -464,7 +464,7 @@ SQL Server post-hook indexes have no direct equivalent in BigQuery (clustering i
 
 `UPDATE STATISTICS` post-hooks are also irrelevant — BigQuery manages statistics automatically.
 
-### Step 5 — Schema and type migration
+### BigQuery Migration Step 5 — Schema and type mapping
 
 ```python
 # Mapping SQL Server schema.yml data_type to BigQuery
@@ -485,7 +485,7 @@ type_map = {
 
 Update all `schema.yml` `data_type` fields using this mapping before running `dbt run` against BigQuery.
 
-### Step 6 — Validation
+### BigQuery Migration Step 6 — Validation
 
 ```bash
 # Run against BigQuery with --empty flag to validate SQL without loading data

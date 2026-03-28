@@ -24,7 +24,7 @@ updated: 2026-03-23
 
 ## Quality Gates by Medallion Layer
 
-### Bronze (Landing / Raw)
+### Medallion Bronze Quality Gate — Landing / Raw
 
 | Check | Implementation | Action on Failure |
 |-------|---------------|-------------------|
@@ -34,7 +34,7 @@ updated: 2026-03-23
 | Duplicate detection | Hash-based dedup on natural key | Deduplicate, log count |
 | File hash verification | SHA-256 matches source manifest | Reject, re-download |
 
-### Silver (Cleaned / Validated)
+### Medallion Silver Quality Gate — Cleaned / Validated
 
 The [[silver-transforms]] layer is where most quality gates live, acting as the boundary between raw ingestion and trusted data.
 
@@ -45,7 +45,7 @@ The [[silver-transforms]] layer is where most quality gates live, acting as the 
 | Referential integrity | All instruments exist in dimension table | Quarantine orphans |
 | Staleness check | Data freshness within tolerance | Warn or use T-1 fallback |
 
-### Gold (Consumption / Publication)
+### Medallion Gold Quality Gate — Consumption / Publication
 
 | Check | Implementation | Action on Failure |
 |-------|---------------|-------------------|

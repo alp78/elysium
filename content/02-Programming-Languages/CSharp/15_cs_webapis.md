@@ -157,7 +157,7 @@ catch (HttpRequestException ex)
 
 ## REST API Patterns for Data Engineering
 
-#### Pagination — fetch data in pages
+#### REST API Pagination — fetch data in pages
 
 Three essential patterns for API integrations: **pagination** loops through pages until exhausted, **retry with exponential backoff** handles transient 429/5xx errors (check `Retry-After` header), and **bulk POST** batches records to reduce round trips by 10-100x. These three patterns cover 90% of data pipeline API integrations.
 
@@ -199,7 +199,7 @@ Console.WriteLine($"  Total pages: {allPages.Count}");
       })
       Total pages: 3
 
-#### Retry with exponential backoff
+#### REST API Retry with exponential backoff
 
 ```csharp
 // Retry with exponential backoff — recover from transient API failures
@@ -241,7 +241,7 @@ Console.WriteLine($"  Success: {(int)result.StatusCode}");
     === Retry with Backoff ===
       Success: 200
 
-#### Bulk POST — batch multiple records
+#### REST API Bulk POST — batch multiple records
 
 ```csharp
 // Bulk POST — send multiple records in one request

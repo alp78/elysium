@@ -28,7 +28,7 @@ start_date = "2023-06-01"
 >>>>>>> feat/new-history
 ```
 
-#### Reading the markers
+#### Merge conflict markers — reading HEAD vs incoming
 
 | Marker | Meaning |
 |--------|---------|

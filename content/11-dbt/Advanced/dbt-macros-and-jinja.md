@@ -200,7 +200,7 @@ from weighted
 
 Install via `packages.yml` (see [[dbt-packages]]). The most useful macros for financial pipelines:
 
-### `surrogate_key`
+### dbt-utils surrogate_key — deterministic hash key from columns
 
 Generates a deterministic hash key from one or more columns, handling nulls consistently.
 
@@ -220,7 +220,7 @@ from source_table
 > [!note] MD5 vs SHA256
 > `generate_surrogate_key` uses MD5 by default. For compliance-sensitive pipelines where key collision probability matters (very unlikely but auditable), use `dbt_utils.generate_surrogate_key` with a custom hash function via dispatch.
 
-### `date_spine`
+### dbt-utils date_spine — generate continuous date series
 
 Generates a complete calendar table — essential for ensuring no trading days are missing in time-series performance data.
 
@@ -245,7 +245,7 @@ select
 from spine
 ```
 
-### `pivot`
+### dbt-utils pivot — rows to columns transformation
 
 Rotates ESG provider rows into columns without hardcoding provider names.
 
@@ -276,7 +276,7 @@ from {{ ref('int_esg_scores_unpivoted') }}
 group by 1, 2
 ```
 
-### `star`
+### dbt-utils star — select all columns except specified
 
 Selects all columns from a relation except a specified exclusion list — useful when staging tables need to drop raw provider internal IDs.
 

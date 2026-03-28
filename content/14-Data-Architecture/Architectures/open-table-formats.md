@@ -209,7 +209,7 @@ ALTER TABLE data-pipeline.silver.daily_ohlcv
 
 BigQuery supports reading and writing Iceberg tables natively via **BigLake Metastore**:
 
-#### Create a BigLake external table pointing to Iceberg files on GCS
+#### Iceberg on BigQuery — BigLake external table pointing to GCS
 
 ```sql
 -- Create a BigLake connection for GCS access
@@ -280,7 +280,7 @@ The [[medallion-architecture|medallion architecture]] (bronze/silver/gold) maps 
 | **Silver** | Merge-on-read for upserts, partitioned by trade_date | Cleaned, validated, SCD2 via snapshots |
 | **Gold** | Copy-on-write for fast reads, sorted by index_key | Aggregated, optimized for dashboard queries |
 
-#### GCS lakehouse folder structure for the project financial data
+#### Medallion Architecture on Lakehouse — GCS folder structure
 
 ```
 gs://data-pipeline-lakehouse/
