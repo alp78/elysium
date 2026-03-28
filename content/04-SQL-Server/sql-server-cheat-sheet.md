@@ -1378,7 +1378,7 @@ SELECT * FROM sys.fn_get_audit_file('/var/opt/mssql/audit/FinanceAudit*', NULL, 
 
 ## Concurrency
 
-### Transaction Control
+### Concurrency — Transaction Control (BEGIN TRAN, COMMIT, ROLLBACK)
 
 ```sql
 -- Basic transaction

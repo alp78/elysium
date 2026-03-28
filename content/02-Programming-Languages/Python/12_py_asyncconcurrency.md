@@ -748,9 +748,9 @@ print(f"  Active threads: {threading.active_count()}")
       Results: ['fetch_products done', 'fetch_users done', 'fetch_events done']
       Active threads: 7
 
-#### Locks
+#### Threading Locks
 
-#### Race condition demo (WITHOUT lock)
+#### Threading race condition demo (WITHOUT lock)
 
 ```python
 # Race condition demo — without lock shows data corruption

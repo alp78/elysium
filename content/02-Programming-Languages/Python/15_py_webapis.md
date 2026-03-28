@@ -384,7 +384,7 @@ print(f"  Server received: {len(data['json']['trades'])} trades")
 
 ## Building a REST API (FastAPI)
 
-#### Pydantic models — request/response schemas
+#### Pydantic models — REST API request/response schemas
 
 Define Pydantic models for request/response validation. `@app.get`/`post`/`delete` decorators wire handlers to routes. FastAPI auto-generates Swagger docs at `/docs`. `uvicorn` serves the ASGI app. Type hints drive validation, serialization, and documentation simultaneously.
 
@@ -432,7 +432,7 @@ positions: dict[str, PortfolioPosition] = {
 }
 ```
 
-#### GET endpoints — health, positions
+#### FastAPI REST API — GET endpoints health, positions
 
 ```python
 # GET endpoints — read data from the API
@@ -461,7 +461,7 @@ def get_position(ticker: str):
     return positions[ticker]
 ```
 
-#### POST endpoint — submit trades
+#### FastAPI REST API — POST endpoint submit trades
 
 ```python
 # POST endpoint — create new trade orders with Pydantic validation
@@ -491,7 +491,7 @@ def get_trade(trade_id: str):
     return trades_db[trade_id]
 ```
 
-#### DELETE endpoint — cancel trades
+#### FastAPI REST API — DELETE endpoint cancel trades
 
 ```python
 # DELETE endpoint — remove a trade by ID
@@ -529,7 +529,7 @@ print(f"Run the next cells to test, then run the shutdown cell when done.")
     Swagger docs: http://127.0.0.1:8769/docs
     Run the next cells to test, then run the shutdown cell when done.
 
-#### Test GET endpoints with httpx — health and positions
+#### Test FastAPI GET endpoints with httpx — health and positions
 
 ```python
 # Test the API with httpx — same as calling any external API
@@ -572,7 +572,7 @@ print(f"  {resp.status_code}: {resp.json()}")
     === GET /positions/TSLA (not found) ===
       404: {'detail': 'No position for TSLA'}
 
-#### Test POST endpoint with httpx — submit and validate trades
+#### Test FastAPI POST endpoint with httpx — submit and validate trades
 
 ```python
 # POST trades — submit orders and test validation
@@ -607,7 +607,7 @@ print(f"  {resp.status_code}: {resp.json()['detail'][0]['msg']}")
     === POST invalid trade (validation error) ===
       422: String should have at least 1 character
 
-#### Test GET and DELETE endpoints with httpx — list and cancel trades
+#### Test FastAPI GET and DELETE endpoints with httpx — list and cancel trades
 
 ```python
 # GET all trades and DELETE one

@@ -702,7 +702,7 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
       [102] fetch_events finished
       Results: [fetch_events done, fetch_users done, fetch_products done]
 
-#### Race condition demo (WITHOUT lock)
+#### Threading race condition demo (WITHOUT lock)
 
 ```csharp
 // Race condition demo — without lock shows data corruption

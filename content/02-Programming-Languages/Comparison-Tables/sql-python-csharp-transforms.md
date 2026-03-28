@@ -39,7 +39,7 @@ The ability to express the same transformation in SQL, Python, and C# is what ma
 
 Window functions compute values across a "window" of related rows without collapsing the result set. They are one of the most powerful features in SQL and have equivalents in pandas and LINQ.
 
-### ROW_NUMBER — Assign Sequential Row Numbers
+### Window Functions — ROW_NUMBER Assign Sequential Row Numbers
 
 #### Row number within a partition (e.g., rank instruments per index by score)
 
@@ -65,7 +65,7 @@ df['rank'] = (
 )
 ```
 
-### RANK and DENSE_RANK
+### Window Functions — RANK and DENSE_RANK
 
 ```sql
 -- SQL Server: RANK() leaves gaps after ties; DENSE_RANK() does not
@@ -85,7 +85,7 @@ df['rank_with_gaps'] = df['composite_score'].rank(method='min', ascending=False)
 df['dense_rank']     = df['composite_score'].rank(method='dense', ascending=False).astype(int)
 ```
 
-### LAG and LEAD — Prior and Next Row Values
+### Window Functions — LAG and LEAD Prior and Next Row Values
 
 #### Compute day-over-day change (LAG = previous row's value)
 
@@ -109,7 +109,7 @@ df['next_close'] = df.groupby('symbol')['close_price'].shift(-1)
 df['day_change']  = df['close_price'] - df['prev_close']
 ```
 
-### Running Totals and Moving Averages
+### Window Functions — Running Totals and Moving Averages
 
 ```sql
 -- SQL Server: running total with ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW

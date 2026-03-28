@@ -102,7 +102,7 @@ Console.WriteLine($"Body echoed: {postData.GetProperty("json")}");
         "ticker": "AAPL"
       }
 
-#### Headers and authentication
+#### HttpClient REST API — headers and authentication
 
 ```csharp
 // Custom headers — API keys, bearer tokens for financial data providers
@@ -121,7 +121,7 @@ Console.WriteLine($"  X-Client-Id: {headers.GetProperty("X-Client-Id").GetString
       Authorization: Bearer sk_demo_fake_key_12345
       X-Client-Id: trading-pipeline-v2
 
-#### Status code handling
+#### HttpClient REST API — status code handling
 
 ```csharp
 // Status code handling — check success/failure and EnsureSuccessStatusCode
@@ -269,7 +269,7 @@ Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty
 
 ## Building a REST API (ASP.NET Minimal APIs)
 
-#### DTO record declarations
+#### ASP.NET REST API — DTO record declarations
 
 Define record DTOs (like Pydantic models), write handler functions that return typed results, and wire them to routes with `app.MapGet`/`MapPost`/`MapDelete`. Each handler is a pure function testable without a running web server. `Results.Ok`/`NotFound`/`Created` map directly to HTTP status codes. For complex APIs with middleware, use full ASP.NET MVC controllers.
 
@@ -286,7 +286,7 @@ record TradeResponse(string TradeId, string Status, string Message);
 record PortfolioPosition(string Ticker, int Shares, double AvgCost, double MarketValue);
 ```
 
-#### In-memory store and health check
+#### ASP.NET REST API — in-memory store and health check
 
 ```csharp
 // In-memory store — simulates a database for the API
@@ -310,7 +310,7 @@ Console.WriteLine($"  {{ status: healthy }}");
     === GET /health ===
       { status: healthy }
 
-#### GET /positions — list with optional filter
+#### ASP.NET REST API — GET /positions with optional filter
 
 ```csharp
 #nullable enable
@@ -353,7 +353,7 @@ Console.WriteLine($"  {s3}: {b3}");
     === GET /positions?ticker=TSLA ===
       404 Not Found: No position for TSLA
 
-#### GET /positions/{ticker} — single position lookup
+#### ASP.NET REST API — GET /positions/{ticker} single lookup
 
 ```csharp
 // Get single position by ticker — path parameter
@@ -382,7 +382,7 @@ Console.WriteLine($"  {s2}: {b2}");
     === GET /positions/TSLA ===
       404 Not Found: No position for TSLA
 
-#### POST /trades — submit a trade order
+#### ASP.NET REST API — POST /trades submit a trade order
 
 ```csharp
 // Submit a new trade — returns 201 Created or 409 Conflict
@@ -413,7 +413,7 @@ Console.WriteLine($"  {s2}: {b2}");
     === POST /trades (duplicate) ===
       409 Conflict: Trade TRD_001 already exists
 
-#### DELETE /trades/{tradeId} — cancel a trade
+#### ASP.NET REST API — DELETE /trades/{tradeId} cancel a trade
 
 ```csharp
 // Cancel a trade — returns 200 OK or 404 Not Found

@@ -762,7 +762,7 @@ withRankP.Head(8)
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(8 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>rank_in_group<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>946.5</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>940.5</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1126</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1085.5</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1024</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>887.5</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>875.5</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>871</td></tr></tbody></table></div>
 
-#### Deedle — Rank within group (manual computation)
+#### Deedle — Window Function Rank within group (manual computation)
 
 ```csharp
 // Deedle — Manual rank: sort values within group, assign ordinal rank
