@@ -24,7 +24,7 @@ Terraform's input variables and output values are the primary mechanism for maki
 
 Variables are Terraform's parameters. They are set via `terraform.tfvars` (gitignored), command-line flags (`-var`), or environment variables (`TF_VAR_*`).
 
-**Minimum variable declaration:**
+#### variable "name" { type, default, description } — minimum declaration
 
 ```hcl
 variable "project_id" {
@@ -103,7 +103,7 @@ variable "labels" {
 
 ### Setting Variable Values
 
-**terraform.tfvars (recommended — gitignored):**
+#### terraform.tfvars — recommended variable values file (gitignored)
 
 ```hcl
 project_id  = "data-platform-prod"
@@ -112,13 +112,13 @@ admin_ip    = "203.0.113.42"
 dd_api_key  = "your-datadog-key"
 ```
 
-**Command-line flags:**
+#### -var and -var-file — command-line variable overrides
 
 ```bash
 terraform apply -var="project_id=data-platform-prod" -var="db_password=secret"
 ```
 
-**Environment variables (TF_VAR_ prefix):**
+#### TF_VAR_ environment variables — set variables from shell
 
 ```bash
 export TF_VAR_project_id="data-platform-prod"

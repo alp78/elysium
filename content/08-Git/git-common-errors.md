@@ -407,7 +407,7 @@ git pull --rebase origin main
 
 `--rebase` replays your local commits on top of the fetched changes instead of merging. Instead of creating merge commits, puts your changes on top cleanly.
 
-**Make it the default for all future pulls:**
+#### Make it the default for all future pulls
 
 ```bash
 git config --global pull.rebase true
@@ -474,7 +474,7 @@ You're looking at the remote pointer instead of your local branch. Switch to the
 
 **Cause:** You deleted the local and/or remote feature branch before merging the PR on GitHub. The PR may auto-close when its head branch disappears.
 
-**Scenario:**
+#### Scenario
 
 ```bash
 git checkout main && git pull
@@ -505,7 +505,7 @@ gh pr reopen 26
 - `git branch <name> <sha>` — creates a branch pointing at a specific commit
 - `gh pr reopen` — reopens a closed PR; works as long as the head branch exists on the remote
 
-**If `git push` says "Everything up-to-date":**
+#### If `git push` says "Everything up-to-date"
 
 The remote may still have a stale ref. Force it:
 

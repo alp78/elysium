@@ -21,7 +21,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** `pull_request_target` was introduced to allow privileged operations (e.g., labeling, commenting) on fork PRs, which `pull_request` cannot do because forks run without secrets. The trigger runs in the context of the base branch (main), which has secrets. If you then explicitly checkout the PR's HEAD, you are running attacker-controlled code with trusted credentials. GitHub even warns in the docs, but the pattern is intuitive enough that engineers reach for it repeatedly.
 
-**Consequences:**
+#### Consequences — Supply Chain Attacks via pull_request_target
 - Repository secrets (API keys, service account credentials, signing keys) exfiltrated
 - Malicious commits pushed to main via write-scoped `GITHUB_TOKEN`
 - Lateral movement to other repos via org-level secrets shared across repos
@@ -98,7 +98,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >             });
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Supply Chain Attacks via pull_request_target
 1. Audit all workflows for `pull_request_target` — run `grep -r "pull_request_target" .github/workflows/`
 2. If `pull_request_target` is truly needed, never pair it with `actions/checkout` referencing the PR HEAD
 3. Set `permissions: {}` (empty object) at the workflow level by default, grant minimally per-job
@@ -106,7 +106,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 5. Enable "Require approval for all outside collaborators" in repo Settings → Actions → General
 6. Enable Dependabot for GitHub Actions to surface SHA drift: add `.github/dependabot.yml` with `package-ecosystem: github-actions`
 
-**Fix if compromised:**
+#### Fix if compromised — Supply Chain Attacks via pull_request_target
 1. Immediately rotate ALL repository and org-level secrets — assume every secret was exfiltrated
 2. Audit `git log --all --oneline` for unauthorized commits (look for commits from the Actions bot that shouldn't exist)
 3. Check npm/PyPI/Docker registries for package versions published during the window
@@ -151,13 +151,13 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     API_KEY: ${{ secrets.API_KEY }}  # inject via env, not interpolation
 > ```
 
-**Consequences:**
+#### Consequences — Secret Exposure in Logs and Fork PRs
 - Secrets visible in public repo logs to anyone with a GitHub account
 - Internal repos: any team member or contractor with read access sees credentials
 - Audit trail: GitHub retains logs for 90 days by default
 - If the secret is a financial data API key, it can be used to exfiltrate or manipulate market data
 
-**Prevention protocol:**
+#### Prevention protocol — Secret Exposure in Logs and Fork PRs
 1. Never use `${{ secrets.* }}` inside `run:` blocks — always pass via `env:`
 2. Use `::add-mask::` for any derived value computed from a secret
 3. Run `actionlint` in CI to catch secret interpolation in run steps: `actionlint` will warn on `${{ secrets.* }}` in `run:` contexts
@@ -165,7 +165,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 5. Restrict repo read access to the minimum set of people
 6. For fork PRs, `pull_request` triggers do NOT have access to secrets — this is the correct default
 
-**Fix procedure:**
+#### Fix procedure — Secret Exposure in Logs and Fork PRs
 1. If a secret was printed, assume it was compromised — rotate immediately
 2. Delete the specific log run via GitHub API: `gh api -X DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs`
 3. Audit who accessed the repo within the log retention window
@@ -232,20 +232,20 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     BRANCH: ${{ github.head_ref }}
 > ```
 
-**Consequences:**
+#### Consequences — Workflow Injection (Command Injection)
 - Full secrets exfiltration within a single workflow run
 - `GITHUB_TOKEN` abuse — creating releases, modifying code, opening PRs
 - Persistent access if the attacker writes a backdoor to the codebase via write token
 - In financial pipelines: injection into a data processing workflow could corrupt index calculations
 
-**Prevention protocol:**
+#### Prevention protocol — Workflow Injection (Command Injection)
 1. Run `actionlint` — it detects `${{ }}` interpolation in `run:` contexts automatically
 2. Global rule: any user-controlled value (`github.event.pull_request.*`, `github.head_ref`, commit messages, issue titles) must be passed via `env:`, never interpolated
 3. Use `toJSON()` for complex values that must be used in scripts
 4. Apply restrictive `permissions:` to limit blast radius
 5. Enable GitHub's default code scanning for Actions (under Security → Code scanning)
 
-**Fix procedure:**
+#### Fix procedure — Workflow Injection (Command Injection)
 1. Identify the window of exposure and collect all run logs
 2. Rotate all secrets accessible during that workflow's execution
 3. Review git history for unauthorized changes
@@ -260,14 +260,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** `.github/workflows/` files are code that controls production, but they're rarely treated that way. Many repos don't include workflow files in CODEOWNERS, don't require PR reviews for changes to them, and don't have branch protection rules that specifically cover them. Changes take effect immediately on push — there's no staging environment for workflow logic.
 
-**Consequences:**
+#### Consequences — Broken Production Deploys from Workflow Edits
 - All deployments blocked until the workflow file is repaired
 - Rollback is impossible via the CI system itself (the deploy workflow is broken)
 - In a financial data org: index calculation pipelines, EOD batch jobs, data delivery workflows all blocked
 - Emergency manual deployment required, bypassing all safety checks
 - On-call rotation triggered for what is essentially a configuration typo
 
-**Prevention protocol:**
+#### Prevention protocol — Broken Production Deploys from Workflow Edits
 1. Add to `.github/CODEOWNERS`:
    ```
    .github/workflows/ @platform-team
@@ -296,7 +296,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
    ```
 6. Keep a `workflow_dispatch` emergency deploy trigger as a fallback that can run even if push-triggered deploys are broken
 
-**Fix procedure:**
+#### Fix procedure — Broken Production Deploys from Workflow Edits
 1. Push a fix to the workflow file on main immediately (or open and fast-merge a PR)
 2. If the workflow file references a missing secret or variable, add it in Settings → Secrets first
 3. Use `workflow_dispatch` to manually trigger the deploy once the workflow is fixed
@@ -313,13 +313,13 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub Actions has no local test execution environment that faithfully replicates the runner. The `act` tool approximates it but diverges in critical ways: it doesn't replicate GitHub-hosted runner images, secrets handling, OIDC, service containers, or caching. There is no "dry run" mode. Every test requires a full remote execution.
 
-**Consequences:**
+#### Consequences — 20-Minute Feedback Loops
 - Developer productivity destroyed for workflow authors
 - Context switching overhead: 20 minutes is long enough to fully context-switch to another task
 - Accumulated CI minutes cost: 14 iterations × 20 minutes × $0.008/minute = $2.24 per workflow change, plus opportunity cost
 - Platform team becomes a bottleneck if only they maintain workflows
 
-**Prevention protocol:**
+#### Prevention protocol — 20-Minute Feedback Loops
 1. Use `act` for fast local syntax validation even if behavior differs:
    ```bash
    # Install act
@@ -365,7 +365,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 5. Use `--fail-fast: true` in matrix builds so the first failure stops the matrix
 6. Structure workflows with a fast "pre-flight" job (lint, type check, unit tests — under 2 minutes) that must pass before expensive integration jobs start
 
-**Fix procedure (when stuck in a long iteration cycle):**
+#### Fix procedure (when stuck in a long iteration cycle) — 20-Minute Feedback Loops
 1. Use `actions/upload-artifact` to output intermediate files and debug state
 2. Add `ACTIONS_STEP_DEBUG=true` to repo secrets for verbose runner logging
 3. Use `tmate` action for live SSH debugging into a running runner (last resort):
@@ -385,7 +385,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** The GitHub Actions runner interprets YAML into execution steps; there's no intermediate representation that can be inspected or tested locally. The expression language (`${{ }}`) has its own evaluation rules that differ from both bash and JavaScript, and edge cases (null coalescing, type coercion) behave unexpectedly.
 
-**Consequences:**
+#### Consequences — YAML Is Untestable Locally
 - Conditional logic errors that only manifest in specific scenarios (e.g., on a tag push, on a failed previous job)
 - `if: failure()` vs `if: always()` confusion leads to cleanup steps not running when they should
 - Matrix exclusion logic errors go undetected until a specific combination is tested
@@ -419,7 +419,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 > if: contains(toJSON(github.event.pull_request.labels.*.name), 'deploy')
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — YAML Is Untestable Locally
 1. Run `actionlint` in CI on every PR touching `.github/workflows/` — it type-checks expressions
 2. Use `yamllint` for structural YAML issues (indentation, duplicate keys):
    ```bash
@@ -438,7 +438,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
    ```
 5. Use composite actions to encapsulate testable logic units — the action's inputs/outputs can be verified independently
 
-**Fix procedure:**
+#### Fix procedure — YAML Is Untestable Locally
 1. Use `ACTIONS_STEP_DEBUG=true` secret for full expression evaluation traces
 2. Add debug steps to print context values: `run: echo '${{ toJSON(github) }}'`
 3. Use the GitHub Actions expression playground at `https://github.com/nickmccurdy/actions-expressions` to test expression evaluation
@@ -451,14 +451,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub resolves `pull_request` trigger execution by creating a temporary merge ref (`refs/pull/N/merge`) that represents the merge of the PR into the base branch. When merge conflicts exist, this ref cannot be created. Without the merge ref, the workflow cannot start — and GitHub reports no status, not a failure.
 
-**Consequences:**
+#### Consequences — Merge Conflicts in Workflow Files (Silent CI Failure)
 - PRs merged to main with zero CI validation
 - Bugs that integration tests would catch reach main
 - If a deploy workflow auto-triggers on merge to main, untested code is deployed
 - The behavior is invisible — no alert, no error, no notification
 - In financial data repos: broken data transformations or schema changes reach production
 
-**Prevention protocol:**
+#### Prevention protocol — Merge Conflicts in Workflow Files (Silent CI Failure)
 1. Install the `eps1lon/actions-label-merge-conflict` action to auto-label conflicted PRs:
    ```yaml
    # .github/workflows/label-conflicts.yml
@@ -484,7 +484,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 4. The key insight: if the listed check never runs, the PR is blocked — this is the correct behavior
 5. Train the team: a PR with no CI status is not ready to merge — it means CI couldn't run, not that it passed
 
-**Fix procedure:**
+#### Fix procedure — Merge Conflicts in Workflow Files (Silent CI Failure)
 1. Rebase the PR on the latest main: `git fetch origin && git rebase origin/main`
 2. Resolve all conflicts in `.github/workflows/` files
 3. Force push the rebased branch: `git push --force-with-lease`
@@ -498,7 +498,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** Cache keys are user-defined hashes. A mismatch between the key used to save and the key used to restore results in a complete cache miss — the cache action falls through to the `restore-keys` fallback or gets nothing. The action reports success regardless. Because the cache is an optimization, not a correctness requirement, there's no built-in alerting for misses.
 
-**Consequences:**
+#### Consequences — Silent Cache Misses
 - CI runs 3-10x slower than expected with no obvious cause
 - Queue backlog builds up, increasing effective feedback loop time
 - Cache storage costs accumulate if old caches aren't pruned but hits are rare
@@ -544,14 +544,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     echo "Cache hit: ${{ steps.npm-cache.outputs.cache-hit }}"
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Silent Cache Misses
 1. Always use `id:` on cache steps and check `steps.<id>.outputs.cache-hit` in subsequent steps
 2. Pin the runner OS version (`ubuntu-22.04` not `ubuntu-latest`) so runner upgrades don't bust cache keys
 3. Include the runner OS in the cache key: `${{ runner.os }}-...`
 4. Use `restore-keys:` as a fallback for partial hits (faster than a full miss)
 5. Audit cache usage monthly via Settings → Actions → Caches — prune stale caches
 
-**Fix procedure:**
+#### Fix procedure — Silent Cache Misses
 1. If build is slow, check whether cache hit rate has dropped: compare recent run durations
 2. Manually delete the stale cache via `gh api -X DELETE /repos/{owner}/{repo}/actions/caches/{cache_id}`
 3. Push a no-op commit to force a fresh cache save with the current key
@@ -610,20 +610,20 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     secrets: inherit   # passes all caller's secrets — reduces maintenance burden
 > ```
 
-**Consequences:**
+#### Consequences — Reusable Workflow Limitations
 - Reusable workflow changes require coordinated updates across every caller repo
 - New secrets added to the called workflow break all callers simultaneously
 - Matrix strategies can't orchestrate jobs inside called workflows
 - Teams abandon the reusable workflow pattern and duplicate workflow code instead
 
-**Prevention protocol:**
+#### Prevention protocol — Reusable Workflow Limitations
 1. Use `secrets: inherit` unless there's a specific security reason not to
 2. Design reusable workflows around `inputs:` not secrets when possible (pass environment names, not credentials)
 3. Version your reusable workflows: `uses: org/repo/.github/workflows/deploy.yml@v2`
 4. Keep a changelog for reusable workflow changes to coordinate caller updates
 5. Use composite actions (not reusable workflows) for steps that don't need separate job isolation — composite actions do inherit the caller's environment
 
-**Fix procedure:**
+#### Fix procedure — Reusable Workflow Limitations
 1. When a caller breaks after a reusable workflow change: add the new secret to `secrets:` in the caller
 2. Use `secrets: inherit` to prevent future breakage from this pattern
 3. If the called workflow is in another repo, pin to a version tag and create a migration process for major changes
@@ -636,7 +636,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub reserves the right to change what `ubuntu-latest` points to. The label is a convenience alias, not a pinned version. When the underlying image changes, every workflow using the alias is affected simultaneously. The same problem occurs with actions' default runner images and when GitHub updates the tool cache on runners.
 
-**Consequences:**
+#### Consequences — Runner Environment Inconsistency
 - Mass build failures across the org on the same day with no code changes
 - Difficult to diagnose: the problem is environmental, not in the code
 - Flaky tests that only fail on specific runner image versions
@@ -665,14 +665,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     cat /etc/os-release
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Runner Environment Inconsistency
 1. Pin all `runs-on:` values to specific versions — audit with: `grep -r "runs-on:.*latest" .github/workflows/`
 2. Subscribe to the `github/roadmap` repo and GitHub changelog for runner image update announcements
 3. When upgrading runner versions, do it in a separate PR and require the full test suite to pass
 4. For self-hosted runners: pin the runner image version and control upgrade timing
 5. Document the required runner environment in workflow comments
 
-**Fix procedure:**
+#### Fix procedure — Runner Environment Inconsistency
 1. When builds break after a runner upgrade: check the GitHub blog/changelog for the upgrade date
 2. Pin to the previous version temporarily (`ubuntu-22.04` if `ubuntu-latest` became 24.04)
 3. Investigate what changed: compare the old and new runner image changelogs at `https://github.com/actions/runner-images`
@@ -689,7 +689,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub changed the default `GITHUB_TOKEN` permissions to read-only in 2023 for new repos, but many existing repos still have write-all defaults. Workflows written before this change, or copied from Stack Overflow, assume broad permissions. The permission model has two levels (workflow-level and job-level) and the interaction is non-obvious: job-level permissions override workflow-level for that job only.
 
-**Consequences:**
+#### Consequences — Permission Model Confusion
 - Security regression when `write-all` is used to fix a permission error without investigation
 - Workflows that worked in one repo fail in another due to org-level default permission settings
 - `GITHUB_TOKEN` with write access can be used to push malicious commits if the workflow is compromised
@@ -732,14 +732,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 > # - Upload SARIF results: security-events: write
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Permission Model Confusion
 1. Set org-level default to read-only permissions (Settings → Actions → General → "Read repository contents and packages permissions")
 2. Always specify explicit `permissions:` in every workflow — `actionlint` can enforce this
 3. Use `permissions: {}` at the top level and grant only what's needed per job
 4. For OIDC (recommended for cloud auth), `id-token: write` is required — document this for the team
 5. Create a permission reference cheatsheet for your org's common workflow patterns
 
-**Fix procedure:**
+#### Fix procedure — Permission Model Confusion
 1. When a 403 occurs: read the error message for the specific permission needed
 2. Check current token permissions: add `- run: echo '${{ toJSON(github.token) }}'` (shows claims, not the token itself)
 3. Grant the minimum required permission at the job level, not the workflow level
@@ -753,7 +753,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub Actions pricing is per-minute with no hard cap by default. Teams don't monitor minute consumption. Matrix builds, long-running jobs, and eager triggers (running on every push including to feature branches) compound the cost. Windows runners cost 8× more than Linux; macOS 10× more.
 
-**Consequences:**
+#### Consequences — Cost Surprises
 - Unexpected billing charges, especially in organizations on the free or Teams plan
 - Surprise budget conversations
 - Teams self-throttle CI by removing tests to save minutes — a counterproductive outcome
@@ -798,7 +798,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     key: deps-${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Cost Surprises
 1. Set a spending limit in GitHub org billing settings — even $0 hard cap will alert before charges accumulate
 2. Monitor minutes with `gh api /orgs/{org}/settings/billing/actions` — add this to a weekly ops report
 3. Use `concurrency: cancel-in-progress: true` on all PR workflows
@@ -806,7 +806,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 5. Use Linux runners for everything possible — only use macOS/Windows when required
 6. Consider GitHub's larger runners for builds where faster execution reduces total minutes used
 
-**Fix procedure:**
+#### Fix procedure — Cost Surprises
 1. If overages occurred, identify top consumers: Settings → Billing → Actions usage
 2. Add `timeout-minutes` to the longest-running jobs
 3. Add `concurrency` to workflows triggered by `push` and `pull_request`
@@ -821,13 +821,13 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub Actions logs are unstructured text streams. There's no log level filtering, no structured output format, and the web UI struggles with logs over ~10MB. Actions don't have native APM or error extraction — what you log is what you get.
 
-**Consequences:**
+#### Consequences — Log Viewing Broken at Scale
 - Incident response slowed by poor log accessibility
 - Engineers copy-paste logs into external tools to search them
 - Noisy logs hide actual errors — warnings and verbose output drown signal
 - In on-call situations, finding the root cause in logs can take longer than fixing it
 
-**Prevention protocol:**
+#### Prevention protocol — Log Viewing Broken at Scale
 1. Use GitHub's `::group::` / `::endgroup::` log folding to collapse verbose sections:
    ```yaml
    - name: Install dependencies
@@ -854,7 +854,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 4. Export structured logs to an external system (Datadog, Loki, CloudWatch) via a post-job step
 5. Keep individual job log output under 1MB by suppressing verbose tool output where possible
 
-**Fix procedure:**
+#### Fix procedure — Log Viewing Broken at Scale
 1. Use browser Ctrl+F in the log view for keyword search
 2. Download the raw log: `gh run view {run_id} --log > run.log && grep -n "ERROR|FAIL|fatal" run.log`
 3. Use `gh run view {run_id} --log-failed` to show only failed step logs
@@ -868,13 +868,13 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub Actions workflows are code in the repo but are rarely assigned to an owner in the same way application modules are. CODEOWNERS entries for workflows are uncommon. There's no built-in workflow registry or ownership model. As orgs grow, workflow files accumulate without clear stewardship.
 
-**Consequences:**
+#### Consequences — No Workflow Ownership / Blame Model
 - No one is responsible for workflow maintenance or on-call response
 - Broken workflows sit unfixed for weeks because everyone assumes someone else owns it
 - Duplicate workflows created because engineers don't know existing ones exist
 - Security vulnerabilities in workflow files go unpatched
 
-**Prevention protocol:**
+#### Prevention protocol — No Workflow Ownership / Blame Model
 1. Create a workflow ownership registry in the repo wiki or as a YAML manifest:
    ```yaml
    # .github/workflow-owners.yml
@@ -900,7 +900,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 4. Create a Slack channel or PagerDuty service specifically for workflow alerts
 5. Quarterly audit: review all workflows, confirm owners are still correct
 
-**Fix procedure:**
+#### Fix procedure — No Workflow Ownership / Blame Model
 1. Use `git log --follow .github/workflows/broken.yml` to find the original author
 2. Check CODEOWNERS for the file's listed team
 3. Use Slack to ask in the team's channel — someone usually knows
@@ -952,14 +952,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >           github-token: ${{ secrets.GITHUB_TOKEN }}
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Stale Deployment Artifacts
 1. Always pass `run-id:` explicitly in `download-artifact` — use job outputs to thread the ID
 2. Include the git SHA in the artifact name: `name: dist-${{ github.sha }}`
 3. Verify the artifact's git SHA matches the expected deploy SHA before deploying
 4. Use container image tags (based on git SHA) for deployments rather than artifact files — image tags are immutable and verifiable
 5. For production deploys, always re-run the full workflow (not just the deploy job)
 
-**Fix procedure:**
+#### Fix procedure — Stale Deployment Artifacts
 1. If a stale artifact was deployed: identify which SHA was actually deployed by checking artifact metadata
 2. Trigger a new full workflow run to rebuild and deploy the correct version
 3. Verify post-deploy that the running version matches the expected SHA (via version endpoint or container label)
@@ -972,12 +972,12 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** CI provides async feedback by design, but long feedback loops mean the developer has left the problem space by the time results arrive. The cognitive cost of context re-entry is underappreciated.
 
-**Consequences:**
+#### Consequences — Context Switching Overhead
 - PRs take 2-5 days to merge when they should take hours
 - Developer flow state destroyed multiple times per day
 - In financial data orgs: delayed PRs mean delayed pipeline updates, which can miss market data windows
 
-**Prevention protocol:**
+#### Prevention protocol — Context Switching Overhead
 1. Optimize for fast first feedback — a lint/type-check job that completes in 90 seconds tells the developer quickly if there's a trivial error
 2. Structure workflows with a "fast gate" first job and "slow integration" second job:
    ```yaml
@@ -1001,7 +1001,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 5. Set `--fail-fast: true` in matrix builds so failures surface quickly
 6. For distributed teams: tag PRs with the author's time zone, prioritize reviews within their working hours
 
-**Fix procedure:**
+#### Fix procedure — Context Switching Overhead
 1. When context switching cost is identified as a team problem: measure average CI duration and time-to-review
 2. Prioritize CI optimization as an engineering investment with measurable ROI
 3. Consider parallelizing test suites with test splitting tools (e.g., `jest --shard=1/4`)
@@ -1040,19 +1040,19 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >   cancel-in-progress: false
 > ```
 
-**Consequences:**
+#### Consequences — Concurrency Control Confusion
 - Race conditions in deployments — two deploys stepping on each other
 - Cancelled deploy leaving environment in inconsistent state
 - Queue backlog if `cancel-in-progress: false` is set and many runs accumulate
 
-**Prevention protocol:**
+#### Prevention protocol — Concurrency Control Confusion
 1. Always use `concurrency:` on any workflow that modifies shared state (deploy, migration, publish)
 2. Use `cancel-in-progress: false` for deploy workflows — never cancel a deploy mid-run
 3. Use `cancel-in-progress: true` for PR validation — safe to cancel because the runner just restarts
 4. Include the environment in the concurrency group key to allow parallel deploys to dev/staging/prod
 5. For critical deploys, use GitHub Environments with "required reviewers" as a human gate
 
-**Fix procedure:**
+#### Fix procedure — Concurrency Control Confusion
 1. If a partial deploy occurred due to cancellation: manually complete or rollback the operation
 2. Check the deployment environment status before re-running
 3. Update concurrency config to prevent future premature cancellation
@@ -1108,14 +1108,14 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >       python: '3.11'  # only test latest Python on Windows
 > ```
 
-**Prevention protocol:**
+#### Prevention protocol — Matrix Build Explosion
 1. Calculate job count before committing a matrix change: multiply all dimension sizes
 2. Use `include:` instead of full dimensions when you want specific combinations
 3. Use `exclude:` to trim specific combinations from a full matrix
 4. Set `max-parallel:` to limit concurrent jobs: `strategy: max-parallel: 5`
 5. Require PR review for any change that adds a matrix dimension
 
-**Fix procedure:**
+#### Fix procedure — Matrix Build Explosion
 1. If a runaway matrix is queued: cancel the run immediately via the Actions UI
 2. Reduce the matrix using `include:` with only the required combinations
 3. Review the minutes consumed and adjust the billing alert threshold
@@ -1154,19 +1154,19 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >           - "*"
 > ```
 
-**Consequences:**
+#### Consequences — Action Version Pinning Fatigue
 - Security hygiene vs. developer experience tension
 - Dependabot PR noise leads to "Dependabot blindness" — PRs auto-merged without review
 - Legitimate security updates missed in the noise
 
-**Prevention protocol:**
+#### Prevention protocol — Action Version Pinning Fatigue
 1. Enable Dependabot for GitHub Actions with a weekly schedule, not daily
 2. Use Dependabot's `groups:` to batch related updates into one PR
 3. Always add a `# v1.2.3` comment after the SHA so humans can read the version
 4. Configure auto-merge for Dependabot PRs that pass CI — reduce the manual burden
 5. Use `zizmor` or `pin-github-action` tool to automate the initial SHA pinning
 
-**Fix procedure:**
+#### Fix procedure — Action Version Pinning Fatigue
 1. If Dependabot was disabled: re-enable with the grouped weekly schedule
 2. Run `pin-github-action` to convert all tag references to SHAs in one pass:
    ```bash
@@ -1182,12 +1182,12 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub's PR review interface shows raw diffs. For application code, reviewers have language-specific understanding and tests to verify behavior. For GitHub Actions YAML, there's no semantic diff tool, no "before/after behavior" summary, and no automated test that proves the new workflow behaves as intended.
 
-**Consequences:**
+#### Consequences — No Native Workflow Diff View
 - Security regressions merged by approving reviewers who didn't understand the impact
 - Broken workflows merged because the reviewer didn't trace all conditional paths
 - Over time: workflow files accumulate technical debt because reviewers can't effectively review them
 
-**Prevention protocol:**
+#### Prevention protocol — No Native Workflow Diff View
 1. Require workflow PR authors to include a "Behavior Change Summary" in the PR description:
    - What triggers changed?
    - What permissions changed?
@@ -1210,7 +1210,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
    zizmor .github/workflows/
    ```
 
-**Fix procedure:**
+#### Fix procedure — No Native Workflow Diff View
 1. When a problematic workflow change is discovered post-merge: revert immediately via `git revert`
 2. Use `git show HEAD~1:.github/workflows/deploy.yml` to compare to the pre-change version
 3. Rebuild the correct version of the workflow using both versions as reference

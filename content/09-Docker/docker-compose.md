@@ -453,7 +453,7 @@ docker compose pull airflow-webserver
 docker compose up -d --force-recreate airflow-webserver
 ```
 
-**Safe rolling update pattern for production-like stacks:**
+#### Safe rolling update pattern for production-like stacks
 
 ```bash
 # 1. Pull new images while stack is running (no downtime yet)

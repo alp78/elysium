@@ -176,7 +176,7 @@ CMD ["--env", "prod"]
 
 The `.dockerignore` file excludes files from the **build context** — the directory Docker sends to the daemon at build time. Excluding unnecessary files speeds up builds and prevents secrets from leaking into images.
 
-**Python project `.dockerignore`:**
+#### Python project `.dockerignore`
 ```
 # Version control
 .git
@@ -338,7 +338,7 @@ CMD ["python", "-m", "pipeline.run"]
 
 **Why layers matter here:** without multi-stage, a single `pip install` on a slim image still leaves behind the wheel build cache and any C-extension build dependencies pulled in by pip. Multi-stage is the only way to guarantee those artifacts never appear in the final image.
 
-**Build a specific stage for debugging:**
+#### Build a specific stage for debugging
 ```bash
 # Build only the builder stage to inspect installed packages
 docker build --target builder -t data-pipeline-pipeline:debug .

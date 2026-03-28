@@ -130,7 +130,7 @@ git blame src/transform.py
 # In plain English: Who wrote each line of this file? (Not for blaming — for understanding context.)
 ```
 
-**blame output format:**
+#### blame output format
 
 ```
 ^cd97a43 (alice 2026-03-10 14:22:31 +0100  42) def transform_ohlcv(df):

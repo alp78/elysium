@@ -18,7 +18,7 @@ Git remotes are named references to copies of a repository hosted on a server (t
 
 ## Viewing Configured Remotes
 
-**Show all configured remotes and their fetch/push URLs:**
+#### git remote -v — show all configured remotes and URLs
 
 ```bash
 git remote -v
@@ -41,7 +41,7 @@ upstream  https://github.com/original-org/repo.git (push)
 
 ## Adding a Remote (Fork Workflow)
 
-**Register a new remote connection:**
+#### git remote add upstream — register a fork's upstream remote
 
 ```bash
 git remote add upstream https://github.com/original/repo.git
@@ -70,7 +70,7 @@ When you fork a repository on GitHub, your fork becomes `origin`. The original r
 
 ## Fetching: Download Without Merging
 
-**Download all new branches and commits from origin without touching your working files:**
+#### git fetch origin — download new branches without touching working files
 
 ```bash
 git fetch origin
@@ -86,7 +86,7 @@ Fetch is always safe. It updates your remote-tracking branches (e.g., `origin/ma
 
 ## Pruning: Clean Up Deleted Remote Branches
 
-**Fetch and remove stale remote-tracking references:**
+#### git fetch --prune — remove stale remote-tracking references
 
 ```bash
 git fetch --prune
@@ -105,7 +105,7 @@ When teammates delete branches on GitHub (e.g., after merging a PR), those branc
 
 ## Safe Force-Push After Rebase
 
-**Force-push a branch but only if no one else has pushed since your last fetch:**
+#### git push --force-with-lease — safe force-push after rebase
 
 ```bash
 git push --force-with-lease

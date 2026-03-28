@@ -47,10 +47,13 @@ function getText(node: any): string {
   return ""
 }
 
-/** Get the heading depth from a tag name, or 0 if not a heading */
+/** Get the heading depth from a tag name, or 0 if not an indexed heading.
+ *  Only h3 and h4 are indexed for search — h1/h2 are page-level structure,
+ *  h5/h6 are too granular. */
 function headingDepth(tagName: string): number {
-  const match = /^h([1-6])$/.exec(tagName)
-  return match ? parseInt(match[1], 10) : 0
+  if (tagName === "h3") return 3
+  if (tagName === "h4") return 4
+  return 0
 }
 
 /**
@@ -86,8 +89,20 @@ function extractSections(tree: Root): Section[] {
       const el = node as Element
       const depth = headingDepth(el.tagName)
 
+      // h1/h2: not indexed, but update the breadcrumb stack for context
+      const rawMatch = /^h([1-6])$/.exec(el.tagName)
+      if (rawMatch && depth === 0) {
+        const rawDepth = parseInt(rawMatch[1], 10)
+        const headingText = getText(el).trim()
+        while (headingStack.length > 0 && headingStack[headingStack.length - 1].depth >= rawDepth) {
+          headingStack.pop()
+        }
+        headingStack.push({ depth: rawDepth, text: headingText })
+        return // don't recurse into heading children
+      }
+
       if (depth > 0) {
-        // ── New heading found — flush current section and start new one ──
+        // ── h3/h4 heading — flush current section and start new one ──
         flushSection()
 
         const headingText = getText(el).trim()
@@ -98,7 +113,7 @@ function extractSections(tree: Root): Section[] {
           headingStack.pop()
         }
 
-        // Build breadcrumb from remaining stack
+        // Build breadcrumb from remaining stack (includes h1/h2 ancestors)
         const titles = headingStack.map((h) => h.text)
 
         // Push this heading onto the stack

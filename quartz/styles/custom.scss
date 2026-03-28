@@ -99,8 +99,8 @@ pre + p {
 
 /* ── Tables ──────────────────────────────────────────────────── */
 table {
-  font-size: 13.5px !important;
-  line-height: 1.55 !important;
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
   margin-top: 8px !important;
   margin-bottom: 8px !important;
   border-collapse: collapse;
@@ -112,9 +112,9 @@ table {
   background-color: #292e42 !important;
   color: #7aa2f7 !important;
   font-weight: 600 !important;
-  font-size: 13.5px !important;
+  font-size: 13px !important;
   letter-spacing: 0.02em;
-  padding: 8px 12px !important;
+  padding: 6px 10px !important;
   border-bottom: 2px solid #3b4261 !important;
   border-top: none !important;
   border-left: none !important;
@@ -125,8 +125,8 @@ table {
   background-color: #e0dfe4 !important;
   color: #2d2a5e !important;
   font-weight: 600 !important;
-  font-size: 13.5px !important;
-  padding: 8px 12px !important;
+  font-size: 13px !important;
+  padding: 6px 10px !important;
   border-bottom: 2px solid #c8c6d0 !important;
   border-top: none !important;
   border-left: none !important;
@@ -135,8 +135,8 @@ table {
 
 /* ── Cells ── */
 [saved-theme="dark"] td {
-  font-size: 13.5px !important;
-  padding: 8px 12px !important;
+  font-size: 12.5px !important;
+  padding: 5px 10px !important;
   border-bottom: 1px solid rgba(59, 66, 97, 0.5) !important;
   border-top: none !important;
   border-left: none !important;
@@ -144,8 +144,8 @@ table {
 }
 
 [saved-theme="light"] td {
-  font-size: 13.5px !important;
-  padding: 8px 12px !important;
+  font-size: 12.5px !important;
+  padding: 5px 10px !important;
   border-bottom: 1px solid rgba(208, 205, 216, 0.7) !important;
   border-top: none !important;
   border-left: none !important;

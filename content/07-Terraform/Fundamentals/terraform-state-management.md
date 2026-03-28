@@ -92,7 +92,7 @@ Lock Info:
   Created:   2026-03-22 14:00:00
 ```
 
-**If a `terraform apply` crashed mid-run and left the lock:**
+#### terraform force-unlock — remove stale lock after crashed apply
 
 ```bash
 # Force-unlock the state (use with caution — verify no other apply is running first)
@@ -122,7 +122,7 @@ terraform -chdir=infra state show google_cloud_run_v2_service.dashboard
 terraform -chdir=infra show
 ```
 
-**Example output of `state list`:**
+#### terraform state list — example output of managed resources
 
 ```
 google_artifact_registry_repository.data-pipeline

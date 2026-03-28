@@ -28,7 +28,7 @@ start_date = "2023-06-01"
 >>>>>>> feat/new-history
 ```
 
-**Reading the markers:**
+#### Reading the markers
 
 | Marker | Meaning |
 |--------|---------|
@@ -79,7 +79,7 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 
 ## Aborting a Merge
 
-**Cancel a merge and return to the state before merging started:**
+#### Cancel a merge and return to the state before merging started
 
 ```bash
 git merge --abort
@@ -94,7 +94,7 @@ Use this when you start a merge, find the conflicts too complex to resolve now, 
 
 ## Visual Merge Tools
 
-**Launch the configured visual merge tool:**
+#### Launch the configured visual merge tool
 
 ```bash
 git mergetool
@@ -124,7 +124,7 @@ After this, `git mergetool` opens VS Code for every conflicted file.
 
 Conflicts during `git rebase` work the same way mechanically, but the workflow continues differently than a merge. Git pauses the rebase at each conflicting commit and waits for you to resolve.
 
-**After resolving conflicts in a rebasing file, continue the rebase:**
+#### After resolving conflicts in a rebasing file, continue the rebase
 
 ```bash
 git add filename.py
@@ -134,7 +134,7 @@ git rebase --continue
 - `git add` — mark the file as resolved (same as in merge resolution)
 - `git rebase --continue` — apply the resolution and replay the next commit in the sequence
 
-**Other rebase escape hatches:**
+#### Other rebase escape hatches
 
 ```bash
 git rebase --abort   # Cancel the entire rebase, restore pre-rebase state
@@ -183,7 +183,7 @@ When `git stash pop` produces conflicts, the markers label the sides differently
 >>>>>>> Stashed changes      ← your stashed work
 ```
 
-**Resolution approach:**
+#### Resolution approach
 - Open each conflicted file
 - Remove the conflict markers and keep the correct version
 - In most cases you want your stashed changes (they contain the new work)
@@ -205,7 +205,7 @@ git push -u origin fix/stock-chart-missing-latest-date
 gh pr merge 7 --squash
 ```
 
-**The merge fails:**
+#### The merge fails
 
 ```
 Pull request #7 is not mergeable: the merge commit cannot be cleanly created.

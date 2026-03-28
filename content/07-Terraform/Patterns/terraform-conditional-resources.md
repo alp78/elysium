@@ -93,7 +93,7 @@ resource "google_compute_firewall" "allow_airflow_ui" {
 }
 ```
 
-**Function chain breakdown:**
+#### chomp + trimspace + http data source — function chain breakdown
 
 | Function | Input | Output |
 |----------|-------|--------|
@@ -127,7 +127,7 @@ resource "google_bigquery_dataset" "env_dataset" {
 
 This creates two datasets: `pipeline_dev` and `pipeline_prod`.
 
-**Accessing for_each resources:**
+#### resource["key"] — accessing for_each resource instances
 
 ```hcl
 # Reference a specific instance
@@ -182,22 +182,22 @@ With `var.allowed_ports = ["80", "443", "8080"]`, this creates three `allow` blo
 
 ## Ternary Operator Patterns
 
-**String interpolation:**
+#### "${var.project}-${var.env}" — string interpolation
 ```hcl
 name = "data-pipeline-${var.environment == "prod" ? "api" : "api-dev"}"
 ```
 
-**Boolean flag:**
+#### var.enable_x ? value : null — boolean flag ternary
 ```hcl
 deletion_protection = var.environment == "prod" ? true : false
 ```
 
-**Resource count based on variable:**
+#### count = var.create ? 1 : 0 — conditional resource creation
 ```hcl
 count = var.enable_monitoring ? 1 : 0
 ```
 
-**Nested ternary (use sparingly — becomes unreadable):**
+#### Nested ternary — use sparingly, becomes unreadable
 ```hcl
 machine_type = var.environment == "prod" ? "e2-standard-4" : (var.environment == "staging" ? "e2-standard-2" : "e2-medium")
 ```

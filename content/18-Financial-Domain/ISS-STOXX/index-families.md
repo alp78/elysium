@@ -27,7 +27,7 @@ date: 2026-03-28
 
 ### Blue-Chip Index
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="56 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 56</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
 
 > A stock market index composed of shares in the largest, most liquid, and most financially stable companies within a given market or region. Blue-chip indices serve as headline benchmarks and are widely used as underlyings for financial products including ETFs, futures, and options.
@@ -46,45 +46,40 @@ In plain terms, a blue-chip index is a list of the biggest, most well-known comp
 
 > [!example]- Source excerpts (5)
 >
-> **Global and regional indices | STOXX**
-> create sophisticated indices. In the STOXX Total Market Country Indices (TMI) family, each country
-> index aims to represent a broad market and covers at least 95% of the free-float market
-> capitalization of the respective country. Regional and country indices are also calculated for our
-> Benchmark and **Blue-chip index** families. Key benefits Compleme...
->
-> — [Global and regional indices | STOXX](https://stoxx.com/equity-indices/global-and-regional-indices)
->
-> **Stoxx Index Guide (PDF)**
-> STOXX INDEX METHODOLOGY GUIDE 99/639 9. STOXX BLUE-CHIP INDICES If it is added, the stock replaces
-> the smallest stock in the **Blue-Chip Index**. The announcement will be on the first trading day
-> of the month after close of markets. The implementation is together with the STOXX Total Market
-> indices. Spin-offs: Each spin-off stock qualifies for addit...
+> STOXX INDEX METHODOLOGY GUIDE 103/639 9. STOXX BLUE-CHIP INDICES STOXX GLOBAL 150 9.4.1. OVERVIEW
+> The STOXX Global 150 **Blue-Chip Index** is a combination of the regional STOXX Blue-Chip indices
+> for North America, Asia Pacific and Europe which cover the supersector leaders of the respective
+> region in terms of free-float market capitalization. Unive...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Dax Strategy Index Guide (PDF)**
-> are linked to the changes of **blue-chip index** DAX, applying a positive leverage factor to DAX
-> movements. Therefore, investing in leveraged indices yields x-fold the performance of DAX,
-> compared to the closing level from the last day of calculation. Short Indices are linked to the
-> inverse movement of **blue-chip index** DAX (TecDAX) (Section 3.3.1). B...
+> Monthly Index News / February 2026 Featured index The EURO STOXX 50® — the Eurozone’s leading
+> **blue-chip index** — turned 28 on February 26. The anniversary coincided with surging flows into
+> European equities that are impacting the index and the related trading ecosystem. The benchmark
+> jumped 22.1% in 2025 as EUR 7.3 billion flowed into 22 ETFs tra...
 >
-> — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
+> — [Monthly Index News February 2026 (PDF)](https://stoxx.com/monthly-index-news-february-2026)
 >
-> **Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX**
-> ed in November 2021. Figure 2: Index performance While SDAX has shown slightly higher volatility
-> than DAX in recent years, this was not always the case historically. Between 2008 and 2017, the
-> small-caps index had consistently lower annualized volatility — meaning it didn’t fluctuate as
-> much as the **blue-chip index**. “Small stocks attract a strong...
+> Digital Asset Blue Chip index and using Bitcoin Suisse as crypto data provider, said the digital
+> assets market is currently undergoing a “demand shock.” She estimated during the panel that demand
+> for bitcoin is running at about ten times the amount that is actually being mined. Amid such
+> uptake, a **blue-chip index** can bring transparency, help sta...
 >
-> — [Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX](https://stoxx.com/exploring-sdax-the-benchmark-for-german-small-companies)
+> — [IPE Webinar: Digital Assets – Exploring a new paradigm in investing | Blog po...](https://stoxx.com/ipe-webinar-digital-assets-exploring-a-new-paradigm-in-investing)
 >
-> **Qontigo and Eurex Launch First Collateral Indices Total Return Futures | STOXX**
-> g the index offer analogous performance to total-return swaps with reduced counterparty risk,
-> capital costs, collateral usage and bilateral margining charges. Gaining exposure to the implied
-> repo rate “The total return futures provide cost-efficient access to the total returns of Europe’s
-> benchmark **blue-chip index** whilst hedging the implied equi...
+> In March 2024, the single-stock weight cap in the DAX® benchmark was raised from 10% to 15%, a
+> move devised to keep the German **blue-chip index** diversified and representative of the
+> underlying economy. The change was backed by a wide range of stakeholders in a market consultation
+> and was aligned with international practices. For the first time si...
 >
-> — [Qontigo and Eurex Launch First Collateral Indices Total Return Futures | STOXX](https://stoxx.com/qontigo-and-eurex-launch-first-collateral-indices-total-return-futures)
+> — [DAX: A trading impact analysis of the 15% stock cap | Blog posts | STOXX](https://stoxx.com/dax-a-trading-impact-analysis-of-the-15-stock-cap)
+>
+> 50, STOXX USA 50, STOXX Canada 50, STOXX Hong Kong 50, STOXX Japan 50, STOXX Singapore 20 and
+> STOXX Australia 50 indices are part of this regular quarterly review. The new composition of these
+> indices can be found on the respective webpages at www.qontigo.com from Sep. 20, 2021. Changes
+> made to the **blue-chip index** series are being announced toda...
+>
+> — [Changes In Composition Of STOXX Blue-Chip Indices | Press releases | STOXX](https://stoxx.com/changes-in-composition-of-stoxx-blue-chip-indices-2)
 >
 
 ---
@@ -93,7 +88,7 @@ In plain terms, a blue-chip index is a list of the biggest, most well-known comp
 
 ### DAX
 
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,921 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,921</span>
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4,191 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 4,191</span>
 
 
 > The DAX (Deutscher Aktienindex) is the blue-chip index of the 40 largest and most liquid companies trading on the Frankfurt Stock Exchange. Launched in 1988 with a base value of 1,000 points, the DAX was expanded from 30 to 40 constituents in September 2021. It is a total-return index by default, meaning dividends are reinvested into the index calculation.
@@ -114,52 +109,47 @@ The DAX is Germany's most important stock market index. It functions like a scor
 
 > [!example]- Source excerpts (5)
 >
-> **Aurubis, K+S to join DAX 50 ESG index; Daimler Truck enters DAX ESG Target | ...**
-> nd **DAX** ESG Target indices combine the two most popular responsible-investing approaches:
-> negative screening and best-in-class ESG integration. The **DAX** 50 ESG was conceived as a
-> broad-market ESG benchmark with a larger composition than that of the flagship DAX. The DAX ESG
-> Target aims to reflect the DAX and follows an optimized weighing methodolo...
+> , too, with the notable exception of the COVID-19-induced sell-off in early 2020. Figure 2 shows
+> the **DAX** ESG Target’s active return in a dotted line. ‘Specific returns’ refers to the
+> idiosyncratic component from each stock’s return that can’t be explained by a style factor. The
+> study shows that the **DAX** ESG Target’s exposure to specific risks con...
 >
-> — [Aurubis, K+S to join DAX 50 ESG index; Daimler Truck enters DAX ESG Target | ...](https://stoxx.com/aurubis-ks-to-join-dax-50-esg-index-daimler-truck-enters-dax-esg-target)
+> — [DAX ESG Target: An optimal solution to risk, return and impact in German stoc...](https://stoxx.com/dax-esg-target-an-optimal-solution-to-risk-return-and-impact)
 >
-> **Neuer DAX-Index erweitert die Möglichkeiten für nachhaltiges Investieren in d...**
-> en weisen sie aber diejenigen transparenten Methoden und Liquiditätsanforderungen auf, die allen
-> **DAX**-Indizes gemein sind, und nutzen jeweils die besten verfügbaren Daten. Solche Optionen
-> bieten besondere Vorteile in einem Marktsegment, in dem Standardlösungen wenig erfolgversprechend
-> sind. [1] Der H**DAX** fasst alle Aktien zusammen die entweder im ...
+> The Index Data Distribution System contains various permission levels such as entity and users’
+> accesses, per Index Package level and subject to Licenses of Third-Party Data. - The “Current
+> Index Data Distribution System” refers to MD+Si and/or iSFTP solution, which is currently in place
+> and allows **DAX** clients to retrieve Index Data. - The “New ...
 >
-> — [Neuer DAX-Index erweitert die Möglichkeiten für nachhaltiges Investieren in d...](https://stoxx.com/neuer-dax-index-erweitert-die-moglichkeiten-fur-nachhaltiges-investieren-in-deutsche-aktien)
+> — [Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX_Equity_Indices_Simulation_Phase–from_Dec_18_2023_to_February_29_2024.pdf)
 >
-> **Unscheduled change in SDAX - May 26, 2020 | Press releases | STOXX**
-> sing SE shares will be deleted from S**DAX**. They will be replaced by MLP SE (DE0006569908).
-> Media Contact General Inquiries: media@qontigo.com Index Inquiries: Andreas von Brevern +49 (0) 69
-> 211 14284 These changes will become effective on 29 May 2020. The next scheduled index review is 4
-> June 2020. S**DAX**® is a registered trademark of Qontigo GmbH.
+> With X**DAX****DAX** DAX and X-DAX are merged and distributed using one ISIN. Base value and
+> dates: 1000 on December 30, 1987. 10.2. CALCULATION Calculation of X-DAX The factor applied to
+> discount the DAX future (FDAX) will be deducted from the daily deviation of the index future from
+> its underlying index (DAX). The X-DAX is calculated as follows: 1 Ind...
 >
-> — [Unscheduled change in SDAX - May 26, 2020 | Press releases | STOXX](https://stoxx.com/unscheduled-change-in-sdax-2)
+> — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
 >
-> **DAX tops 20,000 for first time on strength of international-focused constitue...**
-> ar factors. As such, the economy has underperformed other large nations in the European Union and
-> is significantly lagging the US. As some of the world’s biggest exporters, **DAX** companies are
-> however largely dependent on overseas revenues. According to a 2023 analysis from Deutsche Bank,
-> only 18% of **DAX** components’ sales are generated in Germany ...
+> ncial reports is retained as part of the indices’ own methodology. 4 This requirement is for
+> companies that are not yet **DAX** constituents. Existing **DAX** members that have negative
+> profitability can stay in the index. The requirement applies for the main DAX and is not extended
+> to the MDAX, SDAX or TecDAX. The rule refers to a positive EBITDA in th...
 >
-> — [DAX tops 20,000 for first time on strength of international-focused constitue...](https://stoxx.com/dax-tops-20000-for-first-time-on-strength-of-international-focused-constituents)
+> — [New DAX Rules, Part of Methodology Overhaul, Kick in in March 2021 | Blog pos...](https://stoxx.com/new-dax-rules-part-of-methodology-overhaul-kick-in-next-month)
 >
-> **DAX increases footprint in Japan | Press releases | STOXX**
-> Norinchukin Zenkyoren Asset Management lists **DAX** ETF in Tokyo Zug, 21 September 2023 – STOXX
-> Ltd. has announced the licensing of the **DAX** Index (JPY Hedged) to Norinchukin Zenkyoren Asset
-> Management Co., Ltd. (NZAM) in Japan. The index is used as an underlying for an ETF which will be
-> listed on the Tokyo Stock Exchange tomorrow. It is the 2nd D
+> X indices (Chart 2). Chart 2 – Sector allocation in **DAX** 50 ESG and **DAX** The ESG index
+> overweights the consumer, telecommunications, industrial, media and retail sectors, among others.
+> It has, on the other hand, a smaller representation of software and automobile stocks than the
+> benchmark. Unlike the DAX, the ESG index includes no utilities. Accom...
 >
-> — [DAX increases footprint in Japan | Press releases | STOXX](https://stoxx.com/dax-increases-footprint-in-japan)
+> — [Introducing the DAX 50 ESG Index | STOXX](https://stoxx.com/introducing-the-dax-50-esg-index)
 >
 
 ---
 
 ### DAX 50 ESG
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="235 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 235</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="193 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 193</span>
 
 
 > The DAX 50 ESG index comprises 50 large and liquid German equities selected from the HDAX universe (the combined constituents of DAX, MDAX, and TecDAX) that meet environmental, social, and governance (ESG) screening criteria. Companies involved in controversial weapons, tobacco, coal, nuclear energy, and military contracting, and those violating the UN Global Compact principles, are excluded.
@@ -180,52 +170,47 @@ Think of the DAX 50 ESG as a filtered version of the broader German stock market
 
 > [!example]- Source excerpts (5)
 >
-> **DAX 50 ESG Index to Serve as Benchmark for Active Fund | Blog posts | STOXX**
-> observing a continuous trend towards sustainable investing, and the **DAX 50 ESG** is the ideal
-> index to be used as the ESG flagship benchmark for the German equity market,” said Stephan
-> Flaegel, Global Head of Indices and Benchmarks at Qontigo. For a Qontigo whitepaper analyzing the
-> performance of the **DAX 50 ESG** Index, please click here. Featured i...
+> **DAX 50 ESG** Index, please click here. Featured index DAX® 50 ESG Index 1 Negative exclusions in
+> the **DAX 50 ESG** Index cover a Global Standards Screening as well as involvement in
+> controversial weapons, tobacco production, thermal coal, nuclear power and military contracting.
+> The base universe of the DAX 50 ESG Index is the HDAX universe, which com...
 >
 > — [DAX 50 ESG Index to Serve as Benchmark for Active Fund | Blog posts | STOXX](https://stoxx.com/dax-50-esg-index-benchmark-for-active-fund)
 >
-> **EURO STOXX 50 ESG and DAX 50 ESG Benchmarks Underlie Next Generation of Susta...**
-> on, or have power generation capacity that utilizes thermal coal. In addition to the exclusion
-> screens, 10% of companies with the lowest ESG scores are removed and replaced by companies with a
-> higher ESG score from the same ICB Supersector as the excluded companies. 2 The selection universe
-> for the **DAX 50 ESG** index is the HDAX® index, which comp...
->
-> — [EURO STOXX 50 ESG and DAX 50 ESG Benchmarks Underlie Next Generation of Susta...](https://stoxx.com/euro-stoxx-50-esg-and-dax-50-esg-benchmarks-underlie-new-sustainability-derivatives)
->
-> **DAX 50 ESG-Index an Raiffeisen Centrobank lizenziert | Press releases | STOXX**
-> ZUG, Aug. 27, 2020 – Der **DAX 50 ESG**-Index verwendet zwei sich ergänzende Ansätze, um
-> ESG-Prinzipien abzubilden: standardisierte Negativ-Screens für Unternehmen, die in kontroversen
-> oder nicht-nachhaltigen Geschäftsfeldern aktiv sind, und ESG-Scores. Die Methodologie ist so
-> konzipiert, dass ein nachhaltiger deutscher Aktienm
->
-> — [DAX 50 ESG-Index an Raiffeisen Centrobank lizenziert | Press releases | STOXX](https://stoxx.com/dax-50-esg-index-an-raiffeisen-centrobank-lizenziert)
->
-> **Aurubis, K+S to join DAX 50 ESG index; Daimler Truck enters DAX ESG Target | ...**
-> th a larger composition than that of the flagship DAX. The DAX ESG Target aims to reflect the DAX
-> and follows an optimized weighing methodology whose objective is to improve the portfolio’s ESG
-> score and decrease its carbon footprint relative to the benchmark, while limiting the tracking
-> error. The **DAX 50 ESG** serves as underlying for respective ...
->
-> — [Aurubis, K+S to join DAX 50 ESG index; Daimler Truck enters DAX ESG Target | ...](https://stoxx.com/aurubis-ks-to-join-dax-50-esg-index-daimler-truck-enters-dax-esg-target)
->
-> **Germany’s LBBW licenses DAX 50 ESG decrement index for structured products | ...**
-> stant markdown of 4% per annum, accruing on a daily basis. NR (net return) indices include all
-> dividends paid by constituent companies, after tax. The ‘id’ suffix in the name denotes a DAX
-> index that has been designed or customized specially for one client’s use. German sustainability
-> benchmark The **DAX 50 ESG** Index is a broad-market ESG benchmar...
+> Germany’s Landesbank Baden-Württemberg (LBBW) has licensed the id**DAX 50 ESG** NR Decrement 4.0%
+> Index, derived from the DAX® 50 ESG Index, to issue structured products with efficient exposure to
+> sustainability leaders in the German equity market. The id**DAX 50 ESG** NR Decrement 4.0% Index
+> replicates the performance of the DAX 50 ESG NR Index assumin...
 >
 > — [Germany’s LBBW licenses DAX 50 ESG decrement index for structured products | ...](https://stoxx.com/germanys-lbbw-licenses-dax-50-esg-decrement-index-for-structured-products)
+>
+> At the same time, we noticed that no investable index with a sustainable approach on German
+> equities existed before the launch of the **DAX 50 ESG**. With the launch of the ETF, we extend
+> our ESG product universe to cover a key market.” What type of investor did you have in mind when
+> devising the Lyxor **DAX 50 ESG** UCITS ETF? “Pretty much every invest...
+>
+> — [Pulse Online Q&amp;A: Lyxor’s Arne Scheehl on New DAX 50 ESG ETF | Blog posts...](https://stoxx.com/pulse-online-qa-lyxors-arne-scheehl-on-new-dax-50-esg-etf)
+>
+> ZUG, August 27, 2020 – Qontigo has licensed the DAX® 50 ESG Index to the Austrian Raiffeisen
+> Centrobank as an underlying for a certificate. The **DAX 50 ESG** index employs two complementary
+> approaches to incorporate ESG principles into the selection criteria: standardized negative
+> screens for companies that are involved in controversial or unsustai...
+>
+> — [DAX 50 ESG Index Licensed To Raiffeisen Centrobank | Press releases | STOXX](https://stoxx.com/dax-50-esg-index-licensed-to-raiffeisen-centrobank)
+>
+> Index Update Zug, December 6th, 2023 Results of regular review for **DAX 50 ESG** Index. No
+> composition changes effective on December 18, 2023 Dear Customer, STOXX Ltd. today announced the
+> new composition of **DAX 50 ESG** Index as part of the regular review. Date Index ISIN Company
+> Name Changes Rules Applied 06.12.2023 DAX 50 ESG - - - - For more infor...
+>
+> — [Index Update Dax 50 Esg Index Eng 20231206 (PDF)](https://www.stoxx.com/document/News/2023/December/Index_Update_DAX_50_ESG_Index_ENG_20231206.pdf)
 >
 
 ---
 
 ### DAX ESG Target
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="138 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 138</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="123 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 123</span>
 
 
 > The DAX ESG Target index is derived from the DAX universe and applies a best-in-class ESG optimisation approach. The index aims to achieve a significantly improved aggregate ESG score relative to the parent DAX index while maintaining similar risk and return characteristics. It uses an optimisation framework that maximises the ESG score subject to constraints on tracking error, sector weights, and individual stock weights.
@@ -246,7 +231,13 @@ In everyday language, the DAX ESG Target takes the standard DAX and reweights it
 
 > [!example]- Source excerpts (5)
 >
-> **Aurubis, K+S to join DAX 50 ESG index; Daimler Truck enters DAX ESG Target | ...**
+> , too, with the notable exception of the COVID-19-induced sell-off in early 2020. Figure 2 shows
+> the **DAX ESG Target**’s active return in a dotted line. ‘Specific returns’ refers to the
+> idiosyncratic component from each stock’s return that can’t be explained by a style factor. The
+> study shows that the **DAX ESG Target**’s exposure to specific risks con...
+>
+> — [DAX ESG Target: An optimal solution to risk, return and impact in German stoc...](https://stoxx.com/dax-esg-target-an-optimal-solution-to-risk-return-and-impact)
+>
 > Siemens Energy AG The DAX 50 ESG and **DAX ESG Target** indices combine the two most popular
 > responsible-investing approaches: negative screening and best-in-class ESG integration. The DAX 50
 > ESG was conceived as a broad-market ESG benchmark with a larger composition than that of the
@@ -254,37 +245,26 @@ In everyday language, the DAX ESG Target takes the standard DAX and reweights it
 >
 > — [Aurubis, K+S to join DAX 50 ESG index; Daimler Truck enters DAX ESG Target | ...](https://stoxx.com/aurubis-ks-to-join-dax-50-esg-index-daimler-truck-enters-dax-esg-target)
 >
-> **DAX ESG Target: An optimal solution to risk, return and impact in German stoc...**
-> SG scores.3 Unlike other ESG Target indices, there is no removal of companies based solely on low
-> ESG scores. The optimization weighting process is then applied. A new whitepaper4 from Melissa
-> Brown, Managing Director, Applied Research at Qontigo, examines the performance and
-> characteristics of the **DAX ESG Target** Index in terms of risk, return a...
->
-> — [DAX ESG Target: An optimal solution to risk, return and impact in German stoc...](https://stoxx.com/dax-esg-target-an-optimal-solution-to-risk-return-and-impact)
->
-> **DAX ESG Target Index selected as underlying index for a new iShares ETF | Pre...**
-> month, the German federal government announced a new green financing strategy to steer capital
-> towards environmental projects and develop Germany into a major hub for sustainable finance.
-> Germany is taking a leading position on the global stage with a strong trend towards sustainable
-> investing. The **DAX ESG Target** Index is an innovative solution ...
+> ), tobacco, thermal coal, nuclear power, and oil sands. Companies that are excluded from the index
+> as a result of these screenings are then replaced from the universe of the HDAX (DAX, MDAX and
+> TecDAX) based on market capitalization and ESG score to complete the number of 30 constituents
+> again. The **DAX ESG Target** is licensed to BlackRock for an ...
 >
 > — [DAX ESG Target Index selected as underlying index for a new iShares ETF | Pre...](https://stoxx.com/dax-esg-target-index-selected-as-underlying-index-for-a-new-ishares-etf)
 >
-> **Benchmark DAX Grows to 40 Stocks – What’s the Impact on the DAX ESG Target In...**
-> characteristics of DAX while applying ESG screens, integrating ESG scores and reducing the
-> portfolio’s carbon intensity by at least 30%. The index has the same number of constituents as
-> DAX, replacing those stocks that fail to meet the ESG selection criteria with stocks in the HDAX®
-> universe.1 The **DAX ESG Target** Index has an ex-ante tracking err...
+> Index Update Zug, December 6th, 2023 STOXX changes composition of **DAX ESG Target** index
+> effective on December 18, 2023 Dear Customer, STOXX Ltd. today announced the new composition of
+> **DAX ESG Target** Index as part of the regular review. Date Index ISIN Company Name Changes Rules
+> Applied 06.12.2023 DAX ESG Target DE000A12DM80 SCOUT24 SE NA O.N. Add...
+>
+> — [Index Update Composition Changes In Dax Esg Target Index En 20231206 (PDF)](https://www.stoxx.com/document/News/2023/December/Index_Update_Composition_Changes_in_DAX_ESG_Target_Index_EN_20231206.pdf)
+>
+> On September 20, DAX® Index will expand from 30 to 40 constituents. This enlargement will be
+> reflected as well in the DAX® ESG Target Index, an ESG-enhanced version of the flagship German
+> benchmark. The **DAX ESG Target** Index aims to mirror the risk and return characteristics of DAX
+> while applying ESG screens, integrating ESG scores and reducing t...
 >
 > — [Benchmark DAX Grows to 40 Stocks – What’s the Impact on the DAX ESG Target In...](https://stoxx.com/dax_esg_target_and_dax_reform_2021)
->
-> **Scout24 to join DAX ESG Target index as Hellofresh exits; Siemens Energy ente...**
-> indices track mid-cap companies. For an overview of the DAX ESG indices, visit a recent blog post.
-> The DAX 50 ESG serves as underlying for respective ETFs managed by Lyxor Asset Management and
-> Credit Suisse Asset Management, for structured products, and for futures and options listed on
-> Eurex. The **DAX ESG Target** underlies an ETF managed by Black...
->
-> — [Scout24 to join DAX ESG Target index as Hellofresh exits; Siemens Energy ente...](https://stoxx.com/scout24-to-join-dax-esg-target-index-as-hellofresh-exits-siemens-energy-enters-dax-esg-screened)
 >
 
 ---
@@ -293,7 +273,7 @@ In everyday language, the DAX ESG Target takes the standard DAX and reweights it
 
 ### eb.rexx Bond Indices
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > The eb.rexx index family tracks the performance of the most liquid German government bonds (Bundesanleihen, Bundesobligationen, and Bundesschatzanweisungen) traded on the Eurex Bonds electronic trading platform. Sub-indices cover different maturity buckets (1-3 years, 3-5 years, 5-7 years, 7-10 years, and 10+ years). Prices are based on real-time tradeable quotes rather than dealer estimates.
@@ -312,9 +292,8 @@ The eb.rexx indices measure how German government bonds are performing. Unlike m
 > [!tip] Related terms
 > [[#EUROGOV Bond Indices]] | [[#STOXX ICE Fixed Income Sustainability Indices]] | [[index-construction#Bond Index]]
 
-> [!example]- Source excerpts (4)
+> [!example]- Source excerpts (3)
 >
-> **eb.rexx Bond indices | STOXX**
 > Solutions **eb.rexx Bond indices** German government bond indices based on ICE data The **eb.rexx
 > Bond indices** cover the German government bond market with both total return and price return
 > indices with monthly rebalancing. In December 2024, STOXX partnered with ICE to calculate,
@@ -322,15 +301,13 @@ The eb.rexx indices measure how German government bonds are performing. Unlike m
 >
 > — [eb.rexx Bond indices | STOXX](https://stoxx.com/fixed-income-indices/eb-rexx-bond-indices)
 >
-> **STOXX and ICE collaborate on new suite of fixed income indices | Press releas...**
-> r precise, granular access to the German bond market.” Brett Pybus, Global Co-Head of iShares
-> Fixed Income ETFs for BlackRock For more information about ICE index solutions, please visit
-> https://www.ice.com/fixed-income-data-services/index-solutions. STOXX Ltd. is the owner and
-> administrator of the **eb.rexx Bond Indices** and will be the owner and ...
+> We’re thrilled to work with STOXX and look forward to continuing to work together on new products
+> and services.” Chris Edmonds, President of ICE Fixed Income and Data Services Separately, STOXX is
+> already leveraging ICE’s fixed income pricing and reference data for calculation and reporting for
+> its **eb.rexx Bond Indices**, which tracks the market f...
 >
 > — [STOXX and ICE collaborate on new suite of fixed income indices | Press releas...](https://stoxx.com/stoxx-and-ice-collaborate-on-new-suite-of-fixed-income-indices)
 >
-> **New index launches | STOXX**
 > er of technology and data, to support a suite of fixed income climate indices launched on June 2.
 > The new indices expand STOXX’s presence in the fixed income segment and strengthen its
 > collaboration with ICE, which already provides pricing and reference data for calculation and
@@ -338,20 +315,12 @@ The eb.rexx indices measure how German government bonds are performing. Unlike m
 >
 > — [New index launches | STOXX](https://stoxx.com/category/new-index-launches)
 >
-> **CSP Reports | STOXX**
-> ices Factor-Based indices Factor-based indices overview Factor and ESG-X Factor indices Equity
-> factor indices Industry Neutral Factor indices Dividend indices Minimum Variance indices
-> Volatility indices Fixed Income indices Fixed Income indices overview STOXX ICE Fixed Income
-> Sustainability indices **eb.rexx Bond indices** EUROGOV Bond indices Digit...
->
-> — [CSP Reports | STOXX](https://stoxx.com/csp-reports)
->
 
 ---
 
 ### EURO STOXX 50
 
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,736 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,736</span>
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,306 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,306</span>
 
 
 > The EURO STOXX 50 is Europe's leading blue-chip index, comprising 50 of the largest and most liquid stocks from Eurozone countries. Constituents are selected from the EURO STOXX index (the Eurozone subset of the STOXX Europe 600) using free-float market capitalisation ranking, subject to a review buffer and sector representation considerations. It was launched on 26 February 1998 with a base value of 1,000 as of 31 December 1991.
@@ -374,52 +343,47 @@ The EURO STOXX 50 is the benchmark most people think of when they talk about Eur
 
 > [!example]- Source excerpts (5)
 >
-> **BlackRock launches ETF tracking EURO STOXX 50 ESG | Blog posts | STOXX**
-> BlackRock has introduced an iShares ETF tracking the **EURO STOXX 50**® ESG, the Eurozone’s
-> sustainability benchmark. The fund was listed on the Frankfurt Stock Exchange last July. The
-> **EURO STOXX 50** ESG index reflects the benchmark EURO STOXX 50® after standard ESG exclusion
-> screens are applied for global norms1, controversial weapons, small arms, m...
+> The replacement will be the largest company in the peer group with an ESG score higher than that
+> of the exiting stock. **EURO STOXX 50** ESG Index components are weighted by their market
+> capitalization, maintaining the same methodology as the benchmark. As is the case with other STOXX
+> ESG indices, the **EURO STOXX 50** ESG includes a ‘fast exit’ rule. T...
 >
-> — [BlackRock launches ETF tracking EURO STOXX 50 ESG | Blog posts | STOXX](https://stoxx.com/blackrock-launches-ishares-etf-tracking-euro-stoxx-50-esg)
+> — [EURO STOXX 50 ESG Index – The Eurozone’s Sustainable Benchmark | Blog posts |...](https://stoxx.com/euro-stoxx-50-esg-index-the-eurozones-sustainable-benchmark)
 >
-> **Pandemic Fuels Trading in EURO STOXX 50 Dividend and Total Return Futures | B...**
-> d open interest in EURO STOXX Banks Index dividend futures Total return futures A record 1.9
-> million total return futures on the **EURO STOXX 50** Index traded in March this year (Figure 4).
-> Last month, volume amounted to 2.5 times the monthly average of 2019. Figure 4 – Traded volume and
-> open interest **EURO STOXX 50** Total Return Futures TRFs provide...
+> Sarah Ball Executive Director, Communications press@iss-stoxx.com The launch further expands the
+> collaboration between STOXX, a leading provider of benchmark and custom index solutions, and
+> Global X ETFs Europe, a specialist in thematic growth, income, commodity and defined-outcome
+> strategies. The **EURO STOXX 50**® Covered Call ATM (“At The Money”)...
+>
+> — [STOXX and Global X ETFs Europe combine on launch of Global X’s EURO STOXX 50 ...](https://stoxx.com/stoxx-and-global-x-etfs-europe-combine-on-launch-of-global-xs-euro-stoxx-50-covered-call-ucits-etf)
+>
+> In 2023, BlackRock’s iShares introduced an ETF tracking the **EURO STOXX 50**® ESG, the
+> sustainable version of the Eurozone’s flagship equities benchmark. The **EURO STOXX 50** ESG’s
+> methodology is simple: it excludes companies in controversial activities and up to 20% of the
+> least sustainable constituents from the EURO STOXX 50® benchmark, reducing rep...
+>
+> — [BlackRock’s Thurner on why iShares EURO STOXX 50 ESG ETF is attractive propos...](https://stoxx.com/blackrocks-thurner-on-why-ishares-euro-stoxx-50-esg-etf-is-attractive-proposition-for-both-retail-and-institutional-investors)
+>
+> Eurozone portfolios. Sustainability is one of a dozen families built from the flagship **EURO
+> STOXX 50** and its methodology. As investing becomes ever-more sophisticated, I expect to see more
+> solutions built around these index offerings, to the benefit of a wider public. This will further
+> enhance the **EURO STOXX 50** universe and pave the way for more...
+>
+> — [Q&amp;A with Lyxor and Qontigo: 20 Years of the EURO STOXX 50 ETF | Blog post...](https://stoxx.com/qa-20-years-of-the-euro-stoxx-50-etf)
+>
+> Several chief executive officers of large European banks have in recent weeks called on regulators
+> to lift restrictions on dividend payments. Figure 3 – Trading volume and open interest in EURO
+> STOXX Banks Index dividend futures Total return futures A record 1.9 million total return futures
+> on the **EURO STOXX 50** Index traded in March this year (F...
 >
 > — [Pandemic Fuels Trading in EURO STOXX 50 Dividend and Total Return Futures | B...](https://stoxx.com/pandemic-fuels-trading-in-euro-stoxx-50-dividend-and-total-return-futures)
->
-> **EURO STOXX 50 Index licensed to KB Asset Management | Press releases | STOXX**
-> rovide a compelling option to investors who are considering investing in Europe via individual
-> pension accounts.” Yung Gi Hong, Head of the Multi-Solution Division at KB Asset Management. “We
-> are very happy that we are now making further inroads into the Korean market and expanding the
-> reach of our **EURO STOXX 50** flagship index, which currently c...
->
-> — [EURO STOXX 50 Index licensed to KB Asset Management | Press releases | STOXX](https://stoxx.com/euro-stoxx-50-index-licensed-to-kb-asset-management)
->
-> **STOXX and Invesco collaborate on Invesco&#039;s launch of first ETF in Europe...**
-> g the **EURO STOXX 50**® Equal Weight index that provides equivalent Blue-chip representation of
-> supersector leaders in the Eurozone. Media Contact Sarah Ball Executive Director, Communications
-> press@iss-stoxx.com The new Invesco ETF tracks this underlying index comprising the same stocks as
-> the parent **EURO STOXX 50** index but weights them equally at...
->
-> — [STOXX and Invesco collaborate on Invesco&#039;s launch of first ETF in Europe...](https://stoxx.com/stoxx-and-invesco-collaborate-on-invescos-launch-of-first-etf-in-europe-tracking-euro-stoxx-50-equal-weight-index)
->
-> **Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...**
-> STOXX 50 and simultaneously sells a **EURO STOXX 50** ATM call option, traded at Eurex. The launch
-> expands the collaboration between STOXX, a leading provider of benchmark and custom index
-> solutions, and Global X ETFs Europe, a specialist in thematic growth, income, commodity and other
-> strategies. “The **EURO STOXX 50** is the flagship Eurozone equity i...
->
-> — [Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...](https://stoxx.com/global-x-etfs-europe-stoxx-launch-first-euro-stoxx-50-covered-call-etf)
 >
 
 ---
 
 ### EURO STOXX 50 Volatility (VSTOXX) Subindices
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="88 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 88</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="78 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 78</span>
 
 
 > The EURO STOXX 50 Volatility (VSTOXX) subindex family extends the headline VSTOXX index by providing implied-volatility measures across multiple fixed time horizons. Subindices are calculated for constant maturities of 30, 60, 90, 120, 150, 180, 210, 240, 300, 330, and 360 calendar days using interpolation of EURO STOXX 50 option prices, enabling a term structure view of expected Eurozone equity volatility.
@@ -441,7 +405,13 @@ While the headline VSTOXX captures 30-day implied volatility, the subindices sho
 
 > [!example]- Source excerpts (5)
 >
-> **Monthly Index News August 2021 (PDF)**
+> atility allocations are moved completely into a cash position. Dissemination Calendar: STOXX Eurex
+> Calendar 11.2. BASIC DATA Index ISIN Symbol EURO STOXX Volatility-Balanced (Excess Return)
+> CH0128045587 SX5EVBE EURO STOXX Volatility-Balanced (Total Return) CH0128045595 SX5EVBT 11.3.
+> CALCULATION The **EURO STOXX 50 Volatility**-Balanced index is calc...
+>
+> — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
+>
 > MONTHLY INDEX NEWS / August 2021 Volatility Indices Key Points European equity volatility ticked
 > lower in August, as measured by the **EURO STOXX 50 Volatility** (VSTOXX) Index, VDAX-New® Index
 > and EURO STOXX 50® Volatility of Volatility Index (V-VSTOXX). The VSTOXX and VDAX measure the
@@ -449,44 +419,33 @@ While the headline VSTOXX captures 30-day implied volatility, the subindices sho
 >
 > — [Monthly Index News August 2021 (PDF)](https://stoxx.com/monthly-index-news-august-2021)
 >
-> **Stoxx Strategy Guide (PDF)**
-> 0 BuyWrite (100%) index as sub-index of existing EURO STOXX 50 BuyWrite index • August 2013:
-> Detailed listing of RIC codes used for Interbank Rates in Chapter • November 2013: Introduction of
-> EURO STOXX 50 Futures Roll • March 2014: Chapter 5. STOXX Short and Leverage • April 2014:
-> Reformulation of **EURO STOXX 50 Volatility** (VSTOXX) methodology •...
->
-> — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
->
-> **Index Files Guide 20230619 (PDF)**
-> FILES GUIDE 7 Option type EURO STOXX 50 Option type (CALL/PUT) Text 8 2.4.3. Volatility - VVSTOXX
-> The extended historical index data files for **EURO STOXX 50 Volatility** of Volatility (V-VSTOXX)
-> Indices contain the portfolio of options on VSTOXX Futures with different exercise prices and
-> weighting used for index closing value calculation. The hist...
->
-> — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
->
-> **Istoxx Index Guide (PDF)**
-> iSTOXX® METHODOLOGY GUIDE 57/1024 5.1. DYNAMIC VSTOXX INDEX OVERVIEW The Dynamic VSTOXX Index is
-> an “index of indices”, i.e. its value is calculated based on the value of other underlying
-> indices. The indices constituting the Dynamic VSTOXX index are the **EURO STOXX 50 Volatility**
-> Short- Term Futures Index and **EURO STOXX 50 Volatility** Mid-Term Fut...
+> THODOLOGY GUIDE 57/1024 5.1. DYNAMIC VSTOXX INDEX OVERVIEW The Dynamic VSTOXX Index is an “index
+> of indices”, i.e. its value is calculated based on the value of other underlying indices. The
+> indices constituting the Dynamic VSTOXX index are the **EURO STOXX 50 Volatility** Short- Term
+> Futures Index and **EURO STOXX 50 Volatility** Mid-Term Futures Index...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **August market turmoil highlights benefit of dynamic volatility allocation  | ...**
-> future volatility – also known as implied volatility – in Eurozone stocks. The VSTOXX 30 days is
-> the most popular, and usually referred to as “the VSTOXX.” [2] Gross returns in euros. [3] Data
-> through July 31, 2024. [4] In addition, a stop-loss criterion is applied: if the weekly
-> performance of the **EURO STOXX 50 Volatility**-Balanced Excess Return...
+> ] Yet a key element of the strategy is that it attempts to bypass the types of drawdowns
+> experienced in 2008 and 2020 that can leave a long-lasting dampening effect on returns. In other
+> words, avoiding the deep losses more than offsets missing out on the big gains. A range of
+> volatility indices The **EURO STOXX 50 Volatility**-Balanced index is part...
 >
 > — [August market turmoil highlights benefit of dynamic volatility allocation  | ...](https://stoxx.com/august-market-turmoil-highlights-benefit-of-dynamic-volatility-allocation)
+>
+> 8 special cash dividends) 10 Divisor Index divisor Number 0 11 Dividend_points Calculated Dividend
+> Point factor Number 7 xxxxx (index symbol 12 for which report is Dividend Point Index value after
+> each event Number 2 provided) 2.4.2. Volatility - VSTOXX The extended historical index data files
+> for **EURO STOXX 50 Volatility** Indices contain the por...
+>
+> — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
 >
 
 ---
 
 ### EURO STOXX Banks
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="51 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 51</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
 
 > The EURO STOXX Banks index tracks the performance of Eurozone banking-sector stocks within the EURO STOXX index. It includes all constituents classified under the ICB Banks supersector. The index is widely used as a barometer of Eurozone financial-sector health and serves as the underlying for Eurex-listed futures and options.
@@ -507,7 +466,6 @@ This index is a focused lens on Eurozone banks. If you want to know how the big 
 
 > [!example]- Source excerpts (5)
 >
-> **Istoxx Index Guide (PDF)**
 > **EURO STOXX Banks** NR Index while assuming a constant dividend markdown. Over the course of a
 > year 5% of the performance of the underlying index is gradually subtracted according to the
 > corresponding day-to-day year fraction. DEFINITIONS Base value: 95.79 Base date: 31 December 1986
@@ -515,15 +473,13 @@ This index is a focused lens on Eurozone banks. If you want to know how the big 
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
-> ication to index types and currencies in the Overview section of EURO STOXX 50 Index October
-> 2025(2): Update to the Country classification screen of STOXX Global Quantum Computing Index
-> October 2025(3): Methodology update for STOXX Europe Total Market Defense Capped Index November
-> 2025: Deletion of **EURO STOXX Banks** 5/10/40 Index and update in th...
+> 3000 ESG-X STOXX Developed Markets 2400 ESG-X STOXX Emerging Markets 50 ESG-X STOXX Emerging
+> Markets 800 LO ESG-X STOXX Emerging Markets 1500 ESG-X EURO STOXX Large ESG-X EURO STOXX Mid ESG-X
+> EURO STOXX Small ESG-X STOXX Europe Large 200 ESG-X STOXX Europe Mid 200 ESG-X STOXX Europe Small
+> 200 ESG-X **EURO STOXX Banks** ESG-X STOXX Europe 600 Banks E...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Pandemic Fuels Trading in EURO STOXX 50 Dividend and Total Return Futures | B...**
 > ctor, there was particularly high activity in the dividend index futures as recently as last month
 > (Figure 3). Several chief executive officers of large European banks have in recent weeks called
 > on regulators to lift restrictions on dividend payments. Figure 3 – Trading volume and open
@@ -531,7 +487,6 @@ This index is a focused lens on Eurozone banks. If you want to know how the big 
 >
 > — [Pandemic Fuels Trading in EURO STOXX 50 Dividend and Total Return Futures | B...](https://stoxx.com/pandemic-fuels-trading-in-euro-stoxx-50-dividend-and-total-return-futures)
 >
-> **Dividend index futures reflect lasting effect on European banks from Ukraine ...**
 > exception has been Austria’s Raiffeisen Bank International, which has suspended its dividend for
 > 2021 and is considering exiting Russia. Yet, futures for 2023 and 2024 suggest dividend
 > expectations are still significantly below the levels before the invasion of Ukraine started.
@@ -539,20 +494,19 @@ This index is a focused lens on Eurozone banks. If you want to know how the big 
 >
 > — [Dividend index futures reflect lasting effect on European banks from Ukraine ...](https://stoxx.com/dividend-index-futures-reflect-lasting-effect-on-european-banks-from-ukraine-crisis)
 >
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> • Adding additional screens for Coal (>1%), Oil fuels (>10%), Gaseous fuels (>50% / Power
-> generation), to "Exclude investments in companies referred to in Article 12(1)(a) to (g) of CDR
-> (EU) 2020/1818 (PAB exclusionary screens)" EURO iSTOXX ESG-X & Ex Nuclear Power Multi Factor EURO
-> STOXX 50 ESG-X **EURO STOXX Banks** ESG-X EURO STOXX ESG-X EURO STO...
+> , while the benchmark gained 0.7%. Banks’ risk profile Banks show the highest risk profile among
+> the 19 EURO STOXX Sector Indices and are likely to remain key to the evolution of the Eurozone’s
+> equity market. This position may continue to underpin demand for derivatives that track the
+> industry. The **EURO STOXX Banks** Index has a 5-year beta coeffi...
 >
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
+> — [STOXX Sector Index Derivatives Trading Thrives | Blog posts | STOXX](https://stoxx.com/stoxx-sector-index-derivatives-trading-thrives)
 >
 
 ---
 
 ### EURO STOXX Select Dividend 30
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > The EURO STOXX Select Dividend 30 index selects 30 high-dividend-yielding stocks from the EURO STOXX index. Stocks are ranked by indicated annual net dividend yield, subject to filters on dividend growth history and payout ratio. The index is weighted by indicated annual net dividend yield rather than by market capitalisation, giving higher weight to stocks with the largest yields.
@@ -573,15 +527,13 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx Strategy Guide (PDF)**
-> ures Roll 5D EUR Excess Return CH0596712205 SX5EF5ER FESX 5 EURO STOXX 50 Futures Roll 5D EUR
-> Total Return CH0596712130 SX5EF5TR FESX 5 EURO STOXX 50 Quanto Futures Roll USD Excess Return
-> CH0328366148 SX5HFEER FESQ11 4 EURO STOXX 50 Quanto Futures Roll USD Total Return CH0328366155
-> SX5HFETR FESQ2 4 **EURO STOXX Select Dividend 30** Futures Roll EUR ...
+> STOXX Indices by simulating an investment into the a STOXX Futures Roll Total Return index,
+> adjusted for dividends. Index types, currencies, base values and dates: Index Types Currency Base
+> value and date EURO STOXX 50 Quanto Futures Price, net and gross return USD 100 as of 02.01.2001
+> Replication **EURO STOXX Select Dividend 30** Futures Price, net...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > nd indices are derived from their benchmark indices or their regional subsets. They cover a fixed
 > number of stocks which represent the highest- yielding stocks relative to their home markets in
 > the respective benchmark index. Universe: STOXX Europe Select Dividend 30, selected from STOXX
@@ -589,7 +541,6 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > nd indices are derived from their benchmark indices or their regional subsets. They cover a fixed
 > number of stocks which represent the highest- yielding stocks relative to their home markets in
 > the respective benchmark index. Universe: STOXX Europe Select Dividend 30, selected from STOXX
@@ -597,7 +548,6 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Istoxx Index Guide (PDF)**
 > e of the STOXX Select Dividend Futures Roll Indices assuming constant performance deductions per
 > annum. The performance deductions accrue constantly on a daily basis. The EURO iSTOXX Select
 > Dividend 30 Futures Roll TR Decrement 5% Index applies 5% annual deduction on the total return
@@ -605,7 +555,6 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **STOXX Indices to Underlie New Total Return Futures on Eurex | Blog posts | STOXX**
 > antageous alternative to over-the-counter derivatives at a time when the latter have been subject
 > to increasingly demanding regulation, Eurex also said. Underlying indices in focus The EURO STOXX
 > Banks Index tracks companies from the Eurozone’s Banks supersector and currently has 22
@@ -618,7 +567,7 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 
 ### EUROGOV Bond Indices
 
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > The EUROGOV index family measures the performance of euro-denominated government bonds issued by Eurozone sovereign issuers. The family includes a broad overall index and sub-indices segmented by maturity band (1-3y, 3-5y, 5-7y, 7-10y, 10y+) and by individual issuer country. Bonds must meet minimum outstanding amount and remaining maturity thresholds to qualify for inclusion.
@@ -638,16 +587,14 @@ The EUROGOV indices are the Eurozone equivalent of tracking how well government 
 > [!tip] Related terms
 > [[#eb.rexx Bond Indices]] | [[#STOXX ICE Fixed Income Sustainability Indices]] | [[index-construction#Bond Index]] | [[index-construction#Yield Curve]]
 
-> [!example]- Source excerpts (4)
+> [!example]- Source excerpts (3)
 >
-> **EUROGOV Bond indices | STOXX**
 > The **EUROGOV Bond indices** cover the German government bond market with total return and price
 > return versions with quarterly rebalancing (except for the Money Market index which is rebalanced
 > monthly). In August 2025, STOXX partnered with ICE to calculate, maintain and report the indices.
 >
 > — [EUROGOV Bond indices | STOXX](https://stoxx.com/fixed-income-indices/eurogov-bond-indices)
 >
-> **Index Files Guide 20230619 (PDF)**
 > ltiplied by the notional amount in Number 6 case a coupon was paid between rebalancing dates, 0
 > otherwise 18 Daily Return Daily Return of the index Number 18 19 Month-to-date Return
 > Month-to-date return of the index Number 8 20 Nominal Value Nominal Value of the index as at time
@@ -655,15 +602,6 @@ The EUROGOV indices are the Eurozone equivalent of tracking how well government 
 >
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
 >
-> **CSP Reports | STOXX**
-> ices Factor-based indices overview Factor and ESG-X Factor indices Equity factor indices Industry
-> Neutral Factor indices Dividend indices Minimum Variance indices Volatility indices Fixed Income
-> indices Fixed Income indices overview STOXX ICE Fixed Income Sustainability indices eb.rexx Bond
-> indices **EUROGOV Bond indices** Digital Asset indices Othe...
->
-> — [CSP Reports | STOXX](https://stoxx.com/csp-reports)
->
-> **STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX**
 > d reporting of its eb.rexx indices, which track the market for German government bonds in euros.
 > Those indices have become recognized benchmarks and currently underly USD 3.2 billion in ETFs
 > managed by BlackRock’s iShares.[4] The first eb.rexx indices were introduced in 2002. STOXX also
@@ -678,7 +616,7 @@ The EUROGOV indices are the Eurozone equivalent of tracking how well government 
 
 ### ISS STOXX Biodiversity Indices
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="41 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 41</span>
 
 
 > The ISS STOXX Biodiversity index family integrates biodiversity-related data from ISS ESG into equity index construction. These indices aim to reduce portfolio exposure to companies with high negative impacts on biodiversity, including deforestation, water pollution, and habitat destruction, while increasing exposure to companies offering biodiversity-positive solutions. The methodology draws on frameworks such as the Taskforce on Nature-related Financial Disclosures (TNFD) and the Kunming-Montreal Global Biodiversity Framework.
@@ -700,7 +638,6 @@ These indices are designed for investors who want their portfolios to account fo
 
 > [!example]- Source excerpts (5)
 >
-> **ISS STOXX Biodiversity Indices | STOXX**
 > e some methods in which an organization’s impact on biodiversity can be quantified and qualified
 > through scientific and carefully-researched data systems. In general, measuring a company’s
 > biodiversity impact is complex and requires a robust methodology to provide a thorough assessment.
@@ -708,7 +645,6 @@ These indices are designed for investors who want their portfolios to account fo
 >
 > — [ISS STOXX Biodiversity Indices | STOXX](https://stoxx.com/solutions/biodiversity-indices)
 >
-> **New report examines rationale, methodology of ISS STOXX Biodiversity indices ...**
 > assified into two categories: “Biodiversity” and “Biodiversity Leaders.”[3] The former tilt
 > exposure to companies with high scores in seven biodiversity- and climate-related SDG objectives,
 > while the latter include companies with high revenues derived from activities aligned with
@@ -716,7 +652,13 @@ These indices are designed for investors who want their portfolios to account fo
 >
 > — [New report examines rationale, methodology of ISS STOXX Biodiversity indices ...](https://stoxx.com/new-report-examines-rationale-methodology-of-iss-stoxx-biodiversity-indices)
 >
-> **New ISS STOXX indices use comprehensive framework to help investors address b...**
+> Tool Mean Species Abundance (MSA) Sustainable ISS ESG SDG Rating and Solutions Assessment
+> Development Goals Source: STOXX, ISS ESG The **ISS STOXX Biodiversity indices** can provide a
+> comprehensive framework to help investors integrate biodiversity considerations into their
+> portfolios. Learn more about **ISS STOXX Biodiversity indices** STOXX Ltd., ISS ...
+>
+> — [Stoxx Integrate Biodiversity Infographic 202402 (PDF)](https://stoxx.com/wp-content/uploads/2024/05/STOXX_Integrate_Biodiversity_Infographic_202402.pdf)
+>
 > ersity action through operations, products and services. The move to protect our habitats raises
 > the regulatory liabilities for corporates and investors, already facing biodiversity-related
 > physical, transition and systemic risks.[6] It is within these considerations that Qontigo has
@@ -724,7 +666,6 @@ These indices are designed for investors who want their portfolios to account fo
 >
 > — [New ISS STOXX indices use comprehensive framework to help investors address b...](https://stoxx.com/new-iss-stoxx-indices-use-comprehensive-framework-to-help-investors-address-biodiversity-challenges)
 >
-> **ISS STOXX indices use comprehensive framework to help investors address biodi...**
 > services that restore climate or biodiversity.[7] Indices in the first category comply with
 > current Article 8 requirements of the Sustainable Finance Disclosure Regulation (SFDR), while
 > those in the Leaders cluster are, as per present regulation, aligned with SFDR’s more ambitious
@@ -732,20 +673,12 @@ These indices are designed for investors who want their portfolios to account fo
 >
 > — [ISS STOXX indices use comprehensive framework to help investors address biodi...](https://stoxx.com/iss-stoxx-indices-use-comprehensive-framework-to-help-investors-address-biodiversity-challenges)
 >
-> **Unveiling the biodiversity paradigm: an emerging risk frontier for portfolios...**
-> elated regulatory landscape and challenges with data, and why investors should care. In a
-> follow-up article last December, we provided an update on the extreme deterioration of our nature
-> systems. Core solution and holistic framework To address those concerns was a driver behind the
-> creation of the **ISS STOXX Biodiversity indices**, said Antonio Ce...
->
-> — [Unveiling the biodiversity paradigm: an emerging risk frontier for portfolios...](https://stoxx.com/unveiling-the-biodiversity-paradigm-an-emerging-risk-frontier-for-portfolios)
->
 
 ---
 
 ### ISS STOXX Net Zero Transition Indices
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="49 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 49</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
 
 
 > The ISS STOXX Net Zero Transition index family is designed to align investment portfolios with a 1.5 degree Celsius global warming trajectory. These indices comply with the EU Paris-Aligned Benchmark (PAB) and Climate Transition Benchmark (CTB) regulations, incorporating greenhouse gas emissions data, forward-looking decarbonisation targets, and fossil fuel revenue thresholds. The methodology mandates a minimum year-on-year self-decarbonisation rate of 7% for PAB-aligned variants.
@@ -767,15 +700,13 @@ In simple terms, these indices reweight the stock market to favour companies tha
 
 > [!example]- Source excerpts (5)
 >
-> **ISS STOXX Net Zero Transition indices | STOXX**
-> of sector-specific performance indicators Real-world sector-specific decarbonization metrics are
-> used and the indices maintain exposure to systematically important companies from high-emitting
-> sectors that play a crucial role in the climate transition. Compliance with key regulatory
-> guidelines The **ISS STOXX Net Zero Transition indices** are aligne...
+> The **ISS STOXX Net Zero Transition indices** provide investors with a next-generation, optimized
+> set of indices that are focused on net-zero targets, real-world transition-aligned metrics, and
+> encompass all industries included in the parent universe. Key benefits Seeking alignment with the
+> IEA’s Net Zero P
 >
 > — [ISS STOXX Net Zero Transition indices | STOXX](https://stoxx.com/sustainability-indices-overview/climate-indices/iss-stoxx-net-zero-transition-indices)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 275/639 14. STOXX SUSTAINABILITY INDICES **ISS STOXX NET ZERO
 > TRANSITION INDICES** 14.25.1. OVERVIEW The **ISS STOXX Net Zero Transition Indices** track the
 > performance of securities from a selection of STOXX Benchmark Indices. These indices have the aim
@@ -783,15 +714,13 @@ In simple terms, these indices reweight the stock market to favour companies tha
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Monthly Index News August 2025 (PDF)**
-> Monthly Index News / August 2025 Net Zero Transition indices Key points The ISS STOXX® Developed
-> World Net Zero Transition added 2.7% in dollars last month. The **ISS STOXX Net Zero Transition
-> indices** are a next-generation, optimized set focused on net-zero targets, real-world
-> transition-aligned metrics, and encompassing of all industries included...
+> EU Climate Transition Benchmarks (CTBs) and EU Paris-aligned Benchmarks (PABs) indices. They stand
+> out for their inclusion of all key industries, integration of forward-looking metrics, and are
+> designed to encourage stewardship, while keeping expected tracking error below 1%. | Key features
+> of the **ISS STOXX Net Zero Transition indices** • Real-wor...
 >
-> — [Monthly Index News August 2025 (PDF)](https://stoxx.com/monthly-index-news-august-2025)
+> — [New ISS STOXX net zero indices adopt innovative, forward-looking approach to ...](https://stoxx.com/new-iss-stoxx-net-zero-indices-adopt-innovative-forward-looking-approach-to-carbon-transition)
 >
-> **STOXX DACH Webinar | STOXX**
 > Date March 25, 2025 Time 10:00 CET March 25, 2025 Time 10:00 CET Please note that this webinar
 > will be conducted in German. This webinar will be moderated by Veronika Kylburg, Head of Global
 > Benchmarks – DAX, STOXX. The STOXX team will cover the following topics: - **ISS STOXX Net Zero
@@ -799,13 +728,12 @@ In simple terms, these indices reweight the stock market to favour companies tha
 >
 > — [STOXX DACH Webinar | STOXX](https://stoxx.com/event/stoxx-dach-webinar-mar-25-2025)
 >
-> **History &amp; Milestones | STOXX**
-> ect qualitative and quantitative portfolio company risks, and meet evolving regulatory
-> requirements. Here are a few milestones that we achieved along the way: 2025 - Jun: STOXX launches
-> STOXX ICE Fixed Income Sustainability indices - May: STOXX launches 3 DAX composite indices - Jan:
-> STOXX launches **ISS STOXX Net Zero Transition indices** 2024 - Ma...
+> Skip to main content Looking for an index? Looking for other information? Select Your Account
+> STOXX Subscribe Our Solutions Back Index Featured indices DAX EURO STOXX 50 STOXX Europe 600 STOXX
+> World Equity indices Equity Factor indices **ISS STOXX Net Zero Transition indices** Artificial
+> Intelligence indices STOXX ICE Fixed Income Sustainability ind...
 >
-> — [History &amp; Milestones | STOXX](https://stoxx.com/company/stoxx-history-milestones)
+> — [CSP Reports | STOXX](https://stoxx.com/csp-reports)
 >
 
 ---
@@ -814,7 +742,7 @@ In simple terms, these indices reweight the stock market to favour companies tha
 
 ### MDAX
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="872 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 872</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="615 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 615</span>
 
 
 > The MDAX comprises 50 mid-cap companies that rank immediately below the DAX constituents in terms of order-book volume and free-float market capitalisation on the Frankfurt Stock Exchange. It represents the second tier of the German equity market and covers companies across all sectors except technology (which has its own dedicated index, TecDAX, though dual-listing in both MDAX and TecDAX is permitted since September 2018).
@@ -835,45 +763,40 @@ The MDAX is where you find Germany's mid-sized listed companies -- firms that ar
 
 > [!example]- Source excerpts (5)
 >
-> **Außerplanmäßige Wechsel in DAX, MDAX und SDAX (19. Dezember 2024) | Press rel...**
-> thias.freutel@gaulyadvisors.com M: 0151 16 894 239 Covestro AG wird aufgrund des Verstoßes der
-> Basiskriterien, wie in Kapitel 5.4.2 des DAX Equity Index Methodology Guide definiert – Minimum
-> Free Float von 10% mit Wirkung zum 27. Dezember 2024, aus dem DAX genommen. Für Covestro AG
-> wechselt aus dem **MDAX** die Fresenius Medical Care AG in den DAX. ...
->
-> — [Außerplanmäßige Wechsel in DAX, MDAX und SDAX (19. Dezember 2024) | Press rel...](https://stoxx.com/auserplanmasige-wechsel-in-dax-mdax-und-sdax-19-dezember-2024)
->
-> **Deutsche Börse extends market consultation on potential rule changes for the ...**
-> the **MDAX** or SDAX in the future. Another would be that DAX companies allocated to the tech
-> sectors could also be entered in the TecDAX, regardless of their size or liquidity. The aim of the
-> revision is to bring the rules in line with current international standards. In addition, an
-> expansion of the **MDAX**, SDAX and TecDAX is being reviewed. As a re...
->
-> — [Deutsche Börse extends market consultation on potential rule changes for the ...](https://stoxx.com/deutsche-borse-extends-market-consultation-on-potential-rule-changes-for-the-mdax-sdax-and-tecdax-indices)
->
-> **Shop Apotheke Europe and Wacker Chemie to be included in MDAX | Press release...**
-> FRANKFURT, September 3, 2020 – On Thursday, Qontigo’s global index provider STOXX Ltd. announced
-> changes to the DAX index family, which will become effective on 21 September 2020. The shares of
-> Shop Apotheke Europe N.V will be included in the **MDAX** index and will replace the shares of RTL
-> Group. The shares of Wacker Chemie AG will also be include...
->
-> — [Shop Apotheke Europe and Wacker Chemie to be included in MDAX | Press release...](https://stoxx.com/shop-apotheke-europe-and-wacker-chemie-to-be-included-in-mdax)
->
-> **MDAX index: 30 years benchmarking Germany’s Mittelstand | Blog posts | STOXX**
-> ows into **MDAX** ETFs[2], an expanded suite of sustainable index versions, and historical returns
-> that have outpaced those of its DAX® large-cap peer. A transparent and rules-based methodology
-> that is common to all DAX family indices, combined with a wide range of investable products, has
-> cemented the **MDAX** as a favored vehicle for accessing the cor...
+> BDI), 99.5% of all German companies belong to the mid-sized sector, while the sector is
+> responsible for 60% of all employed workers in the country. “Mittelstand” usually refers to
+> family-run businesses, many of which have moved on to list on the stock exchange. [2] A net EUR
+> 1.8 billion flowed into **MDAX** ETFs in all of 2025, according to STOXX da...
 >
 > — [MDAX index: 30 years benchmarking Germany’s Mittelstand | Blog posts | STOXX](https://stoxx.com/mdax-index-30-years-benchmarking-germanys-mittelstand)
 >
-> **MDAX Turns 25 | Blog posts | STOXX**
-> **MDAX**®, the index for German mid-sized stocks, turns 25 today, in a year that sees important
-> changes to its methodology. The **MDAX** was introduced on Jan. 19, 1996 and tracks the companies
-> that fall short of entering the country’s benchmark DAX® due to market capitalization or trading
-> volume. In Novemb
+> X and TecDAX is being reviewed. As a result of the variety of responses from the market, the
+> alternatives envisaged have been broadened as follows: in addition to the initially proposed
+> increase in the number of **MDAX** and SDAX constituents from currently 50 each to 60 each, the
+> idea of expanding the **MDAX** to 60 and the SDAX to 70, or both the MDAX...
 >
-> — [MDAX Turns 25 | Blog posts | STOXX](https://stoxx.com/mdax-turns-25)
+> — [Deutsche Börse extends market consultation on potential rule changes for the ...](https://stoxx.com/deutsche-borse-extends-market-consultation-on-potential-rule-changes-for-the-mdax-sdax-and-tecdax-indices)
+>
+> ZUG (March 4, 2026) – STOXX Ltd., part of the ISS STOXX group of companies and leading provider of
+> benchmark and custom index solutions to global institutional investors, today announced an
+> unscheduled change to the **MDAX** and SDAX indices. Media Contact: Sarah Ball Executive Director,
+> Communications index-press@iss-stoxx.com Effective March 9, 20...
+>
+> — [Unscheduled adjustment in the MDAX and SDAX (Mar. 4, 2026) | Press releases |...](https://stoxx.com/unscheduled-adjustment-in-the-mdax-and-sdax-mar-4-2026)
+>
+> Calculation Guide (Spin-offs), the total number of shares and free float used for TKMS AG & Co.
+> KGaA in the index are given by the parent share (thyssenkrupp AG) in the index and the ratio for
+> the spin-off. At the closing of Xetra-trading on October 20, 2025, TKMS AG & Co. KGaA is taken out
+> of the **MDAX** index again. **MDAX**® is a registered trademar...
+>
+> — [Unscheduled adjustment in the MDAX (Oct. 15, 2025) | Press releases | STOXX](https://stoxx.com/unscheduled-adjustment-in-the-mdax-oct-15-2025)
+>
+> . Three companies are new in TecDAX, three will be deleted. **MDAX** will include the 60 companies
+> below DAX that are the largest and have the highest order book turnover. 15 companies will be
+> newly included in **MDAX**, five will be deleted. SDAX will include the 70 largest and most-traded
+> companies below MDAX. 24 companies will be newly included in SD...
+>
+> — [Wirecard AG to be included in DAX – new composition for TecDAX, MDAX and SDAX...](https://stoxx.com/wirecard-ag-to-be-included-in-dax-new-composition-for-tecdax-mdax-and-sdax)
 >
 
 ---
@@ -882,7 +805,7 @@ The MDAX is where you find Germany's mid-sized listed companies -- firms that ar
 
 ### SDAX
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="449 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 449</span>
 
 
 > The SDAX comprises 70 small-cap companies ranking below the MDAX constituents in terms of order-book volume and free-float market capitalisation on the Frankfurt Stock Exchange. It represents the third tier of the German equity market and offers exposure to smaller, often domestically focused, growth companies.
@@ -903,45 +826,40 @@ The SDAX covers the next layer of German companies below the MDAX. These are sma
 
 > [!example]- Source excerpts (5)
 >
-> **Außerplanmäßige Anpassungen in SDAX, HDAX und TecDAX (6. Mai 2025) | Press re...**
-> utel GAULY Advisors matthias.freutel@gaulyadvisors.com M: 0151 16 894 239 Aufgrund des Verstoßes
-> der Basiskriterien gemäß Kapitel 5.4.2 des DAX Equity Index Methodology Guide (Timely publication
-> of the audited annual financial report), werden Nagarro SE, Mutares SE & Co. KGaA und STRATEC SE
-> aus dem **SDAX** Index genommen. Dazu wird Nagarro aus den ...
+> ZUG (October 28, 2020) – On Wednesday, Qontigo’s global index provider STOXX Ltd. announced an
+> unscheduled change to the **SDAX** index. Due to the delisting of Rocket Internet SE
+> (DE000A12UKK6), the equity will be deleted from the index with effective date 2 November 2020,
+> based on the last traded price from 30 October 2020. It will be replaced by ...
 >
-> — [Außerplanmäßige Anpassungen in SDAX, HDAX und TecDAX (6. Mai 2025) | Press re...](https://stoxx.com/auserplanmasige-anpassungen-in-sdax-hdax-und-tecdax-6-mai-2025)
+> — [Unscheduled adjustment in SDAX - October 28, 2020 | Press releases | STOXX](https://stoxx.com/unscheduled-adjustment-in-sdax-6)
 >
-> **Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX**
-> mall stocks attract a strong investor following, and to many of them an index-based approach is
-> the easiest and most efficient way to target this segment,” said Serkan Batir, Global Head for
-> Product Development and Benchmarks at STOXX. “We are celebrating 25 years of exciting small-cap
-> stories with **SDAX**.” Index composition The primary criteria f...
+> , Covestro AG will be deleted from the DAX due to breach of basic criteria according to chapter
+> 5.4.2 (DAX Equity Index Methodology Guide) — Minimum Free Float of 10%. Fresenius Medical Care AG
+> (currently MDAX) will replace Covestro AG in the DAX index. In MDAX, Deutsche Wohnen SE is added
+> from the **SDAX** and replaces Fresenius Medical Care AG. In...
+>
+> — [Unscheduled component changes in DAX, MDAX and SDAX (December 19, 2024) | Pre...](https://stoxx.com/unscheduled-component-changes-in-dax-mdax-and-sdax-december-19-2024)
+>
+> 4 this year. Starting on Jun. 18, ‘shadow indices’ simulating the behavior of the new-rules MDAX,
+> **SDAX** and TecDAX will be made available. Traditionally, MDAX has included the 50
+> ‘classic-industries’ companies that follow after DAX companies in terms of free-float market
+> capitalization and turnover. **SDAX** has included the 50 companies that follow ...
+>
+> — [Change Ahead for the SDAX, MDAX and TecDAX Indices | Blog posts | STOXX](https://stoxx.com/change-ahead-for-the-sdax-mdax-and-tecdax-indices)
+>
+> (Zug, 15. Juni 2022) – STOXX Ltd., der globale Indexanbieter von Qontigo, hat außerplanmäßige
+> Wechsel in den Indizes **SDAX** und TecDAX bekannt gegeben. Aufgrund der Verletzung von
+> Basiskriterien (fristgerechte Veröffentlichung von Quartalsberichten oder Quartalsmitteilungen,
+> gemäß Kapitel 5.1.2 im „Guide to the DAX Equity Indices“) wird Nordex SE ...
+>
+> — [Außerplanmäßige Wechsel in SDAX und TecDAX | Press releases | STOXX](https://stoxx.com/auserplanmasige-wechsel-in-sdax-und-tecdax-3)
+>
+> **SDAX**®, the benchmark for small-capitalization German stocks, was launched on June 21, 1999.
+> With an average annual return of nearly 10% since inception,[1] the index has tracked the
+> country’s lesser-known corporate stories on their growth journey. **SDAX** includes the 70
+> companies that come after DAX®
 >
 > — [Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX](https://stoxx.com/exploring-sdax-the-benchmark-for-german-small-companies)
->
-> **Deutsche Börse extends market consultation on potential rule changes for the ...**
-> DAX or **SDAX** in the future. Another would be that DAX companies allocated to the tech sectors
-> could also be entered in the TecDAX, regardless of their size or liquidity. The aim of the
-> revision is to bring the rules in line with current international standards. In addition, an
-> expansion of the MDAX, **SDAX** and TecDAX is being reviewed. As a result ...
->
-> — [Deutsche Börse extends market consultation on potential rule changes for the ...](https://stoxx.com/deutsche-borse-extends-market-consultation-on-potential-rule-changes-for-the-mdax-sdax-and-tecdax-indices)
->
-> **Unscheduled change in SDAX - May 26, 2020 | Press releases | STOXX**
-> asing SE shares will be deleted from **SDAX**. They will be replaced by MLP SE (DE0006569908).
-> Media Contact General Inquiries: media@qontigo.com Index Inquiries: Andreas von Brevern +49 (0) 69
-> 211 14284 These changes will become effective on 29 May 2020. The next scheduled index review is 4
-> June 2020. **SDAX**® is a registered trademark of Qontigo GmbH.
->
-> — [Unscheduled change in SDAX - May 26, 2020 | Press releases | STOXX](https://stoxx.com/unscheduled-change-in-sdax-2)
->
-> **Unscheduled component change in SDAX (March 11, 2025) | Press releases | STOXX**
-> ZUG (March 11, 2025) – STOXX Ltd., part of the ISS STOXX group of companies and leading provider
-> of benchmark and custom index solutions to global institutional investors, today announced the
-> following unscheduled change to the **SDAX** index. Media Contact Sarah Ball Executive Director,
-> Communications press@iss-stoxx.com ABOUT YOU Holding SE will l...
->
-> — [Unscheduled component change in SDAX (March 11, 2025) | Press releases | STOXX](https://stoxx.com/unscheduled-component-change-in-sdax-march-11-2025)
 >
 
 ---
@@ -969,7 +887,13 @@ This index is a way to invest in the AI theme across the entire global stock mar
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx Index Guide (PDF)**
+> han conducting a narrow search led by precise words, which may yield too few results. The
+> knowledge graph connects companies that use similar technologies and services by extracting
+> information based on their AI-related patents. Getting the constituents with smart precision
+> Company selection in the **STOXX AI Global Artificial Intelligence Index** i...
+>
+> — [First AI-Driven Index Tracking Artificial Intelligence Innovators | Blog post...](https://stoxx.com/first-ai-driven-index-tracking-artificial-intelligence-innovators)
+>
 > Clarification of index-specific dissemination calendars in line with definition of Dissemination
 > Calendar in the STOXX Calculation Guide for the following indices: STOXX® Global Broad
 > Infrastructure Index, STOXX® Global ESG Impact Index, STOXX® USA ESG Impact Index January 2018:
@@ -977,15 +901,13 @@ This index is a way to invest in the AI theme across the entire global stock mar
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Using AI in Index Creation: Gaining True Insight from Big Data | Blog posts |...**
-> technology company, help us determine which companies hold substantial intellectual property (IP)
-> in AI-related technologies. The technique’s main component is called a ‘knowledge graph.’ On a
-> basic level, it is a framework that turns unstructured data into quantifiable metrics. In the case
-> of the **STOXX AI Global Artificial Intelligence Index**, t...
+> Companies which hold patents belonging to these categories are then considered for inclusion in
+> the index. Unleashing the power of big data Using human-like strategies but at exponentially
+> greater scale and speed, Yewno’s AI-based knowledge graph thus helps in the selection of
+> constituents for the **STOXX AI Global Artificial Intelligence Index**. T...
 >
 > — [Using AI in Index Creation: Gaining True Insight from Big Data | Blog posts |...](https://stoxx.com/using-ai-in-index-creation-gaining-true-insight-from-big-data)
 >
-> **STOXX Awarded “Most Innovative Index Provider” By Etfexpress For The Eighth T...**
 > this award again is a great honor, as it proves our customer dedication and value contribution for
 > their businesses by providing the right investment tools,” said Matteo Andreetto, chief executive
 > officer, STOXX Limited. “We will continue to develop innovative indices as our most recently
@@ -993,28 +915,19 @@ This index is a way to invest in the AI theme across the entire global stock mar
 >
 > — [STOXX Awarded “Most Innovative Index Provider” By Etfexpress For The Eighth T...](https://stoxx.com/stoxx-awarded-most-innovative-index-provider-by-etfexpress-for-the-eighth-time)
 >
-> **These Robots Will Recognize Your Moods | Blog posts | STOXX**
-> filed overall per year by the 50 most frequent sponsors has remained relatively constant, there is
-> a much wider presence of assignees now applying for AI patents. In 2016, there were over 1,600
-> different entities filing AI-related patents, four times the amount of 20 years earlier. Companies
-> in the **STOXX AI Global Artificial Intelligence Index** i...
+> of AI companies that exist, both AI adopters and innovators, is vast, and for many investors it
+> has been potentially unnavigable. While leviathan companies such as Amazon and Alphabet have
+> provided plenty of opportunities for returns, staying ahead of the AI technology curve is getting
+> tougher. The **STOXX AI Global Artificial Intelligence Index** w...
 >
 > — [These Robots Will Recognize Your Moods | Blog posts | STOXX](https://stoxx.com/these-robots-will-recognize-your-moods)
->
-> **STOXX Launches First Global AI Index Based On AI Algorithm | Press releases |...**
-> n addition to the innovative AI index based on AI, STOXX also launched the STOXX® Global
-> Artificial Intelligence Index today, which includes companies with a revenue exposure above 50% to
-> AI-related sectors. More details can be found here: www.stoxx.ai Notes to the editors: Company
-> selection of the **STOXX AI Global Artificial Intelligence Index** i...
->
-> — [STOXX Launches First Global AI Index Based On AI Algorithm | Press releases |...](https://stoxx.com/stoxx-ltd-introduced-the-worlds-first-index-that-uses-ai-related-algorithms-to-select-companies-exposed-to-the-artificial-intelligence-ai-megatrend-at-the-inside-etfs-conference-in-the-u-s)
 >
 
 ---
 
 ### STOXX All Europe 800
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The STOXX All Europe 800 index covers 800 companies across European developed and emerging markets, extending the geographic reach beyond the STOXX Europe 600 to include countries in Central and Eastern Europe. The index combines the STOXX Europe 600 constituents with an additional 200 stocks from markets such as Poland, Hungary, the Czech Republic, Romania, and other European emerging-market countries.
@@ -1035,19 +948,17 @@ The STOXX All Europe 800 is a wider version of the STOXX Europe 600 that adds co
 
 > [!example]- Source excerpts (2)
 >
-> **Stoxx Index Guide (PDF)**
-> mber indices which cover the largest stocks of the respective regional or country Total Market
-> index in terms of free-float market capitalization. The basis for all indices is the STOXX Global
-> Total Market index. The following regional indices are calculated: » STOXX Global 3000 » STOXX
-> Africa 90 » **STOXX All Europe 800** » STOXX Americas 1200 » ST...
+> rms of free-float market capitalization to produce the index selection list. Buffer Rule: A 10%
+> buffer rule applies to select the constituents (except for Eastern Europe) for the regional
+> indices and country benchmark indices. Index Name Components Upper buffer Lower buffer STOXX
+> Africa 90 90 81 99 **STOXX All Europe 800** 800 720 880 STOXX Americas...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
-> mber indices which cover the largest stocks of the respective regional or country Total Market
-> index in terms of free-float market capitalization. The basis for all indices is the STOXX Global
-> Total Market index. The following regional indices are calculated: » STOXX Global 3000 » STOXX
-> Africa 90 » **STOXX All Europe 800** » STOXX Americas 1200 » ST...
+> rms of free-float market capitalization to produce the index selection list. Buffer Rule: A 10%
+> buffer rule applies to select the constituents (except for Eastern Europe) for the regional
+> indices and country benchmark indices. Index Name Components Upper buffer Lower buffer STOXX
+> Africa 90 90 81 99 **STOXX All Europe 800** 800 720 880 STOXX Americas...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
@@ -1056,7 +967,7 @@ The STOXX All Europe 800 is a wider version of the STOXX Europe 600 that adds co
 
 ### STOXX Asia/Pacific 600
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="99 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 99</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="55 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 55</span>
 
 
 > The STOXX Asia/Pacific 600 index tracks 600 companies across developed markets in the Asia/Pacific region, including Australia, Hong Kong, Japan, New Zealand, and Singapore. It is one of the three regional building blocks of the STOXX Global 1800, alongside the STOXX Europe 600 and the STOXX North America 600, and serves as the primary STOXX benchmark for Asia/Pacific developed-market equities.
@@ -1078,7 +989,6 @@ This is STOXX's main index for the Asia/Pacific region's developed stock markets
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 573/639 18. STOXX FACTOR INDICES **STOXX Asia/Pacific 600** Ax
 > Momentum **STOXX Asia/Pacific 600** Ax Quality STOXX Asia/Pacific 600 Ax Low Risk STOXX
 > Asia/Pacific 600 Ax Size STOXX Asia/Pacific 600 Ax Multi-Factor STOXX Japan 600 Ax Value STOXX
@@ -1086,15 +996,6 @@ This is STOXX's main index for the Asia/Pacific region's developed stock markets
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Sxxgr (PDF)**
-> de a broad yet investable representation of the world's diversification of all regions: Europe,
-> North America and Asia/Pacific developed markets of Europe, North America and Asia/Pacific, are
-> each represented by 600 components represented by the STOXX Europe 600, the STOXX North America
-> 600 and the **STOXX Asia/Pacific 600** indices.The STOXX Global...
->
-> — [Sxxgr (PDF)](https://www.stoxx.com/document/Indices/Factsheets/2020/July/SXXGR.pdf)
->
-> **Istoxx Index Guide (PDF)**
 > iSTOXX® METHODOLOGY GUIDE 434/1024 44. iSTOXX GLOBAL ESG EX- CONTROVERSIAL ACTIVITIES SELECT 30
 > INDEX ▪ North America : components of the STOXX North America 600 Index ▪ Europe: components of
 > the STOXX Europe 600 Index ▪ Asia/Pacific: components of the **STOXX Asia/Pacific 600** Index c.
@@ -1102,21 +1003,26 @@ This is STOXX's main index for the Asia/Pacific region's developed stock markets
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> 50 ESG Target EURO STOXX ESG Target EURO STOXX ESG Target TE idDAX 50 ESG NR Decrement 4.0% iSTOXX
-> Europe ESG Leaders Additional Exclusions Select 30 iSTOXX Global ESG Select 50 iSTOXX Global ESG
-> Select 50 Risk Control 10% RV iSTOXX Global Industry Neutral ESG 600 iSTOXX North America ESG
-> Select 30 **STOXX Asia/Pacific 600** ESG Target STOXX Asia/Pa...
+> 600 Index component Enagas (Spain, Utilities) will change to Oil & Gas. As of February 28, 2020,
+> the total free-float market cap of the reconstituted STOXX Europe 600 Index increased from 8.1166
+> trillion euros to 8.1422 trillion euros. The STOXX Global 1800 Index, STOXX North America 600
+> Index and **STOXX Asia/Pacific 600** Index are also part of th...
 >
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
+> — [Changes In Composition Of STOXX Benchmark Indices - Mar. 2, 2020 | Press rele...](https://stoxx.com/changes-in-composition-of-stoxx-benchmark-indices-2)
 >
-> **Stoxx Infographic Stoxxeurope600 (PDF)**
-> pected to Compared to make per share in the next year. A lower forward P/E ratio indicates a less
-> U.S. Equities expensive market valuation. 14.1x STOXX Europe 600 21.7x U.S. 14.8x Asia Pacific
-> Source: STOXX. Data as of March 31st, 2025. The U.S. and Asia-Pacific are represented by STOXX USA
-> 500 and **STOXX Asia/Pacific 600** indices. S E C T O R W E...
+> ) – STOXX Ltd., the operator of Deutsche Boerse Group’s index business, and a global provider of
+> innovative and tradable index concepts, today announced the new composition of STOXX Benchmarks
+> and their sub and sector indices, among them the STOXX Europe 600 Index, STOXX North America 600
+> Index and **STOXX Asia/Pacific 600** Index. Media Contact Gen...
 >
-> — [Stoxx Infographic Stoxxeurope600 (PDF)](https://stoxx.com/wp-content/uploads/2025/06/STOXX_Infographic_STOXXEurope600.pdf)
+> — [STOXX Changes Composition Of Benchmark Indices - Jun. 18, 2018 | Press releas...](https://stoxx.com/stoxx-changes-composition-of-benchmark-indices-2)
+>
+> Asia/Pacific 600 Index since the close of trading on Feb. 19. The black line denotes the generally
+> understood threshold for a bear market. The European index has lost 21.5% in the period through
+> Mar. 9, falling to its first bear market since 2016. The Global 1800 Index, North America 600
+> Index and **STOXX Asia/Pacific 600** Index have shed, respecti...
+>
+> — [European Stocks Enter Bear Market | Blog posts | STOXX](https://stoxx.com/european-stocks-enter-bear-market)
 >
 
 ---
@@ -1144,7 +1050,6 @@ These indices bring the same methodological rigour that STOXX applies to traditi
 
 > [!example]- Source excerpts (1)
 >
-> **Stoxx Digital Asset Guide (PDF)**
 > r with any references and links to third-parties that create the data. » The STOXX Eligible Market
 > Segments guide contains the list of stock exchanges and market segments. » The STOXX Digital Asset
 > Methodology guide contains the index specific rules regarding the construction and calculation of
@@ -1157,7 +1062,7 @@ These indices bring the same methodological rigour that STOXX applies to traditi
 
 ### STOXX Emerging Markets
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="112 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 112</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="74 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 74</span>
 
 
 > The STOXX Emerging Markets index family provides broad equity coverage of emerging-market countries worldwide. The indices track large, mid, and small capitalisation segments across markets in Asia, Latin America, Europe, the Middle East, and Africa. The family is part of the broader STOXX World Equity index framework and complements the developed-market STOXX Global 1800.
@@ -1179,7 +1084,6 @@ These indices cover stock markets in developing economies -- countries like Chin
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 76/639 7. STOXX BENCHMARK INDICES (BMI) **STOXX EMERGING MARKETS**
 > 800 LO 7.7.1. OVERVIEW The **STOXX Emerging Markets** 800 LO (Liquidity Optimized) index is
 > derived from the STOXX Emerging Markets 1500 index, covering the largest 800 companies in the
@@ -1187,23 +1091,13 @@ These indices cover stock markets in developing economies -- countries like Chin
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Istoxx Index Guide (PDF)**
-> who are not able to invest in Indian local listings. The index includes the components of the
-> **STOXX Emerging Markets** Index without the Indian local listings; and additional Indian
-> depositary receipts, that aim to compensate for the removed Indian local listings. Universe: The
-> index universe is the **STOXX Emerging Markets** Index and the Indian comp...
+> Carbon exposures. The iSTOXX Univest Emerging World Index tilts away from companies that are
+> laggards in corporate governance, and other social criteria. In addition, the Index aims to reduce
+> its greenhouse gas emissions and intensity at least by half by December 2024 (versus the baseline
+> values of **STOXX Emerging Markets** Index in December 2019) ...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> Results of Market Consultation STOXX Australia Total Market ESG-X STOXX Canada 240 ESG-X STOXX
-> Canada 60 ESG-X STOXX Developed Markets 2400 ESG-X STOXX Developed Markets Total Market ESG-X
-> STOXX Developed Markets Total Market Large ESG-X STOXX Developed Markets Total Market Mid ESG-X
-> **STOXX Emerging Markets** 1500 ESG-X **STOXX Emerging Markets** 50 ES...
->
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
->
-> **STOXX Extends Its Suite Of ESG-X Indices | Press releases | STOXX**
 > Magnus Linder, Head of Derivatives at Swedbank Robur. “We are very happy that the ESG-X range is
 > extended with Eurozone, US and global benchmark indices.” The new offering further includes global
 > and emerging markets benchmarks, such as ESG-X versions of the STOXX Global 3000, STOXX Global
@@ -1211,7 +1105,13 @@ These indices cover stock markets in developing economies -- countries like Chin
 >
 > — [STOXX Extends Its Suite Of ESG-X Indices | Press releases | STOXX](https://stoxx.com/stoxx-extends-its-suite-of-esg-x-indices)
 >
-> **Emerging Markets’ Lackluster Decade | Blog posts | STOXX**
+> is roughly half that of the Top 100. Figure 3: risk and return characteristics The indices are
+> weighted according to the same optimization process. They are reviewed on a semi-annual basis in
+> March and September. [1] Specific exceptions are the Financials Industry for the STOXX Developed
+> World and **STOXX Emerging Markets** indices, and consumer-rel...
+>
+> — [New STOXX Optimal 100 indices offer optimized replication strategies on bench...](https://stoxx.com/new-stoxx-optimal-100-indices-offer-optimized-replication-strategies-on-benchmark-portfolios)
+>
 > for the underperformance is to consider the dollar’s upside move against emerging-nations
 > currencies since 2010. The Brazilian real, Russian ruble, South African rand and Turkish lira, for
 > example, have lost more than 50% of their value to the greenback, hurting the dollar-based
@@ -1224,7 +1124,7 @@ These indices cover stock markets in developing economies -- countries like Chin
 
 ### STOXX Europe 600
 
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,202 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,202</span>
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,041 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,041</span>
 
 
 > The STOXX Europe 600 index covers 600 companies across 17 European countries, representing large, mid, and small capitalisation segments. It is derived from the STOXX Europe Total Market Index and subdivides into the STOXX Europe Large 200, STOXX Europe Mid 200, and STOXX Europe Small 200 sub-indices. The index serves as the primary pan-European equity benchmark for institutional investors.
@@ -1247,23 +1147,13 @@ The STOXX Europe 600 is the go-to index for a broad view of European stock marke
 
 > [!example]- Source excerpts (5)
 >
-> **New STOXX Europe 600 SRI futures on Eurex broaden sustainable derivatives off...**
-> descending order of their ESG scores within each of the 11 ICB Industry groups. The STOXX SRI
-> Indices select the top-ranking companies in each of the ICB Industries until the number of
-> selected stocks reaches a third of the number in the starting benchmark. Figure 1: Methodology
-> comparison between **STOXX Europe 600** SRI and **STOXX Europe 600** ESG-X ...
+> OXX Europe 600 ecosystem The **STOXX Europe 600** is a broad benchmark that covers 17 national
+> markets across developed Europe. It consists of a fixed number of constituents, and it stands out
+> for its popular sub-indices including sector and size strategies. Almost 27 million options and
+> futures on the **STOXX Europe 600** index traded in 2023 on Eurex,...
 >
-> — [New STOXX Europe 600 SRI futures on Eurex broaden sustainable derivatives off...](https://stoxx.com/new-stoxx-europe-600-sri-futures-on-eurex-broaden-sustainable-derivatives-offering-for-investors)
+> — [STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...](https://stoxx.com/stoxx-europe-600-index-underlies-new-total-return-futures-on-eurex)
 >
-> **Q&amp;A with Eurex’s Stuart Heath: STOXX Europe 600 total return futures | Bl...**
-> ing instrument. The **STOXX Europe 600** is a very good alternative because its broad coverage
-> lends itself to multiple strategies — thematic, sector-based, etc. As issuers select different
-> constituents to construct those portfolios, at the end of the day they are likely to hedge their
-> exposures with a **STOXX Europe 600** TRF. There is hedging demand f...
->
-> — [Q&amp;A with Eurex’s Stuart Heath: STOXX Europe 600 total return futures | Bl...](https://stoxx.com/qa-with-eurexs-stuart-heath-stoxx-europe-600-total-return-futures)
->
-> **Taking stock of the STOXX Europe 600’s record-breaking rally and its FX-hedge...**
 > A USD-hedged investment in the **STOXX Europe 600**, for example, allows US-based investors to tap
 > the index’s underlying constituent risk while limiting the risk from moves in the dollar relative
 > to the euro and other European currencies. Over the past ten years, dollar-based investors in the
@@ -1271,28 +1161,33 @@ The STOXX Europe 600 is the go-to index for a broad view of European stock marke
 >
 > — [Taking stock of the STOXX Europe 600’s record-breaking rally and its FX-hedge...](https://stoxx.com/taking-stock-of-the-stoxx-europe-600s-record-breaking-rally-and-its-fx-hedged-versions)
 >
-> **STOXX Europe 600 ESG-X Index Licensed To Kairos Partners | Press releases | S...**
-> nvironment, business ethics and anti-corruption. STOXX cooperates with the ESG data provider
-> Sustainalytics for the screening. “Sustainable investing has become mainstream. In the market,
-> there is strong demand for ESG versions of benchmarks, with a focus on liquidity and lower cost of
-> trading. The **STOXX Europe 600** ESG-X is a simple way of incor...
+> 11 14284 Rafaelle Lennox, Vice President, ETF Product Strategy, Franklin Templeton, commented: “We
+> are delighted to collaborate with Qontigo and are pleased to be the first provider to offer a
+> Paris Aligned Climate ETF tracking the **STOXX Europe 600** Paris-Aligned Benchmark Index. We
+> believe that the **STOXX Europe 600** is the key parent European ben...
 >
-> — [STOXX Europe 600 ESG-X Index Licensed To Kairos Partners | Press releases | S...](https://stoxx.com/stoxx-europe-600-esg-x-index-licensed-to-kairos-partners)
+> — [STOXX Europe 600 Paris-Aligned Benchmark Index Licensed To Franklin Templeton...](https://stoxx.com/stoxx-europe-600-paris-aligned-benchmark-index-licensed-to-franklin-templeton)
 >
-> **Stoxx führt ESG-X-Version des Stoxx Europe 600 Index ein - Institutional Money**
-> aber gezeigt, dass Vermögensverwalter ein starkes Interesse an liquiden, kostengünstigen
-> Benchmarks mit standardisierten Ausschlüssen haben, mit denen sie ihre verantwortungsvollen
-> Investment-Richtlinien abbilden können“, sagte Inderpal Gujral, Head of Product bei STOXX. „Bei
-> der ESG-X-Variante des **STOXX Europe 600** sind die Werte nach Streubesit...
+> Zurich-based index provider Stoxx has launched the **Stoxx Europe 600** ESG-X Index, a
+> sustainability-focused version of the **Stoxx Europe 600**, one of its core European equity
+> benchmarks. The Stoxx Europe 600 index tracks 600 of the most liquid, large-, mid- and small-cap
+> companies across 17 generally developed market countries. (The Czech Republic, ...
 >
-> — [Stoxx führt ESG-X-Version des Stoxx Europe 600 Index ein - Institutional Money](https://stoxx.com/stoxx-fuhrt-esg-x-version-des-stoxx-europe-600-index-ein)
+> — [Stoxx introduces Stoxx Europe 600 ESG-X Index | ETF Strategy - ETF Strategy](https://stoxx.com/stoxx-introduces-stoxx-europe-600-esg-x-index)
+>
+> Table 2: Targeted risk model style factors in each STOXX Industry Neutral Factor index Qontigo has
+> made Factor iQ™ available to unpack and explore select STOXX indices’ exposure to factors. Factor
+> iQ harnesses the power of Axioma’s daily risk models. Multi-factor outperformance Turning back to
+> the **STOXX Europe 600** Industry Neutral Ax Multi-Facto...
+>
+> — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
 >
 
 ---
 
 ### STOXX Europe Large 200
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
 
 > The STOXX Europe Large 200 index comprises the 200 largest constituents of the STOXX Europe 600 by free-float market capitalisation. It represents the large-cap segment of the pan-European equity market and serves as the top size tier within the STOXX Europe 600 framework.
@@ -1312,9 +1207,8 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 > [!tip] Related terms
 > [[#STOXX Europe 600]] | [[#STOXX Europe Mid 200]] | [[#STOXX Europe Small 200]] | [[index-construction#Size Segment]] | [[index-construction#Large-Cap]]
 
-> [!example]- Source excerpts (5)
+> [!example]- Source excerpts (4)
 >
-> **Stoxx Index Guide (PDF)**
 > acco Industry Neutral ESG indices, STOXX Strong Balance Sheet Indices, STOXX ESG Impact Indices,
 > STOXX Sub Balkan 30, STOXX Global Low Risk Weighted Diversified 200 July 2020 (5): Addition of ICB
 > treatment effective on September 18 2020 for EURO STOXX Large ex Financials, EURO STOXX Large ex
@@ -1322,7 +1216,6 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > acco Industry Neutral ESG indices, STOXX Strong Balance Sheet Indices, STOXX ESG Impact Indices,
 > STOXX Sub Balkan 30, STOXX Global Low Risk Weighted Diversified 200 July 2020 (5): Addition of ICB
 > treatment effective on September 18 2020 for EURO STOXX Large ex Financials, EURO STOXX Large ex
@@ -1330,15 +1223,6 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> urope 600 ESG-X STOXX Europe 600 ESG-X Ax Low Risk STOXX Europe 600 ESG-X Ax Momentum STOXX Europe
-> 600 ESG-X Ax Multi-Factor STOXX Europe 600 ESG-X Ax Quality STOXX Europe 600 ESG-X Ax Size STOXX
-> Europe 600 ESG-X Ax Value STOXX Europe 600 ESG-X ex Nuclear Power STOXX Europe ESG-X Select
-> Dividend 30 **STOXX Europe Large 200** ESG-X STOXX Europe Mid 2...
->
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
->
-> **Stoxx Strategy Guide (PDF)**
 > listed in the following table wt = Equity Weight on Index Level Determination Date t Tgtwt =
 > Target Weight on Index Level Determination Date t Cap = the maximum portion that can be given to
 > the risky asset, set to 150% and subject to the exceptions listed in the following table. Index
@@ -1346,7 +1230,6 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> **Istoxx Index Guide (PDF)**
 > se consult the data vendor code sheet on the website32. Index types and currencies: Price, net
 > return and gross return in EUR. INDEX REVIEW The largest components of the three regions are
 > derived from their respective STOXX <Region> Benchmark index. E.g. the STOXX Europe 600 serves as
@@ -1358,8 +1241,6 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 ---
 
 ### STOXX Europe Mid 200
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > The STOXX Europe Mid 200 index comprises the 200 mid-sized constituents of the STOXX Europe 600, ranked between positions 201 and 400 by free-float market capitalisation. It represents the mid-cap segment of the pan-European equity market.
@@ -1378,39 +1259,11 @@ The Mid 200 captures Europe's middle tier of listed companies -- firms that are 
 
 > [!tip] Related terms
 > [[#STOXX Europe 600]] | [[#STOXX Europe Large 200]] | [[#STOXX Europe Small 200]] | [[index-construction#Size Segment]] | [[index-construction#Mid-Cap]]
-
-> [!example]- Source excerpts (3)
->
-> **Stoxx Index Guide (PDF)**
-> /Pacific 600 ESG-X STOXX Global 1800 ESG-X STOXX Global 3000 ESG-X STOXX Developed Markets 2400
-> ESG-X STOXX Emerging Markets 50 ESG-X STOXX Emerging Markets 800 LO ESG-X STOXX Emerging Markets
-> 1500 ESG-X EURO STOXX Large ESG-X EURO STOXX Mid ESG-X EURO STOXX Small ESG-X STOXX Europe Large
-> 200 ESG-X **STOXX Europe Mid 200** ESG-X STOXX Europe Small 2...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> 600 ESG-X Ax Low Risk STOXX Europe 600 ESG-X Ax Momentum STOXX Europe 600 ESG-X Ax Multi-Factor
-> STOXX Europe 600 ESG-X Ax Quality STOXX Europe 600 ESG-X Ax Size STOXX Europe 600 ESG-X Ax Value
-> STOXX Europe 600 ESG-X ex Nuclear Power STOXX Europe ESG-X Select Dividend 30 STOXX Europe Large
-> 200 ESG-X **STOXX Europe Mid 200** ESG-X STOXX Europe Small 2...
->
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
->
-> **Stoxx Index Guide (PDF)**
-> /Pacific 600 ESG-X STOXX Global 1800 ESG-X STOXX Global 3000 ESG-X STOXX Developed Markets 2400
-> ESG-X STOXX Emerging Markets 50 ESG-X STOXX Emerging Markets 800 LO ESG-X STOXX Emerging Markets
-> 1500 ESG-X EURO STOXX Large ESG-X EURO STOXX Mid ESG-X EURO STOXX Small ESG-X STOXX Europe Large
-> 200 ESG-X **STOXX Europe Mid 200** ESG-X STOXX Europe Small 2...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-
 ---
 
 ### STOXX Europe Small 200
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The STOXX Europe Small 200 index comprises the 200 smallest constituents of the STOXX Europe 600, ranked between positions 401 and 600 by free-float market capitalisation. It represents the small-cap segment of the pan-European equity market.
@@ -1430,17 +1283,8 @@ The Small 200 is the bottom third of the STOXX Europe 600 by company size. These
 > [!tip] Related terms
 > [[#STOXX Europe 600]] | [[#STOXX Europe Large 200]] | [[#STOXX Europe Mid 200]] | [[index-construction#Size Segment]] | [[index-construction#Small-Cap]]
 
-> [!example]- Source excerpts (5)
+> [!example]- Source excerpts (1)
 >
-> **Istoxx Index Guide (PDF)**
-> usion list is applied. Universe: The index universe is defined by the corresponding STOXX index: D
-> Index Universe F iSTOXX France BDFG ESG FCPE STOXX France Total Market EURO iSTOXX BDFG ESG EURO
-> STOXX G iSTOXX Europe 600 BDFG ESG FCPE STOXX Europe 600 E iSTOXX Europe 600 BDFG ESG STOXX Europe
-> 600 i**STOXX Europe Small 200** BDFG ESG STOXX Europe Sm...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> **Europe’s ‘Magnificent’ equities in focus at ETF Ecosystem Unwrapped event | B...**
 > The trend coincides with rising investor expectations that interest rates may start to drop in the
 > Eurozone earlier than in the US. Index recognition ETF Stream, which organizes ETF Ecosystem
 > Unwrapped, is a leading publication of ETF news in Europe. The media outlet in April recognized
@@ -1448,36 +1292,12 @@ The Small 200 is the bottom third of the STOXX Europe 600 by company size. These
 >
 > — [Europe’s ‘Magnificent’ equities in focus at ETF Ecosystem Unwrapped event | B...](https://stoxx.com/europes-magnificent-equities-in-focus-at-etf-ecosystem-unwrapped-event)
 >
-> **Stoxx Index Guide (PDF)**
-> obal 1800 ESG-X STOXX Global 3000 ESG-X STOXX Developed Markets 2400 ESG-X STOXX Emerging Markets
-> 50 ESG-X STOXX Emerging Markets 800 LO ESG-X STOXX Emerging Markets 1500 ESG-X EURO STOXX Large
-> ESG-X EURO STOXX Mid ESG-X EURO STOXX Small ESG-X STOXX Europe Large 200 ESG-X STOXX Europe Mid
-> 200 ESG-X **STOXX Europe Small 200** ESG-X EURO STOXX Banks E...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> Europe 600 ESG-X Ax Momentum STOXX Europe 600 ESG-X Ax Multi-Factor STOXX Europe 600 ESG-X Ax
-> Quality STOXX Europe 600 ESG-X Ax Size STOXX Europe 600 ESG-X Ax Value STOXX Europe 600 ESG-X ex
-> Nuclear Power STOXX Europe ESG-X Select Dividend 30 STOXX Europe Large 200 ESG-X STOXX Europe Mid
-> 200 ESG-X **STOXX Europe Small 200** ESG-X STOXX Europe Total ...
->
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
->
-> **Stoxx Index Guide (PDF)**
-> obal 1800 ESG-X STOXX Global 3000 ESG-X STOXX Developed Markets 2400 ESG-X STOXX Emerging Markets
-> 50 ESG-X STOXX Emerging Markets 800 LO ESG-X STOXX Emerging Markets 1500 ESG-X EURO STOXX Large
-> ESG-X EURO STOXX Mid ESG-X EURO STOXX Small ESG-X STOXX Europe Large 200 ESG-X STOXX Europe Mid
-> 200 ESG-X **STOXX Europe Small 200** ESG-X EURO STOXX Banks E...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
 
 ---
 
 ### STOXX Europe Total Market
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="168 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 168</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="128 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 128</span>
 
 
 > The STOXX Europe Total Market index is the broadest European equity benchmark in the STOXX family, covering approximately 95% of the free-float market capitalisation across European developed markets. It serves as the starting universe from which the STOXX Europe 600 and other narrower European indices are derived.
@@ -1498,7 +1318,6 @@ Think of this as the "everything" index for European stocks. While the STOXX Eur
 
 > [!example]- Source excerpts (5)
 >
-> **STOXX Europe Total Market Aerospace &amp; Defense chosen as underlying index ...**
 > position as a leading index provider for thematic indices.” Axel Lomholt, General Manager at STOXX
 > The **STOXX Europe Total Market** Aerospace & Defense Index is comprised of companies categorized
 > by the Industry Classification Benchmark (ICB)’s Aerospace & Defense sector. The index is derived
@@ -1506,15 +1325,20 @@ Think of this as the "everything" index for European stocks. While the STOXX Eur
 >
 > — [STOXX Europe Total Market Aerospace &amp; Defense chosen as underlying index ...](https://stoxx.com/stoxx-europe-total-market-aerospace-and-defense-chosen-as-underlying-index-for-tuttle-capital-etf)
 >
-> **Xtrackers by DWS ETF switches to new STOXX Europe Total Market Leaders index ...**
-> arting universe of the STOXX® Global Total Market index excluding REITS[2], all securities are
-> screened for minimum size and liquidity. Each company is evaluated for its market share across all
-> segments (RBICS Level 6) in which it operates in. Companies must meet the following criteria to
-> enter the **STOXX Europe Total Market** Leaders: - Market lea...
+> VERVIEW The STOXX Total Market Style Indices represent a broad coverage of companies that have
+> similar growth and value characteristics based on fundamental criteria. Universe: Depending on the
+> Style index, the eligible universe is defined as the components of one of the following parent
+> indices: - **STOXX Europe Total Market** - STOXX Europe Total ...
+>
+> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> rs, defined as ranking in the top 25% of their group in several profitability metrics. - European
+> membership: Companies must be part of the STOXX® Europe Total Market index From all remaining
+> constituents, the 40 largest companies by free-float market capitalization are selected. Figure 1
+> shows the **STOXX Europe Total Market** Leaders’ top 10 compo...
 >
 > — [Xtrackers by DWS ETF switches to new STOXX Europe Total Market Leaders index ...](https://stoxx.com/xtrackers-by-dws-etf-switches-to-new-stoxx-europe-total-market-leaders-index)
 >
-> **New ETF from Xtrackers by DWS tracks STOXX Europe Total Market Defence Space ...**
 > s that can benefit from the growing momentum of the European defense sector,” said Michael Mohr,
 > Global Head of Xtrackers Product, “applying a diversified approach that also includes providers of
 > space technology and cybersecurity, which are essential for modern defense systems.” Coverage
@@ -1522,7 +1346,6 @@ Think of this as the "everything" index for European stocks. While the STOXX Eur
 >
 > — [New ETF from Xtrackers by DWS tracks STOXX Europe Total Market Defence Space ...](https://stoxx.com/new-etf-from-xtrackers-by-dws-tracks-stoxx-europe-total-market-defence-space-and-cybersecurity-innovation-index)
 >
-> **Amundi ETF, Eurex launch products tracking STOXX Europe Total Market Defense ...**
 > utures listed on Eurex, offering investors targeted exposure to defense stocks amid a historic
 > upgrade of the region’s military capabilities. The ETF has received regulatory approval and will
 > be listed on main European stock exchanges in coming days. The Eurex futures started trading on
@@ -1530,20 +1353,12 @@ Think of this as the "everything" index for European stocks. While the STOXX Eur
 >
 > — [Amundi ETF, Eurex launch products tracking STOXX Europe Total Market Defense ...](https://stoxx.com/amundi-etf-eurex-launch-products-tracking-stoxx-europe-total-market-defense-capped-index)
 >
-> **Istoxx Index Guide (PDF)**
-> iSTOXX® METHODOLOGY GUIDE 507/1024 5588.. iiSSTTOOXXXX EEUURROOPPEE TTOOTTAALL MMAARRKKEETT
-> FFOOOODD PPRROODDUUCCEERRSS CCAAPPPPEEDD 3300-- 1155 58.1. i**STOXX EUROPE TOTAL MARKET** FOOD
-> PRODUCERS CAPPED 30-15 OVERVIEW The objective of the i**STOXX Europe Total Market** Food Producers
-> Capped 30-15 index is to provide the broadest possible representation...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
 
 ---
 
 ### STOXX Global 1800
 
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,001 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,001</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="847 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 847</span>
 
 
 > The STOXX Global 1800 index comprises 1,800 stocks from developed markets worldwide, constructed by combining three regional sub-indices: the STOXX Europe 600, the STOXX North America 600, and the STOXX Asia/Pacific 600. Each region contributes exactly 600 constituents, ensuring balanced global representation.
@@ -1565,7 +1380,6 @@ The STOXX Global 1800 is a straightforward way to track the global developed-mar
 
 > [!example]- Source excerpts (5)
 >
-> **STOXX Global 1800 Index Qualities Highlighted by Structured Products Industry...**
 > **STOXX Global 1800** Index was considered superior to its competitors in several aspects and
 > offered a “fresh new” alternative to investors.1 The index has a free-float
 > market-capitalization-weighted selection methodology and minimum liquidity thresholds that
@@ -1573,15 +1387,6 @@ The STOXX Global 1800 is a straightforward way to track the global developed-mar
 >
 > — [STOXX Global 1800 Index Qualities Highlighted by Structured Products Industry...](https://stoxx.com/stoxx-global-1800-index-qualities-highlighted-by-structured-products-industry)
 >
-> **STOXX Global 1800 index drops in February; European stocks buck trend | Blog ...**
-> rs are paying up for puts that offer insurance against stock price drops. The VDAX-New®, which
-> measures volatility in German equities, rose to 19.1 from 18.6 in January. Automobiles Supersector
-> leads again The STOXX® Global 1800 Automobiles & Parts index came out on top among 20 Supersectors
-> in the **STOXX Global 1800** for a second consecutive mont...
->
-> — [STOXX Global 1800 index drops in February; European stocks buck trend | Blog ...](https://stoxx.com/stoxx-global-1800-index-drops-in-february-european-stocks-buck-trend)
->
-> **STOXX Global 1800 Index Posts Best Month on Record in November on Vaccine New...**
 > STOXX® Global Pet Care Index came out last even if it still rose 6.8%. Year-to-date, the STOXX®
 > Global Smart Cities Index is the best-performing gauge in the STOXX Thematic Indices family,
 > having risen 65.8%. All three STOXX artificial-intelligence-driven thematic indices outperformed
@@ -1589,28 +1394,33 @@ The STOXX Global 1800 is a straightforward way to track the global developed-mar
 >
 > — [STOXX Global 1800 Index Posts Best Month on Record in November on Vaccine New...](https://stoxx.com/stoxx-global-1800-index-posts-best-month-on-record-in-november)
 >
-> **STOXX Global 1800 climbs to record in February on US economy, earnings outloo...**
-> Stocks extended gains in February, lifting the STOXX® Global 1800 index to a record high, after
-> better-than-expected US labour market and corporate earnings reports. The **STOXX Global 1800**
-> jumped 4.3% in the month when measured in US dollars and including dividends[1], and reached a
-> record high on a price level. It rose 4.7% in February when meas...
+> rs are paying up for puts that offer insurance against stock price drops. The VDAX-New®, which
+> measures volatility in German equities, rose to 19.1 from 18.6 in January. Automobiles Supersector
+> leads again The STOXX® Global 1800 Automobiles & Parts index came out on top among 20 Supersectors
+> in the **STOXX Global 1800** for a second consecutive mont...
 >
-> — [STOXX Global 1800 climbs to record in February on US economy, earnings outloo...](https://stoxx.com/stoxx-global-1800-climbs-to-record-in-february-on-us-economy-earnings-outlook)
+> — [STOXX Global 1800 index drops in February; European stocks buck trend | Blog ...](https://stoxx.com/stoxx-global-1800-index-drops-in-february-european-stocks-buck-trend)
 >
-> **STOXX Global 1800 falls for first month in six in April on interest-rate outl...**
-> t fail to pass norms-based and controversial weapons screenings, meet minimum ESG ratings or are
-> involved in certain business activities considered undesirable from a responsible investing
-> perspective. Thematics, dividend strategies Only four of 35 STOXX® Thematic indices outperformed
-> the benchmark **STOXX Global 1800** last month. The STOXX® Global...
+> Select Dividend 100 Index, which tracks companies with sizeable dividends but also applies a
+> quality filter such as a history of stable payments, fell 9.7% on a gross-return basis. The STOXX®
+> Global Select 100 EUR Index, which is measured in euros, slid 8% during February, also
+> underperforming the **STOXX Global 1800**. The index blends increasing d...
 >
-> — [STOXX Global 1800 falls for first month in six in April on interest-rate outl...](https://stoxx.com/stoxx-global-1800-falls-for-first-month-in-six-in-april-on-interest-rate-outlook)
+> — [Monthly Index News February 2020 (PDF)](https://stoxx.com/monthly-index-news-february-2020)
+>
+> , a maximum number of components is calculated as follows and rounded to the nearest integer: K
+> =(SXW1 +10%)∗N i i where: K maximum number of components from country i, allowed for inclusion in
+> the 𝑖 iSTOXX Global ESG Trend Select 30 Index SXW1 weight of the components coming from country i,
+> in the **STOXX Global 1800** Index i (parent index), as of...
+>
+> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
 
 ---
 
 ### STOXX Global Metaverse
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="39 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 39</span>
 
 
 > The STOXX Global Metaverse index captures companies positioned to benefit from the development of the metaverse ecosystem, including virtual worlds, augmented reality, virtual reality, blockchain-based digital ownership, and supporting infrastructure. Companies are selected based on revenue exposure, patent activity, and strategic positioning within defined metaverse sub-themes.
@@ -1631,23 +1441,20 @@ This thematic index tracks companies building or enabling the "metaverse" -- the
 
 > [!example]- Source excerpts (5)
 >
-> **New STOXX Global Metaverse Index licensed to BlackRock’s iShares for ETF targ...**
-> into account: companies that are non-compliant with Sustainalytics’ Global Standards Screening
-> (GSS) or are involved in controversial weapons activities are excluded. Additional exclusion
-> filters screen out companies for product involvement in weapons, energy and tobacco. In the past
-> ten years, the **STOXX Global Metaverse** has significantly outper...
->
-> — [New STOXX Global Metaverse Index licensed to BlackRock’s iShares for ETF targ...](https://stoxx.com/new-stoxx-global-metaverse-index-licensed-to-blackrocks-ishares-for-etf-targeting-digital-frontier-pioneers)
->
-> **STOXX Global Metaverse | STOXX**
-> al and physical interactions for an immersive experience. This virtual ecosystem is positioned for
-> exponential growth. Its economic value has been forecasted to reach $5 trillion by 2030.1 1
-> McKinsey & Co., ‘Value creation in the metaverse,’ June 2022. Key features How are companies
-> captured in the **STOXX Global Metaverse** index? FEATURED WHITEPAP...
+> The **STOXX Global Metaverse** index selects companies exposed to a defined set of technologies
+> related to the ongoing adoption of the Metaverse. These range from interactive virtual platforms,
+> wearables and immersive technologies to computer processing capabilities, digital twin solutions
+> and infrastructur
 >
 > — [STOXX Global Metaverse | STOXX](https://stoxx.com/solutions/stoxx-global-metaverse)
 >
-> **The industrial Metaverse – beyond gaming and social media | Blog posts | STOXX**
+> on filters screen out companies for product involvement in weapons, energy and tobacco. In the
+> past ten years, the **STOXX Global Metaverse** has significantly outperformed the STOXX® Global
+> TMI benchmark (Figure 2). It has also shown an edge over a traditional sector-based technology
+> index. Figure 2 – **STOXX Global Metaverse** performance While some p...
+>
+> — [New STOXX Global Metaverse Index licensed to BlackRock’s iShares for ETF targ...](https://stoxx.com/new-stoxx-global-metaverse-index-licensed-to-blackrocks-ishares-for-etf-targeting-digital-frontier-pioneers)
+>
 > referencing the technology. Its subsidiary GE Digital is a co-founder of the Digital Twin
 > Consortium, which aims to define best practices and enable interoperability in the field. Other
 > members of this industry body include Dell Technologies and Microsoft, both of which are also
@@ -1655,28 +1462,26 @@ This thematic index tracks companies building or enabling the "metaverse" -- the
 >
 > — [The industrial Metaverse – beyond gaming and social media | Blog posts | STOXX](https://stoxx.com/the-industrial-metaverse-beyond-gaming-and-social-media)
 >
-> **iShares Metaverse ETF tracking STOXX index tops USD 100 mln | Blog posts | STOXX**
-> methodology, visit our article from December 2022. While some people may quickly relate the
-> Metaverse to gaming companies, the space offers increasingly diverse exposure to other business
-> sectors, as more industries step into the virtual universe and introduce related services (Figure
-> 2). Figure 2: **STOXX Global Metaverse** index top 10 holdings 1 ...
->
-> — [iShares Metaverse ETF tracking STOXX index tops USD 100 mln | Blog posts | STOXX](https://stoxx.com/ishares-metaverse-etf-tracking-stoxx-index-tops-usd-100-mln)
->
-> **Stoxx Index Guide (PDF)**
-> nce of STOXX Eligible Market Segments Guide. December 2022: Addition of STOXX U.S. Small-Cap
-> Equity Factor Index, STOXX Emerging Markets Equity Factor Index, STOXX International Small-Cap
-> Equity Factor Index and STOXX Global Equity Factor Index. December 2022(2): Amendment of the
-> methodology of the **STOXX Global Metaverse** Index. Changes to be eff...
+> STOXX INDEX METHODOLOGY GUIDE 413/639 17. STOXX THEMATIC INDICES **STOXX GLOBAL METAVERSE** INDEX
+> 17.15.1. OVERVIEW Metaverse is an emerging concept that simulates the real world or imagines a
+> world beyond it, integrating digital and physical interactions for an immersive experience. The
+> field of virtual and extended realities and digital interface ...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> STOXX® Global 3000 Technology benchmark (depicted in light blue). The dark blue line represents
+> the total return of the broader STOXX Global TMI universe. Figure 3 – Cumulative USD gross returns
+> since March 19, 2012 Recent market turmoil Like many other technology and growth-focused
+> benchmarks, the **STOXX Global Metaverse** was hit disproportionall...
+>
+> — [The Metaverse: investing at the new digital frontier | Blog posts | STOXX](https://stoxx.com/the-metaverse-investing-at-the-new-digital-frontier)
 >
 
 ---
 
 ### STOXX Global Select Dividend 100
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="22 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 22</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
 
 > The STOXX Global Select Dividend 100 index selects the 100 highest-dividend-yielding stocks from the STOXX Global 1800 universe. Constituents are drawn from three regional Select Dividend sub-indices: STOXX Europe Select Dividend 30, STOXX North America Select Dividend 40, and STOXX Asia/Pacific Select Dividend 50 (with a total of 30 + 40 + 30 = 100 stocks). Selection is based on indicated annual net dividend yield, subject to filters on dividend growth and payout ratio. The index is weighted by net dividend yield.
@@ -1698,39 +1503,34 @@ This is the global version of the STOXX Select Dividend family. It combines the 
 
 > [!example]- Source excerpts (5)
 >
-> **Istoxx Index Guide (PDF)**
-> iSTOXX® METHODOLOGY GUIDE 991/1024 137.iSTOXX GLOBAL SELECT 137. i DIVIDEND 100 ENHANCED INDEX S T
-> O X 137.1. i**STOXX GLOBAL SELECT DIVIDEND 100** ENHANCED INDEX X G OVERVIEW L The i**STOXX Global
-> Select Dividend 100** Enhanced Index contains the same components as the STOXX Global Select
-> Dividend 100 Index. The weights are capped for ADTV liquidity to...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> **Stoxx Index Guide (PDF)**
-> to 20 in each country ranking will remain in the index. A maximum of 10 stocks per assigned
-> country can be included in the index. If the number of stocks is still below 30, the highest
-> ranked non- components from the regional ranking are added until the fixed number of index
-> components is reached. **STOXX Global Select Dividend 100** The index is a ...
+> ), rounded to integers. Weighting factors are calculated based on the full precision dividend
+> yields. The weighting factors are published on the second Friday in March, one week prior to
+> quarterly review implementation using Thursday’s closing prices. For all Select Dividend indices,
+> except for the **STOXX Global Select Dividend 100** Index, an addi...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
-> to 20 in each country ranking will remain in the index. A maximum of 10 stocks per assigned
-> country can be included in the index. If the number of stocks is still below 30, the highest
-> ranked non- components from the regional ranking are added until the fixed number of index
-> components is reached. **STOXX Global Select Dividend 100** The index is a ...
+> ), rounded to integers. Weighting factors are calculated based on the full precision dividend
+> yields. The weighting factors are published on the second Friday in March, one week prior to
+> quarterly review implementation using Thursday’s closing prices. For all Select Dividend indices,
+> except for the **STOXX Global Select Dividend 100** Index, an addi...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Strategy Guide (PDF)**
-> tion Gross Return USD CH0328366304 SX5HGREP EURO STOXX Select Dividend 30 Futures Replication
-> Price EUR CH0328366163 SD3EREP EURO STOXX Select Dividend 30 Futures Replication Net Return EUR
-> CH0328366171 SD3TREP EURO STOXX Select Dividend 30 Futures Replication Gross Return EUR
-> CH0328366189 SD3GTREP **STOXX Global Select Dividend 100** Futures Replic...
+> 137.1. i**STOXX GLOBAL SELECT DIVIDEND 100** ENHANCED INDEX X G OVERVIEW L The i**STOXX Global
+> Select Dividend 100** Enhanced Index contains the same components as the STOXX Global Select
+> Dividend 100 Index. The weights are capped for ADTV liquidity to give preference to more liquid
+> components. O Universe: STOXX Global Select Dividend 100 Index B Weight...
+>
+> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+>
+> 𝑅 𝑁 𝑟 1 1 𝑤 k,t−1 = 𝑅 ⋅ 𝑁 = 𝑁 −𝑤 1,t−1 :𝑘=𝑁+1 1 :else {𝑁 where: 𝑅 =length of roll period 𝑟 =rth
+> roll day (0 if not in roll period) 𝑁 =number of futures contracts permanently in the index (1)
+> Weights calculation for the EURO STOXX 50 Traded Futures Roll indices: The futures contracts
+> weights w k ,t **STOXX Global Select Dividend 100** Futures Roll EU...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> **Monthly Index News July 2018 (PDF)**
 > d 40 Index, STOXX® Global Select Dividend 100 Index and STOXX® Global Select 100 EUR Index are all
 > derived from the Global 1800 Index and track different income approaches. The STOXX Global Select
 > 100 EUR Index, which blends increasing dividend yields with low stock price volatility, rose 3.0%.
@@ -1743,7 +1543,7 @@ This is the global version of the STOXX Select Dividend family. It combines the 
 
 ### STOXX ICE Fixed Income Sustainability Indices
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
 > The STOXX ICE Fixed Income Sustainability index family, developed in partnership with Intercontinental Exchange (ICE), integrates ISS ESG data into fixed income benchmarks. The indices apply ESG screening, norms-based exclusions, and sustainability scoring to corporate and government bond universes. Variants include EU PAB and CTB-aligned bond indices as well as broad ESG-screened fixed income benchmarks.
@@ -1763,9 +1563,8 @@ These indices extend ESG and sustainability principles into the bond market. Whi
 > [!tip] Related terms
 > [[#eb.rexx Bond Indices]] | [[#EUROGOV Bond Indices]] | [[#ISS STOXX Net Zero Transition Indices]] | [[index-construction#Bond Index]] | [[index-construction#ESG Screening]]
 
-> [!example]- Source excerpts (5)
+> [!example]- Source excerpts (4)
 >
-> **Fixed Income indices | STOXX**
 > Fixed income is an essential asset class that can enable stable income generation, capital
 > preservation and portfolio diversification. Find out more about STOXX’s fixed income indices,
 > including our collaboration with Intercontinental Exchange (ICE) to develop the **STOXX ICE Fixed
@@ -1773,7 +1572,6 @@ These indices extend ESG and sustainability principles into the bond market. Whi
 >
 > — [Fixed Income indices | STOXX](https://stoxx.com/fixed-income-indices)
 >
-> **Sustainability indices | STOXX**
 > INDICES Biodiversity indices Our Biodiversity indices provide a framework to help address
 > biodiversity challenges. Stock selection is based on biodiversity exclusionary screens,
 > Sustainable Development Goals (SDGs) and carbon emissions targets. BROWSE INDICES Fixed Income
@@ -1781,29 +1579,19 @@ These indices extend ESG and sustainability principles into the bond market. Whi
 >
 > — [Sustainability indices | STOXX](https://stoxx.com/sustainability-indices-overview)
 >
-> **CSP Reports | STOXX**
-> ices **STOXX ICE Fixed Income Sustainability indices** Factor-Based indices Factor-based indices
-> overview Factor and ESG-X Factor indices Equity factor indices Industry Neutral Factor indices
-> Dividend indices Minimum Variance indices Volatility indices Fixed Income indices Fixed Income
-> indices overview **STOXX ICE Fixed Income Sustainability indices** e...
->
-> — [CSP Reports | STOXX](https://stoxx.com/csp-reports)
->
-> **History &amp; Milestones | STOXX**
-> ric research and technology solutions that help capital market participants identify investment
-> opportunities, detect qualitative and quantitative portfolio company risks, and meet evolving
-> regulatory requirements. Here are a few milestones that we achieved along the way: 2025 - Jun:
-> STOXX launches **STOXX ICE Fixed Income Sustainability indices** -...
->
-> — [History &amp; Milestones | STOXX](https://stoxx.com/company/stoxx-history-milestones)
->
-> **STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX**
 > STOXX and Intercontinental Exchange (ICE) have launched a suite of optimized fixed income climate
 > indices, combining their expertise in an area of increasing demand for index-based investing. The
 > **STOXX ICE Fixed Income Sustainability indices** cover the investment-grade segment in US
 > dollars, euros, sterling and other currencies, and high-yield bo...
 >
 > — [STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX](https://stoxx.com/stoxx-and-ice-launch-fixed-income-climate-indices)
+>
+> ric research and technology solutions that help capital market participants identify investment
+> opportunities, detect qualitative and quantitative portfolio company risks, and meet evolving
+> regulatory requirements. Here are a few milestones that we achieved along the way: 2025 - Jun:
+> STOXX launches **STOXX ICE Fixed Income Sustainability indices** -...
+>
+> — [History &amp; Milestones | STOXX](https://stoxx.com/company/stoxx-history-milestones)
 >
 
 ---
@@ -1832,7 +1620,6 @@ Factor investing is about targeting specific characteristics -- like buying chea
 
 > [!example]- Source excerpts (5)
 >
-> **Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...**
 > Apr. 26, Eurex said in a press release. The **STOXX Industry Neutral Ax Factor Indices** were
 > introduced in February and implement the same methodology of the STOXX® Factor Indices while
 > reducing the active industry constraint from +/- 5% to near neutral. In all but eliminating
@@ -1840,7 +1627,6 @@ Factor investing is about targeting specific characteristics -- like buying chea
 >
 > — [Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...](https://stoxx.com/eurex-to-list-futures-on-stoxx-industry-neutral-ax-factor-indices)
 >
-> **Introducing the STOXX Industry Neutral Ax Factor Indices | Blog posts | STOXX**
 > Factor Index STOXX® USA 500 Industry Neutral Ax Momentum Index STOXX® USA 500 Industry Neutral Ax
 > Low Risk Index 1 Industry classification used is ICB level 1. 2 Qontigo Applied Research, ‘STOXX
 > Factor Indices: Targeted Factor Exposures with Managed Liquidity and Risk Profiles,’ January 2020.
@@ -1848,7 +1634,20 @@ Factor investing is about targeting specific characteristics -- like buying chea
 >
 > — [Introducing the STOXX Industry Neutral Ax Factor Indices | Blog posts | STOXX](https://stoxx.com/introducing-the-stoxx-industry-neutral-ax-factor-indices)
 >
-> **25 years forging better markets: Eurex and STOXX celebrate unique partnership...**
+> . The STOXX Factor Indices and **STOXX Industry Neutral Ax Factor Indices** rely on proven factor
+> models and seek precise exposure to desired equity risk premia. They are built using widely
+> accepted and institutionally tested factor definitions and advanced portfolio-construction tools
+> and risk models. **STOXX Industry Neutral Ax Factor Indices** coveri...
+>
+> — [Industry Neutral Factor Indices | STOXX](https://stoxx.com/industry-neutral-factor-indices)
+>
+> Today, trading starts in Eurex-listed futures tracking 12 STOXX® Industry Neutral Ax Factor
+> Indices. The derivatives cover the European and US markets and allow investors to target
+> well-researched and robust factor strategies from Axioma’s Risk Models and optimization tools. The
+> **STOXX Industry Neutral Ax Factor Indices** are derived from industry-...
+>
+> — [Q&amp;A: What do Eurex’s new futures on STOXX Factor Indices offer? | Blog po...](https://stoxx.com/qa-what-do-eurexs-new-futures-on-stoxx-factor-indices-offer)
+>
 > in the development of ESG, and this is a segment that will continue to gain in importance.
 > Elsewhere, increasing appetite for factor-based and thematic strategies have also allowed us to
 > break new ground. In March 2021, we expanded our equity index segment with new factor-based
@@ -1856,28 +1655,12 @@ Factor investing is about targeting specific characteristics -- like buying chea
 >
 > — [25 years forging better markets: Eurex and STOXX celebrate unique partnership...](https://stoxx.com/25-years-forging-better-markets-eurex-and-stoxx-celebrate-unique-partnership-in-index-derivatives)
 >
-> **Industry Neutral Factor Indices | STOXX**
-> rs looking to accurately access pure factor returns, without unintended sector exposures. The
-> STOXX® Industry Neutral Ax Factor Indices implement the same methodology of the STOXX® Factor
-> Indices while reducing the active industry constraint from +/- 5% to near neutral. The STOXX
-> Factor Indices and **STOXX Industry Neutral Ax Factor Indices** rely o...
->
-> — [Industry Neutral Factor Indices | STOXX](https://stoxx.com/industry-neutral-factor-indices)
->
-> **Q&amp;A: What do Eurex’s new futures on STOXX Factor Indices offer? | Blog po...**
-> nd controlling for turnover and maximum weights, in order to increase capacity and reduce trading
-> costs. Thirdly, the index methodology upholds diversification through constraints on country and
-> industry exposures, as well as individual security weights. “It may also be useful to highlight
-> that the **STOXX Industry Neutral Ax Factor Indices** are ve...
->
-> — [Q&amp;A: What do Eurex’s new futures on STOXX Factor Indices offer? | Blog po...](https://stoxx.com/qa-what-do-eurexs-new-futures-on-stoxx-factor-indices-offer)
->
 
 ---
 
 ### STOXX Minimum Variance Indices
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="183 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 183</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="166 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 166</span>
 
 
 > The STOXX Minimum Variance index family uses portfolio optimisation techniques to construct indices that target the lowest possible portfolio volatility for a given universe of stocks. The optimisation process considers the variance-covariance matrix of constituent returns and applies constraints on turnover, individual stock weights, and sector/country deviations relative to the parent index.
@@ -1899,7 +1682,6 @@ These indices are built for investors who want stock market exposure with reduce
 
 > [!example]- Source excerpts (5)
 >
-> **Minimum Variance Indices | STOXX**
 > Based on Modern Portfolio Theory, the **STOXX Minimum Variance indices** aim to limit volatility
 > using a consistently applied and rules-based methodology. The index suite, which uses our
 > factor-model approach two versions of every benchmark — constrained and unconstrained. Key indices
@@ -1907,15 +1689,13 @@ These indices are built for investors who want stock market exposure with reduce
 >
 > — [Minimum Variance Indices | STOXX](https://stoxx.com/minimum-variance-indices)
 >
-> **Stoxx Minvar Paper (PDF)**
-> STOXX LIMITED TABLE OF CONTENTS Introduction 4 1 Overview of minimum variance investing 5 2
-> Characteristics of a minimum variance portfolio (MVP) 7 3 Why minimum variance portfolios provide
-> better risk-adjusted returns 9 4 Methodology of **STOXX Minimum Variance Indices**, highlighting
-> the unique approach for the index series 11 5 A tale of two mini...
+> STOXX LIMITED 6 **STOXX MINIMUM VARIANCE INDICES** Although no expected returns are needed to
+> create MVPs, there are three important inputs that are needed: i) a forecast of variances and
+> covariances ii) an optimization engine iii) a set of constraints that ensures the portfolio is
+> reasonably investable More details of
 >
 > — [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 296/639 1166.. STSOTOXXX XR IRSIKS KB ABASESDED IN INDDICICESE S
 > STOXX MINIMUM VARIANCE AND MINIMUM VARIANCE UNCONSTRAINED INDICES 16.1.1. OVERVIEW The **STOXX
 > Minimum Variance indices** are based on benchmark indices, including the STOXX Global 1800 index,
@@ -1923,7 +1703,6 @@ These indices are built for investors who want stock market exposure with reduce
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Monthly Index News March 2019 (PDF)**
 > March 2019 Minimum Variance Indices Key points Minimum-variance strategies provided one of the
 > month’s surprises, posting stronger-than-average returns even as benchmarks advanced. The
 > performance may signal that investors who led the month’s buying favored a low-variance premium.
@@ -1931,20 +1710,19 @@ These indices are built for investors who want stock market exposure with reduce
 >
 > — [Monthly Index News March 2019 (PDF)](https://stoxx.com/monthly-index-news-march-2019)
 >
-> **China Wobbles | Blog posts | STOXX**
-> ported fundamental factor model to estimate the correlation of all components within the index.
-> This is a more robust model compared to historical volatility and uses factors including value,
-> growth, different term momentums, leverage, liquidity, exchange-rate sensitivity, country, sector,
-> etc. The **STOXX Minimum Variance Indices** come in two vers...
+> , Norway and Australia. The STOXX® Spain Total Market index was the worst performer, shedding
+> 5.7%. Index of the month Amid the unusual market stress, a portfolio of equities constructed with
+> the aim of fending off volatility better than a market-capitalization portfolio achieved its
+> objective. The **STOXX Minimum Variance indices** represent a univ...
 >
-> — [China Wobbles | Blog posts | STOXX](https://stoxx.com/china-wobbles)
+> — [Volatility Makes a Comeback: February Market Review | Blog posts | STOXX](https://stoxx.com/volatility-makes-a-comeback-february-market-review)
 >
 
 ---
 
 ### STOXX North America 600
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="89 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 89</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
 
 > The STOXX North America 600 index tracks 600 companies across the United States and Canada, serving as the North American building block of the STOXX Global 1800. It is subdivided into the STOXX USA 500 (covering the 500 largest US equities) and a Canadian component. The index provides a STOXX-methodology-consistent benchmark for the North American equity market.
@@ -1967,15 +1745,6 @@ This is STOXX's comprehensive index for North American stocks, covering 600 comp
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx Index Guide (PDF)**
-> ders of their region in terms of free-float market capitalization. STOXX Europe 50, selected from
-> the STOXX Europe 600 Index STOXX Nordic 30, selected from STOXX Nordic Total Market Index STOXX
-> Asia/Pacific 50, selected from the STOXX Asia/Pacific 600 Index STOXX North America 50, selected
-> from the **STOXX North America 600** Index For the EURO STOX...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> **Istoxx Index Guide (PDF)**
 > iSTOXX® METHODOLOGY GUIDE 434/1024 44. iSTOXX GLOBAL ESG EX- CONTROVERSIAL ACTIVITIES SELECT 30
 > INDEX ▪ North America : components of the **STOXX North America 600** Index ▪ Europe: components
 > of the STOXX Europe 600 Index ▪ Asia/Pacific: components of the STOXX Asia/Pacific 600 Index c.
@@ -1983,23 +1752,27 @@ This is STOXX's comprehensive index for North American stocks, covering 600 comp
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> arget TE STOXX Global ESG Environmental Leaders STOXX Global ESG Governance Leaders STOXX Global
-> ESG Governance Leaders Select 30 EUR STOXX Global ESG Leaders STOXX Global ESG Leaders Select 50
-> Risk Control 10% STOXX Global ESG Social Leaders STOXX Japan 600 ESG Target STOXX Japan 600 ESG
-> Target TE **STOXX North America 600** ESG Target STOXX North ...
+> ders of their region in terms of free-float market capitalization. STOXX Europe 50, selected from
+> the STOXX Europe 600 Index STOXX Nordic 30, selected from STOXX Nordic Total Market Index STOXX
+> Asia/Pacific 50, selected from the STOXX Asia/Pacific 600 Index STOXX North America 50, selected
+> from the **STOXX North America 600** Index For the EURO STOX...
 >
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
+> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stocks Post Worst Month, Quarter Since 2008 in March | Blog posts | STOXX**
-> estimate the US economy will contract 4.2% this year and the Eurozone’s will slow down by 6.9%.4
-> Readings of annualized volatility (measured as the standard deviation of daily index returns)
-> spiked for all benchmarks and indeed across the entire STOXX range of indices. The volatility
-> ratio for the **STOXX North America 600** Index reached an all-tim...
+> BIS (France, Utilities) will change to Oil & Gas. UBS GROUP (Switzerland, Banks) will change to
+> Financial Services. As of May 29, 2020, the total free-float market cap of the reconstituted STOXX
+> Europe 600 Index increased from 7.59 trillion euros to 7.62 trillion euros. The STOXX Global 1800
+> Index, **STOXX North America 600** Index and STOXX Asia/Pa...
 >
-> — [Stocks Post Worst Month, Quarter Since 2008 in March | Blog posts | STOXX](https://stoxx.com/stocks-post-worst-month-quarter-since-2008-in-march)
+> — [Changes In Composition Of STOXX Benchmark Indices - Jun. 1, 2020 | Press rele...](https://stoxx.com/changes-in-composition-of-stoxx-benchmark-indices)
 >
-> **Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)**
+> ZUG (March 1, 2019) – STOXX Ltd., the operator of Deutsche Boerse Group’s index business, and a
+> global provider of innovative and tradable index concepts, today announced the new composition of
+> STOXX Benchmarks and their sub and sector indices, among them the STOXX Europe 600 Index, **STOXX
+> North America 600** Index and STOXX Asia/Pacific 600 Index....
+>
+> — [STOXX Changes Composition Of Benchmark Indices - Mar. 1, 2019 | Press release...](https://stoxx.com/stoxx-changes-composition-of-benchmark-indices-6)
+>
 > and 13, the feedback was to also possibly consider inclusion of greenhouse gas emissions, carbon
 > intensity reduction screens. Qontigo may explore these at a later stage. Impacted Indices EURO
 > STOXX 50 ESG STOXX Japan 600 ESG Broad Market STOXX USA 500 ESG Broad Market STOXX USA 900 ESG
@@ -2033,7 +1806,6 @@ The Select Dividend family is a set of indices for income-seeking investors acro
 
 > [!example]- Source excerpts (3)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 110/639 1100.. STSOTOXXX XD DIVIVIDIDENENDD IN INDDICICESE S **STOXX
 > SELECT DIVIDEND INDICES** 10.1.1. OVERVIEW Similar to the Blue-Chip indices, the **STOXX Select
 > Dividend indices** are derived from their benchmark indices or their regional subsets. They cover
@@ -2041,7 +1813,6 @@ The Select Dividend family is a set of indices for income-seeking investors acro
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 110/639 1100.. STSOTOXXX XD DIVIVIDIDENENDD IN INDDICICESE S **STOXX
 > SELECT DIVIDEND INDICES** 10.1.1. OVERVIEW Similar to the Blue-Chip indices, the **STOXX Select
 > Dividend indices** are derived from their benchmark indices or their regional subsets. They cover
@@ -2049,7 +1820,6 @@ The Select Dividend family is a set of indices for income-seeking investors acro
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Istoxx Index Guide (PDF)**
 > ighting cap factors are reviewed quarterly. ONGOING MAINTENANCE Replacements: Please refer to
 > section 10.1.4, “Replacements”, in the **STOXX Select Dividend Indices** methodology within the
 > STOXX Index Methodology Guide for further details. Fast exit: Please refer to section 10.1.4,
@@ -2062,7 +1832,7 @@ The Select Dividend family is a set of indices for income-seeking investors acro
 
 ### STOXX USA 500
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="174 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 174</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="148 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 148</span>
 
 
 > The STOXX USA 500 index tracks 500 of the largest US equities by free-float market capitalisation. It is the US component of the STOXX North America 600 index and provides a broad, STOXX-methodology-consistent benchmark for the US market. The index is comparable in scope to other major US large-cap indices but follows STOXX's own selection and maintenance rules.
@@ -2083,23 +1853,6 @@ The STOXX USA 500 is STOXX's benchmark for the US stock market, covering the 500
 
 > [!example]- Source excerpts (5)
 >
-> **New Study: Gauging the Effect of ESG Exclusions Through the STOXX USA 500 ESG...**
-> exclusions on the **STOXX USA 500**. Data show that the exclusions increased volatility relative
-> to the benchmark, although did so only marginally. The Sharpe ratio and maximum drawdowns for the
-> benchmark, ESG-X index and individual exclusions were broadly in line. We invite you to read more
-> about the **STOXX USA 500** ESG-X Index’s methodology, constit...
->
-> — [New Study: Gauging the Effect of ESG Exclusions Through the STOXX USA 500 ESG...](https://stoxx.com/new-study-gauging-the-effect-of-esg-exclusions-through-the-stoxx-usa-500-esg-x)
->
-> **Q&amp;A: Swedbank’s Linder on New STOXX USA 500 ESG-X ESG Futures | STOXX**
-> ot only a solution in terms of mandate and compliance. The futures also result in significant
-> savings relative to trading an ESG basket of stocks. Investing in a basket of stocks that meet
-> sustainability standards can cost multiple times more than buying futures on the STOXX Europe 600
-> ESG-X or the **STOXX USA 500** ESG-X indices because of the accu...
->
-> — [Q&amp;A: Swedbank’s Linder on New STOXX USA 500 ESG-X ESG Futures | STOXX](https://stoxx.com/qa-swedbanks-linder-on-new-stoxx-usa-500-esg-x-esg-futures)
->
-> **Eurex Launches Futures on STOXX USA 500 ESG-X | Blog posts | STOXX**
 > In February 2020, sustainable investing will reach a new chapter when Eurex lists futures on the
 > STOXX® USA 500 ESG-X Index. The **STOXX USA 500** ESG-X Index is a benchmark for US equities that
 > incorporates basic responsible exclusions and that was designed based on feedback from European
@@ -2107,7 +1860,20 @@ The STOXX USA 500 is STOXX's benchmark for the US stock market, covering the 500
 >
 > — [Eurex Launches Futures on STOXX USA 500 ESG-X | Blog posts | STOXX](https://stoxx.com/eurex-launches-futures-on-stoxx-usa-500-esg-x)
 >
-> **Tesla’s place in a US stock benchmark | Blog posts | STOXX**
+> exclusions on the **STOXX USA 500**. Data show that the exclusions increased volatility relative
+> to the benchmark, although did so only marginally. The Sharpe ratio and maximum drawdowns for the
+> benchmark, ESG-X index and individual exclusions were broadly in line. We invite you to read more
+> about the **STOXX USA 500** ESG-X Index’s methodology, constit...
+>
+> — [New Study: Gauging the Effect of ESG Exclusions Through the STOXX USA 500 ESG...](https://stoxx.com/new-study-gauging-the-effect-of-esg-exclusions-through-the-stoxx-usa-500-esg-x)
+>
+> STOXX Europe 600 Index futures.” What do the new USA 500 ESG-X contracts add to the ESG
+> derivatives offering? “We are excited we can expand that same liquid ESG exposure to the US, a
+> market that gets an important part of our clients’ asset allocation. What’s also of particular
+> interest is that the **STOXX USA 500** ESG-X includes a negative screen f...
+>
+> — [Q&amp;A: Swedbank’s Linder on New STOXX USA 500 ESG-X ESG Futures | STOXX](https://stoxx.com/qa-swedbanks-linder-on-new-stoxx-usa-500-esg-x-esg-futures)
+>
 > ed No.10. The stock’s position was as high as No.7 on Aug. 31 this year, before a market rout in
 > September weighed on its share price. Tesla has been a constituent of the index long enough to
 > allow investors to have benefited from this year’s stock surge — even after the recent pullback.
@@ -2115,20 +1881,19 @@ The STOXX USA 500 is STOXX's benchmark for the US stock market, covering the 500
 >
 > — [Tesla’s place in a US stock benchmark | Blog posts | STOXX](https://stoxx.com/teslas-place-in-a-us-stock-benchmark)
 >
-> **Macroeconomic exposures of style indices: What you don&#039;t know could hurt...**
-> most macroeconomic exposure among this set of indices, with an average of more than 30% of the
-> risk coming from these exposures for both standard and industry-neutral portfolios and a maximum
-> of about 56% (see the red shaded portion of Exhibit 1). Exhibit 1 – Percentage contribution to
-> active risk, **STOXX USA 500** style indices Exhibit 2 – Summary...
+> STOXX Global 1800 Climate Transition Benchmark,**STOXX USA 500** Climate Transition
+> Benchmark,STOXX USA 900 Climate Transition Benchmark, EURO STOXX Paris-Aligned Benchmark,EURO
+> STOXX Total Market Paris-Aligned Benchmark,STOXX Europe 600 Paris-Aligned Benchmark,STOXX Global
+> 1800 Paris-Aligned Benchmark,**STOXX USA 500** Paris-Aligned Benchmark,STOXX USA...
 >
-> — [Macroeconomic exposures of style indices: What you don&#039;t know could hurt...](https://stoxx.com/macroeconomic-exposures-of-style-indices-what-you-dont-know-could-hurt-you)
+> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
 
 ---
 
 ### STOXX World Equity Indices
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="97 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 97</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="93 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 93</span>
 
 
 > The STOXX World Equity index family provides comprehensive coverage of global equity markets, including both developed and emerging markets. The family includes the STOXX World AC (All Countries) index, which covers approximately 95% of the global free-float market capitalisation, and sub-indices by region, country, size, and sector. It serves as the broadest equity universe in the STOXX family.
@@ -2150,45 +1915,40 @@ This is STOXX's widest-reaching equity index family, covering stocks from virtua
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx World Equity 2022 12 (PDF)**
-> pitalization weighted indices tracking the performance of large, mid and small cap stocks from
-> developed and emerging markets. The index family offers a modular suite of products that allow
-> investors to flexibly build their strategies while providing broad and liquid coverage of
-> underlying markets. **STOXX World Equity indices** enable investors to ...
->
-> — [Stoxx World Equity 2022 12 (PDF)](https://stoxx.com/wp-content/uploads/2022/12/STOXX_World-Equity_2022-12.pdf)
->
-> **Monthly Index News April 2023 (PDF)**
-> MONTHLY INDEX NEWS / April 2023 Newsletter updates We regularly update this newsletter to include
-> additional indices and consider layout modifications to the various sections. The **STOXX World
-> Equity indices** section has been introduced in this month’s issue, and the STOXX® Europe Luxury
-> 10 index has been added to the Thematic indices section. 1/3...
+> MONTHLY INDEX NEWS / April 2023 World Equity indices Key points The STOXX® World Equity indices
+> are a modular suite that allows investors to flexibly build portfolios covering a broad and liquid
+> universe of markets. Introduced in 2022, the **STOXX World Equity indices** comprise Qontigo’s
+> largest pool of markets and stocks to date. With turnover and...
 >
 > — [Monthly Index News April 2023 (PDF)](https://stoxx.com/monthly-index-news-april-2023)
 >
-> **Benchmark indices | STOXX**
-> e STOXX USA 500. STOXX Benchmark indices are market capitalization weighted indices with a fixed
-> number of constituents. We offer global, regional and country Benchmark indices. - For information
-> on the EURO STOXX 50 and the DAX indices, please go to Blue-chip indices. - For more information
-> on the **STOXX World Equity indices**, please go to Global...
+> STOXX® World Equity Index Series Building blocks for targeted investment solutions The **STOXX
+> World Equity indices** are market-capitalization weighted indices tracking the performance of
+> large, mid and small cap stocks from developed and emerging markets. The index family offers a
+> modular suite of products that allow investors to flexibly build th...
 >
-> — [Benchmark indices | STOXX](https://stoxx.com/equity-indices/benchmark-indices)
+> — [Stoxx World Equity 2022 12 (PDF)](https://stoxx.com/wp-content/uploads/2022/12/STOXX_World-Equity_2022-12.pdf)
 >
-> **Monthly Index News November 2024 (PDF)**
-> ex News / November 2024 World Equity indices Key points The STOXX® World AC rose 3.6% last month,
-> its best month since May. The STOXX® World Equity indices are a modular suite that allows
-> investors to flexibly build portfolios covering a broad and liquid universe of markets. Introduced
-> in 2022, the **STOXX World Equity indices** comprise STOXX’s lar...
+> Skip to main content Looking for an index? Looking for other information? Select Your Account
+> STOXX Subscribe Our Solutions Back Index Featured indices DAX EURO STOXX 50 STOXX Europe 600
+> **STOXX World Equity indices** Equity Factor indices ISS STOXX Net Zero Transition indices
+> Artificial Intelligence indices STOXX ICE Fixed Income Sustainability ind...
 >
-> — [Monthly Index News November 2024 (PDF)](https://stoxx.com/monthly-index-news-november-2024)
+> — [CSP Reports | STOXX](https://stoxx.com/csp-reports)
 >
-> **Monthly Index News December 2025 (PDF)**
-> rket-capitalization filters in the stock selection to ensure they are tradable and representative,
-> the indices track the performance of large-, mid- and small-cap stocks from a full range of
-> developed and emerging markets, as well as derived sector strategies. There are two defining
-> features of the **STOXX World Equity indices**: their exhaustive sc...
+> We offer a broad range of global, regional and country indices in different size segments. Our
+> **STOXX World Equity indices** provide a global comprehensive, modular offering that can serve as
+> building blocks to create sophisticated indices. In the STOXX Total Market Country Indices (TMI)
+> family, each country index aims to represent a broad market a...
 >
-> — [Monthly Index News December 2025 (PDF)](https://stoxx.com/monthly-index-news-december-2025)
+> — [Global and regional indices | STOXX](https://stoxx.com/equity-indices/global-and-regional-indices)
+>
+> ps and downs of the European economy over the past 25 years, the EURO STOXX 50, STOXX® Europe 600
+> and DAX® tracked the fate of the region’s largest companies. Our indices quickly acquired a global
+> footprint, too: the STOXX® Global 1800 Index became a popular benchmark, and in 2022 we introduced
+> the **STOXX World Equity indices**. This new suite allo...
+>
+> — [STOXX celebrates 25 years of pioneering excellence in ever-changing financial...](https://stoxx.com/stoxx-celebrates-25-years-of-pioneering-excellence-in-ever-changing-financial-markets-landscape)
 >
 
 ---
@@ -2197,7 +1957,7 @@ This is STOXX's widest-reaching equity index family, covering stocks from virtua
 
 ### TecDAX
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="572 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 572</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="393 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 393</span>
 
 
 > The TecDAX comprises the 30 largest and most liquid technology stocks listed on the Frankfurt Stock Exchange, ranked by order-book volume and free-float market capitalisation. Since September 2018, TecDAX membership is no longer mutually exclusive with the DAX or MDAX, meaning a company can belong to multiple indices simultaneously. Technology classification is based on sector assignment.
@@ -2220,45 +1980,40 @@ The TecDAX is Germany's answer to a technology-focused index. It tracks the 30 b
 
 > [!example]- Source excerpts (5)
 >
-> **Change Ahead for the SDAX, MDAX and TecDAX Indices | Blog posts | STOXX**
-> gh level of liquidity and tradability,” Deutsche Boerse said. Transition period The new
-> methodology will be applied for the first time in the creation of the eligibility ranking list
-> published on the third trading day of September and will be reflected in the index calculation of
-> the MDAX, SDAX and **TecDAX** as of Sept. 24 this year. Starting on Ju...
+> ZUG (January 8, 2025) – STOXX Ltd., part of the ISS STOXX group of companies and leading provider
+> of benchmark and custom index solutions to global institutional investors, today announced an
+> unscheduled component change in the SDAX, HDAX and **TecDAX** indices. Media Contact Sarah Ball
+> Executive Director, Communications press@iss-stoxx.com NEXUS AG...
 >
-> — [Change Ahead for the SDAX, MDAX and TecDAX Indices | Blog posts | STOXX](https://stoxx.com/change-ahead-for-the-sdax-mdax-and-tecdax-indices)
+> — [Unscheduled component change in SDAX, HDAX and TecDAX (January 8, 2025) | Pre...](https://stoxx.com/unscheduled-component-change-in-sdax-hdax-and-tecdax-jan-8-2025)
 >
-> **Deutsche Börse verlängert Marktbefragung zu möglichen Regeländerungen für Ind...**
-> ren könnten DAX-Unternehmen, die den Tech-Sektoren zugeordnet werden, auch in den **TecDAX**
-> aufgenommen werden, unabhängig von ihrer Größe und Liquidität. Ziel der Überarbeitung ist eine
-> Angleichung an aktuelle internationale Standards. Zum anderen wird gleichzeitig eine Erweiterung
-> des MDAX, SDAX und **TecDAX** überprüft. Auf Basis der vielfältigen Rü...
->
-> — [Deutsche Börse verlängert Marktbefragung zu möglichen Regeländerungen für Ind...](https://stoxx.com/deutsche-borse-verlangert-marktbefragung-zu-moglichen-regelanderungen-fur-indizes-mdax-sdax-und-tecdax)
->
-> **Unscheduled component changes in SDAX, HDAX and TecDAX (May 6, 2025) | Press ...**
-> lobal institutional investors, today announced the following unscheduled changes to the SDAX, HDAX
-> and **TecDAX**. Media Contact Sarah Ball Executive Director, Communications press@iss-stoxx.com
-> Nagarro SE, Mutares SE & Co. KGaA and STRATEC SE will leave the SDAX, with Nagarro also leaving
-> the HDAX and **TecDAX**, due to the breach of Basic Criteria def...
->
-> — [Unscheduled component changes in SDAX, HDAX and TecDAX (May 6, 2025) | Press ...](https://stoxx.com/unscheduled-component-changes-in-sdax-hdax-and-tecdax-may-6-2025)
->
-> **TecDAX: a comprehensive view of Germany’s technology prowess | Blog posts | S...**
-> ius, Evotec and Carl Zeiss Meditec. When looking at factor attribution in the past decade, the
-> Industry factor, or the share of returns that can be explained by a stock’s sector, generated the
-> highest active returns, according to Axioma data. Methodology updates As with other DAX Selection
-> Indices, **TecDAX** has seen important updates to its method...
+> **TecDAX**®, the benchmark for German technology stocks, was launched on March 24, 2003. With an
+> average annual return of 12% since inception,[1] the index’s broad yet focused approach offers
+> exposure to technology companies across several industries. This approach allows investors to
+> track technology p
 >
 > — [TecDAX: a comprehensive view of Germany’s technology prowess | Blog posts | S...](https://stoxx.com/tecdax-a-comprehensive-view-of-germanys-technology-prowess)
 >
-> **Deutsche Börse extends market consultation on potential rule changes for the ...**
-> changes includes eliminating the tech and classic classification. This would mean that companies
-> classified as tech could be simultaneously entered in the **TecDAX** as well as the MDAX or SDAX
-> in the future. Another would be that DAX companies allocated to the tech sectors could also be
-> entered in the **TecDAX**, regardless of their size or liquidity. ...
+> DAX and SDAX in future. Further, DAX companies that are in the technology sectors can now also be
+> included in the **TecDAX** index. In addition, the MDAX and SDAX indices are being expanded: the
+> number of stocks in the MDAX is rising from 50 to 60 and the number of stocks in the SDAX from 50
+> to 70. The **TecDAX** index, by contrast, will remain unchange...
 >
-> — [Deutsche Börse extends market consultation on potential rule changes for the ...](https://stoxx.com/deutsche-borse-extends-market-consultation-on-potential-rule-changes-for-the-mdax-sdax-and-tecdax-indices)
+> — [Deutsche Börse decides rule changes for MDAX, SDAX and TecDAX indices | Press...](https://stoxx.com/deutsche-borse-decides-rule-changes-for-mdax-sdax-and-tecdax-indices)
+>
+> (Zug, 20. Juli 2023) – STOXX Ltd., der globale Indexanbieter von Qontigo, hat außerordentliche
+> Änderungen der Indexzusammensetzung von MDAX, SDAX und **TecDAX** bekannt gegeben. Software AG
+> wird aus MDAX und **TecDAX** gelöscht, weil der Streubesitz im Zusammenhang mit einer Übernahme
+> unter zehn Prozent gesunken ist. Nach den Regeln des „Guide to the DA...
+>
+> — [Außerplanmäßige Wechsel in MDAX, SDAX und TecDAX - Juli 20, 2023 | Press rele...](https://stoxx.com/auserplanmasige-wechsel-in-mdax-sdax-und-tecdax-juli-20-2023)
+>
+> RIB Software SE (DE000A0Z2XN6) by Schneider Electric SE (FR0000121972) the free float of RIB
+> Software SE falls below 10 percent. According to the Guide to the DAX Equity Indices, section
+> 5.1.5. Adjustments in the Case of Mergers and Acquisitions, RIB Software SE shares will be deleted
+> from SDAX and **TecDAX**. They will be replaced by Stratec SE (DE...
+>
+> — [Unscheduled changes in SDAX and TecDAX - 27 April, 2020 | Press releases | STOXX](https://stoxx.com/unscheduled-changes-in-sdax-and-tecdax)
 >
 
 ---
@@ -2267,7 +2022,7 @@ The TecDAX is Germany's answer to a technology-focused index. It tracks the 30 b
 
 ### VSTOXX
 
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,042 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,042</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="875 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 875</span>
 
 
 > The VSTOXX index measures the implied volatility of the EURO STOXX 50 index over a 30-day horizon. It is calculated from the prices of EURO STOXX 50 put and call options across multiple strike prices and expiration dates, using a variance swap methodology. The VSTOXX is expressed in annualised percentage points and rises when market uncertainty or fear increases.
@@ -2290,15 +2045,6 @@ The VSTOXX is Europe's "fear gauge." When investors are nervous about the future
 
 > [!example]- Source excerpts (5)
 >
-> **Video: Upcoming elections and market volatility. What is the VSTOXX index tel...**
-> The **VSTOXX**®, short for EURO STOXX 50® Volatility index, measures the implied volatility of
-> EURO STOXX 50 index options and hence the implied risk of the broader equity market. It’s known as
-> a gauge of risk aversion or market fear — when the **VSTOXX** rises, it is said that investors are
-> buying puts to prot
->
-> — [Video: Upcoming elections and market volatility. What is the VSTOXX index tel...](https://stoxx.com/upcoming-elections-and-market-volatility-what-is-the-vstoxx-index-telling-us)
->
-> **VSTOXX Backwardation Streaks and Short Volatility Trades | STOXX**
 > The following article was originally published by Eurex. By Russell Rhoads CFA, Head of Research
 > and Consulting, EQDerivatives As of the market close on Apr. 14, the short end of the **VSTOXX**®
 > Index futures’ term structure curve has been in backwardation every trading day since Feb. 24.
@@ -2306,29 +2052,33 @@ The VSTOXX is Europe's "fear gauge." When investors are nervous about the future
 >
 > — [VSTOXX Backwardation Streaks and Short Volatility Trades | STOXX](https://stoxx.com/vstoxx-backwardation-streaks-and-short-volatility-trades)
 >
-> **What’s next for VSTOXX? Eurex-hosted panel explores the next evolution in vol...**
-> ally useful and facilitate the trading strategies that have seen such success in the **VSTOXX**
-> and EURO STOXX 50,” he said. Speaking after the presentation, Tom confirmed that STOXX is not
-> currently working on new regional or sector volatility indices, and that there is no immediate
-> plan to expand the **VSTOXX** suite, although this is something that r...
+> The calculation behind **VSTOXX**® (EURO STOXX 50® Volatility index), the flagship gauge for
+> European volatility, is being adjusted to strengthen the index’s trading ecosystem. All indices in
+> the **VSTOXX** family have a settlement level that is calculated on the 30th calendar day
+> preceding the expiry of VSTOXX options on Eurex.[1] A settlement level is...
 >
-> — [What’s next for VSTOXX? Eurex-hosted panel explores the next evolution in vol...](https://stoxx.com/whats-next-for-vstoxx-eurex-hosted-panel-explores-the-next-evolution-in-volatility-indices)
+> — [VSTOXX daily settlement price window expanded to enhance volatility trading |...](https://stoxx.com/vstoxx-daily-settlement-price-window-expanded-to-enhance-volatility-trading)
 >
-> **VSTOXX futures see increased activity amid market pullback and ahead of Frenc...**
-> atility. As such, they capture the event along with the long-term performance that precedes it.
-> **VSTOXX** futures have in the past reflected traders’ interest to hedge or monetize event risk
-> around Italian and German elections, as well as the Brexit vote in June 2016. The futures’ target
-> expiry is the **VSTOXX** expiration that settles into the EURO ST...
->
-> — [VSTOXX futures see increased activity amid market pullback and ahead of Frenc...](https://stoxx.com/vstoxx-futures-see-increased-activity-amid-market-pullback-and-ahead-of-french-elections)
->
-> **VSTOXX turns 20: Experts appraise the volatility index’s standing in equity m...**
-> multiple volatility trading strategies. In 2024, over 21 million futures and options on **VSTOXX**
-> exchanged hands on Eurex. The **VSTOXX** indices track real-time options prices on the EURO STOXX
-> 50® benchmark, thus reflecting market expectations of future volatility in Eurozone stocks.
-> Although the main VSTOXX 30 days index (STOXX ticker: V2TX) is the...
+> Understanding Europe’s Volatility Benchmark | We caught up with experts at Eurex and STOXX to ask
+> them what **VSTOXX** represents for investment portfolios as the index enters its third decade of
+> existence. Below are some excerpts. Zubin Ramdarshan, Head of Derivatives Product Design, Deutsche
+> Börse: “**VSTOXX** — Europe’s ‘fear gauge’ — has entered the...
 >
 > — [VSTOXX turns 20: Experts appraise the volatility index’s standing in equity m...](https://stoxx.com/vstoxx-turns-20-experts-appraise-the-volatility-indexs-standing-in-equity-markets)
+>
+> **VSTOXX** futures, hence reflecting expectations regarding the volatility of volatility.
+> Elsewhere, Qontigo’s volatility strategy indices include the EURO STOXX 50® Investable Volatility
+> Index, which measures forward implied volatility in the Eurozone equity market, the **VSTOXX**®
+> Short-Term Futures and VSTOXX® Mid-Term Futures Indices, VSTOXX® Short-...
+>
+> — [VSTOXX Jumps to Near Record Amid Unprecedented Sentiment Deterioration | STOXX](https://stoxx.com/vstoxx-jumps-to-near-record-amid-unprecedented-sentiment-deterioration)
+>
+> Vice President for Product Research and Development, takes a comprehensive and in-depth look at
+> the objective, methodology, coverage and calculation of the indices in the most complete study
+> from STOXX on the topic to date. The paper is an excellent opportunity to get introduced to, or
+> revisit, the **VSTOXX** and the concepts of volatility and volat...
+>
+> — [VSTOXX 101: Understanding Europe’s volatility benchmark | Blog posts | STOXX](https://stoxx.com/vstoxx-101-understanding-europes-volatility-benchmark_blog)
 >
 
 ---
@@ -2337,7 +2087,7 @@ The VSTOXX is Europe's "fear gauge." When investors are nervous about the future
 
 ### STOXX Europe 50
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="98 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 98</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="86 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 86</span>
 
 
 > The STOXX Europe 50 index comprises 50 blue-chip stocks from 17 European countries, selected from the STOXX Europe 600. It covers the largest companies across the full geographic scope of European developed markets, including non-Eurozone countries such as the United Kingdom and Switzerland.
@@ -2358,7 +2108,6 @@ This is the broader European counterpart to the EURO STOXX 50. While the EURO ST
 
 > [!example]- Source excerpts (5)
 >
-> **Linde Replaces Barclays In The STOXX Europe 50 Index | Press releases | STOXX**
 > ZUG (December 3, 2018) – STOXX Ltd., the operator of Deutsche Boerse Group’s index business, and a
 > global provider of innovative and tradable index concepts, today announced a change in the
 > composition of the **STOXX Europe 50** Index. The shares of Linde (IE00BZ12WP82) will be included
@@ -2366,7 +2115,6 @@ This is the broader European counterpart to the EURO STOXX 50. While the EURO ST
 >
 > — [Linde Replaces Barclays In The STOXX Europe 50 Index | Press releases | STOXX](https://stoxx.com/linde-replaces-barclays-in-the-stoxx-europe-50-index)
 >
-> **London Stock Exchange and Intesa Sanpaolo to be included in the STOXX Europe ...**
 > ZUG (September 2, 2024) – STOXX Ltd. today announced the results of the regular annual review of
 > the STOXX Blue-Chip Indices, among them the EURO STOXX 50, **STOXX Europe 50**, and the STOXX
 > Eastern Europe 50 indices. All changes will be effective with the opening of European markets on
@@ -2374,7 +2122,6 @@ This is the broader European counterpart to the EURO STOXX 50. While the EURO ST
 >
 > — [London Stock Exchange and Intesa Sanpaolo to be included in the STOXX Europe ...](https://stoxx.com/london-stock-exchange-and-intesa-sanpaolo-to-be-included-in-the-stoxx-europe-50-index-sep-2-2024)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 235/639 14. STOXX SUSTAINABILITY INDICES **STOXX EUROPE 50** ESG+
 > INDEX 14.19.1. OVERVIEW The **STOXX Europe 50** ESG+ Index reflects the STOXX Europe 50 Index
 > after a set of compliance, involvement and ESG performance screens are applied. Companies that are
@@ -2382,15 +2129,13 @@ This is the broader European counterpart to the EURO STOXX 50. While the EURO ST
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
-> methodology of these indices. • Adding additional screens for Coal (>1%), Oil fuels (>10%),
-> Gaseous fuels (>50% / Power generation), to "Exclude investments in companies referred to in
-> Article 12(1)(a) to (g) of CDR (EU) 2020/1818 (PAB exclusionary screens)" DAX 50 ESG+ MDAX ESG+
-> EURO STOXX 50 ESG+ **STOXX Europe 50** ESG+ STOXX Europe 600 ESG+ V. T...
+> 000 on October 31, 2024, and the historical index values are available E from September 20, 2019.
+> 5 Index types and currencies: Price, Net and Gross return in EUR 0 Dissemination calendar: STOXX
+> Europe calendar E INDEX REVIEW X Selection List N/A F Composition List I Only companies that are
+> part of **STOXX Europe 50** and not part of Financials (ICB...
 >
-> — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
+> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> **Stoxx Infographic Stoxxeurope600 (PDF)**
 > 600 are 600 Banks among the most heavily Tracks the largest traded index derivatives on banks in
 > Europe. Eurex, the leading European derivatives exchange. STOXX Europe STOXX Europe Small 200 600
 > ESG-X Tracks 200 small-sized The index applies standardized companies in Europe. ESG exclusion
@@ -2424,7 +2169,6 @@ These are sub-indices of the STOXX Europe 600, each tracking a specific sector -
 
 > [!example]- Source excerpts (3)
 >
-> **Stoxx Index Guide (PDF)**
 > imilar to **STOXX Europe 600 Sector indices**, except for replacements of Greece, Czech Republic
 > or Iceland. A combined factor of 1 is applied to all new components that are added between two
 > reviews. Fast exit: Not applicable. Fast entry: Not applicable. Spin-offs: Spin-offs are treated
@@ -2432,7 +2176,6 @@ These are sub-indices of the STOXX Europe 600, each tracking a specific sector -
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > imilar to **STOXX Europe 600 Sector indices**, except for replacements of Greece, Czech Republic
 > or Iceland. A combined factor of 1 is applied to all new components that are added between two
 > reviews. Fast exit: Not applicable. Fast entry: Not applicable. Spin-offs: Spin-offs are treated
@@ -2440,7 +2183,6 @@ These are sub-indices of the STOXX Europe 600, each tracking a specific sector -
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...**
 > nds. Value sector While the banking sector in Europe lags behind others in terms of earnings
 > growth, investors can nonetheless tap those profits at lower relative prices, following years of
 > underperformance. The STOXX Europe 600 Banks index has the second-lowest price-to-earnings ratio
@@ -2453,7 +2195,7 @@ These are sub-indices of the STOXX Europe 600, each tracking a specific sector -
 
 ### STOXX ESG-X Indices
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="122 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 122</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="121 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 121</span>
 
 
 > The STOXX ESG-X index family applies exclusionary ESG screening to standard STOXX benchmark indices. Companies involved in controversial weapons (cluster munitions, anti-personnel mines, biological and chemical weapons), tobacco production, and those violating the UN Global Compact principles are removed. The "X" in the name denotes "exclusion."
@@ -2474,7 +2216,6 @@ ESG-X indices are the simplest form of ESG integration: they take a standard STO
 
 > [!example]- Source excerpts (5)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 189/639 14. STOXX SUSTAINABILITY INDICES STOXX ESG-X SELECT DIVIDEND
 > INDICES 14.9.1. OVERVIEW The STOXX ESG-X Select Dividend indices are derived from the **STOXX
 > ESG-X indices** and select a fixed number of stocks which represent the highest-yielding stocks
@@ -2482,37 +2223,33 @@ ESG-X indices are the simplest form of ESG integration: they take a standard STO
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Monthly Index News May 2020 (PDF)**
-> MONTHLY INDEX NEWS / May ESG-X Indices Key points The **STOXX ESG-X Indices** came slightly ahead
-> of their benchmarks during May, allowing investors to generate above-market returns while
-> complying with sustainable policies. The ESG-X indices are versions of traditional,
-> market-capitalization-weighted benchmarks that observe standard responsible exc...
->
-> — [Monthly Index News May 2020 (PDF)](https://stoxx.com/monthly-index-news-may-2020)
->
-> **Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF)**
-> and norms-based screening, where the focus is more on alignment with investment policies and moral
-> codes than on potentially enhancing a benchmark’s risk-return profile. Although employing such
-> exclusions sometimes leads to a positive impact on performance (as demon- strated in our previous
-> paper, **STOXX eSG-X indices**), this should be seen as a b...
->
-> — [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF)](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
->
-> **Raising Your Responsible Investment Strategy? Explore Qontigo´s Expanded STOX...**
-> different level of sustainability penetration. We call these buckets ‘Exclude’ and ‘Enhance.’
-> Let’s review them. Figure 1 – STOXX’s two ESG buckets ‘Exclude’ strategies – an efficient starting
-> base The first category is a starting point in responsible engagement and risk mitigation. It
-> includes the **STOXX ESG-X indices**, which implement standard n...
->
-> — [Raising Your Responsible Investment Strategy? Explore Qontigo´s Expanded STOX...](https://stoxx.com/raising-your-responsible-investment-strategy-explore-qontigos-expanded-stoxx-sustainability-index-solutions)
->
-> **New Study: Gauging the Effect of ESG Exclusions Through the STOXX USA 500 ESG...**
 > n in our study. Growing implementation of ESG strategies Sustainable investing has gathered
 > extraordinary pace in recent years, and many asset owners and investors must now comply with
 > responsible principles in their asset allocation. However, this doesn’t need to come at a cost to
 > performance. The **STOXX ESG-X Indices** deliver risk-return profile...
 >
 > — [New Study: Gauging the Effect of ESG Exclusions Through the STOXX USA 500 ESG...](https://stoxx.com/new-study-gauging-the-effect-of-esg-exclusions-through-the-stoxx-usa-500-esg-x)
+>
+> ’ and ‘Enhance’ (Figure 1). Today’s post delves deeper into the indices that constitute the first
+> category, Exclude, which is a starting point in responsible engagement and risk mitigation. Figure
+> 1 – STOXX’s two ESG categories > ESG-X Indices The first index family in this category consists of
+> the **STOXX ESG-X indices**, which implement standard n...
+>
+> — [Qontigo’s ‘Exclude’ Sustainable Index Category – An Efficient Starting Point ...](https://stoxx.com/qontigos-exclude-sustainable-index-category)
+>
+> MONTHLY INDEX NEWS / December 2020 ESG-X Indices Key Points The major **STOXX ESG-X indices**
+> performed broadly in line with benchmarks during December, allowing investors to generate
+> market-type returns while complying with sustainable policies. For the entire year, most of the
+> indices beat their benchmarks. The ESG-X indices are versions of tradit...
+>
+> — [Monthly Index News December 2020 (PDF)](https://stoxx.com/monthly-index-news-december-2020)
+>
+> G-X universe is a filtered version of that of the STOXX benchmarks. The exclusion criteria consist
+> of norm-based screening (Sustainalytics’ Global Standards Screening), as well as
+> product-involvement screening (controversial weapons, thermal coal and tobacco), based on data
+> from Sustainalytics. The **STOXX ESG-X Indices** cover more than 40 geograph...
+>
+> — [Combining ESG Screens and Factor Tilts: A Study on Portfolio Returns | Blog p...](https://stoxx.com/combining-esg-screens-and-factor-tilts-a-study-on-portfolio-returns)
 >
 
 ---
@@ -2540,7 +2277,6 @@ Most indices assign a company to a country based on where its headquarters or li
 
 > [!example]- Source excerpts (3)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 12/639 2. CHANGES TO THE GUIDE BOOK March 2015: Addition of STOXX
 > ASEAN Select Dividend 30 March 2015: Addition of STOXX International Exposure Indices June 2015:
 > Addition of **STOXX True Exposure Indices** July 2015: Addition of STOXX Activist Indices October
@@ -2548,7 +2284,6 @@ Most indices assign a company to a country based on where its headquarters or li
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Stoxx Index Guide (PDF)**
 > STOXX INDEX METHODOLOGY GUIDE 12/639 2. CHANGES TO THE GUIDE BOOK March 2015: Addition of STOXX
 > ASEAN Select Dividend 30 March 2015: Addition of STOXX International Exposure Indices June 2015:
 > Addition of **STOXX True Exposure Indices** July 2015: Addition of STOXX Activist Indices October
@@ -2556,7 +2291,6 @@ Most indices assign a company to a country based on where its headquarters or li
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> **Unfazed UK Stocks Reach Record Ahead of Brexit | Blog posts | STOXX**
 > nd. To assess how important the currency advantage has been on UK stocks, it may help to look at
 > the STOXX True Exposure, or TRU, indices. The indices track companies not only by their country of
 > domicile, but also by the country or region of revenue sourcing. Figure 3 shows the performance of
@@ -2569,7 +2303,7 @@ Most indices assign a company to a country based on where its headquarters or li
 
 ### STOXX Sustainability Indices
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="269 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 269</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="243 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 243</span>
 
 
 > The STOXX Sustainability index family selects companies from standard STOXX benchmarks based on comprehensive ESG criteria provided by ISS ESG. The selection process combines exclusionary screening (controversial activities and norms violations) with best-in-class ESG performance within each sector, retaining the top-ranked companies. These indices were among the earliest sustainability benchmarks in Europe.
@@ -2591,7 +2325,20 @@ The STOXX Sustainability indices represent a middle ground in ESG indexing -- st
 
 > [!example]- Source excerpts (3)
 >
-> **Sustainability indices | STOXX**
+> STOXX INDEX METHODOLOGY GUIDE 252/639 14. **STOXX SUSTAINABILITY INDICES** Animal Testing STOXX
+> will exclude companies that ISS ESG identifies to have: Involvement in animal testing for
+> non-pharmaceutical purposes. The "Non-Pharmaceutical" factor refers to the use of live animal
+> testing as part of the development of non-pharmaceutical products.
+>
+> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> STOXX INDEX METHODOLOGY GUIDE 252/639 14. **STOXX SUSTAINABILITY INDICES** Animal Testing STOXX
+> will exclude companies that ISS ESG identifies to have: Involvement in animal testing for
+> non-pharmaceutical purposes. The "Non-Pharmaceutical" factor refers to the use of live animal
+> testing as part of the development of non-pharmaceutical products.
+>
+> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
 > **STOXX Sustainability indices** provide a toolkit to incorporate sustainability objectives and
 > constraints. Key benefits Transparency and simplicity We provide a clear and easy-to-explain,
 > rules-based framework Liquidity and tradability Liquidity considerations always play a crucial
@@ -2599,28 +2346,12 @@ The STOXX Sustainability indices represent a middle ground in ESG indexing -- st
 >
 > — [Sustainability indices | STOXX](https://stoxx.com/sustainability-indices-overview)
 >
-> **Stoxx Index Guide (PDF)**
-> STOXX INDEX METHODOLOGY GUIDE 164/639 14. **STOXX SUSTAINABILITY INDICES** Derived indices: The
-> EURO STOXX Sustainability Index is a subset of the STOXX Europe Sustainability Index covering only
-> Eurozone countries. 14.1.3. ONGOING MAINTENANCE Replacements: Deleted companies are not replaced
-> in the **STOXX Sustainability indices**. Fast Exit: Not ap
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> **Stoxx Index Guide (PDF)**
-> STOXX INDEX METHODOLOGY GUIDE 164/639 14. **STOXX SUSTAINABILITY INDICES** Derived indices: The
-> EURO STOXX Sustainability Index is a subset of the STOXX Europe Sustainability Index covering only
-> Eurozone countries. 14.1.3. ONGOING MAINTENANCE Replacements: Deleted companies are not replaced
-> in the **STOXX Sustainability indices**. Fast Exit: Not ap
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
 
 ---
 
 ### iSTOXX Indices
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > The iSTOXX index family is a range of customisable and innovative indices designed primarily for use as underlyings for structured products, ETFs, and other financial instruments. The "i" prefix denotes indices that use non-standard or proprietary methodologies, including risk-control mechanisms, leverage overlays, decrement features, and bespoke selection rules.
@@ -2639,17 +2370,8 @@ The iSTOXX brand is where STOXX puts its more specialised, product-oriented indi
 > [!tip] Related terms
 > [[#STOXX Europe 600]] | [[#EURO STOXX 50]] | [[index-construction#Risk Control Index]] | [[index-construction#Decrement Index]]
 
-> [!example]- Source excerpts (4)
+> [!example]- Source excerpts (3)
 >
-> **Istoxx Index Guide (PDF)**
-> ll strategy indices » The STOXX DVP Calculation guide describes the dividend points products » The
-> STOXX Distribution Points Calculation guide describes the distribution points products » The
-> iSTOXX Methodology guide contains the index specific rules regarding the construction and
-> derivation of the **iSTOXX indices**, the individual component select...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> **STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...**
 > ZUG, Switzerland (September 11, 2025) – STOXX Ltd., part of the ISS STOXX group of companies,
 > today announced its expanding collaboration with L&G, with L&G’s launch of three developed world
 > factor-based index funds tracking customized **iSTOXX indices**. These funds, built on customized
@@ -2657,21 +2379,19 @@ The iSTOXX brand is where STOXX puts its more specialised, product-oriented indi
 >
 > — [STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...](https://stoxx.com/stoxx-and-lg-collaborate-on-launch-of-three-lg-developed-world-factor-based-index-funds)
 >
-> **Factor Investing | STOXX**
-> ic growth will help corporate earnings. Factor Investing STOXX and L&G collaborate on launch of
-> three L&G developed world factor-based index funds STOXX Ltd. today announced its expanding
-> collaboration with L&G, with L&G’s launch of three developed world factor-based index funds
-> tracking customized **iSTOXX indices**. Stocks gained for a fifth conse...
->
-> — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing)
->
-> **Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...**
 > gnificant advantages in terms of implementation and costs,” said Christoph Gackstatter, Senior
 > Index Product Developer at Qontigo. “We are excited to innovate once again with a new index
 > concept that provides a systematic, rules-based and transparent approach.” Analysis of pairs
 > Figures 2 to 4 show **iSTOXX indices** tracking the spread ratio betwee...
 >
 > — [Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...](https://stoxx.com/spread-ratio-indices-help-trade-relative-value-between-related-securities)
+>
+> ic growth will help corporate earnings. Factor Investing STOXX and L&G collaborate on launch of
+> three L&G developed world factor-based index funds STOXX Ltd. today announced its expanding
+> collaboration with L&G, with L&G’s launch of three developed world factor-based index funds
+> tracking customized **iSTOXX indices**. Stocks gained for a fifth conse...
+>
+> — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing)
 >
 
 ---
@@ -2699,7 +2419,6 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 
 > [!example]- Source excerpts (4)
 >
-> **Stocks Cap Dramatic Year with December Gains | Blog posts | STOXX**
 > XX artificial-intelligence-driven thematic indices outperformed the benchmark STOXX Global 1800 in
 > the month that ended, led by a 6.9% increase for the STOXX® AI Global Artificial Intelligence
 > Index. The measure climbed 31.3% in 2020. 1 All results are total returns before taxes unless
@@ -2707,7 +2426,6 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 >
 > — [Stocks Cap Dramatic Year with December Gains | Blog posts | STOXX](https://stoxx.com/stocks-cap-dramatic-year-with-december-gains)
 >
-> **Stocks Gain in February; Economic Optimism Offsets Inflation Concerns | Blog ...**
 > ility, and was a strong underperformer in recent months. Dividend strategies were overall very
 > weak performers in 2020 and have since recently reversed their trend. 1 All results are total
 > returns before taxes unless specified. 2 The European index is in euros, while the other two are
@@ -2715,7 +2433,6 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 >
 > — [Stocks Gain in February; Economic Optimism Offsets Inflation Concerns | Blog ...](https://stoxx.com/stocks-gain-in-february)
 >
-> **Stocks Start Year on Cautious Note | Blog posts | STOXX**
 > dend yields with low volatility, and was a strong underperformer in recent months. Dividend
 > strategies were overall very weak performers in 2020. 1 All results are total returns before taxes
 > unless specified. 2 See WSJ, ‘GameStop Stock, Reddit and Robinhood: What You Need to Know,’ Jan.
@@ -2723,7 +2440,6 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 >
 > — [Stocks Start Year on Cautious Note | Blog posts | STOXX](https://stoxx.com/stocks-start-year-on-cautious-note)
 >
-> **STOXX Global 1800 Index Posts Best Month on Record in November on Vaccine New...**
 > EURO STOXX 50® ESG Index DAX® 50 ESG Index STOXX® Paris-Aligned Benchmark Indices STOXX® Climate
 > Transition Benchmark Indices STOXX® Global Climate Impact Ex Global Compact Controversial Weapons
 > & Tobacco Index STOXX Thematic Indices 1 All results are total returns before taxes unless
@@ -2736,7 +2452,7 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 
 ### DAX Risk Control Indices
 
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
 > The DAX Risk Control index family applies a volatility-targeting mechanism to the DAX. The strategy dynamically shifts allocation between the DAX (the risky asset) and a cash component (the risk-free asset) to target a specified level of realised volatility. Variants target different volatility levels, such as 5%, 10%, 15%, or 20% annualised.
@@ -2757,7 +2473,6 @@ Risk control indices are like an autopilot for managing market turbulence. When 
 
 > [!example]- Source excerpts (1)
 >
-> **Dax Strategy Index Guide (PDF)**
 > DAX STRATEGY INDEX GUIDE 24/57 6. **DAX RISK CONTROL INDICES** 6. **DAX RISK CONTROL INDICES**
 > 6.1. DAX RISK CONTROL INDICES 6.1.1. OVERVIEW A target volatility concept is applied to the DAX
 > (GR) Index. Whereas the risk profile of the DAX Index is the uncontrolled outcome of the existing
@@ -2792,15 +2507,6 @@ This index identifies global ESG leaders by evaluating companies across three se
 
 > [!example]- Source excerpts (5)
 >
-> **New STOXX Global ESG Leaders index constituents announced | Blog posts | STOXX**
-> ng index constituents. Germany’s BASF AG, General Mills Inc. of the US, and France’s LVMH SE are
-> among 44 companies that have exited. Following the review, the index comprises 425 constituents:
-> 280 from Europe, 79 from North America and 66 from Asia/Pacific. Best performers in each ESG
-> category The **STOXX Global ESG Leaders Index** is STOXX’s broad...
->
-> — [New STOXX Global ESG Leaders index constituents announced | Blog posts | STOXX](https://stoxx.com/new-stoxx-global-esg-leaders-index-constituents-announced)
->
-> **STOXX Global ESG Leaders Index: Methodology and Composition | Blog posts | STOXX**
 > In industries, the ESG Leaders index has lower exposure to Technology, Health Care and Consumer
 > Discretionary than does the benchmark, in favour of Utilities, Basic Materials and Real Estate.
 > Exhibit 1 – Country allocation (right) and industry allocation (left) “The 2020 annual index
@@ -2808,7 +2514,13 @@ This index identifies global ESG leaders by evaluating companies across three se
 >
 > — [STOXX Global ESG Leaders Index: Methodology and Composition | Blog posts | STOXX](https://stoxx.com/the-benchmark-for-esg-corporate-leaders)
 >
-> **Qontigo announces new composition of STOXX Global ESG Leaders Index | Press r...**
+> ng index constituents. Germany’s BASF AG, General Mills Inc. of the US, and France’s LVMH SE are
+> among 44 companies that have exited. Following the review, the index comprises 425 constituents:
+> 280 from Europe, 79 from North America and 66 from Asia/Pacific. Best performers in each ESG
+> category The **STOXX Global ESG Leaders Index** is STOXX’s broad...
+>
+> — [New STOXX Global ESG Leaders index constituents announced | Blog posts | STOXX](https://stoxx.com/new-stoxx-global-esg-leaders-index-constituents-announced)
+>
 > announced the results of the annual review of the STOXX® Global ESG Leaders Index, which tracks
 > the leading companies with respect to environmental, social and governance (ESG) criteria. Media
 > Contact General Inquiries: media@qontigo.com Index Inquiries: Andreas von Brevern +49 (0) 69 211
@@ -2816,21 +2528,19 @@ This index identifies global ESG leaders by evaluating companies across three se
 >
 > — [Qontigo announces new composition of STOXX Global ESG Leaders Index | Press r...](https://stoxx.com/qontigo-announces-new-composition-of-stoxx-global-esg-leaders-index)
 >
-> **New STOXX Global ESG Leaders Announced | Blog posts | STOXX**
-> nd is weighted by the sustainability scores. Before the selection process begins, companies deemed
-> non-compliant with Sustainalytics’ Global Standards Screening (GSS) assessment,1 and those
-> involved with controversial weapons, are excluded.2 For more on the methodology, please click
-> here. Table 1 – **STOXX Global ESG Leaders Index** members per coun...
->
-> — [New STOXX Global ESG Leaders Announced | Blog posts | STOXX](https://stoxx.com/new-stoxx-global-esg-leaders-announced_2021)
->
-> **Istoxx Index Guide (PDF)**
-> iSTOXX® METHODOLOGY GUIDE 66/1024 77.. iiSSTTOOXXXX EESSGG SSEELLEECCTT IINNDDIICCEESS . 7.1.
-> iSTOXX GLOBAL ESG SELECT 100 INDEX OVERVIEW The index represents the top 100 companies from the
-> **STOXX Global ESG Leaders index** in terms of lowest volatility and highest dividend yield.
-> Universe: The index universe are stocks from the STOXX Global ESG Le...
+> /1024 77.. iiSSTTOOXXXX EESSGG SSEELLEECCTT IINNDDIICCEESS . 7.1. iSTOXX GLOBAL ESG SELECT 100
+> INDEX OVERVIEW The index represents the top 100 companies from the **STOXX Global ESG Leaders
+> index** in terms of lowest volatility and highest dividend yield. Universe: The index universe are
+> stocks from the **STOXX Global ESG Leaders Index** Weighting scheme...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+>
+> STOXX INDEX METHODOLOGY GUIDE 292/639 14. STOXX SUSTAINABILITY INDICES ESG LEADERS BLUE-CHIP
+> INDICES 14.27.1. OVERVIEW The universe is predefined as **STOXX Global ESG Leaders Index**. Based
+> on percentile ESG Risk Rating Management scores, an average overall score is calculated. The
+> necessary percentile ESG Risk Rating Management scores are taken fr...
+>
+> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
 
 ---

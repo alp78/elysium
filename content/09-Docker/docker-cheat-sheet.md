@@ -417,7 +417,7 @@ docker compose [OPTIONS] up [UP_OPTIONS] [SERVICE...]
 | `--ansi WHEN` | Control ANSI color: `never`, `always`, `auto` |
 | `--progress TYPE` | Progress output: `auto`, `tty`, `plain`, `quiet` |
 
-**`up` options:**
+#### `up` options
 
 | Flag | Description |
 |---|---|

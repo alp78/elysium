@@ -25,7 +25,7 @@ Git is not optional for data engineering. Every SQL migration, every DAG definit
 
 ## Step 1: Check What's Changed
 
-**Show the state of the working directory and staging area:**
+#### git status — show working directory and staging area state
 
 ```bash
 git status
@@ -33,7 +33,7 @@ git status
 # In plain English: What's changed since my last save point?
 ```
 
-**Compact one-line-per-file status:**
+#### git status -s — compact one-line-per-file status
 
 ```bash
 git status -s
@@ -41,7 +41,7 @@ git status -s
 # Left column = staged, right column = unstaged
 ```
 
-**View changes in detail:**
+#### git diff, git diff --staged — view changes in detail
 
 ```bash
 git diff                    # unstaged changes (what you've modified but not staged)
@@ -49,7 +49,7 @@ git diff --staged           # staged changes (what will be in the next commit)
 git diff main...HEAD        # all changes on your branch vs main (PR preview)
 ```
 
-**View recent history:**
+#### git log --oneline -10 — view recent commit history
 
 ```bash
 git log --oneline -20
@@ -62,7 +62,7 @@ git log --oneline --graph --decorate -20
 
 ## Step 2: Stage Changes (Choose What to Commit)
 
-**Stage a specific file for the next commit:**
+#### git add file — stage a specific file for the next commit
 
 ```bash
 git add filename.py
@@ -70,14 +70,14 @@ git add filename.py
 # In plain English: Mark this file to be included in the next save point.
 ```
 
-**Stage all changes in specific directories:**
+#### git add dir/ — stage all changes in specific directories
 
 ```bash
 git add src/transforms/ tests/
 # Stage everything in these directories
 ```
 
-**Stage ALL changes (new, modified, and deleted):**
+#### git add -A — stage ALL changes (new, modified, deleted)
 
 ```bash
 git add -A
@@ -88,7 +88,7 @@ git add -A
 > [!warning] Avoid `git add -A` or `git add .` in Production Repos
 > In repos with sensitive files (.env, credentials), stage specific files by name instead. Use [[gitignore-patterns|.gitignore]] as a safety net, not as your primary defense against committing secrets or large files.
 
-**Interactive staging (choose individual changes within files):**
+#### git add -p — interactive staging, choose hunks within files
 
 ```bash
 git add -p
@@ -96,7 +96,7 @@ git add -p
 # In plain English: Review each change one by one and pick which ones to include.
 ```
 
-**Unstage a file (remove from staging area, keep changes):**
+#### git restore --staged file — unstage a file, keep working changes
 
 ```bash
 git reset HEAD filename.py
@@ -109,7 +109,7 @@ git restore --staged filename.py
 
 ## Step 3: Commit (Create a Save Point)
 
-**Create a commit with a message:**
+#### git commit -m "message" — create a commit
 
 ```bash
 git commit -m "fix: correct timezone handling in OHLCV transform"
@@ -117,7 +117,7 @@ git commit -m "fix: correct timezone handling in OHLCV transform"
 # -m "..." = the commit message (inline, no editor opens)
 ```
 
-**Create a commit with title and body:**
+#### git commit -m "title" -m "body" — commit with title and description
 
 ```bash
 git commit -m "feat: add daily signal fetcher" -m "Fetches PE, yield, and momentum from yfinance."
@@ -125,7 +125,7 @@ git commit -m "feat: add daily signal fetcher" -m "Fetches PE, yield, and moment
 # Second -m = the body (longer description)
 ```
 
-**Amend the last commit (rewrite it):**
+#### git commit --amend — amend the last commit
 
 ```bash
 git commit --amend -m "fix: correct timezone handling"
@@ -152,7 +152,7 @@ Use present tense imperative ("add", "fix", "update" — not "added", "fixed"). 
 
 ## Step 4: Push (Upload to GitHub)
 
-**Upload local commits to the remote branch:**
+#### git push — upload local commits to remote
 
 ```bash
 git push
@@ -160,7 +160,7 @@ git push
 # In plain English: Send your save points to GitHub so the team can see them.
 ```
 
-**Push a new branch and set up tracking:**
+#### git push -u origin branch — push new branch and set up tracking
 
 ```bash
 git push -u origin feat/my-feature
@@ -170,7 +170,7 @@ git push -u origin feat/my-feature
 # After this, plain "git push" works without specifying origin/branch
 ```
 
-**Delete a branch on GitHub:**
+#### git push origin --delete branch — delete remote branch
 
 ```bash
 git push origin --delete feat/old-branch
@@ -180,7 +180,7 @@ git push origin --delete feat/old-branch
 
 ## Step 5: Pull (Download from GitHub)
 
-**Download and merge the team's latest changes:**
+#### git pull — download and merge the team's latest changes
 
 ```bash
 git pull
@@ -188,7 +188,7 @@ git pull
 # In plain English: Download the team's latest changes and merge them into your work.
 ```
 
-**Download and rebase (cleaner history, no merge commits):**
+#### git pull --rebase — download and rebase for clean linear history
 
 ```bash
 git pull --rebase
@@ -196,7 +196,7 @@ git pull --rebase
 # In plain English: Download latest changes, then replay your work on top. Cleaner history.
 ```
 
-**Download new data without merging (safe inspection):**
+#### git fetch — download new data without merging (safe inspection)
 
 ```bash
 git fetch

@@ -48,7 +48,7 @@ A typical file layout for a GCP project:
 
 Every resource has two names:
 
-**Resource with Terraform-internal name and GCP name:**
+#### resource "type" "name" — Terraform-internal name vs GCP name
 ```hcl
 resource "google_compute_firewall" "allow_sql" {   # "allow_sql" = Terraform-internal name
   name = "allow-sql-from-airflow"                          # "allow-sql-from-airflow" = actual name in GCP

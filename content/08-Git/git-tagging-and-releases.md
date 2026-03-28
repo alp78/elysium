@@ -30,7 +30,7 @@ Git has two types of tags:
 
 ## Creating Tags
 
-**Create a lightweight tag on the current commit:**
+#### git tag v1.0.0 — create a lightweight tag on HEAD
 
 ```bash
 git tag v1.0.0
@@ -39,7 +39,7 @@ git tag v1.0.0
 - `tag` — create a named reference pointing to a commit
 - `v1.0.0` — the tag name (convention: prefix with `v`, use semantic versioning)
 
-**Create an annotated tag with a message (preferred for releases):**
+#### git tag -a v1.0.0 -m "message" — annotated tag (preferred for releases)
 
 ```bash
 git tag -a v1.0.0 -m "First production release"
@@ -49,7 +49,7 @@ git tag -a v1.0.0 -m "First production release"
 - `v1.0.0` — the tag name
 - `-m "..."` — the tag message describing this release
 
-**Tag a specific past commit (not just HEAD):**
+#### git tag v1.0.0 abc1234 — tag a specific past commit
 
 ```bash
 git tag -a v0.9.0 -m "Beta release" abc1234
@@ -59,7 +59,7 @@ git tag -a v0.9.0 -m "Beta release" abc1234
 
 ## Listing Tags
 
-**Show all tags in the repository:**
+#### git tag, git tag -l "v1.*" — list and filter tags
 
 ```bash
 git tag
@@ -78,7 +78,7 @@ git tag -n
 
 ## Pushing Tags to GitHub
 
-**Push a single tag to the remote:**
+#### git push origin v1.0.0 — push a single tag to remote
 
 ```bash
 git push origin v1.0.0
@@ -87,7 +87,7 @@ git push origin v1.0.0
 - `origin` — the remote name
 - `v1.0.0` — the specific tag to push. Tags are not included in regular `git push` — you must name them explicitly, or use `--tags`.
 
-**Push all local tags to the remote:**
+#### git push --tags — push all local tags to remote
 
 ```bash
 git push origin --tags
@@ -110,7 +110,7 @@ Git itself has no opinion on tag naming. The data engineering community conventi
 
 Pre-release versions use a hyphen suffix: `v1.0.0-beta.1`, `v1.0.0-rc.2`.
 
-**Typical release workflow:**
+#### Typical release workflow
 
 ```bash
 # 1. Ensure main is up to date and all PRs are merged
@@ -128,13 +128,13 @@ After pushing, GitHub automatically creates a **Release** entry visible in the r
 
 ## Deleting Tags
 
-**Delete a local tag:**
+#### git tag -d v1.0.0 — delete a local tag
 
 ```bash
 git tag -d v1.0.0-draft
 ```
 
-**Delete a tag on the remote:**
+#### git push origin --delete v1.0.0 — delete a remote tag
 
 ```bash
 git push origin --delete v1.0.0-draft

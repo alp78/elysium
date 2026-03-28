@@ -50,7 +50,7 @@ resource "google_compute_subnetwork" "main" {
 2. Wait for the VPC to finish
 3. Create the subnet with the resolved ID
 
-**The three most common attribute references:**
+#### .id, .name, .self_link — the three most common attribute references
 
 | Reference pattern | What it gets |
 |------------------|-------------|
@@ -104,7 +104,7 @@ locals {
 }
 ```
 
-**Path breakdown:**
+#### resource.name.block[0].attribute — traversing nested attributes
 - `google_compute_instance.sql` — the resource
 - `.network_interface` — a list of network interfaces (most VMs have one)
 - `[0]` — the first (and only) interface
@@ -135,7 +135,7 @@ resource "google_project_iam_member" "pipeline_bq_access" {
 }
 ```
 
-**When to use `depends_on`:**
+#### depends_on — when to use explicit dependencies
 - When a dependency exists through data that Terraform doesn't track (e.g., a secret value in an external system)
 - When ordering is required but no attribute reference expresses it
 - When a resource reads from another indirectly (e.g., via `data` sources)

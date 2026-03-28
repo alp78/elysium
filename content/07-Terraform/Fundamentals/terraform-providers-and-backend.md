@@ -18,7 +18,7 @@ The provider block tells Terraform which cloud platform to manage, and the backe
 
 ## Provider and Backend Configuration
 
-**main.tf — Provider and GCS backend configuration:**
+#### provider "google" + backend "gcs" — main.tf full configuration
 ```hcl
 terraform {
   required_version = ">= 1.5"
@@ -81,7 +81,7 @@ Tells Terraform to store its **state file** remotely in a Google Cloud Storage b
 
 If the state file is local, only one machine can run `terraform apply`. With GCS backend, the state is centralized and locked during operations — preventing concurrent modifications. It also means the state survives if your laptop dies.
 
-**Alternative book example — slightly different naming:**
+#### Backend configuration variant — alternative naming pattern
 ```hcl
 terraform {
   required_version = ">= 1.6"

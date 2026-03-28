@@ -241,7 +241,7 @@ terraform apply -target=google_storage_bucket.data -auto-approve
 terraform apply -replace=google_compute_instance.bastion -auto-approve
 ```
 
-**Full anatomy of an apply invocation:**
+#### terraform apply — full anatomy of an apply invocation
 
 ```
 terraform \
@@ -532,7 +532,7 @@ terraform import [OPTIONS] ADDRESS ID
 | `-no-color` | Disable color output. |
 | `-allow-missing-config` | Import even if no corresponding config block exists (creates a dangling state entry). |
 
-**Full anatomy of a terraform import:**
+#### terraform import — full anatomy of an import invocation
 
 ```
 terraform \

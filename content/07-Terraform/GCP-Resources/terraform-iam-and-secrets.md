@@ -45,7 +45,7 @@ resource "google_service_account" "pipeline" {
 | `account_id` | `data-pipeline-pipeline` | Creates the email `data-pipeline-pipeline@<project>.iam.gserviceaccount.com`. Must be 6-30 characters, lowercase letters, digits, and hyphens. |
 | `display_name` | `the data pipeline project Pipeline` | Human-readable name shown in the GCP console. |
 
-**Three core service accounts:**
+#### google_service_account — three core SAs: pipeline, airflow, dashboard
 
 | Account | Used by | Purpose |
 |---------|---------|---------|

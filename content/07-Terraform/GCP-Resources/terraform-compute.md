@@ -137,7 +137,7 @@ The startup script (`airflow-startup.sh`) runs on every boot and is idempotent �
 10. **Start scheduler** — picks up DAGs, creates task instances, assigns them to executors
 11. **Start triggerer** — handles deferred tasks (async operators like `CloudRunExecuteJobOperator`)
 
-**Key startup script details:**
+#### metadata_startup_script — key Airflow VM startup details
 
 | Aspect | Value | Why |
 |--------|-------|-----|

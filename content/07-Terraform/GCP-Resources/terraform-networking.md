@@ -31,7 +31,7 @@ This note covers the complete GCP network topology for a production data enginee
 
 **IAP (Identity-Aware Proxy)** — Google's managed tunnel service. IAP authenticates you with your Google identity, then forwards traffic to your VM from the `35.235.240.0/20` range. Your actual IP never reaches the VM — Google's IAP service acts as a proxy. This is how `gcloud compute ssh` works without exposing SSH to the internet. IAP is a separate path from NAT — it does not use or depend on NAT.
 
-**Ingress vs Egress:**
+#### Ingress vs Egress — traffic direction in GCP firewall rules
 
 | Direction | What it means | Default in GCP |
 |-----------|---------------|----------------|
@@ -276,7 +276,7 @@ resource "google_compute_firewall" "deny_all_ingress" {
 
 ## gcloud Verification Commands
 
-**After `terraform apply`, verify the network was created correctly:**
+#### gcloud compute networks/firewall-rules list — verify after terraform apply
 
 ```bash
 # List VPCs

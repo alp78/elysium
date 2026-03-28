@@ -124,7 +124,7 @@ These commands configure your Git identity and global preferences. Run them once
 
 ### Identity (required before your first commit)
 
-**Set your author name for all commits:**
+#### git config --global user.name — set author name for all commits
 
 ```bash
 git config --global user.name "Your Name"
@@ -138,7 +138,7 @@ git config --global user.name "Your Name"
 
 *In plain English:* Tell Git who you are so your teammates know who made each change.
 
-**Set your author email:**
+#### git config --global user.email — set author email
 
 ```bash
 git config --global user.email "your.email@company.com"
@@ -153,7 +153,7 @@ git config --global user.email "your.email@company.com"
 
 ### Useful Global Settings
 
-**Set default branch name for new repos to `main`:**
+#### git config --global init.defaultBranch main — set default branch name
 
 ```bash
 git config --global init.defaultBranch main
@@ -163,7 +163,7 @@ git config --global init.defaultBranch main
 
 *In plain English:* New repos will start with a branch called `main`.
 
-**Fix line-ending differences between Windows / Mac / Linux:**
+#### git config core.autocrlf — fix line-ending differences across OS
 
 ```bash
 git config --global core.autocrlf true
@@ -176,7 +176,7 @@ git config --global core.autocrlf true
 > [!tip] Linux and macOS Users
 > On Linux or macOS, use `core.autocrlf input` instead of `true`. This converts CRLF to LF on commit but does not convert on checkout, keeping your files with Unix line endings.
 
-**Set merge as default pull strategy (safer for beginners):**
+#### git config pull.rebase false — set merge as default pull strategy
 
 ```bash
 git config --global pull.rebase false
@@ -186,7 +186,7 @@ git config --global pull.rebase false
 
 *In plain English:* When syncing with the team, merge their changes into yours (don't rewrite your history).
 
-**View all current Git configuration:**
+#### git config --list --show-origin — view all current configuration
 
 ```bash
 git config --list
@@ -215,7 +215,7 @@ git config --global credential.helper manager-core
 
 ### Initialize a New Repository
 
-**Initialize a new Git repository in the current directory:**
+#### git init — initialize a new repository in the current directory
 
 ```bash
 git init
@@ -230,7 +230,7 @@ git init
 
 ### Clone an Existing Repository
 
-**Download a complete copy of a remote repository:**
+#### git clone — download a complete copy of a remote repository
 
 ```bash
 git clone https://github.com/org/repo.git
@@ -241,7 +241,7 @@ git clone https://github.com/org/repo.git
 
 *In plain English:* Download the project from GitHub to your computer.
 
-**Clone into a specific folder name:**
+#### git clone URL folder — clone into a specific directory
 
 ```bash
 git clone https://github.com/org/repo.git my-folder
@@ -251,7 +251,7 @@ git clone https://github.com/org/repo.git my-folder
 
 *In plain English:* Download the project into a specific folder name.
 
-**Shallow clone (latest commit only, faster for large repos):**
+#### git clone --depth 1 — shallow clone, latest commit only
 
 ```bash
 git clone --depth 1 https://github.com/org/repo.git

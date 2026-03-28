@@ -69,7 +69,7 @@ terraform plan -out=tfplan
 > [!warning] Always Review the Plan
 > Never run `terraform apply` without first reviewing `terraform plan`. Terraform can and will destroy production resources if the configuration changes. Look specifically for lines beginning with `-` (destroy) and `~` (update in-place).
 
-**Plan output symbols:**
+#### Plan output symbols — +create, ~update, -destroy, -/+replace
 
 | Symbol | Meaning |
 |--------|---------|
@@ -94,7 +94,7 @@ terraform apply
 > [!info] For the data pipeline project
 > The data pipeline project applies Terraform changes **manually** — there is no automated `terraform apply` in CI/CD. CI/CD only handles application code (Docker images, Cloud Run deployments). Infrastructure changes are deliberate, reviewed, and applied by hand.
 
-**Targeted apply — apply only specific resources:**
+#### terraform apply -target — apply only specific resources
 
 ```bash
 # Apply specific resource only
@@ -165,7 +165,7 @@ terraform -chdir=infra import google_cloud_run_v2_service.dashboard \
   projects/<project>/locations/europe-west1/services/data-pipeline-dashboard
 ```
 
-**Import process:**
+#### terraform import — import existing GCP resources into state
 1. Write the resource block in your `.tf` files (Terraform needs to know the resource type and Terraform name)
 2. Run `terraform import` with the GCP resource ID
 3. Run `terraform plan` — Terraform will show what diffs exist between your `.tf` configuration and the actual resource
@@ -209,7 +209,7 @@ See [[terraform-module-composition]] for module design patterns.
 
 The following patterns cover additional GCP resources commonly managed with Terraform:
 
-**Pub/Sub topics and subscriptions:**
+#### google_pubsub_topic, google_pubsub_subscription — Pub/Sub resources
 
 ```hcl
 # pubsub.tf — event-driven messaging for pipeline orchestration
@@ -252,7 +252,7 @@ resource "google_pubsub_subscription" "pipeline_push" {
 }
 ```
 
-**BigQuery datasets and tables:**
+#### google_bigquery_dataset, google_bigquery_table — BigQuery resources
 
 ```hcl
 # bigquery.tf — data warehouse layer
@@ -302,7 +302,7 @@ resource "google_bigquery_table" "daily_ohlcv" {
 }
 ```
 
-**Provider and project configuration (main.tf root module):**
+#### provider "google" + backend "gcs" — main.tf root module configuration
 
 ```hcl
 # main.tf — root module

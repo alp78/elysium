@@ -97,7 +97,7 @@ gh secret delete OLD_SECRET
 # secret delete — remove a secret permanently
 ```
 
-**How workflows use secrets:**
+#### How workflows use secrets
 
 ```yaml
 steps:
@@ -108,7 +108,7 @@ steps:
 
 The `credentials_json` field receives the full JSON content of the service account key. The action uses it to authenticate with GCP for deployments.
 
-**Common secrets for GCP projects:**
+#### Common secrets for GCP projects
 
 | Secret name | What it contains | Used by |
 |------------|-----------------|---------|
@@ -116,7 +116,7 @@ The `credentials_json` field receives the full JSON content of the service accou
 | `DD_API_KEY` | Datadog API key | Pipeline containers for APM/log shipping |
 | `DB_PASSWORD` | Database SA password | Pipeline and dashboard containers |
 
-**Important rules:**
+#### Important rules
 
 - Never commit secret files (`.json` keys, `.env` files) to Git — add them to `.gitignore`
 - Secrets are not passed to workflows triggered from **forks** (including Dependabot) — this is a GitHub security feature

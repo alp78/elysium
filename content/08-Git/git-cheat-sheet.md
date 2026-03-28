@@ -67,7 +67,7 @@ git config [OPTIONS] [SECTION.KEY [VALUE]]
 | `--show-scope` | Show scope (system/global/local/worktree) |
 | `--type TYPE` | Value type: `bool`, `int`, `bool-or-int`, `path`, `expiry-date`, `color` |
 
-**Essential settings:**
+#### Essential settings
 
 | Key | Example Value | Purpose |
 |---|---|---|
@@ -116,7 +116,7 @@ git config --global --get core.editor
 git config --global --edit
 ```
 
-**Credential helpers:**
+#### Credential helpers
 
 ```bash
 git config --global credential.helper osxkeychain       # macOS
@@ -473,7 +473,7 @@ git rebase --exec "npm test" main      # Run tests after each commit
 git rebase --autostash main            # Stash dirty state first
 ```
 
-**Interactive rebase commands:**
+#### Interactive rebase commands
 
 | Command | Abbreviation | Effect |
 |---|---|---|
@@ -736,7 +736,7 @@ git log --format="%h %an %ar %s"       # Custom: hash author date subject
 git log --format="%H" -- src/          # All commit hashes touching src/
 ```
 
-**`--format` placeholders:**
+#### `--format` placeholders
 
 | Placeholder | Meaning |
 |---|---|
@@ -857,7 +857,7 @@ git stash push -- src/                 # Stash only specific path(s)
 git stash push --include-untracked -- src/
 ```
 
-**Other stash subcommands:**
+#### Other stash subcommands
 
 | Subcommand | Description |
 |---|---|

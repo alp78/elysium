@@ -182,7 +182,7 @@ gh pr create --title "fix: resolve missing volume and stale OHLCV data" --body "
 gh pr merge 7 --squash
 ```
 
-**But it fails:**
+#### But it fails
 
 ```
 Pull request #7 is not mergeable: the merge commit cannot be cleanly created.
@@ -233,7 +233,7 @@ git rebase --continue
 - `git add` — mark the file as resolved
 - `git rebase --continue` — apply the resolution and move to the next commit (if any)
 
-**Other rebase escape hatches:**
+#### Other rebase escape hatches
 - `git rebase --abort` — cancel the rebase entirely and go back to the state before you started
 - `git rebase --skip` — skip the current commit (use only if the commit is no longer needed)
 

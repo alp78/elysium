@@ -28,27 +28,27 @@ Docker containers are the runtime environment for pipeline stages, databases, an
 
 ### Core Flags
 
-**Detached mode — run in the background:**
+#### docker run -d — detached mode, run in the background
 ```bash
 # -d starts the container in the background and prints the container ID
 docker run -d --name airflow-scheduler airflow:2.8
 ```
 
-**Interactive mode — open a shell inside a container:**
+#### docker run -it — interactive mode with terminal
 ```bash
 # -it = -i (keep stdin open) + -t (allocate a pseudo-TTY)
 # Use this to explore an image interactively or debug a running process
 docker run -it --name debug-session python:3.11 bash
 ```
 
-**Name the container:**
+#### docker run --name — assign a container name
 ```bash
 # Without --name, Docker assigns a random name like "hungry_tesla"
 # Named containers are easier to reference in logs, exec, stop, etc.
 docker run -d --name postgres-db postgres:16
 ```
 
-**Port mapping — publish container ports to the host:**
+#### docker run -p host:container — port mapping
 ```bash
 # -p HOST_PORT:CONTAINER_PORT
 # Maps container port 5432 to host port 5432
@@ -61,7 +61,7 @@ docker run -d --name postgres-db2 -p 5433:5432 postgres:16
 docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 ```
 
-**Volume mounts — persist data and inject config files:**
+#### docker run -v host:container — volume mounts for data persistence
 
 When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [[airflow-deployment|Airflow containers]], the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [[file-manipulation|file permission patterns]] used in shell administration.
 
@@ -85,7 +85,7 @@ docker run -it --rm \
 # -w sets the working directory inside the container
 ```
 
-**Environment variables — pass configuration at runtime:**
+#### docker run -e VAR=value — environment variables at runtime
 ```bash
 # -e KEY=VALUE sets a single environment variable
 docker run -d --name postgres-db \
@@ -95,7 +95,7 @@ docker run -d --name postgres-db \
   postgres:16
 ```
 
-**Environment file — load variables from a file:**
+#### docker run --env-file .env — load environment from file
 ```bash
 # --env-file loads all KEY=VALUE pairs from a file
 # The file must NOT have "export" prefixes — plain KEY=VALUE only
@@ -112,7 +112,7 @@ docker run -d --name my-pipeline \
 > [!tip] .env File Security
 > Never commit `.env` files to git. Add `.env` to `.gitignore`. For CI/CD, inject secrets via the pipeline platform's secret store (GitHub Actions secrets, GitLab CI variables, etc.) and pass them with `--env-file` or `-e` at runtime.
 
-**Auto-remove on exit — clean up one-off containers automatically:**
+#### docker run --rm — auto-remove container on exit
 ```bash
 # --rm deletes the container immediately when it exits
 # Perfect for one-off jobs, data transforms, or debugging sessions
@@ -127,7 +127,7 @@ docker run --rm \
   dbt run --select my_model
 ```
 
-**Restart policy — automatically restart containers after failure or reboot:**
+#### docker run --restart unless-stopped — restart policy after failure or reboot
 ```bash
 # --restart controls when Docker automatically restarts the container
 # Options: no (default), always, unless-stopped, on-failure[:max-retries]
@@ -156,7 +156,7 @@ docker run -d --name postgres-db \
 | `always` | Yes | Yes | Yes |
 | `unless-stopped` | Yes | Yes | No |
 
-**Resource limits — cap CPU and memory:**
+#### docker run --memory --cpus — resource limits for CPU and memory
 ```bash
 # --memory caps RAM usage (prevents OOM-killing other containers)
 # --cpus caps CPU usage as a fraction of available cores
@@ -173,7 +173,7 @@ docker inspect my-transform --format='Memory: {{.HostConfig.Memory}}, CPUs: {{.H
 > [!warning] OOM Kills
 > If a container exceeds its `--memory` limit, the Linux kernel kills it with SIGKILL. The exit code will be 137. Always set memory limits on containers running untrusted or unpredictable workloads. See the [[#Exit Code Reference]] table below.
 
-**Network — attach to a specific Docker network:**
+#### docker run --network — attach to a specific Docker network
 ```bash
 # --network connects the container to a named network
 # Containers on the same network can reach each other by container name
@@ -187,7 +187,7 @@ docker network create my-pipeline-network
 
 ### Complete `docker run` Example
 
-**Full production-style run command for a data pipeline worker:**
+#### Full production-style run command for a data pipeline worker
 ```bash
 docker run -d \
   --name pipeline-worker \
@@ -205,7 +205,7 @@ docker run -d \
 
 ### Common One-Off Patterns
 
-**Run a Python script against live data, then delete the container:**
+#### Run a Python script against live data, then delete the container
 ```bash
 docker run --rm \
   -v "$(pwd)/scripts":/scripts \
@@ -214,14 +214,14 @@ docker run --rm \
   python /scripts/backfill.py --date 2026-01-01
 ```
 
-**Open an interactive shell in a container image to explore it:**
+#### Open an interactive shell in a container image to explore it
 ```bash
 # Useful for checking what's installed, what paths exist, etc.
 docker run --rm -it ubuntu:24.04 bash
 docker run --rm -it python:3.11 python  # opens Python REPL
 ```
 
-**Run a database client to connect to a containerized DB:**
+#### Run a database client to connect to a containerized DB
 ```bash
 # Connect psql to a running postgres container
 docker run --rm -it \
@@ -236,7 +236,7 @@ docker run --rm -it \
 
 ### Basic Listing
 
-**List running containers:**
+#### docker ps — list running containers
 ```bash
 # List running containers
 sudo docker ps
@@ -252,7 +252,7 @@ sudo docker ps -a
 # Stopped containers consume disk space — clean them periodically
 ```
 
-**List only container IDs (useful in scripts):**
+#### docker ps -q — list only container IDs for scripting
 ```bash
 # -q outputs only container IDs — pipe to other commands
 docker ps -q                   # IDs of running containers
@@ -267,7 +267,7 @@ docker rm $(docker ps -aq -f status=exited)
 
 ### Filtering
 
-**Filter containers by status, name, or label:**
+#### docker ps --filter — filter by status, name, or label
 ```bash
 # Filter by status
 docker ps -a --filter status=exited      # show only stopped containers
@@ -287,7 +287,7 @@ docker ps -a --filter exited=1           # containers that exited with an app er
 
 ### Custom Formatting with Go Templates
 
-**Format `docker ps` output for scripts or readability:**
+#### docker ps --format — custom output format for scripts
 ```bash
 # Show only name, status, and image — tab-separated
 docker ps --format "{{.Names}}\t{{.Status}}\t{{.Image}}"
@@ -631,7 +631,7 @@ docker rm -v my-container        # -v removes volumes created by the container
 
 > [!warning] When a Container Keeps Crashing (Restart Loop)
 
-**Step 1 — Identify crash-looping containers:**
+#### docker ps -a --filter status=restarting — identify crash-looping containers
 ```bash
 # Containers in "Restarting" status are crash-looping
 docker ps -a --filter status=restarting
@@ -640,13 +640,13 @@ docker ps -a --filter status=restarting
 docker inspect <container> --format='Restarts: {{.RestartCount}}'
 ```
 
-**Step 2 — Check the exit code:**
+#### docker inspect --format ExitCode — check container exit code
 ```bash
 sudo docker inspect <container> --format='{{.State.ExitCode}}'
 # 0 = clean exit, 1 = application error, 137 = SIGKILL (OOM), 139 = SIGSEGV (crash)
 ```
 
-**Step 3 — Check logs for the error message:**
+#### docker logs --tail 50 — check container logs for errors
 ```bash
 sudo docker logs <container> --tail 50
 
@@ -654,7 +654,7 @@ sudo docker logs <container> --tail 50
 docker logs --timestamps <container> --tail 100
 ```
 
-**Step 4 — If OOM killed (exit 137), check memory limits:**
+#### docker stats, exit code 137 — diagnose OOM killed containers
 ```bash
 sudo docker inspect <container> --format='{{.HostConfig.Memory}}'
 # 0 = no limit (uses all host memory)
@@ -664,7 +664,7 @@ sudo docker inspect <container> --format='{{.HostConfig.Memory}}'
 docker stats --no-stream <container>
 ```
 
-**Step 5 — Check if the filesystem is full:**
+#### docker system df — check if Docker filesystem is full
 ```bash
 sudo docker system df
 # Shows: images, containers, volumes, build cache and their sizes
@@ -673,7 +673,7 @@ sudo docker system df
 df -h /var/lib/docker
 ```
 
-**Step 6 — Try running the container interactively to reproduce the error:**
+#### docker run -it --entrypoint /bin/bash — reproduce errors interactively
 ```bash
 # Override the entrypoint to get a shell instead of the app starting
 docker run --rm -it \
@@ -683,7 +683,7 @@ docker run --rm -it \
 # Now you can manually run the startup command and see the full error
 ```
 
-**Step 7 — Inspect environment and mounts:**
+#### docker inspect Env, Mounts — inspect environment and volume mounts
 ```bash
 # Verify the env vars the container sees
 docker inspect <container> --format='{{range .Config.Env}}{{println .}}{{end}}'

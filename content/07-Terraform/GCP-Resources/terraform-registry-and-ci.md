@@ -168,7 +168,7 @@ steps:
 
 The `credentials_json` field receives the full JSON content of the CI service account key. The action uses it to authenticate with GCP for deployments.
 
-**Common GitHub Actions secrets for GCP projects:**
+#### GitHub Actions secrets — GCP_SA_KEY, GCP_PROJECT_ID, TF_VAR_ variables
 
 | Secret name | What it contains | Used by |
 |------------|-----------------|---------|

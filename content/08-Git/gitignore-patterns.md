@@ -120,7 +120,7 @@ git push
 
 Then use one of these tools to remove them from ALL history:
 
-**BFG Repo-Cleaner (simpler, faster):**
+#### BFG Repo-Cleaner (simpler, faster)
 
 ```bash
 # Download BFG
@@ -131,7 +131,7 @@ git reflog expire --expire=now --all && git gc --prune=now --aggressive
 git push --force --all
 ```
 
-**git filter-branch (built-in but slower):**
+#### git filter-branch (built-in but slower)
 
 ```bash
 git filter-branch --force --index-filter \
@@ -200,7 +200,7 @@ Set up a global `.gitignore` for files you never want to commit on ANY project:
 git config --global core.excludesfile ~/.gitignore_global
 ```
 
-**~/.gitignore_global:**
+#### ~/.gitignore_global
 
 ```
 .DS_Store
