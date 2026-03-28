@@ -43,22 +43,17 @@ sudo systemctl disable mssql-server    # don't start on boot
 
 # Service logs (via journald)
 sudo journalctl -u mssql-server --since "1 hour ago" --no-pager
-# -u = unit (service name)
-# --since = time filter (also: "today", "yesterday", "2025-03-09 14:00")
-# --no-pager = print all output (don't paginate)
+# -u = unit (service name), --since = time filter, --no-pager = print all
 
 # Follow service logs in real-time
-sudo journalctl -u mssql-server -f
-# -f = follow (like tail -f)
+sudo journalctl -u mssql-server -f   # -f = follow (like tail -f)
 
 # All services and their status
 systemctl list-units --type=service --state=running
-# Shows every currently running service
 
 # Why did a service fail?
-sudo systemctl status mssql-server   # recent error lines
-sudo journalctl -u mssql-server -n 50 --no-pager  # last 50 log lines
-# Common causes: permission error, port conflict, config syntax error, OOM kill
+sudo systemctl status mssql-server                  # recent error lines
+sudo journalctl -u mssql-server -n 50 --no-pager    # last 50 log lines
 ```
 
 ## Diagnosing OOM Kills

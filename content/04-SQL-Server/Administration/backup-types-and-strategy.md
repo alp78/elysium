@@ -27,7 +27,7 @@ Backups are the single most critical responsibility of anyone operating a databa
 | **Transaction Log** | Log records since last log backup | Seconds | Every 15-60 minutes | Point-in-time recovery |
 | **Copy-Only** | Same as full, but doesn't break backup chain | Minutes | Ad-hoc | Before risky operations |
 
-**File extensions:**
+#### .bak, .trn, .dif — backup file extensions and typical sizes
 
 | Backup Type | File Extension | Typical Size |
 |---|---|---|

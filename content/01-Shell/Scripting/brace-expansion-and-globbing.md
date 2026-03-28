@@ -20,7 +20,7 @@ Brace expansion and shell globbing let you generate multiple arguments from comp
 
 Brace expansion generates a list of arguments from a pattern before the shell interprets anything else.
 
-**Create a full medallion directory tree in one command:**
+#### mkdir -p with {brace,expansion} — create directory trees
 
 ```bash
 # Brace expansion — generate multiple arguments from a pattern
@@ -44,7 +44,7 @@ cp config.yaml{,.bak}
 
 Standard globbing (`*`, `?`, `[abc]`) is built in. Extended globbing requires enabling `extglob`.
 
-**Exclude patterns (requires `shopt -s extglob`):**
+#### shopt -s extglob — exclude patterns with !(glob)
 
 ```bash
 # Globbing — extended patterns (requires shopt -s extglob)
@@ -54,7 +54,7 @@ ls !(*.log|*.tmp)         # list all files EXCEPT .log and .tmp
 rm !(important.txt)       # delete everything except important.txt
 ```
 
-**Recursive globbing (requires `shopt -s globstar`):**
+#### shopt -s globstar — recursive **/ glob patterns
 
 ```bash
 # Globstar — recursive glob (requires shopt -s globstar)

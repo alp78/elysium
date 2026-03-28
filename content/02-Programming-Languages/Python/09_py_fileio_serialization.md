@@ -518,7 +518,10 @@ print(f"  {csv_string.strip()}")
 
 #### json.dumps — dict → JSON string
 
-`json.dumps(obj, indent=2, sort_keys=True)` converts dicts/lists to JSON string. `default=` handles non-serializable types (datetime, Decimal). For high-throughput, use `orjson` (3–10x speed).
+> [!info] JSON serialization
+> - `json.dumps(obj, indent=2, sort_keys=True)` — converts dicts/lists to JSON string
+> - `default=` — handles non-serializable types (datetime, Decimal)
+> - For high-throughput, use `orjson` (3-10x speed)
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="json_yaml_"))
@@ -1245,7 +1248,11 @@ print(f"  Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert
 
 #### str.encode / bytes.decode — UTF-8, ASCII, Latin-1 character encoding
 
-`str.encode('utf-8')` → bytes. `bytes.decode('utf-8')` → string. UTF-8 is the universal standard. Always specify encoding explicitly — default varies by platform. `errors='replace'` for graceful handling of bad bytes.
+> [!info] Character encoding
+> - `str.encode('utf-8')` → bytes
+> - `bytes.decode('utf-8')` → string
+> - UTF-8 is the universal standard — always specify encoding explicitly (default varies by platform)
+> - `errors='replace'` for graceful handling of bad bytes
 
 ```python
 text = "Euro Stoxx 50: SAP €166.52, ASML €685.40"

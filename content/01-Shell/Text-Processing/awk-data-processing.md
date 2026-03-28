@@ -44,7 +44,7 @@ awk reads input one **record** at a time. By default a record is a line. It then
 | `RS`     | Input record separator (default: newline)    |
 | `ORS`    | Output record separator (default: newline)   |
 
-**Print whole line and first two fields:**
+#### awk $0, $1, $2 — print whole line and specific fields
 ```bash
 # $0 = full line, $1 = first whitespace-delimited token, $2 = second
 echo "alice 42 engineer" | awk '{print $0}'    # alice 42 engineer
@@ -52,7 +52,7 @@ echo "alice 42 engineer" | awk '{print $1}'    # alice
 echo "alice 42 engineer" | awk '{print $1,$2}' # alice 42
 ```
 
-**Access last field regardless of column count:**
+#### awk $NF, $(NF-1) — access last field regardless of column count
 ```bash
 # $NF always resolves to the last field
 echo "a b c d e" | awk '{print $NF}'    # e
@@ -187,7 +187,7 @@ awk '{printf "%s\t%s", $1, $2}' data.txt
 awk -F',' '{printf "\"%s\",%s,\"%s\"\n", $1, $2, $3}' data.csv
 ```
 
-**Common printf format specifiers:**
+#### awk printf format specifiers — %s, %d, %f, %-10s
 
 | Specifier | Meaning                        |
 |-----------|--------------------------------|
@@ -907,7 +907,7 @@ PowerShell's pipeline model is object-based rather than text-based, which makes 
 awk -F',' '{print $1,$3}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell Import-Csv + Select-Object — field extraction
 ```powershell
 # Import-Csv parses the header row and creates objects with named properties
 Import-Csv data.csv | Select-Object Column1, Column3
@@ -929,7 +929,7 @@ Get-Content data.csv | ForEach-Object {
 awk -F',' '$3 > 100 {print}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell Where-Object — filtering rows
 ```powershell
 Import-Csv data.csv | Where-Object { [int]$_.amount -gt 100 }
 
@@ -947,7 +947,7 @@ Get-Content data.csv | Where-Object {
 awk -F',' '$4=="ACTIVE" {count++} END {print count}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell Measure-Object — counting and aggregation
 ```powershell
 (Import-Csv data.csv | Where-Object { $_.status -eq 'ACTIVE' }).Count
 
@@ -962,7 +962,7 @@ Import-Csv data.csv | Measure-Object -Property amount -Sum -Average -Minimum -Ma
 awk -F',' 'NR>1 {sum[$1]+=$3} END {for(k in sum) print k, sum[k]}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell Group-Object — group-by aggregation
 ```powershell
 Import-Csv data.csv |
     Group-Object -Property category |
@@ -982,7 +982,7 @@ Import-Csv data.csv |
 awk -F',' '{print $1, toupper($2)}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell Select-Object @{Expression} — string transformation
 ```powershell
 Import-Csv data.csv | Select-Object id, @{Name='name'; Expression={ $_.name.ToUpper() }}
 ```
@@ -994,7 +994,7 @@ Import-Csv data.csv | Select-Object id, @{Name='name'; Expression={ $_.name.ToUp
 awk -F',' 'NR>1 {margin=($3-$4)/$3*100; printf "%s,%.2f\n", $1, margin}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell calculated properties — adding computed columns
 ```powershell
 Import-Csv data.csv | Select-Object name, @{
     Name       = 'margin_pct'
@@ -1009,7 +1009,7 @@ Import-Csv data.csv | Select-Object name, @{
 awk '!seen[$0]++' data.txt
 ```
 
-**PowerShell:**
+#### PowerShell Select-Object -Unique — removing duplicates
 ```powershell
 Get-Content data.txt | Select-Object -Unique
 
@@ -1024,7 +1024,7 @@ Import-Csv data.csv | Sort-Object id -Unique
 awk -F',' 'NR>1 {printf "INSERT INTO t VALUES (%d,'"'"'%s'"'"',%.2f);\n", $1,$2,$3}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell ForEach-Object — generating SQL INSERT statements
 ```powershell
 Import-Csv data.csv | ForEach-Object {
     "INSERT INTO t VALUES ($($_.id), '$($_.name)', $([math]::Round([double]$_.amount, 2)));"
@@ -1038,7 +1038,7 @@ Import-Csv data.csv | ForEach-Object {
 awk -F',' -v OFS='\t' '{$1=$1; print}' data.csv
 ```
 
-**PowerShell:**
+#### PowerShell Export-Csv -Delimiter — delimiter conversion
 ```powershell
 # Using Import-Csv then Export-Csv with tab delimiter
 Import-Csv data.csv | Export-Csv -NoTypeInformation -Delimiter "`t" output.tsv

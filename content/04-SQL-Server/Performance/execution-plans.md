@@ -57,7 +57,7 @@ SQL Server execution plans are read **right-to-left, bottom-to-top**. The rightm
   └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Step-by-step walkthrough:**
+#### Reading the visual tree — operators, arrows, cost tooltips
 
 1. **Start at the far right.** These are the data access operators — where SQL Server touches tables/indexes. Look at their type:
    - **Index Seek** (good) — B-tree navigation to specific rows, O(log n). Requires [[sargable-queries|SARGable predicates]] in the WHERE clause.
@@ -86,7 +86,7 @@ SQL Server execution plans are read **right-to-left, bottom-to-top**. The rightm
 
 ## Getting Plans from the Pipeline (Non-SSMS)
 
-**Capture plans programmatically from plan cache, live XML, and Query Store:**
+#### sys.dm_exec_query_plan, sys.query_store_plan — capture plans programmatically
 
 ```sql
 -- Method 1: Capture from plan cache (after the pipeline runs)
@@ -139,7 +139,7 @@ Every operator in the execution plan shows an **Estimated Operator Cost** as a p
                                                                72% of total cost
 ```
 
-**How to interpret cost percentages:**
+#### Estimated Operator Cost — how to interpret cost percentages
 
 | Cost range | What it means | Action |
 |---|---|---|
@@ -148,7 +148,7 @@ Every operator in the execution plan shows an **Estimated Operator Cost** as a p
 | 20-50% | Significant | Investigate — might benefit from an index or query rewrite |
 | 50-100% | Dominant | This operator is the bottleneck. Fix this first. |
 
-**Extract operator costs from the XML plan programmatically:**
+#### sys.dm_exec_query_stats + XML nodes — extract operator costs from plan
 
 ```sql
 -- Extract operator costs from the XML plan programmatically
@@ -166,7 +166,7 @@ WHERE qs.sql_handle = <your_sql_handle>
 ORDER BY subtree_cost DESC;
 ```
 
-**Cost breakdown — IO vs CPU:**
+#### EstimateIO vs EstimateCPU — cost breakdown per operator
 
 Each operator's cost is split into I/O cost and CPU cost:
 - **High IO cost** → the operator is reading many pages from disk/buffer pool. Solution: add [[index-types-and-strategy|indexes]] to reduce pages read, or add RAM for better buffer pool hit ratio.
@@ -175,7 +175,7 @@ Each operator's cost is split into I/O cost and CPU cost:
 > [!warning] Cost Percentages Are Based on Estimates
 > Cost percentages are based on the optimizer's **estimates**, not actual execution. If statistics are stale, the cost distribution can be completely wrong. A scan showing "5%" might actually dominate execution time if the optimizer underestimated the row count. Always cross-reference costs with **actual row counts** and `SET STATISTICS TIME/IO` output.
 
-**Get actual timing per query (validates total cost):**
+#### SET STATISTICS TIME/IO — get actual timing per query
 
 ```sql
 -- Get actual timing per query (not per operator, but validates total)
@@ -218,14 +218,14 @@ The **cardinality estimator** predicts how many rows each operator will process.
   └────────────────────────────────┘     └────────────────────────────────┘
 ```
 
-**How to spot bad estimates in SSMS:**
+#### SSMS Actual Execution Plan — spot bad cardinality estimates
 
 1. Run the query with **Include Actual Execution Plan** (Ctrl+M)
 2. Hover over each operator — the tooltip shows both Estimated and Actual rows
 3. Look for **thick arrows** where you expect thin ones (or vice versa)
 4. SSMS 18+ shows a **warning icon** (yellow triangle) when estimates are off by > 10x
 
-**Find queries with the worst cardinality estimation errors (requires [[wait-stats-analysis|Query Store]] enabled):**
+#### sys.query_store_runtime_stats — find worst cardinality estimation errors
 
 ```sql
 -- Find queries with the worst cardinality estimation errors
@@ -246,7 +246,7 @@ ORDER BY qsrs.avg_duration DESC;
 -- Open each plan XML and compare EstimateRows vs ActualRows per operator
 ```
 
-**Extract estimated vs actual from the XML plan directly:**
+#### XML plan EstimateRows vs ActualRows — extract estimated vs actual per operator
 
 ```sql
 -- Extract estimated vs actual from the XML plan directly
@@ -271,7 +271,7 @@ WHERE qs.sql_handle = <your_sql_handle>
 ORDER BY runtime.value('@ActualRows', 'int') DESC;
 ```
 
-**Common causes of bad estimates and their fixes:**
+#### Common causes of bad cardinality estimates and fixes
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -282,7 +282,7 @@ ORDER BY runtime.value('@ActualRows', 'int') DESC;
 | Estimates wrong on filtered data | Statistics histogram has insufficient granularity | `UPDATE STATISTICS ... WITH FULLSCAN` or filtered statistics |
 | Consistently bad on complex predicates | CE model limitation (e.g., `WHERE a = 1 OR b = 2`) | Break into UNION ALL, or use plan guides |
 
-**Legacy vs. New Cardinality Estimator:**
+#### sys.databases compatibility_level — legacy vs new Cardinality Estimator
 
 SQL Server 2014+ uses a new CE model (CE 120+). SQL Server 2022 uses CE 160. If you're seeing bizarre estimates on upgraded databases:
 
@@ -305,7 +305,7 @@ OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 
 SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. Instead of correlating server-wide [[wait-stats-analysis|wait stats]] with specific queries, you can see exactly what each query waited on.
 
-**Where to find them in SSMS:**
+#### SSMS WaitStats node — per-query wait stats in execution plans
 
 1. Run query with **Include Actual Execution Plan** (Ctrl+M)
 2. Right-click on the **root operator** (leftmost — `SELECT`, `INSERT`, etc.)
@@ -341,7 +341,7 @@ SQL Server 2016+ embeds **query-level wait statistics** directly into the actual
   └────────────────────────────────────────────┘
 ```
 
-**Extract wait stats from the plan XML programmatically:**
+#### XML plan WaitStats/Wait nodes — extract per-query waits from plan cache
 
 ```sql
 ;WITH XMLNAMESPACES (DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
@@ -358,7 +358,7 @@ WHERE st.text LIKE '%silver.signals_daily%'
 ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 ```
 
-**Interpreting per-query wait stats:**
+#### PAGEIOLATCH, WRITELOG, CXPACKET, LCK_M — interpreting per-query waits
 
 | Wait type in plan | Meaning | Action |
 |---|---|---|
@@ -370,7 +370,7 @@ ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 | `MEMORY_GRANT_QUEUE` | Query waited in the memory grant queue before it could start | Too many concurrent queries requesting sort/hash memory — reduce parallelism or add RAM |
 | `SOS_SCHEDULER_YIELD` | CPU was overloaded, query had to yield its time slice | CPU pressure — optimize the query or add vCPUs |
 
-**Correlation with server-wide wait stats:**
+#### sys.dm_os_wait_stats — correlation with server-wide wait stats
 
 Per-query waits tell you "this specific query waited on X." Server-wide waits (from `sys.dm_os_wait_stats`) tell you "the entire workload is bottlenecked on X." Use both:
 
@@ -399,7 +399,7 @@ Per-query waits tell you "this specific query waited on X." Server-wide waits (f
 
 The most common silent performance killer in Python-to-SQL pipelines. Python's pyodbc sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents [[sargable-queries|index seeks]].
 
-**Detect implicit conversions:**
+#### sys.dm_exec_query_plan PlanAffectingConvert — detect implicit conversions
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
@@ -416,7 +416,7 @@ WHERE qp.query_plan.exist('//Warnings/PlanAffectingConvert') = 1
 ORDER BY qs.total_logical_reads DESC;
 ```
 
-**Fix in Python — force pyodbc to send VARCHAR instead of NVARCHAR:**
+#### pyodbc setencoding — fix implicit NVARCHAR→VARCHAR conversion
 
 ```python
 # In your pipeline connection setup
@@ -438,7 +438,7 @@ cursor.executemany("INSERT INTO ...", rows)
 
 Parameter sniffing is less common in pipelines (queries use literal values, not stored procedures), but it affects parameterized queries from pyodbc.
 
-**Detect high plan variance (sign of parameter sniffing):**
+#### sys.dm_exec_query_stats min/max worker_time — detect parameter sniffing
 
 ```sql
 -- Check if auto-parameterization is causing issues
@@ -457,7 +457,7 @@ WHERE qs.execution_count > 10
 ORDER BY variance_ratio DESC;
 ```
 
-**Mitigations:**
+#### OPTIMIZE FOR UNKNOWN, OPTION (RECOMPILE) — parameter sniffing mitigations
 
 ```sql
 -- Option 1: OPTIMIZE FOR UNKNOWN for variable queries
@@ -480,7 +480,7 @@ OPTION (RECOMPILE);
 
 SQL Server 2022 supports **batch mode on rowstore** (no columnstore index required). This dramatically accelerates analytical queries (groupby, window functions).
 
-**Check if your queries are using batch mode:**
+#### ActualExecutionMode Batch vs Row — check batch mode usage
 
 ```sql
 -- Check if your queries are using batch mode
@@ -497,7 +497,7 @@ ORDER BY qs.total_worker_time DESC;
 -- In the XML plan, look for ActualExecutionMode="Batch" vs "Row"
 ```
 
-**Force batch mode if the optimizer doesn't choose it:**
+#### ENABLE_BATCH_MODE_ON_ROWSTORE hint — force batch mode execution
 
 ```sql
 -- Compatibility level must be 150+ (SQL 2019+)
@@ -555,7 +555,7 @@ ON bronze.pulse_tickers (_index) INCLUDE (symbol, rank, activity_score, volume_s
 | Page compression on gold tables | Medium | Medium | When buffer pool starts filling up |
 | Statistics update after loads | Low | High | Add to pipeline post-load step |
 
-**Check for heap tables (no clustered index — full scan on every query):**
+#### sys.tables + sys.partitions index_id=0 — check for heap tables
 
 ```sql
 -- Check for heap tables (no clustered index)
@@ -568,7 +568,7 @@ WHERE p.rows > 0
 ORDER BY p.rows DESC;
 ```
 
-**Enable RCSI to eliminate reader/writer blocking:**
+#### ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON — enable RCSI
 
 ```sql
 -- Check current setting
@@ -581,7 +581,7 @@ ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 
 After enabling, `SELECT` queries no longer take shared locks, so they never block `INSERT`/`UPDATE`/`DELETE` and vice versa.
 
-**Check compression savings before applying:**
+#### sp_estimate_data_compression_savings — check compression savings
 
 ```sql
 -- Check current compression and potential savings
@@ -599,7 +599,7 @@ REBUILD WITH (DATA_COMPRESSION = PAGE);
 
 Page compression typically saves 60-80% space on time-series financial data, meaning more data fits in the buffer pool without increasing RAM.
 
-**Keep statistics fresh after bulk loads:**
+#### sp_updatestats, UPDATE STATISTICS WITH FULLSCAN — refresh after bulk loads
 
 ```sql
 EXEC sp_updatestats;

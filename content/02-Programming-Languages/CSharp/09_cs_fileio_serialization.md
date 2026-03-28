@@ -48,7 +48,12 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 <h4><code style="font-size:0.75em">File.WriteAllText</code> and <code style="font-size:0.75em">File.ReadAllText</code></h4>
 
-Static `File` class — one-line read/write. `WriteAllText` creates or overwrites. `ReadAllText` reads entire file. UTF-8 by default. Don't use on huge files (loads all into memory) — use `StreamReader` for line-by-line.
+> [!info] File class — one-line read/write
+> - `WriteAllText` — creates or overwrites a file
+> - `ReadAllText` — reads entire file into a string
+> - UTF-8 by default
+>
+> > [!warning] Don't use on huge files (loads all into memory) — use `StreamReader` for line-by-line.
 
 ```csharp
 #nullable enable

@@ -18,7 +18,10 @@ status: complete
 
 #### Stopwatch timing and BenchmarkDotNet
 
-`Stopwatch` for high-resolution timing (hardware counters). `BenchmarkDotNet` for production-grade micro-benchmarks (warm-up, JIT, GC, statistics). Python equivalent: `time.perf_counter()`, `timeit`.
+> [!info] Benchmarking tools
+> - `Stopwatch` — high-resolution timing (hardware counters)
+> - `BenchmarkDotNet` — production-grade micro-benchmarks (warm-up, JIT, GC, statistics)
+> - Python equivalent: `time.perf_counter()`, `timeit`
 
 > [!tip] Never optimize without measuring first. Don't use `DateTime.Now` for benchmarks (15ms resolution).
 

@@ -20,7 +20,7 @@ These features let you treat command output as files and embed multi-line string
 
 Process substitution creates a virtual file descriptor containing a command's output. No temporary files are created or cleaned up.
 
-**Compare the output of two commands as if they were files:**
+#### diff <(cmd) <(cmd) — compare command outputs as virtual files
 ```bash
 # Compare the output of two commands as if they were files
 diff <(sort file1.txt) <(sort file2.txt)
@@ -29,7 +29,7 @@ diff <(sort file1.txt) <(sort file2.txt)
 # No temporary files created or cleaned up
 ```
 
-**Production scenario — compare table row counts between two databases:**
+#### diff <(sqlcmd) <(sqlcmd) — compare row counts between databases
 ```bash
 # Production scenario: compare table row counts between two databases
 diff <(sqlcmd -S prod-server -U sa -P "$PASS" -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data" -h -1 -W) \
@@ -37,14 +37,14 @@ diff <(sqlcmd -S prod-server -U sa -P "$PASS" -d analytics_db -Q "SELECT COUNT(*
 # Instantly tells you if staging has the same data volume as production
 ```
 
-**Feed multiple inputs to a command:**
+#### paste <(cut) <(cut) — feed multiple inputs to a command
 ```bash
 # Feed multiple inputs to a command
 paste <(cut -d, -f1 stocks.csv) <(cut -d, -f3 stocks.csv)
 # Extracts columns 1 and 3 from a CSV and pastes them side by side
 ```
 
-**Write to multiple destinations simultaneously:**
+#### tee >(gzip) >(wc -l) — write to multiple destinations simultaneously
 ```bash
 # Write to multiple destinations simultaneously
 tee >(gzip > data.gz) >(wc -l > count.txt) < data.csv > /dev/null
@@ -56,7 +56,7 @@ tee >(gzip > data.gz) >(wc -l > count.txt) < data.csv > /dev/null
 
 Here documents embed multi-line text directly in a script, feeding it as stdin to a command.
 
-**Here document — embed multi-line SQL in a script:**
+#### << 'EOF' here document — embed multi-line SQL in a script
 ```bash
 # Here document — embed multi-line text in a script
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db << 'EOF'
@@ -71,7 +71,7 @@ EOF
 # Everything between << and the delimiter is fed as stdin
 ```
 
-**Here document with variable expansion — generate config files dynamically:**
+#### << EOF with variable expansion — generate config files dynamically
 ```bash
 # Here document with variable expansion
 cat << EOF > config.env
@@ -88,7 +88,7 @@ EOF
 
 Here strings feed a single-line string as stdin — cleaner than piping from echo.
 
-**Here string — single-line input:**
+#### <<< here string — feed single-line input to stdin
 ```bash
 # Here string — single-line input
 grep "ASML" <<< "ASML SAP SIE"

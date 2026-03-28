@@ -18,7 +18,7 @@ When a pipeline fails and you need to find the offending file across a directory
 
 ## Linux — find, fd, locate
 
-**Find by name pattern:**
+#### find -name -type — find by name pattern
 
 ```bash
 # Find by name pattern
@@ -27,7 +27,7 @@ find /data/ -name "*.parquet" -type f
 # -type f = files only (d = directories, l = symlinks)
 ```
 
-**Find by modification time:**
+#### find -mtime -mmin — find by modification time
 
 ```bash
 # Find by modification time
@@ -37,7 +37,7 @@ find /var/log/ -name "*.log" -mtime -7
 # -mmin -60 = modified within the last 60 minutes (recent changes)
 ```
 
-**Find by size:**
+#### find -size — find by file size
 
 ```bash
 # Find by size
@@ -46,7 +46,7 @@ find /data/ -type f -size +100M
 # -size -1k = smaller than 1 KB (probably empty or corrupt)
 ```
 
-**Find and execute — delete old logs:**
+#### find -exec, find -delete — find and execute on results
 
 ```bash
 # Find and execute (delete old logs — schedule this via cron, see [[linux-scheduling]])
@@ -62,7 +62,7 @@ find /var/log/pipeline/ -name "*.log" -mtime +30 -delete
 # -delete is safer than -exec rm because it won't accidentally expand
 ```
 
-**Find empty directories and today's files:**
+#### find -empty, find -daystart — empty dirs and today's files
 
 ```bash
 # Find empty directories (cleanup after data pipeline runs)
@@ -79,7 +79,7 @@ find / -type f -size +1G 2>/dev/null | head -20
 # 2>/dev/null = suppress permission errors from system directories
 ```
 
-**Parallel processing with xargs:**
+#### find -print0 | xargs -0 -P — parallel processing of found files
 
 ```bash
 # Combine with xargs for parallel processing

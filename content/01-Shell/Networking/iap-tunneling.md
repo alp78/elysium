@@ -59,7 +59,7 @@ Step by step:
 
 ## IAP Tunnel Commands — All Variants
 
-**Linux and PowerShell (gcloud commands are identical on both):**
+#### gcloud compute start-iap-tunnel — port forwarding through IAP
 
 ```bash
 # SSH through IAP (the most common use case)

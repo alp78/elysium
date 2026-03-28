@@ -84,7 +84,7 @@ grep 'ERROR' *.log
 cat file.txt | grep 'pattern'
 ```
 
-**PowerShell equivalents:**
+#### Select-String — PowerShell grep equivalent
 
 ```powershell
 # Select-String (alias: sls) — the PowerShell grep
@@ -109,7 +109,7 @@ grep -i 'error' application.log
 grep -ri 'password' /etc/
 ```
 
-**PowerShell:**
+#### Select-String — case-insensitive search (default behavior)
 
 ```powershell
 # Select-String is case-insensitive BY DEFAULT
@@ -137,7 +137,7 @@ grep -wi 'error' app.log
 grep -w 'DROP' schema_migration.sql
 ```
 
-**PowerShell:**
+#### Select-String — whole-word matching with \b anchors
 
 ```powershell
 # Use word boundary anchors \b in the regex pattern
@@ -159,7 +159,7 @@ grep -n 'FAILED' etl_pipeline.log
 grep -ni 'timeout' job.log
 ```
 
-**PowerShell:**
+#### Select-String .LineNumber — line numbers in output
 
 ```powershell
 # Select-String always includes line numbers in its output object
@@ -186,7 +186,7 @@ grep -c 'ERROR' *.log
 grep -cv 'ERROR' application.log
 ```
 
-**PowerShell:**
+#### Select-String | Measure-Object — count matches
 
 ```powershell
 # Count matching lines — pipeline the results to Measure-Object
@@ -214,7 +214,7 @@ grep -L 'logging.basicConfig' *.py
 grep -l 'ERROR' /var/log/myapp/*.log
 ```
 
-**PowerShell:**
+#### Select-String .Filename — files with and without matches
 
 ```powershell
 # Files WITH matches — select unique Filename property
@@ -252,7 +252,7 @@ grep -r --exclude-dir='.git' --exclude-dir='__pycache__' 'secret' .
 grep -r --include='*.sql' --include='*.py' 'staging_table' ./
 ```
 
-**PowerShell:**
+#### Get-ChildItem -Recurse | Select-String — recursive search
 
 ```powershell
 # Recursive search using Get-ChildItem -Recurse to feed Select-String
@@ -288,7 +288,7 @@ grep -v 'INFO' app.log | grep -v 'DEBUG' | grep -v '^$'
 grep -Ev 'INFO|DEBUG|^$' app.log
 ```
 
-**PowerShell:**
+#### Select-String -NotMatch — invert match (exclude lines)
 
 ```powershell
 # Invert match with -NotMatch switch
@@ -348,7 +348,7 @@ grep 'table_name\.' query.sql # match 'table_name.' (literal dot)
 grep '^[A-Z]' names.txt       # lines starting with an uppercase letter
 ```
 
-**PowerShell uses .NET regex (similar to PCRE) for all Select-String calls:**
+#### Select-String .NET regex — PCRE-equivalent for all calls
 
 ```powershell
 # .NET regex — the same metacharacters apply
@@ -391,7 +391,7 @@ grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}' access.log  # rough IP address match
 egrep 'ERROR|WARN' app.log
 ```
 
-**PowerShell (.NET regex — ERE-equivalent features are always available):**
+#### Select-String .NET regex — ERE features always available
 
 ```powershell
 # All ERE features work natively in Select-String
@@ -444,7 +444,7 @@ grep '^[[:space:]]' script.py
 
 ### Common data engineering regex patterns
 
-**Match IPv4 addresses:**
+#### Regex pattern — match IPv4 addresses
 
 ```bash
 # Strict IPv4 — each octet 0-255 (simplified to 1-3 digits for most log use)
@@ -459,7 +459,7 @@ grep -E '\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01
 Select-String -Pattern '\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b' access.log
 ```
 
-**Match ISO 8601 dates (YYYY-MM-DD):**
+#### Regex pattern — match ISO 8601 dates (YYYY-MM-DD)
 
 ```bash
 # ISO date — common in log timestamps and data files
@@ -476,7 +476,7 @@ grep -E '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' events.log
 Select-String -Pattern '^[0-9]{4}-[0-9]{2}-[0-9]{2}' events.log
 ```
 
-**Match various date formats:**
+#### Regex pattern — match various date formats
 
 ```bash
 # MM/DD/YYYY (US format)
@@ -489,7 +489,7 @@ grep -E '[0-9]{2}-[A-Za-z]{3}-[0-9]{4}' oracle.log
 grep -E '\b[0-9]{10}\b' events.log
 ```
 
-**Match email addresses:**
+#### Regex pattern — match email addresses
 
 ```bash
 # Practical email match (not RFC-5321 compliant, but covers 99% of real cases)
@@ -503,7 +503,7 @@ grep -rE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' --include='*.py' .
 Select-String -Pattern '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' contacts.csv
 ```
 
-**Match SQL table names (schema.table format):**
+#### Regex pattern — match SQL table names (schema.table)
 
 ```bash
 # Match schema-qualified table references: dbo.fact_sales, raw.events
@@ -524,7 +524,7 @@ Select-String -Pattern '(?i)^\s*CREATE\s+TABLE' schema.sql
 Select-String -Pattern '(?i)INSERT\s+INTO\s+[`"]?[a-zA-Z_][a-zA-Z0-9_.]*' *.sql
 ```
 
-**Match JSON keys:**
+#### Regex pattern — match JSON keys
 
 ```bash
 # JSON key pattern: "key_name":
@@ -544,7 +544,7 @@ Select-String -Pattern '"[a-zA-Z_][a-zA-Z0-9_]*"\s*:' response.json
 > [!warning] Use jq for real JSON parsing
 > `grep` can find JSON keys but cannot handle multiline JSON, nested structures, or arrays correctly. For structured JSON querying, use `jq` in bash or `ConvertFrom-Json` in PowerShell. Grep is appropriate for quick scans of NDJSON (newline-delimited JSON) log files.
 
-**Match log levels:**
+#### Regex pattern — match log levels (ERROR, WARN, INFO, DEBUG)
 
 ```bash
 # Standard log levels — case-insensitive, word-bounded
@@ -574,7 +574,7 @@ foreach ($level in @('ERROR','WARN','INFO','DEBUG')) {
 }
 ```
 
-**Match numeric ranges:**
+#### Regex pattern — match numeric ranges
 
 ```bash
 # Lines containing a 3-5 digit number (e.g., HTTP status codes, port numbers)
@@ -615,7 +615,7 @@ grep -C 2 'FATAL' app.log
 grep -r -C 3 'raise ValueError' ./src/
 ```
 
-**PowerShell:**
+#### Select-String -Context — lines before and after match
 
 ```powershell
 # -Context takes two values: lines before, lines after
@@ -650,7 +650,7 @@ grep -oE '\b5[0-9]{2}\b' access.log | sort | uniq -c | sort -rn
 grep -ohE '\b[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\b' *.sql | sort -u
 ```
 
-**PowerShell:**
+#### Select-String .Matches — print only the matching part
 
 ```powershell
 # Use the Matches property of Select-String output to get captured text
@@ -699,7 +699,7 @@ grep -oP '(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})' events.log
 grep -P '\bETL\b' documentation.md    # avoids matching 'ETLX' or 'non-ETL'
 ```
 
-**PowerShell (.NET regex always supports lookahead/lookbehind):**
+#### Select-String .NET regex — lookahead and lookbehind
 
 ```powershell
 # \d, \w, \s are always available in PowerShell regex
@@ -744,7 +744,7 @@ grep -rf error_patterns.txt /var/log/         # recursive
 # Keep error_patterns.txt in version control alongside your runbooks
 ```
 
-**PowerShell:**
+#### Select-String — patterns from a file
 
 ```powershell
 # Read patterns from file and build alternation string
@@ -779,7 +779,7 @@ grep -r --exclude-dir='.git' --exclude-dir='__pycache__' --exclude-dir='node_mod
 grep -r --exclude='*.pyc' --exclude='*.pyo' --exclude-dir='.git' 'connection_string' .
 ```
 
-**PowerShell:**
+#### Get-ChildItem -Include -Exclude — file filtering in recursive search
 
 ```powershell
 # Include filter via Get-ChildItem -Filter
@@ -836,7 +836,7 @@ grep 'FAILED' pipeline.log | awk '{print $NF}'   # last field of each matched li
 grep -r 'deprecated_function' ./src/ | head -20
 ```
 
-**PowerShell:**
+#### Select-String pipeline — combining with pipes for progressive filtering
 
 ```powershell
 # Progressive narrowing via pipeline
@@ -881,7 +881,7 @@ tail -f /var/log/myapp/app.log | grep --line-buffered -E 'ERROR|FATAL'
 grep 'ERROR' app.log | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}' | sort | uniq -c
 ```
 
-**PowerShell:**
+#### Get-Content -Wait | Select-String — search log files for errors
 
 ```powershell
 # Real-time monitoring equivalent of tail -f | grep
@@ -910,7 +910,7 @@ grep -iE 'deadlock detected|process.*waits for' /var/log/postgresql/postgresql-*
 grep -B5 'deadlock' sqlserver.log   # show 5 lines before each deadlock mention
 ```
 
-**PowerShell:**
+#### Select-String — find SQL deadlocks in logs (PowerShell)
 
 ```powershell
 Select-String -Pattern '(?i)deadlock|lock timeout|transaction.*rolled back' sqlserver.log -Context 5,0
@@ -934,7 +934,7 @@ grep -rE '"(dev|staging|prod)\.' --include='*.py' ./dags/
 grep -iE '(INSERT INTO|UPDATE|DELETE FROM)[[:space:]]+[`"]?orders[`"]?' *.sql
 ```
 
-**PowerShell:**
+#### Select-String — search pipeline code for table references (PowerShell)
 
 ```powershell
 # Find all table references across code files
@@ -967,7 +967,7 @@ grep -rE '(password|secret|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' \
     --include='*.py' --include='*.js' --include='*.yaml' .
 ```
 
-**PowerShell:**
+#### Select-String — find environment variable usage across configs (PowerShell)
 
 ```powershell
 # Find env var usage in Python files
@@ -1004,7 +1004,7 @@ grep ',,' required_fields.csv
 grep -v '^[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*$' data.csv
 ```
 
-**PowerShell:**
+#### Import-Csv | Select-Object — extract CSV fields (PowerShell)
 
 ```powershell
 # Import-Csv is far superior for structured CSV work
@@ -1042,7 +1042,7 @@ bzgrep 'ERROR' archive.log.bz2
 xzgrep 'ERROR' archive.log.xz
 ```
 
-**PowerShell:**
+#### PowerShell Expand-Archive — search compressed files
 
 ```powershell
 # Expand-Archive for .zip; for .gz use a .NET approach or external tool
@@ -1078,7 +1078,7 @@ grep 'ERROR' app.log | grep -oE '[0-9]{2}:[0-9]{2}' | sort | uniq -c
 grep -rc 'ERROR' /var/log/myapp/ | grep -v ':0$' | sort -t: -k2 -rn
 ```
 
-**PowerShell:**
+#### Select-String | Group-Object — count error frequency (PowerShell)
 
 ```powershell
 # Count per error type
@@ -1119,7 +1119,7 @@ grep -rE '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' .
 grep -rl 'password.*=.*["\x27]' --include='*.py' .
 ```
 
-**PowerShell:**
+#### Select-String — find credential patterns in files (PowerShell)
 
 ```powershell
 # Find credential patterns — filenames only
@@ -1155,7 +1155,7 @@ fgrep 'literal string' file.txt
 grep -Fi 'select * from' query_log.txt
 ```
 
-**PowerShell:**
+#### Select-String -SimpleMatch — fixed-string search (no regex)
 
 ```powershell
 # -SimpleMatch flag disables regex and treats pattern as literal string
@@ -1230,7 +1230,7 @@ rg -P '(?<=user=)\w+' config.ini
 rg --json 'ERROR' app.log | jq '.data.lines.text // empty'
 ```
 
-**ripgrep in PowerShell:**
+#### rg (ripgrep) in PowerShell
 
 ```powershell
 # rg works identically on Windows — install via winget or scoop

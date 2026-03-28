@@ -18,7 +18,7 @@ Copying, moving, and deleting files seems trivial until you accidentally overwri
 
 ## Linux — cp, mv, rm, rsync
 
-**Copying files:**
+#### cp, cp -a, rsync — copying files and directories
 
 ```bash
 # Copy a file
@@ -43,7 +43,7 @@ rsync -ah --progress source.tar.gz dest/
 # rsync also supports resume: if interrupted, re-run the same command and it continues
 ```
 
-**Moving and renaming:**
+#### mv — moving and renaming files and directories
 
 ```bash
 # Move/rename
@@ -61,17 +61,13 @@ rename 's/\.csv$/.csv.bak/' *.csv
 ## Safe Delete Pattern
 
 ```bash
-# Delete — THE MOST DANGEROUS COMMANDS IN YOUR TOOLKIT
+# Delete
 rm file.txt               # delete a single file
 rm -r directory/           # delete a directory recursively
 rm -rf directory/          # force delete recursively (no confirmation)
 
-# STOP. READ THIS BEFORE RUNNING rm -rf:
-# 1. Double-check the path. Is it a variable? Is it empty? (see set -u above)
-# 2. ls the target first: ls -la /path/to/delete/  — verify it's what you expect
-# 3. Consider mv to a staging area instead of rm:
+# Safer alternative — move to staging area instead of deleting
 mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
-# Now you have a recovery window. Delete from /tmp later.
 ```
 
 > [!info] Prerequisites
@@ -97,25 +93,21 @@ mkdir -p /data/pipeline/{bronze,silver,gold}/staging
 
 # File permissions — the numeric system
 chmod 755 script.sh
-# Octal notation: Owner/Group/Others
-# 7 = rwx (read 4 + write 2 + execute 1)
-# 5 = r-x (read 4 + execute 1)
-# Common patterns:
-#   755 = scripts and executables (owner can write, everyone can read/execute)
-#   644 = data files and configs (owner can write, everyone can read)
-#   600 = secrets and key files (only owner can read/write)
-#   700 = private directories (only owner can enter)
-
 chmod +x script.sh    # add execute permission for all
 chmod u+w,g-w file    # add write for user, remove write for group
+```
 
+> [!info] Octal permission patterns (Owner/Group/Others)
+> - `755` — scripts and executables (owner can write, everyone can read/execute)
+> - `644` — data files and configs (owner can write, everyone can read)
+> - `600` — secrets and key files (only owner can read/write)
+> - `700` — private directories (only owner can enter)
+> - Each digit = read (4) + write (2) + execute (1)
+
+```bash
 # File ownership — critical for Docker and multi-user environments
 chown user:group file.txt
-chown -R 50000:0 /home/airflow/dags/
-# -R = recursive
-# 50000:0 = Airflow container runs as UID 50000, GID 0
-# If the host directory is owned by root, the Airflow container can't write to it
-# This is the #1 cause of "permission denied" in Docker bind mounts
+chown -R 50000:0 /home/airflow/dags/   # Airflow default UID 50000
 ```
 
 > [!tip] Docker Bind Mount Permission Fix

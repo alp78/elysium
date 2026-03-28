@@ -20,7 +20,7 @@ Every GCP resource has different connectivity patterns. This note provides the e
 
 The VM is your most direct resource — you SSH into it, run commands, and transfer files.
 
-**Linux:**
+#### gcloud compute ssh — connect to GCE VM (Linux)
 
 ```bash
 # Interactive SSH (through IAP — no public IP needed)
@@ -45,7 +45,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 # "Could not fetch resource" → wrong zone, wrong instance name, or VM deleted
 ```
 
-**PowerShell:**
+#### gcloud compute ssh — connect to GCE VM (PowerShell)
 
 ```powershell
 # Same gcloud commands work identically
@@ -62,7 +62,7 @@ gcloud compute scp data-pipeline-sql:/tmp/output.csv .\local\ --zone=europe-west
 
 SQL Server on a private GCE VM requires a two-step connection: open the IAP tunnel, then connect through it.
 
-**Linux — Manual tunnel + sqlcmd:**
+#### gcloud start-iap-tunnel + sqlcmd — SQL Server via IAP (Linux)
 
 ```bash
 # Step 1: Open tunnel (in a dedicated terminal or background)
@@ -92,7 +92,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 # ESTAB  0  0  10.0.0.3:1433  10.0.0.24:56434
 ```
 
-**Python — pymssql through IAP tunnel:**
+#### pymssql — SQL Server through IAP tunnel (Python)
 
 ```python
 # pymssql uses host and port as separate arguments
@@ -110,7 +110,7 @@ conn = pymssql.connect(
 # SQLAlchemy uses "mssql+pyodbc://sa:pass@127.0.0.1,1435/analytics_db"
 ```
 
-**PowerShell — SSMS or Invoke-Sqlcmd through IAP tunnel:**
+#### Invoke-Sqlcmd / SSMS — SQL Server through IAP tunnel (PowerShell)
 
 ```powershell
 # Step 1: Open tunnel (in a separate PowerShell window)
@@ -140,7 +140,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "analytics_db" `
 
 BigQuery is a serverless service — there is no server to connect to. You authenticate with `gcloud` and queries go directly to the BigQuery API over HTTPS. No IAP, no tunnels, no port management.
 
-**Linux:**
+#### bq query — BigQuery interactive queries (Linux)
 
 ```bash
 # Interactive query
@@ -172,7 +172,7 @@ gcloud auth list
 # The active account must have BigQuery Data Viewer or BigQuery User role
 ```
 
-**Python — google-cloud-bigquery:**
+#### google-cloud-bigquery Client — BigQuery queries (Python)
 
 ```python
 from google.cloud import bigquery
@@ -184,7 +184,7 @@ client = bigquery.Client(project="data-platform-prod")
 df = client.query("SELECT * FROM data-pipeline.signals_daily LIMIT 10").to_dataframe()
 ```
 
-**PowerShell:**
+#### bq query — BigQuery interactive queries (PowerShell)
 
 ```powershell
 # Same bq commands — gcloud CLI is cross-platform

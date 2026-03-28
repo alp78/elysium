@@ -22,7 +22,7 @@ Understanding how environment variables propagate through process hierarchies is
 
 When you launch a process, it receives a COPY of the parent's exported environment. Changes in the child do not propagate back to the parent. Changes in the parent after the child starts do not reach the child. This is a one-way, point-in-time snapshot.
 
-**Process environment propagation model:**
+#### export — process environment propagation model
 ```
 Shell (parent)
 ├── export DB_HOST=10.132.0.2     ← parent sets variable
@@ -35,7 +35,7 @@ Shell (parent)
 
 ## Bash Environment Variables
 
-**View, set, and export environment variables:**
+#### env, export, printenv — view, set, and export environment variables
 ```bash
 # View all environment variables
 env
@@ -79,7 +79,7 @@ source ~/.bashrc
 > [!warning] Never Hardcode Credentials in Scripts
 > Any user on the system can run `ps aux` and see the full command line of every running process. Passing a password as a command-line argument makes it visible to everyone.
 
-**Production scenario — secure credential handling:**
+#### .env files and source — secure credential handling in scripts
 ```bash
 # NEVER hardcode credentials in scripts. Use environment variables.
 # BAD:

@@ -18,28 +18,28 @@ Every process has three standard file descriptors: fd 0 (stdin) for input, fd 1 
 
 ## Bash Redirection
 
-**Redirect stdout to file (overwrite):**
+#### > operator — redirect stdout to file (overwrite)
 ```bash
 # Redirect stdout to file (overwrite)
 command > output.txt
 # Creates the file if it doesn't exist; truncates it if it does
 ```
 
-**Redirect stdout to file (append):**
+#### >> operator — redirect stdout to file (append)
 ```bash
 # Redirect stdout to file (append)
 command >> output.txt
 # Appends to the file — safe for log aggregation
 ```
 
-**Redirect stderr to file:**
+#### 2> operator — redirect stderr to file
 ```bash
 # Redirect stderr to file
 command 2> errors.txt
 # Only error messages go to the file; normal output still prints to terminal
 ```
 
-**Redirect both stdout and stderr to the same file:**
+#### > file 2>&1 — redirect both stdout and stderr
 ```bash
 # Redirect both stdout and stderr to the same file
 command > all.txt 2>&1
@@ -47,14 +47,14 @@ command > all.txt 2>&1
 # The reverse order (2>&1 > all.txt) does NOT work as expected
 ```
 
-**Modern bash syntax (bash 4+):**
+#### &> shorthand — redirect both stdout and stderr (bash 4+)
 ```bash
 # Modern bash syntax (bash 4+)
 command &> all.txt
 # Shorthand for > all.txt 2>&1 — cleaner, same result
 ```
 
-**Discard all output (both stdout and stderr):**
+#### > /dev/null 2>&1 — discard all output
 ```bash
 # Discard all output (both stdout and stderr)
 command > /dev/null 2>&1
@@ -62,7 +62,7 @@ command > /dev/null 2>&1
 # Use case: running a command purely for its exit code (e.g., testing connectivity)
 ```
 
-**Redirect stdin from a file:**
+#### < operator — redirect stdin from a file
 ```bash
 # Redirect stdin from a file
 sqlcmd -S server -U sa -P "$PASS" -d data-pipeline < query.sql
@@ -71,7 +71,7 @@ sqlcmd -S server -U sa -P "$PASS" -d data-pipeline < query.sql
 
 ## Production Logging Patterns
 
-**Capture stdout and stderr separately for post-mortem analysis:**
+#### Separate stdout and stderr logs — post-mortem analysis
 ```bash
 # Capture stdout and stderr separately for post-mortem analysis
 python3 pipeline/run.py \
@@ -79,7 +79,7 @@ python3 pipeline/run.py \
   2> /var/log/pipeline/run_$(date +%Y%m%d_%H%M%S).err
 ```
 
-**Tee to both file and terminal (see output in real-time AND save it):**
+#### tee -a — output to both file and terminal simultaneously
 ```bash
 # Or tee to both file and terminal (see output in real-time AND save it)
 python3 pipeline/run.py 2>&1 | tee -a /var/log/pipeline/run.log

@@ -20,30 +20,25 @@ The most underused debugging skill in data engineering is reading socket state. 
 
 `ss` reads directly from kernel data structures (netlink) instead of parsing `/proc/net` files, making it faster on systems with thousands of connections.
 
-**Listing listening sockets:**
+#### ss -tlnp — listing listening TCP sockets with process info
+
+> [!info] `ss -tlnp` flags
+> - `-t` — TCP only (use `-u` for UDP, `-x` for Unix sockets)
+> - `-l` — listening sockets only (waiting for incoming connections)
+> - `-n` — numeric (show port numbers, not service names — much faster)
+> - `-p` — show process name (requires root for other users' processes)
 
 ```bash
-# Show all TCP listening sockets with process info
 ss -tlnp
-# -t = TCP only (use -u for UDP, -x for Unix sockets)
-# -l = listening sockets only (waiting for incoming connections)
-# -n = numeric (show port numbers, not service names)
-# -p = show process name (requires root for other users' processes)
-
-# Example output:
-# State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port  Process
-# LISTEN  0       4096     127.0.0.53%lo:53        0.0.0.0:*
-# LISTEN  0       128      0.0.0.0:22              0.0.0.0:*         users:(("sshd",pid=1234,fd=3))
-# LISTEN  0       128      0.0.0.0:1433            0.0.0.0:*         users:(("sqlservr",pid=5678,fd=5))
-# LISTEN  0       128      127.0.0.1:1434          0.0.0.0:*
-# LISTEN  0       128      127.0.0.1:1431          0.0.0.0:*
-# LISTEN  0       4096     127.0.0.1:5000          0.0.0.0:*
-# LISTEN  0       4096     127.0.0.1:8126          0.0.0.0:*
-# LISTEN  0       128      [::]:22                 [::]:*
-# LISTEN  0       128      *:1433                  *:*
 ```
 
-**How to read each column:**
+    State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port  Process
+    LISTEN  0       128      0.0.0.0:22              0.0.0.0:*         users:(("sshd",pid=1234,fd=3))
+    LISTEN  0       128      0.0.0.0:1433            0.0.0.0:*         users:(("sqlservr",pid=5678,fd=5))
+    LISTEN  0       128      127.0.0.1:1434          0.0.0.0:*
+    LISTEN  0       4096     127.0.0.1:5000          0.0.0.0:*
+
+#### ss output columns — State, Recv-Q, Send-Q, Local Address, Process
 
 | Column | Meaning |
 |--------|---------|
@@ -56,35 +51,13 @@ ss -tlnp
 
 ## Interpreting Local Address — Who Can Connect
 
-```bash
-# CRITICAL: the IP address determines WHO can connect
-
-# 0.0.0.0:1433 — listening on ALL IPv4 interfaces
-# Any machine on the network (or internet, if no firewall) can connect
-# This is how SQL Server, SSH, and web servers normally listen
-# Equivalent: *:1433
-
-# 127.0.0.1:5000 — listening on LOOPBACK only
-# ONLY processes on THIS MACHINE can connect
-# External machines will get "connection refused" even if firewall allows it
-# Use case: Datadog agent, internal APIs, admin tools
-# Equivalent: localhost:5000
-
-# [::]:22 — listening on ALL IPv6 interfaces
-# IPv6 version of 0.0.0.0 — accepts IPv6 connections from anywhere
-# On Linux with dual-stack, this often handles BOTH IPv4 and IPv6
-
-# [::1]:1434 — IPv6 loopback only
-# Same as 127.0.0.1 but for IPv6 — localhost only
-
-# 127.0.0.53%lo:53 — bound to loopback via the "lo" interface
-# The %lo suffix specifies the network interface (lo = loopback device)
-# systemd-resolved uses this for local DNS resolution
-
-# 10.0.0.3:1433 — bound to a SPECIFIC interface
-# Only connections arriving on the 10.0.0.3 interface are accepted
-# Connections to other IPs on the same machine are refused
-```
+> [!info] The IP address determines WHO can connect
+> - **`0.0.0.0:1433`** — listening on ALL IPv4 interfaces. Any machine on the network can connect. This is how SQL Server, SSH, and web servers normally listen. Equivalent: `*:1433`
+> - **`127.0.0.1:5000`** — LOOPBACK only. Only processes on THIS machine can connect. External machines get "connection refused" even if firewall allows it. Use case: Datadog agent, internal APIs
+> - **`[::]:22`** — listening on ALL IPv6 interfaces. On Linux with dual-stack, often handles BOTH IPv4 and IPv6
+> - **`[::1]:1434`** — IPv6 loopback only (same as `127.0.0.1` but for IPv6)
+> - **`127.0.0.53%lo:53`** — bound to loopback via the `lo` interface. `systemd-resolved` uses this for local DNS
+> - **`10.0.0.3:1433`** — bound to a SPECIFIC interface. Only connections arriving on that IP are accepted
 
 ## Common Services and Their Default Ports
 

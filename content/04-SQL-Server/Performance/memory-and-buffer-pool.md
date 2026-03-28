@@ -58,7 +58,7 @@ WHERE name = 'max server memory (MB)';
 
 For OS-level memory monitoring with `free`, `vmstat`, and other Linux tools, see [[system-resources]].
 
-**OS-level memory status:**
+#### sys.dm_os_sys_memory — OS-level memory status
 
 ```sql
 -- Available OS memory
@@ -96,7 +96,7 @@ WHERE counter_name = 'Page life expectancy'
   AND object_name LIKE '%Buffer Manager%';
 ```
 
-**Interpretation thresholds:**
+#### Page Life Expectancy — interpretation thresholds
 
 | PLE Value | Interpretation | Action |
 |-----------|---------------|--------|
@@ -146,7 +146,7 @@ WHERE pages_kb > 0
 ORDER BY pages_kb DESC;
 ```
 
-**Common clerks and their meaning:**
+#### sys.dm_os_memory_clerks — common clerks and their meaning
 
 | Clerk | What It Is | Concern |
 |-------|-----------|---------|
@@ -175,7 +175,7 @@ WHERE grant_time IS NULL;
 
 When queries appear here, `RESOURCE_SEMAPHORE` appears in [[wait-stats-analysis|wait statistics]].
 
-**Causes and fixes:**
+#### RESOURCE_SEMAPHORE memory grant queue — causes and fixes
 
 | Cause | Fix |
 |-------|-----|

@@ -32,7 +32,12 @@ Topics covered:
 
 #### perf_counter and timeit — wall-clock timing
 
-`time.perf_counter()` for high-resolution wall-clock timing. `timeit` for reliable micro-benchmarks (auto-repeats, disables GC). `%%timeit` in Jupyter auto-calibrates. Always warm up first (imports, caching). C# equivalent: `BenchmarkDotNet`, `Stopwatch`.
+> [!info] Timing tools
+> - `time.perf_counter()` — high-resolution wall-clock timing
+> - `timeit` — reliable micro-benchmarks (auto-repeats, disables GC)
+> - `%%timeit` in Jupyter — auto-calibrates
+> - Always warm up first (imports, caching)
+> - C# equivalent: `BenchmarkDotNet`, `Stopwatch`
 
 > [!tip] Never optimize without measuring first. Gut feelings are wrong.
 
@@ -128,7 +133,10 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
 
 #### sys.getsizeof and memory measurement
 
-`sys.getsizeof()` — shallow size (not contents). `tracemalloc` tracks allocations with file/line. C# equivalent: `dotMemory`, `GC.GetTotalMemory()`.
+> [!info] Memory measurement
+> - `sys.getsizeof()` — shallow size only (not contents)
+> - `tracemalloc` — tracks allocations with file and line number
+> - C# equivalent: `dotMemory`, `GC.GetTotalMemory()`
 
 > [!tip] Memory is the silent killer. A 10x blowup is invisible until OOM-kill in production.
 

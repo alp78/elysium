@@ -124,7 +124,11 @@ switch (command)
 
 <h4>Switch expression — compact value-returning form with <code style="font-size:0.75em">or</code> pattern and <code style="font-size:0.75em">_</code> wildcard</h4>
 
-`variable switch { pattern => result, _ => default }` — returns a value directly. The `or` pattern combines cases. `_` is the discard wildcard. Compiler warns if cases are incomplete.
+> [!info] Switch expression syntax
+> - `variable switch { pattern => result, _ => default }` — returns a value directly
+> - `or` pattern combines cases
+> - `_` is the discard wildcard
+> - Compiler warns if cases are incomplete
 
 > [!warning] Missing `_` default causes `MatchFailureException` at runtime. Keep switch arms pure — no side effects.
 
@@ -186,7 +190,10 @@ foreach (var v in values)
 
 <h4>Switch expression — property patterns (<code style="font-size:0.75em">{ Property: value }</code>)</h4>
 
-`{ PropertyName: value }` matches when the property equals the value. Nest for multi-property: `{ Month: 12, Day: 25 }`. Combine with relational patterns or `or`. Reads like a specification.
+> [!info] Property patterns
+> - `{ PropertyName: value }` — matches when the property equals the value
+> - Nest for multi-property: `{ Month: 12, Day: 25 }`
+> - Combine with relational patterns or `or`
 
 ```csharp
 var date = new DateTime(2024, 12, 25);
@@ -204,7 +211,12 @@ Console.WriteLine($"{date:yyyy-MM-dd} → {holiday}");
 
 <h4>Null-coalescing (<code style="font-size:0.75em">??</code>, <code style="font-size:0.75em">??=</code>) and <code style="font-size:0.75em">is</code> pattern matching</h4>
 
-`??` returns left if non-null, else right (replaces `x != null ? x : default`). `??=` assigns only when null (one-line lazy init: `_cache ??= LoadData()`). `is` pattern extracts and casts: `if (obj is string s)`. When null is an error, throw `ArgumentNullException` instead of using `??`.
+> [!info] Null-handling operators
+> - `??` — returns left if non-null, else right (replaces `x != null ? x : default`)
+> - `??=` — assigns only when null (one-line lazy init: `_cache ??= LoadData()`)
+> - `is` pattern — extracts and casts in one step: `if (obj is string s)`
+>
+> > [!warning] When null is an error, throw `ArgumentNullException` instead of using `??`.
 
 ```csharp
 #nullable enable
@@ -273,7 +285,11 @@ Console.WriteLine();
 
 <h4><code style="font-size:0.75em">break</code>, <code style="font-size:0.75em">continue</code>, <code style="font-size:0.75em">goto</code></h4>
 
-`break` exits the innermost loop immediately. `continue` skips to the next iteration. Both work in `for`, `foreach`, `while`, and `do-while`. For complex flow, extract to a method with `return`.
+> [!info] Loop control
+> - `break` — exits the innermost loop immediately
+> - `continue` — skips to the next iteration
+> - Both work in `for`, `foreach`, `while`, and `do-while`
+> - For complex flow, extract to a method with `return`
 
 ```csharp
 // break — exits immediately when condition is met
@@ -494,7 +510,12 @@ Console.WriteLine($"Flatten: [{string.Join(", ", Flatten(nestedArr))}]");
 
 #### LINQ basics — Select, Where, chaining, and SelectMany
 
-`Select` transforms each element (map). `Where` filters (filter). Chain methods fluently: `.Where(...).Select(...).Take(...)`. All lazy — nothing executes until enumeration. `SelectMany` flattens nested sequences.
+> [!info] Core LINQ methods
+> - `Select` — transforms each element (map)
+> - `Where` — filters elements (filter)
+> - `SelectMany` — flattens nested sequences
+> - Chain fluently: `.Where(...).Select(...).Take(...)`
+> - All lazy — nothing executes until enumeration (`foreach` or `ToList()`)
 
 > [!warning] Don't use `foreach` with `if` + add to list — use `.Where().Select()`. Don't enumerate a deferred query multiple times — materialize with `ToList()`.
 
@@ -601,7 +622,13 @@ Console.WriteLine($"Average:{nums.Average()}");
 
 <h4>Ordering — <code style="font-size:0.75em">OrderBy</code>, <code style="font-size:0.75em">OrderByDescending</code> with a key selector</h4>
 
-`OrderBy(x => x.Property)` sorts ascending. `OrderByDescending` for descending. `ThenBy`/`ThenByDescending` for secondary sort. Stable sort — equal elements maintain relative order. Don't use `OrderBy` then another `OrderBy` — it replaces the first; use `ThenBy`.
+> [!info] Ordering
+> - `OrderBy(x => x.Property)` — sorts ascending
+> - `OrderByDescending` — sorts descending
+> - `ThenBy` / `ThenByDescending` — secondary sort
+> - Stable sort — equal elements maintain relative order
+>
+> > [!warning] Don't chain two `OrderBy` calls — the second replaces the first. Use `ThenBy` for secondary sort.
 
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
@@ -618,7 +645,13 @@ Console.WriteLine($"By last char:  [{string.Join(", ", names.OrderBy(n => n[^1])
 
 <h4>Deferred execution — chained LINQ pipeline materialized by <code style="font-size:0.75em">ToList()</code></h4>
 
-Each LINQ method returns a lazy `IEnumerable`. Chain declaratively: `.Where().Select().OrderBy().Take()`. Nothing executes until `foreach` or `ToList()`. Add conditions dynamically: `if (filter) query = query.Where(...)`. Don't enumerate the same deferred query multiple times — it duplicates work.
+> [!info] Deferred execution
+> - Each LINQ method returns a lazy `IEnumerable`
+> - Chain declaratively: `.Where().Select().OrderBy().Take()`
+> - Nothing executes until `foreach` or `ToList()`
+> - Add conditions dynamically: `if (filter) query = query.Where(...)`
+>
+> > [!warning] Don't enumerate the same deferred query multiple times — it duplicates work. Materialize with `ToList()` if you need multiple passes.
 
 ```csharp
 var result = Enumerable.Range(1, 20)

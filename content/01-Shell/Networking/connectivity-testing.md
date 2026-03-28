@@ -20,44 +20,34 @@ The first question in any network debugging session is: "Can my client reach the
 
 #### nc (netcat) — testing port reachability
 
-```bash
-# Test if a specific port is reachable (the single most useful network command)
-nc -zv hostname 1433
-# nc = netcat — the Swiss Army knife of networking
-# -z = scan mode (don't send data, just check if the port is open)
-# -v = verbose (shows "Connection to hostname 1433 port [tcp/ms-sql-s] succeeded!")
-# Use case: "Can my pipeline VM reach the SQL Server VM on port 1433?"
+> [!info] `nc` (netcat) flags
+> - `-z` — scan mode (don't send data, just check if the port is open)
+> - `-v` — verbose (shows "succeeded!" or "refused")
+> - `-w 5` — timeout after 5 seconds (don't hang on unreachable hosts)
 
-# With timeout (don't hang for 60 seconds on unreachable hosts)
+```bash
+# Test if a specific port is reachable
+nc -zv hostname 1433
+
+# With timeout
 nc -zv -w 5 hostname 1433
-# -w 5 = timeout after 5 seconds
 
 # Alternative: bash built-in TCP test (no netcat required)
 timeout 5 bash -c "echo > /dev/tcp/hostname/1433" && echo "OPEN" || echo "CLOSED"
-# /dev/tcp/host/port = bash pseudo-device for TCP connections
-# timeout 5 = abort after 5 seconds (prevents hanging)
-# Works on every Linux system without installing extra packages
 
-# Test multiple ports at once
+# Sweep common DE ports: 1433=SQL Server, 5432=PostgreSQL, 6379=Redis, 8080=Airflow
 for port in 1433 5432 6379 8080; do
     nc -zv -w 3 hostname $port 2>&1 | grep -E "succeeded|refused|timed out"
 done
-# Quick sweep of common data engineering ports:
-# 1433 = SQL Server, 5432 = PostgreSQL, 6379 = Redis, 8080 = Airflow webserver
 ```
 
 #### dig — DNS lookup and record queries
 
 ```bash
-# DNS lookup
-dig +short hostname
-# dig = DNS lookup tool (more detailed than nslookup)
-# +short = just the IP address, skip all the DNS metadata
-
+dig +short hostname      # just the IP address, skip DNS metadata
 dig hostname A           # A record (IPv4 address)
 dig hostname CNAME       # CNAME record (alias)
 dig @8.8.8.8 hostname    # query specific DNS server (Google's)
-# Use case: "Is DNS resolving our internal hostname correctly?"
 ```
 
 #### traceroute, mtr, ss — network path tracing and listening ports
@@ -77,14 +67,7 @@ mtr -c 10 hostname
 # Look for: packet loss at a specific hop = congestion or drops
 
 # Show listening ports on the local machine
-ss -tlnp
-# ss = socket statistics (modern replacement for netstat)
-# -t = TCP only
-# -l = listening sockets only
-# -n = numeric addresses (don't resolve hostnames — much faster)
-# -p = show process name and PID
-# Use case: "Is SQL Server actually listening on port 1433?"
-# Typical output: LISTEN  0  128  0.0.0.0:1433  users:(("sqlservr",pid=1234,fd=5))
+ss -tlnp   # -t=TCP, -l=listening, -n=numeric, -p=show process
 ```
 
 ## Production Scenario — Pipeline Can't Connect to the Database

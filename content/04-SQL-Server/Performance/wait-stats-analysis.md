@@ -41,7 +41,7 @@ SELECT
     (SELECT COUNT(*) FROM sys.dm_exec_requests WHERE status = 'running') AS active_queries;
 ```
 
-**Interpretation:**
+#### sys.dm_os_wait_stats — interpretation thresholds
 
 | Metric | Healthy | Investigate |
 |--------|---------|-------------|
@@ -113,12 +113,12 @@ FROM waits
 ORDER BY wait_time_ms DESC;
 ```
 
-**Understanding signal vs. resource wait:**
+#### signal_wait_ms vs resource_wait_ms — CPU pressure indicator
 
 - **resource_wait_ms** — time waiting for the actual resource (disk, lock, memory). This is the problem.
 - **signal_wait_ms** — time waiting to be rescheduled on a CPU after the resource became available. High signal waits indicate CPU pressure.
 
-**Reset wait stats after tuning changes to get a clean baseline:**
+#### DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR) — reset for clean baseline
 
 ```sql
 DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
@@ -237,7 +237,7 @@ JOIN sys.master_files f ON fs.database_id = f.database_id AND fs.file_id = f.fil
 ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 ```
 
-**Latency thresholds (SSD-backed storage on GCP pd-ssd):**
+#### sys.dm_io_virtual_file_stats — latency thresholds for SSD-backed GCP pd-ssd
 
 | File Type | Acceptable | Warning | Critical |
 |-----------|-----------|---------|----------|
@@ -254,7 +254,7 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 
 TempDB allocation page contention (`PAGELATCH_EX/SH` on pages `2:1:1`, `2:1:2`, `2:1:3`) is a common bottleneck when multiple sessions allocate temp objects simultaneously.
 
-**TempDB file I/O stats (per file — look for uneven distribution):**
+#### sys.dm_io_virtual_file_stats — TempDB per-file I/O distribution
 
 ```sql
 -- TempDB file IO stats (per file — look for uneven distribution)
@@ -274,7 +274,7 @@ JOIN sys.master_files f ON fs.database_id = f.database_id AND fs.file_id = f.fil
 ORDER BY f.file_id;
 ```
 
-**Check for PFS/GAM/SGAM page contention:**
+#### sys.dm_exec_requests PAGELATCH — check PFS/GAM/SGAM contention
 
 ```sql
 -- Check for PFS/GAM/SGAM page contention
@@ -289,7 +289,7 @@ WHERE wait_type LIKE 'PAGELATCH%'
 ORDER BY wait_duration_ms DESC;
 ```
 
-**Fix TempDB contention — add one data file per vCPU (up to 8):**
+#### ALTER DATABASE tempdb ADD FILE — add data files per vCPU to fix contention
 
 ```sql
 -- Check current TempDB files
@@ -313,7 +313,7 @@ ALTER DATABASE tempdb ADD FILE (
 
 Query Store persists execution plans and performance metrics across restarts, enabling before/after comparison and plan forcing.
 
-**Enable and configure Query Store:**
+#### ALTER DATABASE SET QUERY_STORE — enable and configure Query Store
 
 ```sql
 ALTER DATABASE analytics_db SET QUERY_STORE = ON;
@@ -340,7 +340,7 @@ SELECT
 FROM sys.database_query_store_options;
 ```
 
-**Find regressed queries (slower compared to 7-day baseline):**
+#### sys.query_store_runtime_stats — find regressed queries vs 7-day baseline
 
 ```sql
 WITH recent AS (
@@ -387,7 +387,7 @@ WHERE r.recent_avg_ms > b.baseline_avg_ms * 2
 ORDER BY r.recent_avg_ms / NULLIF(b.baseline_avg_ms, 0) DESC;
 ```
 
-**Force a known-good plan for a regressed query:**
+#### sp_query_store_force_plan — force a known-good plan for regressed query
 
 ```sql
 -- List available plans for a specific query

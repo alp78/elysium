@@ -27,10 +27,6 @@ Polars.NET lazy execution, optimization, benchmarks. Deedle is eager-only.
 
 ---
 ```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-// NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
-// Run this cell ONCE before any cells that use NuGet packages.
-
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -173,10 +169,9 @@ result.Head(5)
 
 #### 1.4 — Explain: inspect the optimized query plan
 
+> [!info] `Explain()` shows the optimized query plan as a string. It may not be exposed in Polars.NET 0.4.0 — the code catches the exception and notes the limitation.
+
 ```csharp
-// Polars.NET — Explain() shows the optimized query plan as a string
-// NOTE: Explain() may not be exposed in Polars.NET 0.4.0.
-// If it throws, we catch and note the limitation.
 try
 {
     var lfExplain = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));

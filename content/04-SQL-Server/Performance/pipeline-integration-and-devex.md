@@ -24,7 +24,7 @@ Three recurring friction points when integrating SQL Server into a data engineer
 
 **Solution:** tag every SQL query with Airflow metadata in a comment header so monitoring tools can slice by DAG, task, and run.
 
-**Implementation in the Python pipeline:**
+#### SQL comment header tagging — Airflow DAG, task, run metadata in queries
 
 ```python
 # In your pipeline task function
@@ -38,7 +38,7 @@ These comments appear in:
 - Query Store (if enabled) — persists across restarts
 - Datadog SQL query metrics — enables filtering and grouping
 
-**Datadog custom tagging — surface DAG-tagged queries:**
+#### Datadog dbm custom_queries — surface DAG-tagged SQL queries
 
 ```yaml
 # datadog-agent sql_server.d/conf.yaml
@@ -75,7 +75,7 @@ instances:
           - 'service:analytics-pipeline'
 ```
 
-**Correlation dashboard in Datadog:**
+#### Datadog correlation dashboard — CPU, I/O, and DAG timeline overlay
 
 Create a dashboard with two graphs:
 
@@ -84,7 +84,7 @@ Create a dashboard with two graphs:
 
 Overlay with markers for DAG run start/end times. This lets you visually correlate "CPU spiked at 09:05" with "the `daily_pipeline` DAG started at 09:04."
 
-**Query Store approach (no Datadog dependency):**
+#### sys.query_store_query_text — correlate pipeline queries without Datadog
 
 ```sql
 -- Find the most expensive queries during a specific time window (when DAG ran)
@@ -108,7 +108,7 @@ ORDER BY qsrs.avg_duration DESC;
 
 **Problem:** index changes, new columns, new tables are applied ad-hoc via SSMS or scripts. No version control, no rollback path, no audit trail.
 
-**Solution options:**
+#### Flyway, Liquibase, sqlcmd, dacpac — schema migration tool comparison
 
 | Tool | Type | SQL Server Support | How It Works |
 |---|---|---|---|
@@ -129,7 +129,7 @@ pipeline/
     └── V005__scd_type2_stock_dim.sql
 ```
 
-**Migration runner (Python, integrates into Airflow DAG):**
+#### pymssql migration runner — sequential SQL scripts with version table
 
 ```python
 import pymssql
@@ -176,7 +176,7 @@ def run_migrations(conn_params: dict):
     conn.close()
 ```
 
-**Airflow DAG integration — migrations as the first task:**
+#### PythonOperator run_migrations — Airflow DAG migration task
 
 ```python
 # In the DAG definition, run migrations as the first task
@@ -188,7 +188,7 @@ run_migrations_task = PythonOperator(
 run_migrations_task >> load_bronze >> transform_silver >> compute_gold
 ```
 
-**Rules for writing migrations:**
+#### IF NOT EXISTS, IF COL_LENGTH — rules for idempotent migrations
 
 - Always idempotent (use `IF NOT EXISTS`, `IF COL_LENGTH IS NULL`, etc.)
 - Never modify a migration that has already been applied
@@ -196,7 +196,7 @@ run_migrations_task >> load_bronze >> transform_silver >> compute_gold
 - Test migrations on a restored backup before running on production
 - Include both UP and DOWN logic as comments (even if you don't automate rollback)
 
-**Migration validation in CI (GitHub Actions):**
+#### GitHub Actions — migration validation in CI with sqlcmd
 
 ```yaml
 # .github/workflows/validate-migrations.yml
@@ -216,14 +216,14 @@ run_migrations_task >> load_bronze >> transform_silver >> compute_gold
 
 **Why it matters:** each SQL Server connection consumes approximately 2 MB of memory. Uncontrolled pooling can exhaust server memory on a 16 GB VM (8 GB reserved for SQL Server, 8 GB for OS — 400 connections would consume all OS memory).
 
-**Python — pymssql:**
+#### pymssql connection pooling — one connection per task, sqlalchemy pool
 
 pymssql does NOT pool connections natively. Each `pymssql.connect()` opens a new TCP connection.
 
 - For the pipeline: open one connection per task, close when done. Don't open per-query.
 - For high-throughput: use `sqlalchemy` with `create_engine(..., pool_size=5, max_overflow=2)`
 
-**C# / Blazor dashboard — ADO.NET:**
+#### ADO.NET Min/Max Pool Size — C# connection pooling configuration
 
 ADO.NET pools by default (per connection string). Configure pool limits in the connection string:
 
@@ -233,7 +233,7 @@ ADO.NET pools by default (per connection string). Configure pool limits in the c
  Min Pool Size=2;Max Pool Size=20;Connection Timeout=15;"
 ```
 
-**Monitor connections from the server side:**
+#### sys.dm_exec_sessions program_name — monitor connection count by application
 
 ```sql
 -- Current connection count by application
@@ -328,7 +328,7 @@ instances:
         min_collection_interval: 15
 ```
 
-**Datadog monitor definitions — alert thresholds:**
+#### Datadog sqlserver.buffer, sqlserver.waits — alert thresholds
 
 | Metric | Warning | Alert | Action |
 |---|---|---|---|
@@ -337,7 +337,7 @@ instances:
 | `sqlserver.waits.lock_ms` (rate) | > 100ms/s | > 500ms/s | [[blocking-and-locking]] — check for blocking chains |
 | `sqlserver.blocked_processes` | > 0 | > 5 | [[blocking-and-locking]] — find head blocker |
 
-**Create the Datadog monitoring login (minimum required permissions):**
+#### CREATE LOGIN datadog — Datadog monitoring with minimum permissions
 
 ```sql
 -- Create Datadog SQL Server login with read-only system view access

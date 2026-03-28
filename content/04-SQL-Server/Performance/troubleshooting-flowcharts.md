@@ -83,7 +83,7 @@ Start here when users report slowness or pipeline runs are taking longer than us
                                                     └──────────────────┘
 ```
 
-**The wait stats query to start with:**
+#### sys.dm_os_wait_stats — the first query to run for slow pipelines
 
 ```sql
 -- Top 10 wait types (filtered for noise)
@@ -114,7 +114,7 @@ WHERE wait_type NOT IN (
 ORDER BY wait_time_ms DESC;
 ```
 
-**Diagnosis quick reference:**
+#### Wait type diagnosis — PAGEIOLATCH, LCK_M, CXPACKET resolution guide
 
 | Wait Type | Root Cause | Resolution |
 |---|---|---|
@@ -194,7 +194,7 @@ Start here when an Airflow task turns red.
                                                     └──────────────────┘
 ```
 
-**Connection refused / timeout — quick checks:**
+#### nc, ss, gcloud firewall-rules — connection refused/timeout quick checks
 
 ```bash
 # Is SQL Server running?
@@ -207,7 +207,7 @@ sudo systemctl start mssql-server
 gcloud compute start-iap-tunnel analytics-sql-01 1433 --local-host-port=localhost:1433 --zone=europe-west1-b
 ```
 
-**Login failed — check disabled accounts:**
+#### sys.sql_logins is_disabled — login failed, check disabled accounts
 
 ```sql
 -- Check if login is disabled
@@ -219,7 +219,7 @@ WHERE name = 'your_login_name';
 EXEC xp_readerrorlog 0, 1, N'Login failed';
 ```
 
-**Data integrity errors:**
+#### Data integrity errors — duplicate key, constraint violation, type mismatch
 
 - **Duplicate key:** The MERGE or INSERT logic doesn't properly handle existing rows. See [[merge-and-upsert]].
 - **NULL constraint violation:** Source data has NULLs in a NOT NULL column. Add validation in the bronze loader.
@@ -280,7 +280,7 @@ EXEC xp_readerrorlog 0, 1, N'Login failed';
   └─────────────────────────────────────────────────────┘
 ```
 
-**Quick index checks:**
+#### sys.dm_db_missing_index_details — quick index checks
 
 ```sql
 -- What does the optimizer think is missing?
@@ -358,7 +358,7 @@ ORDER BY s.user_updates DESC;
                               └───────────────┘
 ```
 
-**Data file (.mdf) full — immediate actions:**
+#### ALTER DATABASE MODIFY FILE — data file (.mdf) full, grow or add files
 
 ```sql
 -- Check file sizes and free space
@@ -379,7 +379,7 @@ ALTER DATABASE analytics_db ADD FILE (
 );
 ```
 
-**Log file (.ldf) full — FULL recovery model:**
+#### BACKUP LOG, DBCC SHRINKFILE — log file (.ldf) full recovery
 
 ```sql
 -- Check why the log cannot be reused
@@ -398,7 +398,7 @@ DBCC SHRINKFILE (mydb_log, 1024);  -- shrink to 1 GB minimum
 > [!warning] SHRINKFILE Is a Last Resort
 > Shrinking and then letting the log grow again causes log file fragmentation. The correct long-term fix is to take log backups regularly (every 15 minutes for FULL recovery model) to prevent the log from growing in the first place. See [[backup-types-and-strategy]].
 
-**OS disk full — Linux cleanup:**
+#### du, find, journalctl — OS disk full Linux cleanup
 
 ```bash
 # Find large files consuming OS disk

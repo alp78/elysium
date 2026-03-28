@@ -25,7 +25,7 @@ Index fragmentation occurs when the physical order of data pages on disk diverge
 
 ## Fragmentation Detection
 
-**Check fragmentation for a specific table:**
+#### sys.dm_db_index_physical_stats — check fragmentation for a table
 
 ```sql
 -- Check fragmentation for all indexes on a table
@@ -43,7 +43,7 @@ JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
 -- avg_page_space_used_in_percent = how full each page is (low = wasted space)
 ```
 
-**Fragmentation thresholds:**
+#### Fragmentation thresholds — reorganize vs rebuild decision guide
 
 | Fragmentation Level | Action |
 |--------------------|--------|
@@ -52,7 +52,7 @@ JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
 | > 30% | REBUILD (offline or online, thorough) |
 | page_count < 1000 | Skip entirely — too small to matter |
 
-**Check fragmentation across all indexes in the database:**
+#### sys.dm_db_index_physical_stats — fragmentation across all indexes
 
 ```sql
 -- Fragmentation across ALL indexes in the database
@@ -259,7 +259,7 @@ UPDATE STATISTICS silver.signals_quarterly;
 -- Run the automated maintenance script above during the Sunday 02:00 UTC window
 ```
 
-**Recommended index layout for the example data model:**
+#### CREATE INDEX — recommended index layout for medallion data model
 
 ```sql
 -- dbo.market_data (main fact table — millions of rows, daily bulk upserts)

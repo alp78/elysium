@@ -52,7 +52,7 @@ WITH STOPAT = '2026-03-09T14:23:45', RECOVERY;
 -- RECOVERY = bring the database online
 ```
 
-**Key option meanings:**
+#### RESTORE DATABASE options — NORECOVERY, STOPAT, REPLACE
 
 | Option | Purpose |
 |--------|---------|
@@ -111,7 +111,7 @@ FROM sys.dm_exec_requests
 WHERE command LIKE '%RECOVERY%';
 ```
 
-**The three crash recovery phases:**
+#### Crash recovery — analysis, redo, undo phases
 
 | Phase | What Happens | Duration |
 |---|---|---|
@@ -119,7 +119,7 @@ WHERE command LIKE '%RECOVERY%';
 | **Redo (roll forward)** | Replay all committed changes not yet in `.mdf` | Proportional to log records since last checkpoint |
 | **Undo (roll back)** | Reverse uncommitted transactions from before the crash | Proportional to uncommitted work at crash time |
 
-**Crash recovery scenarios:**
+#### Crash recovery scenarios — clean shutdown vs power failure vs log corruption
 
 | Scenario | Impact |
 |---|---|

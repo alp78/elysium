@@ -18,7 +18,7 @@ Resource monitoring tells you whether performance problems are CPU-bound, memory
 
 ## Linux — free, lscpu, uptime, vmstat, iostat, iotop
 
-**Memory:**
+#### free -h — memory usage and available RAM
 
 ```bash
 # Memory — the command you'll run most often on database servers
@@ -35,7 +35,7 @@ free -h
 # If swap is being used (used > 0), your server is already under memory pressure
 ```
 
-**CPU info and load average:**
+#### lscpu, uptime — CPU info and load average
 
 ```bash
 # CPU info
@@ -52,39 +52,32 @@ uptime
 # Trend: if 1-min > 15-min, load is increasing (getting worse)
 ```
 
-**vmstat — combined CPU/memory/IO snapshot:**
+#### vmstat — combined CPU/memory/IO snapshot
+
+> [!info] `vmstat` key columns
+> - **r** — processes waiting for CPU (high = CPU-bound)
+> - **b** — processes blocked on I/O (high = I/O-bound)
+> - **si/so** — swap in/out (should be zero — any swap activity = memory pressure)
+> - **wa** — CPU time spent waiting for I/O (>20% = disk bottleneck)
+> - **st** — stolen time (>0 on VMs = hypervisor overcommit)
 
 ```bash
-# vmstat — combined CPU/memory/IO snapshot
-vmstat 2 5
-# 2 = sample every 2 seconds, 5 = five samples
-# KEY COLUMNS:
-# r = processes waiting for CPU (high = CPU-bound)
-# b = processes blocked on I/O (high = I/O-bound)
-# si/so = swap in/out (SHOULD BE ZERO — any swap activity = memory pressure)
-# wa = CPU time spent waiting for I/O (>20% = disk bottleneck)
-# st = stolen time (>0 on VMs = hypervisor overcommit, your VM isn't getting its allocated CPU)
+vmstat 2 5    # sample every 2 seconds, 5 samples
 ```
 
-**iostat — disk I/O performance:**
+#### iostat -xz — disk I/O performance and utilization
+
+> [!info] `iostat` key columns
+> - **r/s, w/s** — reads and writes per second
+> - **rkB/s, wkB/s** — throughput in KB/s
+> - **await** — average I/O wait time in ms (SSD: <5ms normal, >20ms saturated; HDD: 10-20ms normal, >50ms severe)
+> - **%util** — percentage of time device is busy (>90% = the bottleneck, no amount of CPU/memory helps)
 
 ```bash
-# iostat — disk I/O performance
-iostat -xz 2
-# KEY COLUMNS:
-# r/s, w/s = reads and writes per second
-# rkB/s, wkB/s = throughput in KB/s
-# await = average I/O wait time in ms
-#   - SSD: should be <5ms. If >20ms, the SSD is saturated.
-#   - HDD: 10-20ms is normal. >50ms = severe bottleneck.
-# %util = percentage of time the device is busy
-#   - >90% = the device is the bottleneck, no amount of CPU/memory helps
+iostat -xz 2    # -x = extended stats, -z = suppress idle devices, 2 = every 2 seconds
 
 # iotop — per-process I/O (who's doing the disk I/O?)
-sudo iotop -o
-# -o = only show processes with active I/O (skip idle processes)
-# Shows: read/write bandwidth per process
-# Use case: "Which container is hammering the disk?"
+sudo iotop -o   # -o = only show processes with active I/O
 ```
 
 ## SQL Server Memory Interpretation

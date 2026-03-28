@@ -22,7 +22,7 @@ A step-by-step methodology for auditing any SQL Server instance from scratch. Ea
 
 **Purpose:** Understand what you're working with before diving into diagnostics. Version determines available features, uptime determines how much data the DMVs have accumulated, and configuration reveals common misconfigurations.
 
-**Key terms:**
+#### DMV, MAXDOP, Cost Threshold — key terms for instance audit
 - **DMV (Dynamic Management View):** System views that expose internal SQL Server state — memory usage, query stats, wait times. DMV data resets on restart, so short uptime means limited historical data.
 - **MAXDOP (Max Degree of Parallelism):** How many CPU cores a single query can use. Default 0 = unlimited = all cores.
 - **Cost Threshold for Parallelism:** The estimated query cost (in arbitrary units) above which SQL Server considers parallel execution. Default 5 is almost always too low.
@@ -36,7 +36,7 @@ SELECT SERVERPROPERTY('ProductVersion') AS Version,
        SERVERPROPERTY('ProductLevel') AS PatchLevel;
 ```
 
-**What to look for:**
+#### @@VERSION, SERVERPROPERTY — version and patch level check
 - **Good:** Latest CU (Cumulative Update) installed, edition matches workload needs
 - **Bad:** Running RTM with no patches, Enterprise features needed but running Standard
 - **Action:** If more than 2 CUs behind, recommend patching in the next maintenance window
@@ -52,7 +52,7 @@ SELECT sqlserver_start_time,
 FROM sys.dm_os_sys_info;
 ```
 
-**What to look for:**
+#### sys.dm_os_sys_info sqlserver_start_time — uptime interpretation
 - **Good:** Uptime > 7 days — DMVs have representative data
 - **Bad:** Uptime < 1 day — all DMV-based findings need a disclaimer ("based on limited data since last restart")
 - **Action:** If recently restarted, ask why. Frequent restarts are a red flag (memory leaks, patching without planning, crashes).
@@ -69,7 +69,7 @@ SELECT cpu_count AS logical_cpus,
 FROM sys.dm_os_sys_info;
 ```
 
-**What to look for:**
+#### sys.dm_os_sys_info — hardware: CPUs, memory committed vs target
 - **Good:** `committed_mb` ≈ `target_mb` (SQL Server has enough memory to use what it's configured for)
 - **Bad:** `committed_mb` significantly below `target_mb` (OS is under memory pressure and can't give SQL Server what it wants)
 
@@ -86,7 +86,7 @@ WHERE name IN (
 ORDER BY name;
 ```
 
-**What to look for and recommended values:**
+#### sp_configure — recommended values for max memory, MAXDOP, cost threshold
 
 | Setting | Default | Red flag | Recommended |
 |---------|---------|----------|-------------|
@@ -95,7 +95,7 @@ ORDER BY name;
 | `cost threshold for parallelism` | 5 | 5 is too low — tiny queries go parallel unnecessarily | 25–50 for OLTP, 10–25 for mixed workloads |
 | `optimize for ad hoc workloads` | 0 (off) | Off — every unique query gets a full plan cached, bloating plan cache | 1 (on) — only caches full plan on second execution |
 
-**Fix script:**
+#### sp_configure + RECONFIGURE — fix max memory, MAXDOP, cost threshold
 
 ```sql
 -- Fix max memory (example: 2 GB VM, reserve 1 GB for OS)
@@ -128,7 +128,7 @@ FROM sys.databases
 ORDER BY name;
 ```
 
-**Red flags:**
+#### sys.databases — red flags: auto_shrink, auto_stats, RCSI disabled
 
 > [!warning] auto_shrink = ON is Critical
 > Auto-shrink causes massive fragmentation and CPU spikes. It shrinks the file, then the next insert grows it again, endlessly. Disable immediately: `ALTER DATABASE [db] SET AUTO_SHRINK OFF;`
@@ -143,7 +143,7 @@ ORDER BY name;
 
 **Purpose:** Determine if SQL Server has enough memory. Memory pressure is the most common performance problem — when data doesn't fit in the buffer pool, every query must read from disk (1000x slower).
 
-**Key terms:**
+#### Buffer pool, PLE, cache hit ratio — key terms for memory audit
 - **Buffer pool:** SQL Server's main data cache — holds data pages in RAM so they don't need to be read from disk every time.
 - **Page Life Expectancy (PLE):** Average time (in seconds) a data page stays in the buffer pool before being evicted. Higher = better. If pages are evicted quickly, queries must re-read them from disk.
 - **Buffer cache hit ratio:** Percentage of page reads satisfied from the buffer pool (RAM) vs. disk. Should be > 99%.
@@ -169,7 +169,7 @@ WHERE counter_name = 'Page life expectancy'
   AND object_name LIKE '%Buffer Manager%';
 ```
 
-**How to interpret:**
+#### Page Life Expectancy — healthy vs critical thresholds
 
 | PLE | Status |
 |-----|--------|
@@ -178,7 +178,7 @@ WHERE counter_name = 'Page life expectancy'
 | < 300 seconds | Memory pressure — pages being evicted frequently, queries hitting disk |
 | Volatile / drops suddenly | A large scan (table scan or index rebuild) is flushing the buffer pool |
 
-**Action if PLE is low:**
+#### Low PLE remediation — increase memory or add indexes
 1. Increase `max server memory` if the OS has headroom
 2. Find queries doing table scans (Phase 5) and add indexes
 3. Check if index rebuilds are running during peak hours — schedule them off-peak
@@ -192,7 +192,7 @@ WHERE counter_name = 'Buffer cache hit ratio'
   AND object_name LIKE '%Buffer Manager%';
 ```
 
-**How to interpret:**
+#### Buffer cache hit ratio — interpretation thresholds
 - **> 99%:** Excellent — nearly all reads come from RAM
 - **95–99%:** Acceptable — some disk reads, usually on first access
 - **< 95%:** Problem — significant disk IO, performance is degraded
@@ -207,7 +207,7 @@ FROM sys.dm_os_memory_clerks
 ORDER BY pages_kb DESC;
 ```
 
-**Common clerks and what they mean:**
+#### sys.dm_os_memory_clerks — common clerks and what they mean
 
 | Clerk | What it is | Concern |
 |-------|-----------|---------|
@@ -289,7 +289,7 @@ ORDER BY wait_sec DESC;
 | **LATCH_EX / LATCH_SH** | Internal page latch contention (not user-level locks) | TempDB contention (single file), hot page inserts | Add TempDB files (1 per CPU core, max 8), use OPTIMIZE_FOR_SEQUENTIAL_KEY |
 | **IO_COMPLETION** | Waiting for non-data IO operations (e.g., sorting to tempdb) | TempDB on slow disk, large sort spills | Move TempDB to SSD, add memory, fix queries that spill to disk |
 
-**Good vs bad output examples:**
+#### Wait stats output — good vs bad examples
 
 ```
 -- Good (low absolute numbers, WRITELOG on a small server is normal):
@@ -320,7 +320,7 @@ Then re-run after a representative period (e.g., a full business day) to see if 
 
 **Purpose:** Determine if the storage subsystem is a bottleneck. Slow disk is often the root cause behind PAGEIOLATCH waits.
 
-**Key terms:**
+#### .mdf, .ldf, IO stall — key terms for IO performance audit
 - **Data file (.mdf/.ndf):** Stores the actual database pages (tables, indexes)
 - **Log file (.ldf):** Sequential write-ahead log — every transaction is written here first
 - **IO stall:** Time (in ms) that SQL Server spent waiting for IO operations to complete
@@ -355,7 +355,7 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 > [!warning] Log Files Are More Sensitive
 > Every transaction must wait for the log write to complete before returning success. A 10ms log write latency means every INSERT/UPDATE/DELETE takes at least 10ms regardless of how fast the query itself runs.
 
-**Remediation for high IO latency:**
+#### High IO latency remediation — SSD, separate data/log, add indexes
 - Move to SSD if on spinning disk (biggest single improvement possible)
 - Separate data and log files onto different disks (prevents read/write contention)
 - If on GCP: increase disk tier (pd-standard → pd-ssd → pd-balanced)
@@ -452,7 +452,7 @@ JOIN sys.dm_db_missing_index_details d ON g.index_handle = d.index_handle
 ORDER BY improvement_score DESC;
 ```
 
-**How to interpret:**
+#### sys.dm_db_missing_index_details — interpret equality, inequality, include columns
 - `equality_columns` = columns used in `WHERE col = value` (these go in the index key)
 - `inequality_columns` = columns used in `WHERE col > value` or `ORDER BY` (these go after equality columns)
 - `included_columns` = columns selected but not filtered on (add as `INCLUDE`)
@@ -501,7 +501,7 @@ WHERE ips.page_count > 128
 ORDER BY ips.avg_fragmentation_in_percent DESC;
 ```
 
-**Action thresholds:**
+#### Fragmentation action thresholds — reorganize vs rebuild
 
 | Fragmentation | Action | Command |
 |---------------|--------|---------|
@@ -518,7 +518,7 @@ ORDER BY ips.avg_fragmentation_in_percent DESC;
 
 **Purpose:** TempDB is shared by all databases — sorting, hashing, temp tables, RCSI version store, and spills all go here. A misconfigured TempDB causes contention that affects every query.
 
-**Key terms:**
+#### Version store, spills — key terms for TempDB audit
 - **Version store:** When RCSI is enabled, SQL Server stores old row versions in TempDB so readers can see a snapshot without taking locks. If TempDB fills up, RCSI stops working.
 - **Spill:** When a sort or hash operation runs out of its memory grant, it "spills" to TempDB — writing temp data to disk. Spills are slow.
 - **PFS/GAM/SGAM contention:** Allocation pages at the front of each TempDB file. With only one file, all threads compete for the same allocation pages. Fix: multiple files of equal size.
@@ -533,7 +533,7 @@ SELECT SUM(user_object_reserved_page_count) * 8 / 1024 AS user_objects_mb,
 FROM sys.dm_db_file_space_usage;
 ```
 
-**Red flags:**
+#### TempDB red flags — version store growth, spills, contention
 - `version_store_mb` very large → a long-running transaction is preventing version cleanup. Find it: `SELECT * FROM sys.dm_tran_active_snapshot_database_transactions ORDER BY elapsed_time_seconds DESC;`
 - `internal_objects_mb` very large → queries are spilling to disk — find them in Phase 5 and add indexes
 - `free_mb` near zero → TempDB is about to run out of space — add a file or grow the existing ones
@@ -548,11 +548,11 @@ FROM sys.master_files
 WHERE database_id = 2;
 ```
 
-**What to look for:**
+#### TempDB file layout — multiple files, equal size, fixed growth
 - **Good:** Multiple files (1 per CPU core, max 8), all the same size, fixed growth (e.g., 64 MB)
 - **Bad:** Single file, percentage growth, or files of different sizes
 
-**Fix for single TempDB file (example: 4 cores):**
+#### ALTER DATABASE tempdb ADD FILE — add one file per vCPU
 
 ```sql
 ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev2', FILENAME = '/var/opt/mssql/data/tempdb2.ndf', SIZE = 64MB, FILEGROWTH = 64MB);
@@ -585,13 +585,13 @@ CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
 WHERE r.blocking_session_id > 0;
 ```
 
-**Interpretation:**
+#### sys.dm_exec_requests blocking_session_id — interpretation
 - **0 rows:** No blocking right now — good
 - **Rows with wait_sec < 5:** Transient blocking — normal under load
 - **Rows with wait_sec > 30:** Significant blocking — a long-running transaction is holding locks
 - **Chains (blocker A blocks B, B blocks C):** One session cascading to many — find the head blocker
 
-**Find what the head blocker is doing:**
+#### sys.dm_exec_sessions + dm_exec_sql_text — find what head blocker is running
 
 ```sql
 SELECT s.session_id, s.login_name, s.program_name,
@@ -602,7 +602,7 @@ CROSS APPLY sys.dm_exec_sql_text(s.most_recent_sql_handle) st
 WHERE s.session_id = <blocker_session_id>;
 ```
 
-**Common causes and fixes:**
+#### Blocking common causes — open transactions, long pipelines, index rebuilds
 - **Open transaction from SSMS:** User ran BEGIN TRAN and forgot to COMMIT. Solution: COMMIT/ROLLBACK, or `KILL <session_id>`
 - **Long-running pipeline step:** Pipeline holding locks for minutes. Solution: break into smaller transactions, enable RCSI
 - **Index rebuild running:** Online rebuild holds schema locks briefly. Solution: schedule rebuilds off-peak
@@ -616,7 +616,7 @@ WHERE counter_name = 'Number of Deadlocks/sec'
   AND instance_name = '_Total';
 ```
 
-**Interpretation:**
+#### Deadlock count interpretation — dm_os_performance_counters
 - **0:** No deadlocks since restart — ideal
 - **< 10:** Rare deadlocks — implement retry logic and monitor
 - **> 100:** Frequent deadlocks — structural problem, investigate access order patterns
@@ -657,11 +657,11 @@ WHERE OBJECTPROPERTY(s.object_id, 'IsUserTable') = 1
 ORDER BY sp.modification_counter DESC;
 ```
 
-**How to interpret:**
+#### sys.stats + dm_db_stats_properties — stale statistics interpretation
 - `pct_modified > 20%` — statistics are definitely stale, optimizer is likely making bad plans
 - `last_updated` is weeks/months old on a frequently modified table — auto update stats may be off
 
-**Remediation:**
+#### UPDATE STATISTICS WITH FULLSCAN — refresh stale statistics
 
 ```sql
 -- Update statistics for a specific table
@@ -683,7 +683,7 @@ GROUP BY objtype
 ORDER BY total_mb DESC;
 ```
 
-**How to interpret:**
+#### sys.dm_exec_cached_plans objtype — plan cache composition
 
 | objtype | What it is | Concern |
 |---------|-----------|---------|
@@ -691,7 +691,7 @@ ORDER BY total_mb DESC;
 | `Prepared` | Parameterized queries (sp_executesql) | Good — plans are reusable |
 | `Proc` | Stored procedures | Good — plans are reusable |
 
-**Fix for ad hoc plan bloat:**
+#### sp_configure 'optimize for ad hoc workloads' — fix plan cache bloat
 
 ```sql
 EXEC sp_configure 'optimize for ad hoc workloads', 1;
@@ -714,7 +714,7 @@ ORDER BY qs.total_logical_reads DESC;
 
 **Why it matters:** An implicit conversion on a WHERE clause column prevents SQL Server from using an index seek. Instead, it scans the entire index and converts every single row. A query that should take 1ms takes 10 seconds.
 
-**Common culprits:**
+#### Implicit conversion culprits — nvarchar vs varchar, pyodbc defaults
 - Application sends `nvarchar` parameter but column is `varchar` → SQL Server converts every row in the column to nvarchar
 - Python/ODBC sends all strings as `nvarchar` by default
 - Comparing `int` column with `varchar` parameter
@@ -744,7 +744,7 @@ FROM sys.database_files f;
 ';
 ```
 
-**Red flags:**
+#### Database file growth red flags — percentage growth, low free space
 - **Percentage growth:** A 10% growth on a 100 GB file = 10 GB allocation. Each growth event freezes the database while SQL Server zeros the new space. Use fixed growth (64–256 MB).
 - **Free space near 0:** The file will autogrow soon — on a busy system this causes a pause.
 - **Log file much larger than data file:** Log isn't being backed up (FULL recovery) or has grown due to a large transaction.
@@ -784,7 +784,7 @@ JOIN sys.server_principals rp ON rm.role_principal_id = rp.principal_id
 WHERE rp.name = 'sysadmin';
 ```
 
-**What to look for:**
+#### sys.server_principals — security check: sa enabled, sysadmin logins
 - `sa` account enabled — should be disabled or renamed in production
 - Application logins with sysadmin — applications should use the least privilege needed (e.g., `db_datareader`, `db_datawriter`)
 - Unknown logins — ask who these belong to
@@ -869,7 +869,7 @@ APPENDIX
 
 Run this after each daily pipeline execution to catch issues early.
 
-**Post-pipeline health check covering active queries, blocking, wait stats, IO, stale statistics, and memory:**
+#### Post-pipeline health check — active queries, blocking, wait stats, IO, stale stats, memory
 
 ```sql
 PRINT '=== 1. Active Long Queries ==='
@@ -925,7 +925,7 @@ SELECT
 FROM sys.dm_os_sys_info;
 ```
 
-**Run the health check script:**
+#### sqlcmd -i health_check.sql — run health check from pipeline
 
 Linux (bash on VM):
 

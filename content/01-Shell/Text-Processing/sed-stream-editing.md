@@ -66,14 +66,14 @@ Clear pattern space
 Repeat for next line
 ```
 
-**Key spaces:**
+#### sed pattern space vs hold space
 
 | Space | Purpose |
 |---|---|
 | Pattern space | The current line being processed — this is where substitutions happen |
 | Hold space | A persistent scratch buffer that survives across lines (advanced use) |
 
-**Invocation forms:**
+#### sed invocation forms — command-line, file, stdin
 
 ```bash
 # Command-line expression

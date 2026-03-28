@@ -361,7 +361,13 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
 
 ## 3. Data Validation
 
-Define data shape with type hints — Pydantic validates on construction and raises `ValidationError` if invalid. `Field()` adds constraints (min, max, regex, default). `model_validate()` parses dict → model; `model_dump()` serializes model → dict. Catches bad data at the boundary (API input, file load, config parse) before it flows into pipelines. C# equivalent: `DataAnnotations` (`[Required]`, `[Range]`) + FluentValidation.
+> [!info] Pydantic data validation
+> - Define data shape with type hints — validates on construction, raises `ValidationError` if invalid
+> - `Field()` — adds constraints (min, max, regex, default)
+> - `model_validate()` — parses dict → model
+> - `model_dump()` — serializes model → dict
+> - Catches bad data at the boundary (API input, file load, config parse) before it flows into pipelines
+> - C# equivalent: `DataAnnotations` (`[Required]`, `[Range]`) + FluentValidation
 
 ```python
 # ─── Model definitions ───

@@ -37,7 +37,7 @@ YYYY-Www-D                      2026-W11-2                       ISO week + day 
 YYYY-DDD                        2026-069                         Ordinal date (day 69 of 2026)
 ```
 
-**Date format decision matrix:**
+#### ISO 8601 date format — decision matrix by context
 
 | Context | Format | Example | Why |
 |---------|--------|---------|-----|
@@ -95,7 +95,7 @@ SELECT SYSDATETIMEOFFSET()    -- 2026-03-10 16:30:00.1234567 +01:00 (with offset
 
 ## Parsing and Formatting
 
-**String to date (CAST — simplest for ISO inputs):**
+#### CAST(string AS date) — parse ISO date strings
 
 ```sql
 SELECT CAST('2026-03-10' AS DATE)                                        -- 2026-03-10
@@ -103,7 +103,7 @@ SELECT CAST('2026-03-10T15:30:00' AS DATETIME2)                         -- 2026-
 SELECT CAST('2026-03-10T15:30:00+01:00' AS DATETIMEOFFSET)              -- 2026-03-10 15:30:00 +01:00
 ```
 
-**String to date (CONVERT with style codes — for non-ISO formats from external sources):**
+#### CONVERT(date, string, style) — parse non-ISO date formats
 
 ```sql
 SELECT CONVERT(DATE, '03/10/2026', 101)           -- US format MM/DD/YYYY → 2026-03-10
@@ -121,7 +121,7 @@ SELECT CONVERT(DATE, '20260310', 112)              -- Compact YYYYMMDD → 2026-
 -- 127 = YYYY-MM-DDTHH:MI:SS.mmmZ (ISO 8601 with timezone)
 ```
 
-**Date to string:**
+#### FORMAT, CONVERT — date to string formatting
 
 ```sql
 -- FORMAT — flexible but slow (10-50x slower than CONVERT)
@@ -249,7 +249,7 @@ FROM gold.scores_daily
 
 ## Practical Pipeline Date Patterns
 
-**All data pipeline date patterns in one place:**
+#### DATEADD, DATEDIFF, EOMONTH, DATEFROMPARTS — pipeline date patterns
 
 ```sql
 -- Yesterday's date (for pipeline "load yesterday's data")
@@ -300,7 +300,7 @@ Python has two kinds of datetimes — this distinction matters enormously in pip
 > aware = naive_from_api.replace(tzinfo=timezone.utc)  # because you KNOW the API returns UTC
 > ```
 
-**Current date/time:**
+#### Python datetime.now, datetime.utcnow — current date/time
 
 ```python
 from datetime import datetime, date, time, timedelta, timezone

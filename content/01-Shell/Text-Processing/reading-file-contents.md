@@ -18,7 +18,7 @@ A senior data engineer reads files differently depending on context. Checking a 
 
 ## Linux — cat, head, tail, grep, awk
 
-**Basic file reading:**
+#### cat, head, tail, less — basic file reading
 
 ```bash
 # Read a small file (config, script, schema)

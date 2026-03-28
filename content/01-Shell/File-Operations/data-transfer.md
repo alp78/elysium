@@ -20,31 +20,28 @@ Copying a file on a single machine is trivial. Copying 50 GB of pipeline output 
 
 `rsync` is the most important file transfer tool in data engineering. It transfers only the differences between source and destination (delta transfer), supports compression, preserves all metadata, and resumes interrupted transfers automatically. If you learn one transfer tool, learn rsync.
 
-**Linux — local copies:**
+#### rsync -av — local copies with archive mode
+
+> [!info] `rsync -a` (archive mode) — the single most important flag
+> Equivalent to `-rlptgoD`:
+> - `-r` — recursive (descend into directories)
+> - `-l` — copy symlinks as symlinks
+> - `-p` — preserve permissions
+> - `-t` — preserve modification times (critical for change detection pipelines)
+> - `-g` / `-o` — preserve group/owner
+> - `-D` — preserve device and special files
+>
+> Add `-v` for verbose output, `-z` for compression during transfer (skip for local copies or already-compressed files), `--progress` for per-file progress.
+
+> [!warning] Trailing slash matters
+> - `rsync source_dir/ dest_dir/` → copies **contents** of `source_dir` into `dest_dir`
+> - `rsync source_dir dest_dir/` → copies `source_dir` **itself** into `dest_dir` (creates `dest_dir/source_dir/`)
 
 ```bash
-# Basic local copy (use rsync instead of cp for anything non-trivial)
 rsync -av source_dir/ dest_dir/
-# -a = archive mode — the single most important flag. Equivalent to -rlptgoD:
-#   -r = recursive (descend into directories)
-#   -l = copy symlinks as symlinks (not as the files they point to)
-#   -p = preserve permissions (chmod settings)
-#   -t = preserve modification times (critical for change detection pipelines)
-#   -g = preserve group ownership
-#   -o = preserve owner (requires root for other users' files)
-#   -D = preserve device and special files
-# -v = verbose (print each file as it transfers — useful for progress tracking)
-#
-# CRITICAL: the trailing slash on source_dir/ matters!
-# rsync source_dir/  dest_dir/  → copies CONTENTS of source_dir into dest_dir
-# rsync source_dir   dest_dir/  → copies source_dir ITSELF into dest_dir (creates dest_dir/source_dir/)
 
-# With compression and progress bar (the standard for large transfers)
+# With compression and progress bar (standard for large transfers)
 rsync -avz --progress source_dir/ dest_dir/
-# -z = compress data during transfer (reduces bandwidth, adds CPU overhead)
-#   Use -z for: network transfers (remote machines, slow links)
-#   Skip -z for: local copies, fast networks (10Gbps LAN), already-compressed files (.gz, .parquet)
-# --progress = show per-file transfer progress (bytes transferred, speed, ETA)
 
 # Human-readable progress (better for large transfers)
 rsync -avzh --progress source_dir/ dest_dir/
@@ -80,13 +77,7 @@ rsync -avzn --delete source_dir/ dest_dir/
 
 # Exclude files or patterns
 rsync -avz --exclude='*.log' --exclude='__pycache__/' source_dir/ dest_dir/
-# --exclude = skip files matching this pattern
-# Common excludes for pipeline directories:
-#   '*.log'           — log files (regenerated, large)
-#   '__pycache__/'    — Python bytecode cache
-#   '.git/'           — git history (use git clone instead)
-#   'node_modules/'   — npm packages (use npm install instead)
-#   '*.tmp'           — temporary files
+# Common excludes: '*.log', '__pycache__/', '.git/', 'node_modules/', '*.tmp'
 
 # Exclude from a file (cleaner for many excludes)
 rsync -avz --exclude-from='rsync-excludes.txt' source_dir/ dest_dir/
@@ -103,18 +94,11 @@ rsync -avz --include='*.parquet' --include='*/' --exclude='*' source_dir/ dest_d
 # --exclude='*' = exclude everything else
 # ORDER MATTERS: includes are checked before excludes
 
-# Bandwidth limit (don't saturate the network)
-rsync -avz --bwlimit=50000 source_dir/ dest_dir/
-# --bwlimit=50000 = limit to 50,000 KB/s (≈50 MB/s)
-# Use when: syncing during business hours, sharing bandwidth with production traffic
-# Units: KB/s by default. Use --bwlimit=50m for 50 MB/s (rsync 3.2.3+)
+# Bandwidth limit (don't saturate the network during business hours)
+rsync -avz --bwlimit=50000 source_dir/ dest_dir/   # 50,000 KB/s ≈ 50 MB/s
 
-# Checksum-based comparison (slower but more reliable)
-rsync -avc source_dir/ dest_dir/
-# -c = compare files by checksum instead of modification time and size
-# Default behavior: rsync skips files where size and mtime match (fast but can miss corrupted files)
-# With -c: rsync computes checksums for every file (slower, but catches bit-rot and silent corruption)
-# Use for: critical data, backup verification, compliance copies
+# Checksum-based comparison (slower but catches bit-rot and silent corruption)
+rsync -avc source_dir/ dest_dir/   # -c = checksum instead of mtime+size
 ```
 
 ## rsync Trailing Slash Gotcha
@@ -131,7 +115,7 @@ rsync -avc source_dir/ dest_dir/
 > # If you're ever unsure, use -n (dry run) first
 > ```
 
-**Linux — rsync over SSH (local ↔ remote):**
+#### rsync -avzP over SSH — local to remote and back
 
 ```bash
 # Push: local → remote server
@@ -178,7 +162,7 @@ rsync -avzP -e "ssh -p 2222" /data/exports/ user@127.0.0.1:/data/imports/
 
 `scp` (secure copy) is simpler than rsync but lacks delta transfer, resume, and progress for directories. Use it for quick one-off file transfers. For anything repeated or large, use rsync.
 
-**Linux:**
+#### scp — push, pull, recursive copy over SSH
 
 ```bash
 # Push a single file: local → remote
@@ -220,7 +204,7 @@ scp user@server1:/data/file.csv user@server2:/data/file.csv
 # For server-to-server copy without relay, SSH into server1 and scp from there
 ```
 
-**PowerShell — pscp (PuTTY) or OpenSSH scp:**
+#### PowerShell scp / gcloud compute scp — remote file transfer
 
 ```powershell
 # Windows 10+ includes OpenSSH — scp works natively
@@ -239,7 +223,7 @@ gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ --zone=europe-
 
 `gcloud compute scp` wraps scp with automatic IAP tunneling, OS Login authentication, and zone resolution. It's the simplest way to move files to/from GCE VMs. For additional SSH and file transfer patterns on GCE, including OS Login and metadata SSH keys, see [[vm-ssh-and-file-transfer]].
 
-**Linux and PowerShell (identical commands):**
+#### gcloud compute scp — push and pull files to/from GCE VMs
 
 ```bash
 # Push: local → VM
@@ -289,7 +273,7 @@ gcloud compute scp --ssh-key-file=~/.ssh/custom_key file.txt data-pipeline-sql:/
 
 Google Cloud Storage (GCS) is the backbone for data lake storage, pipeline staging, and database backups. `gsutil` and `gcloud storage` are your tools for moving data in and out. For the full range of GCS object operations including parallel composite uploads and signed URLs, see [[gcs-object-operations]].
 
-**Linux and PowerShell (identical commands):**
+#### gsutil cp, gsutil rsync — upload and sync to Cloud Storage
 
 ```bash
 # Upload a single file
@@ -358,37 +342,32 @@ gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recurs
 
 `bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to/from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [[bronze-layer-loading|bronze layer]] before transformation begins.
 
-**Linux:**
+#### bcp — bulk copy export and import (Linux)
+
+> [!info] `bcp` flags
+> - **Direction:** `queryout` (export query result), `out` (export table — faster), `in` (import from file)
+> - `-S` — server,port | `-U` — username | `-P` — password | `-d` — database
+> - `-c` — character mode (text) | `-n` — native mode (binary, fastest for SQL→SQL)
+> - `-t ","` — field terminator | `-r "\n"` — row terminator
+> - `-F 2` — skip header row (start from row 2)
+> - `-b 10000` — batch size (small = less log space, large = faster)
+> - `-e errors.log` — log rejected rows (invaluable for debugging bad data)
 
 ```bash
 # Export table to CSV
 bcp "SELECT * FROM gold.scores_daily" queryout scores.csv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
     -c -t "," -r "\n"
-# queryout = export a query result to file
-# -S = server,port
-# -U = username, -P = password, -d = database
-# -c = character mode (text output, not binary)
-# -t "," = field terminator (comma — makes it CSV)
-# -r "\n" = row terminator (newline)
 
-# Export to file with tab delimiter (TSV — safer than CSV for data with commas)
+# Export as TSV (safer for data with commas)
 bcp data-pipeline.gold.scores_daily out scores.tsv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
     -c -t "\t" -r "\n"
-# out = export an entire table (faster than queryout — no query parsing)
-# -t "\t" = tab delimiter
 
 # Import CSV into a table
 bcp data-pipeline.bronze.staging_data in data.csv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
     -c -t "," -r "\n" -F 2 -b 10000 -e errors.log
-# in = import from file to table
-# -F 2 = skip the first row (header row — start from row 2)
-# -b 10000 = batch size (commit every 10,000 rows — controls transaction size)
-#   Small batch size = slower but uses less transaction log space
-#   Large batch size = faster but needs more log space, bigger rollback on failure
-# -e errors.log = log rejected rows to this file (invaluable for debugging bad data)
 
 # Native format (fastest — binary, not human-readable)
 bcp data-pipeline.gold.scores_daily out scores.bcp \
@@ -416,7 +395,7 @@ wait
 # Each process runs in parallel — 3x throughput on multi-core systems
 ```
 
-**PowerShell:**
+#### bcp — bulk copy export and import (PowerShell)
 
 ```powershell
 # Same bcp.exe commands — bcp is a native Windows binary
@@ -439,7 +418,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 
 For smaller exports or custom query results, `sqlcmd` outputs directly to file.
 
-**Linux:**
+#### sqlcmd -Q -o — query-based CSV export (Linux)
 
 ```bash
 # Export query result to CSV
@@ -461,7 +440,7 @@ sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
 # sed -i '2d' scores.csv   (delete line 2 — the dashes)
 ```
 
-**PowerShell:**
+#### Invoke-Sqlcmd + Export-Csv — query-based CSV export (PowerShell)
 
 ```powershell
 # Export to CSV (cleaner than sqlcmd — proper CSV with quoting)

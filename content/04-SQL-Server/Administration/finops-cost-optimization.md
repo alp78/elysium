@@ -34,7 +34,7 @@ GCP persistent disk snapshots are incremental, block-level copies of the disk. T
 - Daily SQL BACKUP to GCS (for PITR and granular recovery — see [[backup-types-and-strategy]])
 - Daily disk snapshot (for fast full-VM recovery / disaster recovery)
 
-**Create a snapshot schedule:**
+#### gcloud compute resource-policies create — snapshot schedule
 
 ```bash
 # Daily snapshots, retain for 14 days
@@ -54,7 +54,7 @@ gcloud compute disks describe analytics-sql-data --zone=europe-west1-b \
   --format="get(resourcePolicies)"
 ```
 
-**Application-consistent snapshots (SQL Server 2022):**
+#### gcloud compute disks snapshot --guest-flush — application-consistent snapshots
 
 Crash-consistent snapshots are fine for OS and data recovery, but may leave the database in an unclean state requiring recovery. For application-consistent snapshots, freeze SQL Server I/O before the snapshot:
 
@@ -79,7 +79,7 @@ DBCC THAWIO('analytics_db');       -- Resume writes
 
 ## Committed Use Discounts (CUDs) vs Spot Instances
 
-**CUDs — commit to vCPU/memory usage for a discount:**
+#### Committed Use Discounts — 1-year or 3-year vCPU/memory commitment
 
 ```bash
 # View current commitments
@@ -98,7 +98,7 @@ gcloud compute commitments create analytics-sql-cud \
 | 1-year CUD | ~20-28% | Committed to paying even if VM is off |
 | 3-year CUD | ~40-52% | Locked in for 3 years |
 
-**Spot Instances (preemptible) — for non-production only:**
+#### Spot/Preemptible VMs — 60-91% discount for non-production
 
 ```bash
 # Spot instance (for testing only — NEVER use for production databases)
@@ -114,7 +114,7 @@ gcloud compute instances create analytics-sql-test \
 - **NEVER use for production databases** — data corruption risk if terminated mid-write
 - Acceptable for: CI/CD test databases, read-only analytics replicas, migration testing
 
-**Decision matrix:**
+#### CUD vs Spot vs On-demand — decision matrix
 
 | Scenario | Recommendation |
 |---|---|
@@ -127,7 +127,7 @@ gcloud compute instances create analytics-sql-test \
 
 ## Right-Sizing and Cost Monitoring
 
-**Check if VM is oversized using GCP Recommender:**
+#### gcloud recommender recommendations list — check if VM is oversized
 
 ```bash
 # Get CPU utilization over last 30 days
@@ -138,7 +138,7 @@ gcloud recommender recommendations list \
   --format="table(content.overview.resourceName, content.overview.recommendedMachineType.name, content.overview.currentMachineType.name)"
 ```
 
-**Monthly cost tracking via BigQuery billing export:**
+#### BigQuery billing export — monthly cost tracking by service
 
 ```bash
 # Billing export query (requires billing export to BigQuery to be enabled)
@@ -157,7 +157,7 @@ ORDER BY total_cost DESC
 LIMIT 20"
 ```
 
-**Cost reduction checklist:**
+#### Cost reduction checklist — stop idle VMs, right-size, compress, lifecycle
 
 - [ ] Stop VM when not in use (nights/weekends for dev): schedule with Cloud Scheduler
 - [ ] Use pd-balanced instead of pd-ssd if IOPS requirements are met (see [[server-configuration]])
@@ -169,7 +169,7 @@ LIMIT 20"
 - [ ] Check for idle persistent disks: `gcloud compute disks list --filter="NOT users:*"`
 - [ ] Right-size based on actual utilization (GCP Recommender above)
 
-**GCS lifecycle policy for backup retention (apply to the backup bucket):**
+#### gsutil lifecycle set — GCS backup retention policy
 
 ```json
 {

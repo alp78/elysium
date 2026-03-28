@@ -62,7 +62,7 @@ YYYY-DDD                        2026-069                         Ordinal date (d
 
 ## Terminal — Linux (Bash)
 
-**Current date/time in various formats:**
+#### date +%Y-%m-%d — current date/time in various formats
 ```bash
 # Current date/time in various formats
 date                                # Tue Mar 10 16:30:00 CET 2026 (system locale)
@@ -73,20 +73,27 @@ date +%Y-%m-%dT%H:%M:%SZ -u        # 2026-03-10T15:30:00Z (ISO UTC)
 date +%s                            # 1773422200 (Unix epoch — seconds since 1970-01-01T00:00:00Z)
 date +%Y%m%d                        # 20260310 (compact — for file names)
 date +%Y%m%d_%H%M%S                 # 20260310_163000 (compact with time — for backup names)
-
-# Format specifiers breakdown:
-# %Y = 4-digit year (2026)          %y = 2-digit year (26)
-# %m = month 01-12                  %b = abbreviated month (Mar)   %B = full month (March)
-# %d = day 01-31                    %e = day 1-31 (space-padded)
-# %H = hour 00-23 (24h)            %I = hour 01-12 (12h)          %p = AM/PM
-# %M = minute 00-59                %S = second 00-59
-# %N = nanoseconds                 %3N = milliseconds             %6N = microseconds
-# %z = timezone offset (+0100)     %Z = timezone name (CET)
-# %s = Unix epoch seconds          %j = day of year (001-366)
-# %u = day of week 1-7 (Mon=1)    %A = full weekday (Tuesday)
 ```
 
-**Parse a date string and reformat:**
+> [!info] Format specifiers
+> **Date:**
+> - `%Y` — 4-digit year (2026) | `%y` — 2-digit year (26)
+> - `%m` — month 01-12 | `%b` — abbreviated (Mar) | `%B` — full (March)
+> - `%d` — day 01-31 | `%e` — day 1-31 (space-padded)
+>
+> **Time:**
+> - `%H` — hour 00-23 (24h) | `%I` — hour 01-12 (12h) | `%p` — AM/PM
+> - `%M` — minute 00-59 | `%S` — second 00-59
+> - `%N` — nanoseconds | `%3N` — milliseconds | `%6N` — microseconds
+>
+> **Timezone and epoch:**
+> - `%z` — timezone offset (+0100) | `%Z` — timezone name (CET)
+> - `%s` — Unix epoch seconds
+>
+> **Calendar:**
+> - `%j` — day of year (001-366) | `%u` — day of week 1-7 (Mon=1) | `%A` — full weekday (Tuesday)
+
+#### date -d "string" — parse a date string and reformat
 ```bash
 # Parse a date string and reformat
 date -d "2026-03-10" +%A
@@ -100,7 +107,7 @@ date -d "@1773422200" +%Y-%m-%dT%H:%M:%SZ
 # 2026-03-10T15:30:00Z (convert epoch back to ISO)
 ```
 
-**Date arithmetic in Bash:**
+#### date -d "+N days" — date arithmetic in Bash
 ```bash
 # Date arithmetic
 date -d "2026-03-10 + 7 days" +%Y-%m-%d          # 2026-03-17
@@ -122,7 +129,7 @@ date -d "2026-04-01 - 1 day" +%Y-%m-%d             # 2026-03-31 (last of month)
 date -d "2026-01-01" +%Y-01-01                     # 2026-01-01 (first of year)
 ```
 
-**Timezone conversion in Bash:**
+#### TZ=zone date — timezone conversion in Bash
 ```bash
 # Timezone conversion
 TZ=America/New_York date -d "2026-03-10T15:30:00 UTC" +%Y-%m-%dT%H:%M:%S\ %Z
@@ -158,7 +165,7 @@ find /data -type f -mtime -1
 
 ## Terminal — PowerShell
 
-**Current date/time in PowerShell:**
+#### Get-Date — current date/time in PowerShell
 ```powershell
 # Current date/time
 Get-Date                                                    # 10 March 2026 16:30:00 (locale)
@@ -180,7 +187,7 @@ Get-Date -Format "yyyyMMdd_HHmmss"                           # 20260310_163000
 # IMPORTANT: MM = month, mm = minute. Case matters!
 ```
 
-**Parsing date strings in PowerShell:**
+#### [datetime]::ParseExact — parsing date strings in PowerShell
 ```powershell
 # Parse a date string
 [DateTime]::ParseExact("2026-03-10", "yyyy-MM-dd", $null)
@@ -188,7 +195,7 @@ Get-Date -Format "yyyyMMdd_HHmmss"                           # 20260310_163000
 Get-Date "2026-03-10"                                        # Parses ISO automatically
 ```
 
-**Date arithmetic in PowerShell:**
+#### (Get-Date).AddDays — date arithmetic in PowerShell
 ```powershell
 # Date arithmetic
 (Get-Date "2026-03-10").AddDays(7)                           # 2026-03-17
@@ -205,7 +212,7 @@ $end = Get-Date "2026-03-10"
 ($end - $start).TotalHours                                   # 1632
 ```
 
-**Timezone conversion in PowerShell:**
+#### [TimeZoneInfo]::ConvertTime — timezone conversion in PowerShell
 ```powershell
 # Timezone conversion
 [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(
@@ -219,7 +226,7 @@ $end = Get-Date "2026-03-10"
 [TimeZoneInfo]::GetSystemTimeZones() | Select-Object Id, DisplayName | Where-Object Id -match "Europe|America|Asia"
 ```
 
-**Extracting components and practical use in PowerShell:**
+#### .Year, .Month, .DayOfWeek — extracting date components in PowerShell
 ```powershell
 # Get components
 $d = Get-Date "2026-03-10T15:30:45"
@@ -944,7 +951,7 @@ Your cross-market pipeline that assumes "Paris is always 6 hours ahead of NYC" b
 Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezones.
 ```
 
-**DST Safety Rules:**
+#### DST safety rules — UTC storage, conversion at display time
 
 | Rule | Explanation |
 |------|-------------|

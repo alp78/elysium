@@ -18,76 +18,38 @@ The `ls` command is your window into the file system. The flags you choose deter
 
 ## Linux — ls, du, df, tree
 
-**The data engineer's default `ls`:**
+#### ls -lhrt — the data engineer's default listing
+
+> [!info] `ls -lhrt` — the data engineer's default
+> - `-l` — long format (permissions, owner, group, size, date, name)
+> - `-h` — human-readable sizes (1.2G instead of 1289748480)
+> - `-r` — reverse order
+> - `-t` — sort by modification time
+> - Combined: most recently modified file appears **last** (at the bottom of your terminal, right next to your cursor)
 
 ```bash
-# The data engineer's default ls
-ls -lhrt
-# -l = long format (permissions, owner, group, size, date, name)
-# -h = human-readable sizes (1.2G instead of 1289748480)
-# -r = reverse order
-# -t = sort by modification time
-# Combined: most recently modified file appears LAST (at the bottom of your terminal)
-# This is the single most useful ls invocation — you always want to see what changed recently
-
-# Why -rt and not just -t?
-# With -t alone, the newest file is at the top and scrolls off screen in large directories.
-# With -rt, the newest file is at the bottom — right next to your cursor. No scrolling.
-
-# Show hidden files (dotfiles)
-ls -la
-# -a = all files including . (current dir), .. (parent), and dotfiles (.bashrc, .env, etc.)
-# Critical for: finding .env files, .git directories, .dockerignore, .gitignore
-
-# Show only directories
-ls -d */
-# -d = list directory entries themselves, not their contents
-# */ = glob matching only directories
-# Use case: "What data directories exist in the pipeline output?"
-
-# Tree view (if installed — apt install tree)
-tree -L 2 --dirsfirst
-# -L 2 = depth limit of 2 levels
-# --dirsfirst = directories before files
-# Invaluable for understanding pipeline output directory structure
-# (visualizes the physical [[medallion-architecture]] layout):
-# data/
-# ├── bronze/
-# │   ├── ohlcv/
-# │   └── tickers/
-# ├── silver/
-# │   ├── signals/
-# │   └── dimensions/
-# └── gold/
-#     ├── scores/
-#     └── performance/
+ls -lhrt              # most recent at the bottom
+ls -la                # show hidden files (.env, .git, .dockerignore)
+ls -d */              # show only directories
+tree -L 2 --dirsfirst # visual tree (apt install tree)
 ```
 
 ## Production Scenario — Investigating Disk Space on a Database Server
 
+This is the opening move in the [[sql-server-disk-full]] runbook.
+
 ```bash
 # Step 1: What's consuming the most space? (top 10 directories)
-# This is the opening move in the [[sql-server-disk-full]] runbook
 du -h --max-depth=1 /var/opt/mssql/ | sort -rh | head -10
-# du -h = disk usage, human-readable
-# --max-depth=1 = only immediate subdirectories (don't recurse further)
-# sort -rh = sort reverse, human-numeric (understands 1.5G > 800M)
-# Typical output:
-#   45G    /var/opt/mssql/data
-#   12G    /var/opt/mssql/log
-#   3.2G   /var/opt/mssql/backup
 
 # Step 2: Which database files are the largest?
 ls -lhS /var/opt/mssql/data/*.mdf /var/opt/mssql/data/*.ndf 2>/dev/null
-# -S = sort by size (largest first)
-# .mdf = primary data files, .ndf = secondary data files
 
 # Step 3: How much free space remains?
 df -h /var/opt/mssql/
-# df -h = disk free, human-readable
-# Shows: filesystem, total size, used, available, use%, mount point
-# CRITICAL: SQL Server STOPS when the disk is full. Monitor this.
 ```
+
+> [!warning] SQL Server **stops** when the disk is full. Monitor `df -h` regularly on database servers.
 
 ## The `du` vs `df` Discrepancy
 

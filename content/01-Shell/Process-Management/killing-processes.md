@@ -18,43 +18,38 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 
 ## Linux — kill, pkill, killall
 
+> [!info] SIGTERM (signal 15) — graceful shutdown
+> Docker uses the same SIGTERM→SIGKILL escalation — see [[container-lifecycle]]. The process can:
+> 1. Flush buffers and close file handles
+> 2. Commit or rollback database transactions
+> 3. Release locks
+> 4. Write a clean shutdown message to logs
+> 5. Exit with a clean exit code
+>
+> Always try SIGTERM first. Wait 10-30 seconds for the process to respond.
+
+> [!danger] SIGKILL (signal 9) — force kill
+> The kernel terminates the process **immediately** — no chance to clean up:
+> - Open files may be corrupted (half-written)
+> - Database transactions are NOT rolled back (the DB server does it later)
+> - Lock files are NOT removed (manual cleanup needed)
+> - Shared memory segments are NOT freed
+>
+> **Only use `-9` when SIGTERM doesn't work after waiting.**
+
 ```bash
-# Graceful shutdown (SIGTERM — signal 15)
-# Docker uses the same SIGTERM→SIGKILL escalation — see [[container-lifecycle]]
-kill <PID>
-# Sends SIGTERM — the process receives the signal and can:
-# 1. Flush buffers and close file handles
-# 2. Commit or rollback database transactions
-# 3. Release locks
-# 4. Write a clean shutdown message to logs
-# 5. Exit with a clean exit code
-# Always try SIGTERM first. Wait 10-30 seconds for the process to respond.
+kill <PID>              # SIGTERM — graceful shutdown
+kill -9 <PID>           # SIGKILL — force kill (last resort)
 
-# Force kill (SIGKILL — signal 9)
-kill -9 <PID>
-# Sends SIGKILL — the kernel terminates the process IMMEDIATELY
-# The process gets NO chance to clean up:
-# - Open files may be corrupted (half-written)
-# - Database transactions are NOT rolled back (the DB server does it later)
-# - Lock files are NOT removed (you'll need to clean them up manually)
-# - Shared memory segments are NOT freed (may need manual cleanup)
-# ONLY use -9 when SIGTERM doesn't work after waiting
-
-# Kill by name (matches against full command line)
-pkill -f "python run_pipeline"
-# -f = match against the full command line, not just the process name
+# Kill by name
+pkill -f "python run_pipeline"   # -f = match full command line, not just process name
 # Without -f: pkill python would kill ALL python processes (dangerous!)
 
-# Kill all processes with a name
-killall python3
-# Sends SIGTERM to every process named exactly "python3"
-# DANGER: this kills ALL python3 processes for ALL users
-# Prefer pkill -f with a specific pattern
+killall python3         # SIGTERM to every process named exactly "python3"
+# DANGER: kills ALL python3 processes for ALL users — prefer pkill -f
 
 # Kill a process group (parent and all children)
-kill -- -<PGID>
-# The negative PID signals the entire process group
-# Use case: killing an Airflow task that spawned multiple child processes
+kill -- -<PGID>         # negative PID signals the entire process group
 # Find PGID: ps -o pid,pgid,cmd -p <PID>
 ```
 

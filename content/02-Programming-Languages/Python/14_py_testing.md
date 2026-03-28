@@ -424,7 +424,11 @@ ipytest.run()
 
 ## Fixtures and Parametrize
 
-`@pytest.fixture` marks a function that provides test data or resources. Tests declare the fixture as a parameter — pytest injects it automatically. `yield` separates setup (before) from teardown (after). The `scope` parameter controls lifetime: `"function"` (default, fresh per test), `"module"`, or `"session"`.
+> [!info] Fixtures
+> - `@pytest.fixture` — marks a function that provides test data or resources
+> - Tests declare the fixture as a parameter — pytest injects it automatically
+> - `yield` separates setup (before) from teardown (after)
+> - `scope` controls lifetime: `"function"` (default, fresh per test), `"module"`, or `"session"`
 
 #### Fixture: sample trade data
 
@@ -676,14 +680,22 @@ ipytest.run()
 
 ## Mocking and Patching
 
-`unittest.mock` is Python's built-in mocking library (works with pytest). `Mock()` creates a flexible fake that records all calls. `MagicMock()` adds pre-configured magic methods. `patch()` temporarily replaces a real object in a module.
+> [!info] Mocking library
+> - `unittest.mock` — Python's built-in mocking library (works with pytest)
+> - `Mock()` — creates a flexible fake that records all calls
+> - `MagicMock()` — adds pre-configured magic methods
+> - `patch()` — temporarily replaces a real object in a module
 
 > [!tip] Why mock?
 > Don't call real Bloomberg API / exchange / database in tests. Tests must be fast, isolated, and deterministic. Mock the boundary (API client), test the logic (transform, validate).
 
 #### unittest.mock Mock() — return_value, assert_called_once_with
 
-`Mock()` creates a fake object. `mock_client.get_quote.return_value = {...}` configures canned data — no real API call. Test verifies: caller reads the right field, spread is positive, correct symbol was requested. In production, `get_quote()` hits a live API; in tests, the mock returns instantly.
+> [!info] Mock pattern
+> - `Mock()` creates a fake object
+> - `mock_client.get_quote.return_value = {...}` — configures canned data (no real API call)
+> - Test verifies: caller reads the right field, spread is positive, correct symbol was requested
+> - In production, `get_quote()` hits a live API; in tests, the mock returns instantly
 
 ```python
 def test_mock_market_data():

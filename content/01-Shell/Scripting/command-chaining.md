@@ -22,15 +22,13 @@ Command chaining operators use process exit codes to decide what runs next. Ever
 
 The `&&` operator is a logical AND gate on exit codes. The shell executes the first command, checks its exit code, and only proceeds to the next command if the exit code is exactly 0.
 
-**Bash:**
-
-**Run second command only if first succeeds:**
+#### && operator — run second command only if first succeeds
 ```bash
 # AND — Run B only if A succeeds (exit code 0)
 command_a && command_b
 ```
 
-**Production scenario — deploying a pipeline update:**
+#### && chained deploy — git pull, docker build, docker up
 ```bash
 # Each step only runs if the previous succeeded
 git pull origin main && \
@@ -41,9 +39,7 @@ echo "Deploy complete at $(date)"
 
 If `git pull` fails (merge conflict, network error), the build never starts. If the build fails (syntax error, missing dependency), the container is never restarted with broken code. This is **fail-fast chaining** — the backbone of every safe deployment script.
 
-**PowerShell:**
-
-**AND chain (PowerShell 7+ only):**
+#### PowerShell && and $LASTEXITCODE — AND chain (7+ only)
 ```powershell
 # AND chain (PowerShell 7+ only)
 command_a && command_b
@@ -58,7 +54,7 @@ command_a; if ($LASTEXITCODE -eq 0) { command_b }
 
 The semicolon is a sequential separator with no error checking. It is the equivalent of pressing Enter between two commands. The second command always runs, regardless of whether the first succeeded or failed.
 
-**Run B regardless of whether A succeeds:**
+#### ; semicolon — run B regardless of whether A succeeds
 ```bash
 # SEMICOLON — Run B regardless of whether A succeeds
 command_a ; command_b
@@ -66,7 +62,7 @@ command_a ; command_b
 
 **When to use semicolons:** Only when the commands are genuinely independent. Listing multiple diagnostic commands during an incident is a valid use case:
 
-**Gathering diagnostics during an outage:**
+#### ; chained diagnostics — free, df, docker ps, ss during outage
 ```bash
 # Gathering diagnostics during an outage — all commands should run regardless
 free -h ; df -h ; docker ps ; ss -tlnp
@@ -79,19 +75,19 @@ free -h ; df -h ; docker ps ; ss -tlnp
 
 The `||` operator is a logical OR gate — the fallback operator. Use it to provide an alternative action when the primary action fails.
 
-**Run B only if A fails (non-zero exit code):**
+#### || operator — run B only if A fails (non-zero exit code)
 ```bash
 # OR — Run B only if A fails (non-zero exit code)
 command_a || command_b
 ```
 
-**Production scenario — graceful degradation:**
+#### || fallback — rsync fails, fall back to scp
 ```bash
 # Try the fast path; if it fails, fall back to the slow path
 rsync -avz /data/ backup-server:/data/ || scp -r /data/ backup-server:/data/
 ```
 
-**PowerShell:**
+#### PowerShell || — OR chain and semicolon (7+ only)
 
 ```powershell
 # OR chain (PowerShell 7+)
@@ -105,7 +101,7 @@ command_a; command_b
 
 The most powerful pattern combines `&&` and `||` for try/catch-style logic:
 
-**Try to connect; exit with clear error message if it fails:**
+#### && || combined — shell try/catch pattern
 ```bash
 # Try to connect; exit with clear error message if it fails
 sqlcmd -S 10.132.0.2 -U sa -P "$DB_PASS" -d data-pipeline -Q "SELECT 1" > /dev/null 2>&1 \
@@ -119,13 +115,13 @@ This pattern — `try && success_action || failure_action` — is the shell equi
 
 Pipes are the shell's composition mechanism. Each command in a pipeline runs as a separate process, and the kernel connects them via an in-memory buffer. Data flows from left to right, streaming — the second command can begin processing before the first has finished producing all its output.
 
-**Connect stdout of A to stdin of B:**
+#### | pipe — connect stdout of A to stdin of B
 ```bash
 # PIPE — Connect stdout of A to stdin of B
 command_a | command_b
 ```
 
-**Production scenario — analyzing a 50GB log file during an outage:**
+#### zcat | grep | awk | sort — streaming 50GB log analysis
 ```bash
 # Stream through the file without loading it into memory
 zcat /var/log/pipeline-2025-03-*.gz | \
@@ -147,7 +143,7 @@ This pipeline decompresses, filters, extracts fields, counts occurrences, and sh
 > ```
 > Always enable `pipefail` in scripts. Never in interactive shells (it makes `history | grep` annoying).
 
-**PowerShell Pipe — Objects, Not Text:**
+#### PowerShell | pipe — objects, not text (Where-Object, Sort-Object)
 
 ```powershell
 # Pipe (passes OBJECTS, not text — this is PowerShell's superpower)

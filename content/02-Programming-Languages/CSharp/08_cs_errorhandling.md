@@ -207,7 +207,13 @@ catch (InvalidOperationException ex)
 
 #### Exception hierarchy — Message, StackTrace, InnerException, Data
 
-All exceptions inherit from `Exception`. `SystemException` covers most built-in errors. Key properties: `Message` (description), `StackTrace` (call chain), `InnerException` (wrapped cause), `Data` (key-value diagnostic context). Hierarchical catching means `catch (SystemException)` handles the entire family. Don't ignore `InnerException` — the root cause may be buried.
+> [!info] Exception hierarchy
+> - All exceptions inherit from `Exception`; `SystemException` covers most built-in errors
+> - `Message` — description of the error
+> - `StackTrace` — call chain leading to the error
+> - `InnerException` — wrapped cause (don't ignore — root cause may be buried)
+> - `Data` — key-value diagnostic context
+> - Hierarchical catching: `catch (SystemException)` handles the entire family
 
 ```csharp
 // Exception hierarchy — all exceptions inherit from Exception; SystemException covers most built-ins

@@ -34,7 +34,7 @@ SQL Server will consume every byte of available memory and never release it with
 | 16 GB        | 12288                  | 4 GB             |
 | 32 GB        | 26624                  | 6 GB             |
 
-**Method 1: mssql-conf (requires SQL Server restart):**
+#### mssql-conf set memory.memorylimitmb — set max memory (requires restart)
 
 ```bash
 # Set memory limit (leave ~900 MB for OS + Datadog agent)
@@ -43,7 +43,7 @@ sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb 1024
 sudo systemctl restart mssql-server
 ```
 
-**Method 2: sp_configure (immediate, no restart required):**
+#### sp_configure 'max server memory' — set max memory (immediate, no restart)
 
 ```sql
 EXEC sp_configure 'show advanced options', 1;
@@ -52,7 +52,7 @@ EXEC sp_configure 'max server memory', 1024;  -- MB
 RECONFIGURE;
 ```
 
-**Verify the setting:**
+#### sp_configure — verify current max memory setting
 
 ```sql
 EXEC sp_configure 'show advanced options', 1;

@@ -32,7 +32,7 @@ Microsoft ships two versions of `sqlcmd`:
 
 The connection command encodes everything: which server, which credentials, which database, and how to handle TLS. Getting this wrong is the most common reason for "cannot connect" errors.
 
-**Linux:**
+#### sqlcmd -S -U -P -d — connect to SQL Server (Linux)
 
 ```bash
 # Full connection with all common flags
@@ -43,13 +43,16 @@ The connection command encodes everything: which server, which credentials, whic
   -d analytics_db \
   -C \
   -l 30
-# -S = server (IP,port — note the COMMA, not colon)
-# -U = username
-# -P = password (from environment variable, not hardcoded)
-# -d = default database (avoids USE analytics_db on every session)
-# -C = trust server certificate (required for self-signed certs on Linux)
-# -l 30 = login timeout in seconds (default 15 — increase for slow networks)
+```
 
+> [!info] `sqlcmd` connection flags
+> - `-S` — server (IP,port — note the **comma**, not colon)
+> - `-U` — username | `-P` — password (from env var, not hardcoded)
+> - `-d` — default database (avoids `USE` on every session)
+> - `-C` — trust server certificate (required for self-signed certs on Linux)
+> - `-l 30` — login timeout in seconds (default 15 — increase for slow networks)
+
+```bash
 # Execute a query inline and exit
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -C \
   -Q "SELECT COUNT(*) AS total_rows FROM dbo.market_data"
@@ -70,7 +73,7 @@ sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -C \
 # -o = output file
 ```
 
-**PowerShell:**
+#### Invoke-Sqlcmd — connect to SQL Server (PowerShell)
 
 ```powershell
 # Using the SqlServer module (recommended for PowerShell workflows)
@@ -98,7 +101,7 @@ Invoke-Sqlcmd -ServerInstance "10.132.0.2" -Database "analytics_db" `
 
 When the SQL Server VM has no public IP, all access goes through an Identity-Aware Proxy (IAP) TCP tunnel.
 
-**Step 1: Open the tunnel in a separate terminal:**
+#### gcloud compute start-iap-tunnel — Step 1: open IAP tunnel
 
 ```powershell
 gcloud compute start-iap-tunnel analytics-sql 1433 --local-host-port=0.0.0.0:1435 --zone=europe-west1-b
@@ -107,7 +110,7 @@ gcloud compute start-iap-tunnel analytics-sql 1433 --local-host-port=0.0.0.0:143
 > [!warning] Windows Gotcha
 > Use `0.0.0.0:1435` rather than `localhost:1435` or `127.0.0.1:1435`. Using a specific address may bind to only one IP version, causing connection timeouts in sqlcmd/SSMS.
 
-**Step 2: Connect through the tunnel:**
+#### sqlcmd -S localhost — Step 2: connect through the IAP tunnel
 
 ```powershell
 # Get the SA password from Secret Manager
@@ -117,7 +120,7 @@ gcloud secrets versions access latest --secret=analytics-db-password
 sqlcmd -S 127.0.0.1,1435 -U sa -P 'YourPassword' -C -d analytics_db
 ```
 
-**SSMS connection settings:**
+#### SSMS through IAP tunnel — connection dialog settings
 
 | Setting | Value |
 |---------|-------|

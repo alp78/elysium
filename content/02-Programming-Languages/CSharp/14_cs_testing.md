@@ -403,7 +403,11 @@ foreach (var (vol, bps) in feeCases)
 
 #### Parametrize: currency conversion
 
-Array of named tuples = test cases. `foreach` destructures each tuple. `Assert.Equal(exp, amt * rate, precision: 5)` handles floating-point rounding (IEEE 754). In a real project, this would use `[Theory]` + `[InlineData]` — xUnit runs once per row automatically.
+> [!info] Parametrized test pattern
+> - Array of named tuples = test cases
+> - `foreach` destructures each tuple
+> - `Assert.Equal(exp, amt * rate, precision: 5)` handles floating-point rounding (IEEE 754)
+> - In a real project, use `[Theory]` + `[InlineData]` — xUnit runs once per row automatically
 
 ```csharp
 Console.WriteLine("\n=== Currency Conversion [Theory] ===");
@@ -1119,7 +1123,10 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 
 #### IServiceCollection — validate dependency injection registration
 
-Build a `ServiceProvider` and try to resolve every root service. `GetRequiredService<T>()` throws if not registered — catches missing DI registrations at test time instead of crashing in production. The #1 startup crash in .NET is forgetting `services.AddScoped<IFoo, Foo>()`.
+> [!info] DI registration testing
+> - Build a `ServiceProvider` and try to resolve every root service
+> - `GetRequiredService<T>()` throws if not registered — catches missing DI at test time
+> - The #1 startup crash in .NET is forgetting `services.AddScoped<IFoo, Foo>()`
 
 > [!warning] Resolve root services (they pull the full dependency graph). Don't register services in tests that aren't in production. Watch lifetime mismatches: Scoped into Singleton throws at runtime.
 

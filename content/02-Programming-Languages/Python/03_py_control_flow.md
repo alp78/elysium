@@ -178,7 +178,12 @@ for v in [42, -5, "hello", [1, 2, 3], 3.14]:
 
 #### for and while loops — iteration over iterables
 
-`for` iterates over any iterable (list, range, dict, generator). `while` repeats until the condition is false. Python has no C-style `for(i=0; i<n; i++)` — use `for i in range(n)`. `for`/`else` runs the `else` block only if no `break` occurred. Python has no `do-while` — use `while True: ... if cond: break`.
+> [!info] Loop types
+> - `for` — iterates over any iterable (list, range, dict, generator)
+> - `while` — repeats until the condition is false
+> - `for i in range(n)` — replaces C-style `for(i=0; i<n; i++)`
+> - `for`/`else` — the `else` block runs only if no `break` occurred
+> - No `do-while` — use `while True: ... if cond: break`
 
 > [!warning] Loop anti-patterns
 > - `for i in range(len(items))` — use `for item in items` or `enumerate()`
@@ -348,7 +353,12 @@ for i in range(3):
 
 #### break — exit the innermost loop
 
-`break` exits the innermost loop immediately (does NOT exit outer loops). `continue` skips to the next iteration. `pass` is a no-op placeholder for empty blocks. None of these affect outer loops — Python has no labeled break. The walrus operator (`:=`) assigns a value AND returns it in one expression.
+> [!info] Loop control
+> - `break` — exits the innermost loop immediately (does NOT exit outer loops)
+> - `continue` — skips to the next iteration
+> - `pass` — no-op placeholder for empty blocks
+> - Python has no labeled break — none of these affect outer loops
+> - Walrus operator (`:=`) — assigns a value AND returns it in one expression
 
 ```python
 for i in range(10):
@@ -508,7 +518,11 @@ print(f"  next: {next(gen)}")    # 1
 
 #### List vs generator expression
 
-`[expr for x in iter]` creates a list in memory (eager). `(expr for x in iter)` creates a generator (lazy, on-demand, constant memory). As a function arg, parentheses can be omitted: `sum(x**2 for x in range(n))`. Use generators for large/streaming data; lists when you need indexing, `len()`, or multiple passes.
+> [!info] List vs generator expression
+> - `[expr for x in iter]` — creates a list in memory (eager)
+> - `(expr for x in iter)` — creates a generator (lazy, on-demand, constant memory)
+> - As a function arg, parentheses can be omitted: `sum(x**2 for x in range(n))`
+> - Use **generators** for large/streaming data; **lists** when you need indexing, `len()`, or multiple passes
 
 ```python
 squares_list = [x**2 for x in range(10)]
@@ -587,7 +601,14 @@ print(f"reversed:       {list(reversed([1,2,3]))}")
 
 <h4><code style="font-size:0.75em">itertools</code></h4>
 
-`chain` joins iterables end-to-end. `cycle` repeats infinitely. `repeat` yields same value *n* times. `accumulate` computes running totals. `product` gives Cartesian product. All are lazy generators — never `list(cycle(...))`.
+> [!info] Key itertools functions (all lazy generators)
+> - `chain` — joins iterables end-to-end
+> - `cycle` — repeats infinitely
+> - `repeat` — yields same value *n* times
+> - `accumulate` — computes running totals
+> - `product` — Cartesian product
+>
+> > [!warning] Never `list(cycle(...))` — infinite memory.
 
 ```python
 print(f"chain:          {list(chain([1,2], [3,4]))}")
@@ -741,7 +762,13 @@ print(f"Grid:     {grid}")
 
 #### Dict and set comprehensions
 
-`{k: v for item in iterable}` builds a dict. `{expr for item}` builds a set (auto-deduplicates). Both support `if` filtering. Invert a dict: `{v: k for k, v in d.items()}`. Watch out: dict with duplicate keys — last value wins silently.
+> [!info] Dict and set comprehensions
+> - `{k: v for item in iterable}` — builds a dict
+> - `{expr for item}` — builds a set (auto-deduplicates)
+> - Both support `if` filtering
+> - Invert a dict: `{v: k for k, v in d.items()}`
+>
+> > [!warning] Dict with duplicate keys — last value wins silently.
 
 ```python
 squares_dict = {x: x**2 for x in range(6)}
@@ -818,7 +845,13 @@ print(f"any():   {any(x > 3 for x in nums)}")    # True if ANY match
 
 #### sorted() with key function — custom sort order, multi-key, reverse
 
-`sorted(iterable, key=func)` returns a new sorted list. `list.sort()` sorts in place. The `key` function extracts the comparison value: `key=len`, `key=str.lower`, `key=lambda x: x[1]`. Python's sort is stable — equal elements keep original order. `reverse=True` for descending. For multiple sort keys, return a tuple: `key=lambda x: (x[0], -x[1])`.
+> [!info] Sorting
+> - `sorted(iterable, key=func)` — returns a new sorted list
+> - `list.sort()` — sorts in place
+> - `key` extracts the comparison value: `key=len`, `key=str.lower`, `key=lambda x: x[1]`
+> - `reverse=True` — descending order
+> - Python's sort is **stable** — equal elements keep original order
+> - Multiple sort keys — return a tuple: `key=lambda x: (x[0], -x[1])`
 
 ```python
 names = ["Charlie", "Alice", "Bob", "Diana"]

@@ -18,22 +18,23 @@ When an Airflow VM is slow, a query is hanging, or a runaway process is pinning 
 
 ## Linux — ps, top, htop, pstree
 
-```bash
-# The standard process listing
-ps aux
-# a = show processes from all users
-# u = user-oriented format (columns: USER, PID, %CPU, %MEM, VSZ, RSS, TTY, STAT, START, TIME, COMMAND)
-# x = include processes without a controlling terminal (daemons, background jobs)
+> [!info] `ps aux` flags
+> - `a` — show processes from all users
+> - `u` — user-oriented format (USER, PID, %CPU, %MEM, VSZ, RSS, TTY, STAT, START, TIME, COMMAND)
+> - `x` — include processes without a controlling terminal (daemons, background jobs)
 
-# IMPORTANT COLUMNS:
-# PID    = process ID (needed for kill)
-# %CPU   = CPU usage percentage (can exceed 100% on multi-core)
-# %MEM   = percentage of physical memory used
-# RSS    = Resident Set Size in KB (actual RAM used — the number that matters)
-# VSZ    = Virtual memory size (includes shared libraries — misleadingly large)
-# STAT   = process state: S=sleeping, R=running, D=uninterruptible sleep (IO wait), Z=zombie
-# TIME   = cumulative CPU time (how much CPU the process has consumed since start)
-# COMMAND = full command line (the most useful column for identification)
+> [!info] Important columns
+> - **PID** — process ID (needed for `kill`)
+> - **%CPU** — CPU usage percentage (can exceed 100% on multi-core)
+> - **%MEM** — percentage of physical memory used
+> - **RSS** — Resident Set Size in KB (actual RAM used — the number that matters)
+> - **VSZ** — Virtual memory size (includes shared libraries — misleadingly large)
+> - **STAT** — process state: `S`=sleeping, `R`=running, `D`=uninterruptible sleep (IO wait), `Z`=zombie
+> - **TIME** — cumulative CPU time consumed since start
+> - **COMMAND** — full command line (most useful for identification)
+
+```bash
+ps aux
 
 # Find a specific process
 ps aux | grep "mssql"
@@ -49,21 +50,25 @@ pstree -p
 
 # Top — real-time resource monitoring
 top
-# Interactive commands inside top:
-# P = sort by CPU (default)
-# M = sort by memory
-# k = kill a process (enter PID when prompted)
-# c = toggle full command line (see the actual command, not just the process name)
-# 1 = show per-CPU breakdown (is one core maxed while others idle? = single-threaded bottleneck)
-# q = quit
+```
 
-# htop — better top (install: apt install htop)
+> [!tip] Interactive commands inside `top`
+> - `P` — sort by CPU (default)
+> - `M` — sort by memory
+> - `k` — kill a process (enter PID when prompted)
+> - `c` — toggle full command line
+> - `1` — show per-CPU breakdown (one core maxed while others idle = single-threaded bottleneck)
+> - `q` — quit
+
+> [!tip] `htop` — better `top` (install: `apt install htop`)
+> - `F5` — toggle tree view
+> - `F6` — choose sort column
+> - `F9` — kill signal selection menu
+> - Color-coded, mouse support, tree view, horizontal scrolling for long command lines
+
+```bash
+# htop
 htop
-# Color-coded, mouse support, tree view, horizontal scrolling for long command lines
-# F5 = toggle tree view
-# F6 = choose sort column
-# F9 = kill signal selection menu
-# Every data engineer should install htop on every server they manage
 ```
 
 ## Production Scenario — Airflow VM Is Slow
@@ -84,14 +89,13 @@ sudo docker stats --no-stream
 # --no-stream = print once and exit (vs. real-time updates)
 
 # Step 4: Is the disk the bottleneck?
-iostat -xz 2 3
-# -x = extended stats (includes await, %util)
-# -z = suppress zero-activity devices
-# 2 3 = sample every 2 seconds, 3 times
-# KEY COLUMNS:
-# await = average I/O wait time in ms (>20ms = slow disk)
-# %util = percentage of time the device is busy (>80% = saturated)
-# If %util is 100%, your pipeline is I/O bound — no amount of CPU optimization will help
+iostat -xz 2 3    # -x = extended stats, -z = suppress zero-activity, 2 3 = every 2s × 3 samples
+```
+
+> [!info] `iostat` key columns
+> - **await** — average I/O wait time in ms (>20ms = slow disk)
+> - **%util** — percentage of time the device is busy (>80% = saturated)
+> - If `%util` is 100%, your pipeline is I/O bound — no amount of CPU optimization will help
 ```
 
 ## The D State — Uninterruptible Sleep

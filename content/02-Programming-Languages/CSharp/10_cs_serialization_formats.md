@@ -270,7 +270,13 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### Protobuf with Google.Protobuf NuGet
 
-Protobuf uses `.proto` files to define schemas — `protoc` generates typed C# classes. 3-10x smaller than JSON, fast binary encoding with no parsing overhead. Cross-language: the same `.proto` generates C#, Python, Java, Go code. Schema evolution allows adding fields without breaking old consumers. Use for gRPC, microservice communication, and Kafka messages. For config files or human-readable exchange, use JSON instead.
+> [!info] Protocol Buffers
+> - `.proto` files define schemas — `protoc` generates typed C# classes
+> - 3-10x smaller than JSON, fast binary encoding with no parsing overhead
+> - Cross-language: the same `.proto` generates C#, Python, Java, Go code
+> - Schema evolution — add fields without breaking old consumers
+> - Use for gRPC, microservice communication, and Kafka messages
+> - For config files or human-readable exchange, use JSON instead
 
 ```csharp
 // Protocol Buffers (Protobuf) — cross-language binary serialization with schema

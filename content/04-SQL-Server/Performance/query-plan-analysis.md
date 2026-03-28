@@ -41,7 +41,7 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
   └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Step-by-step walkthrough:**
+#### Reading the visual tree — operators, arrows, cost tooltips
 
 1. **Start at the far right.** These are the data access operators:
    - **Index Seek** (good) — B-tree navigation to specific rows, O(log n)
@@ -79,7 +79,7 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
 
 ## Capturing Plans from the Pipeline (Without SSMS)
 
-**From the plan cache (after the pipeline runs):**
+#### sys.dm_exec_query_plan — capture from plan cache after pipeline runs
 
 ```sql
 -- Find plans for pipeline queries by text snippet
@@ -96,7 +96,7 @@ ORDER BY qs.total_worker_time DESC;
 -- Click the XML result in SSMS to open the graphical plan viewer
 ```
 
-**Capture a live XML plan:**
+#### SET STATISTICS XML ON — capture a live XML plan
 
 ```sql
 SET STATISTICS XML ON;
@@ -105,7 +105,7 @@ SET STATISTICS XML OFF;
 -- The result set includes an XML column containing the full plan
 ```
 
-**Get actual timing and I/O:**
+#### SET STATISTICS TIME/IO — get actual timing and logical reads
 
 ```sql
 SET STATISTICS TIME ON;
@@ -122,7 +122,7 @@ SET STATISTICS IO OFF;
 -- SQL Server Execution Times: CPU time = 15 ms, elapsed time = 23 ms.
 ```
 
-**Via Query Store (persists plans across restarts):**
+#### sys.query_store_plan — Query Store persisted plans across restarts
 
 ```sql
 SELECT
@@ -163,7 +163,7 @@ Every operator shows an **Estimated Operator Cost** as a percentage of total que
 > [!warning] Cost Percentages Are Estimates
 > Costs are based on the optimizer's statistics, not actual execution. If statistics are stale, cost distribution can be completely wrong. Always cross-reference with actual row counts and SET STATISTICS IO output.
 
-**Extract operator costs programmatically from plan XML:**
+#### XML plan nodes //RelOp — extract operator costs programmatically
 
 ```sql
 ;WITH XMLNAMESPACES (DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
@@ -203,14 +203,14 @@ The **cardinality estimator** predicts how many rows each operator will process.
                                          └────────────────────────────────┘
 ```
 
-**How to spot bad estimates in SSMS:**
+#### SSMS Actual Execution Plan — spot bad cardinality estimates
 
 1. Run query with **Include Actual Execution Plan** (Ctrl+M)
 2. Hover over each operator — tooltip shows Estimated and Actual rows
 3. Look for thick arrows where you expect thin ones (or vice versa)
 4. SSMS 18+ shows a **warning icon** (yellow triangle) when estimates are off by > 10x
 
-**Common causes and fixes:**
+#### Common causes of bad cardinality estimates and fixes
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
@@ -220,7 +220,7 @@ The **cardinality estimator** predicts how many rows each operator will process.
 | Estimates wrong with local variables | Optimizer cannot sniff variable values | Use `OPTION (RECOMPILE)` or parameterize the query |
 | Estimates wrong on filtered data | Statistics histogram has insufficient granularity | `UPDATE STATISTICS ... WITH FULLSCAN` or filtered statistics |
 
-**Check and set the cardinality estimator version:**
+#### sys.databases compatibility_level — check and set CE version
 
 ```sql
 -- Check which CE model your database uses
@@ -239,7 +239,7 @@ OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 
 SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. This lets you see exactly what each query waited on, not just server-wide waits.
 
-**Where to find them in SSMS:**
+#### SSMS WaitStats node — per-query wait stats in execution plans
 
 1. Run query with Include Actual Execution Plan (Ctrl+M)
 2. Right-click on the root operator (leftmost: SELECT, INSERT, etc.)
@@ -266,7 +266,7 @@ SQL Server 2016+ embeds **query-level wait statistics** directly into the actual
   • 5ms waiting for client to consume rows
 ```
 
-**Extract wait stats from plan XML programmatically:**
+#### XML plan //WaitStats/Wait — extract per-query waits from plan cache
 
 ```sql
 ;WITH XMLNAMESPACES (DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
@@ -287,7 +287,7 @@ ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 
 Parameter sniffing occurs when SQL Server compiles a query plan based on the first set of parameters it sees, then reuses that plan for all subsequent executions — even when different parameters would benefit from a different plan.
 
-**Detecting parameter sniffing:**
+#### sys.dm_exec_query_stats min/max variance — detect parameter sniffing
 
 ```sql
 -- Find queries with high variance in execution time (potential sniffing)
@@ -306,7 +306,7 @@ WHERE qs.min_elapsed_time > 0
 ORDER BY qs.max_elapsed_time DESC;
 ```
 
-**Fixes for parameter sniffing:**
+#### OPTIMIZE FOR UNKNOWN, RECOMPILE — parameter sniffing fixes
 
 | Fix | When to Use | Command |
 |-----|------------|---------|
@@ -316,7 +316,7 @@ ORDER BY qs.max_elapsed_time DESC;
 | Query Store plan forcing | Lock a known-good plan for a specific query | `sp_query_store_force_plan` |
 | Split into separate queries | Different parameter ranges need fundamentally different plans | Application-level routing |
 
-**Use OPTION (RECOMPILE) for pipeline queries with variable parameters:**
+#### OPTION (RECOMPILE) — for pipeline queries with variable parameters
 
 ```sql
 -- Forces recompile every time — optimal plan for each execution
@@ -330,7 +330,7 @@ OPTION (RECOMPILE);
 
 Query Store persists execution statistics and plans across restarts, enabling before/after comparison and plan forcing.
 
-**Enable and configure Query Store:**
+#### ALTER DATABASE SET QUERY_STORE — enable and configure
 
 ```sql
 ALTER DATABASE analytics_db SET QUERY_STORE = ON;
@@ -357,7 +357,7 @@ SELECT
 FROM sys.database_query_store_options;
 ```
 
-**Find regressed queries (slower compared to 7-day baseline):**
+#### sys.query_store_runtime_stats — find regressed queries vs baseline
 
 ```sql
 WITH recent AS (
@@ -403,7 +403,7 @@ WHERE r.recent_avg_ms > b.baseline_avg_ms * 2
 ORDER BY r.recent_avg_ms / NULLIF(b.baseline_avg_ms, 0) DESC;
 ```
 
-**Force a known-good plan for a regressed query:**
+#### sp_query_store_force_plan — force a known-good plan
 
 ```sql
 -- List available plans for a specific query

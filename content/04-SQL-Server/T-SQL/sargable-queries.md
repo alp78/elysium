@@ -111,7 +111,7 @@ The telltale sign is an **Index Scan** (or **Clustered Index Scan**) with a **Pr
    - **Seek Predicate** = SARGable (index used to navigate)
    - **Predicate** = non-SARGable filter applied AFTER reading all rows
 
-**Find non-SARGable predicates in cached plans:**
+#### sys.dm_exec_query_plan XML — find non-SARGable predicates in cached plans
 
 ```sql
 -- Find non-SARGable predicates in cached plans (look for scans with predicates)
@@ -168,7 +168,7 @@ WHERE YEAR(signal_date) = 2025;
 
 The most common silent performance killer in Python-to-SQL pipelines. Python's `pyodbc` sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents index seeks.
 
-**Detect implicit conversions:**
+#### PlanAffectingConvert XML query — detect implicit conversions
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
@@ -185,7 +185,7 @@ WHERE qp.query_plan.exist('//Warnings/PlanAffectingConvert') = 1
 ORDER BY qs.total_logical_reads DESC;
 ```
 
-**Fix in Python — force pyodbc to send VARCHAR instead of NVARCHAR:**
+#### pyodbc setencoding — fix implicit NVARCHAR→VARCHAR conversion
 
 ```python
 # In your pipeline connection setup

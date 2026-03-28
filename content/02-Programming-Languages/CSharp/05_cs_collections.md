@@ -537,7 +537,12 @@ Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
 
 <h4><code style="font-size:0.75em">ValueTuple</code> basics</h4>
 
-`ValueTuple` is a lightweight value type with named fields — lives on the stack, compared by value, no heap allocation. Deconstruction (`var (x, y) = tuple`) unpacks into separate variables. Avoid `System.Tuple` (older reference type using `Item1`/`Item2`) in new code. For tuples with more than 3-4 fields, use a `record` or class instead. For public APIs, records are more discoverable and documented.
+> [!info] ValueTuple
+> - Lightweight value type with named fields — lives on the stack, compared by value, no heap allocation
+> - Deconstruction: `var (x, y) = tuple` unpacks into separate variables
+> - Avoid `System.Tuple` (older reference type using `Item1`/`Item2`) in new code
+> - For tuples with more than 3-4 fields, use a `record` or class instead
+> - For public APIs, records are more discoverable and documented
 
 ```csharp
 var point = (3, 4);

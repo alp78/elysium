@@ -30,12 +30,9 @@ curl -v https://api.example.com/data
 # -v = verbose — shows request headers, TLS handshake, response headers, body
 # Invaluable for debugging: "Is the server returning a 301 redirect? A 403 forbidden?"
 
-# Only show the HTTP status code
+# Only show the HTTP status code (health checks)
 curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
-# -s = silent (no progress bar)
-# -o /dev/null = discard response body
-# -w "%{http_code}" = print only the status code (200, 404, 500, etc.)
-# Use case: health checks in monitoring scripts
+# -s = silent, -o /dev/null = discard body, -w = print format string
 ```
 
 #### curl -X POST — send JSON body
@@ -53,40 +50,34 @@ curl -X POST https://api.example.com/webhook \
 
 #### curl --retry --connect-timeout — download with retry and timeout
 
+> [!info] Production download flags
+> - `-f` — fail on server errors (non-zero exit code instead of HTML error page)
+> - `-S` — show errors even in silent mode
+> - `-L` — follow redirects (3xx → follow the Location header)
+> - `--retry 3` — retry up to 3 times on transient failures
+> - `--retry-delay 5` — wait 5 seconds between retries
+> - `--connect-timeout 10` — give up connecting after 10 seconds
+> - `--max-time 300` — total time limit of 5 minutes (including transfer)
+
 ```bash
-# Download a file with retry and timeout
 curl -fSL --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 300 \
   -o data.csv https://data-provider.com/export/latest.csv
-# -f = fail silently on server errors (returns non-zero exit code instead of HTML error page)
-# -S = show errors even in silent mode
-# -L = follow redirects (3xx → follow the Location header)
-# --retry 3 = retry up to 3 times on transient failures
-# --retry-delay 5 = wait 5 seconds between retries
-# --connect-timeout 10 = give up connecting after 10 seconds
-# --max-time 300 = total time limit of 5 minutes (including transfer)
-# This is the CORRECT way to download files in production scripts
 
 # Upload a file
 curl -X PUT -T backup.sql.gz https://storage.example.com/backups/
-# -T = upload file (like PUT)
 ```
 
 **Timing breakdown — where is the latency?**
 
 ```bash
-# Timing breakdown (where is the latency?)
 curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTLS: %{time_appconnect}s\nFirst byte: %{time_starttransfer}s\nTotal: %{time_total}s\n" https://api.example.com/health
-# Output:
-# DNS: 0.012s
-# Connect: 0.034s
-# TLS: 0.089s
-# First byte: 0.145s
-# Total: 0.146s
-# If DNS is slow: check /etc/resolv.conf, consider local DNS cache
-# If Connect is slow: network latency to the server
-# If TLS is slow: certificate chain is large or OCSP stapling is missing
-# If First byte - TLS is slow: server processing time is the bottleneck
 ```
+
+> [!info] Interpreting the timing breakdown
+> - **DNS slow** — check `/etc/resolv.conf`, consider local DNS cache
+> - **Connect slow** — network latency to the server
+> - **TLS slow** — certificate chain is large or OCSP stapling is missing
+> - **First byte - TLS slow** — server processing time is the bottleneck
 
 ## Tool Selection — curl vs wget vs Python requests
 

@@ -282,7 +282,12 @@ conn.Close();
 PRAGMAs configure SQLite behavior per connection. Set them right after `Open()`.
 WAL mode enables concurrent readers. Cache and mmap control memory usage.
 
-PRAGMAs configure SQLite per connection — set right after `Open()`. WAL mode enables concurrent reads. `busy_timeout` retries instead of failing. Never use `synchronous=OFF` in production (data loss on crash).
+> [!info] Key PRAGMAs
+> - Set right after `Open()` — configure per connection
+> - `journal_mode=WAL` — enables concurrent reads
+> - `busy_timeout` — retries instead of failing on lock
+>
+> > [!danger] Never use `synchronous=OFF` in production — data loss on crash.
 
 ```csharp
 var pragmaConn = new SqliteConnection("DataSource=:memory:");

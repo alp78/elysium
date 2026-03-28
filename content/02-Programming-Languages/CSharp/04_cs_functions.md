@@ -77,7 +77,12 @@ Console.WriteLine($"As tuple: {Divide(17, 5)}");
 
 <h4><code style="font-size:0.75em">Func&lt;T, TResult&gt;</code> — function with return value</h4>
 
-`Func<T, TResult>` holds a method that returns a value. `Action<T>` holds a void method. Both store lambdas, named methods, or method groups — functions as first-class values. Use `Func`/`Action` for callbacks, LINQ, strategy pattern, DI. For event handlers, use `EventHandler<T>`.
+> [!info] Delegate types
+> - `Func<T, TResult>` — holds a method that returns a value
+> - `Action<T>` — holds a void method
+> - Both store lambdas, named methods, or method groups — functions as first-class values
+> - Use for callbacks, LINQ, strategy pattern, DI
+> - For event handlers, use `EventHandler<T>`
 
 ```csharp
 Func<string, string> sayHello = Greet;     // assign method to variable
@@ -248,7 +253,11 @@ LoadData(new[] { "users", "orders", "products" },
 
 <h4>Sorting with <code style="font-size:0.75em">Func</code> as key</h4>
 
-LINQ `OrderBy(x => x.Property)` extracts the sort key. `ThenBy` for secondary sort. `GroupBy` + `Select` for aggregation over groups. Declarative and composable.
+> [!info] LINQ with Func
+> - `OrderBy(x => x.Property)` — extracts the sort key
+> - `ThenBy` — secondary sort
+> - `GroupBy` + `Select` — aggregation over groups
+> - Declarative and composable
 
 > [!warning] `OrderBy` then another `OrderBy` **replaces** the first — use `ThenBy` for secondary sort.
 
@@ -301,7 +310,11 @@ Console.WriteLine(Connect("db.example.com", ssl: false));  // named, skip port
 
 <h4><code style="font-size:0.75em">ref</code> — pass by reference</h4>
 
-`ref int x` passes the variable itself — changes inside the method are visible to the caller. Both sides must use the `ref` keyword. Variable must be initialized before passing. Use `out` for output-only scenarios.
+> [!info] Pass by reference
+> - `ref int x` — passes the variable itself; changes are visible to the caller
+> - Both sides must use the `ref` keyword
+> - Variable must be initialized before passing
+> - Use `out` for output-only scenarios (caller doesn't need to initialize)
 
 ```csharp
 void DoubleIt(ref int x)
@@ -367,7 +380,10 @@ Console.WriteLine($"Total(array):   {Total(nums)}");
 
 <h4>No <code style="font-size:0.75em">**kwargs</code> — alternatives</h4>
 
-C# has no `**kwargs`. Alternatives: (1) anonymous object `new { key = value }` (common in ASP.NET), (2) `Dictionary<string, object>` for dynamic keys, (3) named params with defaults for compile-time safety.
+> [!info] C# has no `**kwargs` — alternatives
+> - Anonymous object: `new { key = value }` (common in ASP.NET)
+> - `Dictionary<string, object>` for dynamic keys
+> - Named params with defaults for compile-time safety
 
 ```csharp
 void LogEvent(string name, object data) =>
@@ -404,7 +420,11 @@ Console.WriteLine($"add(3, 4): {add(3, 4)}");
 
 #### Statement lambda — multi-line body with { }
 
-`(params) => { statements; return value; }` — braces and explicit `return` required. Supports `if`/`else`, loops, `try`/`catch`. Still captures enclosing scope. Keep under 5 lines — extract longer logic to a named method.
+> [!info] Statement lambda syntax
+> - `(params) => { statements; return value; }` — braces and explicit `return` required
+> - Supports `if`/`else`, loops, `try`/`catch`
+> - Still captures enclosing scope
+> - Keep under 5 lines — extract longer logic to a named method
 
 ```csharp
 Func<int, string> classify = (x) => {

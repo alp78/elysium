@@ -18,7 +18,7 @@ In an incident at 2 AM, you do not have time to retype a complex pipeline comman
 
 ## Bash History
 
-**Search, recall, and re-run previous commands:**
+#### history, Ctrl+R, !!, !$ — search, recall, re-run commands
 ```bash
 # View full history
 history
@@ -27,14 +27,16 @@ history
 # Search history (text filter)
 history | grep "sqlcmd"
 # Finds every sqlcmd command you've ever run in this shell
+```
 
-# Reverse incremental search (the most important shortcut in bash)
-# Press Ctrl+R, then type a fragment
-# (reverse-i-search)`sqlcmd': sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db
-# Press Ctrl+R again to cycle through older matches
-# Press Enter to execute, or Right arrow to edit before executing
-# Press Ctrl+G or Ctrl+C to cancel
+> [!tip] Reverse incremental search — the most important shortcut in bash
+> 1. Press `Ctrl+R`, then type a fragment (e.g., `sqlcmd`)
+> 2. Bash shows the most recent match: `(reverse-i-search)'sqlcmd': sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db`
+> 3. Press `Ctrl+R` again to cycle through older matches
+> 4. Press `Enter` to execute, or `→` (right arrow) to edit before executing
+> 5. Press `Ctrl+G` or `Ctrl+C` to cancel
 
+```bash
 # Re-run the last command
 !!
 # Use case: "permission denied" → sudo !!  (re-runs with sudo prepended)
@@ -59,7 +61,7 @@ vim $_    # $_ = "new file.txt" (last argument of previous command)
 
 ## Building Complex Commands Incrementally
 
-**Production scenario — building commands step by step using history recall:**
+#### History workflow — building commands step by step with !!, ^old^new
 ```bash
 # Step 1: Test the base query
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"

@@ -20,7 +20,11 @@ status: complete
 
 #### def, return, docstrings — basic function definition
 
-Define with `def name(params): body`. Return a value with `return` — functions without `return` implicitly return `None`. Docstrings (triple-quoted first line) provide built-in documentation via `help()`. Functions are first-class objects: assign to variables, pass as arguments, return from other functions.
+> [!info] Function basics
+> - `def name(params): body` — defines a function
+> - `return` — returns a value; without it, functions implicitly return `None`
+> - Docstrings (triple-quoted first line) — built-in documentation via `help()`
+> - Functions are first-class objects: assign to variables, pass as arguments, return from other functions
 
 > [!warning] Function anti-patterns
 > - Very long parameter lists — use `**kwargs` or a config object
@@ -63,7 +67,12 @@ print(f"Return value: {result}")       # None
 
 #### Default parameters, *args, **kwargs — tuple return and unpacking
 
-Default parameters: `def f(x=10)`. Named arguments: `f(x=5)` — self-documenting. `*args` collects extra positional as tuple, `**kwargs` collects extra keyword as dict. Order: positional, `*args`, keyword-only, `**kwargs`.
+> [!info] Parameters and arguments
+> - Default parameters: `def f(x=10)`
+> - Named arguments: `f(x=5)` — self-documenting
+> - `*args` — collects extra positional arguments as a tuple
+> - `**kwargs` — collects extra keyword arguments as a dict
+> - Order: positional, `*args`, keyword-only, `**kwargs`
 
 > [!warning] Parameter pitfalls
 > - **Mutable defaults:** `def f(lst=[])` shares the list across all calls — use `lst=None` instead
@@ -327,7 +336,10 @@ kitchen_sink("a", "b", "c", keyword_only="custom", x=1, y=2)
 
 #### Positional-only (/) and keyword-only (*) parameters
 
-Before `/` = positional-only (allows renaming params without breaking callers). After `*` = keyword-only (prevents positional misuse). Matches built-in signatures like `len(obj, /)`.
+> [!info] Parameter kinds
+> - Before `/` = **positional-only** (allows renaming params without breaking callers)
+> - After `*` = **keyword-only** (prevents positional misuse)
+> - Matches built-in signatures like `len(obj, /)`
 
 ```python
 def func(pos_only, /, normal, *, kw_only):
@@ -658,7 +670,10 @@ print(f"apply_nohint: {apply_func_nohint(lambda x: x * 2, 5)}")
 
 #### Type aliases, __annotations__, get_type_hints — runtime introspection
 
-Type aliases give readable names to complex types: `UserMap = dict[int, str]`. `__annotations__` stores hints as a dict for runtime introspection — this is how pydantic validates types. `get_type_hints()` resolves forward references.
+> [!info] Type introspection
+> - Type aliases give readable names: `UserMap = dict[int, str]`
+> - `__annotations__` stores hints as a dict for runtime introspection — this is how Pydantic validates types
+> - `get_type_hints()` resolves forward references
 
 ```python
 UserId = int

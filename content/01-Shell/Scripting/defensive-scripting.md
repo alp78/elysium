@@ -16,7 +16,7 @@ status: complete
 
 Every bash script you write for production should begin with one line that enables three safety mechanisms preventing the most common and most dangerous categories of scripting bugs. Without it, your script is a loaded gun pointed at your data.
 
-**The essential first line of every production script:**
+#### set -euo pipefail — the essential first line of every production script
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
@@ -65,7 +65,7 @@ rm -rf "$STAGING_DIR"/*
 # Script exits immediately. Your filesystem is intact.
 ```
 
-**Handling optional variables with `set -u`:**
+#### ${VAR:-default} — handle optional variables with set -u
 ```bash
 set -u
 
