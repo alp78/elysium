@@ -358,18 +358,25 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         .subject(() => nodes.find((n) => n.id === hoveredId))
         .on("start", function (event) {
           if (!event.active) simulation.alphaTarget(0.008).restart()
+          // Record the offset between pointer (in sim space) and node position
+          const simX = (event.x - currentTransform.x) / currentTransform.k
+          const simY = (event.y - currentTransform.y) / currentTransform.k
+          event.subject.__dragOffset = {
+            dx: simX - (event.subject.x ?? 0),
+            dy: simY - (event.subject.y ?? 0),
+          }
           event.subject.fx = event.subject.x
           event.subject.fy = event.subject.y
           dragStartTime = Date.now()
           dragging = true
-          // Lock hover to the dragged node
           setHover(event.subject.id)
           updateLabels(currentTransform.k)
         })
         .on("drag", function (event) {
-          // Convert screen coords to simulation coords, keeping pointer on node
-          event.subject.fx = (event.x - currentTransform.x) / currentTransform.k
-          event.subject.fy = (event.y - currentTransform.y) / currentTransform.k
+          // Convert screen→sim, subtract the initial pointer-to-center offset
+          const off = event.subject.__dragOffset
+          event.subject.fx = (event.x - currentTransform.x) / currentTransform.k - off.dx
+          event.subject.fy = (event.y - currentTransform.y) / currentTransform.k - off.dy
         })
         .on("end", function (event) {
           if (!event.active) simulation.alphaTarget(0)
