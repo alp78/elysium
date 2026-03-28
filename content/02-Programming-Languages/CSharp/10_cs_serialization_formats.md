@@ -74,33 +74,31 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 #### NuGet package and type declarations
 
-> [!warning] Parquet.Net NuGet and type declarations — columnar format for data lakes
-> Parquet.Net NuGet and type declarations — columnar format for data lakes
->
-> Technique: #r "nuget: Parquet.Net" adds the Parquet library. Define a
->   record/class matching the Parquet schema. Parquet.Net maps properties
->   to parquet columns automatically via class serialization API.
->
-> Benefits:
->   - NuGet integration — one line to add the dependency
->   - Type-safe — record properties map directly to parquet columns
->   - Supports both low-level DataColumn API and high-level class serialization
->
-> Anti-patterns:
->   - Not pinning NuGet version — builds may break on updates
->   - Mismatched property types vs parquet schema — runtime errors
->
-> When to use:
->   - Any notebook reading/writing Parquet files
->
-> When NOT to use:
->   - N/A — NuGet setup is required for Parquet.Net
->
->
->
-> EventRecord — Parquet.Net maps properties to parquet columns
-
 ```csharp
+// Parquet.Net NuGet and type declarations — columnar format for data lakes
+//
+// Technique: #r "nuget: Parquet.Net" adds the Parquet library. Define a
+//   record/class matching the Parquet schema. Parquet.Net maps properties
+//   to parquet columns automatically via class serialization API.
+//
+// Benefits:
+//   - NuGet integration — one line to add the dependency
+//   - Type-safe — record properties map directly to parquet columns
+//   - Supports both low-level DataColumn API and high-level class serialization
+//
+// Anti-patterns:
+//   - Not pinning NuGet version — builds may break on updates
+//   - Mismatched property types vs parquet schema — runtime errors
+//
+// When to use:
+//   - Any notebook reading/writing Parquet files
+//
+// When NOT to use:
+//   - N/A — NuGet setup is required for Parquet.Net
+
+
+
+// EventRecord — Parquet.Net maps properties to parquet columns
 public class EventRecord
 {
     public string EventId { get; set; } = "";
@@ -293,53 +291,51 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### Protobuf with Google.Protobuf NuGet
 
-> [!warning] Protocol Buffers — cross-language binary serialization with schema
-> Protocol Buffers — cross-language binary serialization with schema
->
-> Technique: Protobuf uses .proto files to define schemas. protoc generates
->   typed C# classes. Serialize with WriteTo/ToByteArray. Deserialize with
->   Parser.ParseFrom. Schema is external — not embedded in the data.
->
-> Benefits:
->   - Compact — 3-10x smaller than JSON for the same data
->   - Fast — binary encoding, no parsing overhead
->   - Cross-language — same .proto generates C#, Python, Java, Go code
->   - Schema evolution — add fields without breaking old consumers
->
-> Anti-patterns:
->   - Protobuf without schema management — consumers can't decode without .proto
->   - Using for human-readable data — binary format is not inspectable
->
-> When to use:
->   - gRPC, microservice communication, Kafka messages, mobile APIs
->
-> When NOT to use:
->   - Config files — use JSON/YAML; human-readable exchange — use JSON
->
->
-> Protocol Buffers (Protobuf) — cross-language binary serialization with schema
->
-> WHAT: Protobuf defines message schemas in .proto files. The protoc compiler
->   generates C#/Java/Python/Go classes. You serialize instances to compact
->   binary bytes and deserialize back with full type safety.
->
-> WHY:
->   - 60-80% smaller than JSON (binary encoding, no field names in payload)
->   - 10-100x faster to parse than JSON (no text parsing, direct memory mapping)
->   - Strict schema with backward/forward compatibility (add fields without breaking)
->   - Cross-language: same .proto generates code for C#, Python, Java, Go, etc.
->
-> WHEN TO USE: gRPC services, Kafka events, high-frequency data feeds,
->   inter-service communication, mobile APIs (bandwidth matters)
-> ANTI-PATTERNS:
->   - Don't use for human-readable configs — use JSON/YAML instead
->   - Don't change field numbers in existing .proto — breaks all consumers
->   - Don't use for one-off scripts — JSON is simpler for ad-hoc work
->
-> NOTE: In production, protoc generates C# classes from .proto files.
-> In notebooks, we use the dynamic message API (same binary format).
-
 ```csharp
+// Protocol Buffers — cross-language binary serialization with schema
+//
+// Technique: Protobuf uses .proto files to define schemas. protoc generates
+//   typed C# classes. Serialize with WriteTo/ToByteArray. Deserialize with
+//   Parser.ParseFrom. Schema is external — not embedded in the data.
+//
+// Benefits:
+//   - Compact — 3-10x smaller than JSON for the same data
+//   - Fast — binary encoding, no parsing overhead
+//   - Cross-language — same .proto generates C#, Python, Java, Go code
+//   - Schema evolution — add fields without breaking old consumers
+//
+// Anti-patterns:
+//   - Protobuf without schema management — consumers can't decode without .proto
+//   - Using for human-readable data — binary format is not inspectable
+//
+// When to use:
+//   - gRPC, microservice communication, Kafka messages, mobile APIs
+//
+// When NOT to use:
+//   - Config files — use JSON/YAML; human-readable exchange — use JSON
+
+
+// Protocol Buffers (Protobuf) — cross-language binary serialization with schema
+//
+// WHAT: Protobuf defines message schemas in .proto files. The protoc compiler
+//   generates C#/Java/Python/Go classes. You serialize instances to compact
+//   binary bytes and deserialize back with full type safety.
+//
+// WHY:
+//   - 60-80% smaller than JSON (binary encoding, no field names in payload)
+//   - 10-100x faster to parse than JSON (no text parsing, direct memory mapping)
+//   - Strict schema with backward/forward compatibility (add fields without breaking)
+//   - Cross-language: same .proto generates code for C#, Python, Java, Go, etc.
+//
+// WHEN TO USE: gRPC services, Kafka events, high-frequency data feeds,
+//   inter-service communication, mobile APIs (bandwidth matters)
+// ANTI-PATTERNS:
+//   - Don't use for human-readable configs — use JSON/YAML instead
+//   - Don't change field numbers in existing .proto — breaks all consumers
+//   - Don't use for one-off scripts — JSON is simpler for ad-hoc work
+
+// NOTE: In production, protoc generates C# classes from .proto files.
+// In notebooks, we use the dynamic message API (same binary format).
 Console.WriteLine("  Google.Protobuf loaded.");
 ```
 
@@ -495,58 +491,56 @@ Console.WriteLine(@"
 
 #### Avro schema and serialization
 
-> [!warning] Apache Avro — binary serialization with embedded schema
-> Apache Avro — binary serialization with embedded schema
->
-> Technique: Define schema in JSON format. GenericRecord API creates records
->   matching the schema. Schema is embedded in the file header — readers
->   don't need external schema to decode. Standard in Kafka and Hadoop.
->
-> Benefits:
->   - Self-describing — schema embedded in every file
->   - Schema evolution — add/remove fields with compatibility rules
->   - Compact binary — smaller than JSON, comparable to Protobuf
->   - Kafka standard — Schema Registry manages versions
->
-> Anti-patterns:
->   - Avro without schema registry in Kafka — version conflicts
->   - JSON schema strings without validation — runtime parse errors
->
-> When to use:
->   - Kafka messages, Hadoop/Spark pipelines, schema-evolving data
->
-> When NOT to use:
->   - Simple files — Parquet is better for analytics; JSON for interchange
->
->
-> Apache Avro — binary serialization with embedded schema for data engineering
->
-> WHAT: Avro is a row-based binary format where the schema is embedded in every file.
->   Unlike Protobuf (which uses separate .proto files), Avro files are self-describing:
->   any consumer can read the schema from the file header without external metadata.
->
-> WHY:
->   - Schema embedded in file — no need for a separate schema registry (though one helps)
->   - Schema evolution — add/remove fields without breaking readers
->   - Compact binary — field names stored once in header, not per record
->   - THE standard for Kafka messages in data engineering (Confluent Schema Registry)
->   - Supported by Spark, Flink, Hive, BigQuery, and all major data tools
->
-> WHEN TO USE: Kafka event streaming, data lake storage, ETL intermediate format
-> AVRO vs PROTOBUF vs PARQUET:
->   Avro:    row-based, self-describing, best for streaming/Kafka
->   Protobuf: binary, external schema, best for gRPC/microservices
->   Parquet:  columnar, best for analytics/queries (read specific columns)
->
-> ANTI-PATTERNS:
->   - Don't use Avro for analytics queries — use Parquet (columnar = column pruning)
->   - Don't change field types in schema evolution — only add/remove fields
->   - Don't use Avro without a schema registry in production Kafka
->
-> Define Avro schema as JSON string
-> This is the standard way — Avro schemas are always JSON, even for binary data
-
 ```csharp
+// Apache Avro — binary serialization with embedded schema
+//
+// Technique: Define schema in JSON format. GenericRecord API creates records
+//   matching the schema. Schema is embedded in the file header — readers
+//   don't need external schema to decode. Standard in Kafka and Hadoop.
+//
+// Benefits:
+//   - Self-describing — schema embedded in every file
+//   - Schema evolution — add/remove fields with compatibility rules
+//   - Compact binary — smaller than JSON, comparable to Protobuf
+//   - Kafka standard — Schema Registry manages versions
+//
+// Anti-patterns:
+//   - Avro without schema registry in Kafka — version conflicts
+//   - JSON schema strings without validation — runtime parse errors
+//
+// When to use:
+//   - Kafka messages, Hadoop/Spark pipelines, schema-evolving data
+//
+// When NOT to use:
+//   - Simple files — Parquet is better for analytics; JSON for interchange
+
+
+// Apache Avro — binary serialization with embedded schema for data engineering
+//
+// WHAT: Avro is a row-based binary format where the schema is embedded in every file.
+//   Unlike Protobuf (which uses separate .proto files), Avro files are self-describing:
+//   any consumer can read the schema from the file header without external metadata.
+//
+// WHY:
+//   - Schema embedded in file — no need for a separate schema registry (though one helps)
+//   - Schema evolution — add/remove fields without breaking readers
+//   - Compact binary — field names stored once in header, not per record
+//   - THE standard for Kafka messages in data engineering (Confluent Schema Registry)
+//   - Supported by Spark, Flink, Hive, BigQuery, and all major data tools
+//
+// WHEN TO USE: Kafka event streaming, data lake storage, ETL intermediate format
+// AVRO vs PROTOBUF vs PARQUET:
+//   Avro:    row-based, self-describing, best for streaming/Kafka
+//   Protobuf: binary, external schema, best for gRPC/microservices
+//   Parquet:  columnar, best for analytics/queries (read specific columns)
+//
+// ANTI-PATTERNS:
+//   - Don't use Avro for analytics queries — use Parquet (columnar = column pruning)
+//   - Don't change field types in schema evolution — only add/remove fields
+//   - Don't use Avro without a schema registry in production Kafka
+
+// Define Avro schema as JSON string
+// This is the standard way — Avro schemas are always JSON, even for binary data
 var schemaJson = @"{
   ""type"": ""record"",
   ""name"": ""StockQuote"",
@@ -737,32 +731,30 @@ Console.WriteLine(@"
 
 #### Generate test data
 
-> [!warning] Generate OHLCV test data — three sizes for benchmarking
-> Generate OHLCV test data — three sizes for benchmarking
->
-> Technique: Create synthetic OHLCV (Open/High/Low/Close/Volume) records
->   matching the stoxx database schema. Three tiers: 100 (small), 10K
->   (medium), 100K (large) for meaningful performance comparison.
->
-> Benefits:
->   - Reproducible — fixed random seed (42) for consistent benchmarks
->   - Realistic schema — matches actual financial data structure
->   - Three sizes reveal scaling characteristics of each format
->
-> Anti-patterns:
->   - Benchmarking with tiny data only — doesn't reveal scaling issues
->   - Unrealistic schemas — benchmark results won't transfer to production
->
-> When to use:
->   - Comparing serialization format performance with realistic data
->
-> When NOT to use:
->   - Production benchmarks — use actual production data and queries
->
-> Generate OHLCV test data — same schema as stoxx database
-> Three sizes: 100 (small), 10K (medium), 100K (large)
-
 ```csharp
+// Generate OHLCV test data — three sizes for benchmarking
+//
+// Technique: Create synthetic OHLCV (Open/High/Low/Close/Volume) records
+//   matching the stoxx database schema. Three tiers: 100 (small), 10K
+//   (medium), 100K (large) for meaningful performance comparison.
+//
+// Benefits:
+//   - Reproducible — fixed random seed (42) for consistent benchmarks
+//   - Realistic schema — matches actual financial data structure
+//   - Three sizes reveal scaling characteristics of each format
+//
+// Anti-patterns:
+//   - Benchmarking with tiny data only — doesn't reveal scaling issues
+//   - Unrealistic schemas — benchmark results won't transfer to production
+//
+// When to use:
+//   - Comparing serialization format performance with realistic data
+//
+// When NOT to use:
+//   - Production benchmarks — use actual production data and queries
+
+// Generate OHLCV test data — same schema as stoxx database
+// Three sizes: 100 (small), 10K (medium), 100K (large)
 var rng = new Random(42);
 var symbols = new[] { "SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","SIE.DE","ALV.DE",
                       "ADS.DE","DTE.DE","ENEL.MI","ENI.MI","BNP.PA","MC.PA","OR.PA","AIR.PA",

@@ -24,15 +24,14 @@ Topics covered:
 - Dapper (micro-ORM, like pandas read_sql / SQLAlchemy)
 - Real-world Index Provider Queries (index provider)
 
-> [!info] Suppress CS1701/CS1702 assembly version warnings in .NET Interactive
-> Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-> These are harmless — .NET unifies assemblies at runtime correctly.
-> NuGet packages compiled against .NET 8/9 trigger these on .NET 10.
-> We set WarningLevel=0 on the Roslyn ScriptOptions to hide them.
->
-> Run this cell ONCE before any cells that use NuGet packages.
-
 ```csharp
+// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
+// These are harmless — .NET unifies assemblies at runtime correctly.
+// NuGet packages compiled against .NET 8/9 trigger these on .NET 10.
+// We set WarningLevel=0 on the Roslyn ScriptOptions to hide them.
+//
+// Run this cell ONCE before any cells that use NuGet packages.
+
 #r "nuget: Microsoft.Data.SqlClient"
 #r "nuget: Microsoft.Data.Sqlite"
 #r "nuget: System.Data.Odbc"
@@ -131,31 +130,30 @@ SQLite uses the ADO.NET pattern: `SqliteConnection`, `SqliteCommand`, `SqliteDat
 `DataSource=:memory:` creates an in-memory database. Parameterised queries use `@param`
 named placeholders. Python equivalent: `sqlite3.connect(":memory:")`.
 
-> [!warning] SQLite in C# — in-memory database with ADO.NET pattern
-> SQLite in C# — in-memory database with ADO.NET pattern
->
-> Technique: SqliteConnection/SqliteCommand/SqliteDataReader follow the
->   standard ADO.NET provider pattern. Same API as SqlClient, OdbcConnection.
->   @param named placeholders prevent SQL injection.
->
-> Benefits:
->   - Zero setup — in-memory, no server needed
->   - Same ADO.NET API as SQL Server — portable knowledge
->   - Parameterised queries — safe from injection
->   - Transactions with BEGIN/COMMIT/ROLLBACK
->
-> Anti-patterns:
->   - String concatenation for SQL — injection risk
->   - Not disposing connections — resource leak; use using
->   - SQLite for concurrent writes — single-writer lock
->
-> When to use:
->   - Tests, prototyping, embedded apps, local caches
->
-> When NOT to use:
->   - Concurrent multi-user access — use SQL Server or PostgreSQL
-
 ```csharp
+// SQLite in C# — in-memory database with ADO.NET pattern
+//
+// Technique: SqliteConnection/SqliteCommand/SqliteDataReader follow the
+//   standard ADO.NET provider pattern. Same API as SqlClient, OdbcConnection.
+//   @param named placeholders prevent SQL injection.
+//
+// Benefits:
+//   - Zero setup — in-memory, no server needed
+//   - Same ADO.NET API as SQL Server — portable knowledge
+//   - Parameterised queries — safe from injection
+//   - Transactions with BEGIN/COMMIT/ROLLBACK
+//
+// Anti-patterns:
+//   - String concatenation for SQL — injection risk
+//   - Not disposing connections — resource leak; use using
+//   - SQLite for concurrent writes — single-writer lock
+//
+// When to use:
+//   - Tests, prototyping, embedded apps, local caches
+//
+// When NOT to use:
+//   - Concurrent multi-user access — use SQL Server or PostgreSQL
+
 var conn = new SqliteConnection("DataSource=:memory:");
 conn.Open();
 
@@ -310,31 +308,30 @@ conn.Close();
 PRAGMAs configure SQLite behavior per connection. Set them right after `Open()`.
 WAL mode enables concurrent readers. Cache and mmap control memory usage.
 
-> [!warning] SQLite PRAGMA settings — tune performance, concurrency, and durability
-> SQLite PRAGMA settings — tune performance, concurrency, and durability
->
-> Technique: PRAGMA commands configure SQLite behavior per connection.
->   WAL mode allows concurrent reads during writes. Cache size controls
->   how much data SQLite keeps in memory. Synchronous controls durability.
->
-> Benefits:
->   - WAL mode — readers don't block writers (default is exclusive lock)
->   - Larger cache — fewer disk reads for repeated queries
->   - busy_timeout — retry instead of failing on lock contention
->   - mmap_size — memory-mapped I/O for faster reads on large files
->
-> Anti-patterns:
->   - synchronous=OFF in production — data loss on crash
->   - No busy_timeout — immediate SQLITE_BUSY error on contention
->   - Default journal_mode=DELETE — WAL is faster for most workloads
->
-> When to use:
->   - Every SQLite connection — set PRAGMAs right after Open()
->
-> When NOT to use:
->   - In-memory databases — WAL and sync settings have no effect
-
 ```csharp
+// SQLite PRAGMA settings — tune performance, concurrency, and durability
+//
+// Technique: PRAGMA commands configure SQLite behavior per connection.
+//   WAL mode allows concurrent reads during writes. Cache size controls
+//   how much data SQLite keeps in memory. Synchronous controls durability.
+//
+// Benefits:
+//   - WAL mode — readers don't block writers (default is exclusive lock)
+//   - Larger cache — fewer disk reads for repeated queries
+//   - busy_timeout — retry instead of failing on lock contention
+//   - mmap_size — memory-mapped I/O for faster reads on large files
+//
+// Anti-patterns:
+//   - synchronous=OFF in production — data loss on crash
+//   - No busy_timeout — immediate SQLITE_BUSY error on contention
+//   - Default journal_mode=DELETE — WAL is faster for most workloads
+//
+// When to use:
+//   - Every SQLite connection — set PRAGMAs right after Open()
+//
+// When NOT to use:
+//   - In-memory databases — WAL and sync settings have no effect
+
 var pragmaConn = new SqliteConnection("DataSource=:memory:");
 pragmaConn.Open();
 var cmd = pragmaConn.CreateCommand();
@@ -478,16 +475,6 @@ Console.WriteLine("Inserted 5000 OHLCV rows");
 
 #### SQLite — EXPLAIN QUERY PLAN without index (full table scan)
 
-> [!info] INTERPRETING EXPLAIN QUERY PLAN:
-> INTERPRETING EXPLAIN QUERY PLAN:
->   SCAN ohlcv         = full table scan (reads every row) — slow, no index used
->   SEARCH ohlcv       = index lookup (reads only matching rows) — fast
->   USING INDEX idx    = which index is being used
->   USING COVERING INDEX = index has all needed columns, no table access at all
->
-> Goal: turn SCAN into SEARCH by creating the right index.
-> "SCAN" on a 5000-row table is fine. On 50M rows it is a disaster.
-
 ```csharp
 // EXPLAIN QUERY PLAN shows whether SQLite uses an index or full table scan
 // Drop any existing indexes first to show the "before" state
@@ -498,6 +485,15 @@ try { cmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol_date"; cmd.Execut
 
 
 QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
+
+// INTERPRETING EXPLAIN QUERY PLAN:
+//   SCAN ohlcv         = full table scan (reads every row) — slow, no index used
+//   SEARCH ohlcv       = index lookup (reads only matching rows) — fast
+//   USING INDEX idx    = which index is being used
+//   USING COVERING INDEX = index has all needed columns, no table access at all
+//
+// Goal: turn SCAN into SEARCH by creating the right index.
+// "SCAN" on a 5000-row table is fine. On 50M rows it is a disaster.
 ```
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">parent</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">notused</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">detail</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">216</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SCAN ohlcv</td></tr></tbody></table>
@@ -532,21 +528,22 @@ Console.WriteLine("  UNIQUE INDEX: prevents duplicate (symbol, date) pairs");
 
 #### SQLite — EXPLAIN QUERY PLAN with index (index scan)
 
-> [!info] OUTPUT: SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)
-> OUTPUT: SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)
->
-> Before index: SCAN ohlcv        = reads all 5000 rows, checks each one
-> After index:  SEARCH ... USING INDEX = jumps directly to matching rows
->
-> The composite index idx_ohlcv_symbol_date covers both WHERE conditions:
->   symbol=?  (exact match on first column of index)
->   date>?    (range scan on second column of index)
-> On 50M rows this is the difference between 50ms and 50 seconds.
-
 ```csharp
 // Same query now uses the composite index instead of full table scan
 
 QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
+
+
+
+// OUTPUT: SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)
+//
+// Before index: SCAN ohlcv        = reads all 5000 rows, checks each one
+// After index:  SEARCH ... USING INDEX = jumps directly to matching rows
+//
+// The composite index idx_ohlcv_symbol_date covers both WHERE conditions:
+//   symbol=?  (exact match on first column of index)
+//   date>?    (range scan on second column of index)
+// On 50M rows this is the difference between 50ms and 50 seconds.
 ```
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">id</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">parent</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">notused</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">detail</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">3</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)</td></tr></tbody></table>
@@ -647,35 +644,35 @@ pragmaConn.Close();
 
 Quick reference of all important SQLite PRAGMAs — set these right after `Open()`.
 
-> [!abstract]- SQLite PRAGMA quick reference
-> SQLite PRAGMA quick reference
->
-> PRAGMA                  Value               Effect
-> ─────────────────────── ──────────────────── ────────────────────────────────────────
-> journal_mode            WAL                 Concurrent reads + one writer
-> synchronous             NORMAL              Balance of speed and safety
-> cache_size              -20000 (20MB)       In-memory page cache
-> page_size               4096                Disk block alignment (set before CREATE)
-> busy_timeout            5000 (5s)           Retry on lock instead of failing
-> mmap_size               268435456 (256MB)   Memory-mapped I/O for large files
-> temp_store              MEMORY              Temp tables in RAM
-> foreign_keys            ON                  Enforce FK constraints (OFF by default!)
-> auto_vacuum             FULL or INCREMENTAL Auto-reclaim space on DELETE
-> wal_autocheckpoint      1000                WAL checkpoint every N pages
->
-> MAINTENANCE:
-> ANALYZE                                     Update query planner statistics
-> VACUUM                                      Rebuild and compact database file
-> REINDEX                                     Rebuild all indexes
-> PRAGMA integrity_check                      Verify database consistency
->
-> INDEXING:
-> CREATE INDEX idx ON t(col)                  Single column index
-> CREATE INDEX idx ON t(col1, col2)           Composite (covers multi-column WHERE)
-> CREATE UNIQUE INDEX idx ON t(col1, col2)    Unique constraint via index
-> DROP INDEX idx                              Remove an index
-> EXPLAIN QUERY PLAN SELECT ...               Show whether index is used
->
+```csharp
+// SQLite PRAGMA quick reference
+//
+// PRAGMA                  Value               Effect
+// ─────────────────────── ──────────────────── ────────────────────────────────────────
+// journal_mode            WAL                 Concurrent reads + one writer
+// synchronous             NORMAL              Balance of speed and safety
+// cache_size              -20000 (20MB)       In-memory page cache
+// page_size               4096                Disk block alignment (set before CREATE)
+// busy_timeout            5000 (5s)           Retry on lock instead of failing
+// mmap_size               268435456 (256MB)   Memory-mapped I/O for large files
+// temp_store              MEMORY              Temp tables in RAM
+// foreign_keys            ON                  Enforce FK constraints (OFF by default!)
+// auto_vacuum             FULL or INCREMENTAL Auto-reclaim space on DELETE
+// wal_autocheckpoint      1000                WAL checkpoint every N pages
+//
+// MAINTENANCE:
+// ANALYZE                                     Update query planner statistics
+// VACUUM                                      Rebuild and compact database file
+// REINDEX                                     Rebuild all indexes
+// PRAGMA integrity_check                      Verify database consistency
+//
+// INDEXING:
+// CREATE INDEX idx ON t(col)                  Single column index
+// CREATE INDEX idx ON t(col1, col2)           Composite (covers multi-column WHERE)
+// CREATE UNIQUE INDEX idx ON t(col1, col2)    Unique constraint via index
+// DROP INDEX idx                              Remove an index
+// EXPLAIN QUERY PLAN SELECT ...               Show whether index is used
+```
 
 ## 2. SQL Server
 
@@ -685,30 +682,29 @@ Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
 `sys.schemas` to discover the medallion architecture: bronze (raw), silver (cleaned),
 gold (computed scores). `sys.partitions` gives approximate row counts.
 
-> [!warning] SQL Server with ADO.NET (SqlClient) — connect to live database
-> SQL Server with ADO.NET (SqlClient) — connect to live database
->
-> Technique: SqlConnection + SqlCommand + SqlDataReader follow the same
->   ADO.NET pattern as SQLite. Connection string specifies server, database,
->   authentication. Always use parameterised queries (@param) for safety.
->
-> Benefits:
->   - Same ADO.NET API as SQLite — portable knowledge
->   - Parameterised queries prevent SQL injection
->   - sys.* catalog views give full metadata without external tools
->
-> Anti-patterns:
->   - String concatenation in SQL — injection risk
->   - Not disposing connections — pool exhaustion
->   - SELECT * in production — always list columns explicitly
->
-> When to use:
->   - Direct SQL queries, scripts, notebooks, lightweight services
->
-> When NOT to use:
->   - Complex ORM scenarios — use Dapper or EF Core
-
 ```csharp
+// SQL Server with ADO.NET (SqlClient) — connect to live database
+//
+// Technique: SqlConnection + SqlCommand + SqlDataReader follow the same
+//   ADO.NET pattern as SQLite. Connection string specifies server, database,
+//   authentication. Always use parameterised queries (@param) for safety.
+//
+// Benefits:
+//   - Same ADO.NET API as SQLite — portable knowledge
+//   - Parameterised queries prevent SQL injection
+//   - sys.* catalog views give full metadata without external tools
+//
+// Anti-patterns:
+//   - String concatenation in SQL — injection risk
+//   - Not disposing connections — pool exhaustion
+//   - SELECT * in production — always list columns explicitly
+//
+// When to use:
+//   - Direct SQL queries, scripts, notebooks, lightweight services
+//
+// When NOT to use:
+//   - Complex ORM scenarios — use Dapper or EF Core
+
 var connStr = "Server=localhost,1434;Database=stoxx;"
     + "User Id=sa;Password=EsgDev2026Pass1;"
     + "Encrypt=True;TrustServerCertificate=True;";
@@ -1032,71 +1028,45 @@ QueryToTable(conn, @"
 
 #### SQL Server — index fragmentation and maintenance
 
-> [!warning] Index fragmentation — what it is, why it happens, and how to fix it
-> Index fragmentation — what it is, why it happens, and how to fix it
->
-> WHAT IS FRAGMENTATION?
->   SQL Server stores index data in 8KB pages organized as a B-tree.
->   When you INSERT/UPDATE/DELETE, pages split and their physical order
->   diverges from their logical order. This is fragmentation.
->
-> WHY IT MATTERS:
->   Fragmented indexes force SQL Server to read pages out of order,
->   turning efficient sequential I/O into random I/O. A 50% fragmented
->   index can be 2-5x slower for range scans than a 0% one.
->   It also wastes space — half-empty pages waste buffer pool memory.
->
-> WHY IT HAPPENS:
->   - INSERT into the middle of an index → page split
->   - UPDATE that changes the index key → delete + insert = split
->   - DELETE leaves gaps → pages become partially empty
->   - Random GUIDs as clustered key → constant splits (worst case)
->   - Sequential keys (IDENTITY, date) → append-only, minimal splits
->
-> HOW TO FIX:
->   REORGANIZE: online, lightweight, moves pages into order. Good for 10-30%.
->   REBUILD: offline (or online with Enterprise), recreates the entire index.
->            Resets fragmentation to 0%. Good for >30%.
->
-> MAINTENANCE FREQUENCY:
->   - OLTP (frequent writes): check weekly, maintain indexes >10%
->   - Data warehouse (batch loads): rebuild after each ETL load
->   - Read-heavy (few writes): check monthly, rarely needs maintenance
->   - Schedule via SQL Agent job or Azure Maintenance Plan
->   - Always run UPDATE STATISTICS after REBUILD — stale stats = bad plans
->
-> RULES OF THUMB:
->   < 10%  → do nothing
->   10-30% → ALTER INDEX idx ON schema.table REORGANIZE
->   > 30%  → ALTER INDEX idx ON schema.table REBUILD
->   < 1000 pages → don't bother (too small to matter)
-
-> [!tip] INTERPRETING THE RESULTS:
-> INTERPRETING THE RESULTS:
->
-> 95-98% fragmentation on bronze tables (trading_calendar, ohlcv):
->   These tables were bulk-loaded (INSERT from CSV/API) without sorting.
->   Bulk inserts in random order cause massive page splits.
->   CLUSTERED INDEX at 98% means the physical row order is almost
->   completely random relative to the index key — every range scan
->   jumps across the entire file instead of reading sequentially.
->
-> 47-49% fragmentation on silver tables:
->   Silver tables were built from bronze via INSERT...SELECT.
->   Partial ordering from the source means partial fragmentation.
->   Still above 30% — REBUILD is recommended.
->
-> Small page counts (20-51 pages):
->   These are tiny tables. Fragmentation matters less here because
->   the entire table fits in the buffer pool cache. But rebuilding
->   is instant and costs nothing, so do it anyway.
->
-> Larger tables (213-252 pages = ~2MB):
->   At this size, fragmentation starts to have measurable impact.
->   Sequential scans read 2x more pages than necessary at 47% frag.
->   REBUILD will cut scan time significantly.
-
 ```csharp
+// Index fragmentation — what it is, why it happens, and how to fix it
+//
+// WHAT IS FRAGMENTATION?
+//   SQL Server stores index data in 8KB pages organized as a B-tree.
+//   When you INSERT/UPDATE/DELETE, pages split and their physical order
+//   diverges from their logical order. This is fragmentation.
+//
+// WHY IT MATTERS:
+//   Fragmented indexes force SQL Server to read pages out of order,
+//   turning efficient sequential I/O into random I/O. A 50% fragmented
+//   index can be 2-5x slower for range scans than a 0% one.
+//   It also wastes space — half-empty pages waste buffer pool memory.
+//
+// WHY IT HAPPENS:
+//   - INSERT into the middle of an index → page split
+//   - UPDATE that changes the index key → delete + insert = split
+//   - DELETE leaves gaps → pages become partially empty
+//   - Random GUIDs as clustered key → constant splits (worst case)
+//   - Sequential keys (IDENTITY, date) → append-only, minimal splits
+//
+// HOW TO FIX:
+//   REORGANIZE: online, lightweight, moves pages into order. Good for 10-30%.
+//   REBUILD: offline (or online with Enterprise), recreates the entire index.
+//            Resets fragmentation to 0%. Good for >30%.
+//
+// MAINTENANCE FREQUENCY:
+//   - OLTP (frequent writes): check weekly, maintain indexes >10%
+//   - Data warehouse (batch loads): rebuild after each ETL load
+//   - Read-heavy (few writes): check monthly, rarely needs maintenance
+//   - Schedule via SQL Agent job or Azure Maintenance Plan
+//   - Always run UPDATE STATISTICS after REBUILD — stale stats = bad plans
+//
+// RULES OF THUMB:
+//   < 10%  → do nothing
+//   10-30% → ALTER INDEX idx ON schema.table REORGANIZE
+//   > 30%  → ALTER INDEX idx ON schema.table REBUILD
+//   < 1000 pages → don't bother (too small to matter)
+
 QueryToTable(conn, @"
     SELECT TOP 10
            OBJECT_NAME(ips.object_id) AS [Table],
@@ -1113,6 +1083,31 @@ QueryToTable(conn, @"
     JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
     WHERE ips.page_count > 10
     ORDER BY ips.avg_fragmentation_in_percent DESC")
+
+
+// INTERPRETING THE RESULTS:
+//
+// 95-98% fragmentation on bronze tables (trading_calendar, ohlcv):
+//   These tables were bulk-loaded (INSERT from CSV/API) without sorting.
+//   Bulk inserts in random order cause massive page splits.
+//   CLUSTERED INDEX at 98% means the physical row order is almost
+//   completely random relative to the index key — every range scan
+//   jumps across the entire file instead of reading sequentially.
+//
+// 47-49% fragmentation on silver tables:
+//   Silver tables were built from bronze via INSERT...SELECT.
+//   Partial ordering from the source means partial fragmentation.
+//   Still above 30% — REBUILD is recommended.
+//
+// Small page counts (20-51 pages):
+//   These are tiny tables. Fragmentation matters less here because
+//   the entire table fits in the buffer pool cache. But rebuilding
+//   is instant and costs nothing, so do it anyway.
+//
+// Larger tables (213-252 pages = ~2MB):
+//   At this size, fragmentation starts to have measurable impact.
+//   Sequential scans read 2x more pages than necessary at 47% frag.
+//   REBUILD will cut scan time significantly.
 ```
 
 <table style="border-collapse:collapse;font-size:13px;background:transparent"><thead><tr><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Table</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Index</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Type</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Frag %</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Pages</th><th style="text-align:left;padding:4px 10px;border-bottom:1px solid #888;font-weight:600;background:transparent">Action</th></tr></thead><tbody><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK_trading_calendar</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98.7</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">149</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_eurostoxx50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_stoxxusa50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">98.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">PK__oil20_oh__3213E83F22CF352A</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">CLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">95.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_oil20_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">95.0</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">20</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_bronze_stoxxasia50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">94.1</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">51</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxasia50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxasia50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">49.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">247</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">stoxxusa50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_stoxxusa50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">47.4</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">213</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">eurostoxx50_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_eurostoxx50_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">47.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">252</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr><tr><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">oil20_ohlcv</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">IX_silver_oil20_ohlcv_symbol_date</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">NONCLUSTERED INDEX</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">46.2</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">78</td><td style="text-align:left;padding:3px 10px;border-bottom:1px solid rgba(128,128,128,0.2);background:transparent">REBUILD</td></tr></tbody></table>
@@ -1291,27 +1286,26 @@ Console.WriteLine("Ran 13 queries on unindexed columns to provoke recommendation
 
 #### SQL Server — missing index recommendations from the query optimizer
 
-> [!warning] sys.dm_db_missing_index_details — SQL Server’s built-in index advisor
-> sys.dm_db_missing_index_details — SQL Server’s built-in index advisor
->
-> HOW IT WORKS:
->   Every time the query optimizer compiles a plan, it checks whether an
->   index would have reduced the cost. If yes, it records:
->   - equality_columns: columns in WHERE col = ? (should be index key)
->   - inequality_columns: columns in WHERE col > ? (range scan key)
->   - included_columns: columns in SELECT (add as INCLUDE to avoid key lookup)
->   - avg_user_impact: estimated % improvement if the index existed
->
-> WHEN IT’S EMPTY:
->   - After server restart or index REBUILD — DMV stats are in-memory only
->   - If all queries already have good indexes
->   - If no queries have run since the last stats reset
->
-> HOW TO USE THE RECOMMENDATIONS:
->   CREATE INDEX IX_table_col ON schema.table (equality_cols, inequality_cols)
->       INCLUDE (included_columns)
-
 ```csharp
+// sys.dm_db_missing_index_details — SQL Server’s built-in index advisor
+//
+// HOW IT WORKS:
+//   Every time the query optimizer compiles a plan, it checks whether an
+//   index would have reduced the cost. If yes, it records:
+//   - equality_columns: columns in WHERE col = ? (should be index key)
+//   - inequality_columns: columns in WHERE col > ? (range scan key)
+//   - included_columns: columns in SELECT (add as INCLUDE to avoid key lookup)
+//   - avg_user_impact: estimated % improvement if the index existed
+//
+// WHEN IT’S EMPTY:
+//   - After server restart or index REBUILD — DMV stats are in-memory only
+//   - If all queries already have good indexes
+//   - If no queries have run since the last stats reset
+//
+// HOW TO USE THE RECOMMENDATIONS:
+//   CREATE INDEX IX_table_col ON schema.table (equality_cols, inequality_cols)
+//       INCLUDE (included_columns)
+
 QueryToTable(conn, @"
     SELECT TOP 5
            OBJECT_NAME(d.object_id) AS [Table],
@@ -1390,48 +1384,48 @@ QueryToTable(conn, @"
 Quick reference of essential SQL Server DMVs and commands for monitoring,
 tuning, and troubleshooting.
 
-> [!abstract]- SQL Server administration quick reference
-> SQL Server administration quick reference
->
-> METADATA:
->   sys.tables, sys.schemas, sys.columns        Table/column metadata
->   sys.indexes, sys.index_columns              Index definitions
->   sys.partitions                              Row counts per partition
->   OBJECT_ID('schema.table')                   Get object ID for DMV queries
->
-> INDEX MANAGEMENT:
->   sys.dm_db_index_physical_stats               Fragmentation analysis
->   sys.dm_db_index_usage_stats                  Index usage (seeks/scans/updates)
->   sys.dm_db_missing_index_details              Missing index recommendations
->   ALTER INDEX idx ON table REORGANIZE           Defragment online (10-30%)
->   ALTER INDEX idx ON table REBUILD              Full rebuild (>30%)
->   UPDATE STATISTICS table                       Refresh query planner stats
->
-> PERFORMANCE:
->   SET STATISTICS IO ON                          Show logical/physical reads
->   SET STATISTICS TIME ON                        Show CPU/elapsed time
->   sys.dm_exec_query_stats                       Top queries by CPU/reads
->   sys.dm_exec_cached_plans                      Cached execution plans
->   DBCC FREEPROCCACHE                            Clear plan cache (dev only!)
->
-> MONITORING:
->   sys.dm_exec_sessions                          Active connections
->   sys.dm_exec_requests                          Currently running queries
->   sys.dm_os_wait_stats                          Wait type analysis
->   sp_who2                                       Quick session overview
->
-> MAINTENANCE:
->   DBCC CHECKDB                                  Integrity check
->   DBCC SHRINKDATABASE                           Reclaim space (use sparingly)
->   sp_spaceused 'table'                         Table size
->   BACKUP DATABASE db TO DISK = 'path'           Full backup
->
-> CONFIGURATION:
->   sys.configurations                            Server settings
->   sp_configure 'max server memory', 4096        Set max memory (MB)
->   sp_configure 'max degree of parallelism', 4   Set MAXDOP
->   RECONFIGURE                                   Apply sp_configure changes
->
+```csharp
+// SQL Server administration quick reference
+//
+// METADATA:
+//   sys.tables, sys.schemas, sys.columns        Table/column metadata
+//   sys.indexes, sys.index_columns              Index definitions
+//   sys.partitions                              Row counts per partition
+//   OBJECT_ID('schema.table')                   Get object ID for DMV queries
+//
+// INDEX MANAGEMENT:
+//   sys.dm_db_index_physical_stats               Fragmentation analysis
+//   sys.dm_db_index_usage_stats                  Index usage (seeks/scans/updates)
+//   sys.dm_db_missing_index_details              Missing index recommendations
+//   ALTER INDEX idx ON table REORGANIZE           Defragment online (10-30%)
+//   ALTER INDEX idx ON table REBUILD              Full rebuild (>30%)
+//   UPDATE STATISTICS table                       Refresh query planner stats
+//
+// PERFORMANCE:
+//   SET STATISTICS IO ON                          Show logical/physical reads
+//   SET STATISTICS TIME ON                        Show CPU/elapsed time
+//   sys.dm_exec_query_stats                       Top queries by CPU/reads
+//   sys.dm_exec_cached_plans                      Cached execution plans
+//   DBCC FREEPROCCACHE                            Clear plan cache (dev only!)
+//
+// MONITORING:
+//   sys.dm_exec_sessions                          Active connections
+//   sys.dm_exec_requests                          Currently running queries
+//   sys.dm_os_wait_stats                          Wait type analysis
+//   sp_who2                                       Quick session overview
+//
+// MAINTENANCE:
+//   DBCC CHECKDB                                  Integrity check
+//   DBCC SHRINKDATABASE                           Reclaim space (use sparingly)
+//   sp_spaceused 'table'                         Table size
+//   BACKUP DATABASE db TO DISK = 'path'           Full backup
+//
+// CONFIGURATION:
+//   sys.configurations                            Server settings
+//   sp_configure 'max server memory', 4096        Set max memory (MB)
+//   sp_configure 'max degree of parallelism', 4   Set MAXDOP
+//   RECONFIGURE                                   Apply sp_configure changes
+```
 
 #### SQL Server — ODBC Provider with positional parameters
 
@@ -1520,33 +1514,31 @@ Dapper returns **typed objects** (real C# instances with properties). Same diffe
 
 #### Dapper — NuGet setup and record DTOs
 
-> [!warning] Dapper setup — define record DTOs that Dapper maps columns to
-> Dapper setup — define record DTOs that Dapper maps columns to
->
-> Technique: Define a record/class whose property names match SQL column
->   aliases. Dapper matches by name (case-insensitive). No attributes,
->   no configuration — just matching names.
->
-> Benefits:
->   - Auto-mapping — no reader.GetString(0) per column
->   - Parameterised — anonymous objects prevent SQL injection
->   - ~Same performance as raw ADO.NET (IL emission, not reflection)
->   - Full LINQ on results — .Where(), .OrderBy(), .GroupBy()
->
-> Anti-patterns:
->   - Column name mismatch — use AS aliases to match property names
->   - Not disposing connections — use using or connection pooling
->   - Dapper for complex object graphs — use EF Core for navigation props
->
-> When to use:
->   - Services/APIs with known SQL, data pipelines, any typed query
->
-> When NOT to use:
->   - Complex CRUD with relationships — EF Core is more productive
->
-> DTOs — Dapper maps columns to these by matching property names
-
 ```csharp
+// Dapper setup — define record DTOs that Dapper maps columns to
+//
+// Technique: Define a record/class whose property names match SQL column
+//   aliases. Dapper matches by name (case-insensitive). No attributes,
+//   no configuration — just matching names.
+//
+// Benefits:
+//   - Auto-mapping — no reader.GetString(0) per column
+//   - Parameterised — anonymous objects prevent SQL injection
+//   - ~Same performance as raw ADO.NET (IL emission, not reflection)
+//   - Full LINQ on results — .Where(), .OrderBy(), .GroupBy()
+//
+// Anti-patterns:
+//   - Column name mismatch — use AS aliases to match property names
+//   - Not disposing connections — use using or connection pooling
+//   - Dapper for complex object graphs — use EF Core for navigation props
+//
+// When to use:
+//   - Services/APIs with known SQL, data pipelines, any typed query
+//
+// When NOT to use:
+//   - Complex CRUD with relationships — EF Core is more productive
+
+// DTOs — Dapper maps columns to these by matching property names
 record OhlcvRow(string Symbol, DateTime Date, double Open, double High, double Low, double Close, long Volume);
 record IndexInfo(string IndexKey, string DisplayName, string Currency);
 record ScoreRow(string Symbol, double CompositeScore, int CompositeRank);
@@ -1835,37 +1827,36 @@ in-memory database. In production, use SQL Server/PostgreSQL with migrations.
 
 #### EF Core — NuGet packages and entity classes
 
-> [!warning] EF Core setup — entities, DbContext, and in-memory provider
-> EF Core setup — entities, DbContext, and in-memory provider
->
-> Technique: Define entity classes (= tables) with properties (= columns).
->   DbContext maps entities to tables via DbSet<T> properties.
->   In-memory provider for notebooks; SQL Server provider for production.
->
-> Benefits:
->   - LINQ queries — no SQL strings, compile-time checked
->   - Navigation properties — order.Customer.Name traverses relationships
->   - Change tracking — modify objects, SaveChanges() generates SQL
->   - Migrations — schema changes from code, version-controlled
->
-> Anti-patterns:
->   - Lazy loading without understanding N+1 queries
->   - Not using AsNoTracking() for read-only queries
->   - Loading entire tables into memory — use IQueryable, not ToList()
->
-> When to use:
->   - CRUD applications, business logic with complex relationships
->
-> When NOT to use:
->   - Complex analytics SQL (window functions, CTEs) — use Dapper
->   - Bulk operations (100K+ rows) — use SqlBulkCopy or Dapper
->
->
->
-> Entity classes — each class = one database table
-> Properties = columns. Navigation properties = foreign key relationships.
-
 ```csharp
+// EF Core setup — entities, DbContext, and in-memory provider
+//
+// Technique: Define entity classes (= tables) with properties (= columns).
+//   DbContext maps entities to tables via DbSet<T> properties.
+//   In-memory provider for notebooks; SQL Server provider for production.
+//
+// Benefits:
+//   - LINQ queries — no SQL strings, compile-time checked
+//   - Navigation properties — order.Customer.Name traverses relationships
+//   - Change tracking — modify objects, SaveChanges() generates SQL
+//   - Migrations — schema changes from code, version-controlled
+//
+// Anti-patterns:
+//   - Lazy loading without understanding N+1 queries
+//   - Not using AsNoTracking() for read-only queries
+//   - Loading entire tables into memory — use IQueryable, not ToList()
+//
+// When to use:
+//   - CRUD applications, business logic with complex relationships
+//
+// When NOT to use:
+//   - Complex analytics SQL (window functions, CTEs) — use Dapper
+//   - Bulk operations (100K+ rows) — use SqlBulkCopy or Dapper
+
+
+
+// Entity classes — each class = one database table
+// Properties = columns. Navigation properties = foreign key relationships.
+
 public class Stock
 {
     public int Id { get; set; }
@@ -1900,31 +1891,30 @@ public class Trade
 
 #### EF Core — DbContext definition
 
-> [!info] DbContext — the bridge between C# objects and the database
-> DbContext — the bridge between C# objects and the database
->
-> STRUCTURE:
->   DbSet<Stock> Stocks   → maps to the "Stocks" table
->   DbSet<Price> Prices   → maps to the "Prices" table
->   DbSet<Trade> Trades   → maps to the "Trades" table
->
-> OnConfiguring: chooses the database provider
->   UseInMemoryDatabase("name")   → in-memory (for notebooks/tests)
->   UseSqlServer(connStr)         → SQL Server (production)
->   UseNpgsql(connStr)            → PostgreSQL
->
-> OnModelCreating: configures relationships and constraints
->   HasOne / WithMany   → one-to-many relationship (Stock has many Prices)
->   HasForeignKey       → which property is the FK column
->   HasIndex + IsUnique → unique constraint (no duplicate symbols)
->
-> EF Core conventions:
->   - Property named "Id" or "StockId" → auto-detected as primary key
->   - DbSet<Stock> "Stocks" → table name = "Stocks"
->   - Navigation property Stock + StockId → FK auto-detected
->   - OnModelCreating overrides conventions when auto-detection isn't enough
-
 ```csharp
+// DbContext — the bridge between C# objects and the database
+//
+// STRUCTURE:
+//   DbSet<Stock> Stocks   → maps to the "Stocks" table
+//   DbSet<Price> Prices   → maps to the "Prices" table
+//   DbSet<Trade> Trades   → maps to the "Trades" table
+//
+// OnConfiguring: chooses the database provider
+//   UseInMemoryDatabase("name")   → in-memory (for notebooks/tests)
+//   UseSqlServer(connStr)         → SQL Server (production)
+//   UseNpgsql(connStr)            → PostgreSQL
+//
+// OnModelCreating: configures relationships and constraints
+//   HasOne / WithMany   → one-to-many relationship (Stock has many Prices)
+//   HasForeignKey       → which property is the FK column
+//   HasIndex + IsUnique → unique constraint (no duplicate symbols)
+//
+// EF Core conventions:
+//   - Property named "Id" or "StockId" → auto-detected as primary key
+//   - DbSet<Stock> "Stocks" → table name = "Stocks"
+//   - Navigation property Stock + StockId → FK auto-detected
+//   - OnModelCreating overrides conventions when auto-detection isn't enough
+
 public class TradingContext : DbContext
 {
     // Each DbSet = one table. LINQ queries on these generate SQL.
@@ -2146,41 +2136,39 @@ dt
 
 #### EF Core — raw SQL escape hatch with `FromSqlRaw`
 
-> [!danger] FromSqlRaw — raw SQL escape hatch inside EF Core
-> FromSqlRaw — raw SQL escape hatch inside EF Core
->
-> NOT AVAILABLE with InMemory provider — requires a relational database
-> (SQL Server, PostgreSQL, SQLite file). Shown as reference for production use.
->
-> USAGE (with SQL Server provider):
->   var results = db.Stocks
->       .FromSqlRaw("SELECT * FROM Stocks WHERE Sector = {0}", "Technology")
->       .AsNoTracking()
->       .ToList();
->
-> KEY RULES:
->   - Can only return entity types (must match a DbSet<T>)
->   - Use {0}, {1} placeholders — auto-parameterised (safe from injection)
->   - NEVER use string interpolation ($"...{var}...") — injection risk
->   - Can chain LINQ after: .FromSqlRaw(sql).Where(s => s.Active).OrderBy(...)
->   - Results are tracked by default — add .AsNoTracking() for read-only
->
-> FromSqlInterpolated — same but with $ interpolation (auto-parameterised):
->   var sector = "Technology";
->   db.Stocks.FromSqlInterpolated($"SELECT * FROM Stocks WHERE Sector = {sector}")
->   → safe: {sector} becomes @p0 parameter, NOT string concatenation
->
-> WHEN TO USE:
->   - Complex queries LINQ can't express (CTEs, PIVOT, window functions)
->   - Stored procedures: db.Stocks.FromSqlRaw("EXEC sp_GetActiveStocks")
->   - Performance-critical queries where hand-tuned SQL matters
->
-> ALTERNATIVE: use Dapper alongside EF Core for raw SQL queries
->   var results = conn.Query<StockDto>(sql, new { Sector = "Technology" });
->
-> Demo with LINQ instead (works with InMemory provider)
-
 ```csharp
+// FromSqlRaw — raw SQL escape hatch inside EF Core
+//
+// NOT AVAILABLE with InMemory provider — requires a relational database
+// (SQL Server, PostgreSQL, SQLite file). Shown as reference for production use.
+//
+// USAGE (with SQL Server provider):
+//   var results = db.Stocks
+//       .FromSqlRaw("SELECT * FROM Stocks WHERE Sector = {0}", "Technology")
+//       .AsNoTracking()
+//       .ToList();
+//
+// KEY RULES:
+//   - Can only return entity types (must match a DbSet<T>)
+//   - Use {0}, {1} placeholders — auto-parameterised (safe from injection)
+//   - NEVER use string interpolation ($"...{var}...") — injection risk
+//   - Can chain LINQ after: .FromSqlRaw(sql).Where(s => s.Active).OrderBy(...)
+//   - Results are tracked by default — add .AsNoTracking() for read-only
+//
+// FromSqlInterpolated — same but with $ interpolation (auto-parameterised):
+//   var sector = "Technology";
+//   db.Stocks.FromSqlInterpolated($"SELECT * FROM Stocks WHERE Sector = {sector}")
+//   → safe: {sector} becomes @p0 parameter, NOT string concatenation
+//
+// WHEN TO USE:
+//   - Complex queries LINQ can't express (CTEs, PIVOT, window functions)
+//   - Stored procedures: db.Stocks.FromSqlRaw("EXEC sp_GetActiveStocks")
+//   - Performance-critical queries where hand-tuned SQL matters
+//
+// ALTERNATIVE: use Dapper alongside EF Core for raw SQL queries
+//   var results = conn.Query<StockDto>(sql, new { Sector = "Technology" });
+
+// Demo with LINQ instead (works with InMemory provider)
 var techStocks = db.Stocks
     .Where(s => s.Sector == "Technology")    // LINQ → generates WHERE clause
     .AsNoTracking()
@@ -2201,45 +2189,45 @@ Migrations are the killer feature of EF Core — schema changes are version-cont
 C# code, not ad-hoc SQL scripts. Not executable in notebooks (requires project + CLI),
 but this is the production workflow.
 
-> [!tip] EF Core migrations workflow — reference (not executable in notebooks)
-> EF Core migrations workflow — reference (not executable in notebooks)
->
-> SETUP:
->   dotnet add package Microsoft.EntityFrameworkCore.SqlServer
->   dotnet add package Microsoft.EntityFrameworkCore.Design
->   dotnet tool install dotnet-ef
->
-> WORKFLOW:
->   1. Modify entity classes (add property, change type, add table)
->   2. dotnet ef migrations add AddVolumeColumn
->      → generates C# migration file with Up() and Down() methods
->   3. dotnet ef database update
->      → applies pending migrations to the database
->   4. dotnet ef migrations script
->      → generates SQL script (for DBA review in production)
->
-> PRODUCTION CONNECTION (SQL Server):
->   protected override void OnConfiguring(DbContextOptionsBuilder options)
->       => options.UseSqlServer(
->           "Server=localhost,1434;Database=stoxx;User Id=sa;Password=...;");
->
-> MIGRATION BEST PRACTICES:
->   - One migration per logical change (not one per deployment)
->   - Always test Down() — rollbacks must work
->   - Generate SQL scripts for production (dotnet ef migrations script)
->   - Never edit a migration after it has been applied
->   - Use HasData() for seed data that should be in every environment
->
-> EXAMPLE MIGRATION (auto-generated):
->   public partial class AddVolumeColumn : Migration
->   {
->       protected override void Up(MigrationBuilder migrationBuilder)
->           => migrationBuilder.AddColumn<long>("Volume", "Prices");
->
->       protected override void Down(MigrationBuilder migrationBuilder)
->           => migrationBuilder.DropColumn("Volume", "Prices");
->   }
->
+```csharp
+// EF Core migrations workflow — reference (not executable in notebooks)
+//
+// SETUP:
+//   dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+//   dotnet add package Microsoft.EntityFrameworkCore.Design
+//   dotnet tool install dotnet-ef
+//
+// WORKFLOW:
+//   1. Modify entity classes (add property, change type, add table)
+//   2. dotnet ef migrations add AddVolumeColumn
+//      → generates C# migration file with Up() and Down() methods
+//   3. dotnet ef database update
+//      → applies pending migrations to the database
+//   4. dotnet ef migrations script
+//      → generates SQL script (for DBA review in production)
+//
+// PRODUCTION CONNECTION (SQL Server):
+//   protected override void OnConfiguring(DbContextOptionsBuilder options)
+//       => options.UseSqlServer(
+//           "Server=localhost,1434;Database=stoxx;User Id=sa;Password=...;");
+//
+// MIGRATION BEST PRACTICES:
+//   - One migration per logical change (not one per deployment)
+//   - Always test Down() — rollbacks must work
+//   - Generate SQL scripts for production (dotnet ef migrations script)
+//   - Never edit a migration after it has been applied
+//   - Use HasData() for seed data that should be in every environment
+//
+// EXAMPLE MIGRATION (auto-generated):
+//   public partial class AddVolumeColumn : Migration
+//   {
+//       protected override void Up(MigrationBuilder migrationBuilder)
+//           => migrationBuilder.AddColumn<long>("Volume", "Prices");
+//
+//       protected override void Down(MigrationBuilder migrationBuilder)
+//           => migrationBuilder.DropColumn("Volume", "Prices");
+//   }
+```
 
 #### EF Core — when to use EF Core vs Dapper
 
@@ -2278,29 +2266,28 @@ This section demonstrates **all the ways to interact with DuckDB from C#**:
 
 #### DuckDB ADO.NET — open in-memory connection and CREATE TABLE with typed schema
 
-> [!warning] DuckDB with ADO.NET — same pattern as SQLite and SqlClient
-> DuckDB with ADO.NET — same pattern as SQLite and SqlClient
->
-> Technique: DuckDBConnection/DuckDBCommand/DuckDBDataReader implement
->   the standard ADO.NET interfaces. Identical API to SQLite —
->   if you know one, you know the other.
->
-> Benefits:
->   - Same API as SQLite/SqlClient — no new patterns to learn
->   - Columnar engine — 10-100x faster for analytical queries
->   - Full SQL:2003 — window functions, CTEs, QUALIFY, PIVOT
->
-> Anti-patterns:
->   - DuckDB for OLTP (frequent row updates) — use SQL Server
->   - Concurrent writers — DuckDB is single-writer
->
-> When to use:
->   - Analytics, notebooks, ETL validation, file queries
->
-> When NOT to use:
->   - Multi-user transactional systems — use SQL Server/PostgreSQL
-
 ```csharp
+// DuckDB with ADO.NET — same pattern as SQLite and SqlClient
+//
+// Technique: DuckDBConnection/DuckDBCommand/DuckDBDataReader implement
+//   the standard ADO.NET interfaces. Identical API to SQLite —
+//   if you know one, you know the other.
+//
+// Benefits:
+//   - Same API as SQLite/SqlClient — no new patterns to learn
+//   - Columnar engine — 10-100x faster for analytical queries
+//   - Full SQL:2003 — window functions, CTEs, QUALIFY, PIVOT
+//
+// Anti-patterns:
+//   - DuckDB for OLTP (frequent row updates) — use SQL Server
+//   - Concurrent writers — DuckDB is single-writer
+//
+// When to use:
+//   - Analytics, notebooks, ETL validation, file queries
+//
+// When NOT to use:
+//   - Multi-user transactional systems — use SQL Server/PostgreSQL
+
 var duck = new DuckDBConnection("Data Source=:memory:");
 duck.Open();
 
@@ -2546,27 +2533,25 @@ using (var reader = dkCmd.ExecuteReader())
 
 #### DuckDB Appender — INSERT rows without SQL using CreateRow and AppendValue
 
-> [!warning] DuckDB Appender — writes directly to columnar storage
-> DuckDB Appender — writes directly to columnar storage
->
-> Technique: CreateAppender("table") returns a bulk writer that
->   bypasses SQL parsing. CreateRow().AppendValue().EndRow() per row.
->   Close() flushes. 10-100x faster than parameterised INSERT.
->
-> Benefits:
->   - Fastest way to load data into DuckDB
->   - No SQL parsing per row — direct columnar write
->   - Type-safe — AppendValue checks types
->
-> When to use:
->   - Bulk loading from any source (SQL Server, CSV, API)
->
-> When NOT to use:
->   - Single row inserts — regular INSERT is fine
->
-> Create a fresh table for the appender demo
-
 ```csharp
+// DuckDB Appender — writes directly to columnar storage
+//
+// Technique: CreateAppender("table") returns a bulk writer that
+//   bypasses SQL parsing. CreateRow().AppendValue().EndRow() per row.
+//   Close() flushes. 10-100x faster than parameterised INSERT.
+//
+// Benefits:
+//   - Fastest way to load data into DuckDB
+//   - No SQL parsing per row — direct columnar write
+//   - Type-safe — AppendValue checks types
+//
+// When to use:
+//   - Bulk loading from any source (SQL Server, CSV, API)
+//
+// When NOT to use:
+//   - Single row inserts — regular INSERT is fine
+
+// Create a fresh table for the appender demo
 dkCmd.CommandText = "CREATE OR REPLACE TABLE appender_demo (symbol VARCHAR, date DATE, close DOUBLE, volume BIGINT)";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
@@ -2661,15 +2646,14 @@ dt
 
 #### DuckDB Dapper — filter with anonymous object parameters (@Symbol, @MinClose)
 
-> [!info] Dapper with DuckDB — parameterised queries
-> Dapper with DuckDB — parameterised queries
->
-> LIMITATION: DuckDB uses $1 $2 positional params, not @named.
-> Dapper sends @name which DuckDB interprets as a type cast operator.
-> Workaround: use string interpolation (safe when values are not user input)
-> or use ADO.NET with $1 positional params for user-facing queries.
-
 ```csharp
+// Dapper with DuckDB — parameterised queries
+//
+// LIMITATION: DuckDB uses $1 $2 positional params, not @named.
+// Dapper sends @name which DuckDB interprets as a type cast operator.
+// Workaround: use string interpolation (safe when values are not user input)
+// or use ADO.NET with $1 positional params for user-facing queries.
+
 var symbol = "ASML.AS";
 var minClose = 700.0;
 var filtered = duck.Query<DuckOhlcv>(
@@ -2819,31 +2803,30 @@ dt
 
 #### DuckDB SQL — reference of DuckDB-specific features (QUALIFY, PIVOT, EXCLUDE, SAMPLE)
 
-> [!abstract]- DuckDB-specific SQL — quick reference
-> DuckDB-specific SQL — quick reference
->
-> QUALIFY   — filter on window function result (no CTE needed)
->   SELECT *, ROW_NUMBER() OVER (...) AS rn FROM t QUALIFY rn <= 3
->
-> PIVOT / UNPIVOT — rows ↔ columns
->   PIVOT t ON category USING SUM(amount)
->
-> EXCLUDE / REPLACE in SELECT
->   SELECT * EXCLUDE (volume) FROM ohlcv
->   SELECT * REPLACE (ROUND(close, 2) AS close) FROM ohlcv
->
-> SAMPLE — random sampling
->   SELECT * FROM ohlcv USING SAMPLE 10%
->
-> LIST / STRUCT / MAP types
->   SELECT symbol, LIST(close ORDER BY date) FROM ohlcv GROUP BY symbol
->
-> CREATE OR REPLACE — idempotent DDL
-> DESCRIBE / SUMMARIZE — schema + data profiling
-> COPY FROM / TO — bulk import/export (Parquet, CSV, JSON)
-> Direct file queries: SELECT * FROM 'file.parquet'
-
 ```csharp
+// DuckDB-specific SQL — quick reference
+//
+// QUALIFY   — filter on window function result (no CTE needed)
+//   SELECT *, ROW_NUMBER() OVER (...) AS rn FROM t QUALIFY rn <= 3
+//
+// PIVOT / UNPIVOT — rows ↔ columns
+//   PIVOT t ON category USING SUM(amount)
+//
+// EXCLUDE / REPLACE in SELECT
+//   SELECT * EXCLUDE (volume) FROM ohlcv
+//   SELECT * REPLACE (ROUND(close, 2) AS close) FROM ohlcv
+//
+// SAMPLE — random sampling
+//   SELECT * FROM ohlcv USING SAMPLE 10%
+//
+// LIST / STRUCT / MAP types
+//   SELECT symbol, LIST(close ORDER BY date) FROM ohlcv GROUP BY symbol
+//
+// CREATE OR REPLACE — idempotent DDL
+// DESCRIBE / SUMMARIZE — schema + data profiling
+// COPY FROM / TO — bulk import/export (Parquet, CSV, JSON)
+// Direct file queries: SELECT * FROM 'file.parquet'
+
 Console.WriteLine("See comments above for DuckDB-specific SQL features");
 ```
 
@@ -2853,15 +2836,14 @@ Console.WriteLine("See comments above for DuckDB-specific SQL features");
 
 #### DuckDB — CREATE INDEX (ART index for point lookups)
 
-> [!info] DuckDB indexes are optional — the columnar engine is already fast for scans
-> DuckDB indexes are optional — the columnar engine is already fast for scans.
-> Indexes use ART (Adaptive Radix Tree) — different from SQL Server B-tree.
-> They speed up equality filters (WHERE symbol = ?) but NOT range scans.
->
-> DuckDB also uses zone maps (min/max per row group) automatically —
-> these give free predicate pushdown without explicit indexes.
-
 ```csharp
+// DuckDB indexes are optional — the columnar engine is already fast for scans.
+// Indexes use ART (Adaptive Radix Tree) — different from SQL Server B-tree.
+// They speed up equality filters (WHERE symbol = ?) but NOT range scans.
+//
+// DuckDB also uses zone maps (min/max per row group) automatically —
+// these give free predicate pushdown without explicit indexes.
+
 dkCmd.CommandText = "CREATE INDEX idx_ohlcv_symbol ON ohlcv(symbol)";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
@@ -2962,27 +2944,26 @@ without reading any data.
 
 Hierarchy: **Table → Row Group (122K rows) → Column → Segment (compression block + zone map)**
 
-> [!info] Storage stats — zone map min/max per column per segment
-> Storage stats — zone map min/max per column per segment
->
-> WHAT IS A SEGMENT?
->   Within each row group, each column is split into segments —
->   compression blocks that DuckDB manages independently.
->   Each segment has its own zone map (min/max) and compression type.
->
->   Row Group 0 (all rows, since < 122K)
->    └─ Column "symbol"
->        ├─ Segment 0: Min ASML.AS, Max RMS.PA (data block)
->        ├─ Segment 1: Min ABI.BR, Max UCG.MI (data block)
->        ├─ Segment 2: Min BAS.DE, Max VOW.DE (data block)
->        ├─ Segment 3: dictionary metadata (no min/max)
->        └─ ...
->
->   When you query WHERE symbol = 'SAP.DE', DuckDB checks each segment's
->   zone map and skips segments where SAP.DE can't exist.
->   Entries with only [Has Null/No Null] are dictionary/metadata segments.
-
 ```csharp
+// Storage stats — zone map min/max per column per segment
+//
+// WHAT IS A SEGMENT?
+//   Within each row group, each column is split into segments —
+//   compression blocks that DuckDB manages independently.
+//   Each segment has its own zone map (min/max) and compression type.
+//
+//   Row Group 0 (all rows, since < 122K)
+//    └─ Column "symbol"
+//        ├─ Segment 0: Min ASML.AS, Max RMS.PA (data block)
+//        ├─ Segment 1: Min ABI.BR, Max UCG.MI (data block)
+//        ├─ Segment 2: Min BAS.DE, Max VOW.DE (data block)
+//        ├─ Segment 3: dictionary metadata (no min/max)
+//        └─ ...
+//
+//   When you query WHERE symbol = 'SAP.DE', DuckDB checks each segment's
+//   zone map and skips segments where SAP.DE can't exist.
+//   Entries with only [Has Null/No Null] are dictionary/metadata segments.
+
 var statsOnly = new DataTable();
 statsOnly.Columns.Add("row_group_id");
 statsOnly.Columns.Add("column_name");
@@ -3018,44 +2999,42 @@ dt
 
 #### DuckDB — SET memory_limit and threads
 
-> [!info] Tune DuckDB for your workload
-> Tune DuckDB for your workload
->
-> HOW TO DECIDE:
->
-> memory_limit (default: 80% of system RAM)
->   - Controls how much RAM DuckDB can use for query execution
->   - Too low: DuckDB spills to disk (slow) or fails on large queries
->   - Too high: competes with other processes (SQL Server, Python, OS)
->   - RULE: set to 50% of RAM if running alongside SQL Server
->           set to 80% if DuckDB is the only heavy process
->   - Check: if queries fail with "Out of Memory", increase this
->   - Check: if OS starts swapping, decrease this
->
-> threads (default: number of CPU cores)
->   - Controls parallelism — how many cores DuckDB uses per query
->   - More threads = faster for large scans and aggregates
->   - Too many: steals CPU from other services on the same machine
->   - RULE: set to N-2 cores if running alongside other services
->           set to all cores if DuckDB is the only workload
->   - For notebooks: 4 threads is usually enough
->
-> enable_object_cache (default: false)
->   - Caches scanned data between queries — second query on same data is instant
->   - Costs memory — cached data stays in RAM until evicted
->   - RULE: enable for interactive notebooks (re-running queries on same data)
->           disable for one-shot ETL pipelines (data is read once)
->
-> HOW TO KNOW IF TUNING IS NEEDED:
->   1. Query is slow → run EXPLAIN ANALYZE → check if any operator spills to disk
->   2. "Out of Memory" error → increase memory_limit or reduce query scope
->   3. CPU at 100% on all cores → reduce threads if other services need CPU
->   4. Same query runs twice as fast the second time → object cache is helping
->   5. Query on Parquet file is slow → check file size vs memory_limit
->
-> Set memory limit
-
 ```csharp
+// Tune DuckDB for your workload
+//
+// HOW TO DECIDE:
+//
+// memory_limit (default: 80% of system RAM)
+//   - Controls how much RAM DuckDB can use for query execution
+//   - Too low: DuckDB spills to disk (slow) or fails on large queries
+//   - Too high: competes with other processes (SQL Server, Python, OS)
+//   - RULE: set to 50% of RAM if running alongside SQL Server
+//           set to 80% if DuckDB is the only heavy process
+//   - Check: if queries fail with "Out of Memory", increase this
+//   - Check: if OS starts swapping, decrease this
+//
+// threads (default: number of CPU cores)
+//   - Controls parallelism — how many cores DuckDB uses per query
+//   - More threads = faster for large scans and aggregates
+//   - Too many: steals CPU from other services on the same machine
+//   - RULE: set to N-2 cores if running alongside other services
+//           set to all cores if DuckDB is the only workload
+//   - For notebooks: 4 threads is usually enough
+//
+// enable_object_cache (default: false)
+//   - Caches scanned data between queries — second query on same data is instant
+//   - Costs memory — cached data stays in RAM until evicted
+//   - RULE: enable for interactive notebooks (re-running queries on same data)
+//           disable for one-shot ETL pipelines (data is read once)
+//
+// HOW TO KNOW IF TUNING IS NEEDED:
+//   1. Query is slow → run EXPLAIN ANALYZE → check if any operator spills to disk
+//   2. "Out of Memory" error → increase memory_limit or reduce query scope
+//   3. CPU at 100% on all cores → reduce threads if other services need CPU
+//   4. Same query runs twice as fast the second time → object cache is helping
+//   5. Query on Parquet file is slow → check file size vs memory_limit
+
+// Set memory limit
 dkCmd.CommandText = "SET memory_limit = '4GB'";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
@@ -3111,44 +3090,44 @@ Console.WriteLine("VACUUM ANALYZE: stats updated + space reclaimed");
 
 Quick reference of all DuckDB tuning and maintenance commands.
 
-> [!abstract]- DuckDB tuning and maintenance reference
-> DuckDB tuning and maintenance reference
->
-> INDEXES:
->   CREATE INDEX idx ON t(col)              ART index for equality lookups
->   CREATE UNIQUE INDEX idx ON t(col)       Unique constraint
->   DROP INDEX idx                          Remove index
->   duckdb_indexes()                        List all indexes
->
-> STORAGE:
->   CALL pragma_database_size()             Database size
->   CALL pragma_storage_info('table')       Per-column compression + row groups
->   SUMMARIZE table                         Min/max/avg/nulls per column
->   DESCRIBE table                          Column names and types
->
-> MEMORY & THREADS:
->   SET memory_limit = '4GB'                Max memory for query execution
->   SET threads = 4                         Parallelism level
->   SET enable_object_cache = true          Reuse scan results between queries
->
-> MAINTENANCE:
->   VACUUM                                  Reclaim space from deletions
->   VACUUM ANALYZE                          Reclaim space + update statistics
->   CHECKPOINT                              Force WAL flush (file-based DBs)
->   FORCE CHECKPOINT                        Force even if no changes
->
-> EXPLAIN:
->   EXPLAIN sql                             Show query plan (no execution)
->   EXPLAIN ANALYZE sql                     Show plan + actual execution times
->
-> KEY DIFFERENCES FROM SQL SERVER:
->   - Indexes are optional (columnar engine + zone maps handle most cases)
->   - ART indexes, not B-trees (fast for equality, not for ranges)
->   - No ALTER INDEX REBUILD — DuckDB auto-compresses
->   - No UPDATE STATISTICS — use VACUUM ANALYZE
->   - No DBCC CHECKDB — DuckDB uses checksums internally
->   - Memory limit instead of buffer pool — SET memory_limit
->
+```csharp
+// DuckDB tuning and maintenance reference
+//
+// INDEXES:
+//   CREATE INDEX idx ON t(col)              ART index for equality lookups
+//   CREATE UNIQUE INDEX idx ON t(col)       Unique constraint
+//   DROP INDEX idx                          Remove index
+//   duckdb_indexes()                        List all indexes
+//
+// STORAGE:
+//   CALL pragma_database_size()             Database size
+//   CALL pragma_storage_info('table')       Per-column compression + row groups
+//   SUMMARIZE table                         Min/max/avg/nulls per column
+//   DESCRIBE table                          Column names and types
+//
+// MEMORY & THREADS:
+//   SET memory_limit = '4GB'                Max memory for query execution
+//   SET threads = 4                         Parallelism level
+//   SET enable_object_cache = true          Reuse scan results between queries
+//
+// MAINTENANCE:
+//   VACUUM                                  Reclaim space from deletions
+//   VACUUM ANALYZE                          Reclaim space + update statistics
+//   CHECKPOINT                              Force WAL flush (file-based DBs)
+//   FORCE CHECKPOINT                        Force even if no changes
+//
+// EXPLAIN:
+//   EXPLAIN sql                             Show query plan (no execution)
+//   EXPLAIN ANALYZE sql                     Show plan + actual execution times
+//
+// KEY DIFFERENCES FROM SQL SERVER:
+//   - Indexes are optional (columnar engine + zone maps handle most cases)
+//   - ART indexes, not B-trees (fast for equality, not for ranges)
+//   - No ALTER INDEX REBUILD — DuckDB auto-compresses
+//   - No UPDATE STATISTICS — use VACUUM ANALYZE
+//   - No DBCC CHECKDB — DuckDB uses checksums internally
+//   - Memory limit instead of buffer pool — SET memory_limit
+```
 
 ### 6.6 DuckDB vs SQL Server Performance
 
@@ -3494,77 +3473,77 @@ results
 
 #### DuckDB vs Polars — operation mapping reference
 
-> [!info] DuckDB vs Polars.NET — same operations, different syntax
-> DuckDB vs Polars.NET — same operations, different syntax
->
-> Operation          DuckDB (SQL)                              Polars.NET (DataFrame API)
-> ──────────────────  ──────────────────────────────────────  ──────────────────────────────────────────────────
-> Read Parquet       SELECT * FROM 'file.parquet'              DataFrame.ReadParquet(path)
-> Read CSV           SELECT * FROM 'file.csv'                  DataFrame.ReadCsv(path)
-> Read JSON          SELECT * FROM 'file.json'                 DataFrame.ReadJson(path)
-> Filter             WHERE col = 'val'                         df.Filter(Col("col") == Lit("val"))
-> Select             SELECT col1, col2                         df.Select("col1", "col2")
-> Sort               ORDER BY col DESC                         df.Sort("col", descending: true)
-> Limit              LIMIT 10                                  df.Head(10)
-> Group + Agg        GROUP BY ... AVG(col)                     df.GroupBy("col").Agg(Col("col").Mean())
-> Add column         SELECT *, a-b AS c                        df.WithColumns((Col("a")-Col("b")).Alias("c"))
-> Window function    LAG() OVER (PARTITION BY ...)              Not available — use DuckDB
-> CTE                WITH cte AS (...)                          Not available — use DuckDB
-> Export             COPY (...) TO 'file.parquet'              df.WriteParquet(path)
->
+```csharp
+// DuckDB vs Polars.NET — same operations, different syntax
+//
+// Operation          DuckDB (SQL)                              Polars.NET (DataFrame API)
+// ──────────────────  ──────────────────────────────────────  ──────────────────────────────────────────────────
+// Read Parquet       SELECT * FROM 'file.parquet'              DataFrame.ReadParquet(path)
+// Read CSV           SELECT * FROM 'file.csv'                  DataFrame.ReadCsv(path)
+// Read JSON          SELECT * FROM 'file.json'                 DataFrame.ReadJson(path)
+// Filter             WHERE col = 'val'                         df.Filter(Col("col") == Lit("val"))
+// Select             SELECT col1, col2                         df.Select("col1", "col2")
+// Sort               ORDER BY col DESC                         df.Sort("col", descending: true)
+// Limit              LIMIT 10                                  df.Head(10)
+// Group + Agg        GROUP BY ... AVG(col)                     df.GroupBy("col").Agg(Col("col").Mean())
+// Add column         SELECT *, a-b AS c                        df.WithColumns((Col("a")-Col("b")).Alias("c"))
+// Window function    LAG() OVER (PARTITION BY ...)              Not available — use DuckDB
+// CTE                WITH cte AS (...)                          Not available — use DuckDB
+// Export             COPY (...) TO 'file.parquet'              df.WriteParquet(path)
+```
 
 #### DuckDB vs Polars — decision guide
 
-> [!example] Decision guide
-> Decision guide
->
-> Scenario                                 Use            Why
-> ─────────────────────────────────────────  ──────────────  ────────────────────────────────────────
-> Complex SQL (joins, CTEs, windows)       DuckDB         Full SQL:2003 support
-> Ad-hoc file exploration                  DuckDB         SQL on files, no code needed
-> DataFrame transforms                    Polars.NET     Method chaining, lazy eval
-> ML pipeline preprocessing               Polars.NET     DataFrame API integrates with ML
-> Export results to Parquet                Either         DuckDB COPY or Polars WriteParquet
-> Notebook data exploration               DuckDB         Write SQL directly, instant results
-> Production ETL validation               DuckDB         SQL assertions on file data
-> Both in same project                    Yes            DuckDB for SQL, Polars for transforms
->
+```csharp
+// Decision guide
+//
+// Scenario                                 Use            Why
+// ─────────────────────────────────────────  ──────────────  ────────────────────────────────────────
+// Complex SQL (joins, CTEs, windows)       DuckDB         Full SQL:2003 support
+// Ad-hoc file exploration                  DuckDB         SQL on files, no code needed
+// DataFrame transforms                    Polars.NET     Method chaining, lazy eval
+// ML pipeline preprocessing               Polars.NET     DataFrame API integrates with ML
+// Export results to Parquet                Either         DuckDB COPY or Polars WriteParquet
+// Notebook data exploration               DuckDB         Write SQL directly, instant results
+// Production ETL validation               DuckDB         SQL assertions on file data
+// Both in same project                    Yes            DuckDB for SQL, Polars for transforms
+```
 
 ## 8. Summary
 
-> [!abstract]- Summary — C# database cheat sheet
-> Summary — C# database cheat sheet
->
-> SQLITE (Microsoft.Data.Sqlite):
-> new SqliteConnection("DataSource=:memory:")    In-memory DB
-> sqlCmd.Parameters.AddWithValue("@p", value)       Named parameter
-> reader.GetString(0), reader.GetInt32(1)        Typed column access
-> reader["column_name"]                          Name-based access
-> conn.BeginTransaction() + tx.Commit()          Explicit transaction
->
-> SQL SERVER (Microsoft.Data.SqlClient):
-> new SqlConnection(connStr)                     Connect
-> new SqlCommand(sql, conn)                      Create command
-> sqlCmd.ExecuteReader()                            SELECT → reader
-> sqlCmd.ExecuteNonQuery()                          INSERT/UPDATE/DELETE
-> sqlCmd.ExecuteScalar()                            Single value
->
-> DAPPER (micro-ORM):
-> conn.Query<T>(sql, @params)                    SQL → List<T>
-> conn.QueryFirst<T>(sql)                        SQL → single T
-> conn.Execute(sql, @params)                     INSERT/UPDATE/DELETE
->
-> PYTHON EQUIVALENTS:
-> SqliteConnection      → sqlite3.connect()
-> SqlConnection          → pyodbc.connect()
-> SqlCommand             → cursor.execute()
-> SqlDataReader          → cursor.fetchall()
-> @param                 → ? placeholder
-> Dapper                 → pd.read_sql() / SQLAlchemy
-> BeginTransaction()     → with conn: (context manager)
->
-> MEDALLION ARCHITECTURE (stoxx database):
-> Bronze: raw ingested data (latest batch, dim tables)
-> Silver: cleaned, deduplicated, SCD-2, full OHLCV history
-> Gold:   composite scores (value/momentum/sentiment), index performance
->
+```csharp
+// Summary — C# database cheat sheet
+//
+// SQLITE (Microsoft.Data.Sqlite):
+// new SqliteConnection("DataSource=:memory:")    In-memory DB
+// sqlCmd.Parameters.AddWithValue("@p", value)       Named parameter
+// reader.GetString(0), reader.GetInt32(1)        Typed column access
+// reader["column_name"]                          Name-based access
+// conn.BeginTransaction() + tx.Commit()          Explicit transaction
+//
+// SQL SERVER (Microsoft.Data.SqlClient):
+// new SqlConnection(connStr)                     Connect
+// new SqlCommand(sql, conn)                      Create command
+// sqlCmd.ExecuteReader()                            SELECT → reader
+// sqlCmd.ExecuteNonQuery()                          INSERT/UPDATE/DELETE
+// sqlCmd.ExecuteScalar()                            Single value
+//
+// DAPPER (micro-ORM):
+// conn.Query<T>(sql, @params)                    SQL → List<T>
+// conn.QueryFirst<T>(sql)                        SQL → single T
+// conn.Execute(sql, @params)                     INSERT/UPDATE/DELETE
+//
+// PYTHON EQUIVALENTS:
+// SqliteConnection      → sqlite3.connect()
+// SqlConnection          → pyodbc.connect()
+// SqlCommand             → cursor.execute()
+// SqlDataReader          → cursor.fetchall()
+// @param                 → ? placeholder
+// Dapper                 → pd.read_sql() / SQLAlchemy
+// BeginTransaction()     → with conn: (context manager)
+//
+// MEDALLION ARCHITECTURE (stoxx database):
+// Bronze: raw ingested data (latest batch, dim tables)
+// Silver: cleaned, deduplicated, SCD-2, full OHLCV history
+// Gold:   composite scores (value/momentum/sentiment), index performance
+```

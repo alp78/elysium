@@ -24,28 +24,27 @@ Topics covered:
 
 #### Imports and warning suppression
 
-> [!warning] Imports — namespaces for date/time, math, logging, and configuration
-> Imports — namespaces for date/time, math, logging, and configuration
->
-> Technique: Import System.Globalization, Microsoft.Extensions.Logging,
->   and Microsoft.Extensions.Configuration namespaces. Suppress CS1701/CS1702.
->
-> Benefits:
->   - All dependencies visible in one cell
->   - Warning suppression keeps output clean
->
-> Anti-patterns:
->   - Importing inside methods — hard to track
->
-> When to use:
->   - Top of every notebook using these libraries
->
-> When NOT to use:
->   - N/A — imports always belong at the top
->
-> Suppress CS1701/CS1702 warnings and import namespaces used in this notebook
-
 ```csharp
+// Imports — namespaces for date/time, math, logging, and configuration
+//
+// Technique: Import System.Globalization, Microsoft.Extensions.Logging,
+//   and Microsoft.Extensions.Configuration namespaces. Suppress CS1701/CS1702.
+//
+// Benefits:
+//   - All dependencies visible in one cell
+//   - Warning suppression keeps output clean
+//
+// Anti-patterns:
+//   - Importing inside methods — hard to track
+//
+// When to use:
+//   - Top of every notebook using these libraries
+//
+// When NOT to use:
+//   - N/A — imports always belong at the top
+
+// Suppress CS1701/CS1702 warnings and import namespaces used in this notebook
+
 using System.Globalization;
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -77,33 +76,31 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 #### Creating date and time objects
 
-> [!warning] Creating date and time objects — DateTime, DateOnly, TimeOnly
-> Creating date and time objects — DateTime, DateOnly, TimeOnly
->
-> Technique: DateTime.Now for local, DateTime.UtcNow for UTC. DateOnly
->   for dates without time. TimeOnly for times without date. DateTimeOffset
->   carries timezone offset. Always prefer UTC for storage.
->
-> Benefits:
->   - Separate types for date-only and time-only prevent misuse
->   - DateTimeOffset preserves timezone — no ambiguity
->   - UtcNow is monotonic — no DST jumps
->
-> Anti-patterns:
->   - DateTime.Now for storage — timezone-dependent; use UtcNow
->   - Comparing DateTime with different Kinds — undefined behavior
->
-> When to use:
->   - UtcNow for timestamps; DateOnly for calendar dates; DateTimeOffset for cross-zone
->
-> When NOT to use:
->   - DateTime.Now for cross-timezone systems — use DateTimeOffset
->
-> Creating date and time objects
->
-> Current date and time
-
 ```csharp
+// Creating date and time objects — DateTime, DateOnly, TimeOnly
+//
+// Technique: DateTime.Now for local, DateTime.UtcNow for UTC. DateOnly
+//   for dates without time. TimeOnly for times without date. DateTimeOffset
+//   carries timezone offset. Always prefer UTC for storage.
+//
+// Benefits:
+//   - Separate types for date-only and time-only prevent misuse
+//   - DateTimeOffset preserves timezone — no ambiguity
+//   - UtcNow is monotonic — no DST jumps
+//
+// Anti-patterns:
+//   - DateTime.Now for storage — timezone-dependent; use UtcNow
+//   - Comparing DateTime with different Kinds — undefined behavior
+//
+// When to use:
+//   - UtcNow for timestamps; DateOnly for calendar dates; DateTimeOffset for cross-zone
+//
+// When NOT to use:
+//   - DateTime.Now for cross-timezone systems — use DateTimeOffset
+
+// Creating date and time objects
+
+// Current date and time
 DateTime now = DateTime.Now;        // local time
 DateTime utcNow = DateTime.UtcNow;  // UTC time
 DateOnly today = DateOnly.FromDateTime(DateTime.Now);  // date only (.NET 6+)
@@ -334,20 +331,20 @@ Console.WriteLine($"o  Round-trip:    {dt.ToString("o")}");
 
 #### Custom format strings
 
-> [!info]- Custom format strings — combine specifiers for any date/time layout
-> Custom format strings — combine specifiers for any date/time layout
->
-> ISO 8601:       {dt.ToString("yyyy-MM-dd'T'HH:mm:ss")}
-> Date only:      {dt.ToString("yyyy-MM-dd")}
-> Time only:      {dt.ToString("HH:mm:ss")}
-> US format:      {dt.ToString("MM/dd/yyyy")}
-> EU format:      {dt.ToString("dd/MM/yyyy")}
-> Long date:      {dt.ToString("MMMM dd, yyyy")}
-> 12-hour:        {dt.ToString("hh:mm tt")}
-> Day of week:    {dt.ToString("dddd")}
-> With fraction:  {dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff")}
-> Compact:        {dt.ToString("yyyyMMddHHmmss")}
->
+```csharp
+// Custom format strings — combine specifiers for any date/time layout
+
+Console.WriteLine($"ISO 8601:       {dt.ToString("yyyy-MM-dd'T'HH:mm:ss")}");
+Console.WriteLine($"Date only:      {dt.ToString("yyyy-MM-dd")}");
+Console.WriteLine($"Time only:      {dt.ToString("HH:mm:ss")}");
+Console.WriteLine($"US format:      {dt.ToString("MM/dd/yyyy")}");
+Console.WriteLine($"EU format:      {dt.ToString("dd/MM/yyyy")}");
+Console.WriteLine($"Long date:      {dt.ToString("MMMM dd, yyyy")}");
+Console.WriteLine($"12-hour:        {dt.ToString("hh:mm tt")}");
+Console.WriteLine($"Day of week:    {dt.ToString("dddd")}");
+Console.WriteLine($"With fraction:  {dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff")}");
+Console.WriteLine($"Compact:        {dt.ToString("yyyyMMddHHmmss")}");
+```
 
     ISO 8601:       2024-03-15T14:30:45
     Date only:      2024-03-15
@@ -580,14 +577,14 @@ Console.WriteLine($"Total hours:        {diff.TotalHours}");
 
 #### Comparing dates
 
-> [!info]- Comparing dates — operators and DateTime.Compare
-> Comparing dates — operators and DateTime.Compare
->
-> dt1 < dt2:   {dt1 < dt2}
-> dt1 == dt2:  {dt1 == dt2}
-> dt1 > dt2:   {dt1 > dt2}
-> Compare:     {DateTime.Compare(dt1, dt2)}
->
+```csharp
+// Comparing dates — operators and DateTime.Compare
+
+Console.WriteLine($"dt1 < dt2:   {dt1 < dt2}");
+Console.WriteLine($"dt1 == dt2:  {dt1 == dt2}");
+Console.WriteLine($"dt1 > dt2:   {dt1 > dt2}");
+Console.WriteLine($"Compare:     {DateTime.Compare(dt1, dt2)}");
+```
 
     dt1 < dt2:   True
     dt1 == dt2:  False
@@ -729,34 +726,34 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 <h4><code style="font-size:0.75em">Math</code> class</h4>
 
-> [!danger]- Math class — basic arithmetic functions (Abs, Max, Min, Clamp)
-> Math class — basic arithmetic functions (Abs, Max, Min, Clamp)
->
-> Technique: Math.Abs for absolute value, Math.Max/Min for comparisons,
->   Math.Clamp(value, min, max) restricts to a range. All static methods
->   on the Math class — no instance needed.
->
-> Benefits:
->   - Built-in — no external library for common math operations
->   - Clamp replaces manual if/else for range restriction
->   - Overloaded for int, double, decimal, etc.
->
-> Anti-patterns:
->   - Manual if/else for clamping — Math.Clamp is one call
->   - Abs on unsigned types — unnecessary, always positive
->
-> When to use:
->   - Data normalization, bounds checking, absolute differences
->
-> When NOT to use:
->   - Complex math — use MathNet.Numerics library
->
-> Basic math — Abs, Max, Min, Clamp; all static methods on Math class
-> Abs(-42):        {Math.Abs(-42)}
-> Max(10, 20):     {Math.Max(10, 20)}
-> Min(10, 20):     {Math.Min(10, 20)}
-> Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}
->
+```csharp
+// Math class — basic arithmetic functions (Abs, Max, Min, Clamp)
+//
+// Technique: Math.Abs for absolute value, Math.Max/Min for comparisons,
+//   Math.Clamp(value, min, max) restricts to a range. All static methods
+//   on the Math class — no instance needed.
+//
+// Benefits:
+//   - Built-in — no external library for common math operations
+//   - Clamp replaces manual if/else for range restriction
+//   - Overloaded for int, double, decimal, etc.
+//
+// Anti-patterns:
+//   - Manual if/else for clamping — Math.Clamp is one call
+//   - Abs on unsigned types — unnecessary, always positive
+//
+// When to use:
+//   - Data normalization, bounds checking, absolute differences
+//
+// When NOT to use:
+//   - Complex math — use MathNet.Numerics library
+
+// Basic math — Abs, Max, Min, Clamp; all static methods on Math class
+Console.WriteLine($"Abs(-42):        {Math.Abs(-42)}");
+Console.WriteLine($"Max(10, 20):     {Math.Max(10, 20)}");
+Console.WriteLine($"Min(10, 20):     {Math.Min(10, 20)}");
+Console.WriteLine($"Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}");
+```
 
     Abs(-42):        42
     Max(10, 20):     20
@@ -765,16 +762,16 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 #### Rounding
 
-> [!info]- Rounding — Floor, Ceiling, Round, and banker's rounding
-> Rounding — Floor, Ceiling, Round, and banker's rounding
->
-> Floor(3.7):      {Math.Floor(3.7)}
-> Ceiling(3.2):    {Math.Ceiling(3.2)}
-> Round(3.5):      {Math.Round(3.5)}
-> Round(2.5):      {Math.Round(2.5)}
-> Round(2.5, AwayFromZero): {Math.Round(2.5, MidpointRounding.AwayFromZero)}
-> Truncate(3.9):   {Math.Truncate(3.9)}
->
+```csharp
+// Rounding — Floor, Ceiling, Round, and banker's rounding
+
+Console.WriteLine($"Floor(3.7):      {Math.Floor(3.7)}");         // → 3
+Console.WriteLine($"Ceiling(3.2):    {Math.Ceiling(3.2)}");       // → 4
+Console.WriteLine($"Round(3.5):      {Math.Round(3.5)}");         // → 4 (banker's)
+Console.WriteLine($"Round(2.5):      {Math.Round(2.5)}");         // → 2 (banker's — rounds to even!)
+Console.WriteLine($"Round(2.5, AwayFromZero): {Math.Round(2.5, MidpointRounding.AwayFromZero)}"); // → 3
+Console.WriteLine($"Truncate(3.9):   {Math.Truncate(3.9)}");
+```
 
     Floor(3.7):      3
     Ceiling(3.2):    4
@@ -785,17 +782,17 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 #### Powers, roots, and logarithms
 
-> [!info]- Powers, roots, and logarithms — Pow, Sqrt, Log, Exp
-> Powers, roots, and logarithms — Pow, Sqrt, Log, Exp
->
-> Pow(2, 10):      {Math.Pow(2, 10)}
-> Sqrt(144):       {Math.Sqrt(144)}
-> Cbrt(27):        {Math.Cbrt(27)}
-> Log(100):        {Math.Log(100)}
-> Log10(100):      {Math.Log10(100)}
-> Log2(1024):      {Math.Log2(1024)}
-> Exp(1):          {Math.Exp(1)}
->
+```csharp
+// Powers, roots, and logarithms — Pow, Sqrt, Log, Exp
+
+Console.WriteLine($"Pow(2, 10):      {Math.Pow(2, 10)}");        // 2^10 = 1024
+Console.WriteLine($"Sqrt(144):       {Math.Sqrt(144)}");          // √144 = 12
+Console.WriteLine($"Cbrt(27):        {Math.Cbrt(27)}");           // ∛27 = 3
+Console.WriteLine($"Log(100):        {Math.Log(100)}");           // natural log (ln)
+Console.WriteLine($"Log10(100):      {Math.Log10(100)}");         // log base 10
+Console.WriteLine($"Log2(1024):      {Math.Log2(1024)}");         // log base 2
+Console.WriteLine($"Exp(1):          {Math.Exp(1)}");
+```
 
     Pow(2, 10):      1024
     Sqrt(144):       12
@@ -807,16 +804,16 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 #### Trigonometry and constants
 
-> [!info]- Trigonometry and constants — PI, E, Tau, Sin, Cos, Atan2
-> Trigonometry and constants — PI, E, Tau, Sin, Cos, Atan2
->
-> PI:              {Math.PI}
-> E:               {Math.E}
-> Tau:             {Math.Tau}
-> Sin(π/2):        {Math.Sin(Math.PI / 2)}
-> Cos(0):          {Math.Cos(0)}
-> Atan2(1, 1):     {Math.Atan2(1, 1)}
->
+```csharp
+// Trigonometry and constants — PI, E, Tau, Sin, Cos, Atan2
+
+Console.WriteLine($"PI:              {Math.PI}");
+Console.WriteLine($"E:               {Math.E}");
+Console.WriteLine($"Tau:             {Math.Tau}");
+Console.WriteLine($"Sin(π/2):        {Math.Sin(Math.PI / 2)}");
+Console.WriteLine($"Cos(0):          {Math.Cos(0)}");
+Console.WriteLine($"Atan2(1, 1):     {Math.Atan2(1, 1)}");
+```
 
     PI:              3.141592653589793
     E:               2.718281828459045
@@ -827,14 +824,14 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 #### Special float values and NaN
 
-> [!info]- Special float values and NaN — detection and propagation rules
-> Special float values and NaN — detection and propagation rules
->
-> double.NaN:            {double.NaN}
-> double.PositiveInf:    {double.PositiveInfinity}
-> IsNaN(0.0/0.0):        {double.IsNaN(0.0 / 0.0)}
-> IsInfinity(1.0/0.0):   {double.IsInfinity(1.0 / 0.0)}
->
+```csharp
+// Special float values and NaN — detection and propagation rules
+
+Console.WriteLine($"double.NaN:            {double.NaN}");
+Console.WriteLine($"double.PositiveInf:    {double.PositiveInfinity}");
+Console.WriteLine($"IsNaN(0.0/0.0):        {double.IsNaN(0.0 / 0.0)}");
+Console.WriteLine($"IsInfinity(1.0/0.0):   {double.IsInfinity(1.0 / 0.0)}");
+```
 
     double.NaN:            NaN
     double.PositiveInf:    ∞
@@ -951,45 +948,45 @@ for (int i = 0; i < 8; i++)
 
 #### Basic logging setup
 
-> [!danger] Basic logging setup — Microsoft.Extensions.Logging with console provider
-> Basic logging setup — Microsoft.Extensions.Logging with console provider
->
-> Technique: ILoggerFactory creates typed loggers. AddSimpleConsole configures
->   format with timestamp. LogLevel filters: Trace < Debug < Information <
->   Warning < Error < Critical. SetMinimumLevel controls output verbosity.
->
-> Benefits:
->   - Standard .NET logging — same API for console, file, cloud
->   - Log levels enable filtering without code changes
->   - ILogger<T> provides category-based filtering
->
-> Anti-patterns:
->   - Console.WriteLine for logging — no levels, timestamps, or filtering
->   - Hardcoded log level — use configuration for runtime control
->
-> When to use:
->   - Every .NET application — structured logging is a best practice
->
-> When NOT to use:
->   - N/A — logging is always appropriate for production code
->
->
-> Logging in .NET — Microsoft.Extensions.Logging
-> The standard logging abstraction for .NET apps, pipelines, and services.
->
-> KEY CONCEPTS:
-> - ILogger<T>: the logging interface — you inject it, never create directly.
-> - LogLevel: Trace < Debug < Information < Warning < Error < Critical
-> - Structured logging: log key-value pairs, not just strings.
->   e.g., logger.LogInformation("Processed {Count} rows", rowCount)
->   The {Count} is a named placeholder — logging backends (Seq, ELK, GCP) index it.
-> - In notebooks/scripts we use LoggerFactory directly (no DI container).
->
-> ── Basic console logging ──
-> In a real app, this comes from dependency injection (builder.Services.AddLogging()).
-> In a notebook/script, we build the factory manually.
-
 ```csharp
+// Basic logging setup — Microsoft.Extensions.Logging with console provider
+//
+// Technique: ILoggerFactory creates typed loggers. AddSimpleConsole configures
+//   format with timestamp. LogLevel filters: Trace < Debug < Information <
+//   Warning < Error < Critical. SetMinimumLevel controls output verbosity.
+//
+// Benefits:
+//   - Standard .NET logging — same API for console, file, cloud
+//   - Log levels enable filtering without code changes
+//   - ILogger<T> provides category-based filtering
+//
+// Anti-patterns:
+//   - Console.WriteLine for logging — no levels, timestamps, or filtering
+//   - Hardcoded log level — use configuration for runtime control
+//
+// When to use:
+//   - Every .NET application — structured logging is a best practice
+//
+// When NOT to use:
+//   - N/A — logging is always appropriate for production code
+
+
+// Logging in .NET — Microsoft.Extensions.Logging
+// The standard logging abstraction for .NET apps, pipelines, and services.
+//
+// KEY CONCEPTS:
+// - ILogger<T>: the logging interface — you inject it, never create directly.
+// - LogLevel: Trace < Debug < Information < Warning < Error < Critical
+// - Structured logging: log key-value pairs, not just strings.
+//   e.g., logger.LogInformation("Processed {Count} rows", rowCount)
+//   The {Count} is a named placeholder — logging backends (Seq, ELK, GCP) index it.
+// - In notebooks/scripts we use LoggerFactory directly (no DI container).
+
+// ── Basic console logging ──
+// In a real app, this comes from dependency injection (builder.Services.AddLogging()).
+// In a notebook/script, we build the factory manually.
+
+
 {
     using var factory = LoggerFactory.Create(builder =>
     {
@@ -1069,31 +1066,29 @@ for (int i = 0; i < 8; i++)
 
 #### Environment variables
 
-> [!warning] Environment variables — reading system and process-level configuration
-> Environment variables — reading system and process-level configuration
->
-> Technique: Environment.GetEnvironmentVariable("NAME") reads a single var.
->   GetEnvironmentVariables() returns all as IDictionary. Common for
->   secrets, connection strings, and deployment-specific settings.
->
-> Benefits:
->   - Standard — works across all platforms and deployment targets
->   - No files to manage — values set by the runtime environment
->   - Secure for secrets — not stored in source code
->
-> Anti-patterns:
->   - Hardcoding secrets in code — use env vars or secret managers
->   - Not providing defaults — crash when env var is missing
->
-> When to use:
->   - Connection strings, API keys, deployment-specific config
->
-> When NOT to use:
->   - Complex structured config — use appsettings.json + IConfiguration
->
-> Read common env vars
-
 ```csharp
+// Environment variables — reading system and process-level configuration
+//
+// Technique: Environment.GetEnvironmentVariable("NAME") reads a single var.
+//   GetEnvironmentVariables() returns all as IDictionary. Common for
+//   secrets, connection strings, and deployment-specific settings.
+//
+// Benefits:
+//   - Standard — works across all platforms and deployment targets
+//   - No files to manage — values set by the runtime environment
+//   - Secure for secrets — not stored in source code
+//
+// Anti-patterns:
+//   - Hardcoding secrets in code — use env vars or secret managers
+//   - Not providing defaults — crash when env var is missing
+//
+// When to use:
+//   - Connection strings, API keys, deployment-specific config
+//
+// When NOT to use:
+//   - Complex structured config — use appsettings.json + IConfiguration
+
+// Read common env vars
 Console.WriteLine($"USERNAME:              {Environment.GetEnvironmentVariable("USERNAME")}");
 Console.WriteLine($"COMPUTERNAME:          {Environment.GetEnvironmentVariable("COMPUTERNAME")}");
 Console.WriteLine($"OS:                    {Environment.GetEnvironmentVariable("OS")}");

@@ -102,13 +102,13 @@ Console.WriteLine($"obj?.ToString():    '{obj?.ToString() ?? "(null)"}'");
 
 #### Repetition & Concatenation
 
-> [!info]- String repetition and concatenation — no * operator in C#
-> String repetition and concatenation — no * operator in C#
->
-> new string('*', 5):  '{new string('*', 5)}'
-> string.Concat(Enumerable.Repeat(\"ha\", 3)): '{string.Concat(Enumerable.Repeat("ha", 3))}'
-> \"hello\" + \" \" + \"world\": '{"hello" + " " + "world"}'
->
+```csharp
+// String repetition and concatenation — no * operator in C#
+
+Console.WriteLine($"new string('*', 5):  '{new string('*', 5)}'");
+Console.WriteLine($"string.Concat(Enumerable.Repeat(\"ha\", 3)): '{string.Concat(Enumerable.Repeat("ha", 3))}'");
+Console.WriteLine($"\"hello\" + \" \" + \"world\": '{"hello" + " " + "world"}'");
+```
 
     new string('*', 5):  '*****'
     string.Concat(Enumerable.Repeat("ha", 3)): 'hahaha'
@@ -156,30 +156,29 @@ Console.WriteLine($"Modified: {s}");
 
 #### Indexing (0-based)
 
-> [!warning] Indexing and slicing — s[i], s[^i], and s[a..b] range syntax
-> Indexing and slicing — s[i], s[^i], and s[a..b] range syntax
->
-> Technique: s[i] returns a char at position i. s[^i] indexes from the
->   end (^1 = last char). s[a..b] returns a substring (Range syntax, C# 8+).
->   Ranges are exclusive on the right: s[0..5] = first 5 chars.
->
-> Benefits:
->   - ^i eliminates s[s.Length - i] boilerplate for end-relative access
->   - Range syntax s[2..5] is more readable than Substring(2, 3)
->   - Consistent with array slicing — same syntax for strings and arrays
->
-> Anti-patterns:
->   - Forgetting ranges are right-exclusive — s[0..5] is indices 0-4
->   - Using Substring when range syntax is available (C# 8+)
->   - No step/stride support — must use LINQ for every-nth-char
->
-> When to use:
->   - Extracting substrings, accessing characters, end-relative indexing
->
-> When NOT to use:
->   - Pattern extraction — use Regex or Split instead of index math
-
 ```csharp
+// Indexing and slicing — s[i], s[^i], and s[a..b] range syntax
+//
+// Technique: s[i] returns a char at position i. s[^i] indexes from the
+//   end (^1 = last char). s[a..b] returns a substring (Range syntax, C# 8+).
+//   Ranges are exclusive on the right: s[0..5] = first 5 chars.
+//
+// Benefits:
+//   - ^i eliminates s[s.Length - i] boilerplate for end-relative access
+//   - Range syntax s[2..5] is more readable than Substring(2, 3)
+//   - Consistent with array slicing — same syntax for strings and arrays
+//
+// Anti-patterns:
+//   - Forgetting ranges are right-exclusive — s[0..5] is indices 0-4
+//   - Using Substring when range syntax is available (C# 8+)
+//   - No step/stride support — must use LINQ for every-nth-char
+//
+// When to use:
+//   - Extracting substrings, accessing characters, end-relative indexing
+//
+// When NOT to use:
+//   - Pattern extraction — use Regex or Split instead of index math
+
 string s = "Hello, World!";
 //           0123456789...
 
@@ -291,28 +290,27 @@ for (int i = 0; i < 5; i++)
 
 #### Case Methods
 
-> [!warning] Case methods — ToUpper, ToLower, ToTitleCase for case conversion
-> Case methods — ToUpper, ToLower, ToTitleCase for case conversion
->
-> Technique: ToUpper()/ToLower() convert all characters. ToTitleCase()
->   (via CultureInfo.CurrentCulture.TextInfo) capitalizes each word.
->   No built-in swapcase or casefold — use LINQ for custom transforms.
->
-> Benefits:
->   - Culture-aware — ToUpper(CultureInfo) handles locale-specific rules
->   - ToTitleCase handles word boundary detection automatically
->
-> Anti-patterns:
->   - Using ToUpper() for case-insensitive comparison — use StringComparison.OrdinalIgnoreCase
->   - Ignoring culture — Turkish 'i' uppercases to 'İ', not 'I'
->
-> When to use:
->   - Display formatting, normalization, case-insensitive search prep
->
-> When NOT to use:
->   - Case-insensitive comparison — use string.Equals with OrdinalIgnoreCase
-
 ```csharp
+// Case methods — ToUpper, ToLower, ToTitleCase for case conversion
+//
+// Technique: ToUpper()/ToLower() convert all characters. ToTitleCase()
+//   (via CultureInfo.CurrentCulture.TextInfo) capitalizes each word.
+//   No built-in swapcase or casefold — use LINQ for custom transforms.
+//
+// Benefits:
+//   - Culture-aware — ToUpper(CultureInfo) handles locale-specific rules
+//   - ToTitleCase handles word boundary detection automatically
+//
+// Anti-patterns:
+//   - Using ToUpper() for case-insensitive comparison — use StringComparison.OrdinalIgnoreCase
+//   - Ignoring culture — Turkish 'i' uppercases to 'İ', not 'I'
+//
+// When to use:
+//   - Display formatting, normalization, case-insensitive search prep
+//
+// When NOT to use:
+//   - Case-insensitive comparison — use string.Equals with OrdinalIgnoreCase
+
 #nullable enable
 
 string s = "  Hello, World!  ";
@@ -331,18 +329,18 @@ Console.WriteLine($"ToTitleCase(): '{CultureInfo.CurrentCulture.TextInfo.ToTitle
 
 #### Whitespace & Padding
 
-> [!info]- Whitespace and padding — Trim, PadLeft, PadRight
-> Whitespace and padding — Trim, PadLeft, PadRight
->
-> Trim():        '{s.Trim()}'
-> TrimStart():   '{s.TrimStart()}'
-> TrimEnd():     '{s.TrimEnd()}'
-> Trim('!'):     '{"Hello!!".Trim('!')}'
-> PadLeft(20):   '{"hello".PadLeft(20)}'
-> PadRight(20):  '{"hello".PadRight(20)}'
-> PadLeft(20,'*'):'{"hello".PadLeft(20, '*')}'
-> PadLeft(8,'0'):'{"42".PadLeft(8, '0')}'
->
+```csharp
+// Whitespace and padding — Trim, PadLeft, PadRight
+
+Console.WriteLine($"Trim():        '{s.Trim()}'");           // both sides
+Console.WriteLine($"TrimStart():   '{s.TrimStart()}'");      // left only
+Console.WriteLine($"TrimEnd():     '{s.TrimEnd()}'");        // right only
+Console.WriteLine($"Trim('!'):     '{"Hello!!".Trim('!')}'");  // trim specific chars
+Console.WriteLine($"PadLeft(20):   '{"hello".PadLeft(20)}'");
+Console.WriteLine($"PadRight(20):  '{"hello".PadRight(20)}'");
+Console.WriteLine($"PadLeft(20,'*'):'{"hello".PadLeft(20, '*')}'");
+Console.WriteLine($"PadLeft(8,'0'):'{"42".PadLeft(8, '0')}'");      // zero-pad to fixed width
+```
 
     Trim():        'Hello, World!'
     TrimStart():   'Hello, World!  '
@@ -355,23 +353,23 @@ Console.WriteLine($"ToTitleCase(): '{CultureInfo.CurrentCulture.TextInfo.ToTitle
 
 #### Character & String Checks
 
-> [!info]- Character and string checks — char.IsLetter, LINQ-based string tests
-> Character and string checks — char.IsLetter, LINQ-based string tests
->
->   char.IsLetter('A'):    {char.IsLetter('A')}
->   char.IsDigit('5'):     {char.IsDigit('5')}
->   char.IsWhiteSpace(' '):{char.IsWhiteSpace(' ')}
->   char.IsUpper('A'):     {char.IsUpper('A')}
->   char.IsLower('a'):     {char.IsLower('a')}
->
-> String-level checks with LINQ
->   All letters:  {"Hello".All(char.IsLetter)}
->   All digits:   {"12345".All(char.IsDigit)}
->   All alnum:    {"Hello123".All(char.IsLetterOrDigit)}
->   All upper:    {"HELLO".All(char.IsUpper)}
->   All lower:    {"hello".All(char.IsLower)}
->   All ASCII:    {"Hello".All(c => c < 128)}
->
+```csharp
+// Character and string checks — char.IsLetter, LINQ-based string tests
+
+Console.WriteLine($"  char.IsLetter('A'):    {char.IsLetter('A')}");
+Console.WriteLine($"  char.IsDigit('5'):     {char.IsDigit('5')}");
+Console.WriteLine($"  char.IsWhiteSpace(' '):{char.IsWhiteSpace(' ')}");
+Console.WriteLine($"  char.IsUpper('A'):     {char.IsUpper('A')}");
+Console.WriteLine($"  char.IsLower('a'):     {char.IsLower('a')}");
+
+// String-level checks with LINQ
+Console.WriteLine($"  All letters:  {"Hello".All(char.IsLetter)}");       // isalpha
+Console.WriteLine($"  All digits:   {"12345".All(char.IsDigit)}");        // isdigit
+Console.WriteLine($"  All alnum:    {"Hello123".All(char.IsLetterOrDigit)}"); // isalnum
+Console.WriteLine($"  All upper:    {"HELLO".All(char.IsUpper)}");
+Console.WriteLine($"  All lower:    {"hello".All(char.IsLower)}");
+Console.WriteLine($"  All ASCII:    {"Hello".All(c => c < 128)}");
+```
 
       char.IsLetter('A'):    True
       char.IsDigit('5'):     True
@@ -481,27 +479,26 @@ Console.WriteLine($"Back:  '{System.Text.Encoding.UTF8.GetString(utf8)}'");
 
 #### String formatting setup — declare format demo variables
 
-> [!warning] String formatting setup — declare variables for format demonstrations
-> String formatting setup — declare variables for format demonstrations
->
-> Technique: Declare name, age, double, and percentage variables in a
->   separate cell for reuse across formatting demo cells.
->
-> Benefits:
->   - Keeps formatting cells focused on the format specifiers
->
-> Anti-patterns:
->   - Re-declaring variables in every demo cell
->
-> When to use:
->   - When multiple cells share the same test data
->
-> When NOT to use:
->   - Self-contained cells — declare inline
->
-> (moved from 01_Basics and extended)
-
 ```csharp
+// String formatting setup — declare variables for format demonstrations
+//
+// Technique: Declare name, age, double, and percentage variables in a
+//   separate cell for reuse across formatting demo cells.
+//
+// Benefits:
+//   - Keeps formatting cells focused on the format specifiers
+//
+// Anti-patterns:
+//   - Re-declaring variables in every demo cell
+//
+// When to use:
+//   - When multiple cells share the same test data
+//
+// When NOT to use:
+//   - Self-contained cells — declare inline
+
+// (moved from 01_Basics and extended)
+
 string name = "Alice";
 int age = 30;
 double n = 1234567.89123;
@@ -510,16 +507,16 @@ double pct = 0.856;
 
 #### String Interpolation (recommended)
 
-> [!info]- String interpolation — $"" and String.Format for value embedding
-> String interpolation — $"" and String.Format for value embedding
->
-> Name: {name}, Age: {age}
-> Expression: {age + 1}
-> Method call: {name.ToUpper()}
->
-> Console.WriteLine(string.Format("Name: {0}, Age: {1}", name, age));
-> Console.WriteLine(string.Format("Name: {0}, Age: {1}, {0} again", name, age));
->
+```csharp
+// String interpolation — $"" and String.Format for value embedding
+
+Console.WriteLine($"Name: {name}, Age: {age}");
+Console.WriteLine($"Expression: {age + 1}");
+Console.WriteLine($"Method call: {name.ToUpper()}");
+
+Console.WriteLine(string.Format("Name: {0}, Age: {1}", name, age));
+Console.WriteLine(string.Format("Name: {0}, Age: {1}, {0} again", name, age));
+```
 
     Name: Alice, Age: 30
     Expression: 31
@@ -600,36 +597,34 @@ Console.WriteLine($"GBP: {amt.ToString("C2", new CultureInfo("en-GB"))}");
 
 #### Performance: + vs StringBuilder
 
-> [!warning] StringBuilder — mutable string buffer for efficient concatenation
-> StringBuilder — mutable string buffer for efficient concatenation
->
-> Technique: StringBuilder modifies an internal char buffer in place.
->   Append/AppendLine/Insert/Replace avoid creating new string objects.
->   Pre-allocate capacity for known sizes: new StringBuilder(1024).
->
-> Benefits:
->   - O(n) for n appends vs O(n²) for string + in a loop
->   - Pre-allocated capacity avoids buffer resizing
->   - Dramatically faster for >10 concatenations
->
-> Anti-patterns:
->   - Using StringBuilder for 2-3 concatenations — + is fine and simpler
->   - Not calling .ToString() — StringBuilder is not a string
->   - Forgetting to pre-allocate capacity for large known sizes
->
-> When to use:
->   - Building strings in loops, large template assembly, CSV generation
->
-> When NOT to use:
->   - Simple concatenation (2-5 strings) — + or $"" is cleaner
->   - Joining collections — string.Join is optimized for that
->
-> string is IMMUTABLE — each + creates a new string object
-> StringBuilder modifies in-place, much faster for loops
->
-> Performance: + vs StringBuilder — string concatenation in a loop creates many allocations; StringBuilder mutates in place
-
 ```csharp
+// StringBuilder — mutable string buffer for efficient concatenation
+//
+// Technique: StringBuilder modifies an internal char buffer in place.
+//   Append/AppendLine/Insert/Replace avoid creating new string objects.
+//   Pre-allocate capacity for known sizes: new StringBuilder(1024).
+//
+// Benefits:
+//   - O(n) for n appends vs O(n²) for string + in a loop
+//   - Pre-allocated capacity avoids buffer resizing
+//   - Dramatically faster for >10 concatenations
+//
+// Anti-patterns:
+//   - Using StringBuilder for 2-3 concatenations — + is fine and simpler
+//   - Not calling .ToString() — StringBuilder is not a string
+//   - Forgetting to pre-allocate capacity for large known sizes
+//
+// When to use:
+//   - Building strings in loops, large template assembly, CSV generation
+//
+// When NOT to use:
+//   - Simple concatenation (2-5 strings) — + or $"" is cleaner
+//   - Joining collections — string.Join is optimized for that
+
+// string is IMMUTABLE — each + creates a new string object
+// StringBuilder modifies in-place, much faster for loops
+
+// Performance: + vs StringBuilder — string concatenation in a loop creates many allocations; StringBuilder mutates in place
 var sw = Stopwatch.StartNew();
 string result = "";
 for (int i = 0; i < 50000; i++)
@@ -707,30 +702,29 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 
 #### Regex.Match() — First Match
 
-> [!warning] Regex.Match and Matches — find patterns in text
-> Regex.Match and Matches — find patterns in text
->
-> Technique: Regex.Match returns the first match (check .Success).
->   Regex.Matches returns all matches as MatchCollection. Pattern syntax
->   uses @"" verbatim strings to avoid double-escaping backslashes.
->
-> Benefits:
->   - Match.Success avoids null checks — always returns a Match object
->   - Matches returns all occurrences in one call
->   - Groups[0] is the full match; Groups[1..n] are capture groups
->
-> Anti-patterns:
->   - Not checking .Success before reading .Value — empty match is not null
->   - Using IndexOf for pattern matching — Regex is more expressive
->   - Recompiling the same pattern in a loop — cache with new Regex()
->
-> When to use:
->   - Extracting structured data: emails, phones, dates, IPs from text
->
-> When NOT to use:
->   - Simple Contains/StartsWith checks — string methods are faster
-
 ```csharp
+// Regex.Match and Matches — find patterns in text
+//
+// Technique: Regex.Match returns the first match (check .Success).
+//   Regex.Matches returns all matches as MatchCollection. Pattern syntax
+//   uses @"" verbatim strings to avoid double-escaping backslashes.
+//
+// Benefits:
+//   - Match.Success avoids null checks — always returns a Match object
+//   - Matches returns all occurrences in one call
+//   - Groups[0] is the full match; Groups[1..n] are capture groups
+//
+// Anti-patterns:
+//   - Not checking .Success before reading .Value — empty match is not null
+//   - Using IndexOf for pattern matching — Regex is more expressive
+//   - Recompiling the same pattern in a loop — cache with new Regex()
+//
+// When to use:
+//   - Extracting structured data: emails, phones, dates, IPs from text
+//
+// When NOT to use:
+//   - Simple Contains/StartsWith checks — string methods are faster
+
 string text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210.";
 
 // Regex.Match & Matches — find first or all matches; check Success before reading Value
@@ -946,18 +940,18 @@ Console.WriteLine($"Combined:    {string.Join(", ", combined.Select(m => m.Value
 
 #### RegexOptions Reference
 
-> [!abstract]- RegexOptions reference — all available flags and their effects
-> RegexOptions reference — all available flags and their effects
->
-> IgnoreCase              — case-insensitive matching
-> Multiline               — ^ and $ match line boundaries
-> Singleline              — . matches newline characters
-> IgnorePatternWhitespace — whitespace in pattern is ignored, enables comments
-> Compiled                — precompiles regex to IL for repeated use
-> RightToLeft             — search proceeds right to left
-> ExplicitCapture         — only named groups capture, (...) becomes non-capturing
-> NonBacktracking         — .NET 7+, guaranteed linear time (no catastrophic backtracking)
->
+```csharp
+// RegexOptions reference — all available flags and their effects
+
+Console.WriteLine("IgnoreCase              — case-insensitive matching");
+Console.WriteLine("Multiline               — ^ and $ match line boundaries");
+Console.WriteLine("Singleline              — . matches newline characters");
+Console.WriteLine("IgnorePatternWhitespace — whitespace in pattern is ignored, enables comments");
+Console.WriteLine("Compiled                — precompiles regex to IL for repeated use");
+Console.WriteLine("RightToLeft             — search proceeds right to left");
+Console.WriteLine("ExplicitCapture         — only named groups capture, (...) becomes non-capturing");
+Console.WriteLine("NonBacktracking         — .NET 7+, guaranteed linear time (no catastrophic backtracking)");
+```
 
     IgnoreCase              — case-insensitive matching
     Multiline               — ^ and $ match line boundaries

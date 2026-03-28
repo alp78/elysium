@@ -1364,12 +1364,12 @@ display(Markdown(table))
 - **iterrows (Anti-pattern)**: Row-by-row iteration. Extremely slow. Use vectorized operations.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
-> [!warning]- Anti-pattern: iterrows
-> Anti-pattern: iterrows
-> BAD: for _, row in df.iterrows() -- always vectorize!
-> GOOD Pandas: df[col1] - df[col2]
-> GOOD Polars: df.with_columns(pl.col(a) - pl.col(b))
->
+```python
+# Anti-pattern: iterrows
+print("BAD: for _, row in df.iterrows() -- always vectorize!")
+print("GOOD Pandas: df[col1] - df[col2]")
+print("GOOD Polars: df.with_columns(pl.col(a) - pl.col(b))")
+```
 
     BAD: for _, row in df.iterrows() -- always vectorize!
     GOOD Pandas: df[col1] - df[col2]

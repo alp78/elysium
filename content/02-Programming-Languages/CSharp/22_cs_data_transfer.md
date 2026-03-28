@@ -1413,29 +1413,28 @@ for method, fn in methods:
 
 Uploads the Python benchmark script to the VM via SFTP, runs it over an SSH `ShellStream`, and parses `__RESULT__` JSON lines as they arrive. Each result is printed live and persisted incrementally to `vm_upload_results_cs.json`.
 
-> [!info] Execute the VM benchmark script remotely and stream results back to the local...
-> Execute the VM benchmark script remotely and stream results back to the local notebook.
->
-> How it works:
-> 1. Upload the Python benchmark script (VM_BENCHMARK_SCRIPT) to the VM via SFTP.
->    The script defines the same GCS upload methods (simple, resumable, parallel, etc.)
->    and runs each one against small/medium/large files already copied to the VM.
->
-> 2. Execute with CreateCommand + BeginExecute — a non-interactive SSH channel that
->    avoids shell echo issues. Read from cmd.OutputStream as lines arrive.
->
-> 3. The Python script prints one JSON object per benchmark result, prefixed with
->    `__RESULT__` to distinguish it from other output (import warnings, etc.).
->    For each result line:
->    - Parse the JSON into an UploadResult record
->    - Print it to the notebook output (live streaming — you see each result as it completes)
->    - Upsert into the in-memory list (keyed by method+tier, replacing any prior run)
->    - Persist to vm_upload_results_cs.json after each result (crash-safe — if the VM
->      times out mid-run, you keep all results collected so far)
->
-> 4. The loop exits naturally when the command finishes and the stream is exhausted.
-
 ```csharp
+// Execute the VM benchmark script remotely and stream results back to the local notebook.
+//
+// How it works:
+// 1. Upload the Python benchmark script (VM_BENCHMARK_SCRIPT) to the VM via SFTP.
+//    The script defines the same GCS upload methods (simple, resumable, parallel, etc.)
+//    and runs each one against small/medium/large files already copied to the VM.
+//
+// 2. Execute with CreateCommand + BeginExecute — a non-interactive SSH channel that
+//    avoids shell echo issues. Read from cmd.OutputStream as lines arrive.
+//
+// 3. The Python script prints one JSON object per benchmark result, prefixed with
+//    `__RESULT__` to distinguish it from other output (import warnings, etc.).
+//    For each result line:
+//    - Parse the JSON into an UploadResult record
+//    - Print it to the notebook output (live streaming — you see each result as it completes)
+//    - Upsert into the in-memory list (keyed by method+tier, replacing any prior run)
+//    - Persist to vm_upload_results_cs.json after each result (crash-safe — if the VM
+//      times out mid-run, you keep all results collected so far)
+//
+// 4. The loop exits naturally when the command finishes and the stream is exhausted.
+
 var vmScriptPath = $"{VM_DATA_DIR}/bench_upload.py";
 var VM_UPLOAD_RESULTS_FILE = Path.Combine(DATA_DIR, "vm_upload_results_cs.json");
 

@@ -323,14 +323,12 @@ print("  GCP_SA_KEY_PATH set")
 
 #### Grant Cloud KMS Viewer
 
-> [!info] Grants cloudkms.cryptoKeys.get and list permissions on KMS resources
-> Grants cloudkms.cryptoKeys.get and list permissions on KMS resources.
-> Required separately from cryptoKeyEncrypterDecrypter, which only covers
-> encrypt/decrypt operations but NOT reading key metadata (versions, algorithm,
-> protection level). Without this role, calls to kms_client.get_crypto_key()
-> and list_crypto_key_versions() raise a 403 PermissionDenied error.
-
 ```python
+# Grants cloudkms.cryptoKeys.get and list permissions on KMS resources.
+# Required separately from cryptoKeyEncrypterDecrypter, which only covers
+# encrypt/decrypt operations but NOT reading key metadata (versions, algorithm,
+# protection level). Without this role, calls to kms_client.get_crypto_key()
+# and list_crypto_key_versions() raise a 403 PermissionDenied error.
 !gcloud kms keys add-iam-policy-binding notebook-encrypt-key --keyring=notebook-keyring --location=europe-west1 --project=seclab-dev-ap-26 --member="serviceAccount:notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com" --role="roles/cloudkms.viewer"
 ```
 
@@ -622,18 +620,16 @@ print("  GCP_SA_KEY_PATH set")
 
 #### Helper: create secret from value
 
-> [!info] On Windows, "echo -n value | gcloud ..." does not work: cmd.exe has no -n flag,
-> On Windows, "echo -n value | gcloud ..." does not work: cmd.exe has no -n flag,
-> so echo outputs the literal text "-n value" instead of just "value".
-> The workaround is to write the secret value to a temp file and pass its path
-> via --data-file. Forward slashes are used because gcloud on Windows rejects
-> backslash paths inside f-strings.
->
-> --replication-policy=automatic: Secret Manager replicates the secret across
-> multiple regions automatically. The alternative is "user-managed", which lets
-> you choose specific regions but requires extra configuration.
-
 ```python
+# On Windows, "echo -n value | gcloud ..." does not work: cmd.exe has no -n flag,
+# so echo outputs the literal text "-n value" instead of just "value".
+# The workaround is to write the secret value to a temp file and pass its path
+# via --data-file. Forward slashes are used because gcloud on Windows rejects
+# backslash paths inside f-strings.
+#
+# --replication-policy=automatic: Secret Manager replicates the secret across
+# multiple regions automatically. The alternative is "user-managed", which lets
+# you choose specific regions but requires extra configuration.
 def gcloud_secret_create(name, value, project=PROJECT_ID):
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
         f.write(value)
@@ -758,14 +754,12 @@ gcloud_secret_create("db-config", f'{"host":"{SQL_IP}","port":1433,"database":"s
 
 #### Enable OS Login on VM
 
-> [!info] Enable OS Login on the VM instance so that SSH authentication is handled
-> Enable OS Login on the VM instance so that SSH authentication is handled
-> via Google identity rather than manually managed authorized_keys files.
-> Without this flag, the VM uses standard key-based auth and OS Login
-> commands (gcloud compute os-login ssh-keys add) have no effect.
-> Must be set before uploading SSH keys to OS Login below.
-
 ```python
+# Enable OS Login on the VM instance so that SSH authentication is handled
+# via Google identity rather than manually managed authorized_keys files.
+# Without this flag, the VM uses standard key-based auth and OS Login
+# commands (gcloud compute os-login ssh-keys add) have no effect.
+# Must be set before uploading SSH keys to OS Login below.
 !gcloud compute instances add-metadata notebook-vm --zone=europe-west1-b --project=seclab-dev-ap-26 --metadata=enable-oslogin=TRUE
 ```
 
@@ -857,15 +851,13 @@ Installs the packages needed for GCS upload benchmarking. Debian 12 enforces PEP
 
 #### Grant Cloud SQL service agent access to KMS key
 
-> [!info] Cloud SQL uses a Google-managed service agent to encrypt/decrypt disks
-> Cloud SQL uses a Google-managed service agent to encrypt/decrypt disks.
-> This is NOT the notebook-sa we created — it is an internal agent
-> auto-provisioned by Google when the Cloud SQL API is enabled.
-> Format: service-PROJECT_NUMBER@gcp-sa-cloud-sql.iam.gserviceaccount.com
-> It must have cryptoKeyEncrypterDecrypter on the KMS key
-> BEFORE the instance is created with --disk-encryption-key.
-
 ```python
+# Cloud SQL uses a Google-managed service agent to encrypt/decrypt disks.
+# This is NOT the notebook-sa we created — it is an internal agent
+# auto-provisioned by Google when the Cloud SQL API is enabled.
+# Format: service-PROJECT_NUMBER@gcp-sa-cloud-sql.iam.gserviceaccount.com
+# It must have cryptoKeyEncrypterDecrypter on the KMS key
+# BEFORE the instance is created with --disk-encryption-key.
 !gcloud kms keys add-iam-policy-binding {KMS_KEY} --keyring={KMS_KEYRING} --location={KMS_LOCATION} --project={PROJECT_ID} --member="serviceAccount:service-{PROJECT_NUMBER}@gcp-sa-cloud-sql.iam.gserviceaccount.com" --role="roles/cloudkms.cryptoKeyEncrypterDecrypter"
 ```
 
@@ -884,44 +876,42 @@ Installs the packages needed for GCS upload benchmarking. Debian 12 enforces PEP
 
 #### Create SQL Server instance with SSL
 
-> [!info] Create Cloud SQL for SQL Server 2022 Express (~5-10 min to provision)
-> Create Cloud SQL for SQL Server 2022 Express (~5-10 min to provision)
->   - SSL required - all connections must use TLS certificates
->   - db-custom-1-3840 - smallest tier for SQL Server (1 vCPU, 3.75 GB RAM, ~$50/month - stop when not in use)
->   - SQL Server Express - free license, limited to 10GB per database
->   - --quiet is required otherwise the command hangs waiting for confirmation
->
-> CMEK (Customer-Managed Encryption Key) vs Google-managed encryption:
->
->   Google-managed (default, no --disk-encryption-key):
->     - Google creates, owns, and rotates the encryption key automatically
->     - Zero maintenance — nothing to configure or monitor
->     - Google infrastructure (with sufficient access) could theoretically decrypt
->     - Sufficient for most workloads where you trust GCP as a provider
->
->   CMEK (--disk-encryption-key pointing to your Cloud KMS key):
->     - You own the key in KMS; you control rotation, access, and lifecycle
->     - You can revoke access instantly by disabling the key — data becomes
->       permanently unreadable, even by Google
->     - Required for: financial services, healthcare (HIPAA), government (FedRAMP),
->       any compliance framework that mandates customer-controlled encryption
->     - Maintenance cost: you must ensure the KMS key is never accidentally
->       destroyed (data loss is permanent), monitor key access, and manage rotation
->     - Adds ~$0.06/month per key version + API call costs
->     - Cannot be changed after instance creation — must delete and recreate
->
->   When CMEK is NOT necessary:
->     - Dev/test environments where data is not sensitive
->     - Public datasets or non-regulated workloads
->     - When your threat model trusts Google as a cloud provider
->
-> Cloud SQL for SQL Server supports:
->   1. Password auth - traditional SQL Server login (sa password set here)
->   2. SSL/TLS encryption - server certificate validates the instance identity
->   3. Active Directory integration - Windows auth via Managed AD (enterprise)
->   4. Private IP - VPC-only access (no public endpoint)
-
 ```python
+# Create Cloud SQL for SQL Server 2022 Express (~5-10 min to provision)
+#   - SSL required - all connections must use TLS certificates
+#   - db-custom-1-3840 - smallest tier for SQL Server (1 vCPU, 3.75 GB RAM, ~$50/month - stop when not in use)
+#   - SQL Server Express - free license, limited to 10GB per database
+#   - --quiet is required otherwise the command hangs waiting for confirmation
+#
+# CMEK (Customer-Managed Encryption Key) vs Google-managed encryption:
+#
+#   Google-managed (default, no --disk-encryption-key):
+#     - Google creates, owns, and rotates the encryption key automatically
+#     - Zero maintenance — nothing to configure or monitor
+#     - Google infrastructure (with sufficient access) could theoretically decrypt
+#     - Sufficient for most workloads where you trust GCP as a provider
+#
+#   CMEK (--disk-encryption-key pointing to your Cloud KMS key):
+#     - You own the key in KMS; you control rotation, access, and lifecycle
+#     - You can revoke access instantly by disabling the key — data becomes
+#       permanently unreadable, even by Google
+#     - Required for: financial services, healthcare (HIPAA), government (FedRAMP),
+#       any compliance framework that mandates customer-controlled encryption
+#     - Maintenance cost: you must ensure the KMS key is never accidentally
+#       destroyed (data loss is permanent), monitor key access, and manage rotation
+#     - Adds ~$0.06/month per key version + API call costs
+#     - Cannot be changed after instance creation — must delete and recreate
+#
+#   When CMEK is NOT necessary:
+#     - Dev/test environments where data is not sensitive
+#     - Public datasets or non-regulated workloads
+#     - When your threat model trusts Google as a cloud provider
+#
+# Cloud SQL for SQL Server supports:
+#   1. Password auth - traditional SQL Server login (sa password set here)
+#   2. SSL/TLS encryption - server certificate validates the instance identity
+#   3. Active Directory integration - Windows auth via Managed AD (enterprise)
+#   4. Private IP - VPC-only access (no public endpoint)
 !gcloud sql instances create notebook-sql --database-version=SQLSERVER_2022_EXPRESS --tier=db-custom-1-3840 --region=europe-west1 --root-password=SecLabPass2026 --disk-encryption-key=projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key --quiet
 ```
 
@@ -1053,14 +1043,6 @@ print(f"Total uploaded: {total_bytes:,} bytes ({total_bytes / 1024 / 1024:.1f} M
 
 #### Create stoxx database in SQL instance and load tables from GCS
 
-> [!info] Bulk load with bcp (Bulk Copy Program)
-> Bulk load with bcp (Bulk Copy Program)
-> bcp uses the TDS bulk insert protocol which sends rows as a binary stream
-> in a single network operation. By contrast, executemany issues one INSERT
-> statement per row (or per chunk), each requiring a full SQL parse/compile
-> cycle and a network round-trip. For 66k rows, bcp completes in seconds
-> where executemany takes 5-10+ minutes over the internet.
-
 ```python
 load_dotenv()
 SQL_IP       = os.environ["GCP_SQL_IP"]
@@ -1112,6 +1094,12 @@ for tbl in tables:
     tmp = os.path.join(tempfile.gettempdir(), f"{tbl}.tsv").replace("\\", "/")
     df.to_csv(tmp, index=False, sep="	")
 
+    # Bulk load with bcp (Bulk Copy Program)
+    # bcp uses the TDS bulk insert protocol which sends rows as a binary stream
+    # in a single network operation. By contrast, executemany issues one INSERT
+    # statement per row (or per chunk), each requiring a full SQL parse/compile
+    # cycle and a network round-trip. For 66k rows, bcp completes in seconds
+    # where executemany takes 5-10+ minutes over the internet.
     r = subprocess.run(
         ["bcp",
          f"stoxx.dbo.{tbl}",          # target: database.schema.table

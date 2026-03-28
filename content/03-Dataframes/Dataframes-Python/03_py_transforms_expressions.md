@@ -57,11 +57,11 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 
 ## Setup & Data Loading
 
-> [!info]- print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
-> print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
-> print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
-> print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
->
+```python
+print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
+print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
+print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
+```
 
     ohlcv  :
      (66355, 12) 
@@ -2472,7 +2472,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Concept | Polars | Pandas Equivalent |
 |---|---|---|
 | Expression | pl.col("x") * 2 | No equivalent |
-| select | df.select(...) | df[\[cols]] |
+| select | df.select(...) | df[[cols]] |
 | with_columns | df.with_columns(...) | df.assign(...) |
 | filter | df.filter(expr) | df[condition] |
 | group_by.agg | df.group_by().agg(exprs) | df.groupby().agg() |

@@ -31,31 +31,29 @@ import polars as pl
 
 #### Duck typing — no generics needed
 
-> [!warning] Duck typing — Python functions work with any type without generics
-> Duck typing — Python functions work with any type without generics
->
-> Technique: Python's dynamic typing means first_element() works on any
->   iterable — list, tuple, string, set, generator. No type declarations
->   needed. This is "duck typing": if it quacks like a duck, it's a duck.
->
-> Benefits:
->   - No boilerplate — functions are generic by default
->   - Works with any iterable, including custom __iter__ classes
->   - Simpler than C#/Java generics for most use cases
->
-> Anti-patterns:
->   - Assuming duck typing catches type errors — they appear at runtime
->   - Not adding type hints for public APIs — callers can't discover types
->
-> When to use:
->   - Internal functions where flexibility is more valuable than type safety
->
-> When NOT to use:
->   - Public library APIs — add type hints for documentation and checking
->
-> Duck typing — Python functions already accept any type without generics
-
 ```python
+# Duck typing — Python functions work with any type without generics
+#
+# Technique: Python's dynamic typing means first_element() works on any
+#   iterable — list, tuple, string, set, generator. No type declarations
+#   needed. This is "duck typing": if it quacks like a duck, it's a duck.
+#
+# Benefits:
+#   - No boilerplate — functions are generic by default
+#   - Works with any iterable, including custom __iter__ classes
+#   - Simpler than C#/Java generics for most use cases
+#
+# Anti-patterns:
+#   - Assuming duck typing catches type errors — they appear at runtime
+#   - Not adding type hints for public APIs — callers can't discover types
+#
+# When to use:
+#   - Internal functions where flexibility is more valuable than type safety
+#
+# When NOT to use:
+#   - Public library APIs — add type hints for documentation and checking
+
+# Duck typing — Python functions already accept any type without generics
 def first_element(items):
     """Works with ANY iterable — list, tuple, string, set..."""
     for item in items:
@@ -103,24 +101,22 @@ print(f"float: {add(3.5, 4.5)}")
 
 <h4>Generic class — <code style="font-size:0.75em">Generic[T]</code></h4>
 
-> [!warning] - Generic class without type hints on methods — defeats the purpose
->   - Generic class without type hints on methods — defeats the purpose
->   - Runtime isinstance checks on generic types — not supported (type erasure)
->
-> When to use:
->   - Custom container classes, typed wrappers, generic data structures
->
-> When NOT to use:
->   - When built-in containers (list, dict) suffice — no need for custom class
->
-> Generic class — inherit from Generic[T] so the type checker tracks what's inside
->
-> Stack[T] — type checker knows push/pop/peek operate on T
-
 ```python
 # Generic class — inherit from Generic[T] for type-safe containers
 
 // Anti-patterns:
+#   - Generic class without type hints on methods — defeats the purpose
+#   - Runtime isinstance checks on generic types — not supported (type erasure)
+#
+# When to use:
+#   - Custom container classes, typed wrappers, generic data structures
+#
+# When NOT to use:
+#   - When built-in containers (list, dict) suffice — no need for custom class
+
+# Generic class — inherit from Generic[T] so the type checker tracks what's inside
+
+# Stack[T] — type checker knows push/pop/peek operate on T
 class Stack(Generic[T]):
     def __init__(self) -> None:
         self._items: list[T] = []
@@ -159,16 +155,16 @@ print(f"Stack: {str_stack}")
 
 #### Built-in generic types
 
-> [!info]- Built-in generic types — list[int], dict[str, int], set[str], tuple[int, ...]
-> Built-in generic types — list[int], dict[str, int], set[str], tuple[int, ...]
->
-> list[int]              — typed list
-> dict[str, int]         — typed dictionary
-> set[str]               — typed set
-> tuple[int, str]        — typed tuple
-> Optional[str]          — str or None
-> Callable[[int], bool]  — function signature
->
+```python
+# Built-in generic types — list[int], dict[str, int], set[str], tuple[int, ...]
+
+print("list[int]              — typed list")
+print("dict[str, int]         — typed dictionary")
+print("set[str]               — typed set")
+print("tuple[int, str]        — typed tuple")
+print("Optional[str]          — str or None")
+print("Callable[[int], bool]  — function signature")
+```
 
     list[int]              — typed list
     dict[str, int]         — typed dictionary

@@ -622,24 +622,22 @@ Many Python idioms do not translate 1:1 — pay close attention to the gotchas c
 
 #### Demonstrate migration from a Python-style pipeline to idiomatic C# using Polars.NET patterns
 
-> [!abstract]- Migration demo — typical analysis pipeline in idiomatic C# Polars.NET
-> Migration demo — typical analysis pipeline in idiomatic C# Polars.NET
-> Python equivalent:
->   df.filter(pl.col("symbol") == "ASML.AS")
->     .with_columns((pl.col("close") - pl.col("open")).alias("intraday_change"))
->     .with_columns(
->         pl.when(pl.col("intraday_change") > 0)
->           .then(pl.lit("up"))
->           .otherwise(pl.lit("down"))
->           .alias("direction")
->     )
->     .group_by("direction")
->     .agg([pl.col("close").mean(), pl.col("volume").sum()])
->     .sort("direction")
->
-> C# Polars.NET translation:
-
 ```csharp
+// Migration demo — typical analysis pipeline in idiomatic C# Polars.NET
+// Python equivalent:
+//   df.filter(pl.col("symbol") == "ASML.AS")
+//     .with_columns((pl.col("close") - pl.col("open")).alias("intraday_change"))
+//     .with_columns(
+//         pl.when(pl.col("intraday_change") > 0)
+//           .then(pl.lit("up"))
+//           .otherwise(pl.lit("down"))
+//           .alias("direction")
+//     )
+//     .group_by("direction")
+//     .agg([pl.col("close").mean(), pl.col("volume").sum()])
+//     .sort("direction")
+
+// C# Polars.NET translation:
 var pipeline = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
     .WithColumns(

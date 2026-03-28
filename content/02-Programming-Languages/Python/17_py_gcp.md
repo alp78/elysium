@@ -50,19 +50,18 @@ status: complete
 
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
-> [!abstract]- GCP Authentication — how Python connects to Google Cloud
-> GCP Authentication — how Python connects to Google Cloud.
->
-> KEY CONCEPTS:
-> - Service Account: a non-human identity with specific roles.
->   Like a dedicated 'bot user' for your pipeline.
-> - GOOGLE_APPLICATION_CREDENTIALS: env var pointing to the JSON key file.
->   All google-cloud-* libraries auto-detect it.
-> - Application Default Credentials (ADC): the auth chain Google libraries use.
->   1. GOOGLE_APPLICATION_CREDENTIALS env var → 2. gcloud auth → 3. metadata server (GCE/Cloud Run)
-> - C# equivalent: same JSON key, GoogleCredential.FromFile() or env var.
-
 ```python
+# GCP Authentication — how Python connects to Google Cloud.
+#
+# KEY CONCEPTS:
+# - Service Account: a non-human identity with specific roles.
+#   Like a dedicated 'bot user' for your pipeline.
+# - GOOGLE_APPLICATION_CREDENTIALS: env var pointing to the JSON key file.
+#   All google-cloud-* libraries auto-detect it.
+# - Application Default Credentials (ADC): the auth chain Google libraries use.
+#   1. GOOGLE_APPLICATION_CREDENTIALS env var → 2. gcloud auth → 3. metadata server (GCE/Cloud Run)
+# - C# equivalent: same JSON key, GoogleCredential.FromFile() or env var.
+
 import os
 
 from datetime import datetime
@@ -105,22 +104,20 @@ print(f"Region:  {REGION}")
 
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here.
 
-> [!abstract]- Cloud Storage — object storage for data lakes
-> Cloud Storage — object storage for data lakes.
->
-> KEY CONCEPTS:
-> - Bucket: top-level container (like a drive). Globally unique name.
-> - Blob: an object (file) in a bucket. Identified by path (key).
-> - Prefixes: simulate folders (bronze/, silver/, gold/).
-> - C# equivalent: Google.Cloud.Storage.V1 (StorageClient)
->
-> Pipeline step: fetch OHLCV from yfinance → upload CSV to GCS bronze layer.
->
->
-> Create GCS client — authenticates using GOOGLE_APPLICATION_CREDENTIALS
-> In the pipeline: this client handles all object storage operations
-
 ```python
+# Cloud Storage — object storage for data lakes.
+#
+# KEY CONCEPTS:
+# - Bucket: top-level container (like a drive). Globally unique name.
+# - Blob: an object (file) in a bucket. Identified by path (key).
+# - Prefixes: simulate folders (bronze/, silver/, gold/).
+# - C# equivalent: Google.Cloud.Storage.V1 (StorageClient)
+#
+# Pipeline step: fetch OHLCV from yfinance → upload CSV to GCS bronze layer.
+
+
+# Create GCS client — authenticates using GOOGLE_APPLICATION_CREDENTIALS
+# In the pipeline: this client handles all object storage operations
 gcs = storage.Client(project=PROJECT_ID)
 # Get a reference to our bucket — doesn't make a network call yet
 bucket = gcs.bucket(BUCKET_NAME)
@@ -200,22 +197,20 @@ print(f"  Tickers: {sorted(df_check["symbol"].unique())}")
 
 **Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
 
-> [!abstract]- BigQuery — serverless analytics data warehouse
-> BigQuery — serverless analytics data warehouse.
->
-> KEY CONCEPTS:
-> - Dataset: container for tables (like a schema in SQL Server).
-> - Table: columnar storage, partitioned and clustered for performance.
-> - Load jobs: bulk load from GCS, DataFrames, or JSONL.
-> - SQL queries: standard SQL, runs on Google's distributed engine.
-> - C# equivalent: Google.Cloud.BigQuery.V2 (BigQueryClient)
->
-> Pipeline step: load OHLCV from GCS into BigQuery bronze → compute silver/gold.
->
->
-> Create BigQuery client — all queries and loads go through this
-
 ```python
+# BigQuery — serverless analytics data warehouse.
+#
+# KEY CONCEPTS:
+# - Dataset: container for tables (like a schema in SQL Server).
+# - Table: columnar storage, partitioned and clustered for performance.
+# - Load jobs: bulk load from GCS, DataFrames, or JSONL.
+# - SQL queries: standard SQL, runs on Google's distributed engine.
+# - C# equivalent: Google.Cloud.BigQuery.V2 (BigQueryClient)
+#
+# Pipeline step: load OHLCV from GCS into BigQuery bronze → compute silver/gold.
+
+
+# Create BigQuery client — all queries and loads go through this
 bq = bigquery.Client(project=PROJECT_ID)
 
 # ─── Load DataFrame into BigQuery (bronze) ───
@@ -321,19 +316,19 @@ for row in results:
 
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture.
 
-> [!abstract]- Pub/Sub — asynchronous messaging for pipeline events
-> Pub/Sub — asynchronous messaging for pipeline events.
->
-> KEY CONCEPTS:
-> - Topic: a named channel you publish messages to.
-> - Subscription: pulls messages from a topic (pull or push).
-> - Message: bytes payload + optional attributes (metadata).
-> - Acknowledge: mark message as processed (prevents redelivery).
-> - C# equivalent: Google.Cloud.PubSub.V1 (PublisherClient, SubscriberClient)
->
-> Pipeline step: after loading BigQuery, publish 'batch_ready' event.
-
 ```python
+# Pub/Sub — asynchronous messaging for pipeline events.
+#
+# KEY CONCEPTS:
+# - Topic: a named channel you publish messages to.
+# - Subscription: pulls messages from a topic (pull or push).
+# - Message: bytes payload + optional attributes (metadata).
+# - Acknowledge: mark message as processed (prevents redelivery).
+# - C# equivalent: Google.Cloud.PubSub.V1 (PublisherClient, SubscriberClient)
+#
+# Pipeline step: after loading BigQuery, publish 'batch_ready' event.
+
+
 TOPIC = "pipeline-events"
 SUBSCRIPTION = "pipeline-events-sub"
 
@@ -402,26 +397,24 @@ else:
 
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
-> [!abstract]- Firestore -- NoSQL document database for real-time data
-> Firestore -- NoSQL document database for real-time data.
->
-> KEY CONCEPTS:
-> - Collection: group of documents (like a table).
-> - Document: JSON-like record with fields (like a row).
-> - Real-time listeners: subscribe to changes as they happen.
->   This is Firestore's killer feature -- push notifications on data changes.
-> - Subcollections: nested collections within a document.
-> - C# equivalent: Google.Cloud.Firestore (FirestoreDb)
->
-> Pipeline step: write latest gold scores to Firestore,
-> then listen for real-time pulse updates from the scheduler.
->
->
-> Create Firestore client — connects to the document database
-> Pipeline role: Firestore serves as the REAL-TIME layer
-> Gold scores are written here for instant dashboard access
-
 ```python
+# Firestore -- NoSQL document database for real-time data.
+#
+# KEY CONCEPTS:
+# - Collection: group of documents (like a table).
+# - Document: JSON-like record with fields (like a row).
+# - Real-time listeners: subscribe to changes as they happen.
+#   This is Firestore's killer feature -- push notifications on data changes.
+# - Subcollections: nested collections within a document.
+# - C# equivalent: Google.Cloud.Firestore (FirestoreDb)
+#
+# Pipeline step: write latest gold scores to Firestore,
+# then listen for real-time pulse updates from the scheduler.
+
+
+# Create Firestore client — connects to the document database
+# Pipeline role: Firestore serves as the REAL-TIME layer
+# Gold scores are written here for instant dashboard access
 db = firestore.Client(project=PROJECT_ID)
 # Create BigQuery client — all queries and loads go through this
 bq = bigquery.Client(project=PROJECT_ID)
@@ -482,25 +475,23 @@ if pulse_count == 0:
       SIE.DE      price=    203.75  change=  -3.11%  vol_ratio=  2.33  ts=01+00:00
       TTE.PA      price=     76.96  change=  -2.07%  vol_ratio=  1.61  ts=45+00:00
 
-> [!abstract]- Firestore Real-Time Listener -- subscribe to live pulse updates
-> Firestore Real-Time Listener -- subscribe to live pulse updates.
->
-> on_snapshot() fires every time ANY document in the collection changes.
-> This is how dashboards get push updates without polling.
-> The pulse_scheduler.py writes to pulse_live every 60 seconds,
-> and this listener catches each update as it happens.
->
-> C# equivalent: FirestoreDb.Collection().Listen()
->
-> IMPORTANT: run pulse_scheduler.py in a separate terminal first:
->   python pulse_scheduler.py --minutes 5
->
->
-> Create Firestore client — connects to the document database
-> Pipeline role: Firestore serves as the REAL-TIME layer
-> Gold scores are written here for instant dashboard access
-
 ```python
+# Firestore Real-Time Listener -- subscribe to live pulse updates.
+#
+# on_snapshot() fires every time ANY document in the collection changes.
+# This is how dashboards get push updates without polling.
+# The pulse_scheduler.py writes to pulse_live every 60 seconds,
+# and this listener catches each update as it happens.
+#
+# C# equivalent: FirestoreDb.Collection().Listen()
+#
+# IMPORTANT: run pulse_scheduler.py in a separate terminal first:
+#   python pulse_scheduler.py --minutes 5
+
+
+# Create Firestore client — connects to the document database
+# Pipeline role: Firestore serves as the REAL-TIME layer
+# Gold scores are written here for instant dashboard access
 db = firestore.Client(project=PROJECT_ID)
 
 # Track events received
@@ -585,24 +576,22 @@ if events_received:
 
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
 
-> [!danger] Secret Manager — secure storage for credentials, API keys, connection strings
-> Secret Manager — secure storage for credentials, API keys, connection strings.
->
-> KEY CONCEPTS:
-> - Secret: a named container for secret data.
-> - Version: each update creates a new immutable version.
-> - Access: retrieve the latest (or specific) version at runtime.
-> - Rotation: create new versions, disable old ones.
-> - C# equivalent: Google.Cloud.SecretManager.V1 (SecretManagerServiceClient)
->
-> Pipeline step: retrieve DB credentials securely (never hardcode in code).
->
->
-> Create Secret Manager client
-> Pipeline role: ALL credentials come from here — never hardcoded
-> DB passwords, API keys, connection strings are stored as secrets
-
 ```python
+# Secret Manager — secure storage for credentials, API keys, connection strings.
+#
+# KEY CONCEPTS:
+# - Secret: a named container for secret data.
+# - Version: each update creates a new immutable version.
+# - Access: retrieve the latest (or specific) version at runtime.
+# - Rotation: create new versions, disable old ones.
+# - C# equivalent: Google.Cloud.SecretManager.V1 (SecretManagerServiceClient)
+#
+# Pipeline step: retrieve DB credentials securely (never hardcode in code).
+
+
+# Create Secret Manager client
+# Pipeline role: ALL credentials come from here — never hardcoded
+# DB passwords, API keys, connection strings are stored as secrets
 sm = secretmanager.SecretManagerServiceClient()
 
 # ─── Read a secret ───
@@ -678,21 +667,19 @@ print('\n  Deleted: index-notebook-demo')
 
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
 
-> [!abstract]- Cloud Monitoring — metrics, logging, and alerting
-> Cloud Monitoring — metrics, logging, and alerting.
->
-> KEY CONCEPTS:
-> - Custom metrics: write your own time series (pipeline row counts, latency, errors).
-> - Cloud Logging: structured log entries queryable in Log Explorer.
-> - Alerts: trigger notifications when metrics cross thresholds.
-> - C# equivalent: Google.Cloud.Monitoring.V3 (MetricServiceClient)
->
-> Pipeline step: log pipeline events, write custom metrics for row counts.
->
->
-> ─── Cloud Logging ───
-
 ```python
+# Cloud Monitoring — metrics, logging, and alerting.
+#
+# KEY CONCEPTS:
+# - Custom metrics: write your own time series (pipeline row counts, latency, errors).
+# - Cloud Logging: structured log entries queryable in Log Explorer.
+# - Alerts: trigger notifications when metrics cross thresholds.
+# - C# equivalent: Google.Cloud.Monitoring.V3 (MetricServiceClient)
+#
+# Pipeline step: log pipeline events, write custom metrics for row counts.
+
+
+# ─── Cloud Logging ───
 print("=== Cloud Logging ===")
 # Create Cloud Logging client
 # Pipeline role: structured logs for every pipeline step
@@ -778,50 +765,50 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
 
 ## 8. Summary
 
-> [!abstract]- Summary — GCP Python cheat sheet
-> Summary — GCP Python cheat sheet
->
-> AUTHENTICATION:
-> os.environ['GOOGLE_APPLICATION_CREDENTIALS']   Service account key
-> Client(project=PROJECT_ID)                     All libraries use this
->
-> CLOUD STORAGE:
-> storage.Client()                               Create client
-> bucket.blob(path).upload_from_string(data)     Upload
-> bucket.blob(path).download_as_text()           Download
-> client.list_blobs(bucket, prefix=...)          List objects
->
-> BIGQUERY:
-> bigquery.Client()                              Create client
-> client.load_table_from_dataframe(df, table)    Load DataFrame
-> client.query(sql)                              Run SQL query
-> job.result()                                   Wait for completion
->
-> PUB/SUB:
-> publisher.publish(topic, data, **attrs)        Publish message
-> subscriber.pull(subscription, max_messages)    Pull messages
-> subscriber.acknowledge(subscription, ack_ids)  Acknowledge
->
-> FIRESTORE:
-> db.collection('name').document('id').set({})   Write document
-> db.collection('name').stream()                 Read all docs
-> db.collection('name').where(field, op, val)    Query with filter
-> db.batch()                                     Batch writes
->
-> SECRET MANAGER:
-> sm.access_secret_version(name)                 Read secret
-> sm.create_secret(parent, secret_id, secret)    Create secret
-> sm.add_secret_version(parent, payload)         Add version
->
-> CLOUD MONITORING:
-> logger.log_struct({...}, severity='INFO')      Write structured log
-> metric_client.create_time_series(series)       Write custom metric
->
-> C# EQUIVALENTS:
-> google-cloud-storage     → Google.Cloud.Storage.V1
-> google-cloud-bigquery    → Google.Cloud.BigQuery.V2
-> google-cloud-pubsub      → Google.Cloud.PubSub.V1
-> google-cloud-firestore   → Google.Cloud.Firestore
-> google-cloud-secret-mgr  → Google.Cloud.SecretManager.V1
-> google-cloud-monitoring  → Google.Cloud.Monitoring.V3
->
+```python
+# Summary — GCP Python cheat sheet
+#
+# AUTHENTICATION:
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS']   Service account key
+# Client(project=PROJECT_ID)                     All libraries use this
+#
+# CLOUD STORAGE:
+# storage.Client()                               Create client
+# bucket.blob(path).upload_from_string(data)     Upload
+# bucket.blob(path).download_as_text()           Download
+# client.list_blobs(bucket, prefix=...)          List objects
+#
+# BIGQUERY:
+# bigquery.Client()                              Create client
+# client.load_table_from_dataframe(df, table)    Load DataFrame
+# client.query(sql)                              Run SQL query
+# job.result()                                   Wait for completion
+#
+# PUB/SUB:
+# publisher.publish(topic, data, **attrs)        Publish message
+# subscriber.pull(subscription, max_messages)    Pull messages
+# subscriber.acknowledge(subscription, ack_ids)  Acknowledge
+#
+# FIRESTORE:
+# db.collection('name').document('id').set({})   Write document
+# db.collection('name').stream()                 Read all docs
+# db.collection('name').where(field, op, val)    Query with filter
+# db.batch()                                     Batch writes
+#
+# SECRET MANAGER:
+# sm.access_secret_version(name)                 Read secret
+# sm.create_secret(parent, secret_id, secret)    Create secret
+# sm.add_secret_version(parent, payload)         Add version
+#
+# CLOUD MONITORING:
+# logger.log_struct({...}, severity='INFO')      Write structured log
+# metric_client.create_time_series(series)       Write custom metric
+#
+# C# EQUIVALENTS:
+# google-cloud-storage     → Google.Cloud.Storage.V1
+# google-cloud-bigquery    → Google.Cloud.BigQuery.V2
+# google-cloud-pubsub      → Google.Cloud.PubSub.V1
+# google-cloud-firestore   → Google.Cloud.Firestore
+# google-cloud-secret-mgr  → Google.Cloud.SecretManager.V1
+# google-cloud-monitoring  → Google.Cloud.Monitoring.V3
+```

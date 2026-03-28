@@ -20,32 +20,30 @@ status: complete
 
 #### Basic try / catch
 
-> [!warning] Basic try/catch — structured exception handling
-> Basic try/catch — structured exception handling
->
-> Technique: Wrap risky code in try { }. Catch specific exception types
->   in catch (ExceptionType ex) { }. The catch block handles the error.
->   Unmatched exceptions propagate up the call stack.
->
-> Benefits:
->   - Separates normal flow from error handling — cleaner code
->   - Catch specific types — handle each error appropriately
->   - ex.Message and ex.StackTrace provide diagnostic details
->
-> Anti-patterns:
->   - Catch (Exception) everywhere — hides bugs, catches too broadly
->   - Empty catch blocks — silently swallows errors
->   - Using exceptions for flow control — slow, use TryParse/if instead
->
-> When to use:
->   - I/O operations, parsing external data, network calls
->
-> When NOT to use:
->   - Expected conditions — use TryParse, if/else, or null checks
->
-> Basic try/catch — wrap risky code in try; catch handles specific exception types
-
 ```csharp
+// Basic try/catch — structured exception handling
+//
+// Technique: Wrap risky code in try { }. Catch specific exception types
+//   in catch (ExceptionType ex) { }. The catch block handles the error.
+//   Unmatched exceptions propagate up the call stack.
+//
+// Benefits:
+//   - Separates normal flow from error handling — cleaner code
+//   - Catch specific types — handle each error appropriately
+//   - ex.Message and ex.StackTrace provide diagnostic details
+//
+// Anti-patterns:
+//   - Catch (Exception) everywhere — hides bugs, catches too broadly
+//   - Empty catch blocks — silently swallows errors
+//   - Using exceptions for flow control — slow, use TryParse/if instead
+//
+// When to use:
+//   - I/O operations, parsing external data, network calls
+//
+// When NOT to use:
+//   - Expected conditions — use TryParse, if/else, or null checks
+
+// Basic try/catch — wrap risky code in try; catch handles specific exception types
 using System.IO;
 
 try
@@ -224,49 +222,45 @@ catch (InvalidOperationException ex)
 
 #### Exception hierarchy and properties
 
-> [!warning] Exception hierarchy — inheritance tree and diagnostic properties
-> Exception hierarchy — inheritance tree and diagnostic properties
->
-> Technique: All exceptions inherit from Exception. SystemException covers
->   most built-in errors. Properties: Message (description), StackTrace
->   (call chain), InnerException (wrapped cause), Data (key-value context).
->
-> Benefits:
->   - Hierarchical catching — catch base type to handle entire family
->   - InnerException chains preserve the full error history
->   - Data dictionary attaches diagnostic context without custom types
->
-> Anti-patterns:
->   - Catching Exception when a specific type is known — too broad
->   - Ignoring InnerException — the root cause may be buried
->
-> When to use:
->   - Understanding which exception type to catch for a given operation
->
-> When NOT to use:
->   - N/A — this is a reference for the exception type system
->
-> Exception hierarchy — all exceptions inherit from Exception; SystemException covers most built-ins
-
-> [!info] Exception
->
->   Exception
->   ├── SystemException
->   │   ├── ArgumentException (ArgumentNullException, ArgumentOutOfRangeException)
->   │   ├── ArithmeticException (DivideByZeroException, OverflowException)
->   │   ├── InvalidOperationException
->   │   ├── NullReferenceException
->   │   ├── FormatException
->   │   ├── KeyNotFoundException
->   │   ├── IOException (FileNotFoundException, DirectoryNotFoundException)
->   │   └── UnauthorizedAccessException
->   ├── AggregateException (wraps multiple exceptions from parallel tasks)
->   └── your custom exceptions inherit from Exception or a specific subclass
->
-> Exception properties — Message, ParamName, StackTrace, InnerException, Data
-
 ```csharp
+// Exception hierarchy — inheritance tree and diagnostic properties
+//
+// Technique: All exceptions inherit from Exception. SystemException covers
+//   most built-in errors. Properties: Message (description), StackTrace
+//   (call chain), InnerException (wrapped cause), Data (key-value context).
+//
+// Benefits:
+//   - Hierarchical catching — catch base type to handle entire family
+//   - InnerException chains preserve the full error history
+//   - Data dictionary attaches diagnostic context without custom types
+//
+// Anti-patterns:
+//   - Catching Exception when a specific type is known — too broad
+//   - Ignoring InnerException — the root cause may be buried
+//
+// When to use:
+//   - Understanding which exception type to catch for a given operation
+//
+// When NOT to use:
+//   - N/A — this is a reference for the exception type system
+
+// Exception hierarchy — all exceptions inherit from Exception; SystemException covers most built-ins
 #nullable enable
+//
+//   Exception
+//   ├── SystemException
+//   │   ├── ArgumentException (ArgumentNullException, ArgumentOutOfRangeException)
+//   │   ├── ArithmeticException (DivideByZeroException, OverflowException)
+//   │   ├── InvalidOperationException
+//   │   ├── NullReferenceException
+//   │   ├── FormatException
+//   │   ├── KeyNotFoundException
+//   │   ├── IOException (FileNotFoundException, DirectoryNotFoundException)
+//   │   └── UnauthorizedAccessException
+//   ├── AggregateException (wraps multiple exceptions from parallel tasks)
+//   └── your custom exceptions inherit from Exception or a specific subclass
+
+// Exception properties — Message, ParamName, StackTrace, InnerException, Data
 try
 {
     throw new ArgumentException("Value cannot be negative", "salary");
@@ -371,31 +365,30 @@ catch (FormatException ex)
 
 #### Type declarations
 
-> [!warning] Custom exception classes — domain-specific exceptions with structured context
-> Custom exception classes — domain-specific exceptions with structured context
->
-> Technique: CsvParseException inherits Exception and adds RowNumber,
->   ColumnName, RawValue properties. PipelineException wraps any exception
->   with pipeline name and stage. Both preserve InnerException chain.
->
-> Benefits:
->   - Structured context — RowNumber, ColumnName directly on the exception
->   - Type-safe catching — catch (CsvParseException) vs generic Exception
->   - InnerException chain preserves the full error history
->
-> Anti-patterns:
->   - Custom exceptions without additional context — use built-in types
->   - Too many custom exception types — group related errors
->
-> When to use:
->   - Domain errors with structured diagnostic fields (row, column, stage)
->
-> When NOT to use:
->   - Generic errors — built-in FormatException, IOException suffice
->
-> CsvParseException — domain exception for CSV parsing failures with structured context
-
 ```csharp
+// Custom exception classes — domain-specific exceptions with structured context
+//
+// Technique: CsvParseException inherits Exception and adds RowNumber,
+//   ColumnName, RawValue properties. PipelineException wraps any exception
+//   with pipeline name and stage. Both preserve InnerException chain.
+//
+// Benefits:
+//   - Structured context — RowNumber, ColumnName directly on the exception
+//   - Type-safe catching — catch (CsvParseException) vs generic Exception
+//   - InnerException chain preserves the full error history
+//
+// Anti-patterns:
+//   - Custom exceptions without additional context — use built-in types
+//   - Too many custom exception types — group related errors
+//
+// When to use:
+//   - Domain errors with structured diagnostic fields (row, column, stage)
+//
+// When NOT to use:
+//   - Generic errors — built-in FormatException, IOException suffice
+
+// CsvParseException — domain exception for CSV parsing failures with structured context
+
 public class CsvParseException : Exception
 {
     public int RowNumber { get; }
@@ -604,31 +597,29 @@ public class CsvWriter : IDisposable
 
 #### Type declarations
 
-> [!warning] ParseResult record — structured result for error accumulation
-> ParseResult record — structured result for error accumulation
->
-> Technique: record ParseResult(Name, Salary, IsValid, Error) captures
->   both successful parses and failures. Process all rows, partition
->   results into valid/invalid, route errors to dead-letter.
->
-> Benefits:
->   - No exceptions for expected bad data — faster than try/catch per row
->   - All errors collected — not just the first one
->   - Dead-letter pattern — bad records saved for investigation
->
-> Anti-patterns:
->   - Throwing exceptions for each bad row — 1000x slower at scale
->   - Stopping on first error — misses subsequent errors in the batch
->
-> When to use:
->   - ETL parsing where bad records are expected and must be collected
->
-> When NOT to use:
->   - When every error should halt processing — throw immediately
->
-> ParseResult — record for accumulating parse outcomes (valid records + errors)
-
 ```csharp
+// ParseResult record — structured result for error accumulation
+//
+// Technique: record ParseResult(Name, Salary, IsValid, Error) captures
+//   both successful parses and failures. Process all rows, partition
+//   results into valid/invalid, route errors to dead-letter.
+//
+// Benefits:
+//   - No exceptions for expected bad data — faster than try/catch per row
+//   - All errors collected — not just the first one
+//   - Dead-letter pattern — bad records saved for investigation
+//
+// Anti-patterns:
+//   - Throwing exceptions for each bad row — 1000x slower at scale
+//   - Stopping on first error — misses subsequent errors in the batch
+//
+// When to use:
+//   - ETL parsing where bad records are expected and must be collected
+//
+// When NOT to use:
+//   - When every error should halt processing — throw immediately
+
+// ParseResult — record for accumulating parse outcomes (valid records + errors)
 #nullable enable
 record ParseResult(string Name, int Salary, bool IsValid, string? Error);
 ```

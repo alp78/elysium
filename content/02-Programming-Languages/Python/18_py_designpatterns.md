@@ -25,30 +25,29 @@ Topics covered:
 
 ## 1. Dependency Injection
 
-> [!warning] Dependency Injection (DI) — pass dependencies in, don't create them inside
-> Dependency Injection (DI) — pass dependencies in, don't create them inside.
->
-> KEY CONCEPTS:
-> - DI: a class receives its dependencies (DB connection, API client, logger)
->   through its constructor, NOT by creating them internally.
-> - Why: testability (swap real DB for mock), flexibility (swap providers),
->   single responsibility (class does its job, not wiring).
-> - Python: no framework needed — just pass objects via __init__.
->   C# equivalent: Microsoft.Extensions.DependencyInjection (builder.Services.AddXxx)
->
-> WITHOUT DI (bad — hard to test, tightly coupled):
->   class PipelineService:
->       def __init__(self):
->           self.db = PostgresConnection("prod-host")  # hardcoded!
->           self.storage = GCSClient("prod-bucket")     # hardcoded!
->
-> WITH DI (good — inject dependencies):
->   class PipelineService:
->       def __init__(self, db, storage):  # injected!
->           self.db = db
->           self.storage = storage
-
 ```python
+# Dependency Injection (DI) — pass dependencies in, don't create them inside.
+#
+# KEY CONCEPTS:
+# - DI: a class receives its dependencies (DB connection, API client, logger)
+#   through its constructor, NOT by creating them internally.
+# - Why: testability (swap real DB for mock), flexibility (swap providers),
+#   single responsibility (class does its job, not wiring).
+# - Python: no framework needed — just pass objects via __init__.
+#   C# equivalent: Microsoft.Extensions.DependencyInjection (builder.Services.AddXxx)
+#
+# WITHOUT DI (bad — hard to test, tightly coupled):
+#   class PipelineService:
+#       def __init__(self):
+#           self.db = PostgresConnection("prod-host")  # hardcoded!
+#           self.storage = GCSClient("prod-bucket")     # hardcoded!
+#
+# WITH DI (good — inject dependencies):
+#   class PipelineService:
+#       def __init__(self, db, storage):  # injected!
+#           self.db = db
+#           self.storage = storage
+
 from abc import ABC, abstractmethod
 
 # ─── Define interfaces (abstract base classes) ───
@@ -164,17 +163,16 @@ print(f"  Notifications sent: {mock_notifier.messages}")
 
 ## 2. Design Patterns
 
-> [!tip] Singleton — ensure a class has exactly ONE instance
-> Singleton — ensure a class has exactly ONE instance.
->
-> Use case: database connection pool, configuration manager, logger.
-> In Python: use a module-level variable (simplest) or __new__.
-> C# equivalent: static readonly instance, or AddSingleton<T>() in DI.
->
-> WARNING: singletons make testing harder (global state).
-> Prefer DI with a single instance over the Singleton pattern.
-
 ```python
+# Singleton — ensure a class has exactly ONE instance.
+#
+# Use case: database connection pool, configuration manager, logger.
+# In Python: use a module-level variable (simplest) or __new__.
+# C# equivalent: static readonly instance, or AddSingleton<T>() in DI.
+#
+# WARNING: singletons make testing harder (global state).
+# Prefer DI with a single instance over the Singleton pattern.
+
 class Config:
     """Singleton configuration — only one instance ever created."""
     _instance = None
@@ -263,15 +261,15 @@ for provider in ["gcs", "s3", "local"]:
       s3    -> s3://bucket/bronze/data.csv (10 bytes)
       local -> file://bronze/data.csv (10 bytes)
 
-> [!example] Observer — notify multiple listeners when something happens
-> Observer — notify multiple listeners when something happens.
->
-> Use case: pipeline events (step completed, error occurred, data ready).
-> Multiple consumers react to the same event without coupling.
-> C# equivalent: event/delegate pattern, or IObservable<T>.
-> GCP equivalent: Pub/Sub (same pattern, distributed).
-
 ```python
+# Observer — notify multiple listeners when something happens.
+#
+# Use case: pipeline events (step completed, error occurred, data ready).
+# Multiple consumers react to the same event without coupling.
+# C# equivalent: event/delegate pattern, or IObservable<T>.
+# GCP equivalent: Pub/Sub (same pattern, distributed).
+
+
 class PipelineEventBus:
     """Simple observer/event bus — subscribe to events, publish notifications."""
     def __init__(self):
@@ -395,24 +393,23 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
 
 ## 3. Data Validation
 
-> [!abstract]- Data Validation with Pydantic — type-safe data models
-> Data Validation with Pydantic — type-safe data models.
->
-> KEY CONCEPTS:
-> - Pydantic BaseModel: define data shape with type hints.
->   Validates on construction — raises ValidationError if invalid.
-> - Field(): add constraints (min, max, regex, default).
-> - model_validate(): parse dict → model (formerly parse_obj).
-> - model_dump(): model → dict (formerly dict()).
-> - C# equivalent: DataAnnotations ([Required], [Range]) + FluentValidation.
->
-> Why: catch bad data at the boundary (API input, file load, config parse)
-> before it flows into your pipeline and causes silent corruption.
->
->
-> ─── Model definitions ───
-
 ```python
+# Data Validation with Pydantic — type-safe data models.
+#
+# KEY CONCEPTS:
+# - Pydantic BaseModel: define data shape with type hints.
+#   Validates on construction — raises ValidationError if invalid.
+# - Field(): add constraints (min, max, regex, default).
+# - model_validate(): parse dict → model (formerly parse_obj).
+# - model_dump(): model → dict (formerly dict()).
+# - C# equivalent: DataAnnotations ([Required], [Range]) + FluentValidation.
+#
+# Why: catch bad data at the boundary (API input, file load, config parse)
+# before it flows into your pipeline and causes silent corruption.
+
+
+# ─── Model definitions ───
+
 class OhlcvRecord(BaseModel):
     """Validated OHLCV record — catches bad data before pipeline ingestion."""
     symbol: str = Field(..., min_length=1, max_length=20, description="Ticker symbol")
@@ -487,16 +484,16 @@ for case in bad_inputs:
 
 ## 4. Reflection / Introspection
 
-> [!abstract]- Reflection / Introspection — inspect objects at runtime
-> Reflection / Introspection — inspect objects at runtime.
->
-> Python is deeply introspective — you can inspect any object's type,
-> attributes, methods, source code, and module at runtime.
-> C# equivalent: System.Reflection (typeof, GetType, GetProperties, GetMethods).
->
-> Use cases: plugin systems, serializers, ORMs, debugging, documentation.
-
 ```python
+# Reflection / Introspection — inspect objects at runtime.
+#
+# Python is deeply introspective — you can inspect any object's type,
+# attributes, methods, source code, and module at runtime.
+# C# equivalent: System.Reflection (typeof, GetType, GetProperties, GetMethods).
+#
+# Use cases: plugin systems, serializers, ORMs, debugging, documentation.
+
+
 class TradeOrder:
     """Sample class to inspect."""
     MAX_QUANTITY = 1_000_000
@@ -729,49 +726,49 @@ index-pipeline/
 
 ## 6. Summary
 
-> [!abstract]- Summary — Python Design Patterns cheat sheet
-> Summary — Python Design Patterns cheat sheet
->
-> DEPENDENCY INJECTION:
-> class Service:                     Define with abstract deps
->     def __init__(self, repo):       Inject via constructor
-> Service(SqlRepo())                 Production wiring
-> Service(MockRepo())                Test wiring
->
-> SINGLETON:
-> def __new__(cls):                  Control instance creation
->     if cls._instance is None: ...  Create once, return same
-> Better: module-level variable      Python modules ARE singletons
->
-> FACTORY:
-> def create_client(type):           Return right subclass
->     return {"gcs": GCS, "s3": S3}[type]()
->
-> OBSERVER:
-> bus.subscribe("event", callback)   Register listener
-> bus.publish("event", data)         Notify all listeners
->
-> STRATEGY:
-> class Scorer:                      Context class
->     def __init__(self, strategy):   Inject algorithm
->     def evaluate(self): ...         Delegate to strategy
->
-> VALIDATION (Pydantic):
-> class Model(BaseModel):            Define with type hints
->     field: str = Field(min_length=1)
-> Model(**data)                      Auto-validates on creation
->
-> REFLECTION:
-> type(obj), isinstance()            Type checking
-> dir(obj), vars(obj)                List attributes
-> getattr(obj, "name")               Dynamic access
-> inspect.signature()                Parameter introspection
->
-> C# EQUIVALENTS:
-> ABC / abstractmethod    → interface
-> __init__(self, dep)     → constructor injection
-> AddSingleton<T>()       → DI singleton lifetime
-> Pydantic BaseModel      → DataAnnotations + FluentValidation
-> inspect module           → System.Reflection
-> type(obj).__name__      → obj.GetType().Name
->
+```python
+# Summary — Python Design Patterns cheat sheet
+#
+# DEPENDENCY INJECTION:
+# class Service:                     Define with abstract deps
+#     def __init__(self, repo):       Inject via constructor
+# Service(SqlRepo())                 Production wiring
+# Service(MockRepo())                Test wiring
+#
+# SINGLETON:
+# def __new__(cls):                  Control instance creation
+#     if cls._instance is None: ...  Create once, return same
+# Better: module-level variable      Python modules ARE singletons
+#
+# FACTORY:
+# def create_client(type):           Return right subclass
+#     return {"gcs": GCS, "s3": S3}[type]()
+#
+# OBSERVER:
+# bus.subscribe("event", callback)   Register listener
+# bus.publish("event", data)         Notify all listeners
+#
+# STRATEGY:
+# class Scorer:                      Context class
+#     def __init__(self, strategy):   Inject algorithm
+#     def evaluate(self): ...         Delegate to strategy
+#
+# VALIDATION (Pydantic):
+# class Model(BaseModel):            Define with type hints
+#     field: str = Field(min_length=1)
+# Model(**data)                      Auto-validates on creation
+#
+# REFLECTION:
+# type(obj), isinstance()            Type checking
+# dir(obj), vars(obj)                List attributes
+# getattr(obj, "name")               Dynamic access
+# inspect.signature()                Parameter introspection
+#
+# C# EQUIVALENTS:
+# ABC / abstractmethod    → interface
+# __init__(self, dep)     → constructor injection
+# AddSingleton<T>()       → DI singleton lifetime
+# Pydantic BaseModel      → DataAnnotations + FluentValidation
+# inspect module           → System.Reflection
+# type(obj).__name__      → obj.GetType().Name
+```

@@ -593,15 +593,14 @@ Console.WriteLine($"  gRPC RTT to GCP (50 samples): p50={rttP50Ms:F0}ms");
 
       gRPC RTT to GCP (50 samples): p50=33ms
 
-> [!info] GCP managed services — total latency and protocol overhead
-> GCP managed services — total latency and protocol overhead
->
-> C# shows the same ~33ms RTT + ~10ms overhead as Python — the GCP service latency
-> is network-bound, not language-bound. Both use gRPC under the hood.
-> Local WebSocket/SSE differ (C# HTTP.sys kernel vs Python asyncio user-space),
-> but GCP latency is identical because the bottleneck is network + server processing.
-
 ```csharp
+// GCP managed services — total latency and protocol overhead
+//
+// C# shows the same ~33ms RTT + ~10ms overhead as Python — the GCP service latency
+// is network-bound, not language-bound. Both use gRPC under the hood.
+// Local WebSocket/SSE differ (C# HTTP.sys kernel vs Python asyncio user-space),
+// but GCP latency is identical because the bottleneck is network + server processing.
+
 var psOverheadMs = Math.Max(0, psAvgLatency - rttP50Ms);
 var fsOverheadMs = Math.Max(0, fsAvgLatency - rttP50Ms);
 

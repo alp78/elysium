@@ -52,22 +52,21 @@ print(f'  FINNHUB_KEY:     {"set" if FINNHUB_KEY else "MISSING"}')
 
 <h4>Paginated FRED API with <code style="font-size:0.75em">async for</code></h4>
 
-> [!warning] Async generator for paginated FRED API — stream economic data series
-> Async generator for paginated FRED API — stream economic data series
->
-> WHAT: async def with yield produces items one at a time from an async source.
->   async for pulls items lazily — only one page in memory at a time.
->
-> WHY: FRED has thousands of series. Loading all into memory wastes resources.
->   With async generator: fetch page 1 → yield items → fetch page 2 → yield...
->   Consumer processes items as they arrive. break stops fetching further pages.
->
-> WHEN TO USE: any paginated REST API, database cursors, streaming file reads
-> ANTI-PATTERNS:
->   - Don't collect all items into a list unless you need random access
->   - Don't use requests (blocking) — use aiohttp (async) inside async generators
-
 ```python
+# Async generator for paginated FRED API — stream economic data series
+#
+# WHAT: async def with yield produces items one at a time from an async source.
+#   async for pulls items lazily — only one page in memory at a time.
+#
+# WHY: FRED has thousands of series. Loading all into memory wastes resources.
+#   With async generator: fetch page 1 → yield items → fetch page 2 → yield...
+#   Consumer processes items as they arrive. break stops fetching further pages.
+#
+# WHEN TO USE: any paginated REST API, database cursors, streaming file reads
+# ANTI-PATTERNS:
+#   - Don't collect all items into a list unless you need random access
+#   - Don't use requests (blocking) — use aiohttp (async) inside async generators
+
 async def fetch_fred_series(search_text: str, limit: int = 10, page_size: int = 5):
     """Async generator — yields (id, title) tuples from FRED series search."""
     offset = 0
@@ -109,24 +108,22 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 
 #### Parallel fetch with rate limiting
 
-> [!warning] Parallel fetch with asyncio.Semaphore — limit concurrent API requests
-> Parallel fetch with asyncio.Semaphore — limit concurrent API requests
->
-> WHAT: asyncio.Semaphore(n) limits how many coroutines run a section concurrently.
->   Like SemaphoreSlim in C#. Combined with aiohttp for non-blocking HTTP.
->
-> WHY: APIs have rate limits (e.g., 8 req/min for Twelve Data free tier).
->   Without throttling: all requests fire at once → 429 Too Many Requests.
->   Semaphore(3) ensures max 3 requests in flight at any time.
->
-> ANTI-PATTERNS:
->   - Don't use requests library in async code — it blocks the event loop
->   - Don't create a new ClientSession per request — reuse one session
->   - Don't forget to close the session (use async with)
->
-> Euro Stoxx 50 companies (ADR tickers available on Twelve Data free tier)
-
 ```python
+# Parallel fetch with asyncio.Semaphore — limit concurrent API requests
+#
+# WHAT: asyncio.Semaphore(n) limits how many coroutines run a section concurrently.
+#   Like SemaphoreSlim in C#. Combined with aiohttp for non-blocking HTTP.
+#
+# WHY: APIs have rate limits (e.g., 8 req/min for Twelve Data free tier).
+#   Without throttling: all requests fire at once → 429 Too Many Requests.
+#   Semaphore(3) ensures max 3 requests in flight at any time.
+#
+# ANTI-PATTERNS:
+#   - Don't use requests library in async code — it blocks the event loop
+#   - Don't create a new ClientSession per request — reuse one session
+#   - Don't forget to close the session (use async with)
+
+# Euro Stoxx 50 companies (ADR tickers available on Twelve Data free tier)
 SYMBOLS = ['SAP', 'ASML', 'TTE', 'UL', 'DEO', 'SNY', 'NVS', 'AZN']
 
 async def fetch_price(session, symbol, semaphore):
@@ -164,18 +161,17 @@ print(f'\n  Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)')
 
 <h4><code style="font-size:0.75em">asyncio.as_completed</code> with real API</h4>
 
-> [!info] asyncio.as_completed — process results as they arrive, not in submission order
-> asyncio.as_completed — process results as they arrive, not in submission order
->
-> WHAT: wraps a list of coroutines and yields futures in completion order.
->   The fastest API response is processed first, even if it was submitted last.
->
-> WHY: in a pipeline, you want to feed results to the next stage ASAP.
->   gather waits for the slowest; as_completed starts processing immediately.
->
-> NOTE: uses Finnhub (separate rate limit from Twelve Data used in previous cell)
-
 ```python
+# asyncio.as_completed — process results as they arrive, not in submission order
+#
+# WHAT: wraps a list of coroutines and yields futures in completion order.
+#   The fastest API response is processed first, even if it was submitted last.
+#
+# WHY: in a pipeline, you want to feed results to the next stage ASAP.
+#   gather waits for the slowest; as_completed starts processing immediately.
+#
+# NOTE: uses Finnhub (separate rate limit from Twelve Data used in previous cell)
+
 async def fetch_quote_fh(session, symbol):
     """Fetch a quote from Finnhub — returns current price and percent change."""
     url = f'https://finnhub.io/api/v1/quote?symbol={symbol}&token={FINNHUB_KEY}'
@@ -205,23 +201,22 @@ async with aiohttp.ClientSession() as session:
 
 #### Time and count bounded batching
 
-> [!warning] Async batching — accumulate items by count OR time, whichever comes first
-> Async batching — accumulate items by count OR time, whichever comes first
->
-> WHAT: an asyncio.Queue feeds items to a consumer that flushes:
->   - when batch reaches max_size (e.g., 3 items), OR
->   - when max_wait seconds elapse (e.g., 2s), whichever comes first.
->
-> WHY: inserting rows one-by-one into BigQuery/Postgres = 1000 round trips.
->   Batching into groups of 100 = 10 round trips. But you also need a time limit
->   so the last partial batch doesn't wait forever for more items.
->
-> WHEN TO USE: streaming ingestion, high-velocity event pipelines, DB bulk inserts
-> ANTI-PATTERNS:
->   - Don't batch too large — increases latency and memory
->   - Don't forget the time flush — last batch waits forever without it
-
 ```python
+# Async batching — accumulate items by count OR time, whichever comes first
+#
+# WHAT: an asyncio.Queue feeds items to a consumer that flushes:
+#   - when batch reaches max_size (e.g., 3 items), OR
+#   - when max_wait seconds elapse (e.g., 2s), whichever comes first.
+#
+# WHY: inserting rows one-by-one into BigQuery/Postgres = 1000 round trips.
+#   Batching into groups of 100 = 10 round trips. But you also need a time limit
+#   so the last partial batch doesn't wait forever for more items.
+#
+# WHEN TO USE: streaming ingestion, high-velocity event pipelines, DB bulk inserts
+# ANTI-PATTERNS:
+#   - Don't batch too large — increases latency and memory
+#   - Don't forget the time flush — last batch waits forever without it
+
 async def batch_consumer(queue: asyncio.Queue, max_size: int = 3, max_wait: float = 0.5):
     """Consume items from queue, flush when batch is full or timeout expires."""
     batch = []
@@ -262,22 +257,20 @@ await consumer_task
 
 <h4><code style="font-size:0.75em">subprocess</code> — spawn external programs</h4>
 
-> [!warning] subprocess — spawn child processes with full isolation
-> subprocess — spawn child processes with full isolation
->
-> WHAT: subprocess.run() launches an OS process, waits for it, captures output.
->   Each process has its own memory, GIL, and crash boundary.
->
-> WHY: crash resilience (child crash doesn't kill parent), invoke external tools
->   (gcloud, bq, dbt, C# scripts), bypass GIL for CPU-bound code.
->
-> ANTI-PATTERNS:
->   - Don't use shell=True with user input — command injection risk
->   - Don't pass secrets via arguments — visible in process listings
->
-> Single subprocess — run a computation in an isolated process
-
 ```python
+# subprocess — spawn child processes with full isolation
+#
+# WHAT: subprocess.run() launches an OS process, waits for it, captures output.
+#   Each process has its own memory, GIL, and crash boundary.
+#
+# WHY: crash resilience (child crash doesn't kill parent), invoke external tools
+#   (gcloud, bq, dbt, C# scripts), bypass GIL for CPU-bound code.
+#
+# ANTI-PATTERNS:
+#   - Don't use shell=True with user input — command injection risk
+#   - Don't pass secrets via arguments — visible in process listings
+
+# Single subprocess — run a computation in an isolated process
 result = subprocess.run(
     ["python", "-c", "import json, os; print(json.dumps({'pid': os.getpid(), 'result': sum(range(1000))}))"],
     capture_output=True, text=True, timeout=10,
@@ -304,51 +297,51 @@ for expr, val in results:
 
 ## Distributed Task Queues — Architecture Overview
 
-> [!example]- Distributed task queues — when single-machine parallelism isn't enough
-> Distributed task queues — when single-machine parallelism isn't enough
->
-> WHAT: a broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines.
->   Workers pull tasks from the queue, execute them, and report results.
->   This is the standard architecture for production data engineering at scale.
->
-> KEY FRAMEWORKS:
->   - Celery: most popular Python distributed task queue. Workers subscribe to
->     a broker (Redis/RabbitMQ), pull tasks, execute them asynchronously.
->     Use for: ETL jobs, API ingestion workers, scheduled pipeline triggers.
->
->   - Redis Queue (RQ): simpler alternative to Celery. Workers pull jobs from
->     Redis queues. Less config than Celery, good for small/medium workloads.
->
->   - Dask: parallel computing library that scales from laptop to cluster.
->     Dask.distributed provides a scheduler + workers model. Integrates with
->     pandas/numpy. Use for: large DataFrame processing, ML pipelines.
->
-> EVOLUTION PATH:
->   1. asyncio.gather → single process, concurrent IO (this notebook)
->   2. ProcessPoolExecutor → single machine, multiple cores
->   3. Celery/RQ → multiple machines, distributed workers
->   4. Dask/Spark → distributed data processing at scale
->
-> WHEN TO UPGRADE:
->   - Single machine can't keep up with API rate limits → add worker machines
->   - Need fault tolerance → broker retries failed tasks automatically
->   - Need scheduling → Celery Beat or Airflow triggers Celery tasks
->
-> Architecture: Producer → Broker (Redis) → Workers (N machines)
-> print()
->   # Celery example (not runnable in notebook — needs Redis + worker process):
->   from celery import Celery
->   app = Celery("tasks", broker="redis://localhost:6379/0")
-> print()
->   @app.task
->   def fetch_and_store(symbol):
->       data = requests.get(f"api/{symbol}").json()
->       db.insert(data)
-> print()
->   # Dispatch 100 tasks — workers pick them up from Redis:
->   for sym in symbols:
->       fetch_and_store.delay(sym)  # .delay() sends to broker, returns immediately
->
+```python
+# Distributed task queues — when single-machine parallelism isn't enough
+#
+# WHAT: a broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines.
+#   Workers pull tasks from the queue, execute them, and report results.
+#   This is the standard architecture for production data engineering at scale.
+#
+# KEY FRAMEWORKS:
+#   - Celery: most popular Python distributed task queue. Workers subscribe to
+#     a broker (Redis/RabbitMQ), pull tasks, execute them asynchronously.
+#     Use for: ETL jobs, API ingestion workers, scheduled pipeline triggers.
+#
+#   - Redis Queue (RQ): simpler alternative to Celery. Workers pull jobs from
+#     Redis queues. Less config than Celery, good for small/medium workloads.
+#
+#   - Dask: parallel computing library that scales from laptop to cluster.
+#     Dask.distributed provides a scheduler + workers model. Integrates with
+#     pandas/numpy. Use for: large DataFrame processing, ML pipelines.
+#
+# EVOLUTION PATH:
+#   1. asyncio.gather → single process, concurrent IO (this notebook)
+#   2. ProcessPoolExecutor → single machine, multiple cores
+#   3. Celery/RQ → multiple machines, distributed workers
+#   4. Dask/Spark → distributed data processing at scale
+#
+# WHEN TO UPGRADE:
+#   - Single machine can't keep up with API rate limits → add worker machines
+#   - Need fault tolerance → broker retries failed tasks automatically
+#   - Need scheduling → Celery Beat or Airflow triggers Celery tasks
+
+print('Architecture: Producer → Broker (Redis) → Workers (N machines)')
+print()
+print('  # Celery example (not runnable in notebook — needs Redis + worker process):')
+print('  from celery import Celery')
+print('  app = Celery("tasks", broker="redis://localhost:6379/0")')
+print()
+print('  @app.task')
+print('  def fetch_and_store(symbol):')
+print('      data = requests.get(f"api/{symbol}").json()')
+print('      db.insert(data)')
+print()
+print('  # Dispatch 100 tasks — workers pick them up from Redis:')
+print('  for sym in symbols:')
+print('      fetch_and_store.delay(sym)  # .delay() sends to broker, returns immediately')
+```
 
     Architecture: Producer → Broker (Redis) → Workers (N machines)
     

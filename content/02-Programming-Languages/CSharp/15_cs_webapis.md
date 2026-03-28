@@ -159,32 +159,31 @@ catch (HttpRequestException ex)
 
 #### Pagination — fetch data in pages
 
-> [!warning] REST API patterns — pagination, retry, and bulk operations
-> REST API patterns — pagination, retry, and bulk operations
->
-> Technique: Pagination loops through pages until exhausted. Retry with
->   exponential backoff handles transient 429/5xx errors. Bulk POST
->   batches multiple records into one request to reduce round trips.
->
-> Benefits:
->   - Pagination handles unbounded result sets without OOM
->   - Exponential backoff prevents overwhelming failing services
->   - Bulk POST reduces network round trips by 10-100x
->   - 429 handling with Retry-After respects the API's rate limit
->
-> Anti-patterns:
->   - Fetching all pages without a limit — unbounded loop if API is broken
->   - Linear retry (no backoff) — hammers the failing service
->   - One POST per record — N round trips instead of 1
->   - Not checking Retry-After header on 429 — guessing the wait time
->
-> When to use:
->   - Any API integration in data pipelines — these three patterns cover 90% of cases
->
-> When NOT to use:
->   - Streaming APIs (WebSocket, SSE) — use async streaming instead
-
 ```csharp
+// REST API patterns — pagination, retry, and bulk operations
+//
+// Technique: Pagination loops through pages until exhausted. Retry with
+//   exponential backoff handles transient 429/5xx errors. Bulk POST
+//   batches multiple records into one request to reduce round trips.
+//
+// Benefits:
+//   - Pagination handles unbounded result sets without OOM
+//   - Exponential backoff prevents overwhelming failing services
+//   - Bulk POST reduces network round trips by 10-100x
+//   - 429 handling with Retry-After respects the API's rate limit
+//
+// Anti-patterns:
+//   - Fetching all pages without a limit — unbounded loop if API is broken
+//   - Linear retry (no backoff) — hammers the failing service
+//   - One POST per record — N round trips instead of 1
+//   - Not checking Retry-After header on 429 — guessing the wait time
+//
+// When to use:
+//   - Any API integration in data pipelines — these three patterns cover 90% of cases
+//
+// When NOT to use:
+//   - Streaming APIs (WebSocket, SSE) — use async streaming instead
+
 var client = new HttpClient();
 
 // Pagination — loop through pages, collect all results
@@ -289,35 +288,34 @@ Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty
 
 #### DTO record declarations
 
-> [!warning] ASP.NET Minimal APIs — building REST endpoints in C#
-> ASP.NET Minimal APIs — building REST endpoints in C#
->
-> Technique: Define record DTOs (like Pydantic models), write handler
->   functions that return typed results, and wire them to routes with
->   app.MapGet/MapPost/MapDelete. Each handler is a pure function
->   that can be tested independently — we demonstrate that here.
->
-> Benefits:
->   - Record DTOs give compile-time type safety and auto-generated Equals/ToString
->   - Handler functions are testable without a running web server
->   - Same patterns work in ASP.NET Minimal APIs — just add route wiring
->   - Results.Ok/NotFound/Created map directly to HTTP status codes
->
-> Anti-patterns:
->   - Business logic in route handlers — extract to testable functions
->   - Dictionary<string, object> for API models — use typed records
->   - In-memory storage in production — use a database
->
-> When to use:
->   - Internal APIs, microservices, data pipeline endpoints
->
-> When NOT to use:
->   - Complex APIs with middleware — use full ASP.NET MVC controllers
->
-> DTOs — C# records = Python Pydantic models
-> Immutable, value equality, auto-generated ToString.
-
 ```csharp
+// ASP.NET Minimal APIs — building REST endpoints in C#
+//
+// Technique: Define record DTOs (like Pydantic models), write handler
+//   functions that return typed results, and wire them to routes with
+//   app.MapGet/MapPost/MapDelete. Each handler is a pure function
+//   that can be tested independently — we demonstrate that here.
+//
+// Benefits:
+//   - Record DTOs give compile-time type safety and auto-generated Equals/ToString
+//   - Handler functions are testable without a running web server
+//   - Same patterns work in ASP.NET Minimal APIs — just add route wiring
+//   - Results.Ok/NotFound/Created map directly to HTTP status codes
+//
+// Anti-patterns:
+//   - Business logic in route handlers — extract to testable functions
+//   - Dictionary<string, object> for API models — use typed records
+//   - In-memory storage in production — use a database
+//
+// When to use:
+//   - Internal APIs, microservices, data pipeline endpoints
+//
+// When NOT to use:
+//   - Complex APIs with middleware — use full ASP.NET MVC controllers
+
+// DTOs — C# records = Python Pydantic models
+// Immutable, value equality, auto-generated ToString.
+
 record Trade(string TradeId, string Ticker, string Side, int Quantity, double Price);
 record TradeResponse(string TradeId, string Status, string Message);
 record PortfolioPosition(string Ticker, int Shares, double AvgCost, double MarketValue);
@@ -481,22 +479,22 @@ Console.WriteLine($"  {s2}: {b2}");
 
 #### Python FastAPI vs C# ASP.NET Minimal API mapping
 
-> [!info] How to wire these handlers in ASP.NET Minimal APIs (outside notebooks):
-> How to wire these handlers in ASP.NET Minimal APIs (outside notebooks):
->
->   var builder = WebApplication.CreateBuilder(args);
->   builder.Services.AddEndpointsApiExplorer();
->   builder.Services.AddSwaggerGen();
->   var app = builder.Build();
->
->   app.MapGet("/health",             () => Results.Ok(new { status = "healthy" }));
->   app.MapGet("/positions",          (string? ticker) => GetPositions(ticker));
->   app.MapGet("/positions/{ticker}", (string ticker) => GetPosition(ticker));
->   app.MapPost("/trades",            (Trade trade) => PostTrade(trade));
->   app.MapDelete("/trades/{id}",     (string id) => DeleteTrade(id));
->
->   app.Run();
->
+```csharp
+// How to wire these handlers in ASP.NET Minimal APIs (outside notebooks):
+//
+//   var builder = WebApplication.CreateBuilder(args);
+//   builder.Services.AddEndpointsApiExplorer();
+//   builder.Services.AddSwaggerGen();
+//   var app = builder.Build();
+//
+//   app.MapGet("/health",             () => Results.Ok(new { status = "healthy" }));
+//   app.MapGet("/positions",          (string? ticker) => GetPositions(ticker));
+//   app.MapGet("/positions/{ticker}", (string ticker) => GetPosition(ticker));
+//   app.MapPost("/trades",            (Trade trade) => PostTrade(trade));
+//   app.MapDelete("/trades/{id}",     (string id) => DeleteTrade(id));
+//
+//   app.Run();
+```
 
 ## 4. Data Validation — Records, Data Annotations, and FluentValidation
 
@@ -524,32 +522,31 @@ Decorate record properties with `[Required]`, `[Range(1, 1000000)]`, `[StringLen
 `[RegularExpression]` to constrain values. ASP.NET validates these automatically before
 the handler runs. Invalid requests get a 400 Bad Request with detailed error messages.
 
-> [!warning] Data Annotations — attribute-based validation on record properties
-> Data Annotations — attribute-based validation on record properties
->
-> Technique: Decorate properties with [Required], [Range], [StringLength],
->   [RegularExpression]. ASP.NET validates automatically on model binding.
->   System.ComponentModel.DataAnnotations namespace provides all attributes.
->
-> Benefits:
->   - Declarative — constraints are on the property, not in handler code
->   - ASP.NET auto-validates — invalid requests get 400 before your code runs
->   - Standard .NET — works with EF Core, Blazor, WinForms, not just APIs
->   - Error messages auto-generated or customizable
->
-> Anti-patterns:
->   - Validation logic in handlers — use annotations or FluentValidation
->   - Missing [Required] on non-nullable fields — null slips through
->   - [Range] on string properties — use [StringLength] instead
->
-> When to use:
->   - Simple constraints: required, range, length, regex pattern
->
-> When NOT to use:
->   - Complex cross-field rules — use FluentValidation or IValidatableObject
-
 ```csharp
 #nullable enable
+// Data Annotations — attribute-based validation on record properties
+//
+// Technique: Decorate properties with [Required], [Range], [StringLength],
+//   [RegularExpression]. ASP.NET validates automatically on model binding.
+//   System.ComponentModel.DataAnnotations namespace provides all attributes.
+//
+// Benefits:
+//   - Declarative — constraints are on the property, not in handler code
+//   - ASP.NET auto-validates — invalid requests get 400 before your code runs
+//   - Standard .NET — works with EF Core, Blazor, WinForms, not just APIs
+//   - Error messages auto-generated or customizable
+//
+// Anti-patterns:
+//   - Validation logic in handlers — use annotations or FluentValidation
+//   - Missing [Required] on non-nullable fields — null slips through
+//   - [Range] on string properties — use [StringLength] instead
+//
+// When to use:
+//   - Simple constraints: required, range, length, regex pattern
+//
+// When NOT to use:
+//   - Complex cross-field rules — use FluentValidation or IValidatableObject
+
 using System.ComponentModel.DataAnnotations;
 
 // TradeOrder — record with Data Annotation constraints
@@ -859,37 +856,37 @@ Console.WriteLine(@"
 
 #### Web and APIs cheat sheet
 
-> [!abstract]- Summary — C# Web & APIs cheat sheet
-> Summary — C# Web & APIs cheat sheet
->
-> HTTP CLIENT:
-> var client = new HttpClient();
-> await client.GetAsync(url)                      GET request
-> await client.PostAsJsonAsync(url, obj)           POST with JSON body
-> await resp.Content.ReadFromJsonAsync<T>()        Deserialize response
-> resp.EnsureSuccessStatusCode()                   Throw on 4xx/5xx
-> client.DefaultRequestHeaders.Add(k, v)           Set headers
->
-> ASP.NET MINIMAL APIS:
-> app.MapGet("/path", handler)                     Define GET endpoint
-> app.MapPost("/path", handler)                    Define POST endpoint
-> Results.Ok(data)                                 200 response
-> Results.NotFound(msg)                            404 response
-> Results.Created(url, data)                       201 response
-> Results.Conflict(msg)                            409 response
->
-> REST PATTERNS:
-> Pagination           Loop with page/offset parameter
-> Retry + backoff      Catch HttpRequestException, delay, retry
-> Bulk POST            Batch records in single request
-> Rate limit           Check 429 + Retry-After header
->
-> PYTHON EQUIVALENTS:
-> HttpClient           → requests / httpx
-> PostAsJsonAsync       → requests.post(url, json=...)
-> EnsureSuccessStatus   → resp.raise_for_status()
-> ASP.NET Minimal       → FastAPI
-> record                → Pydantic BaseModel
-> Results.NotFound()    → HTTPException(404)
-> IHttpClientFactory    → httpx.Client()
->
+```csharp
+// Summary — C# Web & APIs cheat sheet
+//
+// HTTP CLIENT:
+// var client = new HttpClient();
+// await client.GetAsync(url)                      GET request
+// await client.PostAsJsonAsync(url, obj)           POST with JSON body
+// await resp.Content.ReadFromJsonAsync<T>()        Deserialize response
+// resp.EnsureSuccessStatusCode()                   Throw on 4xx/5xx
+// client.DefaultRequestHeaders.Add(k, v)           Set headers
+//
+// ASP.NET MINIMAL APIS:
+// app.MapGet("/path", handler)                     Define GET endpoint
+// app.MapPost("/path", handler)                    Define POST endpoint
+// Results.Ok(data)                                 200 response
+// Results.NotFound(msg)                            404 response
+// Results.Created(url, data)                       201 response
+// Results.Conflict(msg)                            409 response
+//
+// REST PATTERNS:
+// Pagination           Loop with page/offset parameter
+// Retry + backoff      Catch HttpRequestException, delay, retry
+// Bulk POST            Batch records in single request
+// Rate limit           Check 429 + Retry-After header
+//
+// PYTHON EQUIVALENTS:
+// HttpClient           → requests / httpx
+// PostAsJsonAsync       → requests.post(url, json=...)
+// EnsureSuccessStatus   → resp.raise_for_status()
+// ASP.NET Minimal       → FastAPI
+// record                → Pydantic BaseModel
+// Results.NotFound()    → HTTPException(404)
+// IHttpClientFactory    → httpx.Client()
+```
