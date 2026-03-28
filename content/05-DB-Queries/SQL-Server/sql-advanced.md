@@ -53,14 +53,13 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 The window functions and SCD patterns in this section are used extensively in the [[silver-transforms]] and [[gold-transforms]] layers of the medallion pipeline to produce cleaned and analytical datasets.
 
-### ROW_NUMBER for Deduplication
+### Window Functions — ROW_NUMBER for Deduplication
 
 Assign a unique sequential number within each partition. The classic pattern for picking
 one row per key (e.g., latest price per stock, or deduplicating loads).
 
 
 ```sql
-%%sql
 -- Pick the latest price per stock using ROW_NUMBER
 -- rn=1 means the most recent date for each symbol
 SELECT TOP 10 symbol, date, [close], volume
@@ -148,7 +147,7 @@ ORDER BY [close] DESC
 
 
 
-### PERCENT_RANK and CUME_DIST
+### Window Functions — PERCENT_RANK and CUME_DIST
 
 - `PERCENT_RANK()`: relative rank as a percentage (0 to 1). Where does this stock sit vs peers?
 - `CUME_DIST()`: cumulative distribution — fraction of rows with value ≤ current row.
@@ -157,7 +156,6 @@ Use case: "ASML is in the 90th percentile of composite scores."
 
 
 ```sql
-%%sql
 -- Percentile ranking of stocks by composite score
 SELECT TOP 15
     symbol,
@@ -292,7 +290,7 @@ ORDER BY composite_rank
 
 
 
-### FIRST_VALUE and LAST_VALUE
+### Window Functions — FIRST_VALUE and LAST_VALUE
 
 - `FIRST_VALUE(col)`: first value in the window frame
 - `LAST_VALUE(col)`: last value — **requires explicit frame** or it only sees up to current row
@@ -301,7 +299,6 @@ Use case: compare every day's close to the first close of the year (YTD return).
 
 
 ```sql
-%%sql
 -- Compare each day to first close of the year
 -- FIRST_VALUE gets Jan 2 close; every row computes YTD return from it
 SELECT TOP 15
@@ -444,14 +441,13 @@ ORDER BY date DESC
 
 
 
-### Running Totals and Cumulative Sums
+### Window Functions — Running Totals and Cumulative Sums
 
 `SUM() OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)` — cumulative sum from the first row to current.
 Use case: cumulative volume, cumulative return, running P&L.
 
 
 ```sql
-%%sql
 -- Cumulative volume for ASML in 2025
 SELECT TOP 15
     symbol, date, volume,
@@ -569,7 +565,7 @@ ORDER BY date DESC
 
 
 
-### Window Frame Deep Dive
+### Window Functions — Frame Deep Dive (ROWS BETWEEN, RANGE)
 
 The frame clause controls which rows the function sees:
 
@@ -584,7 +580,6 @@ The frame clause controls which rows the function sees:
 
 
 ```sql
-%%sql
 -- ROWS vs RANGE: ROWS counts physical rows, RANGE groups by value
 -- For SMA, always use ROWS (precise count)
 SELECT TOP 10
@@ -705,14 +700,13 @@ ORDER BY date DESC
 
 ## Recursive CTEs
 
-### Date Series Generation
+### Recursive CTEs — Date Series Generation
 
 A **recursive CTE** has an anchor (starting row) and a recursive member that references itself.
 Classic use: generate a continuous date sequence to detect missing trading days.
 
 
 ```sql
-%%sql
 -- Generate all dates in March 2026, then check which are missing from OHLCV
 WITH dates AS (
     -- Anchor: first date
@@ -838,14 +832,13 @@ ORDER BY d.dt
 
 ## CROSS JOIN / CROSS APPLY / OUTER APPLY
 
-### CROSS JOIN: Build a Complete Grid
+### CROSS JOIN / CROSS APPLY — Build a Complete Grid
 
 `CROSS JOIN` = cartesian product. Every row from A paired with every row from B.
 Use case: generate all (symbol, date) combinations to find missing data.
 
 
 ```sql
-%%sql
 -- Cross join symbols x trading calendar → find dates with no bronze data
 -- Silver is gap-filled, so we check bronze instead
 WITH symbols AS (
@@ -955,14 +948,13 @@ ORDER BY s.symbol, c.date
 
 
 
-### CROSS APPLY: Top-N Per Group
+### CROSS APPLY / OUTER APPLY — Top-N Per Group
 
 `CROSS APPLY` is a lateral join — it runs a subquery **for each row** of the outer table.
 Like a correlated subquery, but returns multiple rows. Use case: top 3 highest-volume days per stock.
 
 
 ```sql
-%%sql
 -- Top 3 highest-volume days for each stock
 -- CROSS APPLY runs the inner query once per symbol
 SELECT TOP 15
@@ -1100,14 +1092,13 @@ ORDER BY d.symbol, t.volume DESC
 
 
 
-### OUTER APPLY: Optional Lateral Join
+### OUTER APPLY — Optional Lateral Join
 
 Like `CROSS APPLY` but keeps the outer row even if the inner returns nothing (like LEFT JOIN).
 Use case: latest score per stock — some stocks may not have scores yet.
 
 
 ```sql
-%%sql
 -- Latest score per stock (NULL if no score exists)
 SELECT TOP 15
     d.symbol, d.short_name, d.sector,
@@ -1262,13 +1253,12 @@ ORDER BY s.composite_rank
 
 ## PIVOT / UNPIVOT
 
-### PIVOT: Rows to Columns
+### PIVOT / UNPIVOT — Rows to Columns
 
 Turn row values into column headers. Classic use: monthly close prices as columns.
 
 
 ```sql
-%%sql
 -- ASML monthly average close, pivoted to columns
 SELECT *
 FROM (
@@ -1306,14 +1296,13 @@ PIVOT (
 
 
 
-### Manual Pivot with CASE (Portable)
+### PIVOT — Manual Pivot with CASE (Portable)
 
 `PIVOT` is SQL Server specific. The portable equivalent uses `CASE` inside aggregates.
 Works in any SQL engine (BigQuery, PostgreSQL, etc.).
 
 
 ```sql
-%%sql
 -- Same result using CASE — works everywhere
 SELECT
     symbol,
@@ -1355,13 +1344,12 @@ GROUP BY symbol
 
 
 
-### UNPIVOT: Columns to Rows
+### UNPIVOT — Columns to Rows
 
 The reverse — turn multiple score columns into rows for easier comparison/charting.
 
 
 ```sql
-%%sql
 -- Turn score components into rows
 SELECT TOP 15 symbol, score_type, ROUND(score_value, 4) AS score_value
 FROM (
@@ -1467,7 +1455,7 @@ ORDER BY symbol, score_type
 
 ## MERGE (Upsert)
 
-### MERGE Syntax
+### MERGE (Upsert) — Syntax and Patterns
 
 The `MERGE` statement does INSERT, UPDATE, and DELETE in one atomic operation.
 This is the core of incremental pipeline loads — "upsert" new data, update changed rows.
@@ -1476,7 +1464,6 @@ This is the core of incremental pipeline loads — "upsert" new data, update cha
 
 
 ```sql
-%%sql
 -- Demo MERGE with a temp table
 -- Simulates loading new OHLCV data: insert new rows, update existing
 CREATE TABLE #staging (
@@ -1536,14 +1523,13 @@ DROP TABLE #target
 
 ## EXISTS vs IN vs JOIN
 
-### EXISTS (Semi-Join)
+### EXISTS vs IN vs JOIN — Semi-Join with EXISTS
 
 `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
 Stops at the first match (efficient). Use for "does a related row exist?" questions.
 
 
 ```sql
-%%sql
 -- Stocks that have gold scores (EXISTS = semi-join)
 SELECT TOP 15 d.symbol, d.short_name, d.sector
 FROM silver.index_dim d
@@ -1644,13 +1630,12 @@ ORDER BY d.symbol
 
 
 
-### NOT EXISTS (Anti-Join)
+### EXISTS vs IN vs JOIN — Anti-Join with NOT EXISTS
 
 Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases.
 
 
 ```sql
-%%sql
 -- Stocks in Euro Stoxx 50 but NOT in Oil & Gas 20 (different index)
 -- Demonstrates NOT EXISTS as an anti-join
 SELECT TOP 15 d.symbol, d.short_name, d.sector
@@ -1754,14 +1739,13 @@ ORDER BY d.symbol
 
 ## Grouping Sets, ROLLUP, CUBE
 
-### GROUPING SETS
+### Grouping Sets, ROLLUP, CUBE — GROUPING SETS
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations,
 use `GROUPING SETS` — more efficient and readable.
 
 
 ```sql
-%%sql
 -- Aggregate scores by sector, by country, and overall — in one query
 SELECT TOP 15
     COALESCE(d.sector, '(all sectors)') AS sector,
@@ -1885,13 +1869,12 @@ ORDER BY GROUPING(d.sector), GROUPING(d.country), avg_score DESC
 
 
 
-### ROLLUP — Hierarchical Subtotals
+### Grouping Sets, ROLLUP, CUBE — ROLLUP Hierarchical Subtotals
 
 `ROLLUP(a, b)` = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
 
 
 ```sql
-%%sql
 -- Volume by sector with subtotals and grand total
 SELECT TOP 15
     COALESCE(d.sector, '*** TOTAL ***') AS sector,
@@ -1990,14 +1973,13 @@ ORDER BY GROUPING(d.sector), total_volume DESC
 
 ## String Aggregation & Functions
 
-### STRING_AGG
+### String Aggregation — STRING_AGG
 
 Concatenate values from multiple rows into a single comma-separated string.
 Use case: list all tickers in a sector as one field.
 
 
 ```sql
-%%sql
 -- Comma-separated list of symbols per sector
 SELECT TOP 10
     sector,
@@ -2073,13 +2055,12 @@ ORDER BY stocks DESC
 
 
 
-### String Parsing
+### String Functions — Parsing with SPLIT, CHARINDEX, SUBSTRING
 
 Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
 
 
 ```sql
-%%sql
 -- Parse exchange from symbol: everything after the dot
 SELECT TOP 10
     symbol,
@@ -2168,7 +2149,7 @@ ORDER BY symbol
 
 ## NULL Handling Patterns
 
-### NULL Rules
+### NULL Handling — Rules and COALESCE, ISNULL, NULLIF
 
 | Expression | Result | Why |
 |-----------|--------|-----|
@@ -2182,7 +2163,6 @@ ORDER BY symbol
 
 
 ```sql
-%%sql
 -- NULL handling in practice: safe division, defaults, counting
 SELECT TOP 10
     symbol,
@@ -2298,7 +2278,7 @@ ORDER BY forward_pe
 
 ## Set Operations
 
-### UNION / INTERSECT / EXCEPT
+### Set Operations — UNION / INTERSECT / EXCEPT
 
 - `UNION ALL`: stack result sets (keep duplicates) — fast
 - `UNION`: stack + deduplicate — slower (sorts)
@@ -2307,7 +2287,6 @@ ORDER BY forward_pe
 
 
 ```sql
-%%sql
 -- EXCEPT: Euro Stoxx 50 symbols that are NOT in STOXX Asia 50
 -- Set difference — finds members exclusive to one index
 SELECT TOP 5 symbol FROM silver.index_dim
@@ -2347,14 +2326,13 @@ ORDER BY symbol
 
 ## Date & Calendar Table Patterns
 
-### Business Day Arithmetic
+### Date & Calendar — Business Day Arithmetic
 
 Use the `trading_calendar` table to count trading days between dates.
 Weekend/holiday-aware calculations are essential for financial data.
 
 
 ```sql
-%%sql
 -- Count trading days in Q1 2026 per exchange
 SELECT TOP 10
     exchange_code,
@@ -2444,7 +2422,7 @@ ORDER BY trading_days DESC
 
 ## Temp Tables vs Table Variables vs CTEs
 
-### Decision Guide
+### Temp Tables vs CTEs vs Table Variables — Decision Guide
 
 | Feature | CTE | \#Temp Table | @Table Variable |
 |---------|-----|-------------|----------------|

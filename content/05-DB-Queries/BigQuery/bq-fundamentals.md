@@ -46,7 +46,7 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 ## Schema Exploration
 
-### List All Tables
+### Schema Exploration — List All Tables
 
 First thing in any database — see what's there. The medallion layers (bronze/silver/gold) are schemas.
 
@@ -252,13 +252,12 @@ pd.DataFrame(rows).sort_values(['dataset', 'table']).reset_index(drop=True)
 
 
 
-### Inspect Column Types
+### Schema Exploration — Inspect Column Types
 
 Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join.
 
 
 ```sql
-%%sql
 -- Inspect columns of a specific table
 SELECT
     column_name,
@@ -348,13 +347,12 @@ ORDER BY ordinal_position
 
 ## SELECT, Filtering & Sorting
 
-### Basic SELECT with WHERE
+### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
 The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits output (BigQuery). PostgreSQL uses `LIMIT N`.
 
 
 ```sql
-%%sql
 -- Latest 10 trading days for ASML
 -- Basic SELECT with WHERE, ORDER BY, TOP
 SELECT
@@ -481,13 +479,12 @@ LIMIT 10
 
 
 
-### Multi-Condition Filtering
+### SELECT & Filtering — Multi-Condition WHERE
 
 Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
 
 
 ```sql
-%%sql
 -- Filter with multiple conditions
 -- Find high-volume days where price moved more than 3%
 SELECT
@@ -629,13 +626,12 @@ LIMIT 15
 
 ## Aggregation (GROUP BY)
 
-### Aggregate by Stock
+### Aggregation GROUP BY — Aggregate by Stock
 
 `GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
 
 
 ```sql
-%%sql
 -- Average daily volume by stock (top 10 most liquid)
 -- GROUP BY + aggregate functions: AVG, COUNT, MIN, MAX
 SELECT
@@ -750,13 +746,12 @@ LIMIT 10
 
 
 
-### Aggregate by Time Period
+### Aggregation GROUP BY — Aggregate by Time Period
 
 Group by `EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)` to build time-series summaries. Shows monthly high/low/average price and total volume — the basis for monthly performance reports.
 
 
 ```sql
-%%sql
 -- Monthly performance summary for ASML
 -- GROUP BY with date functions: YEAR, MONTH
 SELECT
@@ -931,7 +926,7 @@ LIMIT 15
 
 ## JOINs Across Medallion Layers
 
-### JOIN OHLCV + Dimension (Silver Layer)
+### JOIN Across Medallion Layers — OHLCV + Dimension (Silver)
 
 `JOIN` combines rows from two tables on a matching key. Here we join price data (silver OHLCV) with company metadata (silver dimension) to get the latest price + sector + country for each stock.
 
@@ -939,7 +934,6 @@ The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 
 
 ```sql
-%%sql
 -- JOIN silver OHLCV with silver dimension (company info)
 -- Get latest price + sector + country for each stock
 SELECT
@@ -1117,13 +1111,12 @@ LIMIT 15
 
 
 
-### JOIN Gold Scores + Dimension (Cross-Layer)
+### JOIN Across Medallion Layers — Gold Scores + Dimension (Cross-Layer)
 
 The gold layer has pre-computed composite scores. We join with the dimension table to add human-readable names and sector labels — this is what a dashboard query looks like.
 
 
 ```sql
-%%sql
 -- JOIN gold scores with dimension for a complete stock dashboard view
 SELECT
     s.composite_rank AS `rank`,
@@ -1349,7 +1342,7 @@ LIMIT 15
 
 ## Window Functions
 
-### Moving Averages (SMA)
+### Window Functions — Moving Averages (SMA)
 
 A **moving average** smooths price data over N days. Used for trend detection:
 - **SMA 30** (short-term): responsive to recent price action
@@ -1360,7 +1353,6 @@ A **moving average** smooths price data over N days. Used for trend detection:
 
 
 ```sql
-%%sql
 -- Moving averages: SMA 30 and SMA 90
 -- OVER (PARTITION BY symbol ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW)
 --   ↑ group by stock    ↑ sort by date   ↑ sliding window of 30 rows
@@ -1505,7 +1497,7 @@ LIMIT 15
 
 
 
-### LAG / LEAD — Compare Rows
+### Window Functions — LAG / LEAD Compare Rows
 
 **LAG(col, N)** returns the value from N rows **before** the current row.
 **LEAD(col, N)** returns the value from N rows **after**.
@@ -1517,7 +1509,6 @@ Use cases:
 
 
 ```sql
-%%sql
 -- LAG: get previous row's value within each stock's time series
 -- LAG(`close`) OVER (PARTITION BY symbol ORDER BY date)
 --   ↑ previous close    ↑ within each stock  ↑ in date order
@@ -1677,7 +1668,7 @@ LIMIT 15
 
 
 
-### RANK / DENSE_RANK / NTILE — Ranking Rows
+### Window Functions — RANK / DENSE_RANK / NTILE Ranking
 
 - **RANK()**: assigns rank with gaps (1, 2, 2, 4)
 - **DENSE_RANK()**: no gaps (1, 2, 2, 3)
@@ -1688,7 +1679,6 @@ This is the core of the gold scoring engine — rank stocks by composite score.
 
 
 ```sql
-%%sql
 -- Rank stocks by YTD return
 -- Use self-join on pre-computed boundary dates (no subquery inside aggregate)
 WITH bounds AS (
@@ -1807,7 +1797,7 @@ LIMIT 10
 
 ## CTEs & Subqueries
 
-### CTE: Sector Heatmap
+### CTEs & Subqueries — Sector Heatmap
 
 A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
 
@@ -1815,7 +1805,6 @@ This builds a sector heatmap: average score, best/worst rank per sector.
 
 
 ```sql
-%%sql
 -- CTE (Common Table Expression) — readable multi-step queries
 -- Build a sector heatmap: avg composite score by sector
 WITH latest_scores AS (
@@ -1953,13 +1942,12 @@ ORDER BY avg_score DESC
 
 
 
-### Chained CTEs: Cross-Index Comparison
+### CTEs & Subqueries — Chained CTEs Cross-Index Comparison
 
 Multiple CTEs chained together. Compares YTD performance, volatility, and valuation across all 4 indices — the kind of query an index provider runs daily.
 
 
 ```sql
-%%sql
 -- Chained CTEs: cross-index performance comparison
 -- Compare latest performance metrics across all 4 indices
 WITH latest_perf AS (
@@ -2057,7 +2045,6 @@ Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one 
 
 
 ```sql
-%%sql
 -- Data quality: find gaps, nulls, and anomalies
 -- Essential for pipeline monitoring
 
@@ -2139,13 +2126,12 @@ FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 > [!tip] Related pattern
 > The transforms below query data that was first ingested through the [[data-loading-and-export]] pipeline. Understanding how data arrives in bronze helps explain the schemas these queries target.
 
-### Bronze → Silver: Daily Returns
+### Bronze → Silver → Gold Transforms — Daily Returns
 
 The silver transform adds computed columns to raw data. Here, `LAG()` computes daily returns from the price time series. The `is_filled` flag marks gap-filled rows (weekends/holidays).
 
 
 ```sql
-%%sql
 -- Example: how the bronze → silver transform works
 -- Silver adds daily returns and detects gap-filled rows
 SELECT
@@ -2251,13 +2237,12 @@ LIMIT 10
 
 
 
-### Silver → Gold: Z-Score Normalization
+### Bronze → Silver → Gold Transforms — Z-Score Normalization
 
 The gold transform normalizes scores across the index using z-scores: `(value - mean) / stddev`. Stocks are then ranked by composite score. This is the core of any index scoring engine.
 
 
 ```sql
-%%sql
 -- Example: how the gold scoring works
 -- Z-score normalization within index → composite rank
 WITH base AS (

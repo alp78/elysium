@@ -55,7 +55,6 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 
 ```sql
-%%sql
 -- Create a demo schema for our objects (idempotent)
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'demo')
     EXEC('CREATE SCHEMA demo');
@@ -81,7 +80,6 @@ Use case: wrap the "latest price per stock" pattern so downstream queries are si
 
 
 ```sql
-%%sql
 -- Create a view that always returns the latest price per stock
 CREATE OR ALTER VIEW demo.v_latest_prices AS
 SELECT symbol, date, [open], high, low, [close], volume
@@ -105,7 +103,6 @@ WHERE rn = 1;
 
 
 ```sql
-%%sql
 -- Now the complex ROW_NUMBER pattern is hidden behind a simple SELECT
 SELECT TOP 10 * FROM demo.v_latest_prices ORDER BY [close] DESC
 ```
@@ -218,13 +215,12 @@ SELECT TOP 10 * FROM demo.v_latest_prices ORDER BY [close] DESC
 
 
 
-### View for Cross-Layer Dashboard
+### Views — Cross-Layer Dashboard View
 
 Join multiple tables into a single business-friendly view. Dashboards query this instead of raw tables.
 
 
 ```sql
-%%sql
 -- Dashboard view: scores + company info + latest price
 CREATE OR ALTER VIEW demo.v_stock_dashboard AS
 SELECT
@@ -257,7 +253,6 @@ JOIN silver.index_dim d ON s.symbol = d.symbol AND d._index = s._index AND d.is_
 
 
 ```sql
-%%sql
 -- Use the dashboard view
 SELECT TOP 10 * FROM demo.v_stock_dashboard
 WHERE _index = 'euro_stoxx_50'
@@ -433,14 +428,13 @@ ORDER BY [rank]
 > [!tip] Related pattern
 > The [[dbt-sqlserver-adapter]] generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
 
-### Basic SP with Parameters
+### Stored Procedures — Basic SP with Parameters
 
 A stored procedure is precompiled SQL that lives in the database.
 Use case: pipeline steps as SPs — each step has consistent parameters and error handling.
 
 
 ```sql
-%%sql
 -- SP: get top N stocks by composite score for a given index
 CREATE OR ALTER PROCEDURE demo.sp_top_stocks
     @index_key NVARCHAR(50),
@@ -475,7 +469,6 @@ END;
 
 
 ```sql
-%%sql
 EXEC demo.sp_top_stocks @index_key = 'euro_stoxx_50', @top_n = 5
 ```
 
@@ -530,14 +523,13 @@ EXEC demo.sp_top_stocks @index_key = 'euro_stoxx_50', @top_n = 5
 
 
 
-### SP with Error Handling (TRY/CATCH)
+### Stored Procedures — Error Handling with TRY/CATCH
 
 Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
 If anything fails, the entire operation rolls back — no partial loads.
 
 
 ```sql
-%%sql
 -- SP with transaction + error handling
 CREATE OR ALTER PROCEDURE demo.sp_load_scores
     @index_key NVARCHAR(50),
@@ -581,14 +573,13 @@ END;
 
 ## User-Defined Functions
 
-### Inline Table-Valued Function (Best Performance)
+### User-Defined Functions — Inline Table-Valued Function
 
 An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
 Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
 
 
 ```sql
-%%sql
 -- iTVF: get price history for a symbol within a date range
 CREATE OR ALTER FUNCTION demo.fn_price_history(
     @symbol VARCHAR(20),
@@ -616,7 +607,6 @@ AS RETURN (
 
 
 ```sql
-%%sql
 -- Use the function like a table
 SELECT TOP 10 * FROM demo.fn_price_history('ASML.AS', '2026-03-01', '2026-03-31')
 ORDER BY date DESC
@@ -723,7 +713,7 @@ ORDER BY date DESC
 
 ## Indexes
 
-### Index Types & When to Use
+### Indexes — Types and When to Use Each
 
 | Type | What | When |
 |------|------|------|
@@ -735,7 +725,6 @@ ORDER BY date DESC
 
 
 ```sql
-%%sql
 -- Inspect existing indexes on silver.eurostoxx50_ohlcv
 SELECT
     i.name AS index_name,
@@ -777,7 +766,7 @@ ORDER BY i.type_desc
 
 
 
-### Index Design Principles
+### Indexes — Design Principles for Data Pipelines
 
 1. **Equality columns first** in composite keys: `WHERE _index = 'X' AND date >= '2026-01-01'` → index on `(_index, date)`
 2. **Include columns** to avoid lookups: `INCLUDE (close, volume)` if you SELECT those
@@ -788,14 +777,13 @@ ORDER BY i.type_desc
 
 The MERGE patterns used for SCD Type 2 below are a key building block for [[idempotent-pipeline-design]], where every load can be safely re-run without duplicating or corrupting data.
 
-### SCD Type 1 — Overwrite
+### Slowly Changing Dimensions — SCD Type 1 Overwrite
 
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
 Example: fix a typo in a company name.
 
 
 ```sql
-%%sql
 -- SCD Type 1: just overwrite (demo with temp table)
 SELECT TOP 5 symbol, short_name, sector, is_current
 INTO #scd_demo
@@ -858,14 +846,13 @@ SELECT * FROM #scd_demo
 
 
 
-### SCD Type 2 — History Tracking
+### Slowly Changing Dimensions — SCD Type 2 History Tracking
 
 Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
 
 
 ```sql
-%%sql
 -- SCD Type 2: the silver.index_dim already implements this
 -- Show the SCD columns
 SELECT TOP 10
@@ -977,14 +964,13 @@ ORDER BY symbol, valid_from
 
 ## Gap Detection & Gap Filling
 
-### Islands and Gaps
+### Gap Detection & Gap Filling — Islands and Gaps
 
 The classic SQL pattern: identify contiguous groups (islands) and missing periods (gaps)
 in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
 
 
 ```sql
-%%sql
 -- Detect gaps in ASML trading data (days with no price)
 -- LAG compares each date to the previous; gap > 3 calendar days = unusual
 SELECT TOP 10
@@ -1086,14 +1072,13 @@ ORDER BY date DESC
 
 ## Deduplication Strategies
 
-### ROW_NUMBER Deduplication Pattern
+### Deduplication Strategies — ROW_NUMBER Pattern
 
 The standard approach: assign `ROW_NUMBER()` within each duplicate group,
 keep `rn = 1`, delete the rest.
 
 
 ```sql
-%%sql
 -- Deduplication with ROW_NUMBER: detect and resolve duplicates
 -- Simulated: UNION ALL the same rows to create duplicates in a CTE
 WITH raw_data AS (
@@ -1158,7 +1143,7 @@ ORDER BY date DESC, rn
 
 ## Execution Plans & Query Optimization
 
-### Common Anti-Patterns
+### Execution Plans & Query Optimization — Common Anti-Patterns
 
 | Anti-Pattern | Problem | Fix |
 |-------------|---------|-----|
@@ -1170,7 +1155,6 @@ ORDER BY date DESC, rn
 
 
 ```sql
-%%sql
 -- Compare: both return the same count, but the sargable version is faster
 -- BAD:  WHERE YEAR(date) = 2025  → function on column prevents index seek
 -- GOOD: WHERE date >= ... AND date < ...  → index can seek directly
@@ -1200,7 +1184,7 @@ SELECT
 
 ## Transaction Isolation Levels
 
-### Isolation Level Guide for Data Engineering
+### Transaction Isolation Levels — Guide for Data Engineering
 
 | Level | Dirty Reads | Non-Repeatable | Phantoms | Use Case |
 |-------|------------|----------------|----------|----------|
@@ -1228,7 +1212,7 @@ SELECT
 
 ## Data Lineage & Audit Columns
 
-### Standard Audit Columns
+### Data Lineage & Audit — Standard Audit Columns
 
 Every table in the stoxx database has audit columns:
 
@@ -1242,7 +1226,6 @@ Every table in the stoxx database has audit columns:
 
 
 ```sql
-%%sql
 -- Data freshness check: when was each table last updated?
 SELECT 'bronze.eurostoxx50_ohlcv' AS [table], MAX(_ingested_at) AS last_update
 FROM bronze.eurostoxx50_ohlcv
@@ -1289,7 +1272,7 @@ ORDER BY last_update DESC
 
 ## Partitioning Strategies
 
-### When to Partition
+### Partitioning Strategies — When to Partition
 
 Partition large tables (millions of rows) by a date column for:
 - **Faster queries**: partition elimination skips irrelevant months/years
@@ -1319,7 +1302,6 @@ CREATE TABLE silver.ohlcv_partitioned (
 
 
 ```sql
-%%sql
 -- Drop demo objects created in this notebook
 DROP VIEW IF EXISTS demo.v_latest_prices;
 DROP VIEW IF EXISTS demo.v_stock_dashboard;

@@ -1366,7 +1366,6 @@ Let's compare how each library loads them.
 - **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
-%%time
 df_pd = pd.read_csv(DATA / "index_performance.csv")
 print(f"Shape: {df_pd.shape}")
 display(df_pd.head(3))
@@ -1457,7 +1456,6 @@ display(df_pd.head(3))
     Wall time: 20.9 ms
 
 ```python
-%%time
 df_pl = pl.read_csv(DATA / "index_performance.csv")
 print(f"Shape: {df_pl.shape}")
 display(df_pl.head(3))
@@ -1484,7 +1482,6 @@ display(df_pl.head(3))
 - **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ```python
-%%time
 df_pd = pd.read_parquet(DATA / "index_performance.parquet")
 print(f"Shape: {df_pd.shape}")
 display(df_pd.head(3))
@@ -1575,7 +1572,6 @@ display(df_pd.head(3))
     Wall time: 366 ms
 
 ```python
-%%time
 df_pl = pl.read_parquet(DATA / "index_performance.parquet")
 print(f"Shape: {df_pl.shape}")
 display(df_pl.head(3))

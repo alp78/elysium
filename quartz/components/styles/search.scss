@@ -203,10 +203,22 @@
               background: var(--lightgray);
             }
 
+            & > .card-breadcrumb {
+              display: block;
+              font-size: 0.7em;
+              font-weight: 400;
+              color: var(--gray);
+              margin-bottom: 0.15em;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
             & > h3 {
               margin: 0;
-              font-size: 0.9em;
-              color: var(--secondary);
+              font-size: 0.85em;
+              font-weight: 500;
+              color: var(--darkgray);
               display: flex;
               align-items: center;
               gap: 0.4em;
@@ -233,10 +245,8 @@
               }
             }
 
-            @media all and not ($mobile) {
-              & > p.card-description {
-                display: none;
-              }
+            & > p.card-description {
+              display: none;
             }
 
             & > ul.tags {

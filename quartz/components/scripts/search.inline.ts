@@ -319,16 +319,19 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     const pageData = data[pageSlug as FullSlug]
     const contentText = pageData?.content ?? ""
 
-    // Display title: "PageTitle > SectionHeading" (or just PageTitle if no section)
-    const displayTitle =
-      sectionTitle && sectionTitle !== pageTitle
-        ? `${pageTitle} &rsaquo; ${highlight(term, sectionTitle)}`
-        : highlight(term, pageTitle)
+    // Build breadcrumb path and heading separately
+    const breadcrumb = sectionTitle && sectionTitle !== pageTitle
+      ? `${pageSlug.replace(/\//g, " › ")}`
+      : ""
+    const heading = sectionTitle
+      ? highlight(term, sectionTitle)
+      : highlight(term, pageTitle)
 
     return {
       id: result.id,
       slug: pageSlug as FullSlug,
-      title: displayTitle,
+      title: heading,
+      breadcrumb,
       content: highlight(term, contentText, true),
       tags: searchType === "tags" ? highlightTags(term.substring(1), tags) : [],
       relevance: result.relevance,
@@ -355,7 +358,7 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     return new URL(resolveRelative(currentSlug, slug), location.toString())
   }
 
-  const resultToHTML = ({ slug, title, content, tags, relevance, anchor }: Item) => {
+  const resultToHTML = ({ slug, title, content, tags, relevance, anchor, breadcrumb }: Item) => {
     const htmlTags = tags.length > 0 ? `<ul class="tags">${tags.join("")}</ul>` : ``
     const itemTile = document.createElement("a")
     itemTile.classList.add("result-card")
@@ -368,10 +371,13 @@ async function setupSearch(searchElement: Element, currentSlug: FullSlug, data: 
     itemTile.href = anchor ? `${baseUrl}#${anchor}` : baseUrl
 
     const relDot = `<span class="relevance-dot relevance-${relevance}"></span>`
+    const breadcrumbHtml = breadcrumb
+      ? `<span class="card-breadcrumb">${breadcrumb}</span>`
+      : ""
     itemTile.innerHTML = `
+      ${breadcrumbHtml}
       <h3 class="card-title">${relDot}${title}</h3>
       ${htmlTags}
-      <p class="card-description">${content}</p>
     `
     itemTile.addEventListener("click", (event) => {
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return

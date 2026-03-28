@@ -53,14 +53,12 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 The window functions in this section appear throughout production pipelines. The [[gold-transforms]] layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
 
-### ROW_NUMBER for Deduplication
+### Window Functions — ROW_NUMBER for Deduplication
 
-Assign a unique sequential number within each partition. The classic pattern for picking
-one row per key (e.g., latest price per stock, or deduplicating loads).
+Assign a unique sequential number within each partition. The classic pattern for picking one row per key (e.g., latest price per stock, or deduplicating loads).
 
 
 ```sql
-%%sql
 -- Pick the latest price per stock using ROW_NUMBER
 -- rn=1 means the most recent date for each symbol
 SELECT symbol, date, `close`, volume
@@ -151,7 +149,7 @@ LIMIT 10
 
 
 
-### PERCENT_RANK and CUME_DIST
+### Window Functions — PERCENT_RANK and CUME_DIST
 
 - `PERCENT_RANK()`: relative rank as a percentage (0 to 1). Where does this stock sit vs peers?
 - `CUME_DIST()`: cumulative distribution — fraction of rows with value ≤ current row.
@@ -160,7 +158,6 @@ Use case: "ASML is in the 90th percentile of composite scores."
 
 
 ```sql
-%%sql
 -- Percentile ranking of stocks by composite score
 SELECT
     symbol,
@@ -298,7 +295,7 @@ LIMIT 15
 
 
 
-### FIRST_VALUE and LAST_VALUE
+### Window Functions — FIRST_VALUE and LAST_VALUE
 
 - `FIRST_VALUE(col)`: first value in the window frame
 - `LAST_VALUE(col)`: last value — **requires explicit frame** or it only sees up to current row
@@ -307,7 +304,6 @@ Use case: compare every day's close to the first close of the year (YTD return).
 
 
 ```sql
-%%sql
 -- Compare each day to first close of the year
 -- FIRST_VALUE gets Jan 2 close; every row computes YTD return from it
 SELECT
@@ -453,14 +449,13 @@ LIMIT 15
 
 
 
-### Running Totals and Cumulative Sums
+### Window Functions — Running Totals and Cumulative Sums
 
 `SUM() OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)` — cumulative sum from the first row to current.
 Use case: cumulative volume, cumulative return, running P&L.
 
 
 ```sql
-%%sql
 -- Cumulative volume for ASML in 2025
 SELECT
     symbol, date, volume,
@@ -581,7 +576,7 @@ LIMIT 15
 
 
 
-### Window Frame Deep Dive
+### Window Functions — Frame Deep Dive (ROWS BETWEEN, RANGE)
 
 The frame clause controls which rows the function sees:
 
@@ -596,7 +591,6 @@ The frame clause controls which rows the function sees:
 
 
 ```sql
-%%sql
 -- ROWS vs RANGE: ROWS counts physical rows, RANGE groups by value
 -- For SMA, always use ROWS (precise count)
 SELECT
@@ -720,14 +714,13 @@ LIMIT 10
 
 ## Recursive CTEs
 
-### Date Series Generation
+### Recursive CTEs — Date Series Generation
 
 A **recursive CTE** has an anchor (starting row) and a recursive member that references itself.
 Classic use: generate a continuous date sequence to detect missing trading days.
 
 
 ```sql
-%%sql
 -- Generate all dates in March 2026, then check which are missing from OHLCV
 WITH RECURSIVE dates AS (
     -- Anchor: first date
@@ -856,14 +849,13 @@ LIMIT 15
 
 ## CROSS JOIN / CROSS APPLY / OUTER APPLY
 
-### CROSS JOIN: Build a Complete Grid
+### CROSS JOIN / CROSS APPLY — Build a Complete Grid
 
 `CROSS JOIN` = cartesian product. Every row from A paired with every row from B.
 Use case: generate all (symbol, date) combinations to find missing data.
 
 
 ```sql
-%%sql
 -- Cross join symbols x trading calendar → find dates with no bronze data
 -- Silver is gap-filled, so we check bronze instead
 WITH symbols AS (
@@ -976,14 +968,13 @@ LIMIT 15
 
 
 
-### CROSS APPLY: Top-N Per Group
+### CROSS APPLY / OUTER APPLY — Top-N Per Group
 
 `CROSS APPLY` is a lateral join — it runs a subquery **for each row** of the outer table.
 Like a correlated subquery, but returns multiple rows. Use case: top 3 highest-volume days per stock.
 
 
 ```sql
-%%sql
 -- Top 3 highest-volume days per stock (BigQuery: use window function instead of CROSS APPLY)
 SELECT symbol, short_name, date, volume, `close`
 FROM (
@@ -1122,14 +1113,13 @@ LIMIT 15
 
 
 
-### OUTER APPLY: Optional Lateral Join
+### OUTER APPLY — Optional Lateral Join (LEFT JOIN LATERAL)
 
 Like `CROSS APPLY` but keeps the outer row even if the inner returns nothing (like LEFT JOIN).
 Use case: latest score per stock — some stocks may not have scores yet.
 
 
 ```sql
-%%sql
 -- Latest score per stock (BigQuery: LEFT JOIN + ROW_NUMBER instead of OUTER APPLY)
 SELECT d.symbol, d.short_name, d.sector,
        s.composite_score, s.composite_rank, s.score_date
@@ -1287,13 +1277,12 @@ LIMIT 15
 
 ## PIVOT / UNPIVOT
 
-### PIVOT: Rows to Columns
+### PIVOT / UNPIVOT — Rows to Columns
 
 Turn row values into column headers. Classic use: monthly close prices as columns.
 
 
 ```sql
-%%sql
 -- BigQuery PIVOT: monthly average close prices as columns
 SELECT * FROM (
     SELECT symbol, EXTRACT(MONTH FROM date) AS mo, `close`
@@ -1331,14 +1320,13 @@ PIVOT (AVG(`close`) FOR mo IN (1 AS Jan, 2 AS Feb, 3 AS Mar, 4 AS Apr, 5 AS May)
 
 
 
-### Manual Pivot with CASE (Portable)
+### PIVOT — Manual Pivot with CASE (Portable)
 
 `PIVOT` is BigQuery specific. The portable equivalent uses `CASE` inside aggregates.
 Works in any SQL engine (BigQuery, PostgreSQL, etc.).
 
 
 ```sql
-%%sql
 -- Same result using CASE — works everywhere
 SELECT
     symbol,
@@ -1382,13 +1370,12 @@ GROUP BY symbol
 
 
 
-### UNPIVOT: Columns to Rows
+### UNPIVOT — Columns to Rows
 
 The reverse — turn multiple score columns into rows for easier comparison/charting.
 
 
 ```sql
-%%sql
 -- BigQuery UNPIVOT: turn score columns into rows
 SELECT symbol, score_type, ROUND(score_value, 4) AS score_value
 FROM (
@@ -1499,7 +1486,7 @@ LIMIT 15
 > [!tip] Related pattern
 > For cross-language equivalents of MERGE and window functions, see [[sql-python-csharp-transforms]] which compares how the same logic is expressed in SQL, Python, and C#.
 
-### MERGE Syntax
+### MERGE (Upsert) — Syntax and Patterns
 
 The `MERGE` statement does INSERT, UPDATE, and DELETE in one atomic operation.
 This is the core of incremental pipeline loads — "upsert" new data, update changed rows.
@@ -1508,9 +1495,8 @@ This is the core of incremental pipeline loads — "upsert" new data, update cha
 
 
 ```sql
-%%sql
 -- BigQuery MERGE example (conceptual — uses real table reference pattern)
--- In BigQuery, MERGE works on permanent tables, not temp tables in %%sql magic.
+-- In BigQuery, MERGE works on permanent tables, not temp tables in jupysql magic.
 -- Syntax is the same as SQL Server:
 --
 -- MERGE `project.dataset.target` AS t
@@ -1558,14 +1544,13 @@ SELECT 'DEMO.XX', DATE '2026-03-21', 102.5, 1200000
 
 ## EXISTS vs IN vs JOIN
 
-### EXISTS (Semi-Join)
+### EXISTS vs IN vs JOIN — Semi-Join with EXISTS
 
 `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
 Stops at the first match (efficient). Use for "does a related row exist?" questions.
 
 
 ```sql
-%%sql
 -- Stocks that have gold scores (EXISTS = semi-join)
 SELECT d.symbol, d.short_name, d.sector
 FROM `bq-wh-nb.stoxx_silver.index_dim` d
@@ -1669,13 +1654,12 @@ LIMIT 15
 
 
 
-### NOT EXISTS (Anti-Join)
+### EXISTS vs IN vs JOIN — Anti-Join with NOT EXISTS
 
 Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases.
 
 
 ```sql
-%%sql
 -- Stocks in Euro Stoxx 50 but NOT in Oil & Gas 20 (different index)
 -- Demonstrates NOT EXISTS as an anti-join
 SELECT d.symbol, d.short_name, d.sector
@@ -1782,14 +1766,13 @@ LIMIT 15
 
 ## Grouping Sets, ROLLUP, CUBE
 
-### GROUPING SETS
+### Grouping Sets, ROLLUP, CUBE — GROUPING SETS
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations,
 use `GROUPING SETS` — more efficient and readable.
 
 
 ```sql
-%%sql
 -- Aggregate scores by sector, by country, and overall — in one query
 SELECT
     COALESCE(d.sector, '(all sectors)') AS sector,
@@ -1916,13 +1899,12 @@ LIMIT 15
 
 
 
-### ROLLUP — Hierarchical Subtotals
+### Grouping Sets, ROLLUP, CUBE — ROLLUP Hierarchical Subtotals
 
 `ROLLUP(a, b)` = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
 
 
 ```sql
-%%sql
 -- Volume by sector with subtotals and grand total
 SELECT
     COALESCE(d.sector, '*** TOTAL ***') AS sector,
@@ -2024,14 +2006,13 @@ LIMIT 15
 
 ## String Aggregation & Functions
 
-### STRING_AGG
+### String Aggregation — STRING_AGG
 
 Concatenate values from multiple rows into a single comma-separated string.
 Use case: list all tickers in a sector as one field.
 
 
 ```sql
-%%sql
 -- Comma-separated list of symbols per sector
 SELECT
     sector,
@@ -2110,13 +2091,12 @@ LIMIT 10
 
 
 
-### String Parsing
+### String Functions — Parsing with SPLIT, REGEXP_EXTRACT, SUBSTR
 
 Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
 
 
 ```sql
-%%sql
 -- Parse exchange from symbol: everything after the dot
 SELECT
     symbol,
@@ -2208,21 +2188,20 @@ LIMIT 10
 
 ## NULL Handling Patterns
 
-### NULL Rules
+### NULL Handling — Rules and COALESCE, IFNULL, NULLIF
 
 | Expression | Result | Why |
 |-----------|--------|-----|
 | `NULL = NULL` | NULL (not TRUE!) | NULL is unknown, not a value |
 | `NULL + 5` | NULL | Any arithmetic with NULL = NULL |
 | `AVG(col)` | Ignores NULLs | Aggregates skip NULLs |
-| `COUNT(\*)` vs `COUNT(col)` | Different! | `COUNT(\*)` counts rows, `COUNT(col)` skips NULLs |
+| `COUNT(*)` vs `COUNT(col)` | Different! | `COUNT(*)` counts rows, `COUNT(col)` skips NULLs |
 | `COALESCE(a, b, c)` | First non-NULL | ANSI standard, N arguments |
 | `IFNULL(a, b)` | a if not null, else b | BigQuery SQL only, 2 args, type of first arg |
 | `NULLIF(a, b)` | NULL if a = b | Prevents divide-by-zero: `x / NULLIF(y, 0)` |
 
 
 ```sql
-%%sql
 -- NULL handling in practice: safe division, defaults, counting
 SELECT
     symbol,
@@ -2341,11 +2320,15 @@ LIMIT 10
 
 ## Set Operations
 
-### UNION / INTERSECT / EXCEPT
+### Set Operations — UNION / INTERSECT / EXCEPT
+
+- `UNION ALL`: stack result sets (keep duplicates) — fast
+- `UNION`: stack + deduplicate — slower (sorts)
+- `INTERSECT`: rows in both queries
+- `EXCEPT`: rows in first query but not second
 
 
 ```sql
-%%sql
 -- EXCEPT DISTINCT: Euro Stoxx 50 symbols NOT in STOXX Asia 50
 -- Set difference — finds members exclusive to one index
 SELECT symbol FROM `bq-wh-nb.stoxx_silver.index_dim`
@@ -2418,14 +2401,13 @@ LIMIT 15
 
 ## Date & Calendar Table Patterns
 
-### Business Day Arithmetic
+### Date & Calendar — Business Day Arithmetic
 
 Use the `trading_calendar` table to count trading days between dates.
 Weekend/holiday-aware calculations are essential for financial data.
 
 
 ```sql
-%%sql
 -- Count trading days in Q1 2026 per exchange
 SELECT
     exchange_code,
@@ -2518,7 +2500,7 @@ LIMIT 10
 
 ## Temp Tables vs Table Variables vs CTEs
 
-### Decision Guide
+### Temp Tables vs CTEs vs Table Variables — Decision Guide
 
 | Feature | CTE | Temp Table | @Table Variable |
 |---------|-----|-------------|----------------|

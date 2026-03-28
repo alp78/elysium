@@ -57,7 +57,6 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 
 ```sql
-%%sql
 -- Create a demo dataset for our objects (idempotent)
 -- BigQuery uses datasets instead of schemas
 CREATE SCHEMA IF NOT EXISTS demo
@@ -84,7 +83,6 @@ Use case: wrap the "latest price per stock" pattern so downstream queries are si
 
 
 ```sql
-%%sql
 -- Create a view that always returns the latest price per stock
 CREATE OR REPLACE VIEW bq-wh-nb.stoxx_gold.v_latest_prices AS
 SELECT symbol, date, `open`, high, low, `close`, volume
@@ -111,7 +109,6 @@ WHERE rn = 1;
 </table>
 
 ```sql
-%%sql
 -- Now the complex ROW_NUMBER pattern is hidden behind a simple SELECT
 SELECT * FROM bq-wh-nb.stoxx_gold.v_latest_prices ORDER BY `close` DESC
 LIMIT 10
@@ -227,13 +224,12 @@ LIMIT 10
 
 
 
-### View for Cross-Layer Dashboard
+### Views — Cross-Layer Dashboard View
 
 Join multiple tables into a single business-friendly view. Dashboards query this instead of raw tables.
 
 
 ```sql
-%%sql
 -- Dashboard view: scores + company info + latest price
 CREATE OR REPLACE VIEW bq-wh-nb.stoxx_gold.v_stock_dashboard AS
 SELECT
@@ -278,7 +274,6 @@ JOIN `bq-wh-nb.stoxx_silver.index_dim` d ON s.symbol = d.symbol AND d._index = s
 
 
 ```sql
-%%sql
 -- Use the dashboard view
 SELECT * FROM bq-wh-nb.stoxx_gold.v_stock_dashboard
 WHERE _index = 'euro_stoxx_50'
@@ -457,15 +452,15 @@ LIMIT 10
 > [!tip] Related pattern
 > Tools like [[dbt-bigquery-adapter|dbt's BigQuery adapter]] generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
 
-### Basic SP with Parameters
+### Stored Procedures — Basic SP with Parameters
 
 A stored procedure is precompiled SQL that lives in the database.
 Use case: pipeline steps as SPs — each step has consistent parameters and error handling.
 
-### BigQuery Procedures vs SQL Server
+### Stored Procedures — BigQuery vs SQL Server Comparison
 
 BigQuery supports `CREATE OR REPLACE PROCEDURE` with `CALL`, but:
-- `%%sql` magic (jupysql) can't execute `CALL` statements
+- jupysql magic can't execute `CALL` statements
 - BigQuery procedures use `EXECUTE IMMEDIATE` for dynamic SQL
 - The **idiomatic BigQuery pattern** is parameterized CTEs or table functions
 
@@ -473,7 +468,6 @@ Below: the equivalent as a reusable CTE query (production BigQuery style).
 
 
 ```sql
-%%sql
 -- Reusable parameterized query (BigQuery-native pattern)
 -- In production, wrap this in a scheduled query or Cloud Function
 WITH params AS (
@@ -537,14 +531,13 @@ LIMIT 5
 
 
 
-### SP with Error Handling (TRY/CATCH)
+### Stored Procedures — Error Handling with TRY/CATCH
 
 Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
 If anything fails, the entire operation rolls back — no partial loads.
 
 
 ```sql
-%%sql
 -- BigQuery scripting: transaction + error handling
 -- BigQuery uses BEGIN...EXCEPTION...END (not TRY/CATCH)
 -- Transactions are supported on multi-statement queries
@@ -592,14 +585,13 @@ END
 
 ## User-Defined Functions
 
-### Inline Table-Valued Function (Best Performance)
+### User-Defined Functions — Inline Table-Valued Function
 
 An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
 Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
 
 
 ```sql
-%%sql
 -- Table function: get price history for a symbol within a date range
 -- BigQuery: CREATE TABLE FUNCTION (not iTVF)
 CREATE OR REPLACE TABLE FUNCTION demo.fn_price_history(
@@ -627,7 +619,6 @@ AS (
 
 
 ```sql
-%%sql
 -- Call the table function
 SELECT * FROM demo.fn_price_history('ASML.AS', '2026-03-01', '2026-03-21')
 ORDER BY date DESC
@@ -737,7 +728,7 @@ LIMIT 15
 
 ## Indexes
 
-### Index Types & When to Use
+### Indexes — Types and When to Use Each
 
 | Type | What | When |
 |------|------|------|
@@ -749,7 +740,6 @@ LIMIT 15
 
 
 ```sql
-%%sql
 -- BigQuery manages indexes automatically (no manual index creation).
 -- Instead, inspect table metadata and clustering/partitioning info.
 SELECT
@@ -839,7 +829,7 @@ LIMIT 15
 
 
 
-### Index Design Principles
+### Indexes — Design Principles for Data Pipelines
 
 1. **Equality columns first** in composite keys: `WHERE _index = 'X' AND date >= '2026-01-01'` → index on `(_index, date)`
 2. **Include columns** to avoid lookups: `INCLUDE (close, volume)` if you SELECT those
@@ -848,14 +838,13 @@ LIMIT 15
 
 ## Slowly Changing Dimensions (SCD)
 
-### SCD Type 1 — Overwrite
+### Slowly Changing Dimensions — SCD Type 1 Overwrite
 
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
 Example: fix a typo in a company name.
 
 
 ```sql
-%%sql
 -- SCD Type 1: overwrite in place (simulated with CTE)
 -- Shows the before/after: ASML sector changes from its current value
 WITH original AS (
@@ -962,14 +951,13 @@ LIMIT 10
 
 
 
-### SCD Type 2 — History Tracking
+### Slowly Changing Dimensions — SCD Type 2 History Tracking
 
 Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
 
 
 ```sql
-%%sql
 -- SCD Type 2: the `bq-wh-nb.stoxx_silver.index_dim` already implements this
 -- Show the SCD columns
 SELECT
@@ -1084,14 +1072,13 @@ LIMIT 10
 
 ## Gap Detection & Gap Filling
 
-### Islands and Gaps
+### Gap Detection & Gap Filling — Islands and Gaps
 
 The classic SQL pattern: identify contiguous groups (islands) and missing periods (gaps)
 in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
 
 
 ```sql
-%%sql
 -- Detect gaps in ASML trading data (days with no price)
 -- LAG compares each date to the previous; gap > 3 calendar days = unusual
 SELECT
@@ -1196,14 +1183,13 @@ LIMIT 10
 
 ## Deduplication Strategies
 
-### ROW_NUMBER Deduplication Pattern
+### Deduplication Strategies — ROW_NUMBER Pattern
 
 The standard approach: assign `ROW_NUMBER()` within each duplicate group,
 keep `rn = 1`, delete the rest.
 
 
 ```sql
-%%sql
 -- Deduplication with ROW_NUMBER: detect and resolve duplicates
 -- Simulated: UNION ALL the same rows to create duplicates in a CTE
 WITH raw_data AS (
@@ -1273,7 +1259,7 @@ LIMIT 10
 
 For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [[querying-and-cost-optimization]].
 
-### Common Anti-Patterns
+### Execution Plans & Query Optimization — Common Anti-Patterns
 
 | Anti-Pattern | Problem | Fix |
 |-------------|---------|-----|
@@ -1285,7 +1271,6 @@ For a broader look at controlling BigQuery spend through slot management and res
 
 
 ```sql
-%%sql
 -- Compare: both return the same count, but the sargable version is faster
 -- BAD:  WHERE EXTRACT(YEAR FROM date) = 2025  → function on column prevents index seek
 -- GOOD: WHERE date >= ... AND date < ...  → index can seek directly
@@ -1317,7 +1302,7 @@ SELECT
 
 ## Transaction Isolation Levels
 
-### Isolation Level Guide for Data Engineering
+### Transaction Isolation Levels — Guide for Data Engineering
 
 | Level | Dirty Reads | Non-Repeatable | Phantoms | Use Case |
 |-------|------------|----------------|----------|----------|
@@ -1345,7 +1330,7 @@ SELECT
 
 ## Data Lineage & Audit Columns
 
-### Standard Audit Columns
+### Data Lineage & Audit — Standard Audit Columns
 
 Every table in the stoxx database has audit columns:
 
@@ -1359,7 +1344,6 @@ Every table in the stoxx database has audit columns:
 
 
 ```sql
-%%sql
 -- Data freshness check: when was each table last updated?
 SELECT '`bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`' AS `table`, MAX(_ingested_at) AS last_update
 FROM `bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`
@@ -1408,7 +1392,7 @@ ORDER BY last_update DESC
 
 ## Partitioning Strategies
 
-### When to Partition
+### Partitioning Strategies — When to Partition
 
 Partition large tables (millions of rows) by a date column for:
 - **Faster queries**: partition elimination skips irrelevant months/years
