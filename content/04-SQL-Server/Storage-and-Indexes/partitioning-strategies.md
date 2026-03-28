@@ -33,7 +33,7 @@ for splitting the data          (usually PRIMARY for simple     as its storage t
                                 setups)
 ```
 
-**Example partition layout for `dbo.market_data` (6 years of daily data):**
+#### Partition layout — yearly boundaries for market_data time-series
 
 ```
 Partition 1: trade_date < '2021-01-01'   (pre-2021 historical)
@@ -178,7 +178,7 @@ ORDER BY partition_number;
 
 `ALTER TABLE ... SWITCH` is the most powerful partitioning feature. It moves a partition between tables by updating metadata only — no data movement, no row-by-row processing. A billion-row partition switches in milliseconds.
 
-**Use case 1: Fast archiving (move old partition to archive table):**
+#### ALTER TABLE SWITCH PARTITION — fast archiving to archive table
 
 ```sql
 -- Create the archive table with identical structure on the ARCHIVE filegroup
@@ -210,7 +210,7 @@ TO dbo.market_data_archive;
 -- dbo.market_data_archive contains all pre-2021 rows
 ```
 
-**Use case 2: Fast staging load (switch a staging table IN as a new partition):**
+#### ALTER TABLE SWITCH — fast staging load, switch table IN as partition
 
 ```sql
 -- Pipeline: load new data to a staging table, then switch it in atomically
@@ -282,7 +282,7 @@ WHERE object_id = OBJECT_ID('dbo.market_data_partitioned')
 ORDER BY partition_number;
 ```
 
-**Removing old partitions (merge and archive):**
+#### ALTER PARTITION FUNCTION MERGE RANGE — remove old partitions
 
 ```sql
 -- Before removing: switch out the old partition to the archive table (see above)

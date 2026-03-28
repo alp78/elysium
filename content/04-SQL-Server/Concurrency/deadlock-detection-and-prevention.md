@@ -203,7 +203,7 @@ This ensures: transparent recovery, incremental back-off, bounded retries (no in
 
 ## Reproducing a Deadlock for Testing
 
-**Step 1 — Create test tables:**
+#### CREATE TABLE — step 1: set up deadlock reproduction tables
 ```sql
 USE analytics_db
 GO
@@ -214,7 +214,7 @@ INSERT INTO dbo.deadlock_test_b VALUES (1, 'init')
 GO
 ```
 
-**Step 2 — Session 1 (holds lock on A, then tries B):**
+#### BEGIN TRAN — step 2: session 1 locks table A then requests B
 ```sql
 BEGIN TRAN
 UPDATE dbo.deadlock_test_a SET val = 'session1' WHERE id = 1
@@ -223,7 +223,7 @@ UPDATE dbo.deadlock_test_b SET val = 'session1' WHERE id = 1  -- will try to get
 COMMIT
 ```
 
-**Step 3 — Session 2 (holds lock on B, then tries A):**
+#### BEGIN TRAN — step 3: session 2 locks table B then requests A (deadlock)
 ```sql
 BEGIN TRAN
 UPDATE dbo.deadlock_test_b SET val = 'session2' WHERE id = 1  -- succeeds, holds lock on B
@@ -236,7 +236,7 @@ SQL Server detects the circular wait within 5 seconds and kills one session.
 > [!warning] RCSI and Deadlock Testing
 > If RCSI is enabled, reader/writer deadlocks cannot be reproduced because readers use row-version snapshots. The writer/writer pattern above still works regardless of isolation level.
 
-**Cleanup:**
+#### DROP TABLE — cleanup deadlock test tables
 ```sql
 DROP TABLE IF EXISTS dbo.deadlock_test_a
 DROP TABLE IF EXISTS dbo.deadlock_test_b

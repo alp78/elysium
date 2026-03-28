@@ -156,7 +156,12 @@ Console.WriteLine($"Modified: {s}");
 
 #### Indexing (0-based)
 
-`s[i]` returns a `char` at position `i`. `s[^i]` indexes from the end (`^1` = last char), eliminating `s[s.Length - i]` boilerplate. `s[a..b]` returns a substring using Range syntax (C# 8+) — right-exclusive, so `s[0..5]` is indices 0-4. Consistent with array slicing. No step/stride support — use LINQ for every-nth-char. For pattern extraction, use Regex or Split instead of index math.
+> [!info] Indexing and slicing
+> - `s[i]` — returns a `char` at position `i`
+> - `s[^i]` — indexes from the end (`^1` = last char), eliminating `s[s.Length - i]`
+> - `s[a..b]` — substring via Range syntax (C# 8+), right-exclusive (`s[0..5]` = indices 0-4)
+> - No step/stride support — use LINQ for every-nth-char
+> - For pattern extraction, use Regex or Split instead of index math
 
 ```csharp
 string s = "Hello, World!";
@@ -270,7 +275,11 @@ for (int i = 0; i < 5; i++)
 
 #### Case Methods
 
-`ToUpper()`/`ToLower()` convert all characters. `ToTitleCase()` (via `CultureInfo.CurrentCulture.TextInfo`) capitalizes each word. No built-in `swapcase` or `casefold`. Culture-aware — `ToUpper(CultureInfo)` handles locale-specific rules (e.g., Turkish `i` uppercases to `İ`, not `I`).
+> [!info] Case methods
+> - `ToUpper()` / `ToLower()` — convert all characters
+> - `ToTitleCase()` — via `CultureInfo.CurrentCulture.TextInfo`, capitalizes each word
+> - No built-in `swapcase` or `casefold`
+> - Culture-aware: `ToUpper(CultureInfo)` handles locale-specific rules (e.g., Turkish `i` → `İ`)
 
 > [!warning] Anti-pattern
 > Don't use `ToUpper()` for case-insensitive comparison — use `StringComparison.OrdinalIgnoreCase` instead.
@@ -545,7 +554,12 @@ Console.WriteLine($"GBP: {amt.ToString("C2", new CultureInfo("en-GB"))}");
 
 #### StringBuilder vs string + — concatenation performance comparison
 
-`StringBuilder` modifies an internal char buffer in place — `Append`/`AppendLine`/`Insert`/`Replace` avoid creating new string objects. O(n) for n appends vs O(n²) for `string +` in a loop. Pre-allocate capacity for known sizes: `new StringBuilder(1024)`. Use for building strings in loops, large template assembly, and CSV generation. For simple concatenation (2-5 strings), `+` or `$""` is cleaner; for joining collections, `string.Join` is optimized.
+> [!info] StringBuilder
+> - Modifies an internal char buffer in place — `Append`/`AppendLine`/`Insert`/`Replace`
+> - O(n) for n appends vs O(n²) for `string +` in a loop
+> - Pre-allocate capacity for known sizes: `new StringBuilder(1024)`
+> - Use for building strings in loops, large template assembly, CSV generation
+> - For simple concatenation (2-5 strings), `+` or `$""` is cleaner; for collections, `string.Join`
 
 ```csharp
 // string is IMMUTABLE — each + creates a new string object
@@ -629,7 +643,12 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 
 #### Regex.Match() — First Match
 
-`Regex.Match` returns the first match (check `.Success`). `Regex.Matches` returns all matches as `MatchCollection`. Use `@""` verbatim strings to avoid double-escaping backslashes. `Groups[0]` is the full match; `Groups[1..n]` are capture groups. For simple `Contains`/`StartsWith` checks, string methods are faster.
+> [!info] Regex
+> - `Regex.Match` — returns the first match (check `.Success`)
+> - `Regex.Matches` — returns all matches as `MatchCollection`
+> - Use `@""` verbatim strings to avoid double-escaping backslashes
+> - `Groups[0]` is the full match; `Groups[1..n]` are capture groups
+> - For simple `Contains`/`StartsWith` checks, string methods are faster
 
 > [!warning] Anti-patterns
 > - **Not checking `.Success`** before reading `.Value` — empty match is not null

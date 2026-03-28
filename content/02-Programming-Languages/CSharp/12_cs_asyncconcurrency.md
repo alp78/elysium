@@ -28,7 +28,10 @@ using System.Runtime.CompilerServices;
 
 ## Async and Await
 
-`async` marks a method as asynchronous, returning `Task` or `Task<T>`. `await` pauses the method until the awaited task completes — the thread is released to the pool, not blocked. The thread pool manages threads automatically.
+> [!info] Async fundamentals
+> - `async` — marks a method as asynchronous, returning `Task` or `Task<T>`
+> - `await` — pauses the method until the awaited task completes; the thread is released to the pool, not blocked
+> - The thread pool manages threads automatically
 
 **Why async matters for data engineering:** API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them. A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
 
@@ -481,7 +484,11 @@ await foreach (var item in FetchPagesAsync(10, 3))
 
 ## Tasks and Parallelism
 
-`Task.Run()` schedules work on the thread pool (returns a `Task`). `Parallel.ForEach()` partitions a collection and processes chunks on multiple threads, blocking until all done. `Parallel.ForEachAsync()` (.NET 6+) is the async version. C# has **no GIL** — multiple threads execute truly in parallel.
+> [!info] Task and parallel APIs
+> - `Task.Run()` — schedules work on the thread pool (returns a `Task`)
+> - `Parallel.ForEach()` — partitions a collection, processes on multiple threads, blocks until done
+> - `Parallel.ForEachAsync()` (.NET 6+) — async version
+> - C# has **no GIL** — multiple threads execute truly in parallel
 
 > [!warning] CPU parallelism pitfalls
 > - `Task.Run` for I/O-bound work — use `async`/`await` instead (no thread needed)
@@ -638,7 +645,12 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 
 ## Threading and Concurrency
 
-`new Thread(method)` creates an OS thread. `.Start()` begins execution, `.Join()` blocks until complete. `lock` provides mutual exclusion (sugar for `Monitor.Enter`/`Exit`). `Interlocked` gives atomic operations without locks (`Increment`, `Add`, `Exchange`). `IsBackground = true` makes a daemon thread that dies when main exits.
+> [!info] Threading primitives
+> - `new Thread(method)` — creates an OS thread
+> - `.Start()` — begins execution; `.Join()` — blocks until complete
+> - `lock` — mutual exclusion (sugar for `Monitor.Enter`/`Exit`)
+> - `Interlocked` — atomic operations without locks (`Increment`, `Add`, `Exchange`)
+> - `IsBackground = true` — daemon thread that dies when main exits
 
 > [!tip] In modern C#, prefer `Task`/`async` over raw threads. Use threads only when you need explicit control (priority, apartment state, dedicated long-running work).
 
@@ -873,7 +885,11 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 
 <h4><code style="font-size:0.75em">ReaderWriterLockSlim</code></h4>
 
-`EnterReadLock` allows multiple concurrent readers; `EnterWriteLock` gives exclusive access. Optimized for read-heavy workloads where writes are infrequent. `UpgradeableReadLock` promotes a reader to writer without releasing. For write-heavy workloads, a simple `lock` is better.
+> [!info] ReaderWriterLockSlim
+> - `EnterReadLock` — allows multiple concurrent readers
+> - `EnterWriteLock` — gives exclusive access (blocks readers and other writers)
+> - `UpgradeableReadLock` — promotes a reader to writer without releasing
+> - Optimized for read-heavy workloads; for write-heavy, a simple `lock` is better
 
 > [!warning] Always release in `finally` — deadlock on exception otherwise.
 

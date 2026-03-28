@@ -79,7 +79,11 @@ print(f"val={val} → {label}")
 
 #### Truthy/falsy and chained comparisons
 
-`if items:` is `True` for non-empty collections. Falsy values: `0`, `0.0`, `""`, `None`, `[]`, `{}`, `set()`. Chained comparisons: `0 < x < 100` evaluates `x` only once. `and`/`or` return operands: `name = user or "Anonymous"`.
+> [!info] Truthy/falsy
+> - `if items:` — `True` for non-empty collections
+> - Falsy values: `0`, `0.0`, `""`, `None`, `[]`, `{}`, `set()`
+> - Chained comparisons: `0 < x < 100` evaluates `x` only once
+> - `and`/`or` return operands: `name = user or "Anonymous"`
 
 > [!warning] Don't use `if x == True` — just `if x`. But be careful with truthy checks when `0` or `""` is legitimate data — be explicit in those cases.
 
@@ -108,7 +112,10 @@ if 10 < x < 20:                   # Python exclusive! Chained comparison
 
 <h4><code style="font-size:0.75em">match/case</code> — pattern matching</h4>
 
-`match`/`case` (Python 3.10+) tests against patterns, not just equality. Supports `|` for OR, `_` for wildcard, guards with `if`, and variable binding. First match wins.
+> [!info] Pattern matching (Python 3.10+)
+> - `match`/`case` — tests against patterns, not just equality
+> - `|` for OR, `_` for wildcard, `if` for guards, variable binding
+> - First match wins
 
 > [!warning] Bare variable names in `case` **capture** (don't compare) — use literals or guards. Don't forget the `_` default — unmatched values silently pass through.
 
@@ -148,7 +155,10 @@ match point:
 
 #### match with type checking
 
-`case int(n)` matches integers and binds to `n`. Combine with guards: `case int(n) if n > 0`. Replaces `isinstance()` chains with clean pattern syntax. Use for heterogeneous data (JSON values, mixed-type collections).
+> [!info] Type patterns
+> - `case int(n)` — matches integers and binds to `n`
+> - Combine with guards: `case int(n) if n > 0`
+> - Replaces `isinstance()` chains with clean pattern syntax
 
 ```python
 def describe(value):
@@ -202,7 +212,10 @@ for fruit in ["apple", "banana", "cherry"]:
 
 <h4><code style="font-size:0.75em">range()</code></h4>
 
-`range(stop)`, `range(start, stop)`, `range(start, stop, step)`. Stop is exclusive. Negative step for countdown. `range` is lazy — constant memory regardless of size, and `500 in range(1000)` is O(1).
+> [!info] `range()` forms
+> - `range(stop)`, `range(start, stop)`, `range(start, stop, step)`
+> - Stop is exclusive; negative step for countdown
+> - Lazy — constant memory regardless of size; `500 in range(1000)` is O(1)
 
 ```python
 print("range(5):")
@@ -267,7 +280,12 @@ for key, value in d.items():     # key-value pairs
 
 <h4><code style="font-size:0.75em">enumerate</code> and <code style="font-size:0.75em">zip</code></h4>
 
-`enumerate(iterable, start=0)` yields `(index, element)`. `zip(a, b)` yields `(a_i, b_i)`, stopping at the shortest. Both are lazy. Use `enumerate` instead of `range(len(items))`. Note that `zip` with unequal lengths silently truncates — use `zip_longest` if needed.
+> [!info] Enumerate and zip
+> - `enumerate(iterable, start=0)` — yields `(index, element)`
+> - `zip(a, b)` — yields `(a_i, b_i)`, stopping at the shortest
+> - Both are lazy; use `enumerate` instead of `range(len(items))`
+>
+> > [!warning] `zip` with unequal lengths silently truncates — use `zip_longest` if needed.
 
 ```python
 print("enumerate:")
@@ -300,7 +318,10 @@ for name, age in zip(names, ages):
 
 <h4><code style="font-size:0.75em">while</code> and <code style="font-size:0.75em">for/else</code></h4>
 
-`while` repeats until condition is false. `for`/`else` runs the `else` block only if the loop completed WITHOUT `break` — Python's built-in "search found/not found" idiom. Use `for`/`else` for search patterns; `while` for polling, retry, input validation.
+> [!info] While and for/else
+> - `while` — repeats until condition is false
+> - `for`/`else` — the `else` block runs only if no `break` occurred (search found/not found idiom)
+> - Use `for`/`else` for search patterns; `while` for polling, retry, input validation
 
 > [!warning] The `else` in `for`/`else` runs when there's **no** `break` — the name is counterintuitive. Don't use it for non-search patterns.
 
@@ -797,7 +818,11 @@ print(f"Unique lengths: {unique_lengths}")
 
 <h4><code style="font-size:0.75em">map</code> and <code style="font-size:0.75em">filter</code></h4>
 
-`map(func, iterable)` applies `func` to every element. `filter(pred, iterable)` keeps elements where `pred` is True. Both are lazy. Best with named functions (`map(str.upper, words)`) — with lambdas, comprehensions are almost always clearer.
+> [!info] Map and filter
+> - `map(func, iterable)` — applies `func` to every element
+> - `filter(pred, iterable)` — keeps elements where `pred` is True
+> - Both are lazy; best with named functions (`map(str.upper, words)`)
+> - With lambdas, comprehensions are almost always clearer
 
 ```python
 nums = [1, 2, 3, 4, 5]
@@ -818,7 +843,9 @@ print(f"Evens:   {evens}")
 
 <h4><code style="font-size:0.75em">reduce</code> and built-in aggregations</h4>
 
-`reduce(func, iterable, initial)` applies `func` cumulatively — folds all elements into one value. Prefer built-ins for common cases: `sum()`, `min()`, `max()`, `any()`, `all()` are faster (C code) and short-circuit.
+> [!info] Reduce and built-in aggregations
+> - `reduce(func, iterable, initial)` — applies `func` cumulatively, folds into one value
+> - Prefer built-ins: `sum()`, `min()`, `max()`, `any()`, `all()` — faster (C code) and short-circuit
 
 ```python
 nums = [1, 2, 3, 4, 5]

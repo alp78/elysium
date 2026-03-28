@@ -85,7 +85,12 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 
 <h4><code style="font-size:0.75em">TransformBlock</code> and <code style="font-size:0.75em">ActionBlock</code></h4>
 
-`TransformBlock<TIn, TOut>` transforms items with configurable parallelism; `ActionBlock<T>` is a terminal consumer. `LinkTo` connects blocks, and `PropagateCompletion` cascades shutdown through the pipeline. Built-in buffering and backpressure prevent OOM from fast producers. For simple sequential processing, plain `async`/`await` is simpler.
+> [!info] TPL Dataflow blocks
+> - `TransformBlock<TIn, TOut>` — transforms items with configurable parallelism
+> - `ActionBlock<T>` — terminal consumer
+> - `LinkTo` — connects blocks; `PropagateCompletion` cascades shutdown
+> - Built-in buffering and backpressure prevent OOM from fast producers
+> - For simple sequential processing, plain `async`/`await` is simpler
 
 > [!warning] Anti-patterns
 > - **Not calling `Complete()`** — downstream blocks wait forever
@@ -252,7 +257,10 @@ Console.WriteLine($"  Done in {sw.ElapsedMilliseconds}ms");
 
 #### Parallel fetch with rate limiting
 
-`SemaphoreSlim(maxConcurrent)` limits simultaneous API calls. `WaitAsync` blocks when the limit is reached; `Release` in `finally` ensures cleanup. `Task.WhenAll` runs all fetches concurrently within the limit. Use for batch API ingestion with rate limits (3-10 concurrent requests).
+> [!info] Rate-limited parallel fetch
+> - `SemaphoreSlim(maxConcurrent)` — limits simultaneous API calls
+> - `WaitAsync` blocks when the limit is reached; `Release` in `finally` ensures cleanup
+> - `Task.WhenAll` runs all fetches concurrently within the limit
 
 > [!warning] Anti-patterns
 > - **Unbounded concurrency** — gets rate-limited or banned by APIs
@@ -426,7 +434,11 @@ await producer; // ensure producer completed without exceptions
 
 <h4><code style="font-size:0.75em">Process</code> — spawn external programs</h4>
 
-`Process.Start` with `RedirectStandardOutput` captures the child process's stdout. `WaitForExitAsync` provides non-blocking wait; `ExitCode` indicates success (0) or failure. Child runs in a separate OS process with its own memory — a crash doesn't take down the parent. Language-agnostic: child can be Python, Go, Rust, or shell scripts.
+> [!info] Process execution
+> - `Process.Start` with `RedirectStandardOutput` — captures stdout
+> - `WaitForExitAsync` — non-blocking wait; `ExitCode` = success (0) or failure
+> - Separate OS process with own memory — child crash doesn't take down the parent
+> - Language-agnostic: child can be Python, Go, Rust, or shell scripts
 
 > [!danger] Security
 > Never use `Shell=true` with user input — command injection risk. Always check `ExitCode` to catch silent failures.

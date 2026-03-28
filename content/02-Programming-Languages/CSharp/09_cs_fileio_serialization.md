@@ -301,7 +301,11 @@ Directory.Delete(tmpDir, recursive: true);
 
 #### JsonSerializerOptions — configure camelCase, indentation, encoding
 
-`JsonSerializerOptions` configures serialization globally: `WriteIndented`, `PropertyNamingPolicy` for camelCase, `Encoder` for Unicode. Reuse one instance — don't create new options per call.
+> [!info] JsonSerializerOptions
+> - `WriteIndented` — pretty print
+> - `PropertyNamingPolicy` — camelCase for APIs
+> - `Encoder` — Unicode handling
+> - Reuse one instance — don't create new options per call
 
 ```csharp
 #nullable enable
@@ -671,7 +675,11 @@ For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Av
 
 #### System.IO Stream hierarchy — FileStream, MemoryStream, StreamReader
 
-`Stream` is the abstract base — `FileStream` for files, `MemoryStream` for in-memory, `NetworkStream` for network. `StreamReader`/`Writer` wrap for text. Uniform API with async support. Always dispose streams.
+> [!info] Stream hierarchy
+> - `Stream` — abstract base class
+> - `FileStream` — files | `MemoryStream` — in-memory | `NetworkStream` — network
+> - `StreamReader`/`StreamWriter` — wrap streams for text I/O
+> - Uniform API with async support; always dispose streams
 
 ```csharp
 #nullable enable
@@ -1156,7 +1164,11 @@ Console.WriteLine("  Pipelines: used by ASP.NET Core Kestrel for HTTP parsing");
 
 <h4>Zero-allocation CSV parsing with <code style="font-size:0.75em">ReadOnlySpan&lt;char&gt;</code></h4>
 
-`AsSpan()` creates a zero-allocation view. `IndexOf` finds delimiters, `Slice` creates sub-views without new strings. Orders of magnitude less GC pressure than `Split`. Use for high-throughput parsing (>100MB, millions of rows). For normal CSV, `Split` is simpler and sufficient.
+> [!info] Zero-allocation CSV parsing
+> - `AsSpan()` — creates a zero-allocation view
+> - `IndexOf` finds delimiters; `Slice` creates sub-views without new strings
+> - Orders of magnitude less GC pressure than `Split`
+> - Use for high-throughput parsing (>100MB, millions of rows); for normal CSV, `Split` suffices
 
 ```csharp
 // Traditional: line.Split(',') — allocates N strings per line

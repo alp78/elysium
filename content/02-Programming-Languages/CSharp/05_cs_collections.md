@@ -440,7 +440,11 @@ foreach (var (key, value) in sorted)
 
 #### HashSet&lt;T&gt; creation — unordered unique elements
 
-`HashSet<T>` stores unique elements with O(1) membership testing, deduplication, and built-in set algebra (`UnionWith`, `IntersectWith`, `ExceptWith`, `SymmetricExceptWith`). `SortedSet<T>` keeps elements sorted. No `frozenset` equivalent — use `ImmutableHashSet` from `System.Collections.Immutable`.
+> [!info] HashSet
+> - `HashSet<T>` — unique elements with O(1) membership, deduplication, and set algebra
+> - Set operations: `UnionWith`, `IntersectWith`, `ExceptWith`, `SymmetricExceptWith`
+> - `SortedSet<T>` — keeps elements sorted
+> - No `frozenset` equivalent — use `ImmutableHashSet` from `System.Collections.Immutable`
 
 > [!warning] Anti-patterns
 > - **`List` + `Contains`** for uniqueness checks — O(n) per check vs O(1) for `HashSet`
@@ -617,7 +621,13 @@ Console.WriteLine($"All values:      [{string.Join(", ", Enum.GetValues<Color>()
 
 <h4>Stack — <code style="font-size:0.75em">Stack&lt;T&gt;</code> (LIFO)</h4>
 
-`Push` adds to top, `Pop` removes and returns top, `Peek` reads top without removing — all O(1). `TryPop`/`TryPeek` return `false` if empty instead of throwing. Natural for undo systems, DFS traversal, balanced bracket checking, and reverse iteration. For FIFO processing use `Queue<T>`; for indexed access use `List<T>`.
+> [!info] Stack operations (all O(1))
+> - `Push` — adds to top
+> - `Pop` — removes and returns top
+> - `Peek` — reads top without removing
+> - `TryPop` / `TryPeek` — return `false` if empty instead of throwing
+> - Natural for undo systems, DFS, balanced bracket checking, reverse iteration
+> - For FIFO use `Queue<T>`; for indexed access use `List<T>`
 
 ```csharp
 var stack = new Stack<string>();

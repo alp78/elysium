@@ -29,7 +29,7 @@ The bronze layer is the raw data landing zone in the [[medallion-architecture]].
 
 All DDL in this project is idempotent — safe to run multiple times without error, following the principles described in [[idempotent-pipeline-design]]. File: `db/ddl/bronze_schema.sql`
 
-**Create the analytics database if it doesn't exist (idempotent):**
+#### CREATE DATABASE IF NOT EXISTS — idempotent analytics database creation
 
 ```sql
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'analytics_db')
@@ -50,7 +50,7 @@ GO
 
 All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded. For benchmarks comparing pyodbc `fast_executemany` with alternative ingestion methods (bcp, SqlBulkCopy), see [[23_py_data_ingestion]] and [[23_cs_data_ingestion]].
 
-**pyodbc connection factory using environment variables from .env:**
+#### pyodbc connect with os.environ — connection factory from .env
 
 ```python
 # utils/db.py — creates pyodbc connections from .env config
@@ -80,7 +80,7 @@ def get_connection(autocommit=False, database=None):
 
 ### Symbol Lookup Helper
 
-**Returns all stock symbols and their price history start dates for a given index:**
+#### SELECT symbol, MIN(date) — stock symbols and history start dates per index
 
 ```sql
 -- utils/db.py: get_index_symbols()
@@ -92,7 +92,7 @@ FROM bronze.index_dim
 WHERE _index = ?          -- parameterized: e.g. 'market_index'
 ```
 
-**Sample result:**
+#### Sample result — dim_stock query output
 
 | symbol | price_data_start |
 |--------|-----------------|
@@ -113,7 +113,7 @@ Stores company identity data: name, sector, country, exchange, currency. Refresh
 - **Refresh:** On setup or manual re-fetch
 - **Strategy:** Truncate & reload per index
 
-**Full DDL for bronze.index_dim:**
+#### CREATE TABLE bronze.index_dim — full DDL with clustered index
 
 ```sql
 -- Source: data/dimensions/{prefix}_dim.json (fetched from yfinance .info)
@@ -173,7 +173,7 @@ One snapshot per stock per pipeline run. Stores price metrics, momentum, and ana
 - **Refresh:** 3x daily (09:00, 17:00, 22:00 UTC)
 - **Strategy:** Truncate & reload per index
 
-**Full DDL for bronze.signals_daily:**
+#### CREATE TABLE bronze.signals_daily — full DDL
 
 ```sql
 -- Source: data/stage/{prefix}_signals_daily.json
@@ -226,7 +226,7 @@ GO
 - **Refresh:** Daily (values only change quarterly with earnings)
 - **Strategy:** Truncate & reload per index
 
-**Full DDL for bronze.signals_quarterly:**
+#### CREATE TABLE bronze.signals_quarterly — full DDL
 
 ```sql
 -- Source: data/stage/{prefix}_signals_quarterly.json
@@ -280,7 +280,7 @@ GO
 - **Refresh:** Every 5 minutes during market hours
 - **Strategy:** Truncate & reload per index
 
-**Full DDL for bronze.pulse (uses BIGINT PK for high-frequency data):**
+#### CREATE TABLE bronze.pulse — BIGINT PK for high-frequency data
 
 ```sql
 -- Source: data/pulse/{prefix}_pulse.json
@@ -325,7 +325,7 @@ GO
 
 ### bronze.pulse_tickers — Most Active Stocks
 
-**Full DDL for bronze.pulse_tickers:**
+#### CREATE TABLE bronze.pulse_tickers — full DDL
 
 ```sql
 -- Source: data/pulse/{prefix}_tickers.json
@@ -359,7 +359,7 @@ Used to detect gaps in OHLCV data — if the exchange was open but we have no pr
 - **Refresh:** On setup (populated once per exchange)
 - **Composite primary key:** `(date, exchange_code)` — no surrogate id
 
-**Full DDL for bronze.trading_calendar:**
+#### CREATE TABLE bronze.trading_calendar — full DDL
 
 ```sql
 -- Source: exchange_calendars Python library
@@ -406,7 +406,7 @@ The table name is derived from the index key by stripping underscores:
 | `project_usa_50` | `index_usa` | `bronze.index_usa_ohlcv` | `silver.index_usa_ohlcv` |
 | `project_asia_50` | `index_asia` | `bronze.index_asia_ohlcv` | `silver.index_asia_ohlcv` |
 
-**config.py derives table prefix from index key:**
+#### config.py — derive table prefix from index key for dynamic DDL
 
 ```python
 # config.py — derives table prefix from index key
@@ -422,7 +422,7 @@ def silver_ohlcv(key):
 
 ### Dynamic OHLCV DDL (`setup_index.py`)
 
-**OHLCV table creation — bronze and silver — created per index (idempotent):**
+#### CREATE TABLE IF NOT EXISTS — OHLCV bronze and silver per index (idempotent)
 
 ```sql
 -- Created by setup_index.py for each new index (idempotent)
@@ -472,7 +472,7 @@ Loaders read JSON files produced by fetchers and write to bronze tables. Two str
 Used by: `index_dim`, `signals_daily`, `signals_quarterly`, `pulse`, `pulse_tickers`
 
 
-**Step 1 — Delete all existing rows for this index:**
+#### DELETE WHERE _index = @key — truncate-reload step 1: clear existing data
 
 ```sql
 -- ingestion/loaders/load_signals_daily.py (line 33)
@@ -481,7 +481,7 @@ DELETE FROM bronze.signals_daily
 WHERE _index = ?      -- e.g. 'market_index'
 ```
 
-**Step 2 — Bulk insert all records from JSON:**
+#### INSERT INTO bronze — truncate-reload step 2: bulk insert from JSON
 
 ```sql
 -- ingestion/loaders/load_signals_daily.py (lines 60-68)
@@ -496,7 +496,7 @@ INSERT INTO bronze.signals_daily (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
-**Python batch insert using `cursor.executemany()` with `fast_executemany`:**
+#### pyodbc cursor.executemany fast_executemany — Python batch insert
 
 ```python
 cursor.fast_executemany = True   # pyodbc batch mode — much faster than row-by-row
@@ -512,7 +512,7 @@ conn.commit()                    # commit the transaction (or rollback on error)
 OHLCV data is append-only (new dates) with volume corrections (updates). Used by: `load_ohlcv.py`
 
 
-**Step 1 — Read existing bronze data to build a lookup map:**
+#### SELECT existing bronze — merge step 1: build lookup map for comparison
 
 ```sql
 -- ingestion/loaders/load_ohlcv.py (lines 54-57)
@@ -523,7 +523,7 @@ SELECT symbol,                                   -- stock ticker
 FROM bronze.index_europe_ohlcv                     -- table name is dynamic per index
 ```
 
-**Sample result:**
+#### Sample result — bronze OHLCV lookup query output
 
 | symbol | date | volume |
 |--------|------|--------|
@@ -533,7 +533,7 @@ FROM bronze.index_europe_ohlcv                     -- table name is dynamic per 
 
 Python builds a dictionary: `existing = {('ASML.AS', '2025-03-04'): 1842300, ...}`
 
-**Step 2a — Insert rows that don't exist yet (new dates):**
+#### INSERT WHERE NOT IN existing — merge step 2a: new rows only
 
 ```sql
 -- ingestion/loaders/load_ohlcv.py (lines 84-88)
@@ -544,7 +544,7 @@ INSERT INTO bronze.index_europe_ohlcv (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
-**Step 2b — Update rows where volume was 0 but now has real data:**
+#### UPDATE WHERE volume changed — merge step 2b: update stale rows
 
 ```sql
 -- ingestion/loaders/load_ohlcv.py (lines 91-95)

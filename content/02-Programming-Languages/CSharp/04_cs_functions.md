@@ -52,7 +52,11 @@ RunDemo();
 
 #### Expression-bodied and tuple return
 
-`=>` syntax eliminates braces and `return` for one-liners. Tuples return multiple values: `(string, int) GetInfo() => ("Alice", 30)`. Callers destructure: `var (name, age) = GetInfo()`. Use named tuple fields for clarity. For more than 3-4 values, use a `record` or class instead.
+> [!info] Expression-bodied and tuple return
+> - `=>` syntax — eliminates braces and `return` for one-liners
+> - Tuples return multiple values: `(string, int) GetInfo() => ("Alice", 30)`
+> - Callers destructure: `var (name, age) = GetInfo()`
+> - Use named tuple fields for clarity; for 3-4+ values, use a `record` or class
 
 ```csharp
 string GreetShort(string name) => $"Hello, {name}!";
@@ -403,7 +407,11 @@ LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] 
 
 #### Lambda expressions
 
-`(params) => expression` for single-expression lambdas (return is implicit). `(params) => { statements }` for multi-statement with explicit `return`. Assign to `Func<T, TResult>` (returns value) or `Action<T>` (void). Lambdas capture enclosing scope variables automatically.
+> [!info] Lambda syntax
+> - `(params) => expression` — single-expression (return is implicit)
+> - `(params) => { statements }` — multi-statement with explicit `return`
+> - Assign to `Func<T, TResult>` (returns value) or `Action<T>` (void)
+> - Lambdas capture enclosing scope variables automatically
 
 > [!warning] Keep lambdas short (≤3 lines). Extract complex logic to named methods. Don't use lambdas with side effects in LINQ — use `foreach`.
 
@@ -463,7 +471,10 @@ Console.WriteLine($"Youngest: {youngest}");
 
 <h4><code style="font-size:0.75em">Action</code>, <code style="font-size:0.75em">Predicate</code>, and closure capture</h4>
 
-`Action<T>` for side-effect lambdas (void). `Predicate<T>` for boolean tests used by `List.FindAll`, `Exists`. Closures capture the **variable reference**, not its value — changes are shared.
+> [!info] Delegate types and closures
+> - `Action<T>` — side-effect lambdas (void)
+> - `Predicate<T>` — boolean tests used by `List.FindAll`, `Exists`
+> - Closures capture the **variable reference**, not its value — changes are shared
 
 ```csharp
 Action<string> shout = msg => Console.WriteLine($"  {msg.ToUpper()}!");

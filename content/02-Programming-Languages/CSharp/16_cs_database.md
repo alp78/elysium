@@ -125,7 +125,11 @@ SQLite uses the ADO.NET pattern: `SqliteConnection`, `SqliteCommand`, `SqliteDat
 `DataSource=:memory:` creates an in-memory database. Parameterised queries use `@param`
 named placeholders. Python equivalent: `sqlite3.connect(":memory:")`.
 
-`SqliteConnection`/`SqliteCommand`/`SqliteDataReader` follow the standard ADO.NET pattern — same API as SqlClient. `@param` named placeholders prevent SQL injection. Always `using` connections to avoid leaks. SQLite is single-writer — use SQL Server for concurrent access.
+> [!info] ADO.NET pattern (SQLite)
+> - `SqliteConnection` / `SqliteCommand` / `SqliteDataReader` — same API as SqlClient
+> - `@param` named placeholders prevent SQL injection
+> - Always `using` connections to avoid leaks
+> - SQLite is single-writer — use SQL Server for concurrent access
 
 ```csharp
 var conn = new SqliteConnection("DataSource=:memory:");
@@ -627,7 +631,11 @@ Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
 `sys.schemas` to discover the medallion architecture: bronze (raw), silver (cleaned),
 gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [[sql-fundamentals]].
 
-`SqlConnection` + `SqlCommand` + `SqlDataReader` — same ADO.NET pattern as SQLite. Always use `@param` for safety. `sys.*` catalog views give full metadata. Don't use `SELECT *` in production — list columns explicitly.
+> [!info] ADO.NET pattern (SQL Server)
+> - `SqlConnection` + `SqlCommand` + `SqlDataReader` — same pattern as SQLite
+> - Always use `@param` for safety
+> - `sys.*` catalog views give full metadata
+> - Don't use `SELECT *` in production — list columns explicitly
 
 ```csharp
 var connStr = "Server=localhost,1434;Database=stoxx;"
@@ -1184,7 +1192,12 @@ Console.WriteLine("Ran 13 queries on unindexed columns to provoke recommendation
 
 #### SQL Server — missing index recommendations from the query optimizer
 
-`sys.dm_db_missing_index_details` — SQL Server’s built-in index advisor. The optimizer records missing indexes every time it compiles a plan: `equality_columns` (WHERE `=`), `inequality_columns` (WHERE `>`), `included_columns` (SELECT → INCLUDE), and `avg_user_impact` (estimated % improvement). Empty after restart (in-memory only).
+> [!info] Missing index advisor (`sys.dm_db_missing_index_details`)
+> - SQL Server records missing indexes every time it compiles a plan
+> - `equality_columns` — WHERE `=` | `inequality_columns` — WHERE `>`
+> - `included_columns` — SELECT → INCLUDE
+> - `avg_user_impact` — estimated % improvement
+> - Empty after restart (in-memory only)
 
 ```csharp
 QueryToTable(conn, @"
@@ -1712,7 +1725,11 @@ public class Trade
 
 #### EF Core — DbContext definition
 
-`DbContext` maps `DbSet<T>` properties to tables. `OnConfiguring` chooses the provider (`UseInMemoryDatabase` for tests, `UseSqlServer` for production). `OnModelCreating` configures relationships (`HasOne`/`WithMany`) and constraints (`HasIndex`). Conventions: `Id` property = primary key, `DbSet<Stock>` = "Stocks" table, navigation + FK properties auto-detected.
+> [!info] DbContext setup
+> - `DbContext` maps `DbSet<T>` properties to tables
+> - `OnConfiguring` — chooses the provider (`UseInMemoryDatabase` for tests, `UseSqlServer` for production)
+> - `OnModelCreating` — configures relationships (`HasOne`/`WithMany`) and constraints (`HasIndex`)
+> - Conventions: `Id` = primary key, `DbSet<Stock>` = "Stocks" table, navigation + FK auto-detected
 
 ```csharp
 public class TradingContext : DbContext

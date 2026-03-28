@@ -56,7 +56,7 @@ Data is stored column-by-column instead of row-by-row, compressed in segments of
 
 ## Exploring Existing Indexes
 
-**List all indexes on a specific table:**
+#### sys.indexes + sys.index_columns — list all indexes on a table
 
 ```sql
 -- List ALL indexes on a specific table
@@ -79,7 +79,7 @@ ORDER BY i.index_id;
 -- filter_definition = WHERE clause for filtered indexes
 ```
 
-**List all indexes across the entire database:**
+#### sys.indexes + sys.tables — list all indexes across the database
 
 ```sql
 -- List ALL indexes across the entire database
@@ -94,7 +94,7 @@ WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
 ORDER BY table_name, i.index_id;
 ```
 
-**Detailed index info with sizes:**
+#### sys.dm_db_index_physical_stats — detailed index sizes and page counts
 
 ```sql
 -- Detailed index info with sizes
@@ -114,7 +114,7 @@ ORDER BY size_mb DESC;
 -- Largest indexes are candidates for review — are they actually used?
 ```
 
-**Check if a table is a heap (no clustered index):**
+#### sys.indexes type = 0 — check if a table is a heap
 
 ```sql
 -- Check if a table is a HEAP (no clustered index)
@@ -127,7 +127,7 @@ WHERE type = 0  -- 0 = HEAP
 -- Almost always add a clustered index (exception: staging tables with truncate-reload)
 ```
 
-**View index columns with sort direction:**
+#### sys.index_columns is_descending_key — view columns with sort direction
 
 ```sql
 -- View index columns with sort direction
@@ -148,7 +148,7 @@ ORDER BY i.index_id, ic.key_ordinal;
 
 ## Index Usage Analysis — Are Your Indexes Being Used?
 
-**Index usage statistics (reads vs. writes):**
+#### sys.dm_db_index_usage_stats — index reads vs writes since restart
 
 ```sql
 -- Index usage statistics (reads vs. writes)
@@ -175,7 +175,7 @@ ORDER BY total_reads DESC;
 -- user_lookups > 0 = key lookup happening — consider INCLUDE columns
 ```
 
-**Find unused indexes (zero reads since last restart):**
+#### dm_db_index_usage_stats user_seeks = 0 — find unused indexes
 
 ```sql
 -- UNUSED indexes (zero reads since last restart)
@@ -203,7 +203,7 @@ ORDER BY s.user_updates DESC;
 -- Only drop unused indexes if uptime covers a full business cycle (at least 1 week)
 ```
 
-**Find duplicate indexes (same key columns):**
+#### sys.index_columns STRING_AGG — find duplicate indexes (same key columns)
 
 ```sql
 -- DUPLICATE indexes (same key columns — waste of space and write I/O)
@@ -235,7 +235,7 @@ JOIN IndexColumns b ON a.object_id = b.object_id AND a.key_cols = b.key_cols AND
 
 ## Missing Index Recommendations
 
-**SQL Server's built-in missing index suggestions:**
+#### sys.dm_db_missing_index_details — built-in missing index recommendations
 
 ```sql
 -- SQL Server's built-in missing index suggestions
@@ -271,7 +271,7 @@ ORDER BY improvement_score DESC;
 --   4. Resets on service restart — only trust after sufficient uptime
 ```
 
-**Find cached query plans with missing index warnings:**
+#### XML plan MissingIndex — find cached plans with missing index warnings
 
 ```sql
 -- Missing index suggestions from a specific query plan
@@ -508,7 +508,7 @@ JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
 -- page_count < 1000      → too small to matter — skip it
 ```
 
-**Check fragmentation across all indexes in the database:**
+#### sys.dm_db_index_physical_stats — check fragmentation across all indexes
 
 ```sql
 -- Fragmentation across ALL indexes in the database
@@ -634,7 +634,7 @@ DEALLOCATE idx_cursor;
 
 Statistics tell the query optimizer how data is distributed in each column. Without accurate statistics, the optimizer makes bad guesses about row counts, leading to terrible execution plans.
 
-**View all statistics on a table:**
+#### sys.stats + dm_db_stats_properties — view all statistics on a table
 
 ```sql
 -- View all statistics on a table
@@ -655,7 +655,7 @@ ORDER BY sp.last_updated;
 -- rows_sampled / rows = sample rate (< 100% means stats may be approximate)
 ```
 
-**Find stale statistics:**
+#### dm_db_stats_properties modification_counter — find stale statistics
 
 ```sql
 -- STALE statistics (changed significantly since last update)
@@ -675,7 +675,7 @@ ORDER BY sp.modification_counter DESC;
 -- Auto-update triggers at ~20% modifications (or sqrt(1000 * rows) in SQL Server 2016+)
 ```
 
-**Update statistics:**
+#### UPDATE STATISTICS WITH FULLSCAN — refresh statistics after bulk loads
 
 ```sql
 -- Update statistics for a specific index
@@ -695,7 +695,7 @@ EXEC sp_updatestats;
 -- Uses default sample rate (not full scan)
 ```
 
-**View the histogram (data distribution):**
+#### DBCC SHOW_STATISTICS — view histogram data distribution
 
 ```sql
 -- View the histogram (data distribution) for a statistic
@@ -711,7 +711,7 @@ DBCC SHOW_STATISTICS('dbo.market_data', 'IX_market_data_symbol_date');
 --    AVG_RANGE_ROWS = average rows per distinct value in range
 ```
 
-**Enable auto-create and auto-update (should always be ON):**
+#### ALTER DATABASE SET AUTO_CREATE_STATISTICS ON — enable auto stats
 
 ```sql
 -- Enable auto-create and auto-update (should always be ON)

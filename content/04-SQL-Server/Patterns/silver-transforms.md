@@ -39,7 +39,7 @@ Tracks company attribute changes (sector, name, etc.) over time. When an attribu
 > [!info] SCD Type 2 Pattern
 > SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [[idempotent-pipeline-design]] for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [[dbt-snapshots-and-scd]].
 
-**silver.index_dim DDL with SCD2 temporal columns:**
+#### CREATE TABLE silver.index_dim — SCD Type 2 with valid_from, valid_to, is_current
 
 ```sql
 -- Slowly Changing Dimension Type 2: tracks attribute changes over time.
@@ -74,7 +74,7 @@ GO
 ```
 
 
-**Example silver.index_dim state after an SCD2 attribute change:**
+#### SCD Type 2 example — silver.index_dim state after attribute change
 
 | _index | symbol | sector | valid_from | valid_to | is_current |
 |--------|--------|--------|------------|----------|------------|
@@ -85,7 +85,7 @@ GO
 
 One row per `(_index, symbol, signal_date)` — no duplicates. Bronze gets truncated every run; silver preserves the full history.
 
-**silver.signals_daily DDL with UNIQUE constraint:**
+#### CREATE TABLE silver.signals_daily — UNIQUE constraint on (symbol, date)
 
 ```sql
 -- One row per (_index, symbol, signal_date) — no duplicates.
@@ -113,7 +113,7 @@ GO
 
 ### silver.signals_quarterly — Deduplicated Quarterly Signals
 
-**silver.signals_quarterly DDL with UNIQUE constraint:**
+#### CREATE TABLE silver.signals_quarterly — UNIQUE constraint on (symbol, quarter)
 
 ```sql
 -- Same pattern: one row per (_index, symbol, as_of_date)
@@ -146,7 +146,7 @@ This is the most sophisticated transform. It compares every attribute between br
 - **Changed attributes**: close old row, insert new row
 - **Removed symbols**: close old row
 
-**Step 1 — Read the full bronze snapshot:**
+#### SELECT bronze.index_dim — SCD2 step 1: read full bronze snapshot
 
 ```sql
 -- transform_index_dim.py (lines 40-43)
@@ -160,7 +160,7 @@ SELECT _index, symbol, long_name, short_name, sector, sector_key,
 FROM bronze.index_dim
 ```
 
-**Step 2 — Read current silver rows (active records only):**
+#### SELECT silver WHERE is_current = 1 — SCD2 step 2: read active rows
 
 ```sql
 -- transform_index_dim.py (lines 51-54)

@@ -159,7 +159,7 @@ FROM sys.database_audit_specifications;
 
 ## Step 4: Query Audit Logs
 
-**Recent events (last 1 hour):**
+#### sys.fn_get_audit_file — recent audit events (last 1 hour)
 
 ```sql
 -- Read audit records from the audit files
@@ -194,7 +194,7 @@ WHERE event_time > DATEADD(HOUR, -1, GETUTCDATE())
 ORDER BY event_time DESC;
 ```
 
-**Summary: events per action in last 24 hours:**
+#### sys.fn_get_audit_file GROUP BY — event summary by action (24 hours)
 
 ```sql
 -- Summary: events per action in last 24 hours
@@ -221,7 +221,7 @@ ORDER BY event_count DESC;
 
 ## Step 5: Detect Brute-Force Login Attacks
 
-**Alert on brute-force attempts: more than 10 failed logins from same IP in 1 hour:**
+#### Brute-force detection — 10+ failed logins from same IP in 1 hour
 
 ```sql
 -- Alert on brute-force attempts: >10 failed logins from same IP in 1 hour
@@ -243,7 +243,7 @@ ORDER BY failed_attempts DESC;
 -- 10.0.2.55     47               2026-03-10 09:30:12.000     46                       5
 ```
 
-**Detect credential stuffing (multiple different usernames from same IP):**
+#### Credential stuffing detection — multiple usernames from same IP
 
 ```sql
 -- Detect credential stuffing: multiple different usernames from same IP
@@ -421,14 +421,14 @@ WHERE db.name = 'analytics_db';
 
 ## Audit File Management
 
-**Check audit file size and location:**
+#### sys.dm_server_audit_status — check audit file size and location
 
 ```sql
 SELECT name, audit_file_path, status_desc
 FROM sys.server_audits;
 ```
 
-**List audit files on disk (Linux):**
+#### ls -lh /var/opt/mssql/audit — list audit files on disk
 
 ```bash
 ls -lh /var/opt/mssql/audit/
@@ -437,7 +437,7 @@ ls -lh /var/opt/mssql/audit/
 # -rw-rw---- 1 mssql mssql 100M Mar 09 00:00 project_audit_20260309.sqlaudit
 ```
 
-**Stop and restart the audit (for maintenance):**
+#### ALTER SERVER AUDIT — stop and restart audit for maintenance
 
 ```sql
 -- Stop temporarily (existing events are flushed to file first)

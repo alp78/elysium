@@ -20,7 +20,11 @@ status: complete
 
 #### List creation — literals, list(), range, nested
 
-`list` is Python's primary collection — ordered, mutable, allows duplicates and mixed types. O(1) append and index access, O(n) insert/remove. 0-indexed with negative indexing (`[-1]` = last element) and slicing (`list[start:stop:step]`). No fixed-size array built-in (use `array.array` or NumPy for that).
+> [!info] List fundamentals
+> - Ordered, mutable, allows duplicates and mixed types
+> - O(1) append and index access, O(n) insert/remove
+> - 0-indexed with negative indexing (`[-1]` = last element) and slicing (`list[start:stop:step]`)
+> - No fixed-size array built-in (use `array.array` or NumPy)
 
 > [!warning] Anti-patterns
 > - **`list` for membership tests** — O(n); use `set` for large data
@@ -319,7 +323,11 @@ print(f"Total:        {c.total()}")
 
 #### Set creation — literals, set(), frozenset
 
-`set` stores unique hashable elements with O(1) average membership testing, deduplication, and built-in set algebra (union, intersection, difference, symmetric difference). `frozenset` is the immutable variant — can be used as dict keys or inside another set. Use `{}` syntax for non-empty sets but `set()` for empty (since `{}` creates an empty dict).
+> [!info] Set fundamentals
+> - Unique hashable elements with O(1) membership testing and deduplication
+> - Built-in set algebra: union, intersection, difference, symmetric difference
+> - `frozenset` — immutable variant (can be dict keys or inside another set)
+> - `{}` for non-empty sets, but `set()` for empty (since `{}` creates an empty dict)
 
 > [!warning] Anti-patterns
 > - **`list` + `in`** for uniqueness — O(n); use `set`

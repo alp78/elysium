@@ -66,7 +66,11 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 
 #### Generic method
 
-`T First<T>(T[] items)` declares a type parameter `T` that the compiler infers from the argument. One method handles `int[]`, `string[]`, `double[]` — no overloads needed. Type safety is preserved at compile time. Avoid using `object` instead of generics (loses type safety, requires casting).
+> [!info] Generic methods
+> - `T First<T>(T[] items)` — declares a type parameter `T` the compiler infers from the argument
+> - One method handles `int[]`, `string[]`, `double[]` — no overloads needed
+> - Type safety preserved at compile time
+> - Avoid `object` instead of generics (loses type safety, requires casting)
 
 ```csharp
 // Generic method — one method works with any type T; compiler infers T from the argument

@@ -67,7 +67,7 @@ Database "analytics_db"
         └── ... (append-only, circular reuse after backup)
 ```
 
-**Add a secondary data file to distribute I/O across disks:**
+#### ALTER DATABASE ADD FILE — secondary data file for I/O distribution
 
 ```sql
 -- Add a secondary file for distributing I/O across disks
@@ -79,7 +79,7 @@ ALTER DATABASE analytics_db ADD FILE (
 );
 ```
 
-**Check current file layout:**
+#### sys.database_files — check current data and log file layout
 
 ```sql
 SELECT
@@ -139,7 +139,7 @@ Every page, regardless of type, has the same 96-byte header:
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Row structure within a data page:**
+#### 8 KB data page — row structure: header, fixed columns, null bitmap, variable columns
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -160,14 +160,14 @@ Every page, regardless of type, has the same 96-byte header:
 └────────────────────────────────────────────────────────┘
 ```
 
-**Practical capacity:**
+#### 8 KB page practical capacity — rows per page by row size
 
 - Usable space per page: 8,096 bytes (8,192 − 96 header)
 - Maximum row size: 8,060 bytes (leaves room for slot array)
 - A row with 100-byte fixed columns: ~80 rows per page
 - A row with 4,000-byte columns: 2 rows per page
 
-**Inspect pages with DBCC:**
+#### DBCC PAGE — inspect raw page contents
 
 ```sql
 -- Turn on trace flag to see DBCC PAGE output in messages
@@ -228,7 +228,7 @@ The log file is the safety net. Every modification follows this sequence:
 > [!info] COMMIT Does Not Mean Disk
 > When a COMMIT returns success, the data might NOT be in the `.mdf` yet. It is guaranteed to be in the `.ldf`. If the server crashes before the checkpoint, recovery replays the log (called **redo** or **roll forward**) to apply committed changes to the `.mdf`. Uncommitted changes found in the log are undone (**undo** or **roll back**).
 
-**Log record anatomy — each log record contains:**
+#### Log record anatomy — LSN, transaction ID, operation, before/after images
 
 - **LSN** — unique identifier for this record
 - **Transaction ID** — which transaction this belongs to
@@ -237,7 +237,7 @@ The log file is the safety net. Every modification follows this sequence:
 - **Before image** — the original data (for undo)
 - **After image** — the new data (for redo)
 
-**View recent log records:**
+#### sys.fn_dblog — view recent transaction log records
 
 ```sql
 -- View recent log records
@@ -260,7 +260,7 @@ Current LSN             Operation       Context         Transaction ID  Page ID 
 00000027:0000014e:0001  LOP_BEGIN_XACT  LCX_NULL        0000:0000041a   NULL     NULL
 ```
 
-**Virtual Log Files (VLFs):**
+#### DBCC LOGINFO — Virtual Log Files (VLF) count and status
 
 The `.ldf` is internally divided into Virtual Log Files. Too many VLFs (hundreds or thousands) slow down recovery and backups.
 
@@ -272,7 +272,7 @@ SELECT COUNT(*) AS vlf_count FROM sys.dm_db_log_info(DB_ID('analytics_db'));
 -- Fix: shrink log, set a proper initial size and growth increment
 ```
 
-**Log flush triggers:**
+#### Log flush triggers — COMMIT, checkpoint, lazy writer
 
 | Event | What happens |
 |---|---|
@@ -281,7 +281,7 @@ SELECT COUNT(*) AS vlf_count FROM sys.dm_db_log_info(DB_ID('analytics_db'));
 | `CHECKPOINT` | Checkpoint record written to log. Dirty pages flushed to .mdf. |
 | `sp_flush_log` | Force flush without committing (for delayed durability scenarios). |
 
-**Delayed durability — trade durability for performance:**
+#### ALTER DATABASE SET DELAYED_DURABILITY — trade durability for write speed
 
 ```sql
 -- Trades durability for performance: COMMIT returns before log fsync
@@ -305,7 +305,7 @@ INSERT INTO gold.index_performance (index_key, trade_date, close_value)
 VALUES ('market_index', '2026-03-10', 4892.34);
 ```
 
-**What happens internally, step by step:**
+#### INSERT internal flow — buffer pool, log write, dirty page, checkpoint
 
 ```
 1. BEGIN IMPLICIT TRANSACTION
@@ -359,7 +359,7 @@ VALUES ('market_index', '2026-03-10', 4892.34);
    └── Background process writes dirty data pages to .mdf
 ```
 
-**See how many pages a table uses:**
+#### sys.dm_db_partition_stats — pages and rows per table
 
 ```sql
 -- See how many pages a table uses
@@ -389,7 +389,7 @@ WHERE index_key = 'market_index'
   AND trade_date = '2026-03-10';
 ```
 
-**With a clustered index on (index_key, trade_date):**
+#### Clustered index seek — B-tree navigation for SELECT with clustered key
 
 ```
 1. QUERY OPTIMIZATION
@@ -434,7 +434,7 @@ B-tree with clustered index on (index_key, trade_date):
                     └─────────────────────────────┘
 ```
 
-**Without a clustered index (heap) and no relevant nonclustered index:**
+#### Heap table scan — full scan when no clustered index exists
 
 ```
 1. TABLE SCAN
@@ -446,7 +446,7 @@ B-tree with clustered index on (index_key, trade_date):
    Total I/O: ALL pages in the table (could be thousands)
 ```
 
-**With a nonclustered index — the key lookup (bookmark lookup):**
+#### NC index seek + key lookup — bookmark lookup to clustered index
 
 ```
 1. NONCLUSTERED INDEX SEEK
@@ -461,7 +461,7 @@ B-tree with clustered index on (index_key, trade_date):
    Total I/O: ~3 pages (NC index seek) + ~3 pages (key lookup) = ~6 pages
 ```
 
-**Eliminating the key lookup with a covering index:**
+#### CREATE INDEX INCLUDE — covering index eliminates key lookup
 
 ```sql
 -- This nonclustered index includes close_value, so no lookup is needed
@@ -470,7 +470,7 @@ ON gold.index_performance (index_key, trade_date)
 INCLUDE (close_value);
 ```
 
-**Monitor page reads per query:**
+#### SET STATISTICS IO ON — monitor logical reads per query
 
 ```sql
 SET STATISTICS IO ON;
@@ -500,7 +500,7 @@ WHERE index_key = 'market_index'
   AND trade_date = '2026-03-10';
 ```
 
-**Internal flow:**
+#### UPDATE internal flow — find row, log before/after, modify in-place or split
 
 ```
 1. BEGIN IMPLICIT TRANSACTION
@@ -539,7 +539,7 @@ WHERE index_key = 'market_index'
 7. LATER: CHECKPOINT flushes dirty pages to .mdf
 ```
 
-**Heap forwarding pointer problem:**
+#### Heap forwarding pointers — UPDATE moves rows to new pages
 
 ```
 Before UPDATE (heap):
@@ -552,7 +552,7 @@ After UPDATE that makes the row too large for page 500:
   Now every read of this row costs 2 page reads instead of 1.
 ```
 
-**Detect forwarding pointers in heaps:**
+#### sys.dm_db_index_physical_stats forwarded_record_count — detect forwarding
 
 ```sql
 -- Detect forwarding pointers in heaps
@@ -580,7 +580,7 @@ WHERE index_key = 'market_index'
   AND trade_date = '2026-03-10';
 ```
 
-**Internal flow:**
+#### DELETE internal flow — ghost record marking and deferred cleanup
 
 ```
 1. BEGIN IMPLICIT TRANSACTION
@@ -610,13 +610,13 @@ WHERE index_key = 'market_index'
    └── Space is now available for new rows
 ```
 
-**Why ghost records instead of immediate removal:**
+#### Ghost cleanup task — why deferred removal instead of immediate delete
 
 - **Performance:** DELETE returns faster because it only flips a bit
 - **Concurrency:** Other transactions that started before the DELETE (snapshot isolation) might still need to see the old row
 - **Rollback efficiency:** If the transaction rolls back, just unset the ghost bit — no data reconstruction needed
 
-**Check for ghost records:**
+#### sys.dm_db_index_physical_stats ghost_record_count — check for ghost records
 
 ```sql
 -- Check for ghost records (indicates cleanup backlog)
@@ -643,7 +643,7 @@ FROM '/tmp/ohlcv_export.csv'
 WITH (FIELDTERMINATOR = ',', ROWTERMINATOR = '\n', FIRSTROW = 2);
 ```
 
-**Internal flow differs from row-by-row INSERT:**
+#### BULK INSERT internal flow — minimal logging, extent allocation, bulk lock
 
 ```
 1. MINIMAL LOGGING (if recovery model = SIMPLE or BULK_LOGGED)
@@ -707,7 +707,7 @@ A clustered index defines the physical layout of the table. The leaf level IS th
               Linked by prev/next page pointers (doubly-linked list)
 ```
 
-**Check B-tree depth for each index:**
+#### sys.dm_db_index_physical_stats index_depth — check B-tree depth
 
 ```sql
 -- Check B-tree depth for each index
@@ -769,7 +769,7 @@ Nonclustered index on (symbol):
           └────────────────────────────────────────┘
 ```
 
-**The tipping point — index seek + lookup vs. table scan:**
+#### Tipping point — when optimizer switches from index seek to table scan
 
 ```
 Strategy A: Nonclustered seek + key lookups
@@ -812,14 +812,14 @@ AFTER (page split):
   Parent page updated: C→100, D→150
 ```
 
-**Why page splits hurt performance:**
+#### Page splits — why random inserts cause fragmentation and IO amplification
 
 1. **Extra I/O** — allocating a new page, moving rows, updating parent nodes
 2. **Fragmentation** — page 150 might be physically far from page 100 on disk, breaking sequential read patterns
 3. **Wasted space** — both pages are ~50% full after the split
 4. **Log amplification** — the split generates many log records
 
-**Detect fragmentation from page splits:**
+#### sys.dm_db_index_physical_stats avg_fragmentation — detect page split damage
 
 ```sql
 SELECT
@@ -837,7 +837,7 @@ WHERE index_level = 0  -- leaf level
 ORDER BY avg_fragmentation_in_percent DESC;
 ```
 
-**Track page splits in real time:**
+#### dm_os_performance_counters Page Splits/sec — track in real time
 
 ```sql
 -- Track page splits in real time
@@ -848,7 +848,7 @@ WHERE counter_name = 'Page Splits/sec'
   AND object_name LIKE '%Access Methods%';
 ```
 
-**Prevention strategies:**
+#### Page split prevention — sequential keys, fill factor, index design
 
 ```sql
 -- 1. Use a sequential clustered key (identity, datetime) — no mid-page inserts
@@ -930,7 +930,7 @@ Phase 3: UNDO (roll back)
 └── Duration: proportional to uncommitted work at crash time
 ```
 
-**Monitor recovery progress after a crash:**
+#### sys.dm_exec_requests percent_complete — monitor crash recovery progress
 
 ```sql
 -- Monitor recovery progress after a crash
@@ -943,7 +943,7 @@ FROM sys.dm_exec_requests
 WHERE command LIKE '%RECOVERY%';
 ```
 
-**Crash scenarios and their impact:**
+#### Crash scenarios — clean shutdown, power failure, log corruption
 
 | Scenario | Impact |
 |---|---|
@@ -958,7 +958,7 @@ WHERE command LIKE '%RECOVERY%';
 
 tempdb is a system database that SQL Server recreates from scratch on every restart. It is the most I/O-intensive database on many servers because every session shares it.
 
-**What uses tempdb:**
+#### TempDB consumers — sorts, hashes, temp tables, RCSI version store, spills
 
 | Consumer | When | Example |
 |---|---|---|
@@ -970,7 +970,7 @@ tempdb is a system database that SQL Server recreates from scratch on every rest
 | **Online index rebuilds** | Old/new index versions coexist temporarily | `ALTER INDEX ... REBUILD WITH (ONLINE = ON)` |
 | **DBCC CHECKDB** | Internal snapshots for online consistency checks | Periodic integrity validation |
 
-**How tempdb interacts with CRUD operations:**
+#### TempDB interaction with CRUD — sort spills, RCSI versions, hash joins
 
 ```
 INSERT with ORDER BY into a table with a different clustered key:
@@ -996,7 +996,7 @@ UPDATE/DELETE under Snapshot Isolation (RCSI):
 > [!tip] One tempdb File Per CPU Core
 > Best practice: create one tempdb data file per logical CPU core (up to 8), all equally sized. This reduces **PFS/GAM/SGAM page contention** — a bottleneck where multiple sessions compete for allocation pages. See [[server-configuration]] for the configuration steps.
 
-**Monitor tempdb usage:**
+#### sys.dm_db_file_space_usage — monitor TempDB space by category
 
 ```sql
 -- Current tempdb space usage by type
@@ -1060,7 +1060,7 @@ ORDER BY qs.total_spills DESC;
 | **msdb** | All SQL Agent jobs, backup history, SSIS packages lost. | Backup regularly — jobs are hard to recreate from memory. |
 | **tempdb** | N/A — it's recreated every restart. | Never backup. |
 
-**Verify system database locations:**
+#### sys.master_files — verify system database file locations
 
 ```sql
 -- Verify system database locations
@@ -1106,7 +1106,7 @@ The buffer pool is where pages live between disk and CPU. Nearly all CRUD operat
 └──────────────────────────────────────────────────────────┘
 ```
 
-**How the buffer pool interacts with reads and writes:**
+#### Buffer pool read/write flow — cache miss, dirty page, lazy writer
 
 ```
 SELECT (read path):
@@ -1122,7 +1122,7 @@ INSERT/UPDATE (write path):
    (dirty pages are written to .mdf before eviction)
 ```
 
-**Monitor buffer pool health:**
+#### dm_os_performance_counters PLE, cache hit ratio — monitor buffer pool health
 
 ```sql
 -- Buffer pool hit ratio (should be >99% for OLTP)
@@ -1161,7 +1161,7 @@ ORDER BY pages_in_memory DESC;
 
 Every CRUD operation acquires locks. The lock manager tracks all locks in memory and detects deadlocks.
 
-**Lock compatibility matrix:**
+#### Lock compatibility matrix — S, X, U, IS, IX interactions
 
 ```
                     LOCK COMPATIBILITY MATRIX
@@ -1177,7 +1177,7 @@ Every CRUD operation acquires locks. The lock manager tracks all locks in memory
   X = second phase of UPDATE, INSERT, DELETE (modify the row)
 ```
 
-**Lock granularity — from fine to coarse:**
+#### Lock granularity — RID, KEY, PAGE, OBJECT, DATABASE hierarchy
 
 ```
   ROW lock (RID or KEY)     — least blocking, most overhead per lock
@@ -1194,7 +1194,7 @@ Every CRUD operation acquires locks. The lock manager tracks all locks in memory
 > [!warning] Lock Escalation
 > When a single transaction holds >5,000 row/page locks on one table, SQL Server escalates to a table lock to save memory. This can cause unexpected blocking of all other sessions. Watch for this during bulk updates.
 
-**Lock operations per CRUD type:**
+#### Lock operations per CRUD — SELECT(S), INSERT(X), UPDATE(U→X), DELETE(X)
 
 | Operation | Lock sequence |
 |---|---|
@@ -1204,7 +1204,7 @@ Every CRUD operation acquires locks. The lock manager tracks all locks in memory
 | `UPDATE` | Acquire IX on table → IU on page → U on row (during seek) → convert U to X (during modify). All held until COMMIT. |
 | `DELETE` | Same as UPDATE — U lock during seek, convert to X for the ghost operation. |
 
-**View current locks:**
+#### sys.dm_tran_locks — view current locks by session and resource
 
 ```sql
 -- See current locks

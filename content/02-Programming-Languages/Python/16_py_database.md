@@ -48,7 +48,12 @@ _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="inde
 
 #### SQLite — connect and CREATE TABLE
 
-`sqlite3.connect(":memory:")` for in-memory or a file path. `cursor.execute(sql, params)` with `?` placeholders for parameterized queries. The context manager (`with conn:`) auto-commits on success or rolls back on exception. Built-in — no pip install, no server. Use for tests, prototyping, and local caches; for concurrent multi-user access, use SQL Server or PostgreSQL.
+> [!info] SQLite basics
+> - `sqlite3.connect(":memory:")` — in-memory; or pass a file path
+> - `cursor.execute(sql, params)` — `?` placeholders for parameterized queries
+> - Context manager (`with conn:`) — auto-commits on success, rolls back on exception
+> - Built-in — no pip install, no server
+> - Use for tests, prototyping, local caches; for concurrent access, use SQL Server or PostgreSQL
 
 > [!danger] SQL injection
 > Never use f-strings in SQL — always use `?` parameter placeholders.
@@ -411,7 +416,11 @@ The SQL patterns used below (parameterised queries, window functions, CTEs) foll
 
 #### SQL Server — connect and list schemas/tables
 
-`pyodbc.connect()` for direct cursor operations (INSERT/UPDATE/DELETE) and `SQLAlchemy create_engine()` for `pd.read_sql()` — both use ODBC Driver 18 underneath. Use `pyodbc` cursor for DML (fast, `rowcount` available) and SQLAlchemy engine for `pd.read_sql` (avoids DBAPI2 warnings, adds connection pooling). For ORM scenarios, use SQLAlchemy ORM instead.
+> [!info] SQL Server connection pattern
+> - `pyodbc.connect()` — direct cursor for DML (fast, `rowcount` available)
+> - `SQLAlchemy create_engine()` — for `pd.read_sql()` (avoids DBAPI2 warnings, adds connection pooling)
+> - Both use ODBC Driver 18 underneath
+> - For ORM scenarios, use SQLAlchemy ORM instead
 
 ```python
 import urllib.parse

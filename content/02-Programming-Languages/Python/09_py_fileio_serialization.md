@@ -61,7 +61,11 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 ## Read, Write, Append Files
 
-`open(path, mode)` returns a file object. Modes: `'r'` (read, default), `'w'` (write — truncates!), `'a'` (append), `'x'` (exclusive create — fail if exists). Add `'b'` for binary (`'rb'`, `'wb'`), `'+'` for read+write (`'r+'`, `'w+'`). Always specify `encoding='utf-8'` — the default varies by OS (Windows uses cp1252). Use `pathlib.Path` for modern, object-oriented path handling (preferred over `os.path`).
+> [!info] File modes
+> - `'r'` — read (default) | `'w'` — write (truncates!) | `'a'` — append | `'x'` — exclusive create
+> - Add `'b'` for binary (`'rb'`, `'wb'`), `'+'` for read+write (`'r+'`, `'w+'`)
+> - Always specify `encoding='utf-8'` — the default varies by OS (Windows uses cp1252)
+> - Use `pathlib.Path` for modern path handling (preferred over `os.path`)
 
 > [!warning] Always use `with` for file operations
 > - `open()` without `with` leaks file handles if an exception occurs
@@ -1373,7 +1377,10 @@ print(f"  Full URL: https://api.example.com/quote?{qs}")
 
 <h4><code style="font-size:0.75em">aiofiles</code> — non-blocking file operations</h4>
 
-`aiofiles` wraps standard `open()` with `async`/`await` — releases the event loop during disk I/O. Essential for asyncio-based web servers. Standard `open()` blocks the entire event loop; `aiofiles` uses a thread pool internally.
+> [!info] aiofiles
+> - Wraps standard `open()` with `async`/`await` — releases the event loop during disk I/O
+> - Essential for asyncio-based web servers
+> - Standard `open()` blocks the entire event loop; `aiofiles` uses a thread pool internally
 
 ```python
 tmp = tempfile.mkdtemp(prefix="async_py_")
@@ -1409,7 +1416,11 @@ shutil.rmtree(tmp)
 
 <h4><code style="font-size:0.75em">orjson</code> — fast JSON serialization</h4>
 
-`orjson` — Rust-based JSON, 3–10x faster than stdlib. `dumps()` returns `bytes` (not `str`). Handles `datetime`, `numpy`, `dataclass` natively. Drop-in replacement for high-throughput APIs.
+> [!info] orjson
+> - Rust-based JSON, 3-10x faster than stdlib
+> - `dumps()` returns `bytes` (not `str`)
+> - Handles `datetime`, `numpy`, `dataclass` natively
+> - Drop-in replacement for high-throughput APIs
 
 ```python
 # orjson.dumps returns bytes, not str
@@ -1452,7 +1463,11 @@ print(f"  Speedup: {std_time/orj_time:.1f}x")
 
 <h4><code style="font-size:0.75em">pydantic</code> — typed models with validation</h4>
 
-`class Model(BaseModel)` — validates types on construction, auto-coerces (`"42"` → `42`), generates JSON schema. `model_dump()` → dict, `model_dump_json()` → JSON string. Use for API models, config validation, ETL schemas. For simple internal data, `dataclass` is lighter.
+> [!info] Pydantic
+> - `class Model(BaseModel)` — validates types on construction, auto-coerces (`"42"` → `42`)
+> - `model_dump()` → dict | `model_dump_json()` → JSON string
+> - Generates JSON schema automatically
+> - Use for API models, config validation, ETL schemas; for simple internal data, `dataclass` is lighter
 
 ```python
 # Define a model with type hints and constraints

@@ -240,7 +240,11 @@ loader.load(["users", "orders", "products"])
 
 <h4>Sorting with <code style="font-size:0.75em">key=</code> function</h4>
 
-`sorted(iterable, key=func)` returns a new sorted list. The `key` function extracts the comparison value: `key=len`, `key=lambda x: x["salary"]`. `reverse=True` for descending. Python's sort is stable — equal elements keep original order.
+> [!info] Sorting with key
+> - `sorted(iterable, key=func)` — returns a new sorted list
+> - `key` extracts the comparison value: `key=len`, `key=lambda x: x["salary"]`
+> - `reverse=True` for descending
+> - Python's sort is stable — equal elements keep original order
 
 ```python
 employees = [
@@ -271,7 +275,10 @@ for e in by_salary:
 
 #### Mutable default argument trap — def f(lst=[]) pitfall
 
-`def f(lst=[])` creates ONE list at definition time — all calls share it. This is Python's most common gotcha. Fix: use `None` as default, create inside: `if lst is None: lst = []`. Immutable defaults (`int`, `str`, `tuple`) are safe.
+> [!info] Mutable default trap
+> - `def f(lst=[])` creates ONE list at definition time — all calls share it
+> - Fix: use `None` as default, create inside: `if lst is None: lst = []`
+> - Immutable defaults (`int`, `str`, `tuple`) are safe
 
 > [!danger] Mutable default arguments (`def f(lst=[], d={})`) cause shared state across calls. The same issue applies to dicts and sets — always use the `None` sentinel pattern.
 
@@ -373,7 +380,10 @@ print(f"lambda add: {add(3, 4)}")
 
 <h4>Lambdas with <code style="font-size:0.75em">sorted</code>, <code style="font-size:0.75em">map</code>, <code style="font-size:0.75em">filter</code></h4>
 
-`sorted(key=lambda)`, `map(lambda, iter)`, `filter(lambda, iter)`. `map`/`filter` are lazy — generate on demand. However, comprehensions are often more Pythonic: prefer `[x**2 for x in nums]` over `list(map(lambda x: x**2, nums))`.
+> [!info] Lambdas with built-ins
+> - `sorted(key=lambda)`, `map(lambda, iter)`, `filter(lambda, iter)`
+> - `map`/`filter` are lazy — generate on demand
+> - Comprehensions are often more Pythonic: prefer `[x**2 for x in nums]` over `list(map(...))`
 
 ```python
 names = ["Charlie", "Alice", "Bob", "Diana"]
@@ -563,7 +573,11 @@ print(f"add('a', 'b'): {add('a', 'b')}")   # works! Python doesn't enforce  # ty
 
 <h4>Built-in decorators — <code style="font-size:0.75em">@property</code>, <code style="font-size:0.75em">@staticmethod</code>, <code style="font-size:0.75em">@classmethod</code></h4>
 
-`@property` makes a method act like an attribute. `@staticmethod` takes no `self`. `@classmethod` receives `cls` — use for factory methods and inheritance-safe constructors. Avoid `@property` for expensive computation (cache it or use a regular method).
+> [!info] Built-in decorators
+> - `@property` — makes a method act like an attribute
+> - `@staticmethod` — takes no `self`
+> - `@classmethod` — receives `cls`; use for factory methods and inheritance-safe constructors
+> - Avoid `@property` for expensive computation — cache it or use a regular method
 
 ```python
 class MyClass:

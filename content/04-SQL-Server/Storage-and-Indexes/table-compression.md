@@ -48,14 +48,14 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 
 ## When to Apply Page Compression
 
-**Good candidates:**
+#### Page compression — good candidates (gold-layer, read-heavy, time-series)
 
 - **Gold-layer tables** — read-only or rarely updated; financial time-series data compresses extremely well
 - **Historical silver data** — SCD Type 2 inactive records (`is_current = 0`) that are queried but never updated
 - **Archival tables** — older partitions that are frozen
 - **Dashboard query targets** — tables that must fit in the buffer pool for fast response times
 
-**Poor candidates:**
+#### Page compression — poor candidates (heavy write, TempDB, small tables)
 
 - **Tables with frequent in-place updates** — each UPDATE decompresses the page, modifies it, and recompresses it (overhead adds up on hot update tables)
 - **Tables with highly random data** — compression ratio approaches 0% on random bytes, encrypted data, GUIDs, or truly varied text
@@ -88,7 +88,7 @@ EXEC sp_estimate_data_compression_savings
     @data_compression = 'ROW';
 ```
 
-**Reading the output:**
+#### sp_estimate_data_compression_savings — reading the output
 
 | Column | Meaning |
 |---|---|
@@ -103,7 +103,7 @@ Divide projected by current to get compression ratio. Financial time-series data
 
 ## Applying Compression
 
-**Apply page compression to a specific index:**
+#### ALTER INDEX REBUILD WITH DATA_COMPRESSION = PAGE — compress specific index
 
 ```sql
 -- Apply page compression to the clustered index (the table itself)
@@ -111,7 +111,7 @@ ALTER INDEX CIX_index_performance ON gold.index_performance
 REBUILD WITH (DATA_COMPRESSION = PAGE);
 ```
 
-**Apply page compression to all indexes on a table:**
+#### ALTER TABLE REBUILD WITH DATA_COMPRESSION = PAGE — compress all indexes
 
 ```sql
 -- Compress all indexes on the table in one statement
@@ -119,7 +119,7 @@ ALTER INDEX ALL ON gold.index_performance
 REBUILD WITH (DATA_COMPRESSION = PAGE);
 ```
 
-**Apply compression with ONLINE = ON to avoid table locks (Enterprise Edition only):**
+#### ALTER INDEX REBUILD ONLINE = ON — compress without table locks (Enterprise)
 
 ```sql
 -- Online rebuild — other sessions can read and write during the rebuild
@@ -134,7 +134,7 @@ REBUILD WITH (
 > [!warning] ONLINE = ON Requires Enterprise Edition
 > Online index rebuilds are not available in Standard Edition. On Standard Edition, an index rebuild takes a schema modification (Sch-M) lock on the table — blocking all reads and writes for the duration. Schedule Standard Edition rebuilds during maintenance windows. See [[blocking-and-locking]] for lock type details.
 
-**Apply compression when creating a new table:**
+#### CREATE TABLE WITH DATA_COMPRESSION = PAGE — apply at creation time
 
 ```sql
 -- Create a compressed table directly (no rebuild needed)
@@ -151,7 +151,7 @@ CREATE TABLE gold.index_performance_archive (
 
 ## Monitoring Compression State
 
-**Check current compression status across all tables:**
+#### sys.partitions data_compression_desc — check compression across all tables
 
 ```sql
 -- Current compression settings for all user tables and indexes
@@ -172,7 +172,7 @@ ORDER BY size_mb DESC;
 -- Look for: NONE on large read-heavy tables = compression opportunity
 ```
 
-**Check compression rebuild progress (for large tables):**
+#### sys.dm_exec_requests percent_complete — monitor compression rebuild progress
 
 ```sql
 -- Monitor an in-progress index rebuild
@@ -199,7 +199,7 @@ The analytics database has three schema layers with different compression recomm
 | `silver` | Normalized daily/corporate data | ROW on large tables | Mixed read/write (SCD upserts); ROW compression is safe overhead-wise |
 | `gold` | Index performance, scores, signals | PAGE | Read-only by dashboards; time-series data compresses 60-80%; must fit in buffer pool |
 
-**Apply PAGE compression to all gold tables:**
+#### Batch compress gold tables — apply PAGE compression to all gold indexes
 
 ```sql
 -- Apply page compression to all gold-layer tables
@@ -218,7 +218,7 @@ ALTER INDEX ALL ON gold.financial_health
 REBUILD WITH (DATA_COMPRESSION = PAGE);
 ```
 
-**Estimate total buffer pool impact before and after:**
+#### sys.dm_os_buffer_descriptors — estimate buffer pool impact of compression
 
 ```sql
 -- Buffer pool usage by schema before compression

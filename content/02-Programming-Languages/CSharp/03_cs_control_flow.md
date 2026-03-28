@@ -164,7 +164,10 @@ Console.WriteLine($"Score {score} → Grade {grade}");
 
 <h4>Switch expression — type patterns and <code style="font-size:0.75em">when</code> guard</h4>
 
-`int n => ...` matches integers and binds to `n`. `when` adds a guard: `int n when n < 0 => ...`. Combines type checking and casting in one step — no explicit cast needed.
+> [!info] Type patterns
+> - `int n => ...` — matches integers and binds to `n`
+> - `when` adds a guard: `int n when n < 0 => ...`
+> - Combines type checking and casting in one step — no explicit cast needed
 
 ```csharp
 object[] values = { 42, -5, "hello", new[] { 1, 2, 3 }, 3.14 };
@@ -246,7 +249,10 @@ else
 
 #### for and foreach loops
 
-`for (init; condition; increment)` runs while condition is true. `foreach (var item in collection)` iterates any `IEnumerable<T>`. Prefer `foreach` — cleaner, no off-by-one errors.
+> [!info] Loop types
+> - `for (init; condition; increment)` — runs while condition is true
+> - `foreach (var item in collection)` — iterates any `IEnumerable<T>`
+> - Prefer `foreach` — cleaner, no off-by-one errors
 
 > [!warning] Don't modify a collection during `foreach` — throws `InvalidOperationException`. Use `for` loop or `ToList()` first.
 
@@ -568,7 +574,12 @@ Console.WriteLine($"Method:   [{string.Join(", ", methodResult)}]");
 
 <h4><code style="font-size:0.75em">ToDictionary</code> and <code style="font-size:0.75em">ToHashSet</code></h4>
 
-`ToDictionary(keySelector, valueSelector)` builds a `Dictionary` (O(1) lookup). `ToHashSet()` builds a `HashSet` (O(1) membership). Both are eager — enumerate immediately. Watch out: duplicate keys in `ToDictionary` throw `ArgumentException`.
+> [!info] Materialization
+> - `ToDictionary(keySelector, valueSelector)` — builds a `Dictionary` (O(1) lookup)
+> - `ToHashSet()` — builds a `HashSet` (O(1) membership)
+> - Both are eager — enumerate immediately
+>
+> > [!warning] Duplicate keys in `ToDictionary` throw `ArgumentException`.
 
 ```csharp
 var squaresDict = Enumerable.Range(0, 6).ToDictionary(x => x, x => x * x);
@@ -591,7 +602,11 @@ Console.WriteLine($"Unique lengths: [{string.Join(", ", uniqueLengths)}]");
 
 <h4>Aggregate and built-in aggregations (<code style="font-size:0.75em">Sum</code>, <code style="font-size:0.75em">Max</code>, <code style="font-size:0.75em">Any</code>, <code style="font-size:0.75em">All</code>)</h4>
 
-`Aggregate(seed, (acc, x) => ...)` is the general fold. Prefer built-in shortcuts: `Sum()`, `Max()`, `Min()`, `Average()`, `Count()`. `Any(predicate)` and `All(predicate)` for boolean checks — `Any()` short-circuits on first match. Don't use `Count() > 0` when `Any()` suffices.
+> [!info] Aggregation
+> - `Aggregate(seed, (acc, x) => ...)` — the general fold
+> - Built-in shortcuts: `Sum()`, `Max()`, `Min()`, `Average()`, `Count()`
+> - `Any(predicate)` / `All(predicate)` — boolean checks; `Any()` short-circuits on first match
+> - Don't use `Count() > 0` when `Any()` suffices
 
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
@@ -668,7 +683,10 @@ Console.WriteLine($"Chained: [{string.Join(", ", result)}]");
 
 #### Infinite generator and common sequence methods
 
-`while(true)` with `yield return` produces an infinite sequence. Callers control consumption with `Take()`, `First()`, `TakeWhile()`. Common methods: `Take`, `Skip`, `Distinct`, `Zip`, `Chunk`, `Concat`.
+> [!info] Infinite sequences
+> - `while(true)` with `yield return` produces an infinite sequence
+> - Callers control consumption with `Take()`, `First()`, `TakeWhile()`
+> - Common methods: `Take`, `Skip`, `Distinct`, `Zip`, `Chunk`, `Concat`
 
 > [!danger] Never call `ToList()`, `Count()`, or `foreach` without `break` on infinite sequences — hangs or OOM.
 

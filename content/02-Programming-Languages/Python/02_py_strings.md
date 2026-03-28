@@ -115,7 +115,13 @@ print(f"Modified: {s}")
 
 #### Indexing (0-based)
 
-`s[i]` accesses by index (0-based). `s[-1]` is the last character, eliminating `len(s)-1` boilerplate. `s[a:b]` slices from `a` to `b` (right-exclusive). `s[::2]` takes every 2nd char; `s[::-1]` reverses. Slicing never raises `IndexError` — out-of-range indices are silently clamped. For pattern extraction, use regex or split instead of index math.
+> [!info] Indexing and slicing
+> - `s[i]` — access by index (0-based)
+> - `s[-1]` — last character (eliminates `len(s)-1`)
+> - `s[a:b]` — slice from `a` to `b` (right-exclusive)
+> - `s[::2]` — every 2nd char; `s[::-1]` — reverse
+> - Slicing never raises `IndexError` — out-of-range indices are silently clamped
+> - For pattern extraction, use regex or split instead of index math
 
 ```python
 #     0123456789...
@@ -180,7 +186,12 @@ for i, ch in enumerate(s[:5]):
 
 #### Case Methods  — Case, Whitespace, Checking, Searching, Replacing
 
-`casefold()` is more aggressive than `lower()` — handles Unicode correctly (`"Straße".casefold()` = `"strasse"`). Use `casefold()` for case-insensitive comparison, not `lower()`. `title()`/`capitalize()` handle word boundaries automatically. All methods are Unicode-aware. For locale-sensitive case rules (Turkish `i`), use the `locale` module.
+> [!info] Case methods
+> - `casefold()` — more aggressive than `lower()`, handles Unicode (`"Straße"` → `"strasse"`)
+> - Use `casefold()` for case-insensitive comparison, not `lower()`
+> - `title()` / `capitalize()` — handle word boundaries automatically
+> - All methods are Unicode-aware
+> - For locale-sensitive rules (Turkish `i`), use the `locale` module
 
 ```python
 s = "  Hello, World!  "
@@ -380,7 +391,11 @@ print(f"encode('ascii'):   {'hello'.encode('ascii')}")
 
 #### f-strings (recommended, Python 3.6+)
 
-`f"..."` embeds any expression in `{braces}` — supports format specifiers (`f"{n:.2f}"`), method calls (`f"{s.upper()}"`), and expressions (`f"{a + 1}"`). Faster than `.format()` and more readable. Use f-strings for all new code; `.format()` when the template is a variable.
+> [!info] f-string syntax
+> - `f"..."` embeds any expression in `{braces}`
+> - Format specifiers: `f"{n:.2f}"` | method calls: `f"{s.upper()}"` | expressions: `f"{a + 1}"`
+> - Faster than `.format()` and more readable
+> - Use f-strings for all new code; `.format()` when the template is a variable
 
 > [!danger] Injection risk
 > Never use f-strings in SQL or shell commands — use parameterized queries. For logging, use `logger.info("msg %s", val)` for lazy evaluation.

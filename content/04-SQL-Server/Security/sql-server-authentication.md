@@ -51,7 +51,7 @@ SQL Server security has three distinct identity layers that must each be hardene
 
 By default, GCP Compute Engine VMs use the default Compute Engine service account with `roles/editor` — an overly broad permission set that violates least privilege. Any process on the VM (backup scripts, monitoring agents, pipeline jobs) inherits the VM's GCP service account permissions.
 
-**Step 1 — Create a Dedicated GCP Service Account:**
+#### gcloud iam service-accounts create — dedicated SA for SQL Server VM
 
 ```bash
 # Create the service account
@@ -66,7 +66,7 @@ gcloud iam service-accounts list --filter="email:analytics-sql-sa"
 # analytics-sql-sa@data-platform-prod.iam.gserviceaccount.com      False
 ```
 
-**Step 2 — Assign Minimum IAM Roles:**
+#### gcloud projects add-iam-policy-binding — assign minimum IAM roles
 
 ```bash
 # GCS backup access (read/write to backup bucket)
@@ -90,7 +90,7 @@ gcloud projects get-iam-policy data-platform-prod \
 # roles/storage.objectAdmin
 ```
 
-**Step 3 — Remove the Default Service Account from the VM:**
+#### gcloud compute instances set-service-account — remove default SA from VM
 
 ```bash
 # Assign the dedicated SA to the VM (requires VM stop/start)
@@ -103,7 +103,7 @@ gcloud compute instances set-service-account analytics-sql --zone=europe-west1-b
 gcloud compute instances start analytics-sql --zone=europe-west1-b
 ```
 
-**Step 4 — Verify from Inside the VM:**
+#### gcloud auth list — verify service account from inside VM
 
 ```bash
 # SSH into the VM
@@ -124,7 +124,7 @@ curl -s -H "Metadata-Flavor: Google" \
 
 ## Part 2: SQL Server Login Hardening
 
-**Step 5 — Create Dedicated Logins for Each Application:**
+#### CREATE LOGIN / CREATE USER — dedicated logins per application
 
 ```sql
 -- ============================================================
@@ -211,7 +211,7 @@ ORDER BY create_date;
 -- datadog_svc     SQL_LOGIN       0            2026-03-10
 ```
 
-**Update connection strings after login creation:**
+#### pymssql, ADO.NET — update connection strings with dedicated logins
 
 | Application | Config Location | Old | New |
 |-------------|----------------|-----|-----|
@@ -222,7 +222,7 @@ ORDER BY create_date;
 
 ## Part 3: TLS Encryption for Connections
 
-**Current Architecture — Network Path:**
+#### Network path — client → IAP tunnel → VM → SQL Server
 
 ```
 ┌─────────────────────┐    IAP Tunnel     ┌─────────────────────┐
@@ -248,7 +248,7 @@ ORDER BY create_date;
 └─────────────────────┘
 ```
 
-**Step 6 — Generate TLS Certificate:**
+#### openssl req -x509 — generate TLS certificate for SQL Server
 
 ```bash
 # SSH into the SQL Server VM
@@ -267,7 +267,7 @@ sudo chmod 400 /etc/ssl/private/mssql.key
 sudo chmod 444 /etc/ssl/certs/mssql.pem
 ```
 
-**Step 7 — Configure SQL Server to Force TLS 1.2:**
+#### mssql-conf set network.tlscert/tlskey — force TLS 1.2 on SQL Server
 
 ```bash
 # Set TLS certificate and key paths
@@ -299,7 +299,7 @@ sudo cat /var/opt/mssql/log/errorlog | grep -i "encrypt|certificate|TLS"
 # ... Server is listening on ... using encryption
 ```
 
-**Update client connection strings for TLS:**
+#### Encrypt=yes;TrustServerCertificate=no — update connection strings for TLS
 
 ```python
 # Python pipeline — pyodbc connection string with TLS
@@ -323,7 +323,7 @@ connection_string = (
 }
 ```
 
-**Verify encrypted connections:**
+#### sys.dm_exec_connections encrypt_option — verify encrypted connections
 
 ```sql
 -- Check that all active connections are encrypted
@@ -400,7 +400,7 @@ gcloud compute instances describe analytics-sql --zone=europe-west1-b \
 
 ## Part 5: SQL Server Audit
 
-**SQL Server Audit Architecture:**
+#### SQL Server Audit architecture — server audit → specification → log
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -439,7 +439,7 @@ gcloud compute instances describe analytics-sql --zone=europe-west1-b \
         └──────────────────────┘
 ```
 
-**Step 8 — Create Server Audit:**
+#### CREATE SERVER AUDIT — file-based audit with max size and rollover
 
 ```sql
 -- Create server-level audit
@@ -465,7 +465,7 @@ SELECT name, status_desc, audit_file_path, queue_delay, on_failure_desc
 FROM sys.server_audits;
 ```
 
-**Create Server Audit Specification (Login and Permission Events):**
+#### CREATE SERVER AUDIT SPECIFICATION — login and permission events
 
 ```sql
 CREATE SERVER AUDIT SPECIFICATION audit_logins
@@ -481,7 +481,7 @@ WITH (STATE = ON);
 GO
 ```
 
-**Create Database Audit Specification (Data Access Events):**
+#### CREATE DATABASE AUDIT SPECIFICATION — data access events
 
 ```sql
 USE analytics_db;
@@ -499,7 +499,7 @@ WITH (STATE = ON);
 GO
 ```
 
-**Query Audit Logs:**
+#### sys.fn_get_audit_file — query audit logs
 
 ```sql
 -- Recent events (last 1 hour)
@@ -534,7 +534,7 @@ WHERE event_time > DATEADD(HOUR, -1, GETUTCDATE())
 ORDER BY event_time DESC;
 ```
 
-**Detect Brute-Force Login Attacks:**
+#### sys.fn_get_audit_file FAILED_LOGIN_GROUP — detect brute-force attacks
 
 ```sql
 -- Alert on brute-force attempts: >10 failed logins from same IP in 1 hour
@@ -565,7 +565,7 @@ HAVING COUNT(DISTINCT server_principal_name) > 3
 ORDER BY total_attempts DESC;
 ```
 
-**Forward Audit Logs to Cloud Logging:**
+#### google-cloud-ops-agent — forward SQL Server audit logs to Cloud Logging
 
 ```yaml
 # /etc/google-cloud-ops-agent/config.yaml
@@ -603,7 +603,7 @@ gcloud logging read 'resource.type="gce_instance" AND logName:"sqlserver_errorlo
 # Expected: recent SQL Server error log entries
 ```
 
-**Sink Audit Logs to BigQuery for Long-Term Analysis:**
+#### gcloud logging sinks create — sink audit logs to BigQuery
 
 ```bash
 # Sink audit logs to BigQuery for long-term analysis
@@ -731,7 +731,7 @@ WHERE action_id IN ('G ', 'D ', 'R ', 'CR', 'AL', 'DR')
 ORDER BY event_time DESC;
 ```
 
-**Quarterly Review Action Items:**
+#### Quarterly security review — checklist of audit actions
 
 | Check | Action if Failed |
 |-------|-----------------|

@@ -259,7 +259,11 @@ del regular, slotted, list_data
 
 #### cProfile — built-in CPU profiler
 
-`cProfile.run()` profiles and prints per-function timing: `tottime` (in-function only) vs `cumtime` (including sub-calls). Use `pstats` for programmatic analysis. C# equivalent: dotTrace, PerfView.
+> [!info] cProfile
+> - `cProfile.run()` — profiles and prints per-function timing
+> - `tottime` — in-function only | `cumtime` — including sub-calls
+> - `pstats` — programmatic analysis
+> - C# equivalent: dotTrace, PerfView
 
 > [!tip] Profile the WHOLE program first, then zoom into hotspots. Don't guess. Don't profile in production (use py-spy for sampling).
 

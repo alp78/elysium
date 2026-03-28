@@ -59,7 +59,7 @@ UPDATE t SET val = 15 WHERE id = 1
 -- A's update is lost!
 ```
 
-**Fix — atomic operation (combine read + write into one statement):**
+#### UPDATE SET counter += 1 — fix lost update with atomic operation
 
 ```sql
 UPDATE t SET val = val + 5 WHERE id = 1
@@ -80,7 +80,7 @@ INSERT INTO t (symbol) VALUES ('ASML')     WHERE symbol = 'ASML')
 -- Duplicate or PK violation!
 ```
 
-**Fix — MERGE (atomic check + insert):**
+#### MERGE WHEN NOT MATCHED — fix phantom insert with atomic upsert
 
 ```sql
 MERGE INTO t AS target
@@ -107,7 +107,7 @@ ROLLBACK
                                       -- A now has phantom value 999
 ```
 
-**Fix — proper isolation level (default READ COMMITTED prevents this):**
+#### SET TRANSACTION ISOLATION LEVEL — fix dirty read with proper isolation
 
 SQL Server's default isolation level (READ COMMITTED) prevents dirty reads. Process A would wait for B to commit or rollback before seeing the data. With RCSI enabled, A would see the pre-update snapshot instead — without any blocking.
 
@@ -130,7 +130,7 @@ Process B:     DELETE FROM t WHERE _index='X'  →  INSERT 50 rows
 
 Unlike deadlocks, SQL Server does not automatically detect race conditions. You must look for their symptoms.
 
-**Check for duplicate rows (phantom inserts):**
+#### GROUP BY HAVING COUNT > 1 — detect duplicate rows from phantom inserts
 
 ```sql
 -- Find duplicate keys that shouldn't exist
@@ -140,7 +140,7 @@ GROUP BY _index, symbol, score_date
 HAVING COUNT(*) > 1;
 ```
 
-**Check for data gaps (lost deletes from overlapping truncate-reload):**
+#### LAG() date gap detection — find missing rows from overlapping loads
 
 ```sql
 -- Compare expected stock count vs actual
@@ -151,7 +151,7 @@ GROUP BY _index;
 -- Should match known index sizes (50 per index)
 ```
 
-**Check for stale data (missed updates):**
+#### SELECT MAX(updated_at) — detect stale data from missed updates
 
 ```sql
 -- Find rows where the signal date is older than expected
@@ -161,7 +161,7 @@ FROM silver.signals_daily
 GROUP BY _index;
 ```
 
-**Audit with timestamps — verify all rows have the expected load timestamp:**
+#### SELECT WHERE load_timestamp != expected — audit for missed load windows
 
 ```sql
 SELECT _index, MIN(loaded_at) AS earliest, MAX(loaded_at) AS latest,
@@ -182,7 +182,7 @@ GROUP BY _index;
 
 Ensure only one process writes to a given table at a time. This eliminates all race conditions by removing concurrency entirely.
 
-**Airflow `max_active_runs=1` — prevents overlapping DAG runs:**
+#### Airflow max_active_runs=1 — prevent overlapping DAG runs
 
 ```python
 with DAG(
@@ -195,7 +195,7 @@ with DAG(
 
 If a scheduled run is already active when the next trigger fires, Airflow queues the new run instead of starting it in parallel.
 
-**Airflow task dependencies (`>>`) — enforce execution order within a run:**
+#### Airflow >> operator — enforce task execution order within a DAG run
 
 ```python
 [ohlcv, signals_daily, signals_quarterly] >> gold_scores >> gold_performance
@@ -207,13 +207,13 @@ Gold transforms wait for all silver transforms to complete. No concurrent access
 
 Replace multi-step read-then-write sequences with single SQL statements that hold locks for the entire operation.
 
-**Atomic update (no gap for another process to interfere):**
+#### UPDATE SET col = expression — atomic update with no read-modify-write gap
 
 ```sql
 UPDATE accounts SET balance = balance - 50 WHERE id = 1
 ```
 
-**MERGE for upserts (atomic check + insert/update):**
+#### MERGE for upserts — atomic check + insert/update in one statement
 
 ```sql
 MERGE INTO silver.signals_daily AS target

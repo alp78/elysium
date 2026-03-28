@@ -35,7 +35,11 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_compl
 
 ## Async and Await
 
-`async def` declares a coroutine — a function that can pause and resume. `await` pauses until the awaited task completes, releasing the event loop to run other coroutines. `asyncio.run()` is the entry point that starts the event loop (in Jupyter, the loop is already running — use `await` directly at top level).
+> [!info] Async fundamentals
+> - `async def` — declares a coroutine (a function that can pause and resume)
+> - `await` — pauses until the awaited task completes, releasing the event loop
+> - `asyncio.run()` — entry point that starts the event loop
+> - In Jupyter, the loop is already running — use `await` directly at top level
 
 The event loop is a single-threaded scheduler that multiplexes coroutines. While one awaits I/O, the loop runs another. This is **not parallelism** — it's concurrency on one thread. Great for I/O-bound work (HTTP, DB, file); useless for CPU-bound work.
 
@@ -691,7 +695,12 @@ for expr, result in results:
 
 ## Threading and Concurrency
 
-`threading.Thread(target=func, args=())` creates an OS thread. `.start()` begins execution, `.join()` waits for completion. Threads share memory — use `Lock` for shared mutable state. `threading.Event` signals between threads (one sets, others wait). Daemon threads die when the main thread exits.
+> [!info] Threading primitives
+> - `threading.Thread(target=func, args=())` — creates an OS thread
+> - `.start()` — begins execution; `.join()` — waits for completion
+> - Threads share memory — use `Lock` for shared mutable state
+> - `threading.Event` — signals between threads (one sets, others wait)
+> - Daemon threads die when the main thread exits
 
 Threads provide true concurrency for I/O-bound work (the GIL is released during I/O) with lower overhead than processes (no pickling, no process creation). Use threads when asyncio isn't an option.
 

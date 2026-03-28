@@ -20,7 +20,11 @@ status: complete
 
 #### datetime module — creating date, time, datetime, timedelta objects
 
-`datetime.now()` for local time; `datetime.now(timezone.utc)` for UTC. `date.today()` for date-only, `time()` for time-only. `timedelta` for arithmetic — add/subtract days, hours, seconds. Naive datetimes have no timezone; aware ones include `tzinfo`.
+> [!info] Date and time types
+> - `datetime.now()` — local time | `datetime.now(timezone.utc)` — UTC
+> - `date.today()` — date-only | `time()` — time-only
+> - `timedelta` — arithmetic (add/subtract days, hours, seconds)
+> - Naive datetimes have no timezone; aware ones include `tzinfo`
 
 > [!warning] Anti-patterns
 > - **`datetime.now()` for storage** — timezone-naive; use `datetime.now(timezone.utc)`
@@ -560,7 +564,12 @@ print(f"+ 1y 2m 3d:      {dt + relativedelta(years=1, months=2, days=3)}")
 
 #### Built-in math — abs(), max(), min(), divmod(), clamp
 
-`abs()`, `max()`, `min()` are built-in (no import needed). `max`/`min` accept any number of arguments. Clamp pattern: `max(lo, min(val, hi))`. The `math` module adds `floor`, `ceil`, `sqrt`, `log`, `pow`, and trig functions. For vectorized array math, use NumPy instead.
+> [!info] Math built-ins
+> - `abs()`, `max()`, `min()` — built-in, no import needed
+> - `max`/`min` accept any number of arguments
+> - Clamp pattern: `max(lo, min(val, hi))`
+> - `math` module adds `floor`, `ceil`, `sqrt`, `log`, `pow`, and trig functions
+> - For vectorized array math, use NumPy instead
 
 ```python
 # Basic math — abs, max, min are built-in; clamp uses max(lo, min(val, hi))
@@ -899,7 +908,12 @@ json_logger.warning("Schema drift detected in %s", "users")
 
 #### os.environ — reading and setting environment variables
 
-`os.environ["KEY"]` raises `KeyError` if missing; `os.environ.get("KEY", default)` returns the default silently. `os.environ["KEY"] = value` sets for the current process only. Standard for Docker, Kubernetes, CI/CD. For complex structured config, use config files with env var overrides.
+> [!info] Environment variables
+> - `os.environ["KEY"]` — raises `KeyError` if missing
+> - `os.environ.get("KEY", default)` — returns default silently
+> - `os.environ["KEY"] = value` — sets for the current process only
+> - Standard for Docker, Kubernetes, CI/CD
+> - For complex structured config, use config files with env var overrides
 
 > [!warning] Anti-patterns
 > - **Hardcoding secrets in code** — use env vars or secret managers

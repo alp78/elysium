@@ -27,7 +27,12 @@ from dataclasses import dataclass, field
 
 #### Class definition — __init__, attributes, __str__
 
-`class Dog:` defines a type. `__init__` initializes instance attributes (`self.name`), while class attributes (`species`) are shared by all instances. `__str__` provides human-readable output for `print()` and f-strings. For simple data containers without behavior, prefer `dataclass` or `namedtuple`.
+> [!info] Class basics
+> - `class Dog:` — defines a type
+> - `__init__` — initializes instance attributes (`self.name`)
+> - Class attributes (`species`) — shared by all instances
+> - `__str__` — human-readable output for `print()` and f-strings
+> - For simple data containers without behavior, prefer `dataclass` or `namedtuple`
 
 > [!warning] Anti-patterns
 > - **Mutable class attributes** (lists/dicts) — shared and mutated by all instances
@@ -268,7 +273,11 @@ print(f"MRO:   {[c.__name__ for c in Duck.__mro__]}") # Method Resolution Order 
 
 #### Abstract class
 
-`class Shape(ABC)` with `@abstractmethod` defines methods that subclasses must implement. Concrete methods provide shared logic. Instantiating an abstract class raises `TypeError`. For pure contracts without shared code, use `Protocol` for duck-typing compatibility instead.
+> [!info] Abstract base class
+> - `class Shape(ABC)` with `@abstractmethod` — defines methods subclasses must implement
+> - Concrete methods provide shared logic
+> - Instantiating an abstract class raises `TypeError`
+> - For pure contracts without shared code, use `Protocol` instead
 
 > [!warning] Anti-patterns
 > - **ABC with no shared code** — use `Protocol` for structural typing
@@ -464,7 +473,10 @@ print("Python: conventions only — nothing is truly private")
 
 #### @staticmethod and @classmethod — definition and factory methods
 
-`@classmethod` receives the class as first argument (`cls`) — enables factory methods and inheritance-aware construction (cls is the subclass when called on one). `@staticmethod` gets no implicit argument — just a function namespaced to the class. Use `@classmethod` for factories and `@staticmethod` for class-namespaced utilities.
+> [!info] Class methods vs static methods
+> - `@classmethod` — receives `cls` as first argument; enables factory methods and inheritance-aware construction
+> - `@staticmethod` — gets no implicit argument; just a function namespaced to the class
+> - Use `@classmethod` for factories; `@staticmethod` for class-namespaced utilities
 
 > [!warning] Anti-patterns
 > - **`@staticmethod` when a module-level function is clearer** — unnecessary nesting

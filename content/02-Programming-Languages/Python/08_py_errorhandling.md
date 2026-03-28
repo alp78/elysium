@@ -151,7 +151,11 @@ except RuntimeError as e:
 
 #### Exception hierarchy — BaseException tree, args, __cause__
 
-`BaseException` is the root — `SystemExit` and `KeyboardInterrupt` are siblings of `Exception`. Always catch `Exception`, not `BaseException`. Properties: `args` (tuple), `__cause__` (from `raise ... from`), `__context__` (implicit chaining). Hierarchical catching means `except OSError` catches all OS-related errors.
+> [!info] Exception hierarchy
+> - `BaseException` — root; `SystemExit` and `KeyboardInterrupt` are siblings of `Exception`
+> - Always catch `Exception`, not `BaseException`
+> - Properties: `args` (tuple), `__cause__` (`raise ... from`), `__context__` (implicit chaining)
+> - Hierarchical catching: `except OSError` catches all OS-related errors
 
 > [!danger] Never catch `BaseException`
 > This prevents `Ctrl+C` (`KeyboardInterrupt`) and `sys.exit()` from working.
@@ -355,7 +359,11 @@ except ConfigError as e:
 
 <h4>Basic <code style="font-size:0.75em">with</code> statement</h4>
 
-`with open(path) as f:` calls `__enter__` on start and `__exit__` on end (even on exception). No `finally` needed — cleanup is automatic. Multiple resources can be stacked in one statement: `with open(a) as f1, open(b) as f2:`. Use for files, DB connections, locks, temp directories, and network sockets.
+> [!info] Context manager protocol
+> - `with open(path) as f:` — calls `__enter__` on start, `__exit__` on end (even on exception)
+> - No `finally` needed — cleanup is automatic
+> - Stack multiple: `with open(a) as f1, open(b) as f2:`
+> - Use for files, DB connections, locks, temp directories, network sockets
 
 > [!warning] Anti-patterns
 > - **Manual `try`/`finally`** when `with` is available — more verbose, easier to forget
@@ -475,7 +483,11 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
 
 #### Safe parse helpers — return default on failure instead of raising
 
-`safe_int(value, default=0)` wraps `int()` in `try`/`except` and returns the default on failure — much cleaner than `try`/`except` around every parse call. Composable in comprehensions and `map()` calls. Use for parsing CSV/JSON fields where bad values are expected; when invalid data should halt processing, raise explicitly instead.
+> [!info] Safe parse pattern
+> - `safe_int(value, default=0)` — wraps `int()` in `try`/`except`, returns default on failure
+> - Composable in comprehensions and `map()` calls
+> - Use for parsing CSV/JSON fields where bad values are expected
+> - When invalid data should halt processing, raise explicitly instead
 
 ```python
 # Safe parse helpers — return a default instead of raising; much cleaner for expected bad data

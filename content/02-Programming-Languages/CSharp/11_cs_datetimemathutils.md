@@ -58,7 +58,11 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 #### DateTime, DateOnly, TimeOnly, DateTimeOffset — creating objects
 
-`DateTime.Now` for local, `DateTime.UtcNow` for UTC. `DateOnly` for dates without time, `TimeOnly` for times without date (.NET 6+). `DateTimeOffset` carries timezone offset — always prefer UTC for storage. Separate types prevent misuse; `UtcNow` is monotonic (no DST jumps).
+> [!info] Date and time types
+> - `DateTime.Now` — local time | `DateTime.UtcNow` — UTC
+> - `DateOnly` — dates without time | `TimeOnly` — times without date (.NET 6+)
+> - `DateTimeOffset` — carries timezone offset; always prefer UTC for storage
+> - `UtcNow` is monotonic (no DST jumps)
 
 > [!warning] Anti-patterns
 > - **`DateTime.Now` for storage** — timezone-dependent; use `UtcNow`
@@ -693,7 +697,12 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 <h4><code style="font-size:0.75em">Math</code> class</h4>
 
-`Math.Abs` for absolute value, `Math.Max`/`Min` for comparisons, `Math.Clamp(value, min, max)` restricts to a range — all static methods, overloaded for `int`, `double`, `decimal`. `Clamp` replaces manual `if`/`else` for range restriction. For complex math, use the `MathNet.Numerics` library.
+> [!info] Math class
+> - `Math.Abs` — absolute value
+> - `Math.Max` / `Math.Min` — comparisons
+> - `Math.Clamp(value, min, max)` — restricts to a range (replaces manual `if`/`else`)
+> - All static, overloaded for `int`, `double`, `decimal`
+> - For complex math, use `MathNet.Numerics`
 
 ```csharp
 // Basic math — Abs, Max, Min, Clamp; all static methods on Math class
@@ -986,7 +995,14 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 
 #### Environment.GetEnvironmentVariable — read and set env vars
 
-`Environment.GetEnvironmentVariable("NAME")` reads a single variable; `GetEnvironmentVariables()` returns all as `IDictionary`. Standard across all platforms. Use for connection strings, API keys, and deployment-specific settings — never hardcode secrets in code. Always provide defaults with `??` for variables that may not exist. For complex structured config, use `appsettings.json` + `IConfiguration`.
+> [!info] Environment variables
+> - `Environment.GetEnvironmentVariable("NAME")` — reads a single variable
+> - `GetEnvironmentVariables()` — returns all as `IDictionary`
+> - Standard across all platforms; use for connection strings, API keys, deployment config
+> - Always provide defaults with `??` for variables that may not exist
+> - For complex structured config, use `appsettings.json` + `IConfiguration`
+>
+> > [!warning] Never hardcode secrets in code.
 
 ```csharp
 // Read common env vars

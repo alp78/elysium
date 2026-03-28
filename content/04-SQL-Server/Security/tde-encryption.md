@@ -74,7 +74,7 @@ GCP Cloud KMS                         SQL Server 2022
 
 ## Step 1: Create KMS Keyring and Key in GCP
 
-**Create the Cloud KMS keyring and 90-day auto-rotating encryption key:**
+#### gcloud kms keyrings/keys create — Cloud KMS keyring with 90-day rotation
 
 ```bash
 # Create the keyring in the same region as the VM
@@ -119,7 +119,7 @@ gcloud kms keys add-iam-policy-binding analytics-sql-tde \
 
 ## Step 3: Certificate-Based TDE Setup
 
-**Complete TDE setup: DMK, certificate, DEK, enable encryption, and monitor progress:**
+#### CREATE MASTER KEY, CERTIFICATE, DATABASE ENCRYPTION KEY — complete TDE setup
 
 ```sql
 -- ============================================================
@@ -223,7 +223,7 @@ ORDER BY db.name;
 > [!warning] Certificate Backup is Mandatory
 > Without the certificate and its private key, encrypted database backups are **completely unrestorable** on another SQL Server instance. This is the single most important step in TDE setup. Treat the certificate backup with the same care as the database backup itself.
 
-**Backup certificate and private key to local files:**
+#### BACKUP CERTIFICATE TO FILE — export certificate and private key
 
 ```sql
 -- Backup certificate and private key to files
@@ -247,7 +247,7 @@ GO
 
 ## Step 5: Copy Certificate to GCS (Encrypted at Rest by KMS)
 
-**Upload certificate to GCS, apply KMS CMEK encryption, and remove local copies:**
+#### gsutil cp + gcloud kms encrypt — upload certificate to CMEK-encrypted GCS
 
 ```bash
 # Copy certificate and private key to GCS backup bucket
@@ -277,7 +277,7 @@ rm /var/opt/mssql/backup/project_tde_cert_key.pvk
 
 ## Step 6: Restore Certificate on Another Server (Disaster Recovery)
 
-**Full DR restore: create DMK on new server, restore certificate, restore database:**
+#### CREATE MASTER KEY + CREATE CERTIFICATE FROM FILE — DR restore on new server
 
 ```sql
 -- On the NEW server (after restoring master database backup or fresh install):
@@ -309,7 +309,7 @@ GO
 
 ## TDE Monitoring Query
 
-**Check TDE status and certificate expiry (use in quarterly security review):**
+#### sys.dm_database_encryption_keys, sys.certificates — TDE status and expiry check
 
 ```sql
 -- Check TDE status, certificate validity, and days until expiry

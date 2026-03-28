@@ -118,7 +118,12 @@ Console.WriteLine($"New radius: {c.Radius}");
 
 #### Inheritance — base class, virtual, override, sealed
 
-`virtual` marks a method for overriding; `override` in a child class provides a new implementation. `base.Method()` calls the parent version. C# supports single inheritance only — one base class per type. Use inheritance for IS-A relationships; prefer composition (fields/properties) for HAS-A.
+> [!info] Inheritance mechanics
+> - `virtual` — marks a method for overriding
+> - `override` — in a child class, provides a new implementation
+> - `base.Method()` — calls the parent version
+> - C# supports **single inheritance** only — one base class per type
+> - Use inheritance for IS-A relationships; prefer composition (fields/properties) for HAS-A
 
 > [!warning] Anti-patterns
 > - **Deep hierarchies** (>3 levels) — prefer composition
@@ -460,7 +465,12 @@ Console.WriteLine(@"
 
 #### static members — shared state, factory methods, utility classes
 
-`static` fields/properties are shared by all instances — one copy exists per type. `static` methods don't need an instance (called via `ClassName.Method()`), and `static` constructors run once when the type is first used. A `static` class can only contain static members and cannot be instantiated. Unlike Python's `@classmethod`, C# static methods cannot be overridden in subclasses.
+> [!info] Static members
+> - `static` fields/properties — shared by all instances, one copy per type
+> - `static` methods — don't need an instance (called via `ClassName.Method()`)
+> - `static` constructors — run once when the type is first used
+> - `static` class — can only contain static members, cannot be instantiated
+> - Unlike Python's `@classmethod`, C# static methods cannot be overridden in subclasses
 
 > [!warning] Anti-patterns
 > - **Mutable static state** shared across threads — race conditions

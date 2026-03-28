@@ -98,7 +98,10 @@ MeasureTime(() => dataDict.ContainsKey(99_999), "Dict.ContainsKey (O(1))");
 
 #### GC.GetTotalMemory — measure managed heap allocations
 
-`GC.GetTotalMemory(true)` returns managed heap size — measure before/after to get delta. Value types (struct) live on stack; reference types (class) on heap. Boxing (`int` → `object`) allocates.
+> [!info] Memory measurement
+> - `GC.GetTotalMemory(true)` — returns managed heap size (measure before/after for delta)
+> - Value types (`struct`) live on stack; reference types (`class`) on heap
+> - Boxing (`int` → `object`) allocates
 
 > [!tip] Every `new` is an allocation. Every allocation is future GC pressure.
 
@@ -183,7 +186,11 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 
 #### Span and zero-allocation patterns
 
-`Span<T>` — stack-only view into contiguous memory. Slicing creates a view (no copy, no allocation). `ReadOnlySpan<char>` for string parsing without `Substring` allocations. `stackalloc` for stack arrays (no GC, ~1MB limit). Can't store in fields or use across `await`.
+> [!info] Span and zero-allocation patterns
+> - `Span<T>` — stack-only view into contiguous memory; slicing creates a view (no copy)
+> - `ReadOnlySpan<char>` — string parsing without `Substring` allocations
+> - `stackalloc` — stack arrays (no GC, ~1MB limit)
+> - Can't store in fields or use across `await`
 
 ```csharp
 // Array slicing: copy vs Span
@@ -357,7 +364,12 @@ try {
 
 #### Nullable reference types and static analysis
 
-`#nullable enable` turns on compiler null analysis. `string?` = nullable, `string` = non-nullable. Catches `NullReferenceException` at compile time. The `!` operator (null-forgiving) suppresses warnings — use sparingly. On by default since .NET 6.
+> [!info] Nullable reference types
+> - `#nullable enable` — turns on compiler null analysis
+> - `string?` = nullable, `string` = non-nullable
+> - Catches `NullReferenceException` at compile time
+> - `!` operator (null-forgiving) suppresses warnings — use sparingly
+> - On by default since .NET 6
 
 > [!tip] Enable NRT in all new projects — free bug prevention. Don't ignore nullable warnings or overuse `!`.
 

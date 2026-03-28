@@ -80,7 +80,10 @@ ipytest.autoconfig()
 
 ## Unit Testing with pytest
 
-`pytest` is the de-facto standard Python test framework. Test discovery is automatic: files named `test_*.py` or `*_test.py`, and functions named `test_*`, are picked up without any base class or decorator. Plain `assert` statements get rewritten by pytest to show rich diffs on failure.
+> [!info] pytest fundamentals
+> - De-facto standard Python test framework
+> - Automatic discovery: files `test_*.py` or `*_test.py`, functions `test_*` — no base class needed
+> - Plain `assert` statements get rewritten to show rich diffs on failure
 
 > [!info] Running pytest in notebooks
 > pytest runs from the command line (`pytest test_mymodule.py`). In notebooks, we use `ipytest` to run pytest cells interactively. In production, test files live in a `tests/` directory.
@@ -1077,7 +1080,10 @@ def test_index_weight_calculation():
 
 #### Data quality validation — validate_eod_prices, OHLCV invariants
 
-`validate_eod_prices` returns error strings — empty = all valid. Invariants: `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%. Financial APIs return garbage more often than expected — these tests are the last line of defense.
+> [!info] EOD price validation invariants
+> - `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%
+> - Returns error strings — empty = all valid
+> - Financial APIs return garbage more often than expected — these tests are the last line of defense
 
 ```python
 # validate_eod_prices — the function under test

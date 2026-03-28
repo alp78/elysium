@@ -358,7 +358,10 @@ RunTest("Missing key throws KeyNotFoundException", () =>
 
 ## Theory and InlineData
 
-`[Theory]` + `[InlineData]` is C#'s equivalent of `@pytest.mark.parametrize`. `[Fact]` = single test case. `[Theory]` = parametrized — runs once per `[InlineData]` set. In notebooks we simulate with a loop; in real projects, xUnit discovers automatically.
+> [!info] xUnit test attributes
+> - `[Fact]` — single test case
+> - `[Theory]` + `[InlineData]` — parametrized (runs once per data set); C# equivalent of `@pytest.mark.parametrize`
+> - In notebooks we simulate with a loop; in real projects, xUnit discovers automatically
 
 ```csharp
 void RunTest(string name, Action test)
@@ -431,7 +434,12 @@ foreach (var (amt, rate, exp, label) in fxCases)
 
 #### Parametrize: OHLCV validation
 
-`IsValidBar` checks OHLCV candle invariants: `high >= max(open, close)`, `low <= min(open, close)`, `volume >= 0`. Financial APIs occasionally return garbage (high < open, negative volume) — a pipeline without validation feeds bad data into models.
+> [!info] OHLCV candle invariants
+> - `high >= max(open, close)`
+> - `low <= min(open, close)`
+> - `volume >= 0`
+>
+> Financial APIs occasionally return garbage (high < open, negative volume) — a pipeline without validation feeds bad data into models.
 
 ```csharp
 Console.WriteLine("\n=== OHLCV Validation [Theory] ===");
@@ -867,7 +875,10 @@ RunTest("Index weight calculation with mock", () =>
 
 #### Data quality checks
 
-`ValidateEodPrices` returns a list of error strings — empty = all valid. Invariants: `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%. Bad API data is common — 0 for missing fields, negative prices from currency bugs, unadjusted splits.
+> [!info] EOD price validation invariants
+> - `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%
+> - Returns a list of error strings — empty = all valid
+> - Bad API data is common: 0 for missing fields, negative prices from currency bugs, unadjusted splits
 
 ```csharp
 Console.WriteLine("\n=== Data Quality Tests ===");
