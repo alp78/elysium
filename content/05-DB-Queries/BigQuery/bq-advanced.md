@@ -2343,11 +2343,6 @@ LIMIT 10
 
 ### UNION / INTERSECT / EXCEPT
 
-- `UNION ALL`: stack result sets (keep duplicates) — fast
-- `UNION`: stack + deduplicate — slower (sorts)
-- `INTERSECT`: rows in both queries
-- `EXCEPT`: rows in first query but not second
-
 
 ```sql
 %%sql
