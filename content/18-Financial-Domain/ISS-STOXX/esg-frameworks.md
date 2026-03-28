@@ -60,6 +60,8 @@ CDP matters because it provides one of the largest standardized datasets on corp
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News January 2020 (PDF)
 > imate Indices Key points The STOXX® Global Climate Change Leaders Index stood out among STOXX’s Climate Indices during January after posting a positive return and the widest monthly outperformance to the STOXX Global 1800 Index in 18 months. The STOXX Global Climate Change Leaders Index is based on **CDP**’s ‘A list’ database of companies that are publicly committed to reducing their carbon footpri...
@@ -80,6 +82,8 @@ CDP matters because it provides one of the largest standardized datasets on corp
 > [!quote] Index Files Guide 20230619 (PDF)
 > Physical_Risks Data is not available to report this value Number 2 Sum of constituent weights listed in NACE sections A- 37 Item7b_Exposure_ NACE_Sections Number 2 H, L Sum of constituent weights multiplied by emmision 38 Item7b_GHG_ intensity Number 2 intensity Sum of constituent weights that have **CDP** reported 39 Item7b_GHG_ reported_vs_estimated Number 2 data Sum of constituent weights listed...
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News January 2020 (PDF)](https://stoxx.com/monthly-index-news-january-2020)
@@ -123,10 +127,14 @@ The Convention on Cluster Munitions is one of the key treaties referenced in con
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Controversial Weapons and the Implications for Investors | ISS
 > PM NZDT Eight years ago a new international convention introduced a global ban on cluster munitions – a result of long negotiations following the public outcry caused by reports about the severe humanitarian consequences of the use of these weapons in recent conflicts. Following the adoption of the **Convention on Cluster Munitions** on 2008 a number of countries, including New Zealand, introduced ...
 > — [Controversial Weapons and the Implications for Investors | ISS](https://www.issgovernance.com/controversial-weapons-and-the-implications-for-investors) — "Controversial Weapons and the Implications for Investors"
+
+</details>
 
 **Sources:**
 - [Controversial Weapons and the Implications for Investors | ISS](https://www.issgovernance.com/controversial-weapons-and-the-implications-for-investors) — "Controversial Weapons and the Implications for Investors"
@@ -150,6 +158,8 @@ The CSRD is a watershed regulation for ESG investing in Europe. It requires comp
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Antonio Celeste on how investors should urgently mitigate against biodiversit...
 > ity indices or customize them according to their investment policies. How can investors access biodiversity forward-looking data? There is a lot happening on the regulatory front that will result in even more tangible and reliable biodiversity data. The Corporate Sustainability Reporting Directive (**CSRD**) will come into effect from January 1st 2024 and will play a key role as it will introduce m...
@@ -170,6 +180,8 @@ The CSRD is a watershed regulation for ESG investing in Europe. It requires comp
 > [!quote] 2023 Global Climate Change Update | ISS
 > limate Change-Related Issues Globally DECEMBER 7, 2023 The following chapters examine all these aspects of climate-related investment risks and opportunities and identify ISS ESG data and tools that can support investors in navigating these issues. - Climate Change Regulation and Standards in 2023: **CSRD**/ESRS, ISSB, and U.S. Legislation - Corporate Climate Governance: A Subject of Growing Invest...
 > — [2023 Global Climate Change Update | ISS](https://www.issgovernance.com/library/2023-global-climate-change-update) — "2023 Global Climate Change Update"
+
+</details>
 
 **Sources:**
 - [Antonio Celeste on how investors should urgently mitigate against biodiversity loss - Climate Action](https://stoxx.com/antonio-celeste-on-how-investors-should-urgently-mitigate-against-biodiversity-loss) — "Topics"
@@ -198,6 +210,8 @@ DNSH acts as a safeguard within the EU Taxonomy — an activity cannot be labele
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
 > inition of sustainable investment and regulatory guidelines 3 2.1 Regulatory uncertainties 4 2.2 A cornerstone of the EU’s sustainable finance framework 4 2.3 Overview of STOXX’s sustainable investment methodology 5 2.4 Framework methodology overview 7 3 Detailed methodology 8 3.1 Screening pillar: **do no significant harm** 8 3.2 Screening pillar: good governance 9 3.3 Positive contribution: produ...
@@ -218,6 +232,8 @@ DNSH acts as a safeguard within the EU Taxonomy — an activity cannot be labele
 > [!quote] Navigating Europe’s equities and sustainable investing landscape  | Blog post...
 > should become a more practical and pragmatic task with time, she added. In building indices at Qontigo, Cady explained, the determination of whether an investment is sustainable or not relies on two steps: 1) a screening process for minimum sustainability performance, including Good Governance and ‘**Do No Significant Harm**;’ and 2) a measurement of positive contribution, which can be achieved, fo...
 > — [Navigating Europe’s equities and sustainable investing landscape  | Blog post...](https://stoxx.com/navigating-europes-equities-and-sustainable-investing-landscape) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
@@ -245,6 +261,8 @@ Double materiality distinguishes European ESG disclosure from frameworks like IS
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...
 > e in 2023 and are likely to extend into 2024, Warberg and Karakulova wrote. In July, the EC adopted new European Sustainability Reporting Standards (ESRS), which provide more details on the Corporate Sustainability Reporting Directive (CSRD) from last year. ESRS requires companies to report on the “**double materiality**” environmental impact of their operations and value chain, and relieves them —...
@@ -285,6 +303,8 @@ Double materiality distinguishes European ESG disclosure from frameworks like IS
 > [!quote] Analysis: Differentiated Voting Rights in Europe | ISS
 > with equal right to dividends, which were forbidden by the previous Companies Act. It furthermore enables companies to issue bearer shares. Shares with no voting rights do not carry any special cash-flow rights (such as a preferential dividend). When analyzing multiple voting rights, ISS applies a **double materiality** test by (1) examining the impact of the multiple voting rights relative to the ...
 > — [Analysis: Differentiated Voting Rights in Europe | ISS](https://www.issgovernance.com/analysis-differentiated-voting-rights-in-europe) — "Analysis: Differentiated Voting Rights in Europe"
+
+</details>
 
 **Sources:**
 - [Sustainability reporting regulation: midyear progress review by ISS ESG  | Blog posts | STOXX](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg) — "WHITEPAPER"
@@ -314,6 +334,8 @@ The Equator Principles matter because they represent the financial industry's pr
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2017 Sustainability Us Voting Guidelines (PDF)
 > internationally recognized standards and national/local regulations; › The potential financial impact or risk to the company associated with water-related concerns or issues; and › Recent, significant company controversies, fines, or litigation regarding water use by the company and its suppliers. **Equator Principles** The **Equator Principles** is the financial industry’s benchmark for determining, a...
@@ -334,6 +356,8 @@ The Equator Principles matter because they represent the financial industry's pr
 > [!quote] ISS ESG White Paper Series: ESG Themes and Trends 2021 – Europe, Middle East ...
 > nd investment into renewables remains a key focus for countries in the Middle East relying on expansion of green bond market. - Growth in sustainable and green bonds in Africa is coupled with signals that there is momentum for a ‘green recovery’ for the continent, with the implementation of revised **Equator Principles** and Mining Principles expected to lift the ESG performance of mining companies...
 > — [ISS ESG White Paper Series: ESG Themes and Trends 2021 – Europe, Middle East ...](https://www.issgovernance.com/library/esg-themes-trends-2021-emea) — "ISS ESG WHITE PAPER SERIES: ESG THEMES & TRENDS 2021"
+
+</details>
 
 **Sources:**
 - [2017 Sustainability Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-sustainability-us-voting-guidelines.pdf)
@@ -361,6 +385,8 @@ ESRS standardizes sustainability reporting across the EU in a way that earlier v
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Executive Summary Of Key 2017 Updates And Policy (PDF)
 > ds of directors constitutes a legal requirement, the AFEP- MEDEF Code and the AFG (the French Association of Asset Managers) exclude **ESRs** when setting the minimum level of independence that boards should maintain. In other words, under the approach favored by the AFEP-MEDEF Code and AFG Guidelines, **ESRs** should not be counted when calculating the percentage of independent directors on a company'...
@@ -381,6 +407,8 @@ ESRS standardizes sustainability reporting across the EU in a way that earlier v
 > [!quote] Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...
 > companies can be held accountable for adverse impacts to the environment and human rights, among other things. The tri-party negotiations will continue in 2023 and are likely to extend into 2024, Warberg and Karakulova wrote. In July, the EC adopted new European Sustainability Reporting Standards (**ESRS**), which provide more details on the Corporate Sustainability Reporting Directive (CSRD) from ...
 > — [Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Executive Summary Of Key 2017 Updates And Policy (PDF)](https://www.issgovernance.com/file/policy/executive-summary-of-key-2017-updates-and-policy.pdf)
@@ -424,6 +452,8 @@ The EU Taxonomy is foundational to sustainable finance in Europe. STOXX uses tax
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] EU Taxonomy Alignment Solution Webinar | ISS
 > **EU Taxonomy** Alignment Solution Webinar Starting in 2022, institutional investors and financial market participants (FMPs) who distribute relevant investment products inside the European Union will need to provide disclosure according to the **EU Taxonomy**. The regulation is the first mandatory requirem
@@ -444,6 +474,8 @@ The EU Taxonomy is foundational to sustainable finance in Europe. STOXX uses tax
 > [!quote] EU Taxonomy Alignment Solution | ISS
 > cial products with defined taxonomy activities. The solution quantifies respective revenues, capital expenditure, and operational expenditure in order to comply with the upcoming disclosure obligations. PORTFOLIO REPORTING – KEY FEATURES A single report at the click of a button, designed to support **EU Taxonomy** reporting obligations. Meet Disclosure Obligations Incorporate directly reported data...
 > — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy) — "EU Taxonomy Alignment Solution Webinar"
@@ -470,6 +502,8 @@ EET is the plumbing that makes ESG regulation work in practice for the European 
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Climate Event Series - Paris | ISS
 > estisseurs doivent alors faire face à de nouveaux enjeux dont celui prédominant de la disponibilité des données. Nous avons le plaisir de vous convier à un petit déjeuner organisé par ISS ESG au cours duquel nos experts ESG vous aideront à mieux comprendre les exigences réglementaires liées à SFDR, **European ESG Template (EET)**, MiFID et l’Article 29 de la loi Énergie-Climat. Ils vous présenteron...
@@ -482,6 +516,8 @@ EET is the plumbing that makes ESG regulation work in practice for the European 
 > [!quote] European ESG Template | ISS
 > The **European ESG Template**, developed by FinDatEx, is a fund-level reporting template for asset managers that distribute funds in the European Union and need to comply with ESG-related regulatory requirements covered in the SFDR, EU Taxonomy, MiFID II, and IDD. We have mapped the **European ESG Template** re
 > — [European ESG Template | ISS](https://www.issgovernance.com/sustainability/regulatory/european-esg-template) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [Climate Event Series - Paris | ISS](https://www.issgovernance.com/climate-event-series-paris) — "Comprendre les Réglementations de la Finance Durable et les Outils à Disposition des Investisseurs"
@@ -509,6 +545,8 @@ The GHG Protocol's scope classification is the universal language of carbon acco
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > revenue data (xvii) and Refinitiv output volume (xviii) for the remaining securities in the universe list are used in the methodology and are described below. (i) Enterprise value including cash (EVIC) based on the fiscal year data for the end of the last calendar year (ii) GHG Emissions data: The **GHG Protocol** Corporate Standard classifies companies’ greenhouse gas (GHG) emissions as direct emi...
@@ -529,6 +567,8 @@ The GHG Protocol's scope classification is the universal language of carbon acco
 > [!quote] ISS Launches Climate Voting Policy | ISS
 > ification (CRR). - Disclosure signals based on climate disclosure indicators aligned with TCFD disclosure requirements. - Norms violations, based on any violations of globally recognized climate norms. - Current climate performance signals, such as greenhouse gas (GHG) emission intensity, following **GHG Protocol**’s carbon accounting methodology for Scope 1-3 GHG emissions. - Future climate perfor...
 > — [ISS Launches Climate Voting Policy | ISS](https://www.issgovernance.com/iss-launches-climate-voting-policy) — "ISS Launches Climate Voting Policy"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -572,6 +612,8 @@ GRI has been the dominant sustainability reporting framework for over two decade
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2017 Sustainability Us Voting Guidelines (PDF)
 > . Shareholders may request general environmental reports or reports on a specific location/operation, often requesting that the company detail the environmental risks and potential liabilities of a specific project. Companies have begun to report on environmental and sustainability issues using the **Global Reporting Initiative (GRI)** standards. The GRI was established in 1997 with the mission of ...
@@ -592,6 +634,8 @@ GRI has been the dominant sustainability reporting framework for over two decade
 > [!quote] IIA Survey Points to Continued Strong Growth for ESG Assets, Key Role for ESG...
 > ESG data. Other challenges include regulatory uncertainty, weak corporate disclosure, and differences in ESG definitions and measurement. “There is a dizzying array of different ESG reporting organizations and ESG benchmarks — for example, the U.N. Principles for Responsible Investment (UNPRI), the **Global Reporting Initiative (GRI)**, the Sustainability Accounting Standards Board (SASB), to name ...
 > — [IIA Survey Points to Continued Strong Growth for ESG Assets, Key Role for ESG...](https://stoxx.com/iia-survey-points-to-continued-strong-growth-for-esg-assets-key-role-for-esg-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [2017 Sustainability Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-sustainability-us-voting-guidelines.pdf)
@@ -619,6 +663,8 @@ Good governance is the social floor beneath the EU Taxonomy's environmental ceil
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Regulatory Sustainable Investment Solution | ISS
 > ts The methodology is based on four common pillars within sustainable finance regulations globally that our team of regulatory experts have identified Financially Material Sustainability Risks Contribution to Environmental or Social Objectives Adverse Sustainability Impacts & Do No Significant Harm **Good Governance** POWERED BY A BROAD RANGE OF HIGH-QUALITY SUSTAINABILITY SOLUTIONS, INCLUDING: CUS...
@@ -639,6 +685,8 @@ Good governance is the social floor beneath the EU Taxonomy's environmental ceil
 > [!quote] Us Procedures And Policies Faq (PDF)
 > a director to serve on the board for a short period of time prior to his/her election. The majority vote standard is considered a more meaningful, consequential standard in an uncontested election. However, in a contested election (more nominees than seats), a majority vote standard is anathema to **good governance** and results in an unfair election because of the counting of the Against votes and...
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [Regulatory Sustainable Investment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/regulatory-sustainable-investment) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
@@ -683,6 +731,8 @@ ILO Conventions are foundational to the social dimension of ESG analysis. ISS ES
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > ze and bargain collectively, Nondiscrimination in employment, Abolition of forced labor, and End of child labor. Each of the 187 member-nations of the ILO is bound to respect and promote these rights to the best of their abilities. SA 8000 is a set of labor standards, based on the principles of the **ILO conventions** and other human rights conventions, and covers eight workplace conditions, includ...
@@ -703,6 +753,8 @@ ILO Conventions are foundational to the social dimension of ESG analysis. ISS ES
 > [!quote] 2015 Us Sri Voting Guidelines (PDF)
 > ze and bargain collectively, Nondiscrimination in employment, Abolition of forced labor, and End of child labor. Each of the 185 member nations of the ILO is bound to respect and promote these rights to the best of their abilities. SA 8000 is a set of labor standards, based on the principles of the **ILO conventions** and other human rights conventions, and covers eight workplace conditions, includ...
 > — [2015 Us Sri Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2015-us-sri-voting-guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -730,6 +782,8 @@ The ISSB represents the push toward a single global baseline for sustainability 
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...
 > amework, whose final version is now planned for September this year. The TNFD follows on the example of the Taskforce on Climate-related Financial Disclosure (TCFD) and aims to develop risk management and disclosure guidelines to report and act on evolving nature-related risks. The standard-setting **International Sustainability Standards Board (ISSB)**, which in May started a consultation on its n...
@@ -746,6 +800,8 @@ The ISSB represents the push toward a single global baseline for sustainability 
 > [!quote] Transparency Paves the Road to Net Zero | ISS
 > e medium-term action so it can be scrutinised, allowing for the identification of gaps that need to be tackled. - Standards setters and regulators are driving transparency, from the Task Force on Climate-related Financial Disclosures (TCFD) to the US Securities and Exchange Commission (SEC) and the **International Sustainability Standards Board (ISSB)**. The development of a comprehensive global ba...
 > — [Transparency Paves the Road to Net Zero | ISS](https://www.issgovernance.com/library/transparency-paves-the-road-to-net-zero) — "Transparency Paves the Road to Net Zero"
+
+</details>
 
 **Sources:**
 - [Sustainability reporting regulation: midyear progress review by ISS ESG  | Blog posts | STOXX](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg) — "WHITEPAPER"
@@ -791,6 +847,8 @@ The NFRD was the EU's first mandatory sustainability reporting requirement, but 
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...
 > overnment is extending its pioneering Article 173 legislation to demand asset owners and asset managers report their biodiversity impact as of this year. Europe is taking a strong lead in seeking environmental data. The European Commission is currently reviewing a Non-Financial Reporting Directive (**NFRD**) and preparing a renewed sustainable finance strategy, both of which are likely to lead to i...
@@ -799,6 +857,8 @@ The NFRD was the EU's first mandatory sustainability reporting requirement, but 
 > [!quote] EU Taxonomy Alignment Solution | ISS
 > ities including: - Improved forest management - Livestock production - Manufacture of renewable energy technologies - Manufacture of cement - Electricity generation from wind power - Manufacture of aluminium - Anaerobic digestion of sewage sludge - Composting of bio-waste - Freight rail transport A **NFRD** indicator flag is also included in order to assist clients with their disclosure obligations...
 > — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog posts | STOXX](https://stoxx.com/responsible-investing-zeroes-in-on-biodiversity) — "WHITEPAPER"
@@ -825,6 +885,8 @@ The OECD Guidelines are a foundational normative framework in ESG investing. ISS
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Us Procedures And Policies Faq (PDF)
 > generated by ISS ESG as well as external sources. ISS ESG captures companies' violations of international norms using a Norms-Based Research (NBR) approach. The norms-based framework recognizes and uses as guidelines the UN Global Compact and the Responsible Business Conduct (RBC) set out under the **OECD guidelines for Multinational Enterprises**, both of which are derived from international law. ...
@@ -845,6 +907,8 @@ The OECD Guidelines are a foundational normative framework in ESG investing. ISS
 > [!quote] OECD Guidelines for Responsible Investment: New Drivers for E&amp;S Company A...
 > . Last month, the Organisation for Economic Co-operation and Development (OECD) released its Responsible Business Conduct for Institutional Investors, its most specific guidance yet for the finance industry’s efforts to integrate established ESG expectation into its management systems. Built on the **OECD Guidelines for Multinational Enterprises**, the practical guidance explains that even with min...
 > — [OECD Guidelines for Responsible Investment: New Drivers for E&amp;S Company A...](https://www.issgovernance.com/understanding-the-environmental-and-social-impacts-of-portfolio-companies) — "OECD Guidelines for Responsible Investment: New Drivers for E&S Company Analysis"
+
+</details>
 
 **Sources:**
 - [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
@@ -890,6 +954,8 @@ The Paris Agreement is the single most referenced climate target in financial re
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate and Nature Solutions | ISS
 > g opportunities in the transition to a low-carbon economy. Our biodiversity indices provide a comprehensive framework to address our world’s nature-related challenge. Climate Indices Our climate indices are designed to facilitate the shift towards a low-carbon economy and align investments with the **Paris Agreement**, EU Climate Benchmarks regulation, and other decarbonization objectives. Biodiver...
@@ -910,6 +976,8 @@ The Paris Agreement is the single most referenced climate target in financial re
 > [!quote] CORE | ISS
 > resources, support, and opportunities to grow—professionally and personally. Together, we foster an environment that fuels creativity, drives innovation, and shapes our future success. Environment Reducing the environmental footprint of our business operations and committing to the 1.5C goal of the **Paris agreement**. Business Providing clients with objective and varied analyses and insights throu...
 > — [CORE | ISS](https://www.issgovernance.com/core) — "ISS STOXX CORE"
+
+</details>
 
 **Sources:**
 - [Climate and Nature Solutions | ISS](https://www.issgovernance.com/climate-and-nature/solutions) — "ISS STOXX"
@@ -936,6 +1004,8 @@ PRI is the largest global coalition of institutional investors committed to ESG 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Axioma Multi Asset Class Risk Monitor (PDF)
 > and commodities. The white bars represent volatilities from the previous 60 business day period. Figure 3. Government Zero Coupon Yield Curves US EU GB JP 3. Zero coupon bond curves built from vanilla bonds issued by the respective sovereign. Eurozone curve represents minimal cost of funding and is primarily built from German, Dutch and Austrian debt, though exact composition can change dependi...
@@ -956,6 +1026,8 @@ PRI is the largest global coalition of institutional investors committed to ESG 
 > [!quote] 2014 Iss Usa Sustainability (PDF)
 > ssments ................................................................................................ 65 Weapons and Military Sales .................................................................................................................................................. 65 Data Security, Privacy, and Internet Issues .......................................................................
 > — [2014 Iss Usa Sustainability (PDF)](https://www.issgovernance.com/file/2014_Policies/2014_ISS_USA_Sustainability.pdf)
+
+</details>
 
 **Sources:**
 - [Axioma Multi Asset Class Risk Monitor (PDF)](https://stoxx.com/axioma-multi-asset-class-risk-monitor)
@@ -985,6 +1057,8 @@ SASB's industry-specific approach is its distinguishing feature — rather than 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Us Voting Guidelines (PDF)
 > carbon-restricted economy. The model’s expectations used to assess performance practices are defined by industry groups, based on the specific climate risks identified in industry and multi-stakeholder initiatives and reflected in authoritative standards such as the Global Reporting Initiative, the Sustainability Accounting Standards Board standards, and TCFD recommendations. In cases of assess...
@@ -1005,6 +1079,8 @@ SASB's industry-specific approach is its distinguishing feature — rather than 
 > [!quote] IIA Survey Points to Continued Strong Growth for ESG Assets, Key Role for ESG...
 > re, and differences in ESG definitions and measurement. “There is a dizzying array of different ESG reporting organizations and ESG benchmarks — for example, the U.N. Principles for Responsible Investment (UNPRI), the Global Reporting Initiative (GRI), the Sustainability Accounting Standards Board (**SASB**), to name but a few,” the IIA said in the survey’s report. “By one estimate there are over o...
 > — [IIA Survey Points to Continued Strong Growth for ESG Assets, Key Role for ESG...](https://stoxx.com/iia-survey-points-to-continued-strong-growth-for-esg-assets-key-role-for-esg-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Climate Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/Climate-US-Voting-Guidelines.pdf)
@@ -1032,6 +1108,8 @@ SBTi has become the gold standard for validating whether a company's climate com
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ETF Express names Qontigo’s STOXX Best Index Provider for ESG ETFs | Press re...
 > e investment goals. “In 2020, we set a new standard with the launch of our STOXX Climate Transition Benchmark, CTB, and STOXX Paris-Aligned Benchmark, PAB. By going above and beyond EU regulatory requirements in these indices’ design, in particular with our requirement that companies must commit to **Science Based Targets Initiative**, SBTI, to remain in the index, we offer an investment framework ...
@@ -1052,6 +1130,8 @@ SBTi has become the gold standard for validating whether a company's climate com
 > [!quote] Environmental Finance – The Future of ESG Data Americas 2023 | ISS
 > ed to navigate the rapidly evolving ESG data landscape. Join our Panel Discussion 16:05 – 16:50 EST: The role of ESG data in the transition to net zero Sam Schrager, our Head of US Climate Analytics, will be speaking on this panel alongside experts from Futurepast, Moody’s Analytics, Ortec Finance, **Science Based Targets Initiative**, and Natixis. Explore Our Solutions Understand, measure and act ...
 > — [Environmental Finance – The Future of ESG Data Americas 2023 | ISS](https://www.issgovernance.com/iss-esg-environmental-finance-washington-2023) — "Environmental Finance –The Future of ESG Data Americas 2023"
+
+</details>
 
 **Sources:**
 - [ETF Express names Qontigo’s STOXX Best Index Provider for ESG ETFs | Press releases | STOXX](https://stoxx.com/etf-express-names-qontigos-stoxx-best-index-provider-for-esg-etfs) — "WHITEPAPER"
@@ -1079,6 +1159,8 @@ SDGs provide a universal language for linking investment activities to real-worl
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2024 (PDF)
 > atural ecosystems and growing efforts to protect them. The indices exclude companies involved in activities that are controversial or cause harm to biodiversity, select securities with less negative impact on ecosystems and those contributing positively to relevant UN Sustainable Development Goals (**SDGs**). They also reduce the portfolio’s carbon emissions. A key component of the ISS STOXX Biodiv...
@@ -1099,6 +1181,8 @@ SDGs provide a universal language for linking investment activities to real-worl
 > [!quote] Philips Pensioenfonds selects STOXX Responsible SDG Index | Press releases | ...
 > lio with the sustainability preferences of our beneficiaries while retaining a diversified portfolio with a low cost implementation. Because the SDG profile materially improved and this portfolio makes up almost 20% of our total AUM it represents an important step in aligning our investments to the **SDGs**. In the future, we seek to integrate the **SDGs** in other asset classes and portfolios too.” An...
 > — [Philips Pensioenfonds selects STOXX Responsible SDG Index | Press releases | ...](https://stoxx.com/philips-pensioenfonds-selects-stoxx-responsible-sdg-index) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2024 (PDF)](https://stoxx.com/monthly-index-news-april-2024)
@@ -1141,6 +1225,8 @@ SRD II is directly relevant to ISS's proxy advisory business. As a proxy advisor
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate International Policy Updates (PDF)
 > INTERNATIONAL CLIMATE POLICY UPDATES FOR 2022 Pay equity ratios: This a requirement provided by the EU **SRD II**: “Where applicable, the remuneration report shall contain the following information regarding each individual director’s remuneration: ….. (b) the annual change of remuneration, of the performance of the company, and of average remuneration on a full-time equivalent basis of employees o...
@@ -1161,6 +1247,8 @@ SRD II is directly relevant to ISS's proxy advisory business. As a proxy advisor
 > [!quote] ISS Launches GPD Shareholder Identification Service Ahead of SRD II Deadline ...
 > ial market participants, today launched its Global Proxy Distribution (GPD) Shareholder Identification Service. The new offering is the latest in ISS’ suite of outsourced solutions designed to assist custodians and intermediaries in meeting requirements under the EU Shareholder Rights Directive II (**SRD II**), the deadline for which is September 3. “ISS brings its market-leading understanding of t...
 > — [ISS Launches GPD Shareholder Identification Service Ahead of SRD II Deadline ...](https://www.issgovernance.com/iss-launches-gpd-shareholder-identification-service-ahead-of-srd-ii-deadline) — "ISS Launches GPD Shareholder Identification Service Ahead of SRD II Deadline"
+
+</details>
 
 **Sources:**
 - [Climate International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/specialty/Climate-International-Policy-Updates.pdf)
@@ -1187,6 +1275,8 @@ Stewardship codes complement regulatory requirements like SRD II by encouraging 
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] Statement on Intent to Sign Japan Stewardship Code | ISS
 > Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s Financial Services Agency (FSA) on February 27, 2014. ISS’ Head of Japanese Research, Takeyuki Ishida, participated in the Working Group that drafted the **Stewardship Code**. We are pleased to support the FSA in their effo...
@@ -1227,6 +1317,8 @@ Stewardship codes complement regulatory requirements like SRD II by encouraging 
 > [!quote] Stewardship Engagement Solutions | ISS
 > are under growing pressure to demonstrate sustainability transparency and accountability. Our Collaborative Engagement Services help you meet these expectations by aligning with global standards like Principles for Responsible Investment (PRI), The Sustainable Finance Disclosure Regulation (SFDR), **stewardship code**s, and the UN Sustainable Development Goals (SDGs). We facilitate focused, outcome...
 > — [Stewardship Engagement Solutions | ISS](https://www.issgovernance.com/stewardship-engagement-solutions) — "ISS STOXX"
+
+</details>
 
 **Sources:**
 - [Statement on Intent to Sign Japan Stewardship Code | ISS](https://www.issgovernance.com/compliance/statement-on-intent-to-sign-japan-stewardship-code) — "Statement on Intent to Sign Japan Stewardship Code"
@@ -1257,6 +1349,8 @@ TCFD transformed climate disclosure from a niche ESG exercise into a mainstream 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Carbon &amp; Climate Data and Advisory | ISS
 > es, the report provides detailed analyses of Scope 1&2 and Scope 3 emissions, transitional and physical risks and alignment with below 2° C, 4° C and 6° C climate scenarios. The report can assist investors in fulfilling requirements for internal and global external reporting initiatives such as the **Task Force on Climate-related Financial Disclosures (TCFD)**, Article 173 of the French Energy Tran...
@@ -1277,6 +1371,8 @@ TCFD transformed climate disclosure from a niche ESG exercise into a mainstream 
 > [!quote] Americas Policy Updates (PDF)
 > fore, ISS is for 2022 focusing on the 167 companies currently identified as the Climate Action 100+ Focus Group list, and it will recommend against incumbent directors – usually the appropriate committee chair in the first year – in cases where the company is not disclosing such as according to the **Task Force on Climate-related Financial Disclosures (TCFD)** and does not have quantitative GHG emi...
 > — [Americas Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/updates/Americas-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [Carbon &amp; Climate Data and Advisory | ISS](https://www.issgovernance.com/sustainability/climate-solutions/carbon-climate-data-and-advisory) — "ISS ESG/CLIMATE SOLUTIONS"
@@ -1304,6 +1400,8 @@ TNFD extends the climate disclosure paradigm to the broader biodiversity and nat
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] How to Assess Your Portfolio’s Impact on Biodiversity | ISS
 > investors in measuring their portfolio’s impact on biodiversity and can be used to support compliance with biodiversity-related disclosure frameworks within the European Union, including Article 29 of the French law on Energy and Climate, as well as the UN Convention on Biological Diversity and the **Task Force on Nature-related Financial Disclosures**. Join this session to learn more about ISS ESG...
@@ -1312,6 +1410,8 @@ TNFD extends the climate disclosure paradigm to the broader biodiversity and nat
 > [!quote] Biodiversity Impact Assessment Tool | ISS
 > BIODIVERSITY IMPACT ASSESSMENT TOOL The Biodiversity Impact Assessment Tool can be used to support compliance with climate-related disclosure frameworks within the European Union, including Article 29 of the French Energy Transition Law, as well as the UN Convention on Biological Diversity and the **Task Force on Nature-related Financial Disclosures**. COVERAGE Approximately 18,000+ Issuers Data as...
 > — [Biodiversity Impact Assessment Tool | ISS](https://www.issgovernance.com/sustainability/biodiversity-impact-assessment-tool) — "SUSTAINABILITY SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [How to Assess Your Portfolio’s Impact on Biodiversity | ISS](https://www.issgovernance.com/how-to-assess-your-portfolios-impact-on-biodiversity) — "How to Assess Your Portfolio’s Impact on Biodiversity"
@@ -1354,6 +1454,8 @@ UN Global Compact compliance is one of the most widely used norms-based screens 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] CORE | ISS
 > Business Providing clients with objective and varied analyses and insights through a comprehensive suite of data, research, and technology solutions that help streamline workflows, optimize investment impact, and inform decision-making to benefit their stakeholders. Actioning our Values through the **UN Global Compact**. The **UN Global Compact** (UNGC) is the world´s largest corporate sustainability i...
@@ -1374,6 +1476,8 @@ UN Global Compact compliance is one of the most widely used norms-based screens 
 > [!quote] Istoxx Index Guide (PDF)
 > TB Minimum Variance Indices » January 2020 (3): Addition of iSTOXX Global Megatrends Select 50 Index » January 2020 (4): Addition of iSTOXX Global NexGen Communication Innovative Technology Index » February 2020: Addition of iSTOXX Global Profitability Select 30 Index » March 2020: Clarification on **UN Global Compact** with Sustainalytics Global Standards Screening and ESG Controversy Rating » Mar...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [CORE | ISS](https://www.issgovernance.com/core) — "ISS STOXX CORE"
@@ -1401,6 +1505,8 @@ The UNGPs are foundational to social risk assessment in ESG investing. ISS ESG e
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > eening identifies companies that violate or are at risk of violating commonly accepted international norms and standards, enshrined in the United Nations Global Compact (UNGC) Principles, the Organisation for Economic Co-operation and Development (OECD) Guidelines for Multinational Enterprises, the **UN Guiding Principles on Business and Human Rights** (UNGPs), and their underlying conventions. Con...
@@ -1421,6 +1527,8 @@ The UNGPs are foundational to social risk assessment in ESG investing. ISS ESG e
 > [!quote] Three different DAX benchmarks to build distinct German ESG portfolios | Blog...
 > for Multinational Enterprises. For the DAX 50 ESG and DAX ESG Target, Sustainalytics’ Global Standards Screening assessment identifies companies that violate or are at risk of violating commonly accepted international norms and standards, enshrined in the UN Global Compact, the OECD Guidelines, the **UN Guiding Principles on Business and Human Rights** (UNGPs), and their underlying conventions. 2 L...
 > — [Three different DAX benchmarks to build distinct German ESG portfolios | Blog...](https://stoxx.com/three-different-dax-benchmarks-to-build-distinct-german-esg-portfolios) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)

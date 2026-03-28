@@ -46,6 +46,8 @@ Where $P_i$ is the closing price of security $i$, $S_i$ is total shares outstand
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 464/639 17. STOXX THEMATIC INDICES » Minimum liquidity: 3-month median daily trading volume (MDTV) greater than one million USD » Minimum size: **Adjusted free-float market capitalization** greater than 200 million USD » Multiple share lines: in case a company is present with multiple listings and/or a DR line and/or multiple share classes, all of the lines are eligibl...
@@ -58,6 +60,8 @@ Where $P_i$ is the closing price of security $i$, $S_i$ is total shares outstand
 > [!quote] Istoxx Index Guide (PDF)
 > s designed to minimize G the sum of the squares of the relative errors (SSE) over all the assets in the Target Portfolio, where the relative error for an asset is the difference between its index and Target Portfolio weights E scaled by the Target Portfolio weight. M The Target portfolio is the FOL-**adjusted free-float market capitalization**-weighted portfolio, constructed as follows: C 1. Start ...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -77,6 +81,8 @@ The announcement date gives market participants advance notice of upcoming index
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Calculation Guide 20231002 (PDF)
 > based on the most recent available data. The final data are published on the quarterly underlying data **announcement date**s and implemented on the quarterly implementation dates. The review cut-off date for free float and number of shares data is the trading day prior to the quarterly underlying data **announcement date**, i.e. usually the Thursday before the second Friday of the review month. Data a...
@@ -97,6 +103,8 @@ The announcement date gives market participants advance notice of upcoming index
 > [!quote] Istoxx Index Guide (PDF)
 > » April 2022(2): Addition of the 3 iSTOXX on Single Stock Indices, iSTOXX® Eurozone ESG 50 NR Decrement 5% Index and EURO iSTOXX 50 ESG NR Decrement 4.75% Index » April 2022(3): Addition of the iSTOXX Europe 600 Oil & Gas Futures Roll TR Decrement 5% Index » April 2022(4): Change in Underlying Data **Announcement date** to five days for the iSTOXX Europe Next Dividend Low Risk 50 Index, iSTOXX Euro...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Dax Equity Calculation Guide 20231002 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX%20Equity%20Calculation%20Guide_20231002.pdf)
@@ -136,6 +144,8 @@ The base date is the starting point of an index's time series. On this date the 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 62/639 7. STOXX BENCHMARK INDICES (BMI) Weighting scheme: The indices are weighted according to free-float market capitalization. Base values and dates: The following base values and dates apply: 100 on January 31, 2011, except for STOXX USA 900, which has a **base date** of 15.03.2002 and base value as per the vendor code sheet. For a complete list please consult the ...
@@ -156,6 +166,8 @@ The base date is the starting point of an index's time series. On this date the 
 > [!quote] Guide To Eurogov Bond Indices (PDF)
 > 0A0S3P68 3LEW Price DE000A0S3P19 3LER Deutsche Börse EUROGOV Germany 3-5 Total Return DE000A0S3P76 3LEX Price DE000A0S3P27 3LES Deutsche Börse EUROGOV Germany 5-10 Total Return DE000A0S3P84 3LEY Price DE000A0S3P35 3LET Deutsche Börse EUROGOV Germany 10+ Total Return DE000A0S3P92 3LEZ 3.3. BASIS The **base date** of EUROGOV® indices is 31 January 1999 with a base value of 100. 1 Each inclusive matur...
 > — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -180,6 +192,8 @@ The base value is an arbitrary scaling constant — commonly set to 100, 1,000, 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 62/639 7. STOXX BENCHMARK INDICES (BMI) Weighting scheme: The indices are weighted according to free-float market capitalization. **Base value**s and dates: The following **base value**s and dates apply: 100 on January 31, 2011, except for STOXX USA 900, which has a base date of 15.03.2002 and base value as per the vendor code sheet. For a complete list please consult the ...
@@ -200,6 +214,8 @@ The base value is an arbitrary scaling constant — commonly set to 100, 1,000, 
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > performance of those assets which are deemed to be ‘blue chip’ in terms of quality, activity, robustness and financial strength. INDEX INFORMATION The index is calculated as a price weighted index with capped weighting factors, in accordance with Laysperes formula as described in section 3.8. Index **Base Value**s and Base Dates: 1000 as of 22/03/2021. Index Types and Currencies: Price Return in US...
 > — [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -228,6 +244,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > t based on the Sustainalytics Global Standards Screening assessment or are involved in controversial weapons are not eligible for selection. Additional filters exclude companies involved in tobacco production, thermal coal and military contracting. The EURO STOXX® ESG Broad Market Index returned 23 basis points more than the benchmark EURO STOXX® Index during April. Risk and Return Characterist...
@@ -248,6 +266,8 @@ $$
 > [!quote] Stoxx Strategy Guide (PDF)
 > l on index level determination date t wt = Equity Weight on index level determination date t Level of the EURO STOXX 50 Net Return on index level determination SX5Tt = date t IRt = Money-market rate on the index level determination date t x = Cost of borrowing: If wt-1 ≤ 1, then x=0, otherwise x=50 Basis Points Difference between determination date t-1 and t measured in Diff(t-1,1) = calendar d...
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -272,6 +292,8 @@ Benchmark indices are the flagship products of index providers. STOXX benchmark 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] German Benchmark Index DAX Will be Strengthened by Additional Qualification C...
 > ne with international standards and new qualification criteria for the German **benchmark index**, which tracks the largest listed companies on the German capital market. Stephan Flaegel, Global Head of Benchmarks & Indices The main results on changing the index rulebook are: - From September 2021, the **benchmark index** DAX will be expanded by ten members, to a total of 40 constituents. This means th...
@@ -292,6 +314,8 @@ Benchmark indices are the flagship products of index providers. STOXX benchmark 
 > [!quote] Index Files Guide 20230619 (PDF)
 > cenario Text 255 energy-model/sustainable-development-scenario" for CTB/PAB indices. This value is reported only if the benchmark is a PAB or Share_of_Benchmark_in_Investable_ CTB index. It shows the share of the free float market 65 Number 2 Universe_Free_Float_Market_Capitalization cap of PAB/CTB **benchmark index** in the free float market cap of parent index. Date when report is produced and th...
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+
+</details>
 
 **Sources:**
 - [German Benchmark Index DAX Will be Strengthened by Additional Qualification Criteria and Harmonization with International Standards | Press releases | STOXX](https://stoxx.com/german-benchmark-index-dax-will-be-strengthened-by-additional-qualification-criteria-and-harmonization-with-international-standards) — "WHITEPAPER"
@@ -316,6 +340,8 @@ Buffer rules create a zone of tolerance around the selection threshold. For exam
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > r code sheet on the website22. 9.1.2. INDEX REVIEW Component selection: There is a minimum liquidity requirement for components: to be eligible, the 3-month average daily trading volume has to be at least EUR 1 million. Components are selected based on the free-float market capitalization and a 10% **buffer rule** applies for the ranking. If the number of stocks selected is still below the required...
@@ -336,6 +362,8 @@ Buffer rules create a zone of tolerance around the selection threshold. For exam
 > [!quote] STOXX Europe 600 index – The continent&#039;s benchmark | Blog posts | STOXX
 > e widest coverage among flagship European benchmarks in the industry in terms of market capitalization and number of components.[3] A liquidity filter[3] supports the tradability of the index’s portfolio, while a quarterly review based on clear rules gives it a continuous pulse on market changes. A **buffer rule** ensures a moderate turnover at each review. The STOXX Europe 600’s free-float market ...
 > — [STOXX Europe 600 index – The continent&#039;s benchmark | Blog posts | STOXX](https://stoxx.com/stoxx-europe-600-index-the-continents-benchmark) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -368,6 +396,8 @@ Where $w_i^{\text{uncapped}}$ is the raw weight and $W_{\max}$ is the cap limit.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] DAX capping will be adjusted to 15 per cent | Press releases | STOXX
 > the **capping** in the DAX index family from 10 to 15 per cent. This was preceded by a broad market consultation which lasted from 11 October to 8 November 2023. The responses reflected a wide range of considerations from different stakeholders. A majority of participants were in favour of raising the **capping** limit to 15 percent. Media Contact Andreas von Brevern +49 (0) 69 211 14284 With this capp...
@@ -388,6 +418,8 @@ Where $w_i^{\text{uncapped}}$ is the raw weight and $W_{\max}$ is the cap limit.
 > [!quote] Sri International Policy Updates (PDF)
 > ing boardroom composition. While the majority of the countries covered in the region lack a legal framework regarding independent director tenure limits, Argentina, Brazil, and Peru have recently adopted hard and/or soft laws with references to tenure. Argentina has recently implemented a hard law, **capping** independent directors' tenures at 10 years; any director with a tenure greater than 10 ye...
 > — [Sri International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2019/specialty/SRI-International-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [DAX capping will be adjusted to 15 per cent | Press releases | STOXX](https://stoxx.com/dax-capping-will-be-adjusted-to-15-per-cent) — "WHITEPAPER"
@@ -416,6 +448,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > METHODOLOGY GUIDE 25 5.13.2. FOREIGN OWNERSHIP LIMIT 39 5.13.3. FREE FLOAT ADJUSTED FOR FOREIGN RESTRICTIONS 39 3. GENERAL PRINCIPLES 26 5.13.4. FOREIGN HEADROOM 40 INDEX RATIONALE 26 WEIGHTING FACTOR 40 METHODOLOGY REVIEW POLICIES 26 FREE-FLOAT MARKET CAPITALIZATION 40 INDEX TERMINATION POLICY 26 **CAPPING FACTOR**S 40 5.16.1. WEIGHTING CAP FACTORS 40 4. COVERAGE 27 5.16.2. LIQUIDITY SCALING FACTO...
@@ -436,6 +470,8 @@ $$
 > [!quote] Index Files Guide 20230619 (PDF)
 > _Key Unique identifier of the constituent Text 6 12 ISIN Constituent ISIN Text 12 13 Instrument_Name Constituent name Text 50 14 Currency Constituent ISO currency code Text 3 15 Shares Number of the shares of the constituent Number 0 16 Free_Float Free float of the constituent Number 4 17 Capfactor **Capping factor** of the constituent Number 7 18 Weightfactor factor used to calculate units in pric...
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -466,6 +502,8 @@ Where $R_j^{\text{new basket}}$ is the return of the post-rebalancing basket on 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
 > share i on the trading i0 day before the first inclusion in the index p = Price of share i at time t it q = Number of shares of company i on the i0 trading day before the first inclusion in the index q = Number of shares of company i at iT time T t = calculation time of the index K = Index-specific **chaining** factor valid as T of **chaining** date T T = Date of the last chaining Base = value of the i...
@@ -486,6 +524,8 @@ Where $R_j^{\text{new basket}}$ is the return of the post-rebalancing basket on 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > nt of multiple share classes - Deletion of section 4.1.1.4 “Transition Rules” and deletion of the note about the relevance of the Index Guide/transition rules - Renewed introduction of sequential creation of the ranking list - Correction to the wording regarding the X indices - Clarification of the **chaining** process used with equal weighted indices Effective Version 9.2.1 Sept. 24, 2018 - Termin...
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+
+</details>
 
 **Sources:**
 - [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
@@ -510,6 +550,8 @@ The terms "component" and "constituent" are used interchangeably throughout the 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Unscheduled component change in SDAX, HDAX and TecDAX (January 8, 2025) | Pre...
 > ZUG (January 8, 2025) – STOXX Ltd., part of the ISS STOXX group of companies and leading provider of benchmark and custom index solutions to global institutional investors, today announced an unscheduled **component** change in the SDAX, HDAX and TecDAX indices. Media Contact Sarah Ball Executive Director, Communications press@iss-stoxx.com NEXUS AG will leave the SDAX, HDAX and TecDAX due to a bre...
@@ -530,6 +572,8 @@ The terms "component" and "constituent" are used interchangeably throughout the 
 > [!quote] Carbon Risk Rating | ISS
 > about CO2-related risks. The Carbon Risk Rating considers the following parameters: Performance development of the company Climate targets, measures and strategies to reduce emissions Emissions along the entire value chain, from the procurement of raw materials to the disposal phase of products THE **COMPONENT**S OF CARBON RISK RATING CARBON PERFORMANCE SCORE Carbon Performance Score looks at a com...
 > — [Carbon Risk Rating | ISS](https://www.issgovernance.com/sustainability/climate-solutions/carbon-risk-rating) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [Unscheduled component change in SDAX, HDAX and TecDAX (January 8, 2025) | Press releases | STOXX](https://stoxx.com/unscheduled-component-change-in-sdax-hdax-and-tecdax-jan-8-2025) — "WHITEPAPER"
@@ -560,10 +604,14 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > sinesses that do not adhere to these critical standards. O Universe: STOXX Developed World All Cap S Weighting scheme: The index is free-float market capitalization weighted D Capping: Components are capped with an iterative process to guarantee that an absolute ICB Industry capping and the 5/10/40 **concentration limit**s are met E Base value and dates: 100 on March 18, 2022 V Index types and curr...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -584,6 +632,8 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] New STOXX Global ESG Leaders index constituents announced | Blog posts | STOXX
 > and standards, enshrined in the United Nations Global Compact (UNGC) Principles, the Organisation for Economic Co-operation and Development (OECD) Guidelines for Multinational Enterprises, the UN Guiding Principles on Business and Human Rights (UNGPs), and their underlying conventions. 2 In case a **constituent** increases its ESG Controversy Rating to Category 5 and becomes non-compliant based on ...
@@ -604,6 +654,8 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 > [!quote] Institutional Shareholder Services Releases Annual Policy Survey | ISS
 > ent of ISS. “The significant input we receive from all market **constituent**s ensures that ISS’ policies reflect market best practices, create dialogue around important issues and, most importantly, serve the proxy voting needs of our institutional clients worldwide. We encourage all interested market **constituent**s, investors and companies alike, to provide input through our survey or by writing di...
 > — [Institutional Shareholder Services Releases Annual Policy Survey | ISS](https://www.issgovernance.com/institutional-shareholder-services-releases-annual-policy-survey) — "Institutional Shareholder Services Releases Annual Policy Survey"
+
+</details>
 
 **Sources:**
 - [New STOXX Global ESG Leaders index constituents announced | Blog posts | STOXX](https://stoxx.com/new-stoxx-global-esg-leaders-index-constituents-announced) — "WHITEPAPER"
@@ -641,6 +693,8 @@ Country weighting is a key dimension of index analytics and is closely monitored
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Ixarobu (PDF)
 > (USDbn.) Component weight (%) Turnover (%) Full Free-float Mean Median Largest Smallest Largest Smallest Last 12 months STOXX Global Automation & Robotics N/A 10.7 0.1 0.0 0.2 0.0 1.8 0.0 41.0 STOXX Global Total Market 85,453.5 72,194.6 6.4 0.7 2,811.7 0.0 3.9 0.0 2.8 Supersector weighting (top 10) **Country weighting** Risk and return figures1 Index returns Return (%) Annualized return (%) Last mo...
@@ -661,6 +715,8 @@ Country weighting is a key dimension of index analytics and is closely monitored
 > [!quote] Product Brief Stoxx Global Ai Infastructure Index (PDF)
 > COM Technology USA 4.98  Apple Inc. Technology USA 4.97  International Business Machine Technology USA 4.97  ASML HLDG Technology Netherlands 4.96    TSMC Technology Taiwan 4.91   Qualcomm Inc. Technology USA 4.90  NVIDIA Corp. Technology USA 4.85    Source: STOXX. Supersector weighting **Country weighting** 82.4%Technology 79.9% USA 10.0%Telecommunications 8.6% Taiwan 4.7% Retail 5.0%N...
 > — [Product Brief Stoxx Global Ai Infastructure Index (PDF)](https://stoxx.com/wp-content/uploads/2023/11/Product-brief-STOXX-Global-AI-Infastructure-Index.pdf)
+
+</details>
 
 **Sources:**
 - [Ixarobu (PDF)](https://www.stoxx.com/document/Bookmarks/CurrentFactsheets/IXAROBU.pdf)
@@ -693,6 +749,8 @@ The numerator uses the new composition (post-event) and the denominator uses the
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > t = Time the index is computed. n = Number of assets in the index. p it = Reference price of asset (i) at time (t). wf it = Weight factor of asset (i) at time (t) . x it = Exchange rate from reference price currency to index currency at time (t). M t = Total ‘units’ of the index at time (t). D t = **Divisor** of the index at time (t). 3.8.2. **DIVISOR** CALCULATION The index divisor is calculated as fo...
@@ -713,6 +771,8 @@ The numerator uses the new composition (post-event) and the denominator uses the
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > Y INDEX METHODOLOGY GUIDE 11/120 4. INDEX CHARACTERISTICS Last trading t-6: Closing day of previous price for month: cutoff calculating for data the UDA is t: Review is collection fixed implemented 3rd/4thtrading day: t-5: UDA is t+1: Review Components are published takes effect announced The index **divisor** is recalculated on the review implementation date as described in the DAX Equity Index Ca...
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
@@ -737,6 +797,8 @@ A divisor adjustment is performed whenever the aggregate capitalization of the i
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Dax Equity Calculation Guide 20231002 (PDF)
 > ed indices with weighting factors: Adjusted prices will unchanged be calculated as above a) to c) 𝑤𝑓 𝑎𝑑𝑗 =𝑤𝑓 𝑡−1 ×𝑝 𝑡−1 /𝑝 𝑎𝑑𝑗 8.1.10. ADDITION / DELETION OF A COMPANY No price adjustments are made. The change in market capitalization (for price weighted indices: the change in units) determines the **divisor adjustment**. a) For free float market capitalization weighted indices: If the change in ma...
@@ -745,6 +807,8 @@ A divisor adjustment is performed whenever the aggregate capitalization of the i
 > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
 > indices with weighting factors: Adjusted prices will be calculated unchanged as above a) to c) 𝑤𝑓 =𝑤𝑓 ×𝑝 /𝑝 i. 𝑎𝑑𝑗 𝑡−1 𝑡−1 𝑎𝑑𝑗 8.1.10 Addition / Deletion of A Company No price adjustments are made. The change in market capitalization (for price weighted indices: the change in units) determines the **divisor adjustment**. a) For free-float market capitalization weighted indices: If the change in mar...
 > — [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
+
+</details>
 
 **Sources:**
 - [Dax Equity Calculation Guide 20231002 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX%20Equity%20Calculation%20Guide_20231002.pdf)
@@ -768,6 +832,8 @@ The effective date is the implementation point for all changes disclosed on the 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > METHODOLOGY GUIDE 382/639 17. STOXX THEMATIC INDICES The China A securities are monitored against their equivalent Stock Connect Securities. China Connect Securities are screened on a daily basis between the cut-off date and the review **effective date**. » If STOXX is informed 3 days before the review **effective date** about a China Connect Security ineligibility (not eligible to “both buy and sell”)...
@@ -788,6 +854,8 @@ The effective date is the implementation point for all changes disclosed on the 
 > [!quote] Guide To Eurogov Bond Indices (PDF)
 > ses STOXX Ltd. may exceptionally issue the notification either subsequently immediately following such an event or in any case by other means. Any measures will be implemented two dissemination days later and will enter into effect the next dissemination day after implementation, unless a different **effective date** is specified in the notification.
 > — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -812,6 +880,8 @@ Eligibility criteria act as the first filter in the index construction process. 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] A Case Study Involving S&amp;P 500 Companies | ISS
 > er $1.4 million from previously traded losses. * Figures are taken from 32 total settlements of S&P 500 companies during 2013 – 2016 using the average recovery per share from each of the legal Settlements Notices; actual recoveries will vary based upon specific trading data in the claims submitted. **ELIGIBILITY CRITERIA** AND PARTICIPATION REQUIREMENTS Criteria for participating in a securities cl...
@@ -832,6 +902,8 @@ Eligibility criteria act as the first filter in the index construction process. 
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > o Industry Classifications Used by STOXX. ASSET UNIVERSE The universe of assets for the STOXX Digital Asset Indices is reviewed bi-annually in March and September. The universe consists of any asset classified in the Bitcoin Suisse Index Reference Classification List (xRCL), for which the following **eligibility criteria** are met: • Digital assets must be ranked in the Top 75 in regards to market ...
 > — [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
+
+</details>
 
 **Sources:**
 - [A Case Study Involving S&amp;P 500 Companies | ISS](https://www.issgovernance.com/a-case-study-involving-sp-500-companies) — "NOTABLE CASES"
@@ -860,6 +932,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Thematic investing offers alternative approach amid market volatility  | Blog...
 > e. By nature, thematic portfolios also carry a higher risk than do broader strategies and can therefore be more volatile in times of market stress. But volatility can work both ways, which means that many of the themes are likely to outperform the market in the eventual recovery. Also, the adjusted **equal weighting** of constituents in many thematic ETFs ensures that the portfolios are often more ...
@@ -880,6 +954,8 @@ $$
 > [!quote] Capturing the upside of a digital future through thematic indices | Blog post...
 > companies most exposed to the theme in question. This screening relies on FactSet’s Revere (RBICS) granular business taxonomy. - Stock selection is sector-agnostic; therefore, a thematic portfolio will look very different from a traditional industry-focused one. - Stocks are weighted by an adjusted equal-weighting scheme to balance between diversification and liquidity. - Additionally, the indi...
 > — [Capturing the upside of a digital future through thematic indices | Blog post...](https://stoxx.com/capturing-the-upside-of-a-digital-future-through-thematic-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Thematic investing offers alternative approach amid market volatility  | Blog posts | STOXX](https://stoxx.com/thematic-investing-offers-alternative-approach-amid-market-volatility) — "WHITEPAPER"
@@ -906,6 +982,8 @@ Fast entry rules ensure that indices remain representative of the market between
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > DEX METHODOLOGY GUIDE 35/120 7. DAX BLUE-CHIP INDICES abroad (this is a discretionary rule; see section 2.3 “Discretion” in the DAX Equity Index Calculation Guide). Component selection: The composition of the DAX, MDAX, SDAX and TecDAX indices is reviewed quarterly on the basis of the Fast Exit and **Fast Entry rule**s, and semi-annually on the basis of the Regular Exit and Regular Entry rules. The...
@@ -926,6 +1004,8 @@ Fast entry rules ensure that indices remain representative of the market between
 > [!quote] Scout24, Delivery Hero and Puma to be included in MDAX | Press releases | STOXX
 > the shares of STADA Arzneimittel AG, Krones AG and alstria office REIT-AG. As of 13 July 2018, STADA will change from the segment Prime Standard into General Standard and therefore no longer fulfils the criteria to remain in the indices. The inclusion of Delivery Hero AG and Puma SE is based on the **fast entry rule**; both companies are eligible for the index inclusion due to their market capitali...
 > — [Scout24, Delivery Hero and Puma to be included in MDAX | Press releases | STOXX](https://stoxx.com/scout24-delivery-hero-and-puma-to-be-included-in-mdax) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
@@ -950,6 +1030,8 @@ Fast exit rules protect index integrity by promptly removing securities that no 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF)
 > ase from the same iCB supersector of the eUrO STOXX universe (includes the eUrO STOXX 50®). where an eligible company has the same eSG score as a potential replacement, the company with the higher free float market capitalization is selected. replacement constituents must have an eSG score of > 50. **FAST eXiT rULe** The eUrO STOXX 50®eSG index methodology includes a **fast exit rule** that ensures a s...
@@ -970,6 +1052,8 @@ Fast exit rules protect index integrity by promptly removing securities that no 
 > [!quote] Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)
 > (e) ESG Controversy STOXX will exclude companies that Sustainalytics identifies to have a Controversy Rating of Category 5 (Severe) (f) ESG Risk Ratings STOXX will exclude companies that Sustainalytics identifies to have a “Severe” ESG Risk Rating. Furthermore, STOXX will implement an intra-quarter **fast exit rule** for severe ESG Controversies. For the EURO STOXX 50 ESG only: • Spin-offs will onl...
 > — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (September 2019) (PDF)](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
@@ -994,6 +1078,8 @@ Free-float is a critical concept in modern index construction. STOXX defines str
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liqu...
 > increase the DAX’s representativeness of the domestic economy and foster its diversification. But what does it mean for the index’s profile in terms of market capitalization and equity turnover? In this article we’ll look at the effects of the change from these two perspectives Figure 1 – Impact on **free-float** market cap The addition of ten new companies in the index lowers the average free-floa...
@@ -1014,6 +1100,8 @@ Free-float is a critical concept in modern index construction. STOXX defines str
 > [!quote] Index Files Guide 20230619 (PDF)
 > not fulfilled”, “No ESG 16 Comment score available” or blank) Text 255 Scale Indices “Not traded on Xetra”, “30 Days Rule” Dax+ MaxDiv Indices, DivDAX and DivMSDAX “No dividend within next chaining period / dividend yield last period / rank value = minimum dividend yield next period”; “ADTV and/or **Free-Float** Market Cap and/or Price Momentum below limit” New Ranking of constituents, applicable f...
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+
+</details>
 
 **Sources:**
 - [DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liquidity | Blog posts | STOXX](https://stoxx.com/dax-index-grows-to-40-constituents-looking-at-impact-on-market-cap-and-liquidity) — "WHITEPAPER"
@@ -1044,6 +1132,8 @@ Rounded to the nearest 0.05.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
 > lation is defined as (unless stated differently in the individual index methodologies): • Input data (e.g., pricing and currency rates) and other underlying data: rounded to seven decimal places. • Index divisors: rounded to integer numbers. • Market capitalization: rounded to two decimal places. • **Free-float factor**s: rounded to four decimal places. • Product of (number of shares x Free-float f...
@@ -1064,6 +1154,8 @@ Rounded to the nearest 0.05.
 > [!quote] Istoxx Index Guide (PDF)
 > NEUTRAL ESG 600 INDEX Determination of free-float market capitalization weights: p ⋅n ⋅ff it it it w = it ∑n p ⋅n ⋅ff i=1 it it it wit = Free-Float Market Capitalization weight of company (i) at time (t) pit = Price of company (i) at time (t) nit = Number of shares of company (i) at time (t) ffit = **Free-float factor** of company (i) at time (t) nit = Number of shares Weighting cap factors: A capp...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
@@ -1126,6 +1218,8 @@ Where $D_i$ is the gross (pre-tax) dividend per share for constituent $i$ going 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Equity Index Family Benchmark Statement (PDF)
 > dance with the methodology; Benchmarks can be calculated using different (b) where relevant, a description of calculation rules. For example: instances when the accuracy and - they are calculated as a Price Index, without dividends; reliability of the methodology used for - they are calculated as a **Gross Return Index**; with determining the benchmark can no dividends reinvested; longer be ensured...
@@ -1146,6 +1240,8 @@ Where $D_i$ is the gross (pre-tax) dividend per share for constituent $i$ going 
 > [!quote] Monthly Index News September 2024 (PDF)
 > XX Benchmark indices, gross return. Data as of September 30, 2024. Source: STOXX. Index and volatility performance 135 100% 130 90% 125 80% 120 70% 115 60% 50% 110 40% 105 30% 100 20% 95 10% 90 0% Oct-23 Dec-23 Feb-24 Apr-24 Jun-24 Aug-24 1 2 3 4 5 6 7 8 1 2 3 4 5 6 7 8 September 2024 Figure 1: EUR **gross return index** performance. Oct. 2023 – Sep. Figure 2: Monthly annualized volatility analysis...
 > — [Monthly Index News September 2024 (PDF)](https://stoxx.com/monthly-index-news-september-2024)
+
+</details>
 
 **Sources:**
 - [Stoxx Equity Index Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/STOXX_Equity_Index_Family_Benchmark_Statement.pdf)
@@ -1172,6 +1268,8 @@ STOXX calculates its indices in real time during exchange trading hours and publ
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
 > f new Index Guides for its DAX Index offering pursuant to methodological changes of the DAX Equity Index Framework announced March 27th, 2023. The current Guide to the DAX Equity Indices has been restructured to provide a more transparent guidance to the rules underlying the Index methodologies and **Index calculation**. On March 18th, 2024, the currently applicable Guide to the DAX Equity Indices ...
@@ -1192,6 +1290,8 @@ STOXX calculates its indices in real time during exchange trading hours and publ
 > [!quote] Stoxx Index Guide (PDF)
 > odology in order to achieve the index objective. STOXX performs intensive research and may conduct conversations with market participants and third parties for this purpose. STOXX discloses the index objective in every case. METHODOLOGY REVIEW POLICIES STOXX constantly monitors the execution of the **index calculation** rules in order to ensure the validity of the index methodology. STOXX also cond...
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
@@ -1216,10 +1316,14 @@ The STOXX Index Committee (or equivalent governance body) serves as the ultimate
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Tesla’s place in a US stock benchmark | Blog posts | STOXX
 > weighted by their float-adjusted market value. Inclusion is based on quantitative factors such as size, liquidity, investability and financial viability (members must be profitable over the past 12 months, including the most recent quarter). However, constituent selection is at the discretion of an **Index Committee** based on the eligibility criteria.1 Driving outperformance Amid increased profita...
 > — [Tesla’s place in a US stock benchmark | Blog posts | STOXX](https://stoxx.com/teslas-place-in-a-us-stock-benchmark) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Tesla’s place in a US stock benchmark | Blog posts | STOXX](https://stoxx.com/teslas-place-in-a-us-stock-benchmark) — "WHITEPAPER"
@@ -1251,6 +1355,8 @@ Where:
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > YY G GUUIDIDEE 10/639 11.. ININTRTORODDUCUCTIOTIONN T OTO T HTEH ES TSOTOXXX XIN INDDEXE XG GUIUDIDESE S The STOXX index guides are separated into the following sub-sets: » The STOXX Calculation guide provides a general overview of the calculation of the STOXX equity indices, the dissemination, the index formulas and adjustments due to corporate actions » The STOXX Index Methodology guide conta...
@@ -1271,6 +1377,8 @@ Where:
 > [!quote] Stoxx Strategy Guide (PDF)
 > STOXX® STRATEGY INDEX GUIDE 2/99 CONTENTS 7.3.1. **INDEX FORMULA** 18 1. INTRODUCTION TO THE STOXX INDEX GUIDES 7.3.2. ROLLING 21 6 7.3.3. TRADING SUSPENSION/ NON-TRADING DAYS 21 8. STOXX SHORT AND LEVERAGED INDICES 22 2. CHANGES TO THE GUIDE BOOK 7 8.1. OVERVIEW 22 2.1. HISTORY OF CHANGES TO THE STOXX STRATEGY GUIDE 7 8.2. BASIC DATA 22 3. GENERAL PR
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1295,6 +1403,8 @@ The index level is the single number quoted in financial markets — for example
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > f options on VSTOXX futures, hence reflecting expectations regarding the volatility of volatility. All three are significantly lower than their March 2020 peaks. The three measures showed a relatively high negative correlation to the underlying stock market in April. Risk and Return Characteristics **Index Level** Correlation T T-1M T-12M 1M 1Y 1. VSTOXX 20.6 18.0 33.9 -0.8 -0.7 2. V-VSTOXX 103.9 9...
@@ -1315,6 +1425,8 @@ The index level is the single number quoted in financial markets — for example
 > [!quote] Technical Migration New Index Data Distribution System And New File Formats F... (PDF)
 > on System”, is a system where users with commercial agreements with Qontigo are entitled to retrieve Index Data for purposes as defined in the commercial agreements. The Index Data Distribution System contains various permission levels such as entity and users accesses, per commercial packages, per **Index level** and subject to Licenses of Third-Party Data. - The “Current Index Data Distribution S...
 > — [Technical Migration New Index Data Distribution System And New File Formats F... (PDF)](https://www.stoxx.com/document/News/2023/March/Technical_Migration-New_Index_Data_Distribution_System_and_New_File_Formats_for_DAX_Indices_20230327_3457284624.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -1347,6 +1459,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] STOXX extends EURO STOXX 50 ESG offering with dividend points index | Blog po...
 > d traders to gain targeted exposure on corporate payments. As such, they can hedge their portfolios’ dividend risk, separate from the underlying share performance. The new EURO STOXX 50® ESG DVP index will enable the construction of hedges around dividend payments in the EURO STOXX 50 ESG. Dividend **index point**s The STOXX DVP indices are calculated as the sum of all gross cash or cash equivalent...
@@ -1367,6 +1481,8 @@ $$
 > [!quote] Q&amp;A with Eurex and STOXX: A perspective on volatility indices | Blog post...
 > are quoted just a few ticks wide, and in some cases there’s over 5,000 contracts being posted on the bid/ask.” Thomas, with different economic realities and monetary policy in the two markets, what are volatility indices telling us today? “The VSTOXX and VIX are currently quoted at around 17 and 15 **index point**s respectively. This is lower than the average value across the lifetimes of these two...
 > — [Q&amp;A with Eurex and STOXX: A perspective on volatility indices | Blog post...](https://stoxx.com/qa-with-eurex-and-stoxx-a-perspective-on-volatility-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [STOXX extends EURO STOXX 50 ESG offering with dividend points index | Blog posts | STOXX](https://stoxx.com/stoxx-extends-euro-stoxx-50-esg-offering-with-dividend-points-index) — "WHITEPAPER"
@@ -1391,6 +1507,8 @@ The index universe is the starting pool before any eligibility or selection scre
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > de a low tracking error to the benchmark index while ensuring an improved ESG score. The weighting of each constituent security is determined through an optimization process that is designed to ensure diversification and uses Axioma’s risk model and optimizer to construct the indices. Universe: The **index Universe**s for the STOXX ESG Target TE indices are defined by all the stocks in the correspo...
@@ -1411,6 +1529,8 @@ The index universe is the starting pool before any eligibility or selection scre
 > [!quote] Index Files Guide 20230619 (PDF)
 > FILES GUIDE 1 Report name Text «Price Indices - Euro Currency» Text 29 Row 2 Column Data Attribute Description Data Format ID Type 1 Date Text «Date» Text 4 2 **Index Universe** Text «Euro STOXX» Text 10 3 **Index Universe** Text «Euro STOXX» Text 10 4 Index Universe Text «Euro STOXX» Text 10 5 Index Universe Text «Euro STOXX» Text 10 Row 3 Column Data Attribute Description Data Format ID Type 1 N/A Em...
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1435,6 +1555,8 @@ Investability is a core design objective for benchmark indices. STOXX ensures in
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Q&amp;A: Building customized, sustainable portfolios based on the STOXX World...
 > kets, with the view that if you want to create a sustainable outcome you might want to use different thresholds and criteria. In using the STOXX World indices as building blocks, you can do this without compromising the consistent index-construction methodology. Can you tell us a bit more as to why **investability** is so important in emerging markets? Emerging markets cannot necessarily be accesse...
@@ -1455,6 +1577,8 @@ Investability is a core design objective for benchmark indices. STOXX ensures in
 > [!quote] Industry Neutral Factor Indices | STOXX
 > mization and portfolio analytics. Invest with precision Maximize the allocation to the desired factor while constraining the exposure to non-targeted factors, other attributes and unintended sources of risk. Manage liquidity Aim for higher capacity and reduced trading costs by managing turnover and **investability**, and avoiding potentially problematic illiquid positions. Easily tradable Access yo...
 > — [Industry Neutral Factor Indices | STOXX](https://stoxx.com/industry-neutral-factor-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Q&amp;A: Building customized, sustainable portfolios based on the STOXX World indices | Blog posts | STOXX](https://stoxx.com/qa-building-customized-sustainable-portfolios-based-on-the-stoxx-world-indices) — "WHITEPAPER"
@@ -1519,6 +1643,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Valour launches ETP on first STOXX crypto blue-chip index | Blog posts | STOXX
 > to-native metrics including the scope of adoption, the size of the developer community, the fees paid by users and the age of the protocol. This, together with robust exchange-based pricing, ensures the investable tokens present quality standards that are acceptable to a larger pool of investors. A **market capitalization weighting** scheme with a cap of 30% limits exposure to dominant tokens — suc...
@@ -1531,6 +1657,8 @@ $$
 > [!quote] What’s Behind the Edge in Equal-Weight Strategies? | Blog posts | STOXX
 > The launch of the DAX® Equal Weight Index this month presents a good opportunity to review the virtues of an equal-weight equity strategy. Looking across different markets and time periods, a portfolio whose holdings have had an equal allocation to them has outperformed the traditional market-capitalization-weighting positioning. The latter strategy has been the core offering since the inceptio...
 > — [What’s Behind the Edge in Equal-Weight Strategies? | Blog posts | STOXX](https://stoxx.com/whats-behind-the-edge-in-equal-weight-strategies) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Valour launches ETP on first STOXX crypto blue-chip index | Blog posts | STOXX](https://stoxx.com/valour-launches-etp-on-first-stoxx-crypto-blue-chip-index) — "WHITEPAPER"
@@ -1580,6 +1708,8 @@ Where $\tau_i$ is the withholding tax rate applicable to the dividend of constit
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > turn index assuming a constant 5% performance deduction per annum. The performance deduction accrues constantly on a daily basis (using an Actual/365 Fixed day count convention). Consequently, due to the percentage of performance being subtracted, the decrement index is underperforming the standard **net return index**. The Underlying Index is the iStoxx Europe Origin 100 Equal Weight Net Return In...
@@ -1600,6 +1730,8 @@ Where $\tau_i$ is the withholding tax rate applicable to the dividend of constit
 > [!quote] Dax Esg Equity Family Benchmark Statement (PDF)
 > uption which results in the performance of the Index being unable to be tracked. Limitation Shall refer to circumstances where the Index Methodology contains an Insufficient Rule or Unclear Rule or if it fails to produce Index Values as intended. Examples: Data Insufficiency; Extreme Market Events. **Net Return Index** Shall mean an Index in which dividend payments are fully reinvested, calculated ...
 > — [Dax Esg Equity Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_ESG_Equity_Family_Benchmark_Statement.pdf)
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -1624,6 +1756,8 @@ Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News September 2022 (PDF)
 > MONTHLY INDEX NEWS / September 2022 Featured index September brought more changes to the methodology behind the blue-chip DAX®. For the first time since the index was introduced in 1988, the **number of components**’ shares, weight factors and caps affected by the quarterly review was fixed using data as of the close on t-6 (six trading days before the effective rebalance date on the third Friday o...
@@ -1644,6 +1778,8 @@ Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target
 > [!quote] Us Executive Compensation Policies Faq 16 March 2016 (PDF)
 > closure to allow for an informed say-on-pay vote, ISS will look for all of the following disclosures: › The portion of the EMI’s management fee that is allocated to NEO compensation paid by the external manager (aggregated values for all NEOs is acceptable); › Of this compensation, the breakdown of fixed vs. variable/incentive pay; and › The metrics utilized to measure performance to determine ...
 > — [Us Executive Compensation Policies Faq 16 March 2016 (PDF)](https://www.issgovernance.com/file/policy/us-executive-compensation-policies-faq-16-march-2016.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News September 2022 (PDF)](https://stoxx.com/monthly-index-news-september-2022)
@@ -1691,6 +1827,8 @@ Periodic reviews are the primary governance mechanism for index maintenance. STO
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 305/639 16. STOXX RISK BASED INDICES Review frequency The index composition is reviewed annually in December. All changes are implemented on the third Friday and effective the next trading day following the STOXX **periodic review** calendar. The cut-off date for the selection list and the ADTV data to calculate the weights is the last business day of the month precedi...
@@ -1711,6 +1849,8 @@ Periodic reviews are the primary governance mechanism for index maintenance. STO
 > [!quote] Dax Esg Equity Family Benchmark Statement (PDF)
 > s whether this data is adequate. If STOXX assesses that the quantity of Transaction Data is inadequate it will deem this to be a Limitation and the IGC will then exercise Discretion in how to resolve the situation. STOXX does not use any models or methods of extrapolation in relation to Input Data. **Periodic review**s of all benchmarks are undertaken to ensure their Copyright © 2025 STOXX Ltd. 8
 > — [Dax Esg Equity Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_ESG_Equity_Family_Benchmark_Statement.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1739,6 +1879,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > STOXX® DIGITAL ASSET METHODOLOGY GUIDE 12/31 3. INDEX CHARACTERISTICS INDEX CALCULATION The indices are calculated using Laysperes formula as described in this section. 3.8.1. **PRICE RETURN INDEX** The indices are weighted based on the components’ reference prices and weighting factors: ∑𝑛 (𝑝 ∙ 𝑤𝑓 ∙𝑥 ) 𝑀 𝑖=1 𝑖𝑡 𝑖𝑡 𝑖𝑡 𝑡 𝐼𝑛𝑑𝑒𝑥 𝑡 = 𝐷 = 𝐷 𝑡 𝑡 Where: t = Time the index is computed. n = Number of assets...
@@ -1759,6 +1901,8 @@ $$
 > [!quote] Monthly Index News April 2024 (PDF)
 > he STOXX Digital Asset Blue Chip X must be eligible for the FSE’s Xetra venue. Index and volatility performance 230 100% 140% 210 90% 120% 80% 190 100% 70% 170 60% 80% 150 50% 60% 130 40% 30% 40% 110 20% 20% 90 10% 70 0% 0% May-23 Jul-23 Sep-23 Nov-23 Jan-24 Mar-24 1 2 April 2024 1 2 Figure 27: EUR **price return index** performance. May 2023 – Apr. Figure 28: Monthly annualized volatility analysis...
 > — [Monthly Index News April 2024 (PDF)](https://stoxx.com/monthly-index-news-april-2024)
+
+</details>
 
 **Sources:**
 - [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
@@ -1815,6 +1959,8 @@ Rebalancing corrects the weight drift that accumulates between review dates as c
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] DAX: A trading impact analysis of the 15% stock cap | Blog posts | STOXX
 > oduced the DAX UCITS Capped index series. For more on the automatic capping process, please see Section 5.10 of the DAX Equity Index Methodology Guide. Conclusion A 15% capping rule has very limited impact on trading flows, representing only a small fraction of the regular trading volume around DAX **rebalancing** days, even in the case of very strong quarters for a dominant stock. With respect to ...
@@ -1835,6 +1981,8 @@ Rebalancing corrects the weight drift that accumulates between review dates as c
 > [!quote] Market Consultation Stoxx Index 20250925 (PDF)
 > 𝑦 𝑓 𝑒 𝑙 𝑎 𝑎 𝑟 𝑡 − 𝑖𝑜 𝑒𝑛 𝑛 𝑑 𝐴 𝑑𝑗𝑢𝑠𝑡𝑚𝑒𝑛𝑡 𝐹𝑎𝑐𝑡𝑜𝑟 ) 1/𝑇 1−( 𝐼𝑛𝑑𝑒𝑥 𝐺𝐻𝐺 𝐼𝑛𝑡𝑒𝑛𝑠𝑖 𝐼 𝑡 𝑛 𝑦 𝑑 𝑐𝑢 𝑒 𝑟 𝑥 𝑟𝑒 𝐺 𝑛𝑡 𝐻 ∙ 𝐺 𝐶 𝐼 𝑢 𝑛 𝑚 𝑡𝑒 𝑢 𝑛 𝑙𝑎 𝑠𝑖 𝑡 𝑡 𝑖 𝑦 𝑣 2 𝑒 0 𝐼 2 𝑛 1 𝑦 𝑓 𝑒 𝑙 𝑎 𝑎 𝑟 𝑡 − 𝑖 𝑒 𝑜 𝑛 𝑛 𝑑 𝐴 𝑑𝑗𝑢𝑠𝑡𝑚𝑒𝑛𝑡 𝐹𝑎𝑐𝑡𝑜𝑟 ) 1/(𝑌 4) where T is the number of years since 2021 schedule where Y is the number of quarterly **rebalancing**s since December 2021. g Change The review is conducted on an annual basis The review ...
 > — [Market Consultation Stoxx Index 20250925 (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_STOXX_Index_20250925.pdf)
+
+</details>
 
 **Sources:**
 - [DAX: A trading impact analysis of the 15% stock cap | Blog posts | STOXX](https://stoxx.com/dax-a-trading-impact-analysis-of-the-15-stock-cap) — "WHITEPAPER"
@@ -1859,6 +2007,8 @@ Reconstitution is distinct from rebalancing: reconstitution changes *which* secu
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Implications of Index Reconstitutions: Free Carbon Alpha? | ISS
 > Implications of Index **Reconstitution**s: Free Carbon Alpha? SEPTEMBER 22, 2022 KEY TAKEAWAYS - ISS ESG’s Climate Impact Report provides a detailed analysis of a portfolio’s carbon footprint, with 99.85% of coverage of the Russell 3000 Index. In preparing this report, the authors analysed the climate profile of $100 billion
@@ -1879,6 +2029,8 @@ Reconstitution is distinct from rebalancing: reconstitution changes *which* secu
 > [!quote] Ma Analysis (PDF)
 > Background Key Events TPG-Axon, the company’s third-largest shareholder at 6.7%, is requesting Nov 8, 2012—TPG-Axon, a 4.5% holder, delivers letter to SandRidge board re- shareholders act by written consent to replace all 7 incumbents, including the questing declassification and **reconstitution** of the board in consultation founder CEO/Chairman, on the board of SandRidge Energy. with large shareh...
 > — [Ma Analysis (PDF)](https://www.issgovernance.com/file/2013/02/MA_analysis.pdf)
+
+</details>
 
 **Sources:**
 - [Implications of Index Reconstitutions: Free Carbon Alpha? | ISS](https://www.issgovernance.com/library/implications-of-index-reconstitutions-free-carbon-alpha) — "Implications of Index Reconstitutions: Free Carbon Alpha?"
@@ -1903,6 +2055,8 @@ STOXX uses different review frequencies across its index families. The EURO STOX
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx World Equity Index Guide (PDF)
 > s of the parent STOXX World AC Universal All Cap Equity Index, unless specified otherwise. 6.2.2. INDEX REVIEW Component selection: Each STOXX Country Index consist of the components of the parent STOXX World AC Universal All Cap Equity Index, that belong to the respective country, see Section 4.6. **Review frequency**: The **review frequency** of each STOXX Country Index is the same as the review freq...
@@ -1923,6 +2077,8 @@ STOXX uses different review frequencies across its index families. The EURO STOX
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX Paris-Aligned Benchmark Indices September 2024: Addition of STOXX World AC AI Market Leaders Index October 2024: Methodology update for STOXX World AC Real Estate Focused, STOXX Developed World Real Estate Focused and STOXX Europe 600 Real Estate Focused Index and minor update in the section ‘**Review Frequency**’ of STOXX Regional Industry Neutral ESG and STOXX Regional Excluding Tobacco Ind...
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
@@ -1947,10 +2103,14 @@ All STOXX indices are rules-based, meaning that their methodology is fully codif
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Digital Asset Indices | STOXX
 > The STOXX® Digital Asset Blue Chip index aims to track high-quality assets that represent the crypto universe. The index was launched in partnership with Bitcoin Suisse, a leading Swiss crypto-financial services provider and brings together STOXX’s transparent and **rules-based index** methodology with Bitcoin Suisse’s expertise in the crypto space. A blue-chip focus means the index does not just s...
 > — [Digital Asset Indices | STOXX](https://stoxx.com/digital-asset-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Digital Asset Indices | STOXX](https://stoxx.com/digital-asset-indices) — "WHITEPAPER"
@@ -1973,6 +2133,8 @@ Sector weighting is a fundamental dimension of index risk and return attribution
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX
 > and Information Technology are two of the most important ones, as it happens with the larger DAX. This implies that the core, global-leading prowess of Germany’s corporate sector in those two industries is equally present in both the large and small companies segments. Further, the rest of the Super**sector weighting**s show a highly diversified index. Figure 4: Super**sector weighting**s Capping alter...
@@ -1993,6 +2155,8 @@ Sector weighting is a fundamental dimension of index risk and return attribution
 > [!quote] BlackRock’s Thurner on why iShares EURO STOXX 50 ESG ETF is attractive propos...
 > tly in recent years as clients have come to define sustainability in different, more nuanced ways. Today, investing sustainably often means integrating ESG considerations into traditional exposures in a measured, pragmatic way — and this ETF was designed precisely with that in mind.” Figure 1: Super**sector weighting**s (top 10 of benchmark) What makes the iShares EURO STOXX 50 ESG ETF attractive f...
 > — [BlackRock’s Thurner on why iShares EURO STOXX 50 ESG ETF is attractive propos...](https://stoxx.com/blackrocks-thurner-on-why-ishares-euro-stoxx-50-esg-etf-is-attractive-proposition-for-both-retail-and-institutional-investors) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX](https://stoxx.com/exploring-sdax-the-benchmark-for-german-small-companies) — "WHITEPAPER"
@@ -2017,6 +2181,8 @@ Selection criteria determine which securities from the eligible universe actuall
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News June 2023 (PDF)
 > ay, the DAX family serves as underlying for hundreds of thousands of financial products — from ETFs to listed derivatives and structured products. In 2020, the DAX’s biggest methodology reform since inception kicked off. New rules were introduced to bolster the quality of member companies and bring **selection criteria** in line with international standards. The number of constituents was expanded ...
@@ -2037,6 +2203,8 @@ Selection criteria determine which securities from the eligible universe actuall
 > [!quote] Overview Of Methodology Changes Valid From 18 Of March 2024 (PDF)
 > Methodology Changes (DAX Strategy Guide) DAXglobal China 12.3. DAXglobal 4.9.3. Unscheduled China Chaining (DAXglobal Guide) DAXglobal Gold Component Components with less than 0.5% index weight at 3.3. **Selection Criteria** No exclusion of components at review based on 13.2. DAXglobal Miners Selection review are not included in the index. (DAXglobal Guide) component weight. Gold Miners DAXplus Wei...
 > — [Overview Of Methodology Changes Valid From 18 Of March 2024 (PDF)](https://www.stoxx.com/document/News/2023/October/Overview%20of%20methodology%20changes%20valid%20from%2018%20of%20March%202024.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News June 2023 (PDF)](https://stoxx.com/monthly-index-news-june-2023)
@@ -2061,6 +2229,8 @@ The selection list is the intermediate output of the index construction process,
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > X Emerging Markets Equity Factor Index, STOXX International Small-Cap Equity Factor Index and STOXX Global Equity Factor Index. December 2022(2): Amendment of the methodology of the STOXX Global Metaverse Index. Changes to be effective with March 2023 review. December 2022(3): Rule clarification of **selection list**s during review month. This is a correction to the November 2022(2): Rule clarifica...
@@ -2101,6 +2271,8 @@ The selection list is the intermediate output of the index construction process,
 > [!quote] Sx50Ugv (PDF)
 > railing STOXX USA 500 Index 23.3 18.2 19.4 17.1 0.1 1.3 2.4 17.6 STOXX USA Total Market Index 24.1 18.4 18.0 16.3 0.1 1.2 2.1 18.2 Performance and annual returns4 Methodology The universe is the STOXX USA 900. All stocks in the index universe are ranked by free-float market cap to produce the index **selection list**. The index aims to cover the 500 largest companies in terms of free-float market c...
 > — [Sx50Ugv (PDF)](https://www.stoxx.com/document/Indices/Factsheets/2022/December/SX50UGV.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -2125,6 +2297,8 @@ Simulated (back-tested) data allows index users to evaluate how an index would h
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)
 > bruary 29th, 2024 Dear Customer, STOXX Ltd., the operator of Qontigo’s index business and a global provider of innovative and tradable index concepts, provides hereafter information related to the **Simulation** Phase for DAX Equity Indices scheduled from December 18th, 2023 to February 29th, 2024. The **Simulation** Phase for DAX Equity Indices aims at allowing DAX Index Licensees to understand the ap...
@@ -2145,6 +2319,8 @@ Simulated (back-tested) data allows index users to evaluate how an index would h
 > [!quote] Tesla’s place in a US stock benchmark | Blog posts | STOXX
 > ates based on the **simulation** show that Tesla accounted for more than 1 percentage point of the benchmark’s gross performance. The extra returns would not have come at the cost of any significant increase in volatility, decrease in the overall dividend yield or material tracking error, based on this **simulation**. The extra return may also help explain some of this year’s outperformance of the STOX...
 > — [Tesla’s place in a US stock benchmark | Blog posts | STOXX](https://stoxx.com/teslas-place-in-a-us-stock-benchmark) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX_Equity_Indices_Simulation_Phase–from_Dec_18_2023_to_February_29_2024.pdf)
@@ -2182,6 +2358,8 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] A view from COP26: navigating the climate transition with investable indices ...
 > ed products, most use carbon emissions to target carbon reduction.” In the CTI indices, we move beyond carbon emissions and “look at what the valuation risk is going to be at the company level, and bring that to life in an index.” The index methodology translates “the CTVaR data into a rules-based, **systematic index** and the key is the probability distribution of that data equated into the weight...
@@ -2194,6 +2372,8 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 > [!quote] An Analysis of Thematic Portfolios Construction, Risk and Returns | Blog post...
 > hence indicating a relatively favorable stock selection. A bias towards growth was observed in most of the thematic indices, which could be expected since thematic indices attempt to obtain exposure to megatrends as they are evolving. Particular risk and return characteristics as key elements Using **systematic index**-based approaches, investors may obtain exposure to megatrends that are shaping o...
 > — [An Analysis of Thematic Portfolios Construction, Risk and Returns | Blog post...](https://stoxx.com/an-analysis-of-thematic-portfolios-construction-risk-and-returns) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [A view from COP26: navigating the climate transition with investable indices | Blog posts | STOXX](https://stoxx.com/a-view-from-cop26-navigating-the-climate-transition-with-investable-indices) — "WHITEPAPER"
@@ -2218,6 +2398,8 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Strategy Index Guide (PDF)
 > .2. CALCULATION The excess return index is calculated as follows: 𝐹 𝐼ER =𝐼ER ⋅ k,t 𝑡 𝑡−1 𝐹 k,t−1 The **total return index** is calculated as follows: 𝐹 𝑑 𝐼TR =𝐼TR ⋅( k,t + ⋅𝑅 ) 𝑡 𝑡−1 𝐹 360 f, t−1 k,t−1 Where: 𝐼ER = Excess return index value on day (t) - Unrounded t-1 value used for 𝑡 calculation. 𝐼TR = **Total return index** value on day (t) - Unrounded t-1 value used for calculation. 𝑡 𝐹 = Settlement ...
@@ -2238,6 +2420,8 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 > [!quote] Landesbank Baden-Württemberg lizenziert DAX 50 ESG Decrement-Index für strukt...
 > z. Der Decrement-Mechanismus hilft Emittenten, das Dividendenrisiko abzusichern. Er beinhaltet den täglichen Abzug eines vorab festgelegten Betrags in absoluten Zahlen oder Prozentsätzen vom Niveau des Basiswerts oder der Gesamtrendite. Durch den Verkauf eines strukturierten Produkts, das auf einem Total-Return-Index mit einem Abschlag basiert, ist der Emittent gegen Dividendenausfälle geschütz...
 > — [Landesbank Baden-Württemberg lizenziert DAX 50 ESG Decrement-Index für strukt...](https://stoxx.com/landesbank-baden-wurttemberg-lizenziert-dax-50-esg-decrement-index-fur-strukturierte-produkte) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
@@ -2268,6 +2452,8 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] Tracking error: making sense of a key investment statistic | Blog posts | STOXX
 > hese days with the growth of sustainable strategies. While the pursuit of environmental, social or governance (ESG) objectives can exist outside the traditional risk/return matrix, in reality, returns and risk cannot simply be ignored. This notion is a key reason why many sustainable strategies are **tracking error**-aware. With this in mind, a new article[1] from Hamish Seegopaul, Global Head for ...
@@ -2308,6 +2494,8 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 > [!quote] Market Consultation Stoxx Index 20250925 (PDF)
 > Budget Risk is calculated 𝑗 𝑐𝑎𝑟𝑏𝑜𝑛 𝑏𝑢𝑑𝑔𝑒𝑡 𝑖,𝑗 as: 𝐶𝐵𝑅 = 𝑖 ∑𝜑 𝑗 𝐶𝐵𝑅 𝑖 ∑𝑐𝑎𝑟𝑏𝑜𝑛 𝑏𝑢𝑑𝑔𝑒𝑡 − ∑𝑐𝑎𝑟𝑏𝑜𝑛 𝑒𝑚𝑖𝑠𝑠𝑖𝑜𝑛𝑠 𝑖,𝑗 𝑖,𝑘 =− where: ∑𝑐𝑎𝑟𝑏𝑜𝑛 𝑏𝑢𝑑𝑔𝑒𝑡 𝑖,𝑗 𝜑 𝑗 =(1−𝜆)∗𝜆𝑗, 𝑗 Where: =0,… ,2050−𝑐𝑢𝑟𝑟𝑒𝑛𝑡 𝑦𝑒𝑎𝑟 j = 2020, …, 2050 𝜆=0.94 (standard decay factor) k = 2020, …, current year e Add tracking At most 1.5% ex-ante **tracking error** relative to the error parent index. To compute the **tracking error**, constraint STOX...
 > — [Market Consultation Stoxx Index 20250925 (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_STOXX_Index_20250925.pdf)
+
+</details>
 
 **Sources:**
 - [Tracking error: making sense of a key investment statistic | Blog posts | STOXX](https://stoxx.com/tracking-error-making-sense-of-a-key-investment-statistic) — "WHITEPAPER"
@@ -2338,6 +2526,8 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liqu...
 > lion from EUR 40.8 billion, Qontigo data show. While most entrants are smaller than existing constituents, there is one exception with Airbus SE. The maker of airplanes is the fifth-largest company on the Frankfurt Stock Exchange (FSE), but had up to now failed to enter the DAX as its local trading **turnover** was smaller than that of other candidate stocks. Elimination of **turnover** requirement Tha...
@@ -2378,6 +2568,8 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 > [!quote] Stoxx World Equity Index Guide (PDF)
 > , the liquidity requirements can be lowered or the period index review can be postponed to the next quarterly review date. In such cases, the composition remains unchanged, but new weighting factors will be implemented. Market participants will be notified of such changes in a timely manner. 4.4.2. **TURNOVER** RATIO The annualized **turnover** ratio is defined as the median value of the daily traded v...
 > — [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liquidity | Blog posts | STOXX](https://stoxx.com/dax-index-grows-to-40-constituents-looking-at-impact-on-market-cap-and-liquidity) — "WHITEPAPER"
@@ -2404,6 +2596,8 @@ The weighting scheme is one of the most consequential design decisions in index 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > lio based indices, the individual component selection process and **weighting scheme**s » The STOXX World Equity Index Methodology guide contains the index specific rules regarding the construction and derivation of the STOXX World portfolio based indices, the individual component selection process and **weighting scheme**s » The STOXX Strategy Index guide contains the formulas and description of all s...
@@ -2424,6 +2618,8 @@ The weighting scheme is one of the most consequential design decisions in index 
 > [!quote] Overview Of Methodology Changes Valid From 18 Of March 2024 (PDF)
 > Methodology Changes (DAXglobal Guide) World Luxury 13.3. World Luxury Index 2.6.3. Unscheduled Index Chaining (World Luxury Guide) General All Share **Weighting Scheme** Full market capitalization weighted 3. General Index Free float market capitalization weighted 6. DAX All Share Information (DAX Indices Scale All Share Guide) 7.7. Scale 30 DAXsector All 3.3 Weighting and Share Capping Methods 13....
 > — [Overview Of Methodology Changes Valid From 18 Of March 2024 (PDF)](https://www.stoxx.com/document/News/2023/October/Overview%20of%20methodology%20changes%20valid%20from%2018%20of%20March%202024.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)

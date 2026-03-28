@@ -319,7 +319,7 @@ now = datetime.now(timezone.utc)
 now = datetime.now()   # naive — is this UTC? Local? Who knows?
 ```
 
-**Parsing strings to dates:**
+#### Python datetime.strptime — parsing date strings
 
 ```python
 # strptime (string parse time) — explicit format
@@ -337,7 +337,7 @@ datetime.fromisoformat("2026-03-10T15:30:00Z")                # aware, UTC (Pyth
 datetime.fromtimestamp(1773422200, tz=timezone.utc)            # 2026-03-10 15:30:00+00:00
 ```
 
-**Date arithmetic:**
+#### Python timedelta, relativedelta — date arithmetic
 
 ```python
 d = date(2026, 3, 10)
@@ -363,7 +363,7 @@ d + relativedelta(years=1)                          # date(2027, 3, 10)
 date(2026, 1, 31) + relativedelta(months=1)         # date(2026, 2, 28) (not Feb 31!)
 ```
 
-**Timezone conversion:**
+#### Python zoneinfo.ZoneInfo, astimezone — timezone conversion
 
 ```python
 paris = ZoneInfo("Europe/Paris")
@@ -376,7 +376,7 @@ dt_utc.astimezone(ny)       # 2026-03-10 11:30:00-04:00 (EDT after DST)
 dt_utc.astimezone(tokyo)    # 2026-03-11 00:30:00+09:00 (next day!)
 ```
 
-**Practical pipeline patterns in Python:**
+#### Python pipeline date patterns — trading calendar, business days, batch windows
 
 ```python
 # Yesterday's date
@@ -435,7 +435,7 @@ TimeOnly.FromDateTime(DateTime.Now)    // 16:30:00 (.NET 6+)
 // Avoid DateTime — it has a broken Kind system (Local/Utc/Unspecified).
 ```
 
-**Parsing and formatting in C#:**
+#### C# DateTime.ParseExact, ToString — parsing and formatting
 
 ```csharp
 // Parse ISO automatically
@@ -461,7 +461,7 @@ dt.ToString("s")                                   // 2026-03-10T15:30:00 (sorta
 dt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ")    // 2026-03-10T14:30:00Z
 ```
 
-**Timezone conversion in C#:**
+#### C# TimeZoneInfo.ConvertTime — timezone conversion
 
 ```csharp
 var utcNow = DateTimeOffset.UtcNow;
@@ -519,7 +519,7 @@ Your cross-market pipeline that assumes "Paris is always 6 hours ahead of NYC" b
 Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezones.
 ```
 
-**DST rules for data engineering:**
+#### DST rules — store UTC, convert at display, never schedule at 2 AM
 
 | Rule | Explanation |
 |------|-------------|

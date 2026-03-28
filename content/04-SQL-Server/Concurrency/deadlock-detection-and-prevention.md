@@ -119,7 +119,7 @@ WITH (
 ALTER EVENT SESSION [deadlock_monitor] ON SERVER STATE = START;
 ```
 
-**Query captured deadlocks:**
+#### sys.fn_xe_file_target_read_target_data — query captured deadlock events
 
 ```sql
 SELECT
@@ -158,7 +158,7 @@ ORDER BY deadlock_time DESC;
 
 ## Application-Level Retry Logic
 
-**C# / Dapper pattern — centralized deadlock retry helper:**
+#### C# Dapper ExecuteWithRetry — centralized deadlock retry helper
 
 ```csharp
 public class DbConnectionFactory

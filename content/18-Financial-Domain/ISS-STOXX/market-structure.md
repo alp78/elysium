@@ -42,6 +42,8 @@ In plain language, ADTV tells you how busy a stock is on a normal day. Index pro
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > ndex types and currencies: Price, net return and gross return in EUR, USD and other versions. For a complete list please consult the data vendor code sheet on the website22. 9.1.2. INDEX REVIEW Component selection: There is a minimum liquidity requirement for components: to be eligible, the 3-month **average daily trading volume** has to be at least EUR 1 million. Components are selected based on t...
@@ -62,6 +64,8 @@ In plain language, ADTV tells you how busy a stock is on a normal day. Index pro
 > [!quote] Istoxx Index Guide (PDF)
 > ents of the STOXX Global Select Dividend 100 Index and their weights are C taken as a starting point. T 2) A liquidity test is performed, based on a reference portfolio with a nominal value of EUR 1bn. Components pass this test if the amount to be allocated does not exceed 2.5 times D the company’s **average daily trading volume (ADTV)** over the last three months. 3) For components which fail the ...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -88,6 +92,8 @@ The ask price is what you pay when you buy a stock at market. If a STOXX index c
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Vstoxx The European Volatility Gauge 202504 (PDF)
 > ded, mid and daily settlement prices is taken • The price cannot be below 0.5 • Both, bid and **ask price**, must be available • The bid-ask spread must be within the established spreads for Eurex Market Makers (8% or up to 16% in stressed markets) • Mid-price is calculated as simple average of bid and **ask price** 1. https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_on_p...
@@ -108,6 +114,8 @@ The ask price is what you pay when you buy a stock at market. If a STOXX index c
 > [!quote] Istoxx Index Guide (PDF)
 > st of trading (selling contract 1 at bid and buying contract 2 at ask). CPre = number of contracts of future x held at the end of day t before the roll; equivalent xt to number of contracts of the same futures contract held on day t-1 post roll PB = bid price, last available at 22:00:00 CET xt PA = **ask price**, last available at 22:00:00 CET xt Determination of the Number of Contracts The target ...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Vstoxx The European Volatility Gauge 202504 (PDF)](https://stoxx.com/wp-content/uploads/2025/04/VSTOXX_The_European_Volatility_Gauge_202504.pdf)
@@ -135,6 +143,8 @@ Auctions matter enormously for index funds. The closing auction price on an exch
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Q&amp;A with Eurex and STOXX: A perspective on volatility indices | Blog post...
 > ays, and one with an expiry longer than 30 days.” Matthew, many of our American readers will be more familiar with the VIX. Is it an equivalent index to VSTOXX for the US? “VIX and VSTOXX are extremely similar indices. Ignoring some technical differences in the final settlement process (VIX uses an **auction**, whereas VSTOXX settles through a so-called time-weighted average price, or TWAP), the bi...
@@ -155,6 +165,8 @@ Auctions matter enormously for index funds. The closing auction price on an exch
 > [!quote] Sustainability Us Voting Guidelines (PDF)
 > UNITED STATES 2026 SUSTAINABILITY PROXY VOTING GUIDELINES can also signify the deal makers' competency. The comprehensiveness of the sales process (e.g., full **auction**, partial **auction**, no auction) can also affect shareholder value. ▪ Conflicts of interest - Are insiders benefiting from the transaction disproportionately and inappropriately as compared to non-insider shareholders? As the result ...
 > — [Sustainability Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/active/specialty/Sustainability-US-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Q&amp;A with Eurex and STOXX: A perspective on volatility indices | Blog posts | STOXX](https://stoxx.com/qa-with-eurex-and-stoxx-a-perspective-on-volatility-indices) — "WHITEPAPER"
@@ -183,6 +195,8 @@ A bear market is the opposite of good times for equity investors. When a STOXX i
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] European Stocks Enter Bear Market | Blog posts | STOXX
 > what is popularly considered a **bear market**. Chart 1 shows the performances of the European benchmark, the STOXX® Global 1800 Index, STOXX® North America 600 Index and STOXX® Asia/Pacific 600 Index since the close of trading on Feb. 19. The black line denotes the generally understood threshold for a **bear market**. The European index has lost 21.5% in the period through Mar. 9, falling to its first...
@@ -203,6 +217,8 @@ A bear market is the opposite of good times for equity investors. When a STOXX i
 > [!quote] Canadian Household Financial Wealth Declines for First Time Since 2008 Financ...
 > f Institutional Shareholder Services, today announced the release of the Household Balance Sheet Report, a biennial review and forecast of the state of Canadian household wealth and its impacts for the retail financial services industry. After strongly expanding in the nine years following the 2008 **bear market** and financial crisis, growth in overall Canadian household assets slowed to 1.8 perce...
 > — [Canadian Household Financial Wealth Declines for First Time Since 2008 Financ...](https://www.issgovernance.com/canadian-household-financial-wealth-declines-for-first-time-since-2008-financial-crisis) — "Canadian Household Financial Wealth Declines for First Time Since 2008 Financial Crisis"
+
+</details>
 
 **Sources:**
 - [European Stocks Enter Bear Market | Blog posts | STOXX](https://stoxx.com/european-stocks-enter-bear-market) — "WHITEPAPER"
@@ -229,6 +245,8 @@ The bid price is what you receive when you sell a stock at market. For highly li
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Strategy Guide (PDF)
 > herwise the exchange day immediately preceding that day. Self-financing constraint (II) 𝐼𝑉𝑃𝑜𝑠𝑡 =𝐼𝑉𝑃𝑟𝑒−(𝐶𝑃𝑜𝑠𝑡−𝐶𝑃𝑟𝑒)(𝑃∗ −𝑃𝑀)−(𝐶𝑃𝑜𝑠𝑡−𝐶𝑃𝑟𝑒)(𝑃∗ −𝑃𝑀) 𝑡 𝑡 1𝑡 1𝑡 1𝑡 1𝑡 2𝑡 2𝑡 2𝑡 2𝑡 The post-roll index level has to be equal to the pre-roll index level minus cost the of trading. Hereby 𝑃∗ refers to either the **bid price** 𝑃𝐵 or ask price 𝑃𝐴 depending on whether the corresponding 𝑥𝑡 𝑥𝑡 𝑥𝑡 contract has to be b...
@@ -249,6 +267,8 @@ The bid price is what you receive when you sell a stock at market. For highly li
 > [!quote] Istoxx Index Guide (PDF)
 > be equal to the pre-roll index level minus the cost of trading (selling contract 1 at bid and buying contract 2 at ask). CPre = number of contracts of future x held at the end of day t before the roll; equivalent xt to number of contracts of the same futures contract held on day t-1 post roll PB = **bid price**, last available at 22:00:00 CET xt PA = ask price, last available at 22:00:00 CET xt Det...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
@@ -275,6 +295,8 @@ The bid-ask spread is the hidden cost of trading. When STOXX evaluates whether a
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Vstoxx The European Volatility Gauge 202504 (PDF)
 > expanding window, i.e. progressively expanding the observation period from 11:00 CET to the most recent calculation time Option Price Screening • The most recent among traded, mid and daily settlement prices is taken • The price cannot be below 0.5 • Both, bid and ask price, must be available • The **bid-ask spread** must be within the established spreads for Eurex Market Makers (8% or up to 16% in...
@@ -291,6 +313,8 @@ The bid-ask spread is the hidden cost of trading. When STOXX evaluates whether a
 > [!quote] Dax Strategy Index Guide (PDF)
 > pplied in that any trade price, mid quote or settlement price below 0.5 points is ignored. The mid quote is only calculated if the following requirements are fulfilled: 1) both the bid and ask quotes are available and 2) both the bid and ask quotes are equal to or greater than 0.1 points and 3) the **bid-ask spread** does not exceed the following thresholds: a. normal market: 8% of bid quote, with ...
 > — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
+
+</details>
 
 **Sources:**
 - [Vstoxx The European Volatility Gauge 202504 (PDF)](https://stoxx.com/wp-content/uploads/2025/04/VSTOXX_The_European_Volatility_Gauge_202504.pdf)
@@ -317,10 +341,14 @@ Block trades allow large investors to move sizable positions without disrupting 
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehi...
 > es are ideal as complementary strategies with existing products or ETFs, as well as for portfolio management and hedging needs. The contracts trade around the clock: from 8 a.m. Hong Kong time to 10 p.m. Central European time. We have active liquidity providers showing prices on screen and offering **block trade**s.” You mentioned that demand for this strategy started in Asia; is it coming from any...
 > — [Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehi...](https://stoxx.com/qa-new-eurex-futures-on-stoxx-semiconductor-30-index-as-investment-vehicle-into-dynamic-sector) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehicle into dynamic sector | Blog posts | STOXX](https://stoxx.com/qa-new-eurex-futures-on-stoxx-semiconductor-30-index-as-investment-vehicle-into-dynamic-sector) — "WHITEPAPER"
@@ -344,6 +372,8 @@ Blue chips are the anchor stocks of major STOXX indices. They tend to have the l
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] STOXX Digital Asset Blue Chip selected as underlying index by Swiss Private B...
 > verse by applying a well-founded index methodology.” Axel Lomholt, General Manager at STOXX The benefits are highlighted by Maerki Baumann’s Head of Investment Management, Konstantinos Ntefeloudis, who is responsible for management of the bank’s crypto investment solutions: “The STOXX Digital Asset **Blue Chip** Index is composed of a comprehensive selection of the world’s leading digital assets th...
@@ -364,6 +394,8 @@ Blue chips are the anchor stocks of major STOXX indices. They tend to have the l
 > [!quote] Stoxx Components Changes Dax Blue Chip Indices 20250605 (PDF)
 > Zug, June 05, 2025 STOXX Changes composition of DAX **Blue Chip** Indices effective on June 23, 2025 Dear Customer, STOXX Ltd. today announced the new composition of DAX **Blue Chip** Indices as part of the regular review effective on June 23, 2025 Date Symbol Index name Internal Key ISIN Company name Changes 23.06.2025 DAX3ESGK DAX 30 ESG 408522 DE000519000
 > — [Stoxx Components Changes Dax Blue Chip Indices 20250605 (PDF)](https://www.stoxx.com/document/News/2025/June/STOXX_Components_Changes_DAX_Blue_Chip_Indices_20250605.pdf)
+
+</details>
 
 **Sources:**
 - [STOXX Digital Asset Blue Chip selected as underlying index by Swiss Private Bank Maerki Baumann | Press releases | STOXX](https://stoxx.com/stoxx-digital-asset-blue-chip-selected-as-underlying-index-by-swiss-private-bank-maerki-baumann) — "WHITEPAPER"
@@ -391,6 +423,8 @@ A bull market is when equities are broadly climbing. During bull markets, STOXX 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Passive Strategies and the Ageing Bull Market | Blog posts | STOXX
 > . Some observers have noted that ETFs get a boost from **bull market**s. As all stocks gain, they argue, it makes less sense to pay for a manager’s view that may be blindsided by a rising tide. Luke Oliver, head of US ETF Capital Markets at Deutsche Asset Management, wrote in April that nine years of a **bull market** with low volatility have been “a perfect scenario for passive strategies.”4 Will pass...
@@ -411,6 +445,8 @@ A bull market is when equities are broadly climbing. During bull markets, STOXX 
 > [!quote] Eurex Derivatives Forum explores growth of options-based, thematic index stra...
 > STOXX, said there are two buckets of demand in defined-outcome strategies: income and buffer portfolios. While the former has seen strong uptake as traders sell upside exposure to generate income, the latter has lagged somewhat, he said. The slow uptake in buffer strategies may reflect the ongoing **bull market** since 2023, Seegopaul added. “The entire concept of buffers is a study in the trade-of...
 > — [Eurex Derivatives Forum explores growth of options-based, thematic index stra...](https://stoxx.com/eurex-derivatives-forum-explores-growth-of-options-based-thematic-index-strategies) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Passive Strategies and the Ageing Bull Market | Blog posts | STOXX](https://stoxx.com/passive-strategies-and-the-ageing-bull-market) — "WHITEPAPER"
@@ -440,6 +476,8 @@ Country classification answers the question "Where does this company belong?" A 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] STOXX Changes Country Classification Model | Press releases | STOXX
 > certain countries as borderline (countries that are either just below or just above the set thresholds) and may include these in the watch list to be observed and possibly reclassified by STOXX, within the framework provided by STOXX’ governance processes. | | Criterion | Current | New | | 1 | IMF **Country Classification** (Source: IMF – International Monetary Fund)STOXX selects the advanced/devel...
@@ -460,6 +498,8 @@ Country classification answers the question "Where does this company belong?" A 
 > [!quote] Istoxx Index Guide (PDF)
 > Developed World Small Cap ESG must be within +/- 1% of the Parent Index. Active Country Weights: The percentage exposure to each country of the BSG index on iSTOXX Developed World Small Cap ESG must be within +/- 1% of the Parent Index value. Each company’s country assignment is based on the STOXX **Country classification**. Active Style Factor Exposures: The exposure to each of the Axioma Risk Mod...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [STOXX Changes Country Classification Model | Press releases | STOXX](https://stoxx.com/stoxx-changes-country-classification-model) — "WHITEPAPER"
@@ -487,10 +527,14 @@ Circuit breakers are the emergency brakes of a stock exchange. If a STOXX index 
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Q&amp;A with BlackRock’s Moufti: AI as driver for ‘picks and shovels’ and cop...
 > s expansion. This means an exponential amount of energy will be required at a time when efforts to transition towards net-zero objectives is depleting supplies of copper. The metal is a key material across the entire chain of the electricity grid, including conductor lines, cables, transformers and **circuit breaker**s. Power grids are already competing with factories, electric vehicles, electronic...
 > — [Q&amp;A with BlackRock’s Moufti: AI as driver for ‘picks and shovels’ and cop...](https://stoxx.com/qa-with-blackrocks-moufti-ai-as-driver-for-picks-and-shovels-and-copper) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Q&amp;A with BlackRock’s Moufti: AI as driver for ‘picks and shovels’ and copper | Blog posts | STOXX](https://stoxx.com/qa-with-blackrocks-moufti-ai-as-driver-for-picks-and-shovels-and-copper) — "WHITEPAPER"
@@ -514,6 +558,8 @@ Clearing sits between trade execution and settlement. When a STOXX index futures
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2018 (PDF)
 > h include the world’s largest financial products issuers, capital owners and asset managers. STOXX indices are used not only as underlyings for financial products, such as ETFs, futures and options and structured products but also for risk and performance measurement. In addition, STOXX Ltd. is the marketing agent for DAX® indices. 8/8
@@ -534,6 +580,8 @@ Clearing sits between trade execution and settlement. When a STOXX index futures
 > [!quote] Istoxx Index Guide (PDF)
 > iSTOXX® METHODOLOGY GUIDE CONTENTS 3/1024 9.2. iSTOXX EUROPE MAXIMUM DIVIDEND 8% DECREMENT 9.9. iSTOXX EUROPE ORIGIN 100 EQUAL WEIGHT 82 DECREMENT 5% 99 OVERVIEW 82 OVERVIEW 99 DEFINITIONS 82 DEFINITIONS 99 CALCULATION 82 CALCULATION 99 MARKET DISRUPTION EVENTS 99 9.3. EURO iSTOXX 50 STYLE WEIGHTED & EURO iSTOXX 50 STYLE WEIGHTED DECREMENT 83 9.10.EURO iSTOXX BANKS GR DECREMENT 50 INDICES 100 O...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2018 (PDF)](https://stoxx.com/monthly-index-news-april-2018)
@@ -560,6 +608,8 @@ A correction is the market taking a breather. For a STOXX index, a 10-15% pullba
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > STOXX® DIGITAL ASSET METHODOLOGY GUIDE CONTENTS 2/31 3.10.1. LACK OF EILIGIBLE EXCHANGE 14 1. INTRODUCTION TO THE STOXX INDEX GUIDES 4 3.10.2. CHANGE IN ASSET ELIGIBILITY 15 4. INDEX GOVERNANCE 16 2. GENERAL PRINCIPLES 5 USAGE OF DISCRETION 16 INDEX RATIONALE 5 INDEX **CORRECTION** POLICIES 17 INDEX TERMINATION POLICY 5 4.2.1. RULE-BASED **CORRECTION** 17 PARTY RESPONSIBILITIES 5 4.2.2. NON RULE-BASED ...
@@ -580,6 +630,8 @@ A correction is the market taking a breather. For a STOXX index, a 10-15% pullba
 > [!quote] Iss Guidance Faq Document (PDF)
 > aterial deficiencies in their analysis, disclose the sources of information used in formulating recommendations and consider factors unique to the issuer or proposal when making recommendations? We take reports of errors seriously and address them through: (1) identification; (2) investigation; (3) **correction**, clarification and/or more context; and (4) if warranted, a Proxy Alert to clients. Wi...
 > — [Iss Guidance Faq Document (PDF)](https://www.issgovernance.com/file/faq/ISS_Guidance_FAQ_Document.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
@@ -607,6 +659,8 @@ A crash is the extreme scenario that index providers must plan for. STOXX method
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] For investors in Korea, a case for European diversification | Blog posts | STOXX
 > ogy sector of the late 1990s (Figure 2). This is appropriate given the current trailing 90-day correlation between the two of 0.9. The green line represents the cumulative daily return of the large- and medium-cap segments of the broad Korean market. Even with the sharp correction from the COVID-19 **crash** of March 2020, the value of the portfolio has more than doubled (103%), driven mostly by th...
@@ -627,6 +681,8 @@ A crash is the extreme scenario that index providers must plan for. STOXX method
 > [!quote] Measuring the difficulty of market timing | Blog posts | STOXX
 > y already has an array of metrics to help navigate this,” writes Hamish. “While finance industry professionals may live and breathe some of these, an average individual investor is unlikely to do so. The TIV spread can bridge the gap in helping understand the profile of historical returns without a **crash** course in statistics, balancing simplicity and insight.” We invite you to download the whit...
 > — [Measuring the difficulty of market timing | Blog posts | STOXX](https://stoxx.com/measuring-the-difficulty-of-market-timing) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [For investors in Korea, a case for European diversification | Blog posts | STOXX](https://stoxx.com/for-investors-in-korea-a-case-for-european-diversification) — "WHITEPAPER"
@@ -654,6 +710,8 @@ Custodians are the vaults of the financial world. When ISS or STOXX needs to det
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Differentiate Your Offering With ISS: Corporate Governance Solutions for Cust...
 > Webinar | Differentiate Your Offering With ISS: Corporate Governance Solutions for **Custodian**s and Intermediaries 17 March 2015 | 11:00 AM EDT; 3:00 PM GMT; 4:00 PM CET Thank you for registering for the webinar Differentiate Your Offering with ISS: Corporate Governance Solutions for **Custodian**s and Intermediaries. We will send you an email nearer the webinar date, confirming webinar
@@ -674,6 +732,8 @@ Custodians are the vaults of the financial world. When ISS or STOXX needs to det
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > f the legal entity providing the services, its domicile and its applied compliance standards (KYC, AML, CFT, sanctions). It also includes the use of on-chain transaction monitoring systems, applicability of licensing and registration requirements (regulatory status), use of regulated and/or audited **custodian**s, and information on the executive management of an exchange.
 > — [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Differentiate Your Offering With ISS: Corporate Governance Solutions for Custodians and Intermediaries  | ISS](https://www.issgovernance.com/differentiate-your-offering-sent) — "Differentiate Your Offering With ISS: Corporate Governance Solutions for Custodians and Intermediaries"
@@ -702,6 +762,8 @@ A depositary receipt lets investors trade foreign shares on their home exchange 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 37/639 5. INDEX CHARACTERISTICS Free Float Factors = (Total Issued Shares5 – Treasury Shares6 – Strategic Shareholdings)/ Total Issued Shares5 The free float factor for American **Depositary Receipt** (ADR) and Global **Depositary Receipt** (GDR) security is directly replicated from the underlying security. Shares held by Depository Bank to back the issuance of Depositary ...
@@ -722,6 +784,8 @@ A depositary receipt lets investors trade foreign shares on their home exchange 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > e property of their respective owners. The simple fact that this Guide mentions them does not imply that trademarks are not protected by the rights of third parties. 1.4. ABBREVIATIONS AND ACRONYMS The following abbreviations and acronyms are used in this Guide: Abbreviation Long form ADRs American **Depositary Receipt**s ADTV average daily trading volume AktG Aktiengesetz (German Stock Corporation...
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -764,6 +828,8 @@ When a company lists on multiple exchanges, index providers must decide which li
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > -month Average Daily Traded Volume (ADTV) in EUR below 5 million EUR are excluded - Trading suspension screening: Securities with suspension from trading for more than 10% of the STOXX Calendar trading days are excluded Min Number of Price Observations = Number of Trading Days × 0.9 Period Period - **Dual listing**: If a company is represented in the eligible universe by multiple listings, only the...
@@ -772,6 +838,8 @@ When a company lists on multiple exchanges, index providers must decide which li
 > [!quote] Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...
 > Qontigo has introduced, in collaboration with Eurex, the iSTOXX® Spread Ratio Indices, which track the relative value spread between two related securities. Each one of 42 indices1 in the family consists of two types of stock issued by one same company, such as **dual listing**s or different share classes. Eurex launched futures on 22 of the indices at the end of June and plans to introduce eight m...
 > — [Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...](https://stoxx.com/spread-ratio-indices-help-trade-relative-value-between-related-securities) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -813,6 +881,8 @@ Eurex is where many STOXX index derivatives trade. If an asset manager wants to 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 25 years forging better markets: Eurex and STOXX celebrate unique partnership...
 > it comes to integrating external data. All that enables us to partner with a variety of clients such as exchanges like **Eurex** as well as with asset owners, money managers and issuers, to come up with the best tailored solution.” Please tell us a bit about the synergy and strong success story between **Eurex** and STOXX Michael: “The STOXX brand is inherently linked to the growth of Eurex as an excha...
@@ -833,6 +903,8 @@ Eurex is where many STOXX index derivatives trade. If an asset manager wants to 
 > [!quote] Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...
 > as the Uncleared Margin Rules (UMR) to mention one. “Futurization also brings greater standardization to the products. In the OTC market, swaps are tailor-made to specific needs, which brings benefits in terms of customizability but limits the scalability and ability to cross-margin the positions. **Eurex** Clearing, our clearing house, allows cross-margining between related products with its portf...
 > — [Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...](https://stoxx.com/qa-with-eurex-switching-otc-swaps-to-a-capital-efficient-alternative-under-uncleared-margin-rules) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [25 years forging better markets: Eurex and STOXX celebrate unique partnership in index derivatives | Blog posts | STOXX](https://stoxx.com/25-years-forging-better-markets-eurex-and-stoxx-celebrate-unique-partnership-in-index-derivatives) — "WHITEPAPER"
@@ -860,6 +932,8 @@ An exchange provides the infrastructure -- order books, price discovery, clearin
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] proxyexchange | ISS
 > Proxy**Exchange** 2.0. An industry standard redefined. The exercise of governance, now even more efficient & transparent. READ MORE ABOUT PROXY**EXCHANGE** 2.0 HERE proxyexchange2013-11-082014-01-08/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
@@ -880,6 +954,8 @@ An exchange provides the infrastructure -- order books, price discovery, clearin
 > [!quote] Global Proxy Distribution - ISS Exchange | ISS
 > roxy**Exchange** QualityScore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score Global Proxy Distribution – ISS **Exchange** SRD II Compliant Global Proxy Distribution Services Start typing and press Enter to search
 > — [Global Proxy Distribution - ISS Exchange | ISS](https://www.issgovernance.com/solutions/iss-exchange/iss-exchange-featured-image) — "Global Proxy Distribution – ISS Exchange"
+
+</details>
 
 **Sources:**
 - [proxyexchange | ISS](https://www.issgovernance.com/banner_builder/3) — "proxyexchange"
@@ -907,6 +983,8 @@ Equity is the foundational asset class that STOXX indices measure. When someone 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Amid a potential US default, equity investors’ message to Congress is, ‘Bette...
 > even for Wile E. Coyote. Although a default has never happened, the closest we came to one was in July 2011, and the credit downgrade by S&P from AAA to AA+ made then still stands today. **Equity** markets fell by 16% and took six months to recover. In a recent article, we analyzed what would happen to **equity** and multi-asset portfolios should a similar event unfold today. As long as a default can b...
@@ -927,6 +1005,8 @@ Equity is the foundational asset class that STOXX indices measure. When someone 
 > [!quote] Philips Pensioenfonds adopts STOXX Index to align its emerging markets equity...
 > n (13). The **equity** portfolio represents roughly 2% of the total assets of the pension fund. “In a survey, our participants showed broad support for the integration of SDGs in the wider investment portfolio. In partnership with BlackRock and Qontigo, we developed a solution for the developed markets **equity** portfolio that was implemented in December 2021. More recently we successfully extended th...
 > — [Philips Pensioenfonds adopts STOXX Index to align its emerging markets equity...](https://stoxx.com/philips-pensioenfonds-adopts-stoxx-index-to-align-its-emerging-markets-equity-portfolio-with-several-un-sdgs) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Amid a potential US default, equity investors’ message to Congress is, ‘Better Be Good to Me’ | Blog posts | STOXX](https://stoxx.com/amid-a-potential-us-default-equity-investors-message-to-congress-is-better-be-good-to-me) — "WHITEPAPER"
@@ -955,6 +1035,8 @@ Frankfurt Stock Exchange is the venue where most German blue-chip stocks are tra
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News June 2023 (PDF)
 > out its history, DAX has preserved its rules-based ethos, precision and reliable methodology, and has become the undisputed reference for Europe’s largest economy and some of the region’s best-known brands. DAX tracks the performance of the 40 largest companies listed on the Regulated Market of the **Frankfurt Stock Exchange** that fulfil certain minimum quality and profitability requirements. Cons...
@@ -975,6 +1057,8 @@ Frankfurt Stock Exchange is the venue where most German blue-chip stocks are tra
 > [!quote] German Benchmark Index DAX Will be Strengthened by Additional Qualification C...
 > ces will have the obligation to publish audited annual financial reports and quarterly statements. After a 30-day warning period, an infringement of these requirements will result in the immediate exclusion from the index. - As a consequence, the obligation to be listed in the Prime Standard of the **Frankfurt Stock Exchange** will no longer apply; a listing on the Regulated Market will be sufficie...
 > — [German Benchmark Index DAX Will be Strengthened by Additional Qualification C...](https://stoxx.com/german-benchmark-index-dax-will-be-strengthened-by-additional-qualification-criteria-and-harmonization-with-international-standards) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News June 2023 (PDF)](https://stoxx.com/monthly-index-news-june-2023)
@@ -1002,6 +1086,8 @@ Free float answers the question "How much of this company can the market actuall
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Extraordinary free float adjustment in MDAX - Nov. 9, 2021 | Press releases |...
 > (Zug, 9 November 2021) – Qontigo’s global index provider STOXX Ltd. has announced an unscheduled adjustment to the MDAX index. The **free float** of Zooplus AG changed by more than 10 percentage points. According to the Guide to the DAX Equity Indices, section 5.1.4., the company’s **free float** will be adjusted in the index from the current 90.06 percent to 18.00 percent. This change will become effe...
@@ -1022,6 +1108,8 @@ Free float answers the question "How much of this company can the market actuall
 > [!quote] Stoxx World Equity Index Guide (PDF)
 > IGN HOLDINGS, FOREIGN OWNERSHIP LIMIT AND METHODOLOGY REVIEW POLICIES 5 FOREIGN HEADROOM 19 INDEX TERMINATION POLICY 5 4.11.1. FOREIGN HOLDINGS 19 3. COVERAGE 6 4.11.2. FOREIGN OWNERSHIP LIMIT (FOL) 19 STOXX WORLD EQUITY UNIVERSE 6 4.11.3. FOREIGN HEADROOM (FHR) 19 STOXX WORLD INVESTABLE UNIVERSE 6 **FREE FLOAT** FACTORS 20 STOXX WORLD COUNTRY AND REGIONAL 4.12.1.1. GENERAL RULES 20 CLASSIFICATIONS...
 > — [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Extraordinary free float adjustment in MDAX - Nov. 9, 2021 | Press releases | STOXX](https://stoxx.com/extraordinary-free-float-adjustment-in-mdax-nov-9-2021) — "WHITEPAPER"
@@ -1048,6 +1136,8 @@ While free float is expressed as a percentage, free-float shares give you the ac
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > 0. STOXX SPECIALTY INDICES All securities are sorted by ADTV 6M, the largest first. The cumulative ADTV 6M percentage is calculated. New components within the first 40% pass the relative ADTV 6M screen.  The annualized Turnover Ratio is defined as the median value of the daily traded volume to the **free-float shares** ratio over a specific period (the last 6 months or 12 months), multiplied by 25...
@@ -1064,6 +1154,8 @@ While free float is expressed as a percentage, free-float shares give you the ac
 > [!quote] Istoxx Index Guide (PDF)
 > country in the universe the following selection procedure is applied to target 85% free-float market cap coverage: E - Only securities with an annualized turnover ratio greater or equal to 10% are selected. The annualized turnover ratio is defined as the median value of the daily traded volume X to **free-float shares** ratio over the last 12 months, multiplied by 252. - Securities with a price gre...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1089,6 +1181,8 @@ Float is the everyday shorthand for free float. When traders say "the float is t
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Extraordinary free float adjustment in MDAX - Nov. 9, 2021 | Press releases |...
 > (Zug, 9 November 2021) – Qontigo’s global index provider STOXX Ltd. has announced an unscheduled adjustment to the MDAX index. The free **float** of Zooplus AG changed by more than 10 percentage points. According to the Guide to the DAX Equity Indices, section 5.1.4., the company’s free **float** will be adjusted in the index from the current 90.06 percent to 18.00 percent. This change will become effe...
@@ -1109,6 +1203,8 @@ Float is the everyday shorthand for free float. When traders say "the float is t
 > [!quote] Emea Policy Updates (PDF)
 > tors vis-a-vis the size of the board; directors vis-a-vis the size of the board; ▪ Nominee(s) qualification, knowledge, and experience; ▪ Nominee(s) qualification, knowledge, and experience; ▪ Attendance record of the director nominees; ▪ Attendance record of the director nominees; ▪ Company's free **float**. ▪ Company's free **float**. Where none of the director nominees can be classified as independe...
 > — [Emea Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/updates/EMEA-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [Extraordinary free float adjustment in MDAX - Nov. 9, 2021 | Press releases | STOXX](https://stoxx.com/extraordinary-free-float-adjustment-in-mdax-nov-9-2021) — "WHITEPAPER"
@@ -1138,6 +1234,8 @@ GICS is the industry taxonomy you hear about most often in the context of S&P an
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > . Except for proposals subject to Equity Plan Scorecard evaluation, Shareholder Value Transfer is reasonable if it falls below a company-specific benchmark. The benchmark is determined as follows: The top quartile performers in each industry group (using the Global Industry Classification Standard: **GICS**) are identified. Benchmark SVT levels for each industry are established based on these top p...
@@ -1158,6 +1256,8 @@ GICS is the industry taxonomy you hear about most often in the context of S&P an
 > [!quote] 1 2015Frenchequitycompensationfaq Fr Version (PDF)
 > FAQ: Rémunération en actions – France 10) Comment ISS calcule-t-il le taux maximum de burn rate applicable? Pour grouper les sociétés françaises du SBF 120 par secteur d'activité, la politique de vote d'ISS se réfère au Global Industry Classification Standard (**GICS**®), une des classifications sectorielles les plus communément utilisées dans le monde développée par MSCI Standard & Poor's. Chaque ...
 > — [1 2015Frenchequitycompensationfaq Fr Version (PDF)](https://www.issgovernance.com/file/policy/1_2015frenchequitycompensationfaq-fr-version.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -1186,6 +1286,8 @@ A trading halt freezes all order matching for a security. When a STOXX index con
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News February 2022 (PDF)
 > s fell for the second month this year in February, volatility climbed. The EURO STOXX 50® Volatility (VSTOXX®) Index, which measures the implied volatility of EURO STOXX 50® Index options across their entire expiration curve, rose last month to the highest since October 2020 (Chart 1). The index is trading higher than during the low-volatility regime that ended with the COVID-19 pandemic in 202...
@@ -1206,6 +1308,8 @@ A trading halt freezes all order matching for a security. When a STOXX index con
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > by an actual portfolio » Stable: There is a high degree of index continuity » Rules-based: Index calculation and any changes to the index composition follow transparent rules » Predictable: Changes to index rules are publicly announced and a reasonable notice period is given (generally at least two trading days); they are never implemented retroactively » Transparent: Decisions are based on pub...
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News February 2022 (PDF)](https://stoxx.com/monthly-index-news-february-2022)
@@ -1235,6 +1339,8 @@ ICB is the classification backbone behind STOXX sector indices. When you see a "
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > RO STOXX 50® ESG Index beat its benchmark by 12 basis points. The index is derived from the flagship EURO STOXX 50 and implements a set of standardized ESG exclusion screens, while additionally replacing the 10% of companies with the lowest ESG scores by stocks with a higher ESG score from the same **ICB** Supersector. Risk and Return Characteristics Return (%) Annualized volatility (%) EUR USD EUR...
@@ -1255,6 +1361,8 @@ ICB is the classification backbone behind STOXX sector indices. When you see a "
 > [!quote] Monthly Index News March 2025 (PDF)
 > dex News / March 2025 Featured index STOXX has introduced the STOXX® Europe Total Market Defense Capped index, which tracks armament producers at a time of heightened geopolitical tension and a historic upgrade of the continent’s military capabilities. The new index selects European companies1 from **ICB**’s Aerospace and Defense Sector that have revenues from specific defense activities, seeking a...
 > — [Monthly Index News March 2025 (PDF)](https://stoxx.com/monthly-index-news-march-2025)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -1282,6 +1390,8 @@ Not every listed stock is investable in a meaningful sense. A company trading th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] MDAX index: 30 years benchmarking Germany’s Mittelstand | Blog posts | STOXX
 > aid Axel Lomholt, General Manager at STOXX. “This has made it a popular benchmark for investors of all sizes. The index is unique in both its scope and its market reach.” STOXX is the administrator of all DAX indices, including the MDAX. Figure 1: Performance MDAX: Key performance in numbers Highly **investable market** There are currently four ETFs tracking the MDAX, the first of which launched in...
@@ -1302,6 +1412,8 @@ Not every listed stock is investable in a meaningful sense. A company trading th
 > [!quote] STOXX Europe 600 ecosystem grows with new Total Return Futures | Press releas...
 > es market in collaboration with Eurex.” Axel Lomholt, General Manager at STOXX With a fixed number of components, the STOXX Europe 600 provides extensive coverage with a diversified allocation across 17 countries and 11 industries within Europe’s developed economies, representing nearly 90% of that **investable market**. Stuart Heath, Director, Equity & Index Product Design at Eurex: “STOXX Europe ...
 > — [STOXX Europe 600 ecosystem grows with new Total Return Futures | Press releas...](https://stoxx.com/stoxx-europe-600-ecosystem-grows-with-new-total-return-futures) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [MDAX index: 30 years benchmarking Germany’s Mittelstand | Blog posts | STOXX](https://stoxx.com/mdax-index-30-years-benchmarking-germanys-mittelstand) — "WHITEPAPER"
@@ -1331,6 +1443,8 @@ Large-cap stocks are the household names -- the biggest companies by market valu
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Introducing the DAX 50 ESG Index | STOXX
 > rmance rating model. The DAX 50 ESG Index is composed of all remaining stocks with the highest rank in three parameters: order book volume, free-float market capitalization and ESG score. For a description of the selection methodology and the review calendar, please click here. Liquid stocks with a **large-cap** tilt Feedback from market participants indicated that a flagship sustainable index shou...
@@ -1351,6 +1465,8 @@ Large-cap stocks are the household names -- the biggest companies by market valu
 > [!quote] Roundtable Multi Faktor Losung Euro Stoxx (PDF)
 > inkedIn sind wir sehr aktiv. Diese hersagen nicht zwingend sind. Als brechen; zur Technologie würden bei- stets nach Wegen Ausschau, um die Universum vermeiden wir zweitens Form der interaktiven, schnellen und Indexfondsmanager habe ich keine Wahlmöglichkeiten unserer Anleger die Übergewichtung von **Large-Cap**s, direkten Kommunikation mit Interes- Kristallkugel auf dem Schreibtisch, zu erweitern....
 > — [Roundtable Multi Faktor Losung Euro Stoxx (PDF)](https://stoxx.com/roundtable-multi-faktor-losung-euro-stoxx)
+
+</details>
 
 **Sources:**
 - [Introducing the DAX 50 ESG Index | STOXX](https://stoxx.com/introducing-the-dax-50-esg-index) — "WHITEPAPER"
@@ -1377,6 +1493,8 @@ Liquidity is the lifeblood of index replicability. If a stock in an index is ill
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liqu...
 > hange turnover criterion, however, is being removed from the ranking process as of the current review, aiming to simplify the index rules. While members of DAX will now be ranked based on free-float market capitalization only, their investability will be warranted by a requirement to fulfil minimum **liquidity** criteria instead1. This will reduce the average 12-month turnover in DAX constituents t...
@@ -1397,6 +1515,8 @@ Liquidity is the lifeblood of index replicability. If a stock in an index is ill
 > [!quote] Taking Stock of the EURO STOXX 50 ESG Index | Blog posts | STOXX
 > **Liquidity** largely unaffected The authors also probed the **liquidity** in both the benchmark and ESG portfolios, as measured by the days it takes to sell down the portfolio’s holdings in the market. The study concluded that the ESG integration methodology, in general, did not have a material impact on liquidity. A more comprehensive ESG approach In summary, the paper underscores the potential of ex...
 > — [Taking Stock of the EURO STOXX 50 ESG Index | Blog posts | STOXX](https://stoxx.com/taking-stock-of-the-euro-stoxx-50-esg-index) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liquidity | Blog posts | STOXX](https://stoxx.com/dax-index-grows-to-40-constituents-looking-at-impact-on-market-cap-and-liquidity) — "WHITEPAPER"
@@ -1423,6 +1543,8 @@ Liquidity screening is the gate that keeps thinly traded stocks out of an index.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > ect Dividend 30 March 2015: Addition of STOXX International Exposure Indices June 2015: Addition of STOXX True Exposure Indices July 2015: Addition of STOXX Activist Indices October 2015: Addition of STOXX Select & Diversification Select Indices November 2015: Clarification of STOXX Select Dividend **liquidity screening** in chapter 10.1.2 February 2016: Addition of STOXX Low Carbon indices in chap...
@@ -1443,6 +1565,8 @@ Liquidity screening is the gate that keeps thinly traded stocks out of an index.
 > [!quote] STOXX Changes Country Classification Model | Press releases | STOXX
 > fluctuations. | | 2.b | **Liquidity Screening** (Source: World Bank)The total value of shares traded must be higher than USD 15 billion. All countries currently classified as an Emerging or Developed Markets need to have at least USD 10 billion traded volume in order to maintain their classification. | **Liquidity Screening** (Source: Thomson Reuters QAD / STOXX internal data)The total value of shares ...
 > — [STOXX Changes Country Classification Model | Press releases | STOXX](https://stoxx.com/stoxx-changes-country-classification-model) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1470,10 +1594,14 @@ A limit order gives the trader price control at the expense of execution certain
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...
 > to the profit and loss stemming from variations in the spread, but, unlike the case with cash shares, they are not liable for the increasing or decreasing market value of the position’s constituents. Finally, Eurex futures have on-screen prices provided by market makers, which allows users to leave **limit order**s at set spread levels. “Trading through on-exchange futures eases execution, brings d...
 > — [Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...](https://stoxx.com/spread-ratio-indices-help-trade-relative-value-between-related-securities) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Spread Ratio Indices Help Trade Relative Value Between Related Securities | Blog posts | STOXX](https://stoxx.com/spread-ratio-indices-help-trade-relative-value-between-related-securities) — "WHITEPAPER"
@@ -1496,6 +1624,8 @@ A long position is the most basic form of equity exposure. When a fund tracks th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > MONTHLY INDEX NEWS / April 2021 Volatility Strategy Indices Key Points The VSTOXX® Short-Term Futures and VSTOXX® Mid-Term Futures indices, which track the return from a rolling **long position** in VSTOXX futures contracts on Eurex, posted positive returns in the month that ended. The EURO STOXX 50® Investable Volatility Index, which measures forward implied volatility in the Eurozone equity marke...
@@ -1516,6 +1646,8 @@ A long position is the most basic form of equity exposure. When a fund tracks th
 > [!quote] Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...
 > _________________________________________________ Overview 1 – Design of ETRFs TRFs follow the OTC total return swap structure, quoted as an annualized spread in basis points that represents the premium added to an overnight funding benchmark rate to determine the financing cost. The holder of the **long position** receives the distribution associated with holding the cash equity, against which the...
 > — [Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...](https://stoxx.com/qa-with-eurex-switching-otc-swaps-to-a-capital-efficient-alternative-under-uncleared-margin-rules) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -1545,6 +1677,8 @@ Market capitalisation is the most fundamental size metric in equity indexing. ST
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Benchmark indices | STOXX
 > tion on the EURO STOXX 50 and the DAX indices, please go to Blue-chip indices. - For more information on the STOXX World Equity indices, please go to Global and regional indices. Key benefits Reach The indices track the most important global and regional markets with a proven, objective methodology **Market capitalization** based The indices are weighted according to free-float market capitalizatio...
@@ -1565,6 +1699,8 @@ Market capitalisation is the most fundamental size metric in equity indexing. ST
 > [!quote] 2013Uspolicyupdates (PDF)
 > , for example, a new CEO in the prior fiscal year or anomalous equity grant practices (e.g., biennial awards); and • Any other factors deemed relevant. Key Changes: • Use company's selected peers as an input to its peer group methodology, while maintaining an approach that includes company size and **market capitalization** constraints. • Potentially incorporate a comparison of realizable pay to gr...
 > — [2013Uspolicyupdates (PDF)](https://www.issgovernance.com/file/2013-policies/2013USPolicyUpdates.pdf)
+
+</details>
 
 **Sources:**
 - [Benchmark indices | STOXX](https://stoxx.com/equity-indices/benchmark-indices) — "WHITEPAPER"
@@ -1591,6 +1727,8 @@ Micro-cap stocks sit at the tail end of the size distribution. They appear in br
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Board Accountability Practices Review | ISS
 > rd accountability practices more quickly compared to smaller firms. For example, annual elections are now the standard among large-cap firms, and are becoming more common among mid-caps. However, progress at small-cap firms has stalled, while there appears to be a resurgence of classified boards at **micro-cap** companies. In light of a surge in restrictive governance structures at younger firms, s...
@@ -1599,6 +1737,8 @@ Micro-cap stocks sit at the tail end of the size distribution. They appear in br
 > [!quote] Q&amp;A with Invesco: Modernizing thematic strategies in fast-changing techno...
 > emes, and, as a result, more investor demand.” Brett: “Talking about some of those future themes, be it quantum computing or carbon capture, a lot of these new forces in the economy are still in the private equity space. You are going to see a lot of growth there, and consequently a lot of unlisted **micro-cap**s coming to the market, and the small-caps that we own, hopefully becoming the large-cap...
 > — [Q&amp;A with Invesco: Modernizing thematic strategies in fast-changing techno...](https://stoxx.com/qa-with-invesco-modernizing-thematic-strategies-in-fast-changing-technology-segments) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Board Accountability Practices Review | ISS](https://www.issgovernance.com/library/board-accountability-practices-review) — "U.S. Board Study: Board Accountability Practices Review"
@@ -1622,6 +1762,8 @@ Mid-cap companies are the "middle children" of the equity market -- large enough
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Der MDAX: Seit 30 Jahren die verlässliche Benchmark für Deutschlands Mid-Caps...
 > herigen Kontrakten ein. Das Open Interest in Mini-MDAX-Derivaten lag Ende Dezember bei circa 2 Milliarden EUR. Darüber hinaus sind gegenwärtig über 2.300 MDAX-Investmentzertifikate an der Frankfurter Wertpapierbörse (FWB) zum Handel verfügbar. „Weltweit bieten nur sehr wenige nationale Märkte einen **Mid-Cap**-Index mit dieser hohen Investierbarkeit. Der MDAX zeigt die Stärke und Dynamik der führen...
@@ -1642,6 +1784,8 @@ Mid-cap companies are the "middle children" of the equity market -- large enough
 > [!quote] Monthly Index News January 2026 (PDF)
 > h.” STOXX is the administrator of all DAX indices, including the MDAX. MDAX: Key performance in numbers Source: STOXX. Total returns in EUR through Jan. 5, 2026. There are currently four ETFs tracking the MDAX, the first of which launched in 2001, and two funds following sustainable versions of the **mid-cap** index. Together, the six ETFs have accumulated EUR 4.4 billion in assets, with nearly hal...
 > — [Monthly Index News January 2026 (PDF)](https://stoxx.com/monthly-index-news-january-2026)
+
+</details>
 
 **Sources:**
 - [Der MDAX: Seit 30 Jahren die verlässliche Benchmark für Deutschlands Mid-Caps | Blog posts | STOXX](https://stoxx.com/der-mdax-seit-30-jahren-die-verlassliche-benchmark-fur-deutschlands-mid-caps) — "WHITEPAPER"
@@ -1669,6 +1813,8 @@ Market makers are the lubricant of the order book. On exchanges like Xetra, desi
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Q&amp;A: IMC Trading’s Van Leeuwen on ESG Futures | Blog posts | STOXX
 > ient manner. What does ESG mean for a **market maker** like IMC? Firstly, market making is in our core, providing liquidity at a fair price, creating efficient markets. We also take our own social responsibility seriously, supporting various good causes through our own charitable foundation. By being a **market maker** of ESG products we are pleased we can now use our core competency to also enable inv...
@@ -1689,6 +1835,8 @@ Market makers are the lubricant of the order book. On exchanges like Xetra, desi
 > [!quote] Amundi and STOXX collaborate to launch Amundi ETF investing in the European d...
 > QUIDITY RISK – There is a risk associated with the markets to which the ETF is exposed. The price and the value of investments are linked to the liquidity risk of the underlying index components. Investments can go up or down. In addition, on the secondary market liquidity is provided by registered **market maker**s on the respective stock exchange where the ETF is listed. On exchange, liquidity ma...
 > — [Amundi and STOXX collaborate to launch Amundi ETF investing in the European d...](https://stoxx.com/amundi-and-stoxx-collaborate-to-launch-amundi-etf-investing-in-the-european-defense-sector) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Q&amp;A: IMC Trading’s Van Leeuwen on ESG Futures | Blog posts | STOXX](https://stoxx.com/qa-imc-tradings-van-leeuwen-on-esg-futures) — "WHITEPAPER"
@@ -1715,10 +1863,14 @@ A market order is the simplest way to get into or out of a position right now. F
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] LiquidMetrix | ISS
 > ligence on Trading Venues has become a key characteristic synonymous with Researchers, Quants, high performing trading desks and Execution Venues. LM Research™ LM Research™ LiquidMetrix financial market data research is based upon our sophisticated advanced analytics and in-depth database of Global **Market order** books and trade data. LiquidMetrix Webinar on Achieving Greater Efficiencies in Trad...
 > — [LiquidMetrix | ISS](https://www.issgovernance.com/liquidmetrix) — "LIQUIDMETRIX"
+
+</details>
 
 **Sources:**
 - [LiquidMetrix | ISS](https://www.issgovernance.com/liquidmetrix) — "LIQUIDMETRIX"
@@ -1743,6 +1895,8 @@ The order book is the central nervous system of an exchange. It shows how many s
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > DAX EQUITY INDEX METHODOLOGY GUIDE 24/120 5. STOCK CHARACTERISTICS 5.13.2. **ORDER BOOK** VOLUME The **order book** volume is the total turnover of a specific share class recorded on Xetra10 and Börse Frankfurt. The period over which the turnover is calculated is stipulated individually for each index type and is applied in line with the specific provisions for the index type conc
@@ -1763,6 +1917,8 @@ The order book is the central nervous system of an exchange. It shows how many s
 > [!quote] Introducing the DAX 50 ESG Index | STOXX
 > generation), nuclear power and military contracting. The remaining securities are screened for their individual ESG scores, as calculated by Sustainalytics’ transparent ESG performance rating model. The DAX 50 ESG Index is composed of all remaining stocks with the highest rank in three parameters: **order book** volume, free-float market capitalization and ESG score. For a description of the select...
 > — [Introducing the DAX 50 ESG Index | STOXX](https://stoxx.com/introducing-the-dax-50-esg-index) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
@@ -1790,6 +1946,8 @@ OTC trading happens off-exchange, often via dealer networks or bilateral agreeme
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Guide To Industry Classifications Used By Stoxx Ltd (PDF)
 > Companies engaged in research into and development of biological substances for the purposes of drug discovery and diagnostic development, and which derive the majority of their revenue from either the sale or licensing of these drugs and diagnostic tools. 20103015 Manufacturers of prescription or **over-the-counter** drugs, such as aspirin, cold remedies and birth Pharmaceuticals control pills. In...
@@ -1810,6 +1968,8 @@ OTC trading happens off-exchange, often via dealer networks or bilateral agreeme
 > [!quote] Eurex, STOXX expand Equity and Basket Total Return Futures collaboration with...
 > TOXX provides an Equity Dividend Index (EDI) that reflects the total net-of-tax dividend per share paid by the underlying equity from a base date[1] and is used in the ETRF’s final settlement price. An ETRF offers a collateral-efficient, fully fungible and listed, synthetic replication to a bespoke **over-the-counter (OTC)** swap used in equity financing. In the agreement, an ETRF holder receives t...
 > — [Eurex, STOXX expand Equity and Basket Total Return Futures collaboration with...](https://stoxx.com/eurex-stoxx-expand-equity-and-basket-total-return-futures-collaboration-with-new-etrfs-on-us-stocks) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Guide To Industry Classifications Used By Stoxx Ltd (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/Guide_to_Industry_Classifications_used_by_STOXX_Ltd.pdf)
@@ -1839,6 +1999,8 @@ For dual-listed companies, the primary listing is the "home" exchange that STOXX
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Australia Policy Updates (PDF)
 > e: The new policy in voting on director elections clarifies ISS' position to hold directors of foreign issuers accountable for failing to comply with Australian market corporate governance standards. There are an increasing number of New Zealand and other foreign incorporated issuers with a sole or **primary listing** on the ASX which are presently not complying with local market corporate governan...
@@ -1859,6 +2021,8 @@ For dual-listed companies, the primary listing is the "home" exchange that STOXX
 > [!quote] Stoxx World Equity Index Guide (PDF)
 > DOLOGY GUIDE 18/37 4. INDEX CHARACTERISTICS COUNTRY AND LISTING Each stock is uniquely assigned to a specific country and listing within the STOXX World investable universe. The country nationality (i.e. the country the stock is assigned to) and listing is based on the country of incorporation, the **primary listing** and the country with the largest trading volume. American and depositary receipts...
 > — [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Australia Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2024/updates/Australia-Policy-Updates.pdf)
@@ -1885,6 +2049,8 @@ Primary market is closely related to primary listing but operates at the country
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
 > vent occurred in relation to a If an Insolvency Event occurred in relation to a Constituent, the securities of the Constituent shall be Constituent of a Blue Chip or International index, deleted from the index based on the traded stock the securities of the Constituent shall be deleted price on its **primary market**, if available; if the last from the index based on the traded stock price on price...
@@ -1905,6 +2071,8 @@ Primary market is closely related to primary listing but operates at the country
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > n the case of group reporting requirements, section 117(2) of the WpHG. 6 https://www.dcgk.de/en/code/current-version/f-transparency-and-external-reporting.html 7 See the EU Regulated Market and the follow-up obligations for the Regulated Market (https://www.deutsche-boerse-cash- market.com/dbcm-en/primary-market/being-public/ipo-line-being-public/regulated-market/!ipo-21956-60156) 8 This provi...
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+
+</details>
 
 **Sources:**
 - [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
@@ -1934,6 +2102,8 @@ Qontigo is the brand name under which STOXX indices are developed and maintained
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] APG and Qontigo Launch STOXX Family of Groundbreaking Responsible Indices: Bl...
 > ons, sheltered employment organizations, medical specialists, and architects. APG Asset Management manages approximately €613 billion (July 2021) pension assets. With approximately 3,000 employees we work from Heerlen, Amsterdam, Brussels, New York, Hong Kong, Shanghai and Beijing. www.apg.nl About **Qontigo** **Qontigo** is a leading global provider of innovative index, analytics and risk solutions th...
@@ -1954,6 +2124,8 @@ Qontigo is the brand name under which STOXX indices are developed and maintained
 > [!quote] Willis Towers Watson and Qontigo launch pioneering STOXX Global Index Series ...
 > ed portfolios - Innovative, proprietary approach looks beyond simple strategies such as carbon exposure - Major Market Innovation for COP26 Private Finance Agenda Media Contact General Inquiries: media@**qontigo**.com Index Inquiries: Andreas von Brevern +49 (0) 69 211 14284 London (October 11, 2021) – **Qontigo** and Willis Towers Watson have launched an innovative family of climate transition indices...
 > — [Willis Towers Watson and Qontigo launch pioneering STOXX Global Index Series ...](https://stoxx.com/willis-towers-watson-and-qontigo-launch-pioneering-stoxx-global-index-series-that-quantifies-the-climate-transition-risk-of-companies) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [APG and Qontigo Launch STOXX Family of Groundbreaking Responsible Indices: BlackRock Selected to Implement the Developed Equities Mandate | Press releases | STOXX](https://stoxx.com/apg-and-qontigo-launch-stoxx-family-of-groundbreaking-responsible-indices) — "WHITEPAPER"
@@ -1983,6 +2155,8 @@ A regulated market is an exchange that operates under an official regulatory fra
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > ion is deemed to have been met for reporting periods ending before the listing. » Publication of a quarterly statement or quarterly financial report for the first and third quarters of the fiscal year. The quarterly statement or quarterly financial report must meet the follow-up obligations for the **Regulated Market**’s Prime Standard7 regarding the content of the report, the period covered and th...
@@ -2003,6 +2177,8 @@ A regulated market is an exchange that operates under an official regulatory fra
 > [!quote] General All Share - STOXX
 > Summary Transparency level for companies that meet statutory subsequent admission requirements. Companies whose shares have been admitted to one of the two EU-**regulated market** segments (**Regulated Market** or Official Market) are automatically admitted to the General Standard. Subsequent admission requirements of the official or regulated markets thus apply for companies in the General Standard an...
 > — [General All Share - STOXX](https://stoxx.com/index/3btt) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
@@ -2029,6 +2205,8 @@ A rally is a period when the market climbs with conviction. For STOXX indices, a
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Controlled Companies Generally Underperform And Boards Less Diverse, New Stud...
 > nificantly higher at controlled companies with multi-class stock structures: three times higher than that at single-class stock controlled firms and more than 40 percent higher than average CEO pay at non-controlled firms. In addition, director tenure typically runs longer, board refreshment is gene**rally** slower, and boardrooms are less diverse at controlled companies. The study, Controlled Comp...
@@ -2049,6 +2227,8 @@ A rally is a period when the market climbs with conviction. For STOXX indices, a
 > [!quote] Canada Venture Voting Guidelines (PDF)
 > gating circumstances, recommend against such changes. Cumulative Voting General Recommendation: Where such a structure would not be detrimental to shareholder interests, gene**rally** vote for proposals to introduce cumulative voting. Gene**rally** vote against proposals to eliminate cumulative voting. Generally vote for proposals to restore or permit cumulative voting but exceptions may be made depend...
 > — [Canada Venture Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2020/americas/Canada-Venture-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Controlled Companies Generally Underperform And Boards Less Diverse, New Study Finds | ISS](https://www.issgovernance.com/controlled-companies-generally-underperform-boards-less-diverse-new-study-finds) — "Controlled Companies Generally Underperform And Boards Less Diverse, New Study Finds"
@@ -2078,6 +2258,8 @@ A sector is a broad economic category -- Banks, Technology, Health Care, and so 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] A Decade of Changing Sector Exposure for European Equities | Blog posts | STOXX
 > The global financial crisis significantly changed the industry composition of European equities, enhancing **sector** diversification relative to the market’s own history and to other major regions. At the core of this change is the banking **sector**, whose members have underperformed in the face of tepid economic growth, low interest rates and tighter capital rules. In March 2008, financials represen...
@@ -2098,6 +2280,8 @@ A sector is a broad economic category -- Banks, Technology, Health Care, and so 
 > [!quote] ISS EVA Webinar Series: EVA Market and Sector Outlook for 2021 | ISS
 > staff lead a discussion of key drivers, risks, and opportunities from an EVA perspective for 2021. The elevated valuations within the framework today have led the EVA research team to have a cautious outlook on the market heading into 2021. Our research team recently published their 2021 Market and **Sector** Outlooks and will be expanding on these views with actionable insights. EVA (Economic Valu...
 > — [ISS EVA Webinar Series: EVA Market and Sector Outlook for 2021 | ISS](https://www.issgovernance.com/iss-eva-webinar-series-eva-market-and-sector-outlook-for-2021) — "ISS EVA Webinar Series"
+
+</details>
 
 **Sources:**
 - [A Decade of Changing Sector Exposure for European Equities | Blog posts | STOXX](https://stoxx.com/a-decade-of-changing-sector-exposure-for-european-equities-a-decade-of-changing-sector-exposure-for-european-equities) — "WHITEPAPER"
@@ -2124,6 +2308,8 @@ Sector classification is the act of labelling a company -- deciding, for example
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > **sector classification** changes for exceptional reasons (e.g., due to a change in the company’s sales focus or, in the case of an investment company, its investment focus), the company will be reclassified on the next quarterly review implementation date. The cutoff date for extraordinary changes in **sector classification**s is the cutoff date for the March, June and December selection lists. Extrao...
@@ -2144,6 +2330,8 @@ Sector classification is the act of labelling a company -- deciding, for example
 > [!quote] How to capture investment themes at different stages of their lifecycle | Blo...
 > capture the winners of seismic shifts disrupting our modern world — known as megatrends — that are durable and longer-term in nature. That is, identifying companies that stand to benefit as these themes transform politics, economics and consumer behavior. Thematic portfolios cut across traditional **sector classification**s, as the latter typically provide less flexibility when it comes to accurate...
 > — [How to capture investment themes at different stages of their lifecycle | Blo...](https://stoxx.com/how-to-capture-investment-themes-at-different-stages-of-their-lifecycle) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
@@ -2170,6 +2358,8 @@ Settlement is the back-office conclusion of a trade. When STOXX schedules an ind
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] VSTOXX daily settlement price window expanded to enhance volatility trading |...
 > The calculation behind VSTOXX® (EURO STOXX 50® Volatility index), the flagship gauge for European volatility, is being adjusted to strengthen the index’s trading ecosystem. All indices in the VSTOXX family have a **settlement** level that is calculated on the 30th calendar day preceding the expiry of VSTOXX options on Eurex.[1] A **settlement** level is calculated as the arithmetic average of all index...
@@ -2190,6 +2380,8 @@ Settlement is the back-office conclusion of a trade. When STOXX schedules an ind
 > [!quote] Equifax Agrees to High Profile Shareholder Settlement for $149 Million | ISS
 > NOTABLE CASES Equifax Agrees to High Profile Shareholder **Settlement** for $149 Million February 17, 2020 CASE SUMMARY The Complaint alleges that throughout the class period, the defendants issued materially false and/or misleading statements and/or failed to disclose that: (1) the Company failed to maintain adequate measures to protect its data systems; (2)
 > — [Equifax Agrees to High Profile Shareholder Settlement for $149 Million | ISS](https://www.issgovernance.com/equifax-and-shareholders-agree-to-149-million-settlement) — "NOTABLE CASES"
+
+</details>
 
 **Sources:**
 - [VSTOXX daily settlement price window expanded to enhance volatility trading | Blog posts | STOXX](https://stoxx.com/vstoxx-daily-settlement-price-window-expanded-to-enhance-volatility-trading) — "WHITEPAPER"
@@ -2216,6 +2408,8 @@ Small-cap stocks offer exposure to smaller, often faster-growing companies. They
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] What’s Behind the Edge in Equal-Weight Strategies? | Blog posts | STOXX
 > to returns in the long run, according to an analysis by Invesco.1 The asset-management company says that the vast majority of an equal-weighted portfolio’s outperformance can be attributed to disciplined quarterly rebalancing, with the remaining coming from a more consistent sector allocation. The **small-cap** effect A recent study by VanEck,2 however, is among those arguing that the outperformanc...
@@ -2236,6 +2430,8 @@ Small-cap stocks offer exposure to smaller, often faster-growing companies. They
 > [!quote] 2013Europeanpolicyupdates (PDF)
 > ercent indicated that the nomination of a censor or modification of company bylaws in order to set up the role of a censor is either never appropriate (32 percent) or appropriate if the appointment is temporary (32 percent). Note that the survey question did not distinguish between large-, mid-, or **small-cap** companies. Furthermore, during ISS' 2011-2012 Comment Period, there was a consensus amo...
 > — [2013Europeanpolicyupdates (PDF)](https://www.issgovernance.com/file/2013-policies/2013EuropeanPolicyUpdates.pdf)
+
+</details>
 
 **Sources:**
 - [What’s Behind the Edge in Equal-Weight Strategies? | Blog posts | STOXX](https://stoxx.com/whats-behind-the-edge-in-equal-weight-strategies) — "WHITEPAPER"
@@ -2295,10 +2491,14 @@ Short selling allows investors to profit from declining prices. While STOXX indi
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Stoxx Strategy Guide (PDF)
 > t the end of day t after the roll4 𝑥𝑡 𝑃𝑀 = mid-price of future x on day t based on last bid and ask at 17:30:00 CET 𝑥𝑡 The index is available in EUR and USD. The index base value is 10’000 as of December 30, 2016. The pre-roll index level is calculated to replicate the performance of a hypothetical **short selling** of the contracts as 𝐼𝑉𝑃𝑟𝑒 =𝐼𝑉𝑃𝑜𝑠𝑡+𝐶𝑃𝑟𝑒(𝑃𝑀−𝑃𝑀 )+𝐶𝑃𝑟𝑒(𝑃𝑀−𝑃𝑀 ) 𝑡 𝑡−1 1𝑡 1𝑡 1,𝑡−1 2𝑡 2𝑡...
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
@@ -2322,6 +2522,8 @@ Stock is the most basic unit of equity investing. When a data engineer works wit
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] China Stocks Lead World as Economy is First to Rebound from Pandemic | Blog p...
 > te in the People’s Republic of China (mainland), has gained 18% in 2020 — with a 15% jump in the first two weeks of July.1 The benchmark STOXX® China A 900 Index has risen at the same rate. China’s A shares make up the country’s biggest market and are traded in renminbi on the Shanghai and Shenzhen **stock** exchanges. The market is dominated by retail investors, although international investors ca...
@@ -2342,6 +2544,8 @@ Stock is the most basic unit of equity investing. When a data engineer works wit
 > [!quote] ISS Announces Hiring of Tom Stockdale as Head of Data Strategy and Applicatio...
 > team to oversee the critical objective of meeting the growing data and technology needs of our clients,” said ISS President & CEO Gary Retelny. “Tom’s experience will prove instrumental in ensuring ISS is successfully able to push forward on critical areas of new growth across our business lines.” **Stock**dale, who will report to Retelny, was among the group of 25 that started RiskMetrics Group in...
 > — [ISS Announces Hiring of Tom Stockdale as Head of Data Strategy and Applicatio...](https://www.issgovernance.com/iss-announces-hiring-tom-stockdale-head-data-strategy-application-development) — "ISS Announces Hiring of Tom Stockdale as Head of Data Strategy and Application Development"
+
+</details>
 
 **Sources:**
 - [China Stocks Lead World as Economy is First to Rebound from Pandemic | Blog posts | STOXX](https://stoxx.com/china-stocks-lead-world-as-economy-rebound-from-pandemic) — "WHITEPAPER"
@@ -2368,6 +2572,8 @@ Supersectors provide a middle layer of granularity. They are broader than sector
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] DAXsupersector Basic Materials - STOXX
 > Summary All companies admitted to the Prime Standard segment of Frankfurt Stock Exchange are included in DAX sector indices based on their sector affiliation. There are three types of DAX sector indices: the DAX**supersector**, DAXsector and DAXsubsector. These comprise all companies assigned to the **supersector**, sector or subsector concerned, based on the DAX Industry Classification. Index Guides, ...
@@ -2388,6 +2594,8 @@ Supersectors provide a middle layer of granularity. They are broader than sector
 > [!quote] Istoxx Index Guide (PDF)
 > iSTOXX® METHODOLOGY GUIDE 141/1024 9. DECREMENT INDICES (PERFORMANCE DEDUCTIONS) 9.51. iSTOXX **SUPERSECTOR** EUROPE DECREMENT INDICES OVERVIEW The iSTOXX **Supersector** Europe Decrement Indices cover 12 ICB Super Sectors, replicating the performance of the appropriate corresponding underlying index while assuming a constant dividend markdown. Over the course of a year, a fixed percentage (between
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [DAXsupersector Basic Materials - STOXX](https://stoxx.com/index/4n7a) — "WHITEPAPER"
@@ -2416,6 +2624,8 @@ Trading volume is the simplest count of activity -- how many shares changed hand
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] DAX: A trading impact analysis of the 15% stock cap | Blog posts | STOXX
 > imit, STOXX this year introduced the DAX UCITS Capped index series. For more on the automatic capping process, please see Section 5.10 of the DAX Equity Index Methodology Guide. Conclusion A 15% capping rule has very limited impact on trading flows, representing only a small fraction of the regular **trading volume** around DAX rebalancing days, even in the case of very strong quarters for a domina...
@@ -2436,6 +2646,8 @@ Trading volume is the simplest count of activity -- how many shares changed hand
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > any re-calculation of weighting cap factors shall be implemented thereafter. 5.12. VOLUME-WEIGHTED AVERAGE PRICE The volume-weighted average price (VWAP) is defined as the sum of the product of execution price and volume of each trade for a stock during the calculation period, divided by the total **trading volume** of that stock during the calculation period.
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+
+</details>
 
 **Sources:**
 - [DAX: A trading impact analysis of the 15% stock cap | Blog posts | STOXX](https://stoxx.com/dax-a-trading-impact-analysis-of-the-15-stock-cap) — "WHITEPAPER"
@@ -2463,6 +2675,8 @@ Tick size determines the granularity of the order book. A stock trading at EUR 5
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > 𝑧𝑒,𝑂 𝑖,𝑇 𝑖 𝐸𝑛𝑡𝑟𝑦 −min(𝑂𝑇𝐶𝑅 𝑖 ∗𝑆 𝐸𝑛𝑡𝑟𝑦 ,30%∗𝑂 𝑖,𝑇 𝑖 𝐸𝑛𝑡𝑟𝑦 )] if 𝑖 is a Call Option where o 𝑂𝑇𝐶𝑅 is the Option Transaction Cost for Option i (as defined in section 0). 𝑖 o 𝑆 is the Euro Stoxx 50 close value at Entry Date. 𝐸𝑛𝑡𝑟𝑦 o 𝑇𝐸𝑛𝑡𝑟𝑦 is the Option Entry Date. 𝑖 o 𝑇𝑖𝑐𝑘 𝑆𝑖𝑧𝑒 is 0.10 EUR, the minimum **tick size** as specified by Eurex 34.1.1.3. OPTION PORTFOLIO LEVEL The Option Portfolio Level is th...
@@ -2471,6 +2685,8 @@ Tick size determines the granularity of the order book. A stock trading at EUR 5
 > [!quote] ESG Futures — How Is the Industry Tracking in the ESG Transition? | Blog post...
 > raditional benchmark futures is most often 1 tick wide, whereas the ESG-X futures is often quoted 2 ticks wide at close to 14 bps spread. Exhibit 2 Even at 1 tick wide, the cost of trading would be more than twice as high compared to the benchmark. One takeaway of this is that Eurex could lower the **tick size** to reduce the cost of trading, but overall this is a tricky problem as liquidity provid...
 > — [ESG Futures — How Is the Industry Tracking in the ESG Transition? | Blog post...](https://stoxx.com/esg-futures-how-is-the-industry-tracking-in-the-esg-transition) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)

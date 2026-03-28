@@ -33,7 +33,7 @@ SQL Server offers several strategies for loading data where rows may already exi
 
 Bronze tables hold only the current snapshot. Every pipeline run wipes the table for the given index and reloads fresh data from JSON. The DELETE and INSERT must be wrapped in a single explicit transaction so a crash between the two steps does not leave the table empty.
 
-**Delete existing rows for this index, then bulk insert:**
+#### DELETE + INSERT in transaction — truncate-reload pattern
 
 ```sql
 -- Strategy: truncate & reload per index
@@ -74,7 +74,7 @@ except Exception:
 
 OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed. This is the same MERGE pattern used in [[bronze-layer-loading#Strategy 2: Merge (OHLCV Only)|bronze OHLCV loading]].
 
-**Step 1: Read existing data to build a lookup map:**
+#### SELECT existing rows — build lookup map for merge comparison
 
 ```sql
 -- Step 1: Read existing bronze data to build a lookup map
@@ -88,7 +88,7 @@ FROM bronze.index_europe_ohlcv                     -- table name is dynamic per 
 
 Python builds a dictionary: `existing = {('ASML.AS', '2025-03-04'): 1842300, ...}`
 
-**Step 2a: Insert rows that don't exist yet (new dates):**
+#### INSERT WHERE NOT EXISTS — insert new rows only (OHLCV merge)
 
 ```sql
 -- Step 2a: Insert rows that don't exist yet (new dates)
@@ -100,7 +100,7 @@ INSERT INTO bronze.index_europe_ohlcv (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
-**Step 2b: Update rows where volume was 0 but now has real data:**
+#### UPDATE WHERE volume changed — update stale rows with new data
 
 ```sql
 -- Step 2b: Update rows where volume was 0 but now has real data
@@ -121,7 +121,7 @@ Slowly Changing Dimension (SCD) Type 2 preserves the full history of attribute c
 
 File: `ingestion/transforms/transform_index_dim.py`
 
-**Step 1: Read the full bronze snapshot:**
+#### SELECT bronze snapshot — SCD Type 2 step 1: read source data
 
 ```sql
 -- Step 1: Read the full bronze snapshot
@@ -136,7 +136,7 @@ SELECT _index, symbol, long_name, short_name, sector, sector_key,
 FROM bronze.index_dim
 ```
 
-**Step 2: Read current silver rows (active records only):**
+#### SELECT silver WHERE is_current = 1 — SCD Type 2 step 2: read active rows
 
 ```sql
 -- Step 2: Read current silver rows (active records only)
@@ -151,7 +151,7 @@ WHERE is_current = 1    -- only active records
 
 Python compares each `(_index, symbol)` pair. If attributes changed:
 
-**Step 3a: Close the old record (set end-date, mark as historical):**
+#### UPDATE SET is_current = 0, end_date — SCD Type 2 step 3a: close old record
 
 ```sql
 -- Step 3a: Close the old record (set end-date, mark as historical)
@@ -164,7 +164,7 @@ WHERE _index = ? AND symbol = ?
   AND is_current = 1
 ```
 
-**Step 3b: Insert the new version (automatically gets `is_current = 1`):**
+#### INSERT new version — SCD Type 2 step 3b: insert with is_current = 1
 
 ```sql
 -- Step 3b: Insert the new version (automatically gets is_current = 1)
@@ -176,7 +176,7 @@ INSERT INTO silver.index_dim (
 -- DEFAULT: valid_from = SYSUTCDATETIME(), is_current = 1
 ```
 
-**Sample `silver.index_dim` state after SCD Type 2:**
+#### silver.index_dim — sample state after SCD Type 2 processing
 
 | _index | symbol | sector | valid_from | valid_to | is_current |
 |--------|--------|--------|------------|----------|------------|
@@ -195,7 +195,7 @@ Bronze holds only today's snapshot (truncated each run). This transform preserve
 
 File: `ingestion/transforms/transform_signals_daily.py`
 
-**Step 1: Load all existing silver data for comparison:**
+#### SELECT silver signals — upsert step 1: load existing for comparison
 
 ```sql
 -- Step 1: Load all existing silver data for comparison
@@ -212,7 +212,7 @@ SELECT _index,
 FROM silver.signals_daily
 ```
 
-**Step 2: Read today's bronze snapshot:**
+#### SELECT bronze snapshot — upsert step 2: read today's source data
 
 ```sql
 -- Step 2: Read today's bronze snapshot
@@ -231,7 +231,7 @@ FROM bronze.signals_daily
 
 Python compares each `(_index, symbol, date)` key:
 
-**Step 3: INSERT if new, UPDATE if changed, SKIP if identical:**
+#### INSERT if new, UPDATE if changed, SKIP if identical — upsert logic
 
 ```sql
 -- Step 3a: INSERT if this date doesn't exist in silver yet
@@ -247,7 +247,7 @@ WHERE _index = ? AND symbol = ? AND signal_date = ?
 -- Step 3c: SKIP if values are identical (no market movement since last fetch)
 ```
 
-**Typical run output:**
+#### Upsert run output — inserted, updated, skipped counts
 
 ```
 records_inserted=50  records_updated=45  records_unchanged=5
@@ -260,7 +260,7 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [[idempotent-pipeline-design|idempotent pattern]] used across the pipeline, and [[dbt-materializations|dbt incremental models]] generate MERGE statements internally when targeting SQL Server.
 
-**MERGE as a race-condition-safe upsert:**
+#### MERGE WHEN MATCHED / NOT MATCHED — atomic upsert pattern
 
 ```sql
 MERGE INTO silver.signals_daily AS target
@@ -280,7 +280,7 @@ WHEN NOT MATCHED THEN INSERT (
 );
 ```
 
-**MERGE to prevent phantom inserts (atomic check + insert only):**
+#### MERGE WHEN NOT MATCHED THEN INSERT — prevent phantom duplicate inserts
 
 ```sql
 MERGE INTO t AS target
@@ -299,7 +299,7 @@ WHEN NOT MATCHED THEN
 
 Gold scores are fully recomputed for a given date — there is no partial update. The pattern is delete the target date, then insert the recomputed rows. For the incremental index performance transform, a 7-day rolling window is refreshed to handle late-arriving signals.
 
-**Daily scores (gold layer) — delete date then insert computed rows:**
+#### DELETE + INSERT by date — gold scores refresh pattern
 
 ```sql
 -- Step 4: Delete existing scores for this date, then insert new ones
@@ -323,7 +323,7 @@ INSERT INTO gold.scores_daily (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ```
 
-**Index performance (gold layer) — refresh a 7-day rolling window:**
+#### DELETE + INSERT rolling window — gold index performance refresh
 
 ```sql
 -- Step 5: Delete last 7 days (refresh window) and insert new data
@@ -507,7 +507,7 @@ BEGIN CATCH
 END CATCH
 ```
 
-**`XACT_ABORT` behavior:**
+#### SET XACT_ABORT ON — automatic rollback on any error
 
 | Setting | Behavior on error |
 |---|---|

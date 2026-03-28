@@ -42,6 +42,8 @@ In plain terms, an activist investor is a shareholder who buys enough stock to d
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Americas Policy Updates (PDF)
 > tionale for Change: In May 2020, the SEC published guidance and withdrew a prior SEC staff letter known as the Boulder Letter in improving protections for boards of CEFs by allowing CEFs to defend themselves against investors using measures permitted under state corporate law. In recent years, some **activist investor**s have targeted CEFs to extract profits by pushing for actions such as fund liqu...
@@ -62,6 +64,8 @@ In plain terms, an activist investor is a shareholder who buys enough stock to d
 > [!quote] Us Procedures And Policies Faq (PDF)
 > owerful anti-takeover provision, which impairs voting rights above certain specified ownership thresholds. This is important, not only because the tactic disenfranchises significant shareholders, but because there is mounting tension in the closed-end fund universe between funds and a small pool of **activist investor**s, which frequently take positions large enough to be directly impacted by the t...
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [Americas Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2021/updates/Americas-Policy-Updates.pdf)
@@ -88,6 +92,8 @@ In plain terms, an advisory vote lets shareholders voice approval or disapproval
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > ous year, making it more difficult to understand the implications of the vote. Social Advisory Services Recommendation: Vote for annual **advisory vote**s on compensation, which provide the most consistent and clear communication channel for shareholder concerns about companies' executive pay programs. **Advisory Vote** on Golden Parachutes in an Acquisition, Merger, Consolidation, or Proposed Sale Thi...
@@ -108,6 +114,8 @@ In plain terms, an advisory vote lets shareholders voice approval or disapproval
 > [!quote] U.S. 2013 Compensation Policy Updates FAQ | ISS
 > imate alignment with shareholders’ interests. Any amount of hedging will be considered a problematic practice warranting a negative vote recommendation against appropriate board members. Please see the 2013 U.S. Proxy Voting Policies and Procedures FAQ for more insight on ISS policy in this regard. **Advisory Vote** on Golden Parachutes (SOGP) - An event has technically triggered a change in contro...
 > — [U.S. 2013 Compensation Policy Updates FAQ | ISS](https://www.issgovernance.com/policy-gateway/u-s-2013-compensation-policy-updates-faq) — "U.S. 2013 Compensation Policy Updates FAQ"
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -134,6 +142,8 @@ In plain terms, the AGM is the yearly meeting where shareholders get to vote on 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2015 Taft Hartley Advisory Services International Guidelines (PDF)
 > ases, Taft-Hartley Advisory Services supports even a bundled resolution that includes negative changes. Change in Company Fiscal Term Taft-Hartley Advisory Services Recommendation: Vote for resolutions to change a company’s fiscal term unless a company’s motivation for the change is to postpone its **annual general meeting (AGM)**. Discussion Companies routinely seek shareholder approval to change ...
@@ -154,6 +164,8 @@ In plain terms, the AGM is the yearly meeting where shareholders get to vote on 
 > [!quote] Prothena (PDF)
 > f its drug candidates until it is able to generate revenue and positive cash flow from product sales. Prothena’s continued viability is dependent upon raising cash from issuances of its shares. We note that Prothena presented amended and restated Articles of Association to our shareholders at their **annual general meeting** in May 2016, which Articles continued to authorise our board of directors ...
 > — [Prothena (PDF)](https://www.issgovernance.com/file/policy/prothena.pdf)
+
+</details>
 
 **Sources:**
 - [2015 Taft Hartley Advisory Services International Guidelines (PDF)](https://www.issgovernance.com/file/policy/2015-taft-hartley-advisory-services-international-guidelines.pdf)
@@ -180,6 +192,8 @@ In plain terms, anti-takeover provisions are defensive shields a company puts in
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Executive Summary Of Key 2016 Updates And Policy (PDF)
 > d in a registered form by the same shareholder for at least two years, unless otherwise prohibited by the company’s bylaws. Companies are permitted to opt-out if they receive shareholder approval for such a bylaw by April 2, 2016. The Act also permits a board facing an unsolicited takeover to adopt **anti-takeover provision**s without shareholder approval – but also allows companies to opt-out of t...
@@ -200,6 +214,8 @@ In plain terms, anti-takeover provisions are defensive shields a company puts in
 > [!quote] Taft Hartley Advisory Services Us Guidelines (PDF)
 > rmance, Taft-Hartley Advisory Services will also evaluate board accountability and oversight at companies that demonstrate sustained underperformance. A governance structure that discourages director accountability may lead to board and management entrenchment. For example, the existence of several **anti-takeover provision**s* has the cumulative effect of deterring legitimate tender offers, merger...
 > — [Taft Hartley Advisory Services Us Guidelines (PDF)](https://www.issgovernance.com/file/policy/2020/specialty/Taft-Hartley-Advisory-Services-US-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Executive Summary Of Key 2016 Updates And Policy (PDF)](https://www.issgovernance.com/file/policy/executive-summary-of-key-2016-updates-and-policy.pdf)
@@ -226,6 +242,8 @@ In plain terms, this is the board's job of making sure the company's financial s
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ESG Index Solutions
 > ance is a foundation for the responsible management of business risks and opportunities. ISS ESG GOVERNANCE QUALITYSCORE INDEX SERIES Identify well-governed and responsible companies that excel in managing governance risks across four key areas: Board Structure, Compensation, Shareholder Rights and **Audit & Risk Oversight**. US DIVERSITY INDEX Good corporate governance is a foundation for the resp...
@@ -246,6 +264,8 @@ In plain terms, this is the board's job of making sure the company's financial s
 > [!quote] Screening, Research &amp; Analytics | ISS
 > of their underlying holdings. Allows for screening of multi-level fund holdings, fully extendable to underlying fund-in-fund structures. Governance QualityScore Governance QualityScore provides data and scores for companies across board structure, compensation/remuneration, shareholder rights, and **audit & risk oversight**.
 > — [Screening, Research &amp; Analytics | ISS](https://www.issgovernance.com/sustainability/screening-research-analytics) — "Screen, Research & Analyze Company Performance"
+
+</details>
 
 **Sources:**
 - [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2) — "ESG INDEX SOLUTIONS"
@@ -274,6 +294,8 @@ In plain terms, a classified (or "staggered") board slows down shareholder abili
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > by one-, three-, and five-year total shareholder returns in the bottom half of a company’s four-digit GICS industry group (Russell 3000 companies only). Take into consideration the company’s operational metrics and other factors as warranted. Problematic provisions include but are not limited to a classified board structure, supermajority vote requirements, a majority vote standard for director...
@@ -294,6 +316,8 @@ In plain terms, a classified (or "staggered") board slows down shareholder abili
 > [!quote] Issusfaqspoliciesandprocedures04302014 (PDF)
 > old on all the members of a committee – e.g., the compensation committee for problematic pay practices or a pay for performance disconnect, or the audit committee for continued material weaknesses in internal controls – and no one on the committee is a nominee on the ballot. The rationale is that a classified board further entrenches management and prevents shareholders from holding the respons...
 > — [Issusfaqspoliciesandprocedures04302014 (PDF)](https://www.issgovernance.com/file/2014_Policies/ISSUSFAQsPoliciesandProcedures04302014.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -320,6 +344,8 @@ In plain terms, board diversity means the board is not composed entirely of peop
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2030: An Odyssey to Thirty-Percent Board Diversity | ISS
 > 2030: An Odyssey to Thirty-Percent **Board Diversity** FEBRUARY 15, 2018 Many public company boards of directors may need to focus more closely on the Earthly concerns of board composition, as investors are “upping the ante” on board gender diversity. Many investors have joined global initiatives that aim to achieve 30 percent gender div
@@ -340,6 +366,8 @@ In plain terms, board diversity means the board is not composed entirely of peop
 > [!quote] India Voting Guidelines (PDF)
 > ompany law, subject to approval of the company's shareholders in a general meeting. Social and Environmental Issues Issues covered under the policy involve a wide range of topics, including consumer and product safety, environment and energy, labour covered standards and human rights, workplace and **board diversity**, and corporate political issues. While a variety of factors goes into each analys...
 > — [India Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2022/asiapacific/India-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [2030: An Odyssey to Thirty-Percent Board Diversity | ISS](https://www.issgovernance.com/library/2030-odyssey-thirty-percent-board-diversity) — "2030: An Odyssey to Thirty-Percent Board Diversity"
@@ -366,6 +394,8 @@ In plain terms, an independent director is someone who does not work at the comp
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Brazil Board Independence (PDF)
 > y have some level of **board independence**. The revised policy also reflects the expectation of international institutional shareholders. In its 2016 policy survey, ISS asked market actors if it is a reasonable expectation that companies listed as Nivel 1 and Traditional should have a minimum level of **board independence**, even though current regulations do not include board independence among these...
@@ -386,6 +416,8 @@ In plain terms, an independent director is someone who does not work at the comp
 > [!quote] Istoxx Index Guide (PDF)
 > istleblower Programmes G.1.2 G.1.4 Tax Disclosure G.1.4 G.2.1 ESG Reporting Standards G.2.1 G.2.3.3 CEO Pay Magnitude (Industry) G.2.3.3 G.2.8.3 Board Executive Experience G.2.8.3 G.2.5 ESG Governance G.2.5 G.2.6.2 Long-Term Incentive Programme G.2.6.2 G.2.7.3 Board Gender Diversity G.2.7.3 G.2.9.2 **Board Independence** G.2.9.2 G.2.10.3 Audit Committee Independence G.2.10.3 G.2.12.2 Remuneration C...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Brazil Board Independence (PDF)](https://www.issgovernance.com/file/policy/brazil-board-independence.pdf)
@@ -412,6 +444,8 @@ In plain terms, board refreshment is about making sure the board does not become
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Board Refreshment Trends at S&amp;P 1500 Firms | ISS
 > perceived problem, (2) the most effective methods for promoting **board refreshment**, and (3) the benefits and possible side-effects of adopting them. Key Findings – Efforts Beginning to Pay Off According to the ISS press release on the paper, the intense focus that investors and others have placed on **board refreshment** has begun to pay off. However, structural trends and governance practices that ...
@@ -432,6 +466,8 @@ In plain terms, board refreshment is about making sure the board does not become
 > [!quote] Australia Voting Guidelines (PDF)
 > Australia Proxy Voting Guidelines Board Diversity Diversity on boards is an important topic for many shareholders. ISS will examine board diversity, including gender, skills, ethnicity and age as part of **board refreshment** and succession planning, in order to provide our clients with sufficient information on which to base informed engagement and voting decisions. Proxy research reports on each ...
 > — [Australia Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/Australia-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Board Refreshment Trends at S&amp;P 1500 Firms | ISS](https://www.issgovernance.com/board-refreshment-trends-sp-1500-firms) — "Board Refreshment Trends at S&P 1500 Firms"
@@ -458,6 +494,8 @@ In plain terms, board structure is the big picture of how the board is set up an
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2013 Policy Information | ISS
 > The complete set of ISS Global Benchmark Policy Guidelines consider market-specific recommended best practices, transparency, and disclosure when addressing issues such as **board structure**, director accountability, corporate governance standards, executive compensation, shareholder rights, corporate transactions, and social/environmental issues. The updates contained in the documents below refle...
@@ -478,6 +516,8 @@ In plain terms, board structure is the big picture of how the board is set up an
 > [!quote] 2019 2020 Iss Policy Survey Results Report (PDF)
 > apanese company that has underperformed in terms of capital efficiency (i.e., when the company has posted average return on equity (ROE) of less than five percent over the last five fiscal years)2, unless improvement3 is observed. The policy is applied to all Japanese companies, regardless of their **board structure** (i.e., statutory auditor system, audit committee system, or three committee syste...
 > — [2019 2020 Iss Policy Survey Results Report (PDF)](https://www.issgovernance.com/file/policy/2019-2020-iss-policy-survey-results-report.pdf)
+
+</details>
 
 **Sources:**
 - [2013 Policy Information | ISS](https://www.issgovernance.com/policy-gateway/2013-policy-information) — "2013 Policy Information"
@@ -504,6 +544,8 @@ In plain terms, board tenure is how long each director has been on the board. IS
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Australia Policy Updates (PDF)
 > e-by-case analysis may be undertaken where a board is at or near 50% independent and the reasons for non- where a board is at or near 50% independent and the reasons for non- independence of certain directors may include excessive **board tenure** independence of certain directors may include excessive **board tenure** greater than 12 years). greater than 12 years). Rationale for Change: The updated wo...
@@ -524,6 +566,8 @@ In plain terms, board tenure is how long each director has been on the board. IS
 > [!quote] 2013Europeanpolicyupdates (PDF)
 > ding peer groups and realizable pay (US) • Board Responsiveness to Majority Supported Proposals (US) • Pledging of Company Stock (US) • Pay for Performance Evaluation, including quantitative and qualitative factors (Canada) • Voto di Lista (Italy) • Overboarded Directors (Hong Kong and Singapore) • **Board Tenure** (Hong Kong and Singapore) • Director Nominee Disclosure (Global) In addition to crea...
 > — [2013Europeanpolicyupdates (PDF)](https://www.issgovernance.com/file/2013-policies/2013EuropeanPolicyUpdates.pdf)
+
+</details>
 
 **Sources:**
 - [Australia Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2021/updates/Australia-Policy-Updates.pdf)
@@ -550,6 +594,8 @@ In plain terms, burn rate measures how fast a company is handing out shares to e
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Us Gics Changes Value Adjusted Burn Rate Faq (PDF)
 > ............................................................................................................................................ 3 Will the updated GICS classifications be displayed in research reports? ...................................................... 3 What is ISS' Value-Adjusted **Burn Rate** and how does it compare to the current **burn rate** methodology?... .. ......................
@@ -570,6 +616,8 @@ In plain terms, burn rate measures how fast a company is handing out shares to e
 > [!quote] 2015Europesummaryvotingguidelines (PDF)
 > 2015 Europe Summary Proxy Voting Guidelines French **Burn Rate** Table for 2015 GICS SECTOR Mean Standard Deviation 2014 **Burn Rate** Cap 1010 ENERGY 0.44% 0.44% 0.87% 1510 MATERIALS 0.37% 0.19% 0.56% 2010-2030 INDUSTRIALS 0.53% 0.45% 0.98% 2510-2550 CONSUMER DISCRETIONARY 0.67% 0.68% 1.35% 3010-3030 CONSUMER STAPLES 0.14% 0.10% 0.24% 3510-3520 HEALTHCARE
 > — [2015Europesummaryvotingguidelines (PDF)](https://www.issgovernance.com/file/policy/2015europesummaryvotingguidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Us Gics Changes Value Adjusted Burn Rate Faq (PDF)](https://www.issgovernance.com/file/policy/2022/americas/US-GICS-Changes-Value-Adjusted-Burn-Rate-FAQ.pdf)
@@ -598,6 +646,8 @@ In plain terms, capital allocation is how a company spends its money. Shareholde
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] A view from COP26: navigating the climate transition with investable indices ...
 > tually deploy the capital, more than investors,” he added. There are barriers to that, he said, including “the mandate to companies to think differently, think long-term and apply the inventiveness of management teams to change the way their businesses operate.” Indices as a mechanism to accelerate **capital allocation** and risk pricing Moreover, indices can act as a powerful mechanism beyond the ...
@@ -618,6 +668,8 @@ In plain terms, capital allocation is how a company spends its money. Shareholde
 > [!quote] Q&amp;A with Willem Keogh: ESG Data as an Innovation Tool | STOXX
 > it is good to have different views as these can be additive. As our partners at CDP said this week, reforms to improve the transparency of climate-related data will help efforts to incorporate climate risks into financial frameworks and develop transition risk modelling, ultimately helping to align capital-allocation decisions with climate policies. ESG data is one of the best tools investors h...
 > — [Q&amp;A with Willem Keogh: ESG Data as an Innovation Tool | STOXX](https://stoxx.com/qa-with-willem-keogh-esg-data-as-an-innovation-tool) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [A view from COP26: navigating the climate transition with investable indices | Blog posts | STOXX](https://stoxx.com/a-view-from-cop26-navigating-the-climate-transition-with-investable-indices) — "WHITEPAPER"
@@ -659,6 +711,8 @@ In plain terms, a clawback policy says: "If we discover the numbers were wrong o
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Us Equity Compensation Plans Faq (PDF)
 > proportion of the CEO's most recent equity grants/awards subject to performance conditions – given that stock prices may be significantly influenced by market trends, making a substantial proportion of top executives' equity awards subject to specific performance conditions is a best practice. ▪ A **clawback policy** that includes equity grants – clawback policies potentially mitigate excessive ris...
@@ -679,6 +733,8 @@ In plain terms, a clawback policy says: "If we discover the numbers were wrong o
 > [!quote] 2 2015 Sri Us Policy Updates Fin (PDF)
 > 2015 SRI U.S. Proxy Voting Guideline Updates EPSC Pillar Weightings - S&P500/Russell 3000 Companies Grant Practices - 3-yr Average Burn Rate - CEO Vesting Term (most recent awards) - **Clawback Policy** – equity - Plan Duration - Holding Requirement 35% Plan Cost - Performance Grant Ratio 45% - SVT – ABC Shares (CEO) - SVT – AB Shares Plan Features 20% - CIC Single Trigger Vesting - Liberal Share R...
 > — [2 2015 Sri Us Policy Updates Fin (PDF)](https://www.issgovernance.com/file/policy/2_2015-sri-us-policy-updates-fin.pdf)
+
+</details>
 
 **Sources:**
 - [Us Equity Compensation Plans Faq (PDF)](https://www.issgovernance.com/file/policy/2022/americas/US-Equity-Compensation-Plans-FAQ.pdf)
@@ -705,6 +761,8 @@ In plain terms, the compensation committee decides how much executives get paid 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > xy or consent or authorization at least once every three years. In general, the SOP ballot item is the primary focus of voting on executive pay practices – dissatisfaction with compensation practices can be expressed by voting against the SOP proposal rather than voting against or withhold from the **compensation committee**. However, if there is no SOP on the ballot, then the negative vote will ap...
@@ -725,6 +783,8 @@ In plain terms, the compensation committee decides how much executives get paid 
 > [!quote] Us Procedures And Policies Faq (PDF)
 > s or herself, (e.g., poor attendance, overboarded, or is a non-independent director serving on the audit, nominating, or **compensation committee**, unless the issue is considered egregious. It is typically applied when ISS would normally recommend withhold on all the members of a committee – e.g., the **compensation committee** for problematic pay practices or a pay for performance disconnect, or the ...
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2018/americas/US-Procedures-and-Policies-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -751,6 +811,8 @@ In plain terms, a contested election is a director race with competing candidate
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > s and to elect all directors annually. ▪ Vote against proposals to classify (stagger) the board of directors. Majority Vote Threshold for Director Elections Social Advisory Services Recommendation: Generally vote for management proposals to adopt a majority of votes cast standard for directors in un**contested election**s. Vote against if no carve-out for plurality in **contested election**s is include...
@@ -771,6 +833,8 @@ In plain terms, a contested election is a director race with competing candidate
 > [!quote] 2013Isstafthartleyadvisoryservicesinternationalguidelines (PDF)
 > achieved because the response to a proxy contest, or one that was narrowly averted, usually includes new strategic initiatives, a restructuring program, governance changes, or selected management changes. Based on these considerations, Taft-Hartley Advisory Services’ framework for the evaluation of **contested election**s has the ultimate goal of increasing long-term value for shareholders. Taft Ha...
 > — [2013Isstafthartleyadvisoryservicesinternationalguidelines (PDF)](https://www.issgovernance.com/file/2013-policies/2013ISSTaftHartleyAdvisoryServicesInternationalGuidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -797,6 +861,8 @@ In plain terms, CSR is a company's effort to be a good corporate citizen — tre
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] TNFD recommendations set path for nature-related disclosure standards, suppor...
 > transition, systemic and regulatory types. What is the TNFD? The Taskforce, a government-supported global initiative, was launched in June 2021 with the objective to provide a framework that can help companies and stakeholders address environmental risks and opportunities.[1] “Nature is no longer a **corporate social responsibility** issue, but a core and strategic risk management issue alongside c...
@@ -817,6 +883,8 @@ In plain terms, CSR is a company's effort to be a good corporate citizen — tre
 > [!quote] Sustainability Gateway | ISS
 > nnection with issuing, offering, sponsoring, managing or marketing any securities, portfolios, financial products or other investment vehicles utilizing or based on, linked to, tracking or otherwise derived from the Information; (v) used to develop, prepare, create, implement, support or maintain a **corporate social responsibility (CSR)** program(s) or the like; (vi) used in connection with intern...
 > — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway) — "SUSTAINABILITY GATEWAY"
+
+</details>
 
 **Sources:**
 - [TNFD recommendations set path for nature-related disclosure standards, supporting biodiversity action | Blog posts | STOXX](https://stoxx.com/tnfd-recommendations-set-path-for-nature-related-disclosure-standards-supporting-biodiversity-action) — "WHITEPAPER"
@@ -843,6 +911,8 @@ In plain terms, cumulative voting lets smaller shareholders pool their votes to 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Cumulative Voting in South Korea: Necessary Reform, Conditional Impact | ISS
 > **Cumulative Voting** in South Korea: Necessary Reform, Conditional Impact February 11, 2026 Ahead of South Korea’s 2026 annual shareholder meeting season, **cumulative voting** is once again a focal point for the debate around corporate governance in Asia’s fourth largest economy. Market observers often vi
@@ -863,6 +933,8 @@ In plain terms, cumulative voting lets smaller shareholders pool their votes to 
 > [!quote] Western Union (PDF)
 > to call special No right Outsider meetings Separate chair/CEO Yes Material restrictions on right to call N/A Independent lead director N/A special meetings Voting Standard Majority Shareholder right to act by written No Plurality carveout for contested elections True consent Resignation policy Yes **Cumulative voting** No Total director ownership (000 shares) 2,604 Board authorized to issue blank-c...
 > — [Western Union (PDF)](https://www.issgovernance.com/file/2013/02/western_union.pdf)
+
+</details>
 
 **Sources:**
 - [Cumulative Voting in South Korea: Necessary Reform, Conditional Impact | ISS](https://www.issgovernance.com/library/cumulative-voting-in-south-korea-necessary-reform-conditional-impact) — "Cumulative Voting in South Korea: Necessary Reform, Conditional Impact"
@@ -891,6 +963,8 @@ In plain terms, director data is the detailed dossier ISS keeps on every public-
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Director Data | ISS
 > SUSTAINABILITY SOLUTIONS / SUSTAINABILITY RAW DATA **Director Data** Generate a complete picture of board-level decision makers to inform investment and sustainability decision making. Access important and non-traditional sources of information at a board level and across the directors to provide a lens into the boardroom. USE **DIRECTOR DATA** TO INFORM IN
@@ -911,6 +985,8 @@ In plain terms, director data is the detailed dossier ISS keeps on every public-
 > [!quote] ISS ESG to Provide Robust Data Sets Through the Open:FactSet Marketplace | ISS
 > mers,” said Marija Kramer, Managing Director with ISS ESG. “In today’s market, ESG is a business imperative for institutional investing and asset management, as evidenced by our offerings via the Open:FactSet Marketplace.” Additional data sets will be added over the coming months covering corporate **director data**, executive pay metrics, shareholder voting results, carbon and climate impacts, car...
 > — [ISS ESG to Provide Robust Data Sets Through the Open:FactSet Marketplace | ISS](https://www.issgovernance.com/iss-esg-to-provide-robust-data-sets-through-the-openfactset-marketplace) — "ISS ESG to Provide Robust Data Sets  Through the Open:FactSet Marketplace"
+
+</details>
 
 **Sources:**
 - [Director Data | ISS](https://www.issgovernance.com/sustainability/raw-data/director-data) — "SUSTAINABILITY SOLUTIONS/SUSTAINABILITY RAW DATA"
@@ -937,6 +1013,8 @@ In plain terms, director elections are how shareholders decide who sits on the b
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 10 2017 Comment Period Template Japan Director Elections Outside Directors (PDF)
 > Japan Policy – **Director Election**s – Outside Directors Background and Overview Corporate governance in Japan has historically been criticized for lack of outside director oversight, but the presence of outside directors on Japanese boards has increased in recent years. Especially notable is the pace at which compan
@@ -957,6 +1035,8 @@ In plain terms, director elections are how shareholders decide who sits on the b
 > [!quote] 2015Southafricavotingguidelines (PDF)
 > r proposals regarding auditor remuneration, unless: › There are serious concerns about the accounts presented or the audit procedures used; › The auditors are being changed without explanation; or › Non-audit related fees are substantial or are routinely in excess of standard audit-related fees. 3. **DIRECTOR ELECTION**S Local requirements The appointment of a new director must be confirmed by shar...
 > — [2015Southafricavotingguidelines (PDF)](https://www.issgovernance.com/file/policy/2015southafricavotingguidelines.pdf)
+
+</details>
 
 **Sources:**
 - [10 2017 Comment Period Template Japan Director Elections Outside Directors (PDF)](https://www.issgovernance.com/file/policy/10-2017-comment-period-template-japan-director-elections-outside-directors.pdf)
@@ -983,6 +1063,8 @@ In plain terms, dual-class shares let founders or insiders keep outsized voting 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sustainability Us Policy Updates (PDF)
 > rities Exchange Act of 1934 to improve the governance of multi-class stock companies. Distinctly, the draft bill would empower the SEC to adopt rules under which U.S. stock exchanges would enact listing standards that would prohibit listing a company that has two 4 See footnote 8, Rick A. Fleming, “**Dual-Class Shares**: A Recipe for Disaster”. Oct 12, 2019 Redlined = deleted; green = added ISSGOVE...
@@ -1003,6 +1085,8 @@ In plain terms, dual-class shares let founders or insiders keep outsized voting 
 > [!quote] Americas Policy Updates (PDF)
 > l voting rights are due to a multi-class common share structure where one or more classes have more votes per share than other classes, at some of the older companies, some classes of common stock afford shareholders differential rights on which nominees they can 7 See footnote 8, Rick A. Fleming, “**Dual-Class Shares**: A Recipe for Disaster”. Oct 12, 2019 Redlined = deleted; green = added ISSGOVE...
 > — [Americas Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/updates/Americas-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [Sustainability Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/specialty/Sustainability-US-Policy-Updates.pdf)
@@ -1031,6 +1115,8 @@ In plain terms, the EEO-1 report is a government form that shows the racial and 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2017 Sustainability Us Voting Guidelines (PDF)
 > qual employment practices. Equality of Opportunity Sustainability Policy Recommendation: Generally vote for proposals requesting a company disclose its diversity policies or initiatives, or proposals requesting disclosure of a company’s comprehensive workforce diversity data, including requests for **EEO-1 data**. Generally vote FOR proposals seeking information on the diversity efforts of supplier...
@@ -1051,6 +1137,8 @@ In plain terms, the EEO-1 report is a government form that shows the racial and 
 > [!quote] Us Voting Guidelines (PDF)
 > on regarding equal employment practices. Equality of Opportunity General Recommendation: Generally vote for proposals requesting a company disclose its diversity policies or initiatives, or proposals requesting disclosure of a company’s comprehensive workforce diversity data, including requests for **EEO-1 data**, unless: › The company publicly discloses equal opportunity policies and initiatives i...
 > — [Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2019/americas/US-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [2017 Sustainability Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-sustainability-us-voting-guidelines.pdf)
@@ -1075,6 +1163,8 @@ In plain terms, the Engagement Suite is ISS's tool for investors who want to hav
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Engagement Suite | ISS
 > **ENGAGEMENT SUITE** An end-to-end issuer engagement tracking and management solution ISS’ **Engagement Suite** provides investors with an effective and efficient means to manage their engagement activities across portfolio companies. The full suite of services allows investors to manage inbound engagement
@@ -1091,6 +1181,8 @@ In plain terms, the Engagement Suite is ISS's tool for investors who want to hav
 > [!quote] engagement-suite | ISS
 > rs Client Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score engagement-suite Start typing and press Enter to search
 > — [engagement-suite | ISS](https://www.issgovernance.com/stewardship-engagement-solutions/engagement-suite-5) — "engagement-suite"
+
+</details>
 
 **Sources:**
 - [Engagement Suite | ISS](https://www.issgovernance.com/solutions/proxy-voting-services/engagement-suite) — "ENGAGEMENT SUITE"
@@ -1116,6 +1208,8 @@ In plain terms, an equity plan is a company's program for giving employees owner
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Resurgence of Evergreen Features in IPO Equity Plans Restrict Investor Say | ISS
 > Resurgence of Evergreen Features in IPO **Equity Plan**s Restrict Investor Say MARCH 15, 2021 KEY TAKEAWAYS - The ability to assess and vote on **equity plan**s is an important shareholder right in the U.S. and equity awards generally account for the bulk of executive pay. - With the repeal of Section 162(m) of the internal revenue code, mandator
@@ -1136,6 +1230,8 @@ In plain terms, an equity plan is a company's program for giving employees owner
 > [!quote] ISS Releases 2016 Benchmark Policy Updates | ISS
 > policy on equity retention proposals, broadening the framework for evaluating these proposals, and also updated some Environmental and Social proposal benchmark policies to adjust for evolving language in shareholder proposals and to codify the current approach to evaluating these proposals. Canada **Equity Plan** Scorecard Similar to the model introduced in the United States for the 2015 proxy sea...
 > — [ISS Releases 2016 Benchmark Policy Updates | ISS](https://www.issgovernance.com/iss-releases-2016-benchmark-policy-updates-2) — "ISS Releases 2016 Benchmark Policy Updates"
+
+</details>
 
 **Sources:**
 - [Resurgence of Evergreen Features in IPO Equity Plans Restrict Investor Say | ISS](https://www.issgovernance.com/library/resurgence-of-evergreen-features-in-ipo-equity-plans-restrict-investor-say) — "Resurgence of Evergreen Features in IPO Equity Plans Restrict Investor Say"
@@ -1177,6 +1273,8 @@ In plain terms, executive compensation is everything a top executive receives fo
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] By the Numbers - Executive Compensation | ISS
 > in a demo of **Executive Compensation** Analytics. Also, keep an eye out for further updates as proxy season progresses around the globe, as well as our market-by-market post season reports this summer, which will include detailed information on compensation trends and vote results. –John Roe, Head of **Executive Compensation** Analytics; David Kokell, Head of U.S. Compensation Research; Harlan Tufford...
@@ -1197,6 +1295,8 @@ In plain terms, executive compensation is everything a top executive receives fo
 > [!quote] SEC Announces New Rules on Executive Compensation Disclosure | ISS
 > On April 29, the SEC announced that it had voted 3-2 in favor of proposing new rules requiring increased disclosure on the link between company performance and **executive compensation**. The proposed rules would implement a requirement mandated by Section 953(a) of the Dodd-Frank Wall Street Reform and Consumer Protection Act. According to the SEC press release, the proposed rules would, “provide ...
 > — [SEC Announces New Rules on Executive Compensation Disclosure | ISS](https://www.issgovernance.com/sec-announces-new-rules-on-executive-compensation-disclosure) — "SEC Announces New Rules on Executive Compensation Disclosure"
+
+</details>
 
 **Sources:**
 - [By the Numbers - Executive Compensation | ISS](https://www.issgovernance.com/by-the-numbers-executive-compensation) — "By the Numbers – Executive Compensation"
@@ -1223,6 +1323,8 @@ In plain terms, an EGM is a special shareholders' meeting called on short notice
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Australia Voting Guidelines (PDF)
 > ws, standards and principles in the Australian market. Shareholders have no decision-making ability in the management of the listed entity. Their main rights in this regard are to receive information about a company’s performance and to vote on resolutions put before an annual or, where applicable, **extraordinary general meeting**. Under current legislation in Australia, items typically put before...
@@ -1243,6 +1345,8 @@ In plain terms, an EGM is a special shareholders' meeting called on short notice
 > [!quote] New Zealand Voting Guidelines (PDF)
 > rectors, especially the chairperson, the acceptance of Shareholders have no decision-making ability in the management of the listed entity. Their main rights in this regard are to receive information about a company’s performance and to vote on resolutions put before an annual or, where applicable, **extraordinary general meeting**. Under current legislation in Australia, items typically put before...
 > — [New Zealand Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2022/asiapacific/New-Zealand-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Australia Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2022/asiapacific/Australia-Voting-Guidelines.pdf)
@@ -1271,6 +1375,8 @@ In plain terms, fiduciary duty means directors and fund managers must put the in
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...
 > on into the SDGs. For us, “this is a journey that started eight years ago,” said Déau. “What we discovered at the time is that there is not enough benchmark data available, nor standards or methodology, to actually be able to figure out the real impact of ESG performance on our asset class.” ESG as **fiduciary duty** Draeger also commented on the evolving notion of **fiduciary duty** and said that fina...
@@ -1291,6 +1397,8 @@ In plain terms, fiduciary duty means directors and fund managers must put the in
 > [!quote] Collaborative Engagement Services | ISS
 > rocess. Greater expectations for transparency and accountability now exist between institutional shareholders, companies and their markets. As a result, shareholders are taking an active role, engaging on responsible investment issues to mitigate risks and create positive change, in line with their **fiduciary duty**. Our USCCB Collaborative Engagement solution enables investors to participate in a...
 > — [Collaborative Engagement Services | ISS](https://www.issgovernance.com/sustainability/engagement) — "SUSTAINABILITY SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog posts | STOXX](https://stoxx.com/qontigo-summit-europe-must-lead-in-standardization-of-esg-data) — "WHITEPAPER"
@@ -1315,6 +1423,8 @@ In plain terms, Form N-PX is the public filing where fund managers reveal how th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS Form N-PX Vote Disclosure Solution | ISS
 > lient Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score ISS **Form N-PX** Vote Disclosure Solution Start typing and press Enter to search
@@ -1335,6 +1445,8 @@ In plain terms, Form N-PX is the public filing where fund managers reveal how th
 > [!quote] Site Map | ISS
 > Shareholder Settlement for $149 Million - Erik Tabuena - Europe’s Largest Court-Approved Securities Case Settlement Ageas (f/k/a Fortis) Settlement Finally Secured at €1.3 Billion - First Solar Agrees to $350 Million Settlement Just One Day Prior to Jury Selection - Flexible Stewardship Solutions - **Form N-PX** Vote Disclosure Services - Form sent - Former Orbital ATK Investors set to Recover $108...
 > — [Site Map | ISS](https://www.issgovernance.com/site-map) — "Site Map"
+
+</details>
 
 **Sources:**
 - [ISS Form N-PX Vote Disclosure Solution | ISS](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services-draft-page/iss-form-n-px-vote-disclosure-solution) — "ISS Form N-PX Vote Disclosure Solution"
@@ -1361,6 +1473,8 @@ In plain terms, Global Meeting Results is ISS's database of what happened at eve
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS Proxy Voting - Global Meeting Results Service
 > **GLOBAL MEETING RESULTS** Comprehensive, Reliable and Fast Meeting Results. **Global Meeting Results** provides access and insight to your voting policy, voting decisions and reporting. Leverage ISS’ global infrastructure and local market expertise for the most comprehensive, real-time meeting results data
@@ -1381,6 +1495,8 @@ In plain terms, Global Meeting Results is ISS's database of what happened at eve
 > [!quote] Solutions | ISS
 > How We Help Learn more about solutions for different intermediaries. ISS delivers flexible solutions that allow custodians and other intermediaries to differentiate their offerings, reduce risk and save costs. From proxy distribution services, to **global meeting results**, to proxy voting solutions that address the nuances of key local markets, ISS partners with custodians and other intermediaries...
 > — [Solutions | ISS](https://www.issgovernance.com/intermediary-outsource/solutions) — "How We Help"
+
+</details>
 
 **Sources:**
 - [ISS Proxy Voting - Global Meeting Results Service](https://www.issgovernance.com/solutions/proxy-voting-services/global-meeting-results-service) — "GLOBAL MEETING RESULTS"
@@ -1407,6 +1523,8 @@ In plain terms, a golden parachute is the big payout an executive receives if th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > it more difficult to understand the implications of the vote. Social Advisory Services Recommendation: Vote for annual advisory votes on compensation, which provide the most consistent and clear communication channel for shareholder concerns about companies' executive pay programs. Advisory Vote on **Golden Parachute**s in an Acquisition, Merger, Consolidation, or Proposed Sale This is a proxy item...
@@ -1427,6 +1545,8 @@ In plain terms, a golden parachute is the big payout an executive receives if th
 > [!quote] 2016 Korea Voting Guidelines Dec 2015 (PDF)
 > ents .............................................................................................................................. 4 Cumulative voting ................................................................................................................................................. 4 **Golden parachute** clause ............................................................................
 > — [2016 Korea Voting Guidelines Dec 2015 (PDF)](https://www.issgovernance.com/file/policy/2016-korea-voting-guidelines-dec-2015.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -1451,6 +1571,8 @@ In plain terms, Governance Exchange is a bridge ISS built between companies and 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Governance Exchange | ISS
 > ISS benchmark and specialized proxy voting policies - Discover new networking and educational opportunities - Draw on the knowledge of ISS’ research team through yearly proxy season retrospectives - Online forums to pose questions, get answers, and engage with peers across the governance profession **Governance Exchange** is delivered to institutional investors through our platform, so it integrate...
@@ -1471,6 +1593,8 @@ In plain terms, Governance Exchange is a bridge ISS built between companies and 
 > [!quote] Site Map | ISS
 > Selection - Flexible Stewardship Solutions - Form N-PX Vote Disclosure Services - Form sent - Former Orbital ATK Investors set to Recover $108 Million - Fraudulent Website & Phishing Warning - Fund Services - GAIM Ops West Downloads - Gary Retelny - GFF Summit 2022 with Clearstream in Luxembourg - **Governance Exchange** - GPD Download Page - Home - Intermediary Outsource Solutions - International ...
 > — [Site Map | ISS](https://www.issgovernance.com/site-map) — "Site Map"
+
+</details>
 
 **Sources:**
 - [Governance Exchange | ISS](https://www.issgovernance.com/solutions/governance-advisory-services/governance-exchange) — "Governance Exchange"
@@ -1497,6 +1621,8 @@ In plain terms, Governance QualityScore is ISS's report card for how well a comp
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] ISS Enhances Methodology for Governance QualityScore | ISS
 > New Board Diversity Subcategory ROCKVILLE, Md. (November 29, 2018) — Institutional Shareholder Services Inc. (ISS), a leading provider of end-to-end governance and responsible investment solutions to the global financial community, today announced the release of methodology enhancements to its ISS **Governance QualityScore** global corporate profiling solution. Effective today, the Governance Quali...
@@ -1537,6 +1663,8 @@ In plain terms, Governance QualityScore is ISS's report card for how well a comp
 > [!quote] Screening, Research &amp; Analytics | ISS
 > and watchlists. - Norm-Based Research & Screening - Environmental & Social QualityScore - Carbon and Climate Data - Custom ESG Ratings - Controversial Weapons Screening - Ethical Screens - Energy & Extractives Screens - Global Sanctions Screening - Sovereign Research & Screening - Fund Screening - **Governance QualityScore** Norm-Based Research & Screening Assesses companies’ adherence to internati...
 > — [Screening, Research &amp; Analytics | ISS](https://www.issgovernance.com/sustainability/screening-research-analytics) — "Screen, Research & Analyze Company Performance"
+
+</details>
 
 **Sources:**
 - [ISS Enhances Methodology for Governance QualityScore | ISS](https://www.issgovernance.com/iss-enhances-methodology-for-governance-qualityscore) — "ISS Enhances Methodology for Governance QualityScore"
@@ -1565,6 +1693,8 @@ In plain terms, an independent director is an outsider who can make objective de
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 1 2016 Hongkong Voting Guidelines Dec 2015 (PDF)
 > 2016 Hong Kong Proxy Voting Guidelines › The nominee is a non-**independent director** serving as the chairman of the audit committee, remuneration committee, and/or nomination committee (except for a non-**independent director** serving as chairman of the nomination committee who also serves as the chairman of the board). When the board does not have a formal audit c
@@ -1585,6 +1715,8 @@ In plain terms, an independent director is an outsider who can make objective de
 > [!quote] Davis Polk Llp (PDF)
 > rview section of the draft policy inappropriately describes the recombination of roles and executive chair positions as problematic, so there is already a negative presumption which should not be made in the final policy for the reasons stated below. Institutional Investors Agree That a Strong Lead **Independent Director** Can Provide Independent Board Leadership. Perhaps the most important factor ...
 > — [Davis Polk Llp (PDF)](https://www.issgovernance.com/file/policy/Davis_Polk_LLP.pdf)
+
+</details>
 
 **Sources:**
 - [1 2016 Hongkong Voting Guidelines Dec 2015 (PDF)](https://www.issgovernance.com/file/policy/1_2016-hongkong-voting-guidelines-dec-2015.pdf)
@@ -1609,6 +1741,8 @@ In plain terms, the ISS Benchmark Policy is the "standard playbook" ISS uses to 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2016 2017 Iss Policy Survey Results Report (PDF)
 > ntarily establish an audit committee as a good corporate governance practice. By doing so, they become subject to the same set of audit committee regulations and must have at least three independent directors. Notably, there are some differences in the definitions of director independence under the **ISS benchmark policy** and Taiwanese law. As a result, some audit panel members will not be conside...
@@ -1629,6 +1763,8 @@ In plain terms, the ISS Benchmark Policy is the "standard playbook" ISS uses to 
 > [!quote] Brazil Remote Voting Card Faq (PDF)
 > resented in a slate or in individual elections) OR supporting the election of a minority fiscal council representative presented under a separate election. Voting instructions submitted for both fiscal council election scenarios would result in votes being rejected. 21. Are there any changes in the **ISS benchmark policy** guidelines regarding the election of directors in light of the changes imple...
 > — [Brazil Remote Voting Card Faq (PDF)](https://www.issgovernance.com/file/policy/2020/americas/Brazil-Remote-Voting-Card-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [2016 2017 Iss Policy Survey Results Report (PDF)](https://www.issgovernance.com/file/policy/2016-2017-iss-policy-survey-results-report.pdf)
@@ -1653,6 +1789,8 @@ In plain terms, ISS does not have just one voting policy — it offers a menu. T
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Institutional Shareholder Services Releases QuickScore 2.0 | ISS
 > the QuickScore database.” Key Updates to ISS Governance QuickScore 2.0: - Coverage universe is expanded to 4,100 companies, including constituents of the UK Euro Stoxx and Australia ASX 200; - Methodology has been enhanced to align scores with quantitative modeling, global governance standards and **ISS voting policy**; - New data sets are available to subscribers comprising additional governance f...
@@ -1673,6 +1811,8 @@ In plain terms, ISS does not have just one voting policy — it offers a menu. T
 > [!quote] Iss Guidance Faq Document (PDF)
 > nce our research reports. Most third-party data used in ISS research is sourced from FactSet, S&P, and Bloomberg, although we do use a small number of other vendors on a regional or specialized basis. Key types of third party data used include company entity information (to determine which regional **ISS voting policy** applies to the subject company), stock price data (to determine total sharehold...
 > — [Iss Guidance Faq Document (PDF)](https://www.issgovernance.com/file/faq/ISS_Guidance_FAQ_Document.pdf)
+
+</details>
 
 **Sources:**
 - [Institutional Shareholder Services Releases QuickScore 2.0 | ISS](https://www.issgovernance.com/institutional-shareholder-services-releases-quickscore-2-0) — "Institutional Shareholder Services Releases QuickScore 2.0"
@@ -1701,6 +1841,8 @@ In plain terms, a lead independent director is the "independent voice" on the bo
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Davis Polk Llp (PDF)
 > d overview section of the draft policy inappropriately describes the recombination of roles and executive chair positions as problematic, so there is already a negative presumption which should not be made in the final policy for the reasons stated below. Institutional Investors Agree That a Strong **Lead Independent Director** Can Provide Independent Board Leadership. Perhaps the most important fa...
@@ -1721,6 +1863,8 @@ In plain terms, a lead independent director is the "independent voice" on the bo
 > [!quote] 2016 2017 Iss Policy Survey Results Report (PDF)
 > equity awards from the company. Among non-investors, time-vesting RSUs were the most popular form of inducement grant, followed by stock options and deferred share units. Only 9 percent of non-investors responded that awarding inducement grants to NEDs is not an acceptable practice. Appointment of **Lead Independent Director** (Singapore) The Singapore Code of Corporate Governance calls for the app...
 > — [2016 2017 Iss Policy Survey Results Report (PDF)](https://www.issgovernance.com/file/policy/2016-2017-iss-policy-survey-results-report.pdf)
+
+</details>
 
 **Sources:**
 - [Davis Polk Llp (PDF)](https://www.issgovernance.com/file/policy/Davis_Polk_LLP.pdf)
@@ -1747,6 +1891,8 @@ In plain terms, lobbying disclosure proposals ask companies to reveal how much t
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Us Procedures And Policies Faq (PDF)
 > l Action Committee (PAC) contributions, which use employees’ own funds, or contributions personally made by executives. Political Lobbying shareholder proposals What does ISS consider when analyzing requests for greater transparency of a company's lobbying expenditures and practices? When analyzing **lobbying disclosure** shareholder proposals, ISS considers disclosure of: management policies and b...
@@ -1763,6 +1909,8 @@ In plain terms, lobbying disclosure proposals ask companies to reveal how much t
 > [!quote] 2015: U.S. Voting Season Review – Environmental &amp; Social Issues | ISS
 > 2), environmental concerns climbed to the top of the E&S resolution leaderboard with 125 shareholder resolutions filed. Political-related issues (with 118 resolutions) settled for second place after seasons of dominance as proponents shied away from filing proposals that diverged from the two large **lobbying disclosure** and political contributions campaigns. A number of new and novel climate chan...
 > — [2015: U.S. Voting Season Review – Environmental &amp; Social Issues | ISS](https://www.issgovernance.com/library/2015-u-s-voting-season-review-environmental-social-issues) — "2015: U.S. Voting Season Review – Environmental & Social Issues"
+
+</details>
 
 **Sources:**
 - [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
@@ -1788,6 +1936,8 @@ In plain terms, an LTIP is the part of an executive's pay that they earn only if
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] France Vesting Periods (PDF)
 > Minimum Vesting Periods for Long-term Incentive Plans (France) Background and Overview Many investors consider that a three-year vesting period is a minimum to qualify an equity-based compensation plan as long-term oriented. From a French perspective, the recommendations on corporate governance annually issued by the AFG (the
@@ -1808,6 +1958,8 @@ In plain terms, an LTIP is the part of an executive's pay that they earn only if
 > [!quote] 2014Newzealandvotingrecommendations Final (PDF)
 > panies will continue to require shareholder approval of equity incentives for directors given they are also listed on the Australian Securities Exchange, where Listing Rule 10.14 requires prior approval for the issue of equity securities to a director under an employee incentive scheme. ISS reviews long-term incentive plans and share option plans (and proposed grants of options and shares to pa...
 > — [2014Newzealandvotingrecommendations Final (PDF)](https://www.issgovernance.com/file/2014_Policies/2014NewZealandVotingRecommendations_FINAL.pdf)
+
+</details>
 
 **Sources:**
 - [France Vesting Periods (PDF)](https://www.issgovernance.com/file/policy/france-vesting-periods.pdf)
@@ -1836,6 +1988,8 @@ In plain terms, majority voting means a director must win the support of more th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Majority Voting As a Potential Entrenchment Device | ISS
 > Unless the voting at Ethan Allen Interiors’ upcoming annual meeting—where 5.5 percent holder Sandell Asset Management has nominated six candidates to the seven-member board—produces a landslide management victory, shareholders may be about to witness firsthand how a poorly designed **majority voting** standard can be used to entrench a board rather than increase its accountability. Across the Russe...
@@ -1856,6 +2010,8 @@ In plain terms, majority voting means a director must win the support of more th
 > [!quote] Executive Summary Of Key 2017 Updates And Policy (PDF)
 > lematic Capital Structures, and adverse recommendations for director nominees will generally be warranted if a company completes its public offering with a multi-class capital structure in which the classes do not have identical voting rights. Because a commitment to put such a provision (or a super**majority voting** requirement) to a shareholder vote after the IPO is not especially meaningful whe...
 > — [Executive Summary Of Key 2017 Updates And Policy (PDF)](https://www.issgovernance.com/file/policy/executive-summary-of-key-2017-updates-and-policy.pdf)
+
+</details>
 
 **Sources:**
 - [Majority Voting As a Potential Entrenchment Device | ISS](https://www.issgovernance.com/majority-voting-potential-entrenchment-device) — "Majority Voting As a Potential Entrenchment Device"
@@ -1882,6 +2038,8 @@ In plain terms, a majority voting standard is the rule that says a director must
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2015Canadaventurevotingguidelines (PDF)
 > no more than one member of the compensation committee should be a related director; › Prompt disclosure of detailed vote results following each shareholder meeting; and › Adoption of a majority vote standard with director resignation policy for uncontested elections OR public commitment to adopt a **majority voting standard** with director resignation policy for uncontested elections if the control...
@@ -1902,6 +2060,8 @@ In plain terms, a majority voting standard is the rule that says a director must
 > [!quote] Majority Voting As a Potential Entrenchment Device | ISS
 > Unless the voting at Ethan Allen Interiors’ upcoming annual meeting—where 5.5 percent holder Sandell Asset Management has nominated six candidates to the seven-member board—produces a landslide management victory, shareholders may be about to witness firsthand how a poorly designed **majority voting standard** can be used to entrench a board rather than increase its accountability. Across the Russe...
 > — [Majority Voting As a Potential Entrenchment Device | ISS](https://www.issgovernance.com/majority-voting-potential-entrenchment-device) — "Majority Voting As a Potential Entrenchment Device"
+
+</details>
 
 **Sources:**
 - [2015Canadaventurevotingguidelines (PDF)](https://www.issgovernance.com/file/policy/2015canadaventurevotingguidelines.pdf)
@@ -1930,6 +2090,8 @@ In plain terms, an overboarded director has too many board seats. ISS worries th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 4 2017 Comment Period Template Canada Director Elections Overboarded Directors (PDF)
 > rboarded if they serve on more than four boards (previously six directorships), while directors who are also CEOs of public companies are considered overboarded if they serve on more than one (previously two) outside boards in addition to the board of the company on which they serve as CEO. Once an **overboarded director** has been identified, an adverse voting recommendation is then only issued wh...
@@ -1950,6 +2112,8 @@ In plain terms, an overboarded director has too many board seats. ISS worries th
 > [!quote] 2015 Sustainability International Voting Guidelines (PDF)
 > ................. 9 The Florange Act (France)- Double Voting Rights ......................................................................................... 10 Unilateral Adoption of an Advance Notice Provision .................................................................................... 10 **Overboarded Director**s ..............................................................................
 > — [2015 Sustainability International Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2015-sustainability-international-voting-guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [4 2017 Comment Period Template Canada Director Elections Overboarded Directors (PDF)](https://www.issgovernance.com/file/policy/4-2017-comment-period-template-canada-director-elections-overboarded-directors.pdf)
@@ -1978,6 +2142,8 @@ In plain terms, pay-for-performance alignment asks a simple question: is the CEO
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] European Pay For Performance Methodology Overview (PDF)
 > Performance ...................................................................................................................... 7 What We Measure -- Relative and Absolute Alignment Over Time ...................................................................... 7 ISS' QUANTITATIVE EVALUATION OF **PAY-FOR-PERFORMANCE ALIGNMENT** ............................................................... 7 Me...
@@ -1998,6 +2164,8 @@ In plain terms, pay-for-performance alignment asks a simple question: is the CEO
 > [!quote] Europe U.K. Ireland European Pay For Performance Methodology (PDF)
 > Ireland Policies - European Pay for Performance Methodology Background and Overview Recent debates about executive compensation have become increasingly focused on quantum and the alignment of pay with performance and peers. Already in 2012 ISS introduced a robust quantitative methodology to assess **pay-for-performance alignment** for the US market. With similar attention for payout levels in Euro...
 > — [Europe U.K. Ireland European Pay For Performance Methodology (PDF)](https://www.issgovernance.com/file/policy/europe-u.k.-ireland-european-pay-for-performance-methodology.pdf)
+
+</details>
 
 **Sources:**
 - [European Pay For Performance Methodology Overview (PDF)](https://www.issgovernance.com/file/policy/2019/emea/European-Pay-for-Performance-Methodology-Overview.pdf)
@@ -2024,6 +2192,8 @@ In plain terms, a poison pill is a defense mechanism that makes it extremely cos
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Japan Poison Pill (PDF)
 > **Poison Pill**s (Japan) Background and Overview The current ISS Japan **poison pill** policy was formulated at the time when Japanese companies first started to introduce pills. Given the potential for pills to be misused, particularly by insider- dominated boards, the policy was intended to set a reasonab
@@ -2044,6 +2214,8 @@ In plain terms, a poison pill is a defense mechanism that makes it extremely cos
 > [!quote] Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)
 > .................. 5 ▪ Meeting Postponements .............................................................................................................. 5 ▪ Virtual-Only Meetings ................................................................................................................... 5 **Poison Pill**s, Shareholder Rights and Boards/Directors ..............................................
 > — [Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)](https://www.issgovernance.com/file/policy/2020/americas/ISS-Policy-Guidance-for-Impacts-of-the-Coronavirus-Pandemic.pdf)
+
+</details>
 
 **Sources:**
 - [Japan Poison Pill (PDF)](https://www.issgovernance.com/file/policy/japan-poison-pill.pdf)
@@ -2070,6 +2242,8 @@ In plain terms, political spending disclosure proposals ask companies to tell sh
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Group Presses on Political Spending Disclosures | ISS
 > Group Presses on **Political Spending Disclosure**s The Corporate Reform Coalition, whose members include investors, academics, and public interest groups, is urging the U.S. Securities and Exchange Commission to consider a rulemaking petition that would require all publicly traded companies to disclose political spendi
@@ -2078,6 +2252,8 @@ In plain terms, political spending disclosure proposals ask companies to tell sh
 > [!quote] Site Map | ISS
 > Number of Contested Meetings - SEC Releases Draft Rules on Hedging - Voting Season Preview: Korea - Rare U.K. Shareholder Proposal Receives Rarer Company Support - Analysis: Differentiated Voting Rights in Europe - U.S. Moves on Methane Emissions - A Review of Canadian Pay Trends - Group Presses on **Political Spending Disclosure**s - 2014 Proxy Season Preview: Australia & New Zealand - Engagement ...
 > — [Site Map | ISS](https://www.issgovernance.com/site-map) — "Site Map"
+
+</details>
 
 **Sources:**
 - [Group Presses on Political Spending Disclosures | ISS](https://www.issgovernance.com/group-presses-on-political-spending-disclosures) — "Group Presses on Political Spending Disclosures"
@@ -2114,6 +2290,8 @@ In plain terms, proxy access lets long-term shareholders put their own director 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] The Finer Points of Proxy Access Bylaws Come Under the Microscope | ISS
 > e a shareholder or a group of up to 20 shareholders who have held 3 percent of the company’s stock for 3 years to nominate up to 20 percent of the board. This so-called 3/3/20/20 structure, which is similar in some respects to the standard the SEC set forth when it promulgated Rule 14a-11 mandating **proxy access** in 2010, has taken hold as the most widely adopted model. Only 16 companies that ado...
@@ -2134,6 +2312,8 @@ In plain terms, proxy access lets long-term shareholders put their own director 
 > [!quote] 2016 Catholic Us Policy Updates (PDF)
 > t the proposed goals and objectives can be achieved (both slates); › Stock ownership positions; › Impact on stakeholders, such as job loss, community lending, equal opportunity, impact on environment. Key Changes: › Clarifying a policy analysis framework to evaluate candidates nominated pursuant to **proxy access** as well as nominees in a proxy contest. › While several factors may be similar in ea...
 > — [2016 Catholic Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2016-catholic-us-policy-updates.pdf)
+
+</details>
 
 **Sources:**
 - [The Finer Points of Proxy Access Bylaws Come Under the Microscope | ISS](https://www.issgovernance.com/finer-points-proxy-access-bylaws-come-microscope) — "The Finer Points of Proxy Access Bylaws Come Under the Microscope"
@@ -2158,6 +2338,8 @@ In plain terms, a proxy contest is a shareholder battle for control. An activist
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sri Us Voting Guidelines (PDF)
 > ndation: Vote case-by-case on conversion proposals, considering the following factors: ▪ Past performance as a closed-end fund; ▪ Market in which the fund invests; ▪ Measures taken by the board to address the discount; and ▪ Past shareholder activism, board activity, and votes on related proposals. **Proxy Contest**s Social Advisory Services Recommendation: Vote case-by-case on **proxy contest**s, cons...
@@ -2178,6 +2360,8 @@ In plain terms, a proxy contest is a shareholder battle for control. An activist
 > [!quote] 2017 Taft Hartley Advisory Services International Guidelines (PDF)
 > 2017 Taft-Hartley International Proxy Voting Guidelines often achieved because the response to a **proxy contest**, or one that was narrowly averted, usually includes new strategic initiatives, a restructuring program, governance changes, or selected management changes. Based on these considerations, Taft-Hartley Advisory Services’ framework for the evaluation of contested elections has the ultimat
 > — [2017 Taft Hartley Advisory Services International Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-taft-hartley-advisory-services-international-guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
@@ -2217,6 +2401,8 @@ In plain terms, most shareholders do not attend company meetings. Instead, they 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS Governance Research and Proxy Voting Solutions
 > ISS offers solutions that help investors make informed stewardship decisions. Institutional Investors have long turned to ISS for governance solutions that support their unique products and viewpoints. ISS was founded in 1985 with the goal of supporting sound investment stewardship to help inform **proxy voting** among institutional investors. First-to-market with **proxy voting** services in 1992, tod...
@@ -2237,6 +2423,8 @@ In plain terms, most shareholders do not attend company meetings. Instead, they 
 > [!quote] 2017 Europe Middle East Africa Regional Proxy Voting Summary Guidelines (PDF)
 > 2017 EMEA Regional **Proxy Voting** Summary Guidelines COVERAGE UNIVERSE The following is a condensed version of the **proxy voting** recommendations contained in ISS’ EMEA Regional Proxy Voting Manual. These guidelines cover all markets in Europe, the Middle East, and Africa (EMEA) that are not covered under a separate marke
 > — [2017 Europe Middle East Africa Regional Proxy Voting Summary Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-europe-middle-east-africa-regional-proxy-voting-summary-guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [ISS Governance Research and Proxy Voting Solutions](https://www.issgovernance.com/solutions) — "Governance Solutions"
@@ -2261,6 +2449,8 @@ In plain terms, ProxyExchange (one word, branded) is ISS's flagship product for 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] proxyexchange | ISS
 > **ProxyExchange** 2.0. An industry standard redefined. The exercise of governance, now even more efficient & transparent. READ MORE ABOUT **PROXYEXCHANGE** 2.0 HERE proxyexchange2013-11-082014-01-08/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
@@ -2281,6 +2471,8 @@ In plain terms, ProxyExchange (one word, branded) is ISS's flagship product for 
 > [!quote] ISS Announces Transformational Enhancements to ProxyExchange Voting Platform ...
 > ROCKVILLE, MD. (11 December 2017) – Institutional Shareholder Services Inc. (ISS), the leading provider of end-to-end governance and responsible investment solutions to the global financial community, today announced the pending launch of sweeping enhancements to its **ProxyExchange** research and voting platform. Dubbed Project Mercury, ISS will on December 11 usher in the most sweeping improvemen...
 > — [ISS Announces Transformational Enhancements to ProxyExchange Voting Platform ...](https://www.issgovernance.com/iss-announces-transformational-enhancements-to-proxyexchange-voting-platform) — "ISS Announces Transformational Enhancements to ProxyExchange Voting Platform"
+
+</details>
 
 **Sources:**
 - [proxyexchange | ISS](https://www.issgovernance.com/banner_builder/3) — "proxyexchange"
@@ -2309,6 +2501,8 @@ In plain terms, a quorum is the minimum attendance needed for a shareholder meet
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2015Canadaventurevotingguidelines (PDF)
 > commendation: Generally vote against new by-laws or amended by-laws that would establish two different **quorum** levels which would result in implementing a higher **quorum** solely for those shareholder meetings where common share investors seek to replace the majority of current board members ("Enhanced Quorum"). Rationale: With Enhanced Quorum, the ability to hold a shareholders’ meeting is subject...
@@ -2329,6 +2523,8 @@ In plain terms, a quorum is the minimum attendance needed for a shareholder meet
 > [!quote] Us Procedures And Policies Faq (PDF)
 > ly diminish shareholders’ rights? If a unilaterally adopted amendment is deemed materially adverse to shareholder rights, ISS will recommend a vote against the appropriate committee members or the entire board. Materially adverse unilateral amendments include, but are not limited to: ▪ Reduction of **quorum** requirements to less than half of outstanding shares; ▪ Authorized capital increases that ...
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [2015Canadaventurevotingguidelines (PDF)](https://www.issgovernance.com/file/policy/2015canadaventurevotingguidelines.pdf)
@@ -2357,6 +2553,8 @@ In plain terms, a related-party transaction is a deal between the company and an
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 1 2016 China Voting Guidelines Dec 2015 (PDF)
 > or article amendments is a special resolution whereas proposal for bylaw amendments is an ordinary resolution. Special resolutions can be adopted by a super majority vote (2/3 or more) of all attending shareholders. Ordinary resolutions can be adopted by a majority of all attending shareholders. 9. **RELATED-PARTY TRANSACTION**S ISS assesses **related-party transaction**s on a case-by-case basis. Howev...
@@ -2377,6 +2575,8 @@ In plain terms, a related-party transaction is a deal between the company and an
 > [!quote] Public Fund Us Policy Updates (PDF)
 > 2018 Public Fund U.S. Proxy Voting Guidelines Updates › The presence of problematic governance practices including interlocking › The presence of problematic governance practices including interlocking directorships, multiple **related-party transaction**s, excessive risk-taking, directorships, multiple **related-party transaction**s, excessive risk-taking, imprudent use of corporate assets, etc.; impr...
 > — [Public Fund Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Public-Fund-US-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [1 2016 China Voting Guidelines Dec 2015 (PDF)](https://www.issgovernance.com/file/policy/1_2016-china-voting-guidelines-dec-2015.pdf)
@@ -2405,6 +2605,8 @@ In plain terms, say-on-pay is the annual moment when shareholders give a thumbs 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Goal Setting, Attainment, and Say-on-Pay Vote Results at U.S. Energy Companie...
 > changes across the industry. We analyzed annual and long-term incentive metrics, particularly the composition of metrics used and goal achievement disclosed at 2015 meetings, as well as goal-setting by companies where financial metrics constituted a majority of annual incentive objectives. Finally, **say-on-pay** vote results at 2015 shareholder meetings are reviewed as a potential gauge for what t...
@@ -2425,6 +2627,8 @@ In plain terms, say-on-pay is the annual moment when shareholders give a thumbs 
 > [!quote] Pearl Meyer (PDF)
 > ance of industry specific factors should be transparent. We urge ISS to avoid a “black box” methodology (similar to that used for ISS proprietary SVT caps in the equity plan analysis), which would force a company to buy a product to understand how ISS will evaluate alignment of pay and performance. **Say-on-Pay** Frequency Under the Dodd-Frank rules adopted in 2011, US companies are required to hol...
 > — [Pearl Meyer (PDF)](https://www.issgovernance.com/file/policy/pearl_meyer.pdf)
+
+</details>
 
 **Sources:**
 - [Goal Setting, Attainment, and Say-on-Pay Vote Results at U.S. Energy Companies | ISS](https://www.issgovernance.com/library/goal-setting-attainment-say-pay-vote-results-u-s-energy-companies) — "Goal Setting, Attainment, and Say-on-Pay Vote Results at U.S. Energy Companies"
@@ -2451,6 +2655,8 @@ In plain terms, a share buyback is when a company buys back its own stock, effec
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sustainability Us Voting Guidelines (PDF)
 > roposals prohibiting executives from selling shares of company stock during periods in which the company has announced that it may or will be repurchasing shares of its stock. Vote for the proposal when there is a pattern of abuse by executives exercising options or selling shares during periods of **share buyback**s. Vote case-by-case on proposals requesting the company exclude the impact of share...
@@ -2471,6 +2677,8 @@ In plain terms, a share buyback is when a company buys back its own stock, effec
 > [!quote] 2014Issafricaguidelines (PDF)
 > Transparency. Inclusiveness. Global Expertise. **Share buyback** authorities Local requirements Companies are allowed to acquire their own shares (CA s48). The JSE specifies a number of conditions in relation to **share buyback**s, one of which is that general authorities are permitted up to 20 percent of the issued share capital in any one financial ye
 > — [2014Issafricaguidelines (PDF)](https://www.issgovernance.com/file/2014_Policies/2014ISSAfricaGuidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Sustainability Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/Sustainability-US-Voting-Guidelines.pdf)
@@ -2497,6 +2705,8 @@ In plain terms, shareholder proposals are items on the ballot that come from inv
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] A Look At Governance Shareholder Proposals in 2015 | ISS
 > The number of governance-related **shareholder proposal**s that appeared on ballots in the first half of each respective year has skyrocketed, from 172 in 2014 to 238 in 2015, reflecting a breakout year for proxy access proposals. The number of governance-related **shareholder proposal**s that appeared on ballots in the first half of each
@@ -2517,6 +2727,8 @@ In plain terms, shareholder proposals are items on the ballot that come from inv
 > [!quote] A Look at AI-Related Shareholder Proposals at U.S. Companies, 2022-2025 | ISS
 > A Look at AI-Related **Shareholder Proposal**s at U.S. Companies, 2022-2025 December 1, 2025 The long-projected systemic and business transformations that can be brought about by Artificial Intelligence (AI) technologies have started. Accordingly, many companies and their boards of directors have faced scrutiny in recent ye
 > — [A Look at AI-Related Shareholder Proposals at U.S. Companies, 2022-2025 | ISS](https://www.issgovernance.com/library/a-look-at-ai-related-shareholder-proposals-at-us-companies-2022-2025) — "A Look at AI-Related Shareholder Proposals at U.S. Companies, 2022-2025"
+
+</details>
 
 **Sources:**
 - [A Look At Governance Shareholder Proposals in 2015 | ISS](https://www.issgovernance.com/library/a-look-at-governance-shareholder-proposals-in-2015) — "A Look At Governance Shareholder Proposals in 2015"
@@ -2543,6 +2755,8 @@ In plain terms, shareholder rights are the powers investors have as part-owners 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] European Shareholder Rights Directive II: An Overview | ISS
 > European **Shareholder Rights** Directive II: An Overview JUNE 30, 2018 In response to the global financial crisis, the European Commission proposed, in April 2014, a revision of the original 2007 **Shareholder Rights** Directive. The revised Shareholder Rights Directive (“SRD II”), which entered into force in June
@@ -2563,6 +2777,8 @@ In plain terms, shareholder rights are the powers investors have as part-owners 
 > [!quote] Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)
 > ISS POLICY GUIDANCE IMPACTS OF THE COVID-19 PANDEMIC Poison Pills, **Shareholder Rights** and Boards/Directors ▪ Poison Pills and other Defensive Measures: Many lawyers and other outside advisers are advising boards, particularly in the U.S. but in other markets also, to consider adopting poison pills (often referred to as “rights plans” or “**shareholder rights** plans”)
 > — [Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)](https://www.issgovernance.com/file/policy/2020/americas/ISS-Policy-Guidance-for-Impacts-of-the-Coronavirus-Pandemic.pdf)
+
+</details>
 
 **Sources:**
 - [European Shareholder Rights Directive II: An Overview | ISS](https://www.issgovernance.com/library/european-shareholder-rights-directive-ii-an-overview) — "European Shareholder Rights Directive II: An Overview"
@@ -2589,6 +2805,8 @@ In plain terms, a special meeting right lets shareholders convene an emergency m
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Western Union (PDF)
 > could hinder or negate the right to call special meetings provided to shareholders. Such provisions would include restrictions on shareholders' ability to call a special meeting to act on business that was addressed at the previous shareholder meeting. ISS believes that such provisions inhibit the **special meeting right**, and may recommend that shareholders vote against proposals that have such r...
@@ -2597,6 +2815,8 @@ In plain terms, a special meeting right lets shareholders convene an emergency m
 > [!quote] A Preliminary Review of the 2018 US Proxy Season | ISS
 > greater scrutiny on a wider range of topics. In compensation, we see an uptick in votes against say-on-pay proposals, potentially as a response to record-level payouts and CEO pay increases. On the shareholder proposals front, individual investors seemed determined to make headway on issues such as **special meeting right**s, independent board chair, and the ability to act by written consent. Meanw...
 > — [A Preliminary Review of the 2018 US Proxy Season | ISS](https://www.issgovernance.com/library/a-preliminary-review-of-the-2018-us-proxy-season) — "A Preliminary Review of the 2018 US Proxy Season"
+
+</details>
 
 **Sources:**
 - [Western Union (PDF)](https://www.issgovernance.com/file/2013/02/western_union.pdf)
@@ -2620,6 +2840,8 @@ In plain terms, stewardship is the idea that investors have a responsibility to 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS Launches Engagement Letter Writing Solution to Support Investors’ Own Ste...
 > 6, 2020) – Institutional Shareholder Services Inc. (“ISS”), a leading provider of corporate governance and responsible investment solutions to the global financial community, today announced the launch of its ISS Engagement Letter Writing Solution, a flexible, dynamic tool to support investors’ own **stewardship** engagement strategies in compliance with global regulations and best practice framewo...
@@ -2640,6 +2862,8 @@ In plain terms, stewardship is the idea that investors have a responsibility to 
 > [!quote] ETF managers step up focus on ESG stewardship | Blog posts | STOXX
 > ys Kashner. “Corporate boards and their C-suites have every reason to respond to shareholders of this size. This has a potential to move the needle in terms of ESG.” Kashner added that the largest asset managers jointly control between 10% and 20% of many US-domiciled companies. An inside look into **stewardship** activity A survey2 by Morningstar published last December provided a comprehensive an...
 > — [ETF managers step up focus on ESG stewardship | Blog posts | STOXX](https://stoxx.com/etf-managers-step-up-focus-on-esg-stewardship) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [ISS Launches Engagement Letter Writing Solution to Support Investors’ Own Stewardship Strategies | ISS](https://www.issgovernance.com/iss-launches-engagement-letter-writing-solution-to-support-investors-own-stewardship-strategies) — "ISS Launches Engagement Letter Writing Solution to Support Investors’ Own Stewardship Strategies"
@@ -2666,6 +2890,8 @@ In plain terms, a supermajority requirement raises the bar for passing important
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Catholic Faith Based Us Policy Updates (PDF)
 > roup (Russell 3000 companies only). Take into consideration the provisions include but are not limited to: company’s five-year total shareholder return and operational metrics. Problematic provisions include but are not limited to: › A classified board structure; › A classified board structure; › A **supermajority vote requirement**; › A **supermajority vote requirement**; ---------------------- 1 In g...
@@ -2686,6 +2912,8 @@ In plain terms, a supermajority requirement raises the bar for passing important
 > [!quote] Us Policies And Procedures Faq April 2017 (PDF)
 > ........................ 13 19. What is the rationale for the policy at this time? ................................................................... 13 20. What companies are not impacted by this policy? ................................................................. 14 21. Will substitution of **supermajority vote requirement**s on binding shareholder bylaw amendments in lieu of a prohibition ...
 > — [Us Policies And Procedures Faq April 2017 (PDF)](https://www.issgovernance.com/file/policy/us-policies-and-procedures-faq-april-2017.pdf)
+
+</details>
 
 **Sources:**
 - [Catholic Faith Based Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Catholic-Faith-Based-US-Policy-Updates.pdf)
@@ -2714,6 +2942,8 @@ In plain terms, a tender offer is when someone offers to buy your shares at an a
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Public Fund Us Policy Updates (PDF)
 > 2018 Public Fund U.S. Proxy Voting Guidelines Updates › Voting agreements - Are the sponsors entering into enter into any voting › Voting agreements - Are the sponsors entering into enter into any voting agreements/**tender offer**s with shareholders who are likely to vote against agreements/**tender offer**s with shareholders who are likely to vote against the proposed merger or exercise conversion ri...
@@ -2734,6 +2964,8 @@ In plain terms, a tender offer is when someone offers to buy your shares at an a
 > [!quote] Taft Hartley Us Policy Updates (PDF)
 > d and management entrenchment. For example, accountability may lead to board and management entrenchment. For example, the existence of several anti-takeover provisions* has the cumulative effect of the existence of several anti-takeover provisions* has the cumulative effect of deterring legitimate **tender offer**s, mergers, and corporate transactions that may deterring legitimate **tender offer**s, m...
 > — [Taft Hartley Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2019/specialty/Taft-Hartley-US-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [Public Fund Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Public-Fund-US-Policy-Updates.pdf)
@@ -2762,6 +2994,8 @@ In plain terms, unequal voting rights mean some shareholders get more votes per 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 1.8.16 GI Unequal Voting rights | ISS
 > 1.8.16 GI **Unequal Voting rights**2016-01-152016-01-15/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
@@ -2782,6 +3016,8 @@ In plain terms, unequal voting rights mean some shareholders get more votes per 
 > [!quote] 2016 2017 Iss Policy Survey Results Report (PDF)
 > l for abuse and the extreme difficulty of abolishing such a structure once the company goes public. Among investor respondents, 57 percent supported negative recommendations, while 19 percent opposed them, and 24 percent opposed negative recommendations as long as there is a sunset provision on the **unequal voting rights**. While one investor opined that "sunset provisions are a poor second to get...
 > — [2016 2017 Iss Policy Survey Results Report (PDF)](https://www.issgovernance.com/file/policy/2016-2017-iss-policy-survey-results-report.pdf)
+
+</details>
 
 **Sources:**
 - [1.8.16 GI Unequal Voting rights | ISS](https://www.issgovernance.com/whats-really-hot-quickscore-analysis-2015s-real-governance-trends/1-8-16-gi-unequal-voting-rights) — "1.8.16 GI Unequal Voting rights"
@@ -2808,6 +3044,8 @@ In plain terms, vote disclosure is when a fund manager reveals their voting reco
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS Proxy Voting - Vote Disclosure Services
 > **VOTE DISCLOSURE** SERVICES Setting the standards for **vote disclosure** best practices Turnkey recordkeeping & disclosure services to help efficiently showcase active ownership and cost-effectively achieve compliance with global regulatory requirements, stewardship codes, and best practice guidelines. Wi
@@ -2828,6 +3066,8 @@ In plain terms, vote disclosure is when a fund manager reveals their voting reco
 > [!quote] Site Map | ISS
 > r Settlement for $149 Million - Erik Tabuena - Europe’s Largest Court-Approved Securities Case Settlement Ageas (f/k/a Fortis) Settlement Finally Secured at €1.3 Billion - First Solar Agrees to $350 Million Settlement Just One Day Prior to Jury Selection - Flexible Stewardship Solutions - Form N-PX **Vote Disclosure** Services - Form sent - Former Orbital ATK Investors set to Recover $108 Million -...
 > — [Site Map | ISS](https://www.issgovernance.com/site-map) — "Site Map"
+
+</details>
 
 **Sources:**
 - [ISS Proxy Voting - Vote Disclosure Services](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services) — "VOTE DISCLOSURE SERVICES"
@@ -2852,6 +3092,8 @@ In plain terms, vote preference is the actual vote — "for" or "against" — th
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Vote Preference | ISS
 > Designed to provide choice, ISS **Vote Preference** is a flexible way for asset managers to create and manage their own offering leveraging innovative technology. ISS **Vote Preference** solves for long-standing market limitations by capturing and executing the vote intentions of underlying shareholders. Further, ISS offers asset managers
@@ -2872,6 +3114,8 @@ In plain terms, vote preference is the actual vote — "for" or "against" — th
 > [!quote] asset-1 | ISS
 > ews & Press Releases Press Center KNOWLEDGE CENTER ISS Insights Newsfeed White Papers Upcoming Events Solutions Governance Solutions OVERVIEW GOVERNANCE RESEARCH & VOTING Proxy Voting Services Custom Policy & Specialty Research Special Situations Research Custom Climate Voting Service ProxyExchange **Vote Preference** ISS Communicator Vote Disclosure Services Global Meeting Results GOVERNANCE SOLUT...
 > — [asset-1 | ISS](https://www.issgovernance.com/2017-fall-briefings-paris/asset-1-4) — "asset-1"
+
+</details>
 
 **Sources:**
 - [Vote Preference | ISS](https://www.issgovernance.com/solutions/proxy-voting-services/vote-preference) — "VOTE PREFERENCE"
@@ -2896,6 +3140,8 @@ In plain terms, Voting Analytics is the ISS tool that lets you see how the inves
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Voting Analytics | ISS
 > ISS ESG | ESG RAW DATA **VOTING ANALYTICS** Leverage ISS’ unsurpassed coverage and insight of institutional voting data With over 15 years of shareholder voting data, **Voting Analytics** enables investment professionals to monitor and analyze institutional voting, shareholder meeting results, and voting patterns to surface trend
@@ -2916,6 +3162,8 @@ In plain terms, Voting Analytics is the ISS tool that lets you see how the inves
 > [!quote] Proxy Season Preview: China, Hong Kong, and Singapore | ISS
 > The Moody’s downgrade was followed a Standard & Poor downgrade in January 2016. Despite the two downgrades, the company firmly believes that once the proposed disposal is complete, the company’s rating metrics will substantially exceed those required for an investment grade rating. According to ISS **Voting Analytics** data, at the company’s EGM held on Jan. 28, 2016, the sale of the company’s 49-p...
 > — [Proxy Season Preview: China, Hong Kong, and Singapore | ISS](https://www.issgovernance.com/proxy-season-preview-china-hong-kong-and-singapore) — "Proxy Season Preview: China, Hong Kong, and Singapore"
+
+</details>
 
 **Sources:**
 - [Voting Analytics | ISS](https://www.issgovernance.com/sustainability/raw-data/voting-analytics) — "ISS ESG|ESG RAW DATA"

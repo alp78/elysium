@@ -40,6 +40,8 @@ In plain language, avoided emissions are the greenhouse gases that *would have b
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...
 > t offer investment advice and does not hold views on any specific investment, investment tool or investment strategy. Download the full summary of the Carbon Yield methodology here or visit the official website http://carbonyield.org/. 1 The Carbon Yield enables investors to determine the potential **avoided emissions** of Green Bonds. 2 Bloomberg, as of August 2018
@@ -60,6 +62,8 @@ In plain language, avoided emissions are the greenhouse gases that *would have b
 > [!quote] Climate and Nature Solutions | ISS
 > s at both the issuer and portfolio level, understand the impact of physical and transitional climate risks and assess nature-related risks such as biodiversity loss and deforestation. Specific data solutions include: - Climate Impact Dataset - Scenario Analysis - Carbon Emissions Data - Potentially **Avoided Emissions** Data - Physical Risk, Transition Risk - Carbon Risk Rating - Sovereign data - B...
 > — [Climate and Nature Solutions | ISS](https://www.issgovernance.com/climate-and-nature/solutions) — "ISS STOXX"
+
+</details>
 
 **Sources:**
 - [Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield On Over 55 Green Bond Issuers To Quantify Climate Change Mitigation Impact | ISS](https://www.issgovernance.com/carbon-yield-insights-report) — "Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield On Over 55 Green Bond Issuers To Quantify Climate Change Mitigation Impact"
@@ -86,6 +90,8 @@ In plain language, this assessment measures whether a company is helping or hurt
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Biodiversity Impact Assessment Tool | ISS
 > ? Based on OECD’s Environmental Outlook to 2050, without new policies in place, we can expect a 10% reduction in total global terrestrial biodiversity. This includes one-third of all marine mammals, 40% of all amphibian species, and nearly 33% of coral reefs. SOURCE: OECD 2022 BENEFITS OF USING THE **BIODIVERSITY IMPACT ASSESSMENT** TOOL The **Biodiversity Impact Assessment** Tool can be used to suppor...
@@ -106,6 +112,8 @@ In plain language, this assessment measures whether a company is helping or hurt
 > [!quote] DWS launches biodiversity-focused Xtrackers ETFs integrating comprehensive IS...
 > steps The “Avoid” step incorporates negative exclusions, including standard compliance and product-involvement screens, and biodiversity-related activity filters[4]. In “Minimize,” the indices select the top 80% of companies by ICB Sector with the least impact on biodiversity,[5] based on ISS ESG’s **Biodiversity Impact Assessment** Tool (BIAT). The “Enable” stage selects companies whose products a...
 > — [DWS launches biodiversity-focused Xtrackers ETFs integrating comprehensive IS...](https://stoxx.com/dws-launches-biodiversity-focused-xtrackers-etfs-integrating-comprehensive-iss-stoxx-impact-framework) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Biodiversity Impact Assessment Tool | ISS](https://www.issgovernance.com/sustainability/biodiversity-impact-assessment-tool) — "SUSTAINABILITY SOLUTIONS"
@@ -130,6 +138,8 @@ In plain language, biodiversity loss means that the web of life — species, hab
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Antonio Celeste on how investors should urgently mitigate against biodiversit...
 > ors should urgently mitigate against **biodiversity loss**. He goes on to describe the sector as being at the dawn of a revolution that will embrace a wide range of biodiversity-related data and intelligent systems, giving investors more visibility on current and future, risks and opportunities. Why is **biodiversity loss** an urgent issue for investors? The fight to protect our ecosystems is gaining m...
@@ -150,6 +160,8 @@ In plain language, biodiversity loss means that the web of life — species, hab
 > [!quote] Climate and Nature Solutions | ISS
 > y and client requirements. The solutions include a suite of climate analytics to monitor and mitigate climate-related impact, assess temperature scenarios at both the issuer and portfolio level, understand the impact of physical and transitional climate risks and assess nature-related risks such as **biodiversity loss** and deforestation. Specific data solutions include: - Climate Impact Dataset - ...
 > — [Climate and Nature Solutions | ISS](https://www.issgovernance.com/climate-and-nature/solutions) — "ISS STOXX"
+
+</details>
 
 **Sources:**
 - [Antonio Celeste on how investors should urgently mitigate against biodiversity loss - Climate Action](https://stoxx.com/antonio-celeste-on-how-investors-should-urgently-mitigate-against-biodiversity-loss) — "Topics"
@@ -174,6 +186,8 @@ In plain language, brown revenue is the money a company earns from activities th
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 629/639 19. STOXX CTB AND STOXX PAB INDICES xii. Percentage of revenues from brown sources: any revenues from fossil fuels (coal, oil, gas, Arctic drilling, hydraulic fracturing and oil sands) and the provision of supporting products or services is considered as **brown revenue**. The definition of **brown revenue**s also extends to revenues that are obstructive to UN Sust...
@@ -190,6 +204,8 @@ In plain language, brown revenue is the money a company earns from activities th
 > [!quote] Science-Based Targets – A Key Piece in the Climate-Alignment Puzzle | Blog po...
 > TB) Indices last July. To future-proof our indices and optimize impact for clients, the STOXX PABs and CTBs go beyond the minimum requirements of the European Union Climate Benchmarks regulation. Additional enhancements include the count of Scope 3 emissions from day one, the incorporation of green/**brown revenue** thresholds, and the use of carbon budget data in the weighting process to ensure in...
 > — [Science-Based Targets – A Key Piece in the Climate-Alignment Puzzle | Blog po...](https://stoxx.com/science-based-targets-a-key-piece-in-the-climate-alignment-puzzle) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -215,6 +231,8 @@ In plain language, a carbon budget is the total "allowance" of CO2 the world can
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > ) (cid:4678) (cid:2919) (cid:2919) (cid:4679) w (cid:2919)(cid:2880)(cid:2869) (cid:2919) where (cid:1875)∗ and (cid:1875) are the optimised and target weights of asset i. (cid:3036) (cid:3036) The target weight is defined as the free-float market capitalization divided by the IEA NZE Scenario 2050 **carbon budget** overshooting z-score, cb_os_z. The target weight is constructed such that it (cid:2...
@@ -235,6 +253,8 @@ In plain language, a carbon budget is the total "allowance" of CO2 the world can
 > [!quote] Science-Based Targets – A Key Piece in the Climate-Alignment Puzzle | Blog po...
 > 15. That amounts to the annual emissions from 78 coal-fired power plants).6 How can companies set science-based targets? There are several methodologies to establish SBTs, all of which include assessing the following: - How much a company can emit to stay within the 2°C warming limit, also known as **carbon budget**. - The approach with which to assign **carbon budget** to companies. - An emissions sce...
 > — [Science-Based Targets – A Key Piece in the Climate-Alignment Puzzle | Blog po...](https://stoxx.com/science-based-targets-a-key-piece-in-the-climate-alignment-puzzle) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -259,6 +279,8 @@ In plain language, CCS is a way to grab CO2 before it enters the atmosphere (or 
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Executive Summary Of Iss Policy Updates And Process (PDF)
 > both its own emissions and the emissions of its products in its reduction plans, whether targets for emissions reductions were set in short- and medium-term timeframes in addition to longer-term ones, and whether the company relied excessively on the use of currently unproven technologies, such as **carbon capture and storage** and other unproven negative emission technologies. An industry group fo...
@@ -267,6 +289,8 @@ In plain language, CCS is a way to grab CO2 before it enters the atmosphere (or 
 > [!quote] Taking Temperature Part 2: US Enters Climate Financial Regulation Era | Blog ...
 > tates, corporations and investors, and said such efforts may not be enough. In order to meet global temperature targets by 2050, governments will have to promote ‘negative’ emissions strategies including carbon removal, she told the audience. “The math at the moment is not working out,” Lutz said. “**Carbon capture and storage**, and even less so carbon removal, are not that much on the agenda. I d...
 > — [Taking Temperature Part 2: US Enters Climate Financial Regulation Era | Blog ...](https://stoxx.com/taking-temperature-2-us-enters-climate-financial-regulation-era) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Executive Summary Of Iss Policy Updates And Process (PDF)](https://www.issgovernance.com/file/policy/2021/updates/Executive-Summary-of-ISS-Policy-Updates-and-Process.pdf)
@@ -288,6 +312,8 @@ In plain language, a carbon credit is a permit that lets a company release one t
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] 2013Isstafthartleyadvisoryservicesusguidelines (PDF)
 > specially those that operate in industries profoundly impacted by greenhouse gas emission constraints or regulation. In order to comply with the anticipated standards, companies will have to consider options such as: capital improvement to their facilities to reduce emissions, the cost of “trading” **carbon credit**s on an open market to offset emission overages, or the expense of fines or restrict...
@@ -296,6 +322,8 @@ In plain language, a carbon credit is a permit that lets a company release one t
 > [!quote] Panel of experts explores transformation of index providers, products | Blog ...
 > aningful shift that impacts all of us,” said Axel. “When you look at that 20% bucket, it is crypto, private assets, infrastructure. All stuff that historically was not really the domain of index providers.” Tom at FTSE Russell and Maya at S&P Dow Jones highlighted infrastructure, digital assets and **carbon credit** futures among investments that are getting more investor interest as they seek to d...
 > — [Panel of experts explores transformation of index providers, products | Blog ...](https://stoxx.com/panel-of-experts-explores-transformation-of-index-providers-products) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [2013Isstafthartleyadvisoryservicesusguidelines (PDF)](https://www.issgovernance.com/file/2013-policies/2013ISSTaftHartleyAdvisoryServicesUSGuidelines.pdf)
@@ -319,6 +347,8 @@ $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Ca
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Qontigo’s Bocquet: Both Standardization and Customization are Equally Needed ...
 > have done at Qontigo is we’ve gone above and beyond the EU regulation.” Rodolphe explained how the STOXX Climate Benchmarks exceed the required decarbonization threshold and uniquely include forward-looking metrics to progressively exclude companies that have not committed to science-based targets. **Carbon pricing** Rodolphe concluded his participation by answering a question on whether he expecte...
@@ -327,6 +357,8 @@ $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Ca
 > [!quote] Climate Analytics | ISS
 > s provided by leading models: e.g. IEA, OECM, and NGFS. The analysis includes implied temperature rise, cumulative alignment metrics, cross-point year, and transparency indicators. TRANSITION RISK Detailed assessment of company and portfolio exposure to transition risks and opportunities related to **carbon pricing** and demand changes, impacts on operating costs and revenues, fossil fuel reserves,...
 > — [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [Qontigo’s Bocquet: Both Standardization and Customization are Equally Needed in the ESG Adoption Journey | Blog posts | STOXX](https://stoxx.com/qontigos-bocquet-both-standardization-and-customization-are-equally-needed-in-the-esg-adoption-journey) — "WHITEPAPER"
@@ -352,6 +384,8 @@ where EVIC = Enterprise Value Including Cash.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Analytics | ISS
 > d facilitate clearer reporting when assessing Sovereign and Sub-sovereign climate-related risks. Furthermore, our forward-looking climate impact data allows investors to act with confidence in relation to their Sovereign portfolios. Key Metrics – Sovereigns AVAILABLE REPORTS: Climate Impact Report, **Carbon Footprint** Report **CARBON FOOTPRINT** DATA A framework that encompasses Scope 1, 2, and 3 emis...
@@ -372,6 +406,8 @@ where EVIC = Enterprise Value Including Cash.
 > [!quote] Monthly Index News January 2020 (PDF)
 > mong STOXX’s Climate Indices during January after posting a positive return and the widest monthly outperformance to the STOXX Global 1800 Index in 18 months. The STOXX Global Climate Change Leaders Index is based on CDP’s ‘A list’ database of companies that are publicly committed to reducing their **carbon footprint**. CDP is a preeminent climate data provider that tracks companies understanding, ...
 > — [Monthly Index News January 2020 (PDF)](https://stoxx.com/monthly-index-news-january-2020)
+
+</details>
 
 **Sources:**
 - [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
@@ -398,6 +434,8 @@ $$\text{Carbon Intensity} = \frac{\text{Total GHG Emissions (tCO}_2\text{e)}}{\t
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Analytics | ISS
 > sity greenhouse gas emissions data from production emissions (as reported to the United Nations Framework Convention on Climate Change (UNFCCC)), aligned with the PCAF methodology - Scope 1, LULUCF emissions and relevant emissions intensities of sub-sovereigns - Includes the TCFD’s weighted average **carbon intensity** by scope. Transition Risk and Climate Policy Ratification, including data on sov...
@@ -418,6 +456,8 @@ $$\text{Carbon Intensity} = \frac{\text{Total GHG Emissions (tCO}_2\text{e)}}{\t
 > [!quote] A view from COP26: navigating the climate transition with investable indices ...
 > quantifying transition risk offers a much more effective tool to engage with companies than **carbon intensity** metrics. EOS is the specialist stewardship services team of Federated Hermes, which oversees $650 billion in clients’ money. “This is exactly the right direction, to look at risk rather than **carbon intensity**, because some companies will be able to pass through that risk while others won’...
 > — [A view from COP26: navigating the climate transition with investable indices ...](https://stoxx.com/a-view-from-cop26-navigating-the-climate-transition-with-investable-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
@@ -455,6 +495,8 @@ In plain language, climate analytics is the data engine behind sustainable inves
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Analytics | ISS
 > SUSTAINABILITY SOLUTIONS / CLIMATE SOLUTIONS **Climate Analytics** Manage your exposure to climate-related risks. Providing Comprehensive Carbon and Climate Data Solutions Our dedicated team of experts provides market participants, governments and academics with market-leading carbon data and climate data as well as state-of-the art portfolio anal
@@ -475,6 +517,8 @@ In plain language, climate analytics is the data engine behind sustainable inves
 > [!quote] ISS ESG Net Zero Solutions - Vom Commitment Zur Umsetzung | ISS
 > usetzen. AGENDA - Was bedeutet Net Zero und warum ist es wichtig? - Wie kann die Finanzbranche zu Net Zero beitragen? - Wie können Anleger von den ISS ESG Net Zero Solutions profitieren? MODERATION Antonia Göser Senior Associate, Client Success, EMEA & APAC, ISS ESG SPRECHER Lukas Lohrer Associate, **Climate Analytics** Consultant ISS ESG
 > — [ISS ESG Net Zero Solutions - Vom Commitment Zur Umsetzung | ISS](https://www.issgovernance.com/iss-esg-net-zero-solutions-vom-commitment-zur-umsetzung) — "ISS ESG Net Zero Solutions – Vom Commitment Zur Umsetzung"
+
+</details>
 
 **Sources:**
 - [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
@@ -499,6 +543,8 @@ In plain language, scenario analysis asks "what if?" questions: What happens to 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Analytics | ISS
 > s are designed to support investors who want to align their portfolios to the goal of maintaining a 1.5°C trajectory, aligned to the Paris Agreement. Furthermore, these reports can help investors address key internal and external climate disclosures, including TCFD-based reporting initiatives where **climate scenario analysis** and scenario alignment are core elements of their disclosure requiremen...
@@ -519,6 +565,8 @@ In plain language, scenario analysis asks "what if?" questions: What happens to 
 > [!quote] Asia-Pac ESG Trends &amp; Outlook | ISS
 > es, ISS ESG Speakers - Dr. Maximilian Horster, Head of Climate Solutions, ISS ESG - Rebecca Mikula-Wright, Director, AIGCC In 2010, ISS ESG’s head of Climate Solutions Max Horster started one of the first companies to measure the climate impact on investments. From investment carbon footprinting to **climate scenario analysis**, from climate-linked proxy voting to climate neutral investments via of...
 > — [Asia-Pac ESG Trends &amp; Outlook | ISS](https://www.issgovernance.com/asia-pac-esg-trends-and-outlook) — "Asia-Pac ESG Trends & Outlook"
+
+</details>
 
 **Sources:**
 - [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
@@ -543,6 +591,8 @@ In plain language, a circular economy keeps resources in use for as long as poss
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] An Investor’s Guide to the Circular Economy | ISS
 > omy JULY 14, 2022 KEY TAKEAWAYS - Humanity’s current global consumption patterns would require the resources of 2.3 planet Earths by 2050. Adopting a circular approach in our economic design and planning offers an opportunity to turn this trend around. - Cost of living concerns are on the rise, and **circular economy** thinking can combat increasing prices for raw materials. The **circular economy** fo...
@@ -563,6 +613,8 @@ In plain language, a circular economy keeps resources in use for as long as poss
 > [!quote] World, investors gear up action to combat biodiversity loss and related risks...
 > d Planet Report 2020. [11] Global Biodiversity Outlook 5, Convention on Biological Diversity. [12] The EU Taxonomy regulation establishes six environmental objectives: climate change mitigation, climate change adaptation, sustainable use and protection of water and marine resources, transition to a **circular economy**, pollution prevention and control, and protection and restoration of biodiversit...
 > — [World, investors gear up action to combat biodiversity loss and related risks...](https://stoxx.com/world-investors-gear-up-action-to-combat-biodiversity-loss-and-related-risks) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [An Investor’s Guide to the Circular Economy | ISS](https://www.issgovernance.com/library/an-investors-guide-to-the-circular-economy) — "An Investor’s Guide to the Circular Economy"
@@ -587,10 +639,14 @@ In plain language, climate litigation is the growing wave of lawsuits accusing c
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Seeing Past the Blind Spots in Climate Finance | ISS
 > aying increasing attention to the connection between an organization’s words and deeds when it comes to climate change. There is increasing pressure on companies that are involved in lobbying against reasonable regulation on climate change, and activists and other bodies are increasingly turning to **climate litigation** as a way of pressuring companies to up their game.
 > — [Seeing Past the Blind Spots in Climate Finance | ISS](https://www.issgovernance.com/library/seeing-past-the-blind-spots-in-climate-finance) — "ISS ESG WHITE PAPER SERIES: ESG THEMES & TRENDS 2021"
+
+</details>
 
 **Sources:**
 - [Seeing Past the Blind Spots in Climate Finance | ISS](https://www.issgovernance.com/library/seeing-past-the-blind-spots-in-climate-finance) — "ISS ESG WHITE PAPER SERIES: ESG THEMES & TRENDS 2021"
@@ -613,10 +669,14 @@ $$\text{Climate VaR} = \text{Transition VaR} + \text{Physical VaR}$$
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] ISS ESG Analyse des risques physiques liés au climat | ISS
 > on des risques de catastrophes naturelles causés par le changement climatique. Cette session proposera une introduction aux solutions de risques physiques par ISS ESG, présentant les méthodologies et métriques disponibles, et se conclura par un aperçu de sa nouvelle solution risque de transition (« Climate VaR ») et du nouvel outil d’évaluation de l’impact sur la biodiversité. Ordre du jour: - ...
 > — [ISS ESG Analyse des risques physiques liés au climat | ISS](https://www.issgovernance.com/iss-esg-analyse-des-risques-physiques-lies-au-climat) — "ISS ESG Analyse des risques physiques liés au climat"
+
+</details>
 
 **Sources:**
 - [ISS ESG Analyse des risques physiques liés au climat | ISS](https://www.issgovernance.com/iss-esg-analyse-des-risques-physiques-lies-au-climat) — "ISS ESG Analyse des risques physiques liés au climat"
@@ -637,6 +697,8 @@ In plain language, climate transition is the journey from fossil-fuel dependence
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Transition Indices – A risk profile analysis | Blog posts | STOXX
 > Willis Towers Watson and Qontigo last year introduced the STOXX Willis Towers Watson **Climate Transition** Indices (CTI) to meet growing demand for transparent and systematic climate-oriented investment solutions. The indices employ a unique **Climate Transition** Value at Risk (CTVaR) methodology that quantifies the anticipated impact on equity valuations from the transition to net-zero.
@@ -657,6 +719,8 @@ In plain language, climate transition is the journey from fossil-fuel dependence
 > [!quote] Transitioning to Net Zero - 1 Year Anniversary of the Australian Climate Tran...
 > Transitioning to Net Zero 1 Year Anniversary of the Australian **Climate Transition** Index At the first anniversary of the Australian **Climate Transition** Index we have BNP Paribas, Clean Energy Finance Corporation and ClimateWorks Australia discuss how a dynamic approach to transition scenarios helps investors gauge industries and companies that are prepared for a
 > — [Transitioning to Net Zero - 1 Year Anniversary of the Australian Climate Tran...](https://www.issgovernance.com/transitioning-to-net-zero) — "Transitioning to Net Zero"
+
+</details>
 
 **Sources:**
 - [Climate Transition Indices – A risk profile analysis | Blog posts | STOXX](https://stoxx.com/climate-transition-indices-a-risk-profile-analysis) — "WHITEPAPER"
@@ -687,6 +751,8 @@ where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate and Nature Ongoing Innovation | ISS
 > Weighted Average Carbon Intensity to assess carbon impact. When valuation data is available, financed emissions are calculated, offering deeper insights into climate impact. Our forward-looking scenario alignment framework helps assess how real asset portfolios are positioned against science-based **decarbonization pathway**s, in reference to CRREM. By projecting Scope 1 and 2 emissions and compari...
@@ -707,6 +773,8 @@ where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years
 > [!quote] Qontigo’s Bocquet: Both Standardization and Customization are Equally Needed ...
 > on pricing in sustainable finance, Rodolphe also highlighted the ‘blessing’ that global warming can be quantifiable, enabling the integration of climate action into investment products. Here, the EU’s Climate Benchmarks regulation has shown the way forward in helping investors align portfolios with **decarbonization pathway**s that meet the criteria of the 2015 Paris Agreement, Rodolphe said. “Ther...
 > — [Qontigo’s Bocquet: Both Standardization and Customization are Equally Needed ...](https://stoxx.com/qontigos-bocquet-both-standardization-and-customization-are-equally-needed-in-the-esg-adoption-journey) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Climate and Nature Ongoing Innovation | ISS](https://www.issgovernance.com/climate-and-nature/ongoing-innovation) — "ISS STOXX"
@@ -731,6 +799,8 @@ In plain language, deforestation risk flags companies whose business depends on 
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] NCRI Deforestation Report | ISS
 > Natural Capital Research Institute Report The Root Cause of Nature Loss: Forests, Why They Matter, and How to Assess **Deforestation Risk** in Investment Portfolios through Nature-Related Data January 9, 2025 The scientific community is once again raising the alarm on the rapid and severe deterioration of the earth’s natural systems and the implications this will have for the stability of our plane...
@@ -743,6 +813,8 @@ In plain language, deforestation risk flags companies whose business depends on 
 > [!quote] the-root-cause-of-nature-loss-forests-why-they-matter-and-how-to-assess-defor...
 > urce ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score the-root-cause-of-nature-loss-forests-why-they-matter-and-how-to-assess-deforestation-risk-in-investment-portfolios-through-nature-related-data Start typing and press En...
 > — [the-root-cause-of-nature-loss-forests-why-they-matter-and-how-to-assess-defor...](https://www.issgovernance.com/natural-capital-investment-emea-2025/the-root-cause-of-nature-loss-forests-why-they-matter-and-how-to-assess-deforestation-risk-in-investment-portfolios-through-nature-related-data) — "the-root-cause-of-nature-loss-forests-why-they-matter-and-how-to-assess-deforestation-risk-in-investment-portfolios-through-nature-related-data"
+
+</details>
 
 **Sources:**
 - [NCRI Deforestation Report | ISS](https://www.issgovernance.com/library/ncri-deforestation-report) — "Natural Capital Research Institute Report"
@@ -786,6 +858,8 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2016 Us Summary Voting Guidelines 23 Feb 2016 (PDF)
 > 2016 U.S. Summary Proxy Voting Guidelines **Energy Efficiency** General Recommendation: Generally vote for proposals requesting that a company report on its **energy efficiency** policies, unless: › The company complies with applicable energy efficiency regulations and laws, and discloses its participation in energy efficiency policies and programs, including disclosure of benchmark data, targets, and ...
@@ -806,6 +880,8 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 > [!quote] Feri Cfi Iss Ethix Executive Summary (PDF)
 > ued subsidies for fossil fuels in many markets. 2. Monitor technology exposure: Monitor not only the sector but also technology exposure of investments to manage Three underlying opportunities exist to address low-carbon alignment with key areas of potential future innovation. objectives: improving **energy efficiency**, reducing carbon intensity of electricity and end-use of energy. Climate change...
 > — [Feri Cfi Iss Ethix Executive Summary (PDF)](https://www.issgovernance.com/file/2017/11/feri_cfi_iss_ethix_executive_summary.pdf)
+
+</details>
 
 **Sources:**
 - [2016 Us Summary Voting Guidelines 23 Feb 2016 (PDF)](https://www.issgovernance.com/file/policy/2016-us-summary-voting-guidelines-23-feb-2016.pdf)
@@ -830,6 +906,8 @@ In plain language, the energy transition is the move away from burning fossil fu
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] New iShares ETF tracking STOXX Global Lithium and Battery Producers index off...
 > asing investor interest, allowing them to tap the **energy transition** metals theme through the companies that stand to benefit most from growing demand. [1] The “big shovel” was a phrase used by Daniel Yergin, a renowned energy expert, to describe the mining boom that will result from mining critical **energy transition** metals to power the shift from a fuel-intensive energy system to a sustainable ...
@@ -850,6 +928,8 @@ In plain language, the energy transition is the move away from burning fossil fu
 > [!quote] Metals Indices | STOXX
 > its particularities, as prices are driven by distinct factors such as supply, demand, and macroeconomic and geopolitical issues. Demand for metals can respond to traditional market economics (consumption), or it can be driven by investors’ purchasing for portfolio diversification and insurance. The **energy transition** as a driver of metals demand The brown-to-green revolution requires substantial...
 > — [Metals Indices | STOXX](https://stoxx.com/thematic-indices/metals-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [New iShares ETF tracking STOXX Global Lithium and Battery Producers index offers investors access to critical energy transition metal | Blog posts | STOXX](https://stoxx.com/new-ishares-etf-tracking-stoxx-global-lithium-and-battery-producers-index-offers-investors-access-to-critical-energy-transition-metal) — "WHITEPAPER"
@@ -874,6 +954,8 @@ In plain language, an environmental footprint is a broad scorecard of how heavil
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] CORE | ISS
 > that values diverse skills, perspectives, and experiences. We empower our people with the resources, support, and opportunities to grow—professionally and personally. Together, we foster an environment that fuels creativity, drives innovation, and shapes our future success. Environment Reducing the **environmental footprint** of our business operations and committing to the 1.5C goal of the Paris a...
@@ -882,6 +964,8 @@ In plain language, an environmental footprint is a broad scorecard of how heavil
 > [!quote] Iss Corporate Responsibility Policy (PDF)
 > encourage the development of our people for a deeper understanding and responsiveness to ethical, social, and environmental issues as they relate to our business. Environment ISS recognizes a shared responsibility to improve sustainability beyond our products and services, as we aim to minimize our **environmental footprint** throughout our operations. We are committed to conducting our business in...
 > — [Iss Corporate Responsibility Policy (PDF)](https://www.issgovernance.com/file/core/ISS-Corporate-Responsibility-Policy.pdf)
+
+</details>
 
 **Sources:**
 - [CORE | ISS](https://www.issgovernance.com/core) — "ISS STOXX CORE"
@@ -907,6 +991,8 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate and Nature Ongoing Innovation | ISS
 > owned or operated by issuers. Analyze emissions performance at the real asset and portfolio level. Using user-provided data, the model estimates Scope 1, 2, and 3 emissions, including Emissions Exposure and Weighted Average Carbon Intensity to assess carbon impact. When valuation data is available, **financed emissions** are calculated, offering deeper insights into climate impact. Our forward-look...
@@ -927,6 +1013,8 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 > [!quote] Sri Us Voting Guidelines (PDF)
 > ly impacted by environmental pollution. These heightened risks can be exacerbated by climate change. Social Advisory Services Recommendation: Generally vote for shareholder proposals requesting disclosure of an environmental justice report, as well as a third-party environmental justice assessment. **Financed Emissions** For financial institutions and companies that provide financial services, gene...
 > — [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/active/specialty/SRI-US-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Climate and Nature Ongoing Innovation | ISS](https://www.issgovernance.com/climate-and-nature/ongoing-innovation) — "ISS STOXX"
@@ -966,6 +1054,8 @@ In plain language, a green bond is a loan that a company or government raises sp
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...
 > through The Rockefeller Foundation’s ‘Zero Gap’ innovative finance portfolio – is one of the first methodologies to present a comparable, quantifiable metric that can be used by a variety of stakeholders, such as issuers, investors and analysts. The methodology looks at the projects financed via a **green bond** and then allocates to the bond the greenhouse gas emissions (GHG) mitigated based on th...
@@ -986,6 +1076,8 @@ In plain language, a green bond is a loan that a company or government raises sp
 > [!quote] The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...
 > nitiatives: Global Developments in 2022 OCTOBER 3, 2022 KEY TAKEAWAYS - The scope and pace of global sustainable finance regulation has accelerated in 2022 across an array of regulatory areas (taxonomies, ESG and climate risk management and disclosures, product requirements, ESG in stewardship, and **green bond** frameworks). - Regulatory efforts continue to prioritize management of climate-related...
 > — [The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...](https://www.issgovernance.com/library/the-depth-and-breadth-of-sustainable-finance-regulatory-initiatives-global-developments-in-2022) — "The Depth & Breadth of Sustainable Finance Regulatory Initiatives: Global Developments in 2022"
+
+</details>
 
 **Sources:**
 - [Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield On Over 55 Green Bond Issuers To Quantify Climate Change Mitigation Impact | ISS](https://www.issgovernance.com/carbon-yield-insights-report) — "Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield On Over 55 Green Bond Issuers To Quantify Climate Change Mitigation Impact"
@@ -1010,6 +1102,8 @@ In plain language, green revenue is the "clean" portion of a company's income. S
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > G intensity reduction of at least 7% starting from 2025 with respect to 2024. The year-on-year carbon reduction included is calculated as: 1/T Index GHG Intensity ∙Cumulative Inflation Adjustment Factor current 1−( ) Index GHG Intensity 2024 year−end where T is the number of years since 2024 d) The **green revenue** share / brown revenue share of the index, ∑n i=1 (cwi∙**Green Revenue** %i) , is ∑n i=1...
@@ -1030,6 +1124,8 @@ In plain language, green revenue is the "clean" portion of a company's income. S
 > [!quote] New ISS STOXX net zero indices adopt innovative, forward-looking approach to ...
 > on of forward-looking metrics, and are designed to encourage stewardship, while keeping expected tracking error below 1%. | Key features of the ISS STOXX Net Zero Transition indices • Real-world aligned decarbonization metrics (including sector-specific year-on-year emissions reduction and share of **green revenue**s) • Forward-looking metrics • Exposure to high-impact sectors • Governance and disc...
 > — [New ISS STOXX net zero indices adopt innovative, forward-looking approach to ...](https://stoxx.com/new-iss-stoxx-net-zero-indices-adopt-innovative-forward-looking-approach-to-carbon-transition) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -1056,6 +1152,8 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Public Fund Us Policy Updates (PDF)
 > s and investments, such as financial, physical, or change on its operations and investments, or on how the company regulatory risks or on how the company identifies, measures, and manages identifies, measures, and manages such risks. such risks. › Generally vote for proposals requesting a report on **greenhouse gas (GHG)** › Generally vote for proposals requesting a report on **greenhouse gas (GHG)** e...
@@ -1076,6 +1174,8 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 > [!quote] Istoxx Index Guide (PDF)
 > percentage exposure to each risk model style factors must be within +/- 25% of the Parent Index. Maximum Turnover: The MUTB Paris Aligned index has a one-way turnover limit of 10% for each semi-annual rebalance. Scope 1, 2, and 3 emissions: The GHG Protocol Corporate Standard classifies companies’ **greenhouse gas (GHG)** emissions as direct and indirect emissions. Direct emissions, also known as S...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Public Fund Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Public-Fund-US-Policy-Updates.pdf)
@@ -1100,6 +1200,8 @@ In plain language, greenwashing is when companies or fund managers talk a bigger
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Combatting greenwashing with transparent and verifiable data | Blog posts | S...
 > set owners up at night, and how is the data helping to alleviate those concerns? The SDI AOP is not only a data provider. We have built a community of asset owners and asset managers and have regular sessions where users can share their challenges and contribute to the development of the solutions. **Greenwashing** and Greenhushing concerns are top of mind for many, as they seek to ensure the valid...
@@ -1120,6 +1222,8 @@ In plain language, greenwashing is when companies or fund managers talk a bigger
 > [!quote] Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...
 > he following guiding principles when developing the SI methodology presented in the document: - Consistency with the existing reference frameworks for the EU’s SI regulations - Specificity, so as to reflect the current recommendations in the SFDR as far as possible - Integrity, to avoid any risk of **greenwashing** - Cohesiveness across all indices - Flexibility, to account for different approaches...
 > — [Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...](https://stoxx.com/qontigo-publishes-guide-for-sfdr-aligned-sustainable-investment-methodology) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Combatting greenwashing with transparent and verifiable data | Blog posts | STOXX](https://stoxx.com/combatting-greenwashing-with-transparent-and-verifiable-data) — "WHITEPAPER"
@@ -1146,6 +1250,8 @@ In plain language, high-emitting sectors are the industries most responsible for
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Monthly Index News January 2025 (PDF)
 > d and STOXX® Europe 600 and follow the International Energy Agency’s Net-Zero Pathway, seeking alignment with the 2050 carbon budget by 2040, based on the ISS ESG scenario alignment toolkit. They incorporate sector-specific performance indicators, and include systematically important companies from **high-emitting sectors** that play a crucial role in the climate transition. The new suite of indice...
@@ -1162,6 +1268,8 @@ In plain language, high-emitting sectors are the industries most responsible for
 > [!quote] Video: ISS STOXX net zero indices offer innovative, forward-looking approach ...
 > established benchmarks such as the STOXX® World AC and STOXX® Europe 600 and follow the International Energy Agency’s Net-Zero Pathway, seeking alignment with the 2050 carbon budget by 2040. They incorporate sector-specific performance indicators, and include systematically important companies from **high-emitting sectors**. Antonio Celeste, Head of Sustainability, Index Product Management at STOXX...
 > — [Video: ISS STOXX net zero indices offer innovative, forward-looking approach ...](https://stoxx.com/video-iss-stoxx-net-zero-indices-offer-innovative-forward-looking-approach-to-carbon-transition) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News January 2025 (PDF)](https://stoxx.com/monthly-index-news-january-2025)
@@ -1185,10 +1293,14 @@ In plain language, habitat loss means that the places where wild species live ar
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] ISS STOXX Biodiversity Indices | STOXX
 > provide a robust toolkit to build such impact portfolios, tailored to specific needs. How can biodiversity impact be measured? Assessing a company’s biodiversity impact involves evaluating the effect that its operations and activities have on the local and global ecosystems. Biodiversity footprint, **habitat loss**, species impact and stakeholder engagement are some methods in which an organization...
 > — [ISS STOXX Biodiversity Indices | STOXX](https://stoxx.com/solutions/biodiversity-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [ISS STOXX Biodiversity Indices | STOXX](https://stoxx.com/solutions/biodiversity-indices) — "WHITEPAPER"
@@ -1224,6 +1336,8 @@ In plain language, implied temperature rise answers: "If every company in the wo
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...
 > while the remaining companies are at 102.8. It should be noted that, notwithstanding the GRANOLAS’ comparatively impressive performance on emissions intensity, this is a metric that is significantly influenced by these companies’ very large revenues. A separate forward-looking climate metric is the **implied temperature rise** (ITR), shown in Figure 5. For every company, given its current and proje...
@@ -1244,6 +1358,8 @@ In plain language, implied temperature rise answers: "If every company in the wo
 > [!quote] Stoxx Index Guide (PDF)
 > verified by the SBTi b. companies that have committed with the SBTi but do not yet have approved science-based targets. Committed companies have 24 months to have their targets approved and published by the SBTi c. companies that have not committed with SBTi Temperature Score: ISS ESG provides the **Implied Temperature Rise** which quantifies the under/overshoot of the issuer to a global warming im...
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog posts | STOXX](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective) — "WHITEPAPER"
@@ -1270,6 +1386,8 @@ In plain language, a just transition means making sure that the move to clean en
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Just Transition: Blending Social and Environmental Considerations | ISS
 > **Just Transition**: Blending Social and Environmental Considerations April 25, 2024 Climate change mitigation efforts are sometimes accused of neglecting the human angle, even to the point of harming workers and communities. There is a growing emphasis driven in large part by labor and environmental ju
@@ -1290,6 +1408,8 @@ In plain language, a just transition means making sure that the move to clean en
 > [!quote] iss-insights-just-transition-blending-social-and-environmental-considerations...
 > iss-insights-just-transition-blending-social-and-environmental-considerations2024-04-252024-04-25/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
 > — [iss-insights-just-transition-blending-social-and-environmental-considerations...](https://www.issgovernance.com/library/just-transition-blending-social-and-environmental-considerations/iss-insights-just-transition-blending-social-and-environmental-considerations) — "iss-insights-just-transition-blending-social-and-environmental-considerations"
+
+</details>
 
 **Sources:**
 - [Just Transition: Blending Social and Environmental Considerations | ISS](https://www.issgovernance.com/library/just-transition-blending-social-and-environmental-considerations) — "Just Transition: Blending Social and Environmental Considerations"
@@ -1320,6 +1440,8 @@ where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] U.S. Moves on Methane Emissions | ISS
 > lready been able to reduce **methane emissions**. Even as production has increased, **methane emissions** have been reduced by 16 percent since 1990. In addition, they argue that oil and gas producers already have a strong incentive to contain leaks and capture methane because it is a marketable commodity. Methane Emissions as a Shareholder Concern In March 2012, Ceres-organized investors representing ...
@@ -1340,6 +1462,8 @@ where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 > [!quote] Investors Continue Focus on Climate Change in the Wake of Paris Accord | ISS
 > resulting from potential climate change policies to reports on stranded carbon asset risks. Shareholders also continued to file proposals asking for a GHG emissions reduction goal (10 proposals), with some asking companies to adopt a “net zero” GHG emissions goal (three resolutions). Resolutions on **methane emissions** are on the rise for 2016, moreover, with the California State Teachers’ Retirem...
 > — [Investors Continue Focus on Climate Change in the Wake of Paris Accord | ISS](https://www.issgovernance.com/investors-continue-focus-climate-change-wake-paris-accord) — "Investors Continue Focus on Climate Change in the Wake of Paris Accord"
+
+</details>
 
 **Sources:**
 - [U.S. Moves on Methane Emissions | ISS](https://www.issgovernance.com/u-s-moves-on-methane-emissions) — "U.S. Moves on Methane Emissions"
@@ -1366,6 +1490,8 @@ In plain language, nature-related risk captures the idea that businesses depend 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...
 > ) released a final draft of its proposed framework, whose final version is now planned for September this year. The TNFD follows on the example of the Taskforce on Climate-related Financial Disclosure (TCFD) and aims to develop risk management and disclosure guidelines to report and act on evolving **nature-related risk**s. The standard-setting International Sustainability Standards Board (ISSB), w...
@@ -1386,6 +1512,8 @@ In plain language, nature-related risk captures the idea that businesses depend 
 > [!quote] The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...
 > xonomies, ESG and climate risk management and disclosures, product requirements, ESG in stewardship, and green bond frameworks). - Regulatory efforts continue to prioritize management of climate-related financial risk as well as preventing greenwashing, although the agenda is beginning to expand to **nature-related risk**s and social issues as well. - The European Union continues to be the leading ...
 > — [The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...](https://www.issgovernance.com/library/the-depth-and-breadth-of-sustainable-finance-regulatory-initiatives-global-developments-in-2022) — "The Depth & Breadth of Sustainable Finance Regulatory Initiatives: Global Developments in 2022"
+
+</details>
 
 **Sources:**
 - [Sustainability reporting regulation: midyear progress review by ISS ESG  | Blog posts | STOXX](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg) — "WHITEPAPER"
@@ -1410,6 +1538,8 @@ In plain language, natural capital is the planet's "balance sheet" of natural as
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Natural Capital: The Next Evolution of Environmental Reporting | ISS
 > **Natural Capital**: The Next Evolution of Environmental Reporting October 9, 2025 The purpose of this paper is to provide a contextual overview of the state of play regarding **natural capital** reporting and developments in the proxy voting space. In recent years, there has been growing adoption of natural capital references among a wide array of stakeholders – from asset managers, asset owners, and ...
@@ -1430,6 +1560,8 @@ In plain language, natural capital is the planet's "balance sheet" of natural as
 > [!quote] NCRI Deforestation Report | ISS
 > **Natural Capital** Research Institute Report The Root Cause of Nature Loss: Forests, Why They Matter, and How to Assess Deforestation Risk in Investment Portfolios through Nature-Related Data January 9, 2025 The scientific community is once again raising the alarm on the rapid and severe deterioration
 > — [NCRI Deforestation Report | ISS](https://www.issgovernance.com/library/ncri-deforestation-report) — "Natural Capital Research Institute Report"
+
+</details>
 
 **Sources:**
 - [Natural Capital: The Next Evolution of Environmental Reporting | ISS](https://www.issgovernance.com/library/natural-capital-the-next-evolution-of-environmental-reporting) — "Natural Capital: The Next Evolution of Environmental Reporting"
@@ -1454,6 +1586,8 @@ In plain language, net zero means putting no more carbon into the air than is ta
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] New ISS STOXX net zero indices adopt innovative, forward-looking approach to ...
 > n transition, and that are forward-looking in nature,” said Saumya Mehrotra, Index Product Management, at STOXX. “The idea of having a more mature framework for climate indices is a natural progression in a journey.” Climate performance Figure 2 shows comparative metrics for the ISS STOXX® World AC **Net Zero** Transition index against its parent, the STOXX World AC index. The **Net Zero** index improv...
@@ -1474,6 +1608,8 @@ In plain language, net zero means putting no more carbon into the air than is ta
 > [!quote] Turning Net Zero Pledges Into Action | ISS
 > ecome increasingly ubiquitous. Over 100 countries, including China, the U.S. and the EU, have pledged to become **Net Zero**. Further, over 100 local governments, nearly 1000 cities and 2000 businesses pledged to operate at **Net Zero**. Net Zero is now also the trillion dollar challenge for investors. The Net Zero Asset Owner Alliance and the Net Zero Investment Framework have embarked to build Net Ze...
 > — [Turning Net Zero Pledges Into Action | ISS](https://www.issgovernance.com/library/turning-net-zero-pledges-into-action) — "Turning Net Zero Pledges Into Action"
+
+</details>
 
 **Sources:**
 - [New ISS STOXX net zero indices adopt innovative, forward-looking approach to carbon transition  | Blog posts | STOXX](https://stoxx.com/new-iss-stoxx-net-zero-indices-adopt-innovative-forward-looking-approach-to-carbon-transition) — "WHITEPAPER"
@@ -1498,6 +1634,8 @@ In plain language, net zero transition is the *journey*, while net zero is the *
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS STOXX Net Zero Transition indices | STOXX
 > -specific performance indicators Real-world sector-specific decarbonization metrics are used and the indices maintain exposure to systematically important companies from high-emitting sectors that play a crucial role in the climate transition. Compliance with key regulatory guidelines The ISS STOXX **Net Zero Transition** indices are aligned with ESMA’s fund naming guidelines and comply with SFDR r...
@@ -1518,6 +1656,8 @@ In plain language, net zero transition is the *journey*, while net zero is the *
 > [!quote] Qontigo joins the Net Zero Financial Services Providers Alliance with a commi...
 > lliance (NZFSPA), thus committing to the attainment of net zero greenhouse gas (GHG) emissions by 2050 or sooner. The NZFSPA is accredited by the UN Race to Zero campaign and is a member of the Glasgow Financial Alliance for Net Zero. Qontigo’s commitment to NZFSPA underscores its dedication to the **net zero transition** for both the company’s own business operations and in enabling Qontigo’s clie...
 > — [Qontigo joins the Net Zero Financial Services Providers Alliance with a commi...](https://stoxx.com/qontigo-joins-the-net-zero-financial-services-providers-alliance-with-a-commitment-to-achieve-net-zero-by-2050-or-sooner) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [ISS STOXX Net Zero Transition indices | STOXX](https://stoxx.com/sustainability-indices-overview/climate-indices/iss-stoxx-net-zero-transition-indices) — "WHITEPAPER"
@@ -1548,6 +1688,8 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News May 2022 (PDF)
 > 5%, an index that complies with the European Union Climate Benchmarks regulation and that will underlie structured products from Germany’s Landesbank Baden-Württemberg (LBBW). The new index is a decrement version of the iSTOXX® Global Climate Change ESG Index, itself based on the STOXX® Global 1800 **Paris-Aligned Benchmark (PAB)** and supplemented by additional ESG exclusionary screens. The STOXX ...
@@ -1568,6 +1710,8 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 > [!quote] Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX
 > romoting environmental and/or social characteristics.’ - To align with Art. 9 requirements, a product methodology needs to strive to increasingly contribute to the E/S objective over time. For example, the decarbonization path and decreasing weight of companies with no carbon targets in the Qontigo Paris-aligned Benchmarks satisfy that obligation. - Good governance is loosely defined around fou...
 > — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News May 2022 (PDF)](https://stoxx.com/monthly-index-news-may-2022)
@@ -1592,6 +1736,8 @@ In plain language, physical risk is the danger that climate change will damage a
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Analyzing Climate Physical Risks for Real Estate Investors | ISS
 > SS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score Analyzing Climate **Physical Risk**s for Real Estate Investors Start typing and press Enter to search
@@ -1612,6 +1758,8 @@ In plain language, physical risk is the danger that climate change will damage a
 > [!quote] Water Risk Rating | ISS
 > Companies’ Freshwater Risk Exposure and Management The Water Risk Rating provides an aggregated score of a company’s overall management of freshwater-related risks based on these complimentary pillars. WATER RISK EXPOSURE CLASSIFICATION WATER RISK MANAGEMENT Determine Your Portfolio’s Water-Related **Physical Risk** Exposure Assess the water-related **physical risk** exposure and access information on ...
 > — [Water Risk Rating | ISS](https://www.issgovernance.com/sustainability/ratings/water-risk-rating) — "SUSTAINABILITY SOLUTIONS/RATINGS & RANKINGS"
+
+</details>
 
 **Sources:**
 - [Analyzing Climate Physical Risks for Real Estate Investors | ISS](https://www.issgovernance.com/ri-europe-2023/analyzing-climate-physical-risks-for-real-estate-investors) — "Analyzing Climate Physical Risks for Real Estate Investors"
@@ -1653,6 +1801,8 @@ In plain language, a science-based target is a company's climate pledge that has
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Science-Based Targets – A Key Piece in the Climate-Alignment Puzzle | Blog po...
 > ed that global warming must not exceed 1.5°C to avoid the catastrophic impacts of climate change. According to the latest climate science, we need to halve emissions by 2030 – and drop to net zero by 2050 – to reach those goals. 3 To explore in more detail the benefits brought to companies that set **science-based target**s, see Galvin D., ‘Six business benefits of setting **science-based target**s,’ S...
@@ -1673,6 +1823,8 @@ In plain language, a science-based target is a company's climate pledge that has
 > [!quote] Expert view: Unpacking the new Xtrackers biodiversity ETFs and their ISS STOX...
 > s): “There was not one but several drivers behind this project. The first one is local regulations and multilateral initiatives. There is a strong push from regulators to measure the impact on biodiversity of an investment, something that has been complemented by a number of initiatives such as the **Science-Based Target**s for Nature (SBTN) and the Taskforce on Nature-related Financial Disclosures...
 > — [Expert view: Unpacking the new Xtrackers biodiversity ETFs and their ISS STOX...](https://stoxx.com/expert-view-unpacking-the-new-xtrackers-biodiversity-etfs-and-their-iss-stoxx-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Science-Based Targets – A Key Piece in the Climate-Alignment Puzzle | Blog posts | STOXX](https://stoxx.com/science-based-targets-a-key-piece-in-the-climate-alignment-puzzle) — "WHITEPAPER"
@@ -1697,6 +1849,8 @@ In plain language, stranded assets are investments that lose their value because
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] 2016 Catholic Us Policy Updates (PDF)
 > he coming years and/or potential climate change regulations make them unburnable). These resolutions asked companies to either report on the consistency of their capital expenditure strategies with policymakers’ goals to limit greenhouse gas emissions, or a company's strategy to address the risk of **stranded assets** presented by global climate change and associated demand reductions for oil and g...
@@ -1705,6 +1859,8 @@ In plain language, stranded assets are investments that lose their value because
 > [!quote] iss-esg-insights-stranded-assets-or-sustainable-investments-in-real-estate-me...
 > ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score iss-esg-insights-stranded-assets-or-sustainable-investments-in-real-estate-measuring-companies-environmental-and-f...
 > — [iss-esg-insights-stranded-assets-or-sustainable-investments-in-real-estate-me...](https://www.issgovernance.com/iss-stoxx-environmental-finance-sustainability-data-conference/iss-esg-insights-stranded-assets-or-sustainable-investments-in-real-estate-measuring-companies-environmental-and-financial-performance) — "iss-esg-insights-stranded-assets-or-sustainable-investments-in-real-estate-measuring-companies-environmental-and-financial-performance"
+
+</details>
 
 **Sources:**
 - [2016 Catholic Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2016-catholic-us-policy-updates.pdf)
@@ -1726,6 +1882,8 @@ In plain language, the SDGs are the world's shared to-do list — from "No Pover
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] SDI AOP launches forward-looking dataset that assesses which companies are ac...
 > e Development Investments Asset Owner Platform (SDI AOP) and Qontigo, its exclusive distribution partner, have announced the launch of the SDI Innovation Outlook. The new dataset provides forward looking information, by analyzing the alignment of companies’ patent portfolios with the United Nations **Sustainable Development Goals**. Media Contact General Inquiries: media@qontigo.com Index Inquiries...
@@ -1746,6 +1904,8 @@ In plain language, the SDGs are the world's shared to-do list — from "No Pover
 > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
 > STOXX’S SFDR ARTICLE 2(17) SUSTAINABLE INVESMENT METHODOLOGY 6/13 approach is therefore developed to account for positive contributions, such as those made to the United Nations’ **Sustainable Development Goals** (SDG)6, Specificity, so as to reflect the current recommendations in the SFDR as far as possible: • Specific metrics should be sought to account for the four dimensions of good governance ...
 > — [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
+
+</details>
 
 **Sources:**
 - [SDI AOP launches forward-looking dataset that assesses which companies are actively developing solutions needed to achieve the UN Sustainable Development Goals (SDGs) | Press releases | STOXX](https://stoxx.com/sdi-aop-launches-forward-looking-dataset-that-assesses-which-companies-are-actively-developing-solutions-needed-to-achieve-the-un-sdgs) — "WHITEPAPER"
@@ -1798,10 +1958,14 @@ In plain language, temperature alignment is a thermometer for investments. If a 
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] New Qontigo Study Looks into Expanding Landscape of Forward-looking Climate M...
 > , it cannot be emphasized enough how important it is for users to consider multiple FLCMs, as opposed to single metrics in isolation,” Qontigo’s Sustainable Investment team says. Moreover, “different providers’ assessments vary widely even when they are expressed in similar units, as in the case of **temperature alignment**.” Implications for index design Finally, the whitepaper looks at key implic...
 > — [New Qontigo Study Looks into Expanding Landscape of Forward-looking Climate M...](https://stoxx.com/new-qontigo-study-looks-into-forward-looking-climate-metrics) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [New Qontigo Study Looks into Expanding Landscape of Forward-looking Climate Metrics | Blog posts | STOXX](https://stoxx.com/new-qontigo-study-looks-into-forward-looking-climate-metrics) — "WHITEPAPER"
@@ -1822,6 +1986,8 @@ In plain language, transition metals are the raw materials that make decarboniza
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] New iShares ETF tracking STOXX Global Lithium and Battery Producers index off...
 > nvestor interest, allowing them to tap the energy **transition metal**s theme through the companies that stand to benefit most from growing demand. [1] The “big shovel” was a phrase used by Daniel Yergin, a renowned energy expert, to describe the mining boom that will result from mining critical energy **transition metal**s to power the shift from a fuel-intensive energy system to a sustainable one. [2...
@@ -1842,6 +2008,8 @@ In plain language, transition metals are the raw materials that make decarboniza
 > [!quote] CSP Reports | STOXX
 > e indices STOXX ICE Fixed Income Sustainability indices Equity indices Equity indices overview Benchmark indices Blue-chip indices European equity indices Global & regional indices Sector indices Size indices Strategy indices Thematic indices Thematic indices overview Revenue-based thematic indices **Transition metal**s indices Patent-based thematic indices Sustainability indices Sustainability ind...
 > — [CSP Reports | STOXX](https://stoxx.com/csp-reports) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [New iShares ETF tracking STOXX Global Lithium and Battery Producers index offers investors access to critical energy transition metal | Blog posts | STOXX](https://stoxx.com/new-ishares-etf-tracking-stoxx-global-lithium-and-battery-producers-index-offers-investors-access-to-critical-energy-transition-metal) — "WHITEPAPER"
@@ -1866,6 +2034,8 @@ In plain language, transition risk is the danger that climate *policy and techno
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Q&amp;A with WTW’s David Nelson: Managing a portfolio’s climate transition ri...
 > exist, and where they are concentrated. “This high-resolution view of **transition risk** provides insight for portfolio managers in selecting stocks that will do well in the transition or represent value in the short term if that’s the strategy. But ultimately, the point of CTVaR is to neutralize the **transition risk** of a portfolio – decarbonization then becomes a side benefit in a way that can be ...
@@ -1886,6 +2056,8 @@ In plain language, transition risk is the danger that climate *policy and techno
 > [!quote] Climate Analytics | ISS
 > roviding a comparative perspective on efficiency and sustainability. Additionally, the framework includes benchmark comparisons to assess performance against industry standards and incorporates Partnership for Carbon Accounting Financials (PCAF) scores to evaluate climate-related financial impacts. **TRANSITION RISK** A risk assessment that focuses on several key factors influencing carbon exposure...
 > — [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
+
+</details>
 
 **Sources:**
 - [Q&amp;A with WTW’s David Nelson: Managing a portfolio’s climate transition risk with a forward-looking focus  | Blog posts | STOXX](https://stoxx.com/qa-with-wtws-david-nelson-managing-a-portfolios-climate-transition-risk-with-a-forward-looking-focus) — "WHITEPAPER"
@@ -1912,6 +2084,8 @@ In plain language, water risk captures the business consequences of having too l
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS ESG&#039;s Water Risk Management Toolkit for Investors | ISS
 > ISS ESG’s **Water Risk** Management Toolkit for Investors Join our team of ESG experts for a 50 minutes’ session to learn more about the **Water Risk** Rating methodology, use cases, and how the rating can be used for constructing thematic freshwater-focused ESG indices. In addition, we’ll provide an overview of how
@@ -1932,6 +2106,8 @@ In plain language, water risk captures the business consequences of having too l
 > [!quote] water-risk-atlas-aqueduct | ISS
 > rs Client Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score water-risk-atlas-aqueduct Start typing and press Enter to search
 > — [water-risk-atlas-aqueduct | ISS](https://www.issgovernance.com/sustainability/ratings/water-risk-rating/water-risk-atlas-aqueduct) — "water-risk-atlas-aqueduct"
+
+</details>
 
 **Sources:**
 - [ISS ESG&#039;s Water Risk Management Toolkit for Investors | ISS](https://www.issgovernance.com/iss-esgs-water-risk-management-toolkit-for-investors) — "ISS ESG’s Water Risk Management Toolkit for Investors"
@@ -1960,6 +2136,8 @@ A ratio above 0.4 (40%) is generally classified as "high water stress."
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Water Risk Rating | ISS
 > ICATION WATER RISK MANAGEMENT Determine Your Portfolio’s Water-Related Physical Risk Exposure Assess the water-related physical risk exposure and access information on company-specific geo-based water risks, measured by pairing information on a company’s geographical footprint with data on baseline **water stress** from the World Resource Institute Aqueduct Water Risk Atlas. CONTRIBUTE TO THE UN SU...
@@ -1980,6 +2158,8 @@ A ratio above 0.4 (40%) is generally classified as "high water stress."
 > [!quote] New Deka ETF tracking STOXX index targets leading water innovators | Blog pos...
 > jects to cool data centers, and Ecolab Inc., whose products range from cooling water treatment solutions to tools to efficiently analyze, evaluate and treat wastewater. Figure 4 shows the top 10 of a total of 59 constituents in the index. Figure 4: Index top 10 holdings Securing the future of water **Water stress** poses a serious threat to human health and development, and to economic growth, in w...
 > — [New Deka ETF tracking STOXX index targets leading water innovators | Blog pos...](https://stoxx.com/new-deka-etf-tracking-stoxx-index-targets-leading-water-innovators) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Water Risk Rating | ISS](https://www.issgovernance.com/sustainability/ratings/water-risk-rating) — "SUSTAINABILITY SOLUTIONS/RATINGS & RANKINGS"
@@ -2021,6 +2201,8 @@ where $w_i$ is the portfolio weight of company $i$.
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Climate Analytics | ISS
 > bsolute and intensity greenhouse gas emissions data from production emissions (as reported to the United Nations Framework Convention on Climate Change (UNFCCC)), aligned with the PCAF methodology - Scope 1, LULUCF emissions and relevant emissions intensities of sub-sovereigns - Includes the TCFD’s **weighted average carbon intensity** by scope. Transition Risk and Climate Policy Ratification, incl...
@@ -2033,6 +2215,8 @@ where $w_i$ is the portfolio weight of company $i$.
 > [!quote] Implications of Index Reconstitutions: Free Carbon Alpha? | ISS
 > 2. - According to the climate analysis, the rebalanced Russell 3000 exceeds its Sustainable Development Scenario (SDS) emissions budget by approximately 8% in 2022 and will exceed it by more than 400% by 2050 due to higher exposure to conventional sources of electricity than the SDS scenario. - The **weighted average carbon intensity** of the Russell 3000 increased by 9.4% after the June 2022 rebal...
 > — [Implications of Index Reconstitutions: Free Carbon Alpha? | ISS](https://www.issgovernance.com/library/implications-of-index-reconstitutions-free-carbon-alpha) — "Implications of Index Reconstitutions: Free Carbon Alpha?"
+
+</details>
 
 **Sources:**
 - [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"

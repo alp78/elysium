@@ -40,6 +40,8 @@ An API is the machine-to-machine doorway into a data provider's catalogue. STOXX
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2020 (PDF)
 > MONTHLY INDEX NEWS / April ESG-X Indices Key points The STOXX ESG-X Indices performed broadly in line with their benchmarks during April, allowing investors to track the respective markets’ moves while complying with sustainable policies. The ESG-X indices are versions of traditional, market-capitalization-weighted benchmarks that observe standard responsible exclusions of leading asset owners....
@@ -60,6 +62,8 @@ An API is the machine-to-machine doorway into a data provider's catalogue. STOXX
 > [!quote] Ingersoll Rand (PDF)
 > s todisapplypreemptionrights.Theseare importantdistinctionsandpriorversionsoftheU.K.and IrelandVotingPolicieshaverecognizedthe differences. WeareinterpretingthecurrentpolicyproposaltomeanthatISSwouldrecommendin favorofshareissuanceauthorities withoutpreemptionrightsofupto20percentofcurrentlyissued capitalandthat ISSisnotseekingtofurtherlimitthegeneralissuance authorities.Ifthisis the intendedch...
 > — [Ingersoll Rand (PDF)](https://www.issgovernance.com/file/policy/ingersoll_rand.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2020 (PDF)](https://stoxx.com/monthly-index-news-april-2020)
@@ -86,6 +90,8 @@ Back-testing lets index providers and investors see what returns a newly designe
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Evaluatingpayforperformance Final Updated 02172012 (PDF)
 > o reflect recent history. The final Pay-TSR Alignment measure is simply equal to the difference: performance slope minus the pay slope. Potential values for PTA are theoretically unbounded, but in practice they range from just over -100% to just over 100%, with a slightly negative median value (see **Back-testing**, below, for more details). **Back-testing** the Measures To back-test these measures, IS...
@@ -106,6 +112,8 @@ Back-testing lets index providers and investors see what returns a newly designe
 > [!quote] Canadian Equity Plan Scorecard Faq (PDF)
 > e use of performance-based equity, the presence of a clawback provision, the strength of vesting provisions, and plan disclosure, should also be considered when determining whether to support a plan. In addition to seeking and applying feedback throughout policy development, ISS conducted extensive **back-testing** using prototype scorecards applied to previously submitted equity plan proposals. Th...
 > — [Canadian Equity Plan Scorecard Faq (PDF)](https://www.issgovernance.com/file/policy/2018/americas/Canadian-Equity-Plan-Scorecard-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [Evaluatingpayforperformance Final Updated 02172012 (PDF)](http://www.issgovernance.com/files/EvaluatingPayForPerformance_final_updated_02172012.pdf)
@@ -130,6 +138,8 @@ Benchmark administration is the regulatory umbrella under which index providers 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > d and blue-chip indices for the regions Americas, Europe, Asia/Pacific and sub-regions Latin America and BRIC (Brazil, Russia, India and China) as well as global markets. STOXX is the administrator of the STOXX® and DAX® indices under the European Benchmark Regulation and exercises control over all **benchmark administration** processes within Qontigo. STOXX indices are licensed to more than 600 co...
@@ -150,6 +160,8 @@ Benchmark administration is the regulatory umbrella under which index providers 
 > [!quote] Philips Pensioenfonds adopts STOXX Index to align its emerging markets equity...
 > 550 companies around the world for benchmarking purposes and as underlyings for ETFs, futures and options, structured products and passively managed investment funds. STOXX Ltd. is the administrator of the STOXX and DAX indices under the European Benchmark Regulation and exercises control over all **benchmark administration** processes within Qontigo. Disclaimers This press release does not constit...
 > — [Philips Pensioenfonds adopts STOXX Index to align its emerging markets equity...](https://stoxx.com/philips-pensioenfonds-adopts-stoxx-index-to-align-its-emerging-markets-equity-portfolio-with-several-un-sdgs) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -174,6 +186,8 @@ A benchmark statement is a regulatory compliance document, not a marketing facts
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Factor Index Family Benchmark Statement (PDF)
 > **BENCHMARK STATEMENT** Regulation Clause Regulation Required Information STOXX LTD Statement Subclause 1.6 Rationale; Art. 27(2)(b) A **benchmark statement** shall contain at Rationale for adopting the benchmark review and approval BMR; Art. 1(5) least, the rationale for adopting the methodology: The STOXX
@@ -194,6 +208,8 @@ A benchmark statement is a regulatory compliance document, not a marketing facts
 > [!quote] General All Share - STOXX
 > ral Standard. Subsequent admission requirements of the official or regulated markets thus apply for companies in the General Standard and include: Publication of ad hoc disclosures Application of international accounting standards (IFRS/IAS or US GAAP) Publication of an interim report Index Guides, **Benchmark statement**, and other reports are available under the "Data & Methodology" tab. Details ...
 > — [General All Share - STOXX](https://stoxx.com/index/3btt) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Factor Index Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/STOXX_Factor_Index_Family_Benchmark_Statement.pdf)
@@ -220,6 +236,8 @@ Think of the coverage universe as the broadest possible "long list." For STOXX, 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] QualityScore | Global Coverage | ISS
 > th local market indices, including constituents of the U.S. Russell 3000, Canadian S&P/TSX Composite, STOXX600, NZX15, ASX 200, JPX-Nikkei 400, and the main European local market indices including the UK FTSE All-Share (ex-investment trusts.) QualityScore also includes widely held companies in ISS’ **coverage universe** for Brazil, China, Hong Kong, and India. The term “widely held” refers to compa...
@@ -240,6 +258,8 @@ Think of the coverage universe as the broadest possible "long list." For STOXX, 
 > [!quote] Europe Voting Guidelines (PDF)
 > Continental Europe Proxy Voting Guidelines **COVERAGE UNIVERSE** The following is a condensed version of the proxy voting recommendations contained in ISS’ European Proxy Voting Manual. ISS' European Policy applies to Member States of the European Union (EU) or the European Free Trade Association (EFTA), with the exception of the United Kingdom
 > — [Europe Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2019/emea/Europe-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [QualityScore | Global Coverage | ISS](https://www.issgovernance.com/solutions/qualityscore-global-coverage) — "Global Coverage"
@@ -279,6 +299,8 @@ Data feeds are the pipes through which institutional investors receive index and
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Research, Screen &amp; Analyze Risk | ISS
 > particular areas of concern, and deep dives into underlying governance data. API to Profiles Your internal platform to the QualityScore API to directly access QualityScore Profiles and drill into the key risks, to easily bring governance insight into investment decisions and proxy voting processes. **Data Feed**s Easily ingest the files through your own internal processes and highlight scores withi...
@@ -299,6 +321,8 @@ Data feeds are the pipes through which institutional investors receive index and
 > [!quote] Meeting Results Data | ISS
 > ssuer to Issuer. With coverage of more than 50,000 meetings across 115 markets annually, ISS proactively collects this data, which can be delivered in a consistent and standardised format, either integrated into your clients proxy voting workflow on our ProxyExchange platform, via SWIFT or a custom **data feed**. Get Valuable Insight As well as the actual vote result, proposal by proposal, and the ...
 > — [Meeting Results Data | ISS](https://www.issgovernance.com/intermediary-outsource/meeting-results-data) — "Meeting Results Data"
+
+</details>
 
 **Sources:**
 - [Research, Screen &amp; Analyze Risk | ISS](https://www.issgovernance.com/solutions/qualityscore-research-screen-analyze-risk) — "Research, Screen & Analyze Risk"
@@ -362,6 +386,8 @@ Data vendors are the middlemen of the financial information ecosystem. STOXX its
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 93/639 9. STOXX BLUE-CHIP INDICES For a complete list please consult the **data vendor** code sheet on the website21. Index types and currencies: Price, net return and gross return in EUR, USD and other versions. For a complete list please consult the **data vendor** code sheet on the website22. 9.1.2. INDEX REVIEW Component selection: There is a minimum liquidity requirem...
@@ -382,6 +408,8 @@ Data vendors are the middlemen of the financial information ecosystem. STOXX its
 > [!quote] CSP Reports | STOXX
 > ch Back Insights & Research Blog posts Case studies Whitepapers ALL Newsletters Monthly index news News & Events Press releases News & media mentions Events WHITEPAPER VSTOXX 101: Understanding Europe’s volatility benchmark Download Index Resources Back Index Data General Indices Customized indices **Data vendor** codes Factsheets & components Market consultation Exchange traded products Technical ...
 > — [CSP Reports | STOXX](https://stoxx.com/csp-reports) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -406,6 +434,8 @@ Every STOXX index has a set of vendor codes — for example, a Bloomberg ticker,
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 93/639 9. STOXX BLUE-CHIP INDICES For a complete list please consult the **data vendor code** sheet on the website21. Index types and currencies: Price, net return and gross return in EUR, USD and other versions. For a complete list please consult the **data vendor code** sheet on the website22. 9.1.2. INDEX REVIEW Component selection: There is a minimum liquidity requirem...
@@ -426,6 +456,8 @@ Every STOXX index has a set of vendor codes — for example, a Bloomberg ticker,
 > [!quote] CSP Reports | STOXX
 > ch Back Insights & Research Blog posts Case studies Whitepapers ALL Newsletters Monthly index news News & Events Press releases News & media mentions Events WHITEPAPER VSTOXX 101: Understanding Europe’s volatility benchmark Download Index Resources Back Index Data General Indices Customized indices **Data vendor code**s Factsheets & components Market consultation Exchange traded products Technical ...
 > — [CSP Reports | STOXX](https://stoxx.com/csp-reports) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -450,6 +482,8 @@ DataDesk is the primary self-service front end for ISS clients. Users can search
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Home | ISS
 > ty Methodology Thought Leadership Biodiversity Impact Assessment Tool Regulatory Solutions Cyber Risk Score ESG Fund Rating ESG Ratings Impact & UN SDG Screening & Controversies Climate Solutions ESG Index Solutions ESG Raw Data Solutions for Academic Professionals Collaborative Engagement Services **DataDesk** Australia | ISS ESG ISS-Corporate Second Party Opinions Market Intelligence (MI) Visit I...
@@ -470,6 +504,8 @@ DataDesk is the primary self-service front end for ISS clients. Users can search
 > [!quote] Site Map | ISS
 > Look Back at 2020 and What’s Ahead in 2021 - Climate Impact Report | What’s New? - Die EU-Taxonomie im Fokus Webinar - EU Taxonomy in Focus Webinar - ISS FWW bietet neues ESG-Fondsrating an - ISS stellt innovatives ESG-Fondsrating vor - Pandemic Toolkit Functionality within the Custom Rating Tab in **DataDesk** - Protected: FNG-Siegel 2021 und Umsetzung - 2020 ISS Bulletin Podcast Series - A Look B...
 > — [Site Map | ISS](https://www.issgovernance.com/site-map) — "Site Map"
+
+</details>
 
 **Sources:**
 - [Home | ISS](https://www.issgovernance.com/) — "ISS Announces Creation of ISS STOXX"
@@ -494,10 +530,14 @@ Disclosure rate is a key quality-of-data metric. A high disclosure rate means th
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] The time is ripe for investors in China to embrace a green financial system  ...
 > mittee of the China Association of Environmental Protection Industry. Many challenges exist with data pertaining to the ESG performance of Chinese corporations. China has distinct corporate governance requirements through its state-led governance model. Additionally, language barriers and different **disclosure rate**s and standards make it all the more difficult for international providers to full...
 > — [The time is ripe for investors in China to embrace a green financial system  ...](https://stoxx.com/the-time-is-ripe-for-investors-in-china-to-embrace-a-green-financial-system) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [The time is ripe for investors in China to embrace a green financial system  | Blog posts | STOXX](https://stoxx.com/the-time-is-ripe-for-investors-in-china-to-embrace-a-green-financial-system) — "WHITEPAPER"
@@ -533,10 +573,14 @@ Not all companies disclose every data point that ESG and climate indices require
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Qontigo’s Mehrotra: Innovation cutting across entire ESG data spectrum — from...
 > ounts of information in real time without human bias,” Patricia said. “We use AI to process hundreds of thousands of documents per day. We can also use machine learning to learn complex patterns. We can clean the data and assess the reliability of data. With advanced machine learning, we can create **estimation model**s for all our coverage gaps. So clearly, there is huge potential.” Patricia added...
 > — [Qontigo’s Mehrotra: Innovation cutting across entire ESG data spectrum — from...](https://stoxx.com/qontigos-mehrotra-innovation-cutting-across-entire-esg-data-spectrum-from-sources-to-uses) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Qontigo’s Mehrotra: Innovation cutting across entire ESG data spectrum — from sources to uses | Blog posts | STOXX](https://stoxx.com/qontigos-mehrotra-innovation-cutting-across-entire-esg-data-spectrum-from-sources-to-uses) — "WHITEPAPER"
@@ -559,6 +603,8 @@ Factsheets are the "business card" of an index. STOXX publishes monthly factshee
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > vidual component selection process and weighting schemes » The STOXX Reference Rates guide contains the rules and methodologies of the reference rate indices » The STOXX Reference Calculations guide provides a detailed view of definitions and formulas of the calculations as utilized in the reports, **factsheet**s, indices and presentations produced by STOXX » The STOXX Currency Rates Indices Method...
@@ -579,6 +625,8 @@ Factsheets are the "business card" of an index. STOXX publishes monthly factshee
 > [!quote] US Benchmark Reaches Record High as European Stocks Struggle in Pandemic Reco...
 > he STOXX USA 500 Index are in dollars. 2 Preliminary data, Eurostat, Aug. 14, 2020. 3 See Dalibor Rohac, ‘Why Europe’s Chances of a Strong Economic Recovery Are Slimmer than the U.S.’, National Review, Jul. 22, 2020. 4 Projected price-to-estimated-earnings excluding negative readings. Source: STOXX **factsheet**s. 5 MarketWatch, ‘’Companies remain cautious’ as eurozone flash PMI eases to two-month ...
 > — [US Benchmark Reaches Record High as European Stocks Struggle in Pandemic Reco...](https://stoxx.com/us-benchmark-reaches-record-high-as-european-stocks-struggle-in-pandemic-recovery) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -620,6 +668,8 @@ STOXX Ltd. is the index administrator for all STOXX and DAX indices. As an admin
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Index Files Guide 20230619 (PDF)
 > ated measures are based on closing data of quarterly review effective date.  File Name: esg_report_xxxxx  File Type: .csv  File specification: semicolon separated  File Frequency: Quarterly (after review implementation) Row Data Data Attribute Description ID Type Format 1 Item1_BM_Administrator **Index administrator** (text "STOXX Ltd.") Text 10 2 Item2_Asset_Class Asset class of the index (cur...
@@ -640,6 +690,8 @@ STOXX Ltd. is the index administrator for all STOXX and DAX indices. As an admin
 > [!quote] CTB, PAB climate benchmarks evolve with investment landscape | Blog posts | S...
 > STOXX indices. ISS and STOXX joined forces in 2023 to form a unified platform offering high-quality data, analytics and indices, underpinned by a leading governance franchise. - A more frequent review better captures the evolution of data and regulation. Separately, the EU in May 2025 mandated that **index administrator**s shall include as of January 2026 the acronyms ‘CTB’ in the name of Climate T...
 > — [CTB, PAB climate benchmarks evolve with investment landscape | Blog posts | S...](https://stoxx.com/ctb-pab-climate-benchmarks-evolve-with-investment-landscape) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
@@ -664,6 +716,8 @@ ISINs are the universal passport number for financial instruments. Every constit
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2018 (PDF)
 > April 2018 STOXX Thematic Indices Key points Thematic investing underperformed in April amid the broader rally in market-capitalization benchmarks. The iSTOXX® FactSet Digitalisation Index was the exception, rising 3%. At the other end, the iSTOXX® FactSet Automation & Robotics Index fell 1.3%. The STOXX thematic indices are composed of companies with the highest revenue exposure to respective ...
@@ -684,6 +738,8 @@ ISINs are the universal passport number for financial instruments. Every constit
 > [!quote] Us Procedures And Policies Faq (PDF)
 > ccessful; › Increasing the vote requirement for shareholders to amend charter/bylaws; › Adopting a plurality vote standard in uncontested director elections, or a majority vote standard in contested director elections; › Removing or restricting the right of shareholders to call a special meeting (raising thresholds, restricting agenda items); and › Removing or materially restricting the shareho...
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2018/americas/US-Procedures-and-Policies-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2018 (PDF)](https://stoxx.com/monthly-index-news-april-2018)
@@ -740,6 +796,8 @@ The oversight function is the governance watchdog inside an index provider. For 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2016 Russia Kazakhstan Voting Guidelines Dec 2015 (PDF)
 > te effective from 21 February 2013). On 1 September 2013, the powers of the Federal Financial Markets Service (FFMS), Russia's securities commission, in the field of regulation, control and supervision in the financial markets were transferred to the Bank of Russia. The regulatory, supervisory, and **oversight function**s of the Bank of Russia in the field of financial markets will be fulfilled by ...
@@ -760,6 +818,8 @@ The oversight function is the governance watchdog inside an index provider. For 
 > [!quote] Russia And Kazakhstan Voting Guidelines (PDF)
 > te effective from 21 February 2013). On 1 September 2013, the powers of the Federal Financial Markets Service (FFMS), Russia's securities commission, in the field of regulation, control and supervision in the financial markets were transferred to the Bank of Russia. The regulatory, supervisory, and **oversight function**s of the Bank of Russia in the field of financial markets will be fulfilled by ...
 > — [Russia And Kazakhstan Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2019/emea/Russia-and-Kazakhstan-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [2016 Russia Kazakhstan Voting Guidelines Dec 2015 (PDF)](https://www.issgovernance.com/file/policy/2016-russia-kazakhstan-voting-guidelines-dec-2015.pdf)
@@ -812,6 +872,8 @@ Point-in-time (PIT) databases are essential for unbiased back-testing. If a comp
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Solutions for Academic Professionals
 > SUSTAINABILITY SOLUTIONS Solutions for Academic Professionals A robust and timely set of environmental, social, and governance datasets to help enrich your academic research. Access in-depth **point-in-time data** on global corporate directors, executive compensation, corporate governance, company vote results, climate and emissions data, and various other sustainability datasets. Enhance your Rese...
@@ -824,6 +886,8 @@ Point-in-time (PIT) databases are essential for unbiased back-testing. If a comp
 > [!quote] ISS ESG to Provide Robust Data Sets Through the Open:FactSet Marketplace | ISS
 > es Inc., today announced the addition of new data sets on the Open:FactSet Marketplace to aid investors seeking to integrate extra-financial considerations into their investment decision-making. Effective today, authorized users of the Open:FactSet Marketplace can access ISS Governance QualityScore **point-in-time data** that covers 7,800 global companies on topics ranging from compensation to shar...
 > — [ISS ESG to Provide Robust Data Sets Through the Open:FactSet Marketplace | ISS](https://www.issgovernance.com/iss-esg-to-provide-robust-data-sets-through-the-openfactset-marketplace) — "ISS ESG to Provide Robust Data Sets  Through the Open:FactSet Marketplace"
+
+</details>
 
 **Sources:**
 - [Solutions for Academic Professionals](https://www.issgovernance.com/sustainability/solutions-for-academic-professionals) — "SUSTAINABILITY SOLUTIONS"
@@ -848,6 +912,8 @@ Quality assurance (QA) in the index and ESG data world encompasses automated val
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Dax Equity Calculation Guide 20231002 (PDF)
 > cy exchange rates provided by Refinitiv. 4.2. MONITORING The real-time input data feeds for the index calculation are monitored continuously to ensure data quality and availability. Data monitoring controls include data filters according to each exchange specification, outlier detection mechanisms, **quality assurance** tools and verification against secondary sources. 4.3. DATA ACCURACY The data a...
@@ -860,6 +926,8 @@ Quality assurance (QA) in the index and ESG data world encompasses automated val
 > [!quote] ISS Reconfirmed as Climate Bonds Standard &amp; Certification Scheme Verifier...
 > eligibility criteria for assets and projects that can be used for Climate Bonds and Green Bonds, said Dr. Maximilian Horster, Head of ISS-climate. “We are proud of the reconfirmation of our Approved Verifier status and look forward to the continued contribution of our knowledge and expertise to the **quality assurance** of these bonds.“ ISS ESG offers a broad range of Green Bond Services delivered ...
 > — [ISS Reconfirmed as Climate Bonds Standard &amp; Certification Scheme Verifier...](https://www.issgovernance.com/iss-reconfirmed-climate-bonds-standard-certification-scheme-verifier) — "ISS Reconfirmed as Climate Bonds Standard & Certification Scheme Verifier"
+
+</details>
 
 **Sources:**
 - [Dax Equity Calculation Guide 20231002 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX%20Equity%20Calculation%20Guide_20231002.pdf)
@@ -884,6 +952,8 @@ Restatements are the data world's errata. A company may restate its carbon emiss
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Issusfaqspoliciesandprocedures04302014 (PDF)
 > those related to tax compliance and preparation fees, i.e. the preparation of original and amended tax returns, refund claims, and tax payment planning, vs. those related to all other services in the tax category, such as tax advice, planning, or consulting. 18. What is ISS’ definition of “material **restatement**s”? When determining if a company has a material **restatement**, ISS’ guidelines are:  H...
@@ -904,6 +974,8 @@ Restatements are the data world's errata. A company may restate its carbon emiss
 > [!quote] Istoxx Index Guide (PDF)
 > B Global ex Japan Minimum Variance and iSTOXX MUTB Global Minimum Variance) » December 2017 (2): Addition of iSTOXX American Century USA Indices » January 2018: Amendment in the base values of the iSTOXX China H 20 Equal Weight HKD Index and iSTOXX Switzerland 10 Equal Weight CHF Index, following a **restatement** in their history. Clarification of index-specific dissemination calendars in line wit...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Issusfaqspoliciesandprocedures04302014 (PDF)](https://www.issgovernance.com/file/2014_Policies/ISSUSFAQsPoliciesandProcedures04302014.pdf)
@@ -928,6 +1000,8 @@ After each quarterly or annual review, STOXX publishes a review report (sometime
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 43/639 5. INDEX CHARACTERISTICS During review implementation month, the published **review report** in combination with the selection list will be used to select a replacement. With the public announcement of the **review report** in the review implementation month, the highest ranked non-component from the selection list, which is not announced an addition to the affected...
@@ -948,6 +1022,8 @@ After each quarterly or annual review, STOXX publishes a review report (sometime
 > [!quote] U.K. Regulators Revamp Banker Pay Rules | ISS
 > e U.K. banking sector, and subsequent recommendations for legislative and other action. Allied with the requirement to propose binding remuneration policy votes for U.K.-incorporated companies, and the Europe-wide CRD IV regulatory regime for EU banks (see the 2015 ISS United Kingdom Voting Season P**review Report** for more information), the new regulatory environment for bankers’ pay in the U.K. ...
 > — [U.K. Regulators Revamp Banker Pay Rules | ISS](https://www.issgovernance.com/u-k-regulators-revamp-banker-pay-rules) — "U.K. Regulators Revamp Banker Pay Rules"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -972,6 +1048,8 @@ RICs are one of several vendor-specific codes that STOXX publishes for each inde
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2020 (PDF)
 > n March that dragged the index to its lowest level since 2016. April marked the index’s strongest monthly performance since April 2009, when equities rebounded from the global financial crisis, and its second-steepest monthly gain on record. The index is now down 12.2% for 2020. The STOXX® North America 600 Index posted its best monthly showing since data begins in 2004, leading gains among the...
@@ -992,6 +1070,8 @@ RICs are one of several vendor-specific codes that STOXX publishes for each inde
 > [!quote] Monthly Index News July 2023 (PDF)
 > metal. The methodology uses FactSet’s granular RBICS Focus business classification and revenue datasets to target relevant companies. The brown-to-green revolution requires substantial amounts of metals such as copper, lithium, nickel, cobalt and aluminum, which are good conductors of heat and electricity, and are ductile and malleable. The minerals are enabling the structural boom in solar and...
 > — [Monthly Index News July 2023 (PDF)](https://stoxx.com/monthly-index-news-july-2023)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2020 (PDF)](https://stoxx.com/monthly-index-news-april-2020)
@@ -1016,6 +1096,8 @@ The rulebook is the single source of truth for an index. It details the universe
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] MDAX index: 30 years benchmarking Germany’s Mittelstand | Blog posts | STOXX
 > ex with this level of investability, showcasing the strength and momentum of Germany’s mid‑cap leaders, and powered by a methodology engineered for liquidity and reliable, rules‑based stability,” said Serkan Batir, Managing Director, Global Head of Index Product Development and Benchmarks at STOXX. **Rulebook** changes The MDAX has undergone adjustments to its methodology in the past three decades....
@@ -1036,6 +1118,8 @@ The rulebook is the single source of truth for an index. It details the universe
 > [!quote] Stoxx World Equity Index Guide (PDF)
 > political changes and developments in the investment industry. As result of these activities, STOXX introduces changes to the methodology books. Material changes are notified to subscribers and the media through the usual communication channels. Clarifications of the methodology are updated in the **rulebook**. All changes are tracked in the section 7.1. INDEX TERMINATION POLICY For the termination...
 > — [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [MDAX index: 30 years benchmarking Germany’s Mittelstand | Blog posts | STOXX](https://stoxx.com/mdax-index-30-years-benchmarking-germanys-mittelstand) — "WHITEPAPER"
@@ -1062,6 +1146,8 @@ The selection list is the output of the review process — the names that "made 
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > X Emerging Markets Equity Factor Index, STOXX International Small-Cap Equity Factor Index and STOXX Global Equity Factor Index. December 2022(2): Amendment of the methodology of the STOXX Global Metaverse Index. Changes to be effective with March 2023 review. December 2022(3): Rule clarification of **selection list**s during review month. This is a correction to the November 2022(2): Rule clarifica...
@@ -1102,6 +1188,8 @@ The selection list is the output of the review process — the names that "made 
 > [!quote] Sx50Ugv (PDF)
 > railing STOXX USA 500 Index 23.3 18.2 19.4 17.1 0.1 1.3 2.4 17.6 STOXX USA Total Market Index 24.1 18.4 18.0 16.3 0.1 1.2 2.1 18.2 Performance and annual returns4 Methodology The universe is the STOXX USA 900. All stocks in the index universe are ranked by free-float market cap to produce the index **selection list**. The index aims to cover the 500 largest companies in terms of free-float market c...
 > — [Sx50Ugv (PDF)](https://www.stoxx.com/document/Indices/Factsheets/2022/December/SX50UGV.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1126,6 +1214,8 @@ Simulation files are the raw material for back-testing and audit. STOXX offers s
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] CSP Reports | STOXX
 > ks Withholding tax Sector classification changes Country classification Dissemination Data and reports End of the day data Index values & divisors Currency rates Historical component changes DAX legacy reports Corporate actions Periodic review information Selection lists Review reports Monthly data **Simulation file**s Services Index licensing License agreement form Academic data iNAV Announcements...
@@ -1134,6 +1224,8 @@ Simulation files are the raw material for back-testing and audit. STOXX offers s
 > [!quote] Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)
 > after. It will contain the new set of files per index and will allow DAX Licensees to retrieve DAX Equity daily files as well as DAX Selection Lists and DAX Index Review files. • A dedicated Web page available on www.stoxx.com > Home > Resources > Reports > Simulation - Files (https://www.stoxx.com/simulation-files) accessible to all clients based on index and third party data permission. • A d...
 > — [Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX_Equity_Indices_Simulation_Phase–from_Dec_18_2023_to_February_29_2024.pdf)
+
+</details>
 
 **Sources:**
 - [CSP Reports | STOXX](https://stoxx.com/csp-reports) — "WHITEPAPER"
@@ -1181,6 +1273,8 @@ The Sustainability Gateway (sometimes referred to as ISS ESG Gateway) is the ESG
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Home | ISS
 > e ProxyExchange Vote Preference ISS Communicator Vote Disclosure Services Global Meeting Results GOVERNANCE SOLUTIONS ISS Nordic Investor Services Engagement Letter Writing PRI Signatories Asset Owners ISS Australia Solutions Custodians & Intermediaries Hedge Funds Sustainability Solutions OVERVIEW **Sustainability Gateway** Sustainability Methodology Thought Leadership Biodiversity Impact Assessme...
@@ -1201,6 +1295,8 @@ The Sustainability Gateway (sometimes referred to as ISS ESG Gateway) is the ESG
 > [!quote] Site Map | ISS
 > erse Impact Solution - SFDR Principal Adverse Impact Solution - Research & Analyze Company Performance - RI Policy Development - Screen for Company Performance - Screening & Controversies - Screening, Research & Analytics - Solutions for Academic Professionals - Support Engagement & Communication - **Sustainability Gateway** - Thank You - Thought Leadership - Terms of Use - Terry Shen - Tesco Compe...
 > — [Site Map | ISS](https://www.issgovernance.com/site-map) — "Site Map"
+
+</details>
 
 **Sources:**
 - [Home | ISS](https://www.issgovernance.com/) — "ISS Announces Creation of ISS STOXX"

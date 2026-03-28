@@ -36,7 +36,7 @@ SQL Server's lock manager tracks all acquired locks in memory and uses a compati
   X = second phase of UPDATE, INSERT, DELETE (modify the row)
 ```
 
-**Lock type descriptions:**
+#### S, X, U, IS, IX, Sch-M — lock type descriptions and compatibility
 
 | Lock type | Mode | Who holds it | Blocks |
 |---|---|---|---|
@@ -68,7 +68,7 @@ SQL Server can lock at different levels of granularity. The lock manager chooses
   DATABASE lock             — used for schema changes, restores
 ```
 
-**Which granularity is used in practice:**
+#### Row, page, table — lock granularity in practice
 
 - Small INSERTs, UPDATEs, DELETEs → row locks (KEY locks in B-tree indexes)
 - Large bulk operations → may escalate to page then table locks
@@ -96,7 +96,7 @@ WHERE resource_database_id = DB_ID('analytics_db')
 ORDER BY request_session_id;
 ```
 
-**Prevent escalation on a specific table (use with caution):**
+#### ALTER TABLE SET LOCK_ESCALATION = DISABLE — prevent table-level escalation
 
 ```sql
 -- Prevent escalation on a specific table (use with caution)
@@ -136,7 +136,7 @@ The isolation level controls what a transaction can see when other transactions 
 | **SERIALIZABLE** | No | No | No | High |
 | **SNAPSHOT** | No | No | No | Medium (uses version store) |
 
-**Anomaly definitions:**
+#### Dirty read, non-repeatable read, phantom — isolation anomaly definitions
 
 - **Dirty read:** Reading uncommitted data that may later be rolled back
 - **Non-repeatable read:** Reading the same row twice in a transaction returns different values (another transaction committed a change in between)
@@ -148,7 +148,7 @@ The isolation level controls what a transaction can see when other transactions 
 
 RCSI is the most important concurrency improvement for mixed read/write workloads. It eliminates reader-writer blocking entirely by giving readers a snapshot of the data from the version store (in TempDB) rather than taking shared locks. The [[server-configuration]] page covers the full RCSI setup alongside other non-negotiable instance settings.
 
-**Under RCSI:**
+#### RCSI behavior — readers never block writers, writers never block readers
 - `SELECT` statements do NOT acquire S locks → cannot block `INSERT`/`UPDATE`/`DELETE`
 - `INSERT`/`UPDATE`/`DELETE` still acquire X locks → can still block each other
 - Readers see the last committed version of each row, never a mid-transaction state
@@ -165,7 +165,7 @@ ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 > [!warning] RCSI Requires a Maintenance Window
 > Enabling RCSI requires that no other connections are active on the database at the time the ALTER DATABASE statement runs. On a production database, run this during a maintenance window. The operation converts all existing transactions to use versioning — it can take seconds to minutes depending on active workload.
 
-**RCSI and TempDB version store:**
+#### RCSI version store — TempDB space usage and monitoring
 
 When RCSI is enabled, every UPDATE and DELETE generates a version record in TempDB's version store. The version store grows during long-running transactions and is cleaned up when no active snapshot read needs the old version. Monitor with:
 
@@ -186,7 +186,7 @@ ORDER BY elapsed_time_seconds DESC;
 
 ## Detecting Blocking Chains
 
-**Active blocking chains right now:**
+#### sys.dm_exec_requests blocking_session_id — active blocking chains
 
 ```sql
 SELECT r.session_id AS blocked,
@@ -200,7 +200,7 @@ WHERE r.blocking_session_id > 0
 ORDER BY r.wait_time DESC;
 ```
 
-**Find what the head blocker is running:**
+#### sys.dm_exec_sql_text — find what the head blocker is running
 
 ```sql
 SELECT s.session_id, s.login_name, s.program_name,
@@ -211,13 +211,13 @@ CROSS APPLY sys.dm_exec_sql_text(s.most_recent_sql_handle) st
 WHERE s.session_id = <blocker_session_id>;
 ```
 
-**Interpretation:**
+#### Blocking chain interpretation — transient vs significant vs cascading
 - **0 rows:** No blocking right now — good
 - **Rows with wait_sec < 5:** Transient blocking — normal under load
 - **Rows with wait_sec > 30:** Significant blocking — a long-running transaction is holding locks
 - **Chains (A blocks B, B blocks C):** One session cascading to many — find the head blocker (the session_id that appears as `blocker` but not as `blocked`). When blocking becomes circular, it escalates to a [[deadlock-detection-and-prevention|deadlock]].
 
-**Common causes and fixes:**
+#### Blocking common causes — forgotten transactions, long pipelines, index rebuilds
 
 | Cause | Fix |
 |---|---|
@@ -267,7 +267,7 @@ For pipeline code in Python/C#, always check that errors cause a `rollback()` ca
 
 ## Lock Monitoring Queries
 
-**See all current locks in a database:**
+#### sys.dm_tran_locks — see all current locks in a database
 
 ```sql
 SELECT
@@ -282,7 +282,7 @@ WHERE resource_database_id = DB_ID('analytics_db')
 ORDER BY request_session_id, resource_type;
 ```
 
-**Check lock escalation rate (from performance counters):**
+#### dm_os_performance_counters Lock Escalations — check escalation rate
 
 ```sql
 SELECT cntr_value AS lock_escalations
@@ -291,7 +291,7 @@ WHERE counter_name = 'Lock Escalations/sec'
   AND instance_name = '_Total';
 ```
 
-**Check deadlock rate:**
+#### dm_os_performance_counters Number of Deadlocks/sec — check deadlock rate
 
 ```sql
 SELECT cntr_value AS deadlocks_total
@@ -300,7 +300,7 @@ WHERE counter_name = 'Number of Deadlocks/sec'
   AND instance_name = '_Total';
 ```
 
-**Top lock-related wait types from [[wait-stats-analysis|wait stats]]:**
+#### LCK_M_S, LCK_M_X, LCK_M_U — top lock-related wait types
 
 ```
 LCK_M_S    — waiting for shared lock (reader waiting for a writer to release)

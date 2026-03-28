@@ -44,6 +44,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] The diversification benefits of a multi-factor approach: the STOXX Europe 600...
 > ver, and it is also important to note that the **active return** was positive far more often than it was negative, both on a quarterly and an annual basis. Exhibit 2: Scatterplot of active vs. market returns, annual (left) and quarterly (right) Returns attribution Attribution can tell us if the index’s **active return**s largely come from its factor exposures, and indeed we see that that is the case. U...
@@ -64,6 +66,8 @@ $$
 > [!quote] STOXX Factor and STOXX ESG-X Factor Indices Q2 Spotlight – Mixed Performance,...
 > or and sustainable investing. These show a similar picture to the standard factor indices. Figures 1 and 2 Source: Qontigo. Data prior to index launch simulated. USD Gross Returns. Benchmarks are the STOXX® Global 1800 Index and its ESG-X version. It is likely worth noting that the recent quarterly **active return**s in the area of +/-10% are much larger than one would expect during less turbulent ...
 > — [STOXX Factor and STOXX ESG-X Factor Indices Q2 Spotlight – Mixed Performance,...](https://stoxx.com/stoxx-factor-and-stoxx-esg-x-factor-indices-q2-spotlight-mixed-performance-strong-exposures-and-rebounding-correlations) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [The diversification benefits of a multi-factor approach: the STOXX Europe 600 Industry Neutral Ax Multi-Factor Index | Blog posts | STOXX](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index) — "WHITEPAPER"
@@ -94,6 +98,8 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] BlackRock’s Ang on sustainability alpha signals: ESG and factors as ‘best fri...
 > gnals can be an important part of factor investing – where the former can, through a quantitatively-driven and systematic investment process, complement or reinforce a factor strategy.3 The result should lead to excess returns and improved climate or ESG scores. “This talk was all about sustainable **alpha**,” Dr. Ang concluded. “That is the real opportunity for all of us. If we, as investors, use ...
@@ -114,6 +120,8 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 > [!quote] Factor Performance Can Be Timed and Exploited, Study Finds Factor Performance...
 > omically large and statistically significant **alpha** after controlling for stock momentum,” they added. AQR is an investment management firm based in Greenwich, Connecticut, with almost $200 billion under management; it is known for its applied research in investment strategies. Large and significant **alpha** Price momentum is the well-researched observation that assets that have outperformed in the...
 > — [Factor Performance Can Be Timed and Exploited, Study Finds Factor Performance...](https://stoxx.com/factor-performance-can-be-timed-and-exploited-study-finds-factor-performance-can-be-timed-and-exploited-study-finds) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [BlackRock’s Ang on sustainability alpha signals: ESG and factors as ‘best friends’  | Blog posts | STOXX](https://stoxx.com/blackrocks-ang-on-sustainability-alpha-signals-esg-and-factors-as-best-friends) — "WHITEPAPER"
@@ -144,6 +152,8 @@ Where $n$ is the number of years in the holding period.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] From pandemic profiteers to stagflation hostages: FAANGs stranglehold weighs ...
 > n the FAANGs last week. Figure 2 – Cumulative excess return FAANGs vs. STOXX USA 900 index Still, the tremendous gains accumulated by the FAANGs during the pandemic years have not been fully wiped out yet (Figure 3). Propelled by their stellar performance in 2020, the FAANGs portfolio has posted an **annualized return** for the 2020-2022 period of 14%, outperforming the STOXX USA 900 index by 6 per...
@@ -164,6 +174,8 @@ Where $n$ is the number of years in the holding period.
 > [!quote] Ixarobu (PDF)
 > an Largest Smallest Largest Smallest Last 12 months STOXX Global Automation & Robotics N/A 10.7 0.1 0.0 0.2 0.0 1.8 0.0 41.0 STOXX Global Total Market 85,453.5 72,194.6 6.4 0.7 2,811.7 0.0 3.9 0.0 2.8 Supersector weighting (top 10) Country weighting Risk and return figures1 Index returns Return (%) **Annualized return** (%) Last month YTD 1Y 3Y 5Y Last month YTD 1Y 3Y 5Y STOXX Global Automation & R...
 > — [Ixarobu (PDF)](https://www.stoxx.com/document/Bookmarks/CurrentFactsheets/IXAROBU.pdf)
+
+</details>
 
 **Sources:**
 - [From pandemic profiteers to stagflation hostages: FAANGs stranglehold weighs on US market | Blog posts | STOXX](https://stoxx.com/from-pandemic-profiteers-to-stagflation-hostages-faangs-stranglehold-weighs-on-us-market) — "WHITEPAPER"
@@ -196,6 +208,8 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > OXX® USA 900 Index by 34 **basis point**s. The STOXX ESG Impact Indices offer a broad market exposure that is tilted towards companies that score better with respect to a small set of environmental, social, and governance key performance indicators. The EURO STOXX 50® ESG Index beat its benchmark by 12 **basis point**s. The index is derived from the flagship EURO STOXX 50 and implements a set of standa...
@@ -216,6 +230,8 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 > [!quote] Monthly Index News August 2021 (PDF)
 > MONTHLY INDEX NEWS / August 2021 Premia Indices Key Points Among the EURO STOXX® Multi Premia® and Single Premium Indices, the EURO STOXX® Momentum Premium Index outperformed the benchmark EURO STOXX® Index’s 2.6% advance in August by 121 **basis point**s. The EURO STOXX Multi Premia and Single Premium Indices track seven distinctive sources of equity risk and returns on a broad and liquid universe...
 > — [Monthly Index News August 2021 (PDF)](https://stoxx.com/monthly-index-news-august-2021)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -244,6 +260,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] STOXX Awarded “Best Smart Beta Index Provider, Asia-Pacific” By SRP | Press r...
 > Zurich/Singapore (April 30, 2018) – STOXX Ltd., the operator of Deutsche Boerse Group’s index business and a global provider of innovative and tradable index concepts, has been recognized as 2018’s “Best Smart **Beta** Index Provider, Asia-Pacific” by Structured Retail Products (SRP). This is the first time STOXX Ltd. has received this award. The awards ceremony was held in Singapore. “This award i...
@@ -264,6 +282,8 @@ $$
 > [!quote] The Index World and Twenty Years of Europe’s ETFs | STOXX
 > of assets, index choice and static factor exposure.2 That means that when an investor picks an ETF, not only are they buying an entire market — they are also actively choosing an asset class, geography, an index methodology, a style and a factor exposure and the timing of the purchase. Enter smart **beta** The menu of index choices has also ballooned with the inception of strategies that seek to ex...
 > — [The Index World and Twenty Years of Europe’s ETFs | STOXX](https://stoxx.com/the-index-world-and-twenty-years-of-europes-etfs) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [STOXX Awarded “Best Smart Beta Index Provider, Asia-Pacific” By SRP | Press releases | STOXX](https://stoxx.com/stoxx-awarded-best-smart-beta-index-provider-asia-pacific-by-srp) — "WHITEPAPER"
@@ -292,10 +312,14 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > ions can be provided upon request. Index types and currencies: Price, net and gross return in EUR, USD and JPY. Dissemination calendar: STOXX Global calendar INDEX REVIEW Selection list: On a quarterly basis, the momentum factor is calculated for each stock after adjusting for market beta, size and **book-to-price ratio**. First, the beta and alpha of each stock is calculated using the formula belo...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -339,6 +363,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (4)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > on Intensity in particular, values are z-scored relative to each stock’s ICB Supersector. The Quality Factor combines the Signals at 20%, 20%, 20%, 20%, 13%, and 7% weights, respectively, and is again z-scored and truncated. The Value Factor is a composite of the following 5 Signals: Book to Price, **Cash Flow Yield**, Time Series Normalized **Cash Flow Yield**, Dividend Yield and Earnings Yield.  Boo...
@@ -355,6 +381,8 @@ $$
 > [!quote] STOXX Equity Factor Indices | STOXX
 > ental signals including carbon emissions intensity and science-based targets, both as reported by the Institutional Shareholder Services group of companies. Value The value score is calculated from the following current book value to price ratio, 12-month trailing dividend yield, earnings yield and **cash flow yield** (i.e., cash flow divided by the full market capitalization), and time series norm...
 > — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -384,6 +412,8 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2024 (PDF)
 > investment exclusions and also integrates companies’ ESG scores into the stock selection, replacing controversial companies and the least sustainable ones with peers from the same ICB Supersector group. Figure 1: EURO STOXX 50 ESG derivatives volume Source: STOXX, Eurex. Only roll months are shown. **Compound annual growth rate** is based on total annual volume per year. Just this year the evolutio...
@@ -404,6 +434,8 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 > [!quote] B.R.AI.N. Index Tracks Disruptive Technologies | Blog posts | STOXX
 > ives. In Biotechnology, biological processes and engineering techniques are combined to develop new technologies and products that can improve lives. Biotechnology is now extensively used in the medical industry, biofuels and agribiotech. The global Robotics market is expected to boost revenue at a **compound annual growth rate** of 16% between 2017 and 2025, to $154 billion.1 Lower costs and incre...
 > — [B.R.AI.N. Index Tracks Disruptive Technologies | Blog posts | STOXX](https://stoxx.com/b-r-ai-n-index-tracks-disruptive-technologies) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2024 (PDF)](https://stoxx.com/monthly-index-news-april-2024)
@@ -432,6 +464,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] STOXX Factor and STOXX ESG-X Factor Indices Q2 Spotlight – Mixed Performance,...
 > as defined by Market Sensitivity and Residual Volatility in the Axioma Risk Model), and Value and Size exposures acted as a drag on both methods. However, the accumulated exposure to Other Factors (primarily Industries) can account for the bulk of the Mixed portfolio’s underperformance. Spotlight – **correlation**s As we noted in our Q1 post, the COVID-19 crisis caused cross-asset **correlation**s to i...
@@ -452,6 +486,8 @@ $$
 > [!quote] Monthly Index News April 2021 (PDF)
 > across their entire expiration curve. The V-VSTOXX measures the implied volatility of options on VSTOXX futures, hence reflecting expectations regarding the volatility of volatility. All three are significantly lower than their March 2020 peaks. The three measures showed a relatively high negative **correlation** to the underlying stock market in April. Risk and Return Characteristics Index Level C...
 > — [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
+
+</details>
 
 **Sources:**
 - [STOXX Factor and STOXX ESG-X Factor Indices Q2 Spotlight – Mixed Performance, Strong Exposures and Rebounding Correlations | STOXX](https://stoxx.com/stoxx-factor-and-stoxx-esg-x-factor-indices-q2-spotlight-mixed-performance-strong-exposures-and-rebounding-correlations) — "WHITEPAPER"
@@ -480,6 +516,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > lculated as follows, based on the returns that were calculated in Step 1 for all DAX constituents: 𝐻𝑇 1 2 𝜎 =√𝐻𝑇⋅ ∑(𝜆 −𝜆)) 𝑖 𝐻𝑇−1 𝑖𝑘 𝑖 𝑘=1 where: 𝜎 = standard deviation of share i =1, …, 40 𝑖 𝜆 = average yield of share i =1, …, 40 𝑖 𝐻𝑇 1 𝐶𝑜𝑣 =𝐻𝑇⋅ ∑(𝜆 −𝜆)⋅(𝜆 −𝜆) i,j 𝐻𝑇−1 𝑖𝑘 𝑖 𝑗𝑘 𝑗 𝑘=1 whereby: 𝐶𝑜𝑣 = **covariance**17 of share 𝑖=1,…,40 to share 𝑗=1,…,40 i,j Step 3) The optimized portfolio weights can ...
@@ -500,6 +538,8 @@ $$
 > [!quote] Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...
 > sion (VolSwap or VarSwap) and listed dispersion. In Europe, OTC dispersion is mainly traded in VolSwap. Because the VolSwap payoff can’t be replicated with listed options, it’s really not the same expected return.” Anand: “Indeed, when you are trading listed dispersion, you are mainly looking for a **covariance** move, i.e.,not only a correlation move. You are looking for really important moves on ...
 > — [Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...](https://stoxx.com/dispersion-trading-in-focus-with-optiver-and-ellipsis) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
@@ -528,6 +568,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > iSTOXX® METHODOLOGY GUIDE 76/1024 8. iSTOXX QUALITY INCOME INDICES - Positive or zero 1-year growth in Liquidity Ratio (1YΔLR). The LR is calculated as the ratio of current assets to current liabilities (also called **current ratio**) 1YΔLR =**current ratio** −current ratio t0 t0 t−1 - 1-year growth in the Number of Shares Outstanding (1YΔNBO) less than or equal to 5%7. number of shares outstanding 1YΔ...
@@ -536,6 +578,8 @@ $$
 > [!quote] Stoxx Digital Asset Guide (PDF)
 > l Information and Transparency: This set of criteria measures the financial health of an exchange. Primary criteria here include: checking the willingness and frequency to provide up-to-date financial statements, adhering to financial requirements (such as profitability, leverage ratio, cash ratio, **current ratio** and debt to equity ratio) and the auditing of financial statements. Transparency cr...
 > — [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -563,6 +607,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 2015 Taft Hartley Advisory Services International Guidelines (PDF)
 > ally attached to a debt issuance in order to enhance the marketability of the accompanying fixed income security. When evaluating a debt issuance request, Taft-Hartley Advisory Services examines the issuing company’s present financial situation. The main factor for analysis is the company’s current **debt-to-equity ratio**, or gearing level. A high gearing level may incline markets and financial an...
@@ -583,6 +629,8 @@ $$
 > [!quote] India2014Votingrecommendations Final (PDF)
 > rn regarding the terms and conditions of the debt. For non-financial companies, the following criteria are used to assess whether the potential increase in debt is considered excessive:  The proposed maximum amount is more than twice the company's total debt;  It could result in the company's net **debt-to-equity ratio**, or gearing level, exceeding 300 percent; and  The maximum hypothetical deb...
 > — [India2014Votingrecommendations Final (PDF)](https://www.issgovernance.com/file/2014_Policies/India2014VotingRecommendations_FINAL.pdf)
+
+</details>
 
 **Sources:**
 - [2015 Taft Hartley Advisory Services International Guidelines (PDF)](https://www.issgovernance.com/file/policy/2015-taft-hartley-advisory-services-international-guidelines.pdf)
@@ -611,6 +659,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...
 > g in flat to falling markets. The ETF launch comes as European stocks have rallied this year but suffered heightened volatility — and losses — in March and April amid a global markets pullback. Figure 1 shows how the income generated by a covered call strategy on the EURO STOXX 50 compares with the **dividend yield** on the index. The former can be several times higher, depending on the period. Fig...
@@ -631,6 +681,8 @@ $$
 > [!quote] Product Brief Stoxx Global Ai Infastructure Index (PDF)
 > 20.6 20.6 3.0 2.4 1.8 14.6 Source: STOXX. Number of High Quality Patents in AI sub-themes 5,000 4,661 4,000 3,000 2,000 1,000 1,515 644 0 AI in Semiconductor/GPU HQ Patents AI in Cloud HQ Patents AI in Big Data HQ Patents Source: EconSight. 5 Based on the composition as of September 30, 2024. 6Net **dividend yield** is calculated as net return index return minus price index return. STOXX Ltd. (“STO...
 > — [Product Brief Stoxx Global Ai Infastructure Index (PDF)](https://stoxx.com/wp-content/uploads/2023/11/Product-brief-STOXX-Global-AI-Infastructure-Index.pdf)
+
+</details>
 
 **Sources:**
 - [Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blog posts | STOXX](https://stoxx.com/global-x-etfs-europe-stoxx-launch-first-euro-stoxx-50-covered-call-etf) — "WHITEPAPER"
@@ -663,6 +715,8 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Esg Equity Family Benchmark Statement (PDF)
 > e benchmarks under Regulation (EU) 2016/1011; 5.2 Way of Art. 5(b) RTS a statement indicating how users will be Not applicable. information of any informed of any delay in the publication of delay in publication the benchmark or of any re-determination of the benchmark and indicating the (expected) **duration** of measures. Copyright © 2025 STOXX Ltd. 17
@@ -683,6 +737,8 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 > [!quote] Canada Tsx Voting Guidelines (PDF)
 > CANADA TSX-LISTED COMPANIES PROXY VOTING GUIDELINES ▪ Misapplication of applicable accounting standards; or ▪ Material weaknesses identified in the internal control process. Severity, breadth, chronological sequence and **duration**, as well as the company's efforts at remediation or corrective actions, will be examined in determining whether withhold votes are warranted. Rationale: The policy addr...
 > — [Canada Tsx Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2020/americas/Canada-TSX-Voting-Guidelines.pdf)
+
+</details>
 
 **Sources:**
 - [Dax Esg Equity Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_ESG_Equity_Family_Benchmark_Statement.pdf)
@@ -713,6 +769,8 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] August market turmoil highlights benefit of dynamic volatility allocation  | ...
 > STOXX 50 Volatility-Balanced index For example, the EURO STOXX 50 Volatility-Balanced index moved to an ‘unpredicted volatility regime’ on July 29 this year, lifting the allocation to VSTOXX futures to 10%. It raised that exposure to 20% on August 1 and then to 30% a day later. The effect of large **drawdown**s Of course, having a 2.5% volatility hedge during stable and/or bull markets is a drag on...
@@ -733,6 +791,8 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 > [!quote] Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF)
 > 11% 5.29% 3y return 10.32% 9.47% 9.53% 1y return 8.98% 8.63% 8.74% volatility since inception 17.85% 17.85% 17.71% 5y volatility 17.92% 17.86% 17.80% 3y volatility 12.55% 12.45% 12.38% 1y volatility 14.08% 13.89% 13.96% Sharpe ratio since inception 0.55 0.54 0.55 5y Sharpe ratio 0.39 0.37 0.38 Max. **drawdown** since inception –27.82% –27.64% –27.14% 5y max. **drawdown** –27.82% –27.64% –27.14% Trackin...
 > — [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF)](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
+
+</details>
 
 **Sources:**
 - [August market turmoil highlights benefit of dynamic volatility allocation  | Blog posts | STOXX](https://stoxx.com/august-market-turmoil-highlights-benefit-of-dynamic-volatility-allocation) — "WHITEPAPER"
@@ -763,6 +823,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > ble. » Payout ratio of less than or equal to 60% (applies quarterly for non-components only). Alternative thresholds may apply for specified regions when mentioned in the following section. DPS Payout ratio= (cid:2919) EPS (cid:2919) DPS i = indicated annualized gross Dividend per Share (i) EPS i = **Earnings per Share** (i) 28 » Non-negative payout ratio using the prior stated payout ratio formula...
@@ -783,6 +845,8 @@ $$
 > [!quote] Australia New Zealand Policy Updates (PDF)
 > avourably by many shareholders compared to a hurdle that specifies an favourably by many shareholders compared to a hurdle that specifies an absolute share price target or an insufficient accounting measure of absolute share price target or an insufficient accounting measure of performance (such as **earnings per share (EPS)**). performance (such as **earnings per share (EPS)**). › Where a relative hur...
 > — [Australia New Zealand Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/updates/Australia-New-Zealand-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -811,6 +875,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > Supersector. The Quality Factor combines the Signals at 20%, 20%, 20%, 20%, 13%, and 7% weights, respectively, and is again z-scored and truncated. The Value Factor is a composite of the following 5 Signals: Book to Price, Cash Flow Yield, Time Series Normalized Cash Flow Yield, Dividend Yield and **Earnings Yield**.  Book to Price is given by the latest book value divided by the total market capi...
@@ -831,6 +897,8 @@ $$
 > [!quote] When 40 is the New 30 – What DAX Gains Following Enlargement | Blog posts | S...
 > itability and growth, but leans toward higher-volatility stocks than its original version. Exposures to **Earnings Yield** and Exchange Rate Sensitivity were small and negative for both DAX iterations, but they were slightly higher in magnitude following the DAX overhaul. The small negative exposure to **Earnings Yield** indicates that DAX (either with 30 or 40 components) contains stocks with lower ea...
 > — [When 40 is the New 30 – What DAX Gains Following Enlargement | Blog posts | S...](https://stoxx.com/when-40-is-the-new-30-what-dax-gains-following-enlargement) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -865,6 +933,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS EVA Resource Center | ISS
 > Part II) Drivers of Growth Finding The Investment Gems Introducing Best-Practice EVA Rightsizing the EVA Way in the COVID Economy Don’t Be Fooled by Earnings: Trust EVA A Case of Mistaken Identity ESG Matters Profitability Drives Value How EVA Can Enhance DCF and P/E Analysis: A Case Study EVA, not **EBITDA**: A Better Measure of Investment Value The Four Key EVA Performance Ratios Insights Into Va...
@@ -885,6 +955,8 @@ $$
 > [!quote] Pay For Performance Mechanics (PDF)
 > ecently available QDD data applicable to the company’s next annual meeting. For more information on the EVA methodology, including the adjustments used to calculate EVA, and to download your company’s free EVA Profile, visit the ISS EVA Resource Center. Note: the GAAP metrics of ROE, ROA, ROIC, and **EBITDA** Growth (Cash Flow Growth for certain industries) will continue to be displayed in research...
 > — [Pay For Performance Mechanics (PDF)](https://www.issgovernance.com/file/policy/2020/americas/Pay-for-Performance-Mechanics.pdf)
+
+</details>
 
 **Sources:**
 - [ISS EVA Resource Center | ISS](https://www.issgovernance.com/eva/iss-eva-resource-center) — "ISS EVA"
@@ -913,6 +985,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ISS EVA Resource Center | ISS
 > tability Drives Value How EVA Can Enhance DCF and P/E Analysis: A Case Study EVA, not EBITDA: A Better Measure of Investment Value The Four Key EVA Performance Ratios Insights Into Value Creation: Using EVA to Measure Performance The Link Between TSR and EVA The EVA Measurement Formula: A Primer on **Economic Value Added (EVA)** Using EVA in Pay-for-Performance Analysis WEBINARS Factor Rotations: W...
@@ -933,6 +1007,8 @@ $$
 > [!quote] Us Compensation Policies Faq (PDF)
 > FAQ: U.S. Executive Compensation Policies No. There will be no changes to the quantitative screens for 2019. The Financial Performance Assessment screen will continue to use GAAP/accounting performance measures. However, ISS will continue to explore the potential for future use of **Economic Value Added (EVA)** measures to add additional insight into a company's financial performance. To that end, ...
 > — [Us Compensation Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2019/americas/US-Compensation-Policies-FAQ.pdf)
+
+</details>
 
 **Sources:**
 - [ISS EVA Resource Center | ISS](https://www.issgovernance.com/eva/iss-eva-resource-center) — "ISS EVA"
@@ -961,6 +1037,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ESG Index Solutions
 > medium or high ISS ESG Corporate Rating and comply with standards related to international norms and controversial weapons. EVA LEADERS INDEX ESG + F ESG + F (financial materiality) is here to stay, as ISS’ proprietary research demonstrates that firms that exhibit both high-ESG performance and high-**EVA Margin** significantly outperform firms that are low-ESG and low-**EVA Margin**. ISS ESG EVA LEADER...
@@ -981,6 +1059,8 @@ $$
 > [!quote] EVA and Governance QualityScore – Emerging Markets | ISS
 > ial materiality and governance quality. EVA deducts the “cost” of giving shareholders a minimum acceptable return for their investment. EVA measures the returns generated on all capital against a strategic, long-run, weighted average cost of capital that is based on a blend of debt and equity. When **EVA Margin** is above zero, the firm is returning above its cost of capital and creating an economi...
 > — [EVA and Governance QualityScore – Emerging Markets | ISS](https://www.issgovernance.com/library/esg-eva-and-gov-qualityscore-emerging-markets) — "EVA and Governance QualityScore – Emerging Markets"
+
+</details>
 
 **Sources:**
 - [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2) — "ESG INDEX SOLUTIONS"
@@ -1009,6 +1089,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (2)</summary>
 
 > [!quote] 2015Executivesummary (PDF)
 > g (meaning that ROE in the most recent fiscal year is at or above 5 percent), and in cases where the senior executives have recently joined the company in connection with a bailout or a major restructuring. The 5 percent threshold was chosen as a minimum ROE level which investors could accept as an **equity risk premium**, based on discussions with institutional investors in Japan holding Japanese ...
@@ -1017,6 +1099,8 @@ $$
 > [!quote] 2015Asia Pacificpolicyupdates (PDF)
 > gally binding nomination committees. Therefore, it is unrealistic to expect that board members could remove top executives when necessary. The updated policy reflects the unique market circumstances of Japan. The five percent threshold was chosen as a minimum ROE level acceptable to investors as an **equity risk premium**, based on discussions with institutional investors in Japan holding Japanese ...
 > — [2015Asia Pacificpolicyupdates (PDF)](https://www.issgovernance.com/file/policy/2015Asia-PacificPolicyUpdates.pdf)
+
+</details>
 
 **Sources:**
 - [2015Executivesummary (PDF)](https://www.issgovernance.com/file/policy/2015ExecutiveSummary.pdf)
@@ -1042,6 +1126,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > utions Assessment data are given 0. After the selection step, the GHG intensity relative to the parent index is assessed using the capped free-float market capitalization weights of the index components. GHG Intensity is defined as the sum of Scope 1, Scope 2 and Scope 3 emissions from ISS ESG over **Enterprise Value** Including Cash (EVIC). If the GHG intensity reduction is not at least 30% versus...
@@ -1062,6 +1148,8 @@ $$
 > [!quote] World, investors gear up action to combat biodiversity loss and related risks...
 > te change adaptation, sustainable use and protection of water and marine resources, transition to a circular economy, pollution prevention and control, and protection and restoration of biodiversity and ecosystems. [13] Qontigo is a signatory to the Principles for Responsible Investment (PRI). [14] **Enterprise Value** Including Cash (EVIC) is the sum of the market capitalization of all issued equi...
 > — [World, investors gear up action to combat biodiversity loss and related risks...](https://stoxx.com/world-investors-gear-up-action-to-combat-biodiversity-loss-and-related-risks) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1094,6 +1182,8 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] The low volatility premium – An analysis of factor exposures of minimum varia...
 > s are likely of great importance for investors while implementing minimum variance strategies. Investors need to be aware of interactions among factors in order to apply appropriate countermeasures. In this context, the empirical findings indicate that applying constraints to limit unintended style **factor exposure**s relative to the benchmark may help reduce the negative performance contribution ...
@@ -1114,6 +1204,8 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 > [!quote] The AI revolution is taking place now – a look inside the STOXX Global Artifi...
 > lity as a multi-year structural story. Having a revenue-based selection methodology appears as an appropriate strategy for an industry where earnings growth is happening now, rather than in the future. Investors targeting a technologically disruptive theme such as AI must be aware of the sector and **factor exposure**s involved in such a strategy. As with many other technology-focused themes, inves...
 > — [The AI revolution is taking place now – a look inside the STOXX Global Artifi...](https://stoxx.com/the-ai-revolution-is-taking-place-now-a-look-inside-the-stoxx-global-artificial-intelligence-index) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [The low volatility premium – An analysis of factor exposures of minimum variance strategies | Blog posts | STOXX](https://stoxx.com/the-low-volatility-premium-an-analysis-of-factor-exposures-of-minimum-variance-strategies-blog) — "WHITEPAPER"
@@ -1142,6 +1234,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] How efficient an inflation hedge is real estate? | Blog posts | STOXX
 > Reserve raised rates for the first time since 2018 on March 16 this year and the Bank of England followed suit. This change in sentiment had an impact on the returns of the inflation expectation factors in the Macroeconomic Projection Model (Figure 2). Figure 2: Expected inflation – YTD cumulative **factor return** Contribution to returns The combination of factor exposures and **factor return**s trans...
@@ -1162,6 +1256,8 @@ $$
 > [!quote] Factor Investing: Q&amp;A on Flows, Outlook | Blog posts | STOXX
 > advantages up and compare it to an active approach, the result goes much farther than just a cost advantage. Is there a risk that factor indices become too popular, ‘crowding’ some strategies? As with all asset classes, any equity strategy will be susceptible to and defined by its risk premium. Any **factor return** can be explained as a reward for taking on risk. If too many investors flock to a m...
 > — [Factor Investing: Q&amp;A on Flows, Outlook | Blog posts | STOXX](https://stoxx.com/factor-investing-qa-on-flows-outlook) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [How efficient an inflation hedge is real estate? | Blog posts | STOXX](https://stoxx.com/how-efficient-an-inflation-hedge-is-real-estate) — "WHITEPAPER"
@@ -1190,6 +1286,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > 871) (cid:3047) (cid:1839)(cid:1829)(cid:1853)(cid:1868) (cid:1839)(cid:1829)(cid:1853)(cid:1868) (cid:3047) (cid:3047)(cid:2879)(cid:2871) where, (cid:1872) cut-off date (cid:1872)−3 3 years prior to the cut-off date; if this is not a trading day, then the next trading day should be considered FCF **Free Cash Flow** Net CapEx Capital Expenditure on Fixed Assets Mcap Free-float Market Capitalizatio...
@@ -1210,6 +1308,8 @@ $$
 > [!quote] Q&amp;A with WTW’s David Nelson: Managing a portfolio’s climate transition ri...
 > ach company’s cash flows. How does that work and how is it reflected in the weights allocated to every stock in a portfolio? “Our analysis begins with the basic principle that the value of an investment is the revenue that it will generate over its lifetime; that is, the net present value of future free cash flows. From that starting point we examine the changes to those cash flows relative to ...
 > — [Q&amp;A with WTW’s David Nelson: Managing a portfolio’s climate transition ri...](https://stoxx.com/qa-with-wtws-david-nelson-managing-a-portfolios-climate-transition-risk-with-a-forward-looking-focus) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1240,6 +1340,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > X® METHODOLOGY GUIDE 380/1024 24. iSTOXX DYNAMIC STYLE INDICES Factor Scores are finally aggregated using the weights in brackets below to arrive at the final Quality Score. • Profitability o Free Cash Flow/Assets o Return On Assets o Return On Equity o Gross Profitability (Gross Profit / Assets) o **Gross Margin** o Asset Turnover • Earnings Quality o Balance sheet accruals o Cash-Flow accruals o ...
@@ -1252,6 +1354,8 @@ $$
 > [!quote] Stoxx Index Guide (PDF)
 > spective subtheme based on its profitability. A company is part of the subtheme group if its aggregate exposure to the subtheme is greater than zero. Companies must pass one of the following indicators in at least one of the subthemes: - Companies must rank in the top 80% of their subtheme group in **Gross Margin** or, - Companies with a **Gross Margin** greater than or equal to 50%. Individual indicat...
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -1278,6 +1382,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > the Parent Index weights and truncated at +/- 3 standard deviations. The Momentum Factor combines the Signals at 25%, 50% and 25% weights, respectively, and is again z-scored and truncated at +/-3 standard deviations. The Quality Factor is a composite of the following 6 Signals: Accruals, Dilution, **Gross Profitability**, Change in Net Operating Assets (NOA), Carbon Emissions Intensity, and Scienc...
@@ -1298,6 +1404,8 @@ $$
 > [!quote] STOXX Equity Factor Indices | STOXX
 > the following five factors: Momentum The momentum score is calculated from price momentum, earnings momentum and earnings announcement drift (i.e., the difference between a stock’s performance on and immediately following an earnings announcement date). Quality The quality score is calculated from **gross profitability**, dilution, accruals and changes in net operating assets as well as environment...
 > — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -1326,6 +1434,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] The Metaverse: investing at the new digital frontier | Blog posts | STOXX
 > s return of the STOXX Global Metaverse since March 2012. The light green area exhibits its excess performance over the STOXX® Global 3000 Technology benchmark (depicted in light blue). The dark blue line represents the total return of the broader STOXX Global TMI universe. Figure 3 – Cumulative USD **gross return**s since March 19, 2012 Recent market turmoil Like many other technology and growth-fo...
@@ -1346,6 +1456,8 @@ $$
 > [!quote] Monthly Index News June 2022 (PDF)
 > Electronic Devices. The index applies liquidity and market-capitalization filters in the selection of stocks, which are finally weighted by adjusted equal weight. The methodology also implements standard exclusionary ESG screens provided by Sustainalytics. Chart 1: Performance Source: Qontigo. USD **gross return**s, June 30, 2015 – June 30, 2022. 3/35 Copyright © 2022 Qontigo GmbH.
 > — [Monthly Index News June 2022 (PDF)](https://stoxx.com/monthly-index-news-june-2022)
+
+</details>
 
 **Sources:**
 - [The Metaverse: investing at the new digital frontier | Blog posts | STOXX](https://stoxx.com/the-metaverse-investing-at-the-new-digital-frontier) — "WHITEPAPER"
@@ -1378,6 +1490,8 @@ Where $\sigma_{\text{active}}$ is the tracking error (standard deviation of acti
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Three Different Flavors for a Sustainable US Equity Portfolio | Blog posts | ...
 > ustainable indices’ framework All three ESG variants have delivered as expected in terms of having higher ESG scores than the parent index and low tracking errors (Figure 2). The ESG Target index has provided the highest ESG score, but also has the highest tracking error (as well as lowest realized **information ratio**, fewest holdings and highest stock concentration). Although higher than that of...
@@ -1398,6 +1512,8 @@ Where $\sigma_{\text{active}}$ is the tracking error (standard deviation of acti
 > [!quote] Unpacking the alpha components behind the STOXX U.S. Equity Factor Index | Wh...
 > nage risk relative to a capitalization-weighted benchmark. The STOXX U.S. Equity Factor Index has beaten its parent index, the STOXX USA 900, by roughly 126 basis points a year since 2003. What is more, it has done so with a relatively small level of predicted and realized active risk, producing an **information ratio** very close to 1. Performance has been consistent as well: The factor index has ...
 > — [Unpacking the alpha components behind the STOXX U.S. Equity Factor Index | Wh...](https://stoxx.com/unpacking-the-alpha-components-behind-the-stoxx-u-s-equity-factor-index) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Three Different Flavors for a Sustainable US Equity Portfolio | Blog posts | STOXX](https://stoxx.com/three-different-flavors-for-a-sustainable-us-equity-portfolio) — "WHITEPAPER"
@@ -1428,6 +1544,8 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
 > Guide describes the processes for calculating and disseminating the DAX equity indices, including information on index formulas and adjustments to be made due to corporate actions » The DAX Strategy Index Guide contains the formulas for, and descriptions of, all DAX strategy indices » The Guide to **iNAV** Calculation contains details on how to calculate indicative net asset values (“iNAVs”) » The ...
@@ -1448,6 +1566,8 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 > [!quote] Manage and Hedge Portfolio with Listed Derivatives on ESG Benchmark Indices |...
 > Trading Desks Fund Managers Portfolio Managers The Need Investors need new indices that can accurately reflect sustainable mandates and underlie appropriate investment instruments such as listed derivatives to better manage and hedge portfolios. The Challenge When one of Scandinavia’s largest asset managers extended its responsible investing principles to all types of instruments, its trading a...
 > — [Manage and Hedge Portfolio with Listed Derivatives on ESG Benchmark Indices |...](https://stoxx.com/derivatives-on-esg-benchmarks) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
@@ -1478,6 +1598,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Minvar Paper (PDF)
 > HILE KEEPING A BETA OF 1. 350 300 250 200 150 100 50 0 Jan-04 Jan-05 Jan-06 Jan-07 Jan-08 Jan-09 Jan-10 Jan-11 Jan-12 Jan-13 Jan-14 Jan-15 Jan-16 STOXX Global 1800 Composite Portfolio Key figures STOXX Global 1800 Composite portfolio Return (annualized) 7.4% 8.8% Volatility (annualized) 15.4% 12.4% **Maximum drawdown** 53.7% 49.2% Return/volatility 0.48 0.71 Source: STOXX daily data from Jan. 2, 20...
@@ -1498,6 +1620,8 @@ $$
 > [!quote] European Stocks Enter Bear Market | Blog posts | STOXX
 > Global 1800 Index, North America 600 Index and STOXX Asia/Pacific 600 Index have shed, respectively, 17.5%, 19% and 11.3% during the period. Chart 1 – Benchmarks performance since Feb. 19 There have been three bear markets, other than this latest one, for the STOXX Europe 600 Index since 2000. The **maximum drawdown** during each one was reached, respectively, in March 2003 (-52.8%), March 2009 (-5...
 > — [European Stocks Enter Bear Market | Blog posts | STOXX](https://stoxx.com/european-stocks-enter-bear-market) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
@@ -1547,6 +1671,8 @@ Commonly using a 12-month lookback with a 1-month skip.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2021 (PDF)
 > MONTHLY INDEX NEWS / April 2021 ESG-X Factor Indices – Regional: Europe Key Points In Europe, the STOXX ESG-X Factor Indices showed a similar performance to the standard factor indices. Quality and **Momentum** outperformed in this group. Risk and Return Characteristics Return (%) Annualized volatility (%) EUR USD EUR USD 1M YTD 1Y 1M YTD 1Y 1M YTD 1Y 1M YTD 1Y 1. STOXX Europe 600 ESG-X Ax Low Risk...
@@ -1567,6 +1693,8 @@ Commonly using a 12-month lookback with a 1-month skip.
 > [!quote] Index Files Guide 20230619 (PDF)
 > score available” or blank) Text 255 Scale Indices “Not traded on Xetra”, “30 Days Rule” Dax+ MaxDiv Indices, DivDAX and DivMSDAX “No dividend within next chaining period / dividend yield last period / rank value = minimum dividend yield next period”; “ADTV and/or Free-Float Market Cap and/or Price **Momentum** below limit” New Ranking of constituents, applicable for indices which 17 Rank 2 (FINAL) ...
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
@@ -1599,6 +1727,8 @@ Where $\tau_i$ is the applicable withholding tax rate for constituent $i$.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Dax Esg Equity Family Benchmark Statement (PDF)
 > uption which results in the performance of the Index being unable to be tracked. Limitation Shall refer to circumstances where the Index Methodology contains an Insufficient Rule or Unclear Rule or if it fails to produce Index Values as intended. Examples: Data Insufficiency; Extreme Market Events. **Net Return** Index Shall mean an Index in which dividend payments are fully reinvested, calculated ...
@@ -1619,6 +1749,8 @@ Where $\tau_i$ is the applicable withholding tax rate for constituent $i$.
 > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
 > Guidance - DAX Equity Index Calculation Cash dividends and bonus distributions are only corrected in performance and **net return** indices. Special distributions are taken account of in all performance, **net return**, and price indices. Within the framework of index calculation, the share price is thus modified by the amount of the respective cash distribution, as defined of Section 2.1. The cash div...
 > — [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
+
+</details>
 
 **Sources:**
 - [Dax Esg Equity Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_ESG_Equity_Family_Benchmark_Statement.pdf)
@@ -1647,6 +1779,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Us Compensation Policies Faq (PDF)
 > ation Profile from Standard & Poor's Compustat and Research Insight. Here is a link to their data dictionary. 10. How does Compustat calculate a company's TSRs and financial/operational measures? For information on how Compustat calculates TSR and financial/operational measures, such as revenue and **net income**, see the data dictionary. 11. Why does CEO pay as percent of revenue or **net income** sho...
@@ -1667,6 +1801,8 @@ $$
 > [!quote] Western Union (PDF)
 > Compared to Peers – 2012 All currency in USD 2008 2009 2010 2011 2012 IVZ FIS FISV NTRS AMP Earnings Invesco Fidelity Fiserv, Inc. Northern Ameriprise Ltd. National Trust Financial, Information Corporation Inc. Services, Inc. Revenue (M) 5,282 5,084 5,193 5,491 5,665 4,177 5,808 4,482 4,194 10,263 **Net Income** (M) 919 849 910 1,165 1,026 677 461 611 687 1,029 EBITDA (M) 1,582 1,508 1,536 1,650 1,...
 > — [Western Union (PDF)](https://www.issgovernance.com/file/2013/02/western_union.pdf)
+
+</details>
 
 **Sources:**
 - [Us Compensation Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2018/americas/US-Compensation-Policies-FAQ.pdf)
@@ -1695,6 +1831,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Pay For Performance Mechanics (PDF)
 > models (asset-heavy vs. asset- light), different business cycles, and companies with peers that span across multiple industries, among other cases. EVA represents the economic profit a company earns after meeting all its obligations – including the demands of capital providers. As a formula, EVA is net operating profit after taxes (NOPAT), less a capital charge computed by multiplying the firm’...
@@ -1715,6 +1853,8 @@ $$
 > [!quote] ISS EVA | ISS
 > ue, and Growth investment opportunities Global coverage Coverage spans 21,000+ companies globally, with historical data going back two decades Leading indicators EVA metrics could provide information that may lead to future stock prices DEFINING EVA EVA = Sales – Operating Costs* – Capital Costs ***Net operating profit after tax** Cost of cap% x net business assets EVA converts accounting profi...
 > — [ISS EVA | ISS](https://www.issgovernance.com/eva) — "ISS EVA"
+
+</details>
 
 **Sources:**
 - [Pay For Performance Mechanics (PDF)](https://www.issgovernance.com/file/policy/2022/americas/Pay-for-Performance-Mechanics.pdf)
@@ -1743,10 +1883,14 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Istoxx Index Guide (PDF)
 > liabilities (also called current ratio) 1YΔLR =current ratio −current ratio t0 t0 t−1 - 1-year growth in the Number of Shares Outstanding (1YΔNBO) less than or equal to 5%7. number of shares outstanding 1YΔNBO = t0 −1 t0 number of shares outstanding t−1 - Positive or zero 1-year growth in the Gross **Operating Margin** (1YΔGOM). The GOM is calculated as the ratio of Gross Incomes to Sales. gross in...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
@@ -1773,10 +1917,14 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (1)</summary>
 
 > [!quote] Europe defense, AI take center stage at Deutsche Börse’s ETF Forum event amid...
 > es a company’s P/E ratio with its expected earnings growth rate. The **PEG ratio** is calculated by dividing P/E by the annual earnings-per-share (EPS) growth rate, thereby accounting for how quickly earnings are growing and providing a more comprehensive view of a stock’s valuation. Figure 2 plots the **PEG ratio** on the vertical axis for three baskets representing defense stocks, industrial companie...
 > — [Europe defense, AI take center stage at Deutsche Börse’s ETF Forum event amid...](https://stoxx.com/europe-defense-ai-take-center-stage-at-deutsche-borses-etf-forum-event-amid-stocks-rally) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Europe defense, AI take center stage at Deutsche Börse’s ETF Forum event amid stocks rally | Blog posts | STOXX](https://stoxx.com/europe-defense-ai-take-center-stage-at-deutsche-borses-etf-forum-event-amid-stocks-rally) — "WHITEPAPER"
@@ -1801,6 +1949,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (3)</summary>
 
 > [!quote] Stoxx Infographic Stoxxeurope600 (PDF)
 > eden 51.3 Luxembourg Finland 11.5 39.8 Denmark United Kingdom 202.6 211.7 Ireland Poland 15.9 15.7 France 149.7 Germany 251.8 Austria 19.8 Italy Portugal Spain Switzerland 82.9 8.2 95.7 248.0 Source: STOXX. Data as of March 31st, 2025. FORWARD PRICE-TO-EARNINGS (P/E) Valuation of European A forward **Price-to-Earnings ratio** shows Equities Is Low how a company’s current stock price compares to the...
@@ -1813,6 +1963,8 @@ $$
 > [!quote] Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...
 > EURO STOXX® Banks index exchanged hands. Value sector While the banking sector in Europe lags behind others in terms of earnings growth, investors can nonetheless tap those profits at lower relative prices, following years of underperformance. The STOXX Europe 600 Banks index has the second-lowest **price-to-earnings ratio** among the 20 STOXX Europe 600 sector indices.[2] The Banks index has the h...
 > — [Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...](https://stoxx.com/sector-watch-europe-bank-stocks-have-second-best-year-ever) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Infographic Stoxxeurope600 (PDF)](https://stoxx.com/wp-content/uploads/2025/06/STOXX_Infographic_STOXXEurope600.pdf)
@@ -1843,6 +1995,8 @@ Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Strategy Guide (PDF)
 > . INDEX FORMULA FOR IMPLIED VOLATILITY INDICES 52 15.3.2. INDEX FORMULA FOR **REALIZED VOLATILITY** INDICES 12.1. OVERVIEW 39 53 15.3.3. DETERMINATION OF THE TARGET WEIGHT (TGTW) 12.2. BASIC DATA 39 USING IMPLIED VOLATILITY 53 15.3.4. DETERMINATION OF THE TARGET WEIGHT (TGTW) 12.3. CALCULATION 39 USING **REALIZED VOLATILITY** 54 12.3.1. INPUT DATA 39 15.3.5. DETERMINATION OF EQUITY WEIGHT (W) AND INDEX...
@@ -1863,6 +2017,8 @@ Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 > [!quote] Why have emerging markets become less risky than their developed counterparts...
 > d to be riskier than their developed counterparts. They haven’t been recently. Leon Serfaty, CFA. Leon is Principal at Qontigo’s Applied Research team, which provides unique insights into risk trends. For all of 2022 and into 2023, the STOXX® Emerging Markets 1500 index has shown lower forecast and **realized volatility** than the STOXX® Global 1800, a benchmark for developed economies (DMs). While...
 > — [Why have emerging markets become less risky than their developed counterparts...](https://stoxx.com/why-have-emerging-markets-become-less-risky-than-their-developed-counterparts) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
@@ -1910,6 +2066,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 20181101 Pearl Meyer (PDF)
 > performance currently based on unadjusted Generally Accepted Accounting Principles (GAAP) accounting data. For 2019, ISS proposes to modify the FPA methodology to use Economic Value Added (EVA) metrics in place of unadjusted GAAP metrics. “EVA Spread,” “EVA Margin,” and “EVA Momentum” will replace **Return on Assets (ROA)**, Return on Equity (ROE), Return on Invested Capital (ROIC), Earnings Before...
@@ -1930,6 +2088,8 @@ $$
 > [!quote] Stoxx Index Guide (PDF)
 > : Each company in the starting universe is evaluated within its respective group2. Companies must pass one of the two profitability definitions: 3.1. Profitability Leaders: o Companies must rank in the top 25% of their group in Gross Margin or, o Companies must rank in the top 25% of their group in **Return on Assets (ROA)** or, o Companies with a Gross Margin greater than or equal to 50%. 3.2. Pro...
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [20181101 Pearl Meyer (PDF)](https://www.issgovernance.com/file/policy/2019/comment/20181101_Pearl_Meyer.pdf)
@@ -1958,6 +2118,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] 20181101 Pearl Meyer (PDF)
 > ased on unadjusted Generally Accepted Accounting Principles (GAAP) accounting data. For 2019, ISS proposes to modify the FPA methodology to use Economic Value Added (EVA) metrics in place of unadjusted GAAP metrics. “EVA Spread,” “EVA Margin,” and “EVA Momentum” will replace Return on Assets (ROA), **Return on Equity (ROE)**, Return on Invested Capital (ROIC), Earnings Before Interest, Tax, Depreci...
@@ -1978,6 +2140,8 @@ $$
 > [!quote] 2015 Us Comp Faqs (PDF)
 > would be at least 50 percent of the shares awarded to each of the named executive officers. Performance-based equity awards are earned or paid out based on the achievement of pre-established, measurable performance targets. The company should disclose the details of the performance criteria (e.g., **return on equity**) and the hurdle rates (e.g., 15 percent) associated with the performance awards a...
 > — [2015 Us Comp Faqs (PDF)](https://www.issgovernance.com/file/policy/2015-us-comp-faqs.pdf)
+
+</details>
 
 **Sources:**
 - [20181101 Pearl Meyer (PDF)](https://www.issgovernance.com/file/policy/2019/comment/20181101_Pearl_Meyer.pdf)
@@ -2008,6 +2172,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] European defense stocks: A look at purity through military revenues’ exposure...
 > h portfolios’ exposure to military **revenue**s. Figure 3 shows that more than 80% of the STOXX Europe Targeted Defence is allocated to companies with a high share of military sales, as opposed to just under 40% for the sector benchmark. Figure 3: Index exposure (weight %) to ISS ESG Military Equipment **Revenue**s Military revenue tier performance Market returns suggest investors have favored exposure...
@@ -2028,6 +2194,8 @@ $$
 > [!quote] 2013 Comprehensive US Compensation Policy | ISS
 > ed as disclosed under the relevant termination scenario in the Change in Control Table and/or narrative of the proxy statement Financial Data — Total Shareholder Return and **Revenue** - Where does ISS obtain a company’s 1-year fiscal total shareholder return, 3-year fiscal total shareholder return and **revenue**? ISS obtains all financial data in the Compensation Profile from Standard & Poor’s Resear...
 > — [2013 Comprehensive US Compensation Policy | ISS](https://www.issgovernance.com/policy-gateway/2013-comprehensive-us-compensation-policy) — "2013 Comprehensive US Compensation Policy"
+
+</details>
 
 **Sources:**
 - [European defense stocks: A look at purity through military revenues’ exposure | Blog posts | STOXX](https://stoxx.com/european-defense-stocks-a-look-at-purity-through-military-revenues-exposure) — "WHITEPAPER"
@@ -2058,6 +2226,8 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Artificial Intelligence Theme Gets Investors’ Attention | STOXX
 > ff. Table 1 In 2020, markets have been rattled by the spread of the COVID-19 virus, so the trend may not persist. Should the volatility seen in February and March this year persist, a performance analysis of the AI indices would be warranted to understand the drivers and factors behind the returns. **Risk-adjusted return**s Yet absolute returns show only part of the story. Qontigo’s three AI indice...
@@ -2078,6 +2248,8 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 > [!quote] Ossiam’s Lacroix: Maximizing the benefits of an ESG index strategy with an eq...
 > : indices weighted by market capitalization are skewed towards mega-caps. For example, the top 20 holdings of the STOXX Europe 600 Index weigh 28%, compared to only 3.3% for the Equal Weight version as of December 31, 2021. Increased diversification limits idiosyncratic risks and improves long-term **risk-adjusted return**s. “The second driver of outperformance is the small-cap premium. The weight ...
 > — [Ossiam’s Lacroix: Maximizing the benefits of an ESG index strategy with an eq...](https://stoxx.com/ossiams-lacroix-maximizing-the-benefits-of-an-esg-index-strategy-with-an-equal-weight-approach) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Artificial Intelligence Theme Gets Investors’ Attention | STOXX](https://stoxx.com/artificial-intelligence-theme-gets-investors-attention) — "WHITEPAPER"
@@ -2108,6 +2280,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] ECB Eyes Repo Market for Risk-Free Rate | Blog posts | STOXX
 > The problem here: unsecured transactions have fallen to as low as 20% of the overall lending volume. EONIA is currently under review by its administrator amid concerns about its lack of representativeness. US and Swiss authorities have already resorted to the collateralized market to establish key **risk-free rate**s. Transparency sought for the bloodstream of financial markets The search for a tra...
@@ -2128,6 +2302,8 @@ $$
 > [!quote] Istoxx Index Guide (PDF)
 > return of 𝐼 ∗( 𝑆𝑡 +𝐷𝑖𝑣 ). In order to 𝑡−1 𝑆𝑡−1 𝑡 implement the Option strategy on that day and get exposure to the variation in the Option Portfolio Level, we need to borrow the cash amount corresponding to the current value of the Option Portfolio, which is equal to 𝑂𝑃𝐿𝑀𝑇𝑀 times the de-annualized **risk-free rate** used 𝑡−1 for borrowing. In formula: 𝑆𝐺𝐶𝑃𝑂𝑁 𝐴𝑐𝑡(𝑡−1,𝑡) ∆𝑂𝑃𝐿 = 𝑂𝑃𝐿 − 𝑂𝑃𝐿 −𝑂𝑃𝐿𝑀𝑇𝑀∗ 𝑡−1...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [ECB Eyes Repo Market for Risk-Free Rate | Blog posts | STOXX](https://stoxx.com/ecb-eyes-repo-market-for-risk-free-rate) — "WHITEPAPER"
@@ -2179,6 +2355,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Stoxx Index Guide (PDF)
 > STOXX INDEX METHODOLOGY GUIDE 306/639 16. STOXX RISK BASED INDICES STOXX **SHARPE RATIO** INDICES 16.5.1. OVERVIEW The STOXX **Sharpe Ratio** indices include stocks from the respective benchmarks that have the highest Sharpe ratios, while excluding those with low dividend yields and low liquidity. Universe: STOXX Global 1800 for the Global version, STOXX [Region] 600 for the reg
@@ -2199,6 +2377,8 @@ $$
 > [!quote] Technical Migration New Index Data Distribution System And New File Formats F... (PDF)
 > 0Z23Q23 .DXFAMT Return Net DAXplus Maximum Dividend EUR DE000A2L0415 DXMDIVNR BBG00WS5PZV8 .DAXMDIVNR Return DAXplus Maximum Dividend EUR Price DE000A0XXEA4 DXMDIVPR BBG000RRHSB8 .DAXMDIVPR Total DAXplus Maximum Dividend EUR DE000A0XXDZ3 DXMDIVTR BBG000RRHVV9 .DAXMDIVTR Return Total DAXplus Maximum **Sharpe Ratio** Germany EUR DE000A0METL2 DXMSG BBG000WCDLT5 .DAXMSG Return Total DAXplus Maximum Sha...
 > — [Technical Migration New Index Data Distribution System And New File Formats F... (PDF)](https://www.stoxx.com/document/News/2023/March/Technical_Migration-New_Index_Data_Distribution_System_and_New_File_Formats_for_DAX_Indices_20230327_3457284624.pdf)
+
+</details>
 
 **Sources:**
 - [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
@@ -2246,6 +2426,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Axioma Multi Asset Class Risk Monitor (PDF)
 > lass Standalone Volatilities and Volatility Contributions 7.-8. Analysis is based on a multi-asset class model portfolio in Axioma Risk. Short-term risk numbers are based on daily unweighted returns over 60 business days. Long-term risk uses weekly returns over five years with a one-year half-life. **Standard Deviation** (Standalone) is the volatility of the bucket independent of the overall portfo...
@@ -2266,6 +2448,8 @@ $$
 > [!quote] Dax Strategy Index Guide (PDF)
 > tility is a measure of the level of uncertainty prevailing in certain markets, or with respect to individual underlying instruments. In principle, there are two different approaches for the estimation of volatility: on the one hand, it is possible to determine historical volatility by measuring the **standard deviation** of prices for any particular security over a given period of time. On the othe...
 > — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
+
+</details>
 
 **Sources:**
 - [Axioma Multi Asset Class Risk Monitor (PDF)](https://stoxx.com/axioma-multi-asset-class-risk-monitor)
@@ -2296,6 +2480,8 @@ Typically expressed in basis points.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Axioma Multi Asset Class Risk Monitor (PDF)
 > Analysis Date | 2024-08-30 Axioma Multi-Asset Class Risk Monitor Figure 1. Factor Correlations (60 days) and Changes in Correlations (vs previous 60 days) 1. Correlations are unweighted and based on daily returns and changes in yield/**spread** over the past 60 business days. The lower left triangle of the matrix represents current correlations. The upper right triangle contains changes in correlat...
@@ -2316,6 +2502,8 @@ Typically expressed in basis points.
 > [!quote] Istoxx Index Guide (PDF)
 > OIL & GAS EW 124. ISTOXX BDFG ESG INDICES 906 INDEX 877 124.1. iSTOXX BDFG ESG INDICES 906 121.1. iSTOXX BANK AUTO AND OIL & GAS EW INDEX OVERVIEW 906 877 INDEX REVIEW 906 OVERVIEW 877 ONGOING MAINTENANCE 907 INDEX FORMULA 877 125. EURO iSTOXX 50 GR DECREMENT TRF 122. EURO iSTOXX ALH CTB INDEX 878 **SPREAD** 10X INDEX 908 122.1. EURO iSTOXX ALH CTB INDEX 878 125.1. EURO iSTOXX 50 GR DECREMENT TRF O...
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [Axioma Multi Asset Class Risk Monitor (PDF)](https://stoxx.com/axioma-multi-asset-class-risk-monitor)
@@ -2348,6 +2536,8 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Pandemic Fuels Trading in EURO STOXX 50 Dividend and Total Return Futures | B...
 > t in EURO STOXX Banks Index dividend futures **Total return** futures A record 1.9 million **total return** futures on the EURO STOXX 50 Index traded in March this year (Figure 4). Last month, volume amounted to 2.5 times the monthly average of 2019. Figure 4 – Traded volume and open interest EURO STOXX 50 Total Return Futures TRFs provide cost-efficient access to the total returns of an underlying ind...
@@ -2368,6 +2558,8 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 > [!quote] STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...
 > Eurex has introduced **Total Return** Futures (TRFs) on the STOXX® Europe 600[1], expanding an increasingly popular type of exchange-traded derivatives to a broad pan-European benchmark for the first time. The new product was listed on September 30 and follows in the footsteps of strong demand for EURO STOXX® 50 index TRFs.
 > — [STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...](https://stoxx.com/stoxx-europe-600-index-underlies-new-total-return-futures-on-eurex) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Pandemic Fuels Trading in EURO STOXX 50 Dividend and Total Return Futures | Blog posts | STOXX](https://stoxx.com/pandemic-fuels-trading-in-euro-stoxx-50-dividend-and-total-return-futures) — "WHITEPAPER"
@@ -2396,6 +2588,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] Tracking error: making sense of a key investment statistic | Blog posts | STOXX
 > hese days with the growth of sustainable strategies. While the pursuit of environmental, social or governance (ESG) objectives can exist outside the traditional risk/return matrix, in reality, returns and risk cannot simply be ignored. This notion is a key reason why many sustainable strategies are **tracking error**-aware. With this in mind, a new article[1] from Hamish Seegopaul, Global Head for ...
@@ -2436,6 +2630,8 @@ $$
 > [!quote] Market Consultation Stoxx Index 20250925 (PDF)
 > Budget Risk is calculated 𝑗 𝑐𝑎𝑟𝑏𝑜𝑛 𝑏𝑢𝑑𝑔𝑒𝑡 𝑖,𝑗 as: 𝐶𝐵𝑅 = 𝑖 ∑𝜑 𝑗 𝐶𝐵𝑅 𝑖 ∑𝑐𝑎𝑟𝑏𝑜𝑛 𝑏𝑢𝑑𝑔𝑒𝑡 − ∑𝑐𝑎𝑟𝑏𝑜𝑛 𝑒𝑚𝑖𝑠𝑠𝑖𝑜𝑛𝑠 𝑖,𝑗 𝑖,𝑘 =− where: ∑𝑐𝑎𝑟𝑏𝑜𝑛 𝑏𝑢𝑑𝑔𝑒𝑡 𝑖,𝑗 𝜑 𝑗 =(1−𝜆)∗𝜆𝑗, 𝑗 Where: =0,… ,2050−𝑐𝑢𝑟𝑟𝑒𝑛𝑡 𝑦𝑒𝑎𝑟 j = 2020, …, 2050 𝜆=0.94 (standard decay factor) k = 2020, …, current year e Add tracking At most 1.5% ex-ante **tracking error** relative to the error parent index. To compute the **tracking error**, constraint STOX...
 > — [Market Consultation Stoxx Index 20250925 (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_STOXX_Index_20250925.pdf)
+
+</details>
 
 **Sources:**
 - [Tracking error: making sense of a key investment statistic | Blog posts | STOXX](https://stoxx.com/tracking-error-making-sense-of-a-key-investment-statistic) — "WHITEPAPER"
@@ -2464,6 +2660,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (10)</summary>
 
 > [!quote] DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liqu...
 > lion from EUR 40.8 billion, Qontigo data show. While most entrants are smaller than existing constituents, there is one exception with Airbus SE. The maker of airplanes is the fifth-largest company on the Frankfurt Stock Exchange (FSE), but had up to now failed to enter the DAX as its local trading **turnover** was smaller than that of other candidate stocks. Elimination of **turnover** requirement Tha...
@@ -2504,6 +2702,8 @@ $$
 > [!quote] Stoxx World Equity Index Guide (PDF)
 > , the liquidity requirements can be lowered or the period index review can be postponed to the next quarterly review date. In such cases, the composition remains unchanged, but new weighting factors will be implemented. Market participants will be notified of such changes in a timely manner. 4.4.2. **TURNOVER** RATIO The annualized **turnover** ratio is defined as the median value of the daily traded v...
 > — [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
+
+</details>
 
 **Sources:**
 - [DAX Index Grows to 40 Constituents – Looking at Impact on Market Cap and Liquidity | Blog posts | STOXX](https://stoxx.com/dax-index-grows-to-40-constituents-looking-at-impact-on-market-cap-and-liquidity) — "WHITEPAPER"
@@ -2542,6 +2742,8 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Monthly Index News April 2022 (PDF)
 > MONTHLY INDEX NEWS / April 2022 Climate Indices - Willis Towers Watson Climate Transition Indices Key points The STOXX Willis Towers Watson Climate Transition Indices (CTI) employ a unique Climate Transition **Value at Risk** (CTVaR) methodology that quantifies the anticipated impact of an economic transition on equity valuations. The CTIs enable a more sophisticated way of managing climate transit...
@@ -2562,6 +2764,8 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 > [!quote] Willis Towers Watson and Qontigo launch pioneering STOXX Global Index Series ...
 > omy that values and manages climate risks. “Investors need a robust framework that can quantify and incorporate the financial impact of climate risk, but this is something that just hasn’t been widely available until now. We believe that understanding this transition, through our Climate Transition **Value at Risk** methodology (CTVaR), should be one of the biggest sources of alpha across all asset...
 > — [Willis Towers Watson and Qontigo launch pioneering STOXX Global Index Series ...](https://stoxx.com/willis-towers-watson-and-qontigo-launch-pioneering-stoxx-global-index-series-that-quantifies-the-climate-transition-risk-of-companies) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [Monthly Index News April 2022 (PDF)](https://stoxx.com/monthly-index-news-april-2022)
@@ -2590,6 +2794,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] August market turmoil highlights benefit of dynamic volatility allocation  | ...
 > . A systematic allocation model Investing in protection against **volatility** can represent a significant drag on returns during stable or bull markets. As such, replacing a fixed hedge allocation with a systematic and flexible one can make a crucial difference for overall results. At the heart of the **Volatility**-Balanced index’s methodology and allocation model is a prevailing volatility environme...
@@ -2610,6 +2816,8 @@ $$
 > [!quote] Low Volatility Strategies: Why the Wheels Came Off (Temporarily) in 2020 | Wh...
 > any ways, it has also produced results in Low **Volatility** strategies counter to these expectations. As with so many aspects of our lives in “the new normal” of today, many components of Low **Volatility** strategies have similarly been upended. However, we do not believe this is the “new normal” for Low Volatility.
 > — [Low Volatility Strategies: Why the Wheels Came Off (Temporarily) in 2020 | Wh...](https://stoxx.com/low-volatility-strategies-why-the-wheels-came-off-temporarily-in-2020) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [August market turmoil highlights benefit of dynamic volatility allocation  | Blog posts | STOXX](https://stoxx.com/august-market-turmoil-highlights-benefit-of-dynamic-volatility-allocation) — "WHITEPAPER"
@@ -2640,6 +2848,8 @@ $$
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] Climate Analytics | ISS
 > bsolute and intensity greenhouse gas emissions data from production emissions (as reported to the United Nations Framework Convention on Climate Change (UNFCCC)), aligned with the PCAF methodology - Scope 1, LULUCF emissions and relevant emissions intensities of sub-sovereigns - Includes the TCFD’s **weighted average** carbon intensity by scope. Transition Risk and Climate Policy Ratification, incl...
@@ -2660,6 +2870,8 @@ $$
 > [!quote] Asia Pacific Policy Updates (PDF)
 > nt smaller than 10 percent of the amount that the board has authority to authority to grant a certain amount of stock options, it still requires grant. shareholders' approval. Exercise price Up to 70 percent discount to the reference price that is the arithmetic The arithmetic average of the volume-**weighted average** share price of average of the volume-**weighted average** share price of one month, ...
 > — [Asia Pacific Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/updates/Asia-Pacific-Policy-Updates.pdf)
+
+</details>
 
 **Sources:**
 - [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics) — "SUSTAINABILITY SOLUTIONS/CLIMATE SOLUTIONS"
@@ -2694,6 +2906,8 @@ This is the Nelson-Siegel model, where $\beta_0$ is the long-run level, $\beta_1
 
 
 
+<details>
+<summary>Source excerpts (5)</summary>
 
 > [!quote] How moves in bond yield curves affect the International Real Estate Index | B...
 > negative exposure to term spreads in Europe since 2019 (a widening of the term spread in that region would negatively impact the index’s returns), although that changed in 2021. Throughout the entire period (2019-2022), the index has largely had a positive exposure to the US term spread, as the US **yield curve** steepened. The exposures to the US, European, UK and Japanese term-spread factors, com...
@@ -2714,6 +2928,8 @@ This is the Nelson-Siegel model, where $\beta_0$ is the long-run level, $\beta_1
 > [!quote] Minimum Variance Indices: A Reading Through Geopolitical Risk | Blog posts | ...
 > e months from December 2018 during which the US and China were in promising trade negotiations; the run-up to the 2017 French presidential election; rising inflation fears in January 2018; an escalation of the trade war rhetoric between China and the US in May 2019; the inversion of the US Treasury **yield curve** in July 2019; the immediate aftermath of an initial ‘Brexit’ agreement in December 20...
 > — [Minimum Variance Indices: A Reading Through Geopolitical Risk | Blog posts | ...](https://stoxx.com/minimum-variance-indices-a-reading-through-geopolitical-risk) — "WHITEPAPER"
+
+</details>
 
 **Sources:**
 - [How moves in bond yield curves affect the International Real Estate Index | Blog posts | STOXX](https://stoxx.com/how-moves-in-bond-yield-curves-affect-the-international-real-estate-index) — "WHITEPAPER"
