@@ -200,7 +200,7 @@ rm -f "${BACKUP_FILE}"
 
 ### RC-2: Data Disk Full — Identify and reclaim space
 
-**Find the largest tables consuming space:**
+#### sp_spaceused, du -h — find largest tables consuming disk space
 
 ```bash
 sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -Q "

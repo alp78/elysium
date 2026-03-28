@@ -295,7 +295,7 @@ cd /opt/airflow
 docker compose up -d airflow-scheduler
 ```
 
-**Identify which part of the scheduler is consuming memory:**
+#### ps aux --sort=-rss — identify scheduler memory consumers
 
 ```bash
 # Live memory stats for the scheduler container

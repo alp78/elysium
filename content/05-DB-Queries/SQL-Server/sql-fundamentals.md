@@ -267,7 +267,7 @@ ORDER BY ORDINAL_POSITION
 
 ### 2a. Basic SELECT with WHERE
 
-The fundamental query: pick columns, filter rows, sort results. <small>`TOP N`</small> limits output (SQL Server). PostgreSQL uses <small>`LIMIT N`</small>.
+The fundamental query: pick columns, filter rows, sort results. `TOP N` limits output (SQL Server). PostgreSQL uses `LIMIT N`.
 
 
 ```sql
@@ -397,7 +397,7 @@ ORDER BY date DESC
 
 ### 2b. Multi-Condition Filtering
 
-Combine conditions with <small>`AND`</small> / <small>`OR`</small>. Use <small>`ABS()`</small> for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
+Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
 
 
 ```sql
@@ -542,7 +542,7 @@ ORDER BY ABS(([close] - [open]) / [open]) DESC
 
 ### 3a. Aggregate by Stock
 
-<small>`GROUP BY`</small> collapses rows into groups. Aggregate functions (<small>`AVG`</small>, <small>`COUNT`</small>, <small>`SUM`</small>, <small>`MIN`</small>, <small>`MAX`</small>) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
+`GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
 
 
 ```sql
@@ -660,7 +660,7 @@ ORDER BY avg_volume DESC
 
 ### 3b. Aggregate by Time Period
 
-Group by <small>`YEAR(date), MONTH(date)`</small> to build time-series summaries. Shows monthly high/low/average price and total volume — the basis for monthly performance reports.
+Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly high/low/average price and total volume — the basis for monthly performance reports.
 
 
 ```sql
@@ -838,9 +838,9 @@ ORDER BY yr, mo
 
 ### 4a. JOIN OHLCV + Dimension (Silver Layer)
 
-<small>`JOIN`</small> combines rows from two tables on a matching key. Here we join price data (silver OHLCV) with company metadata (silver dimension) to get the latest price + sector + country for each stock.
+`JOIN` combines rows from two tables on a matching key. Here we join price data (silver OHLCV) with company metadata (silver dimension) to get the latest price + sector + country for each stock.
 
-The subquery with <small>`ROW_NUMBER()`</small> picks only the most recent price per symbol.
+The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 
 
 ```sql
@@ -1255,7 +1255,7 @@ A **moving average** smooths price data over N days. Used for trend detection:
 - **SMA 90** (long-term): filters out noise
 - Price above SMA = bullish momentum. Below = bearish.
 
-<small>`AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)`</small> — the window slides forward one row at a time.
+`AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` — the window slides forward one row at a time.
 
 
 ```sql
@@ -1407,8 +1407,8 @@ ORDER BY date DESC
 **LEAD(col, N)** returns the value from N rows **after**.
 
 Use cases:
-- **Daily returns**: <small>`(close - LAG(close)) / LAG(close)`</small>
-- **Gap detection**: <small>`DATEDIFF(DAY, LAG(date), date)`</small> — if >1, there was a holiday/weekend
+- **Daily returns**: `(close - LAG(close)) / LAG(close)`
+- **Gap detection**: `DATEDIFF(DAY, LAG(date), date)` — if >1, there was a holiday/weekend
 - **Trend direction**: compare today vs yesterday
 
 
@@ -1701,7 +1701,7 @@ ORDER BY rank_best
 
 ### 6a. CTE: Sector Heatmap
 
-A **CTE** (<small>`WITH name AS (SELECT ...)`</small>) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
+A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
 
 This builds a sector heatmap: average score, best/worst rank per sector.
 
@@ -1941,7 +1941,7 @@ ORDER BY ytd_pct DESC
 
 ### 7a. Data Quality Checks
 
-Every pipeline needs quality gates. <small>`UNION ALL`</small> stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
+Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
 
 
 ```sql
@@ -2027,7 +2027,7 @@ FROM silver.eurostoxx50_ohlcv
 
 ### 8a. Bronze → Silver: Daily Returns
 
-The silver transform adds computed columns to raw data. Here, <small>`LAG()`</small> computes daily returns from the price time series. The <small>`is_filled`</small> flag marks gap-filled rows (weekends/holidays).
+The silver transform adds computed columns to raw data. Here, `LAG()` computes daily returns from the price time series. The `is_filled` flag marks gap-filled rows (weekends/holidays).
 
 
 ```sql
@@ -2136,7 +2136,7 @@ ORDER BY date DESC
 
 ### 8b. Silver → Gold: Z-Score Normalization
 
-The gold transform normalizes scores across the index using z-scores: <small>`(value - mean) / stddev`</small>. Stocks are then ranked by composite score. This is the core of any index scoring engine.
+The gold transform normalizes scores across the index using z-scores: `(value - mean) / stddev`. Stocks are then ranked by composite score. This is the core of any index scoring engine.
 
 
 ```sql

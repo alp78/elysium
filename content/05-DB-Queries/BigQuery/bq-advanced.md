@@ -155,8 +155,8 @@ LIMIT 10
 
 ### 1b. PERCENT_RANK and CUME_DIST
 
-- <small>`PERCENT_RANK()`</small>: relative rank as a percentage (0 to 1). Where does this stock sit vs peers?
-- <small>`CUME_DIST()`</small>: cumulative distribution — fraction of rows with value ≤ current row.
+- `PERCENT_RANK()`: relative rank as a percentage (0 to 1). Where does this stock sit vs peers?
+- `CUME_DIST()`: cumulative distribution — fraction of rows with value ≤ current row.
 
 Use case: "ASML is in the 90th percentile of composite scores."
 
@@ -302,8 +302,8 @@ LIMIT 15
 
 ### 1c. FIRST_VALUE and LAST_VALUE
 
-- <small>`FIRST_VALUE(col)`</small>: first value in the window frame
-- <small>`LAST_VALUE(col)`</small>: last value — **requires explicit frame** or it only sees up to current row
+- `FIRST_VALUE(col)`: first value in the window frame
+- `LAST_VALUE(col)`: last value — **requires explicit frame** or it only sees up to current row
 
 Use case: compare every day's close to the first close of the year (YTD return).
 
@@ -457,7 +457,7 @@ LIMIT 15
 
 ### 1d. Running Totals and Cumulative Sums
 
-<small>`SUM() OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)`</small> — cumulative sum from the first row to current.
+`SUM() OVER (ORDER BY date ROWS UNBOUNDED PRECEDING)` — cumulative sum from the first row to current.
 Use case: cumulative volume, cumulative return, running P&L.
 
 
@@ -589,12 +589,12 @@ The frame clause controls which rows the function sees:
 
 | Frame | Meaning |
 |-------|--------|
-| <small>`ROWS BETWEEN 29 PRECEDING AND CURRENT ROW`</small> | Exactly 30 rows (SMA-30) |
-| <small>`ROWS UNBOUNDED PRECEDING`</small> | All rows from start to current (running total) |
-| <small>`ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING`</small> | Entire partition |
-| <small>`RANGE BETWEEN ...`</small> | Based on **values** not row count (treats ties together) |
+| `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` | Exactly 30 rows (SMA-30) |
+| `ROWS UNBOUNDED PRECEDING` | All rows from start to current (running total) |
+| `ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING` | Entire partition |
+| `RANGE BETWEEN ...` | Based on **values** not row count (treats ties together) |
 
-**Default** (no frame): <small>`RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`</small> — beware, this groups ties!
+**Default** (no frame): `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — beware, this groups ties!
 
 
 ```sql
@@ -860,7 +860,7 @@ LIMIT 15
 
 ### 3a. CROSS JOIN: Build a Complete Grid
 
-<small>`CROSS JOIN`</small> = cartesian product. Every row from A paired with every row from B.
+`CROSS JOIN` = cartesian product. Every row from A paired with every row from B.
 Use case: generate all (symbol, date) combinations to find missing data.
 
 
@@ -980,7 +980,7 @@ LIMIT 15
 
 ### 3b. CROSS APPLY: Top-N Per Group
 
-<small>`CROSS APPLY`</small> is a lateral join — it runs a subquery **for each row** of the outer table.
+`CROSS APPLY` is a lateral join — it runs a subquery **for each row** of the outer table.
 Like a correlated subquery, but returns multiple rows. Use case: top 3 highest-volume days per stock.
 
 
@@ -1126,7 +1126,7 @@ LIMIT 15
 
 ### 3c. OUTER APPLY: Optional Lateral Join
 
-Like <small>`CROSS APPLY`</small> but keeps the outer row even if the inner returns nothing (like LEFT JOIN).
+Like `CROSS APPLY` but keeps the outer row even if the inner returns nothing (like LEFT JOIN).
 Use case: latest score per stock — some stocks may not have scores yet.
 
 
@@ -1335,7 +1335,7 @@ PIVOT (AVG(`close`) FOR mo IN (1 AS Jan, 2 AS Feb, 3 AS Mar, 4 AS Apr, 5 AS May)
 
 ### 4b. Manual Pivot with CASE (Portable)
 
-<small>`PIVOT`</small> is BigQuery specific. The portable equivalent uses <small>`CASE`</small> inside aggregates.
+`PIVOT` is BigQuery specific. The portable equivalent uses `CASE` inside aggregates.
 Works in any SQL engine (BigQuery, PostgreSQL, etc.).
 
 
@@ -1503,10 +1503,10 @@ LIMIT 15
 
 ### 5a. MERGE Syntax
 
-The <small>`MERGE`</small> statement does INSERT, UPDATE, and DELETE in one atomic operation.
+The `MERGE` statement does INSERT, UPDATE, and DELETE in one atomic operation.
 This is the core of incremental pipeline loads — "upsert" new data, update changed rows.
 
-**Syntax**: <small>`MERGE target USING source ON join_key WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT`</small>
+**Syntax**: `MERGE target USING source ON join_key WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT`
 
 
 ```sql
@@ -1562,7 +1562,7 @@ SELECT 'DEMO.XX', DATE '2026-03-21', 102.5, 1200000
 
 ### 6a. EXISTS (Semi-Join)
 
-<small>`WHERE EXISTS (SELECT 1 FROM ... WHERE ...)`</small> — returns TRUE if the subquery finds **any** row.
+`WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
 Stops at the first match (efficient). Use for "does a related row exist?" questions.
 
 
@@ -1673,7 +1673,7 @@ LIMIT 15
 
 ### 6b. NOT EXISTS (Anti-Join)
 
-Find rows in A that have **no match** in B. More efficient than <small>`LEFT JOIN WHERE b.key IS NULL`</small> in most cases.
+Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases.
 
 
 ```sql
@@ -1787,7 +1787,7 @@ LIMIT 15
 ### 7a. GROUPING SETS
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations,
-use <small>`GROUPING SETS`</small> — more efficient and readable.
+use `GROUPING SETS` — more efficient and readable.
 
 
 ```sql
@@ -1920,7 +1920,7 @@ LIMIT 15
 
 ### 7b. ROLLUP — Hierarchical Subtotals
 
-<small>`ROLLUP(a, b)`</small> = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
+`ROLLUP(a, b)` = GROUP BY (a, b) + GROUP BY (a) + GROUP BY (). Subtotals roll up from right to left.
 
 
 ```sql
@@ -2214,13 +2214,13 @@ LIMIT 10
 
 | Expression | Result | Why |
 |-----------|--------|-----|
-| <small>`NULL = NULL`</small> | NULL (not TRUE!) | NULL is unknown, not a value |
-| <small>`NULL + 5`</small> | NULL | Any arithmetic with NULL = NULL |
-| <small>`AVG(col)`</small> | Ignores NULLs | Aggregates skip NULLs |
-| <small>`COUNT(*)`</small> vs <small>`COUNT(col)`</small> | Different! | COUNT(*) counts rows, COUNT(col) skips NULLs |
-| <small>`COALESCE(a, b, c)`</small> | First non-NULL | ANSI standard, N arguments |
-| <small>`IFNULL(a, b)`</small> | a if not null, else b | BigQuery SQL only, 2 args, type of first arg |
-| <small>`NULLIF(a, b)`</small> | NULL if a = b | Prevents divide-by-zero: <small>`x / NULLIF(y, 0)`</small> |
+| `NULL = NULL` | NULL (not TRUE!) | NULL is unknown, not a value |
+| `NULL + 5` | NULL | Any arithmetic with NULL = NULL |
+| `AVG(col)` | Ignores NULLs | Aggregates skip NULLs |
+| `COUNT(*)` vs `COUNT(col)` | Different! | COUNT(*) counts rows, COUNT(col) skips NULLs |
+| `COALESCE(a, b, c)` | First non-NULL | ANSI standard, N arguments |
+| `IFNULL(a, b)` | a if not null, else b | BigQuery SQL only, 2 args, type of first arg |
+| `NULLIF(a, b)` | NULL if a = b | Prevents divide-by-zero: `x / NULLIF(y, 0)` |
 
 
 ```sql
@@ -2345,10 +2345,10 @@ LIMIT 10
 
 ### UNION / INTERSECT / EXCEPT
 
-- <small>`UNION ALL`</small>: stack result sets (keep duplicates) — fast
-- <small>`UNION`</small>: stack + deduplicate — slower (sorts)
-- <small>`INTERSECT`</small>: rows in both queries
-- <small>`EXCEPT`</small>: rows in first query but not second
+- `UNION ALL`: stack result sets (keep duplicates) — fast
+- `UNION`: stack + deduplicate — slower (sorts)
+- `INTERSECT`: rows in both queries
+- `EXCEPT`: rows in first query but not second
 
 
 ```sql

@@ -542,7 +542,7 @@ LIMIT 5
 
 ### 2b. SP with Error Handling (TRY/CATCH)
 
-Production SPs wrap logic in <small>`TRY/CATCH`</small> with explicit transactions.
+Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
 If anything fails, the entire operation rolls back — no partial loads.
 
 
@@ -747,7 +747,7 @@ LIMIT 15
 | **Clustered** | Physical row order. One per table. | PK (symbol, date) for time-series |
 | **Non-clustered** | Separate B-tree pointing to rows. | Filter/sort columns (sector, _index) |
 | **Covering** | Includes extra columns in leaf. | Avoids key lookups for SELECT columns |
-| **Filtered** | Index only subset of rows. | <small>`WHERE is_current = TRUE`</small> on dims |
+| **Filtered** | Index only subset of rows. | `WHERE is_current = TRUE` on dims |
 | **Columnstore** | Columnar storage, batch processing. | Analytical aggregations on OHLCV |
 
 
@@ -844,10 +844,10 @@ LIMIT 15
 
 ### Index Design Principles
 
-1. **Equality columns first** in composite keys: <small>`WHERE _index = 'X' AND date >= '2026-01-01'`</small> → index on <small>`(_index, date)`</small>
-2. **Include columns** to avoid lookups: <small>`INCLUDE (close, volume)`</small> if you SELECT those
-3. **Don't over-index**: each index slows writes. Monitor with <small>`sys.dm_db_index_usage_stats`</small>
-4. **Filtered indexes** for hot subsets: <small>`WHERE is_current = TRUE`</small> on dimension tables
+1. **Equality columns first** in composite keys: `WHERE _index = 'X' AND date >= '2026-01-01'` → index on `(_index, date)`
+2. **Include columns** to avoid lookups: `INCLUDE (close, volume)` if you SELECT those
+3. **Don't over-index**: each index slows writes. Monitor with `sys.dm_db_index_usage_stats`
+4. **Filtered indexes** for hot subsets: `WHERE is_current = TRUE` on dimension tables
 
 ## 5. Slowly Changing Dimensions (SCD)
 
@@ -967,8 +967,8 @@ LIMIT 10
 
 ### 5b. SCD Type 2 — History Tracking
 
-Expire the old row (<small>`is_current=0, valid_to=NOW`</small>) and insert a new row (<small>`is_current=1`</small>).
-This is how <small>`silver.index_dim`</small> works — it has <small>`valid_from`</small>, <small>`valid_to`</small>, <small>`is_current`</small> columns.
+Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_current=1`).
+This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
 
 
 ```sql
@@ -1201,8 +1201,8 @@ LIMIT 10
 
 ### ROW_NUMBER Deduplication Pattern
 
-The standard approach: assign <small>`ROW_NUMBER()`</small> within each duplicate group,
-keep <small>`rn = 1`</small>, delete the rest.
+The standard approach: assign `ROW_NUMBER()` within each duplicate group,
+keep `rn = 1`, delete the rest.
 
 
 ```sql
@@ -1280,9 +1280,9 @@ For a broader look at controlling BigQuery spend through slot management and res
 
 | Anti-Pattern | Problem | Fix |
 |-------------|---------|-----|
-| <small>`WHERE EXTRACT(YEAR FROM date) = 2025`</small> | Function on column prevents index seek | <small>`WHERE date >= '2025-01-01' AND date < '2026-01-01'`</small> |
-| <small>`SELECT *`</small> | Reads all columns, can't use covering index | Select only needed columns |
-| <small>`WHERE col = NULL`</small> | Always FALSE (NULL != NULL) | <small>`WHERE col IS NULL`</small> |
+| `WHERE EXTRACT(YEAR FROM date) = 2025` | Function on column prevents index seek | `WHERE date >= '2025-01-01' AND date < '2026-01-01'` |
+| `SELECT *` | Reads all columns, can't use covering index | Select only needed columns |
+| `WHERE col = NULL` | Always FALSE (NULL != NULL) | `WHERE col IS NULL` |
 | Implicit conversion | VARCHAR compared to NVARCHAR causes scan | Match data types in predicates |
 | Missing index | Table scan on large table | Add non-clustered index on filter columns |
 
@@ -1338,9 +1338,9 @@ SELECT
 
 | Strategy | Speed | When |
 |----------|-------|------|
-| <small>`INSERT INTO ... SELECT`</small> | Medium | Small-medium loads from staging |
-| <small>`INSERT ... WITH (TABLOCK)`</small> | Fast | Minimal logging in SIMPLE/BULK_LOGGED |
-| <small>`BULK INSERT`</small> | Fastest | Loading from CSV files on disk |
+| `INSERT INTO ... SELECT` | Medium | Small-medium loads from staging |
+| `INSERT ... WITH (TABLOCK)` | Fast | Minimal logging in SIMPLE/BULK_LOGGED |
+| `BULK INSERT` | Fastest | Loading from CSV files on disk |
 | Batched inserts (TOP N loop) | Controlled | Large loads with checkpoints |
 | Drop indexes → load → rebuild | Fastest | Full table reloads |
 
@@ -1354,11 +1354,11 @@ Every table in the stoxx database has audit columns:
 
 | Column | Type | Purpose |
 |--------|------|--------|
-| <small>`_ingested_at`</small> | DATETIME2 | When the row was loaded (bronze) |
-| <small>`_scored_at`</small> | DATETIME2 | When the score was computed (gold) |
-| <small>`_computed_at`</small> | DATETIME2 | When the performance was calculated |
-| <small>`is_filled`</small> | BIT | Whether the row was gap-filled (silver) |
-| <small>`is_current`</small> | BIT | SCD Type 2 current flag (dimension) |
+| `_ingested_at` | DATETIME2 | When the row was loaded (bronze) |
+| `_scored_at` | DATETIME2 | When the score was computed (gold) |
+| `_computed_at` | DATETIME2 | When the performance was calculated |
+| `is_filled` | BIT | Whether the row was gap-filled (silver) |
+| `is_current` | BIT | SCD Type 2 current flag (dimension) |
 
 
 ```sql
