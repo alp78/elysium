@@ -19,9 +19,6 @@ status: complete
 # 23. Data Ingestion — SQL Server, BigQuery, Firestore
 
 ```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-// NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
-// Run this cell ONCE before any cells that use NuGet packages.
 
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -377,14 +374,15 @@ Console.WriteLine($"  BigQuery {BQ_DATASET}.ohlcv_bench table ready");
 Row-by-row parameterised INSERT. Simplest pattern but slowest — one round trip per row.
 Only practical for small datasets. Included as a baseline to show the cost of naive ingestion.
 
-```csharp
-// ADO.NET ExecuteNonQuery — row-by-row parameterised INSERT (small + medium only)
-//
-// Technique: Parse CSV, build INSERT with parameters, execute once per row.
-// Benefits: Simple, works with any schema, parameterised (SQL injection safe).
-// Anti-patterns: Row-by-row over the network — 750K rows would take 30+ minutes.
-// Scenario: Ad-hoc inserts of < 10K rows, config/lookup table seeding.
+> [!warning] ADO.NET ExecuteNonQuery — row-by-row parameterised INSERT (small + medium only)
+> ADO.NET ExecuteNonQuery — row-by-row parameterised INSERT (small + medium only)
+>
+> Technique: Parse CSV, build INSERT with parameters, execute once per row.
+> Benefits: Simple, works with any schema, parameterised (SQL injection safe).
+> Anti-patterns: Row-by-row over the network — 750K rows would take 30+ minutes.
+> Scenario: Ad-hoc inserts of < 10K rows, config/lookup table seeding.
 
+```csharp
 int AdoInsert(string tier)
 {
     SqlTruncate(SQL_BENCH_TABLE);
@@ -424,15 +422,16 @@ foreach (var tier in new[] { "small", "medium" })
 .NET’s native bulk insert — streams rows via the TDS protocol’s bulk insert path.
 Equivalent to `pyodbc.fast_executemany` but faster (native TDS bulk protocol, not parameterised batches).
 
-```csharp
-// SqlBulkCopy — .NET native bulk insert, TDS protocol
-//
-// Technique: Reads CSV into a DataTable, then bulk-copies to SQL Server.
-//   SqlBulkCopy uses the same TDS bulk-insert wire format as bcp.
-// Benefits: Fastest managed .NET path, minimal logging, batch-size tunable.
-// Anti-patterns: Loading entire file into DataTable for GB-scale — use IDataReader streaming.
-// Scenario: ETL pipelines, data warehouse loads, any INSERT > 1K rows.
+> [!warning] SqlBulkCopy — .NET native bulk insert, TDS protocol
+> SqlBulkCopy — .NET native bulk insert, TDS protocol
+>
+> Technique: Reads CSV into a DataTable, then bulk-copies to SQL Server.
+>   SqlBulkCopy uses the same TDS bulk-insert wire format as bcp.
+> Benefits: Fastest managed .NET path, minimal logging, batch-size tunable.
+> Anti-patterns: Loading entire file into DataTable for GB-scale — use IDataReader streaming.
+> Scenario: ETL pipelines, data warehouse loads, any INSERT > 1K rows.
 
+```csharp
 int BulkCopyInsert(string tier)
 {
     SqlTruncate(SQL_BENCH_TABLE);
@@ -475,14 +474,15 @@ foreach (var tier in tierNames)
 Native command-line tool. Uses the TDS bulk-insert protocol directly.
 Fastest for raw file loading — bypasses the .NET managed layer entirely.
 
-```csharp
-// bcp dbo.ohlcv_bench in ingest_large.csv -S 34.22.129.89,1433 -U sqlserver -P *** -d stoxx -c -t , -F 2 -b 10000 -u
-//
-// Technique: Shells out to bcp.exe — native TDS bulk-insert, fastest CLI path.
-// Benefits: No managed overhead, minimal logging, built into SQL Server.
-// Anti-patterns: No data transformation during load — data must match table schema exactly.
-// Scenario: Nightly batch loads, data warehouse staging, migration of large flat files.
+> [!warning] bcp dbo.ohlcv_bench in ingest_large.csv -S 34.22.129.89,1433 -U sqlserver -P ...
+> bcp dbo.ohlcv_bench in ingest_large.csv -S 34.22.129.89,1433 -U sqlserver -P *** -d stoxx -c -t , -F 2 -b 10000 -u
+>
+> Technique: Shells out to bcp.exe — native TDS bulk-insert, fastest CLI path.
+> Benefits: No managed overhead, minimal logging, built into SQL Server.
+> Anti-patterns: No data transformation during load — data must match table schema exactly.
+> Scenario: Nightly batch loads, data warehouse staging, migration of large flat files.
 
+```csharp
 int BcpImport(string tier)
 {
     SqlTruncate(SQL_BENCH_TABLE);

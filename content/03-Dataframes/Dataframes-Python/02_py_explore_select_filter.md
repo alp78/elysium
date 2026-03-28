@@ -6218,11 +6218,11 @@ display(Markdown(comparison))
 
 ## Setup & Data Loading
 
-```python
-print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
-print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
-print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
-```
+> [!info]- print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
+> print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
+> print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
+> print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
+>
 
     ohlcv  :
      (66355, 12) 

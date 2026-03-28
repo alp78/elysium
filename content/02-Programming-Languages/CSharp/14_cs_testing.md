@@ -85,18 +85,20 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 #### Imports and test attribute stubs
 
+> [!info] NuGet packages, imports, and shared type declarations for all test cells
+> NuGet packages, imports, and shared type declarations for all test cells
+>
+> WHAT: this cell defines the test infrastructure used by ALL subsequent test cells:
+>   - FactAttribute / TheoryAttribute / InlineDataAttribute: stub versions of xUnit's
+>     test discovery attributes. In a real project, xUnit NuGet provides these.
+>     [Fact] marks a parameterless test. [Theory] + [InlineData] marks a parametrized test.
+>   - These stubs let us write tests with the real xUnit API without NuGet version conflicts.
+>
+> WHY stubs instead of real xUnit: .NET Interactive notebooks have assembly version
+>   conflicts with xUnit's NuGet package. The stubs give us the same API surface
+>   so the test code is copy-pasteable into a real xUnit project.
+
 ```csharp
-// NuGet packages, imports, and shared type declarations for all test cells
-//
-// WHAT: this cell defines the test infrastructure used by ALL subsequent test cells:
-//   - FactAttribute / TheoryAttribute / InlineDataAttribute: stub versions of xUnit's
-//     test discovery attributes. In a real project, xUnit NuGet provides these.
-//     [Fact] marks a parameterless test. [Theory] + [InlineData] marks a parametrized test.
-//   - These stubs let us write tests with the real xUnit API without NuGet version conflicts.
-//
-// WHY stubs instead of real xUnit: .NET Interactive notebooks have assembly version
-//   conflicts with xUnit's NuGet package. The stubs give us the same API surface
-//   so the test code is copy-pasteable into a real xUnit project.
 #nullable enable
 // Lightweight Assert class — same API as xUnit, zero dependencies.
 // In a real project you'd use xUnit with `dotnet test`.
@@ -117,16 +119,18 @@ public class InlineDataAttribute : Attribute
 
 #### Test runner
 
+> [!info] Test runner — discovers and runs test methods on a class
+> Test runner — discovers and runs test methods on a class
+>
+> WHAT: RunTests uses reflection to find all methods decorated with [Fact] or [Theory],
+>   invokes them one by one, and catches exceptions to report PASS/FAIL.
+>   This mimics what `dotnet test` does in a real xUnit project.
+>
+> WHY: in a real project, the xUnit runner handles discovery + execution.
+>   In notebooks, we need this manual runner because there's no test host.
+>   The PASS/FAIL output format matches xUnit's console output.
+
 ```csharp
-// Test runner — discovers and runs test methods on a class
-//
-// WHAT: RunTests uses reflection to find all methods decorated with [Fact] or [Theory],
-//   invokes them one by one, and catches exceptions to report PASS/FAIL.
-//   This mimics what `dotnet test` does in a real xUnit project.
-//
-// WHY: in a real project, the xUnit runner handles discovery + execution.
-//   In notebooks, we need this manual runner because there's no test host.
-//   The PASS/FAIL output format matches xUnit's console output.
 void RunTests(object testClass)
 {
     var methods = testClass.GetType().GetMethods()
@@ -161,23 +165,25 @@ Console.WriteLine("  Assert class, test runner, and attributes ready.");
 
 #### Assert class
 
+> [!info] Assert class — lightweight reimplementation of xUnit's assertion library
+> Assert class — lightweight reimplementation of xUnit's assertion library
+>
+> WHAT: each static method tests one condition and throws if it fails.
+>   Equal: checks value equality (uses Equals, not ==).
+>   True/False: checks a boolean condition.
+>   Null/NotNull: checks for null references.
+>   Contains: checks substring or predicate match in a collection.
+>   Empty/NotEmpty: checks collection element count.
+>   InRange: checks value is within [low, high] bounds.
+>   Throws<T>: verifies that a specific exception type is thrown.
+>   Single: verifies exactly one element in a collection.
+>   Matches: verifies a regex pattern matches a string.
+>
+> WHY: xUnit's Assert is the standard API. By reimplementing it here,
+>   test code written in this notebook is directly portable to a real xUnit project.
+>   Just remove this class and add the xUnit NuGet package.
+
 ```csharp
-// Assert class — lightweight reimplementation of xUnit's assertion library
-//
-// WHAT: each static method tests one condition and throws if it fails.
-//   Equal: checks value equality (uses Equals, not ==).
-//   True/False: checks a boolean condition.
-//   Null/NotNull: checks for null references.
-//   Contains: checks substring or predicate match in a collection.
-//   Empty/NotEmpty: checks collection element count.
-//   InRange: checks value is within [low, high] bounds.
-//   Throws<T>: verifies that a specific exception type is thrown.
-//   Single: verifies exactly one element in a collection.
-//   Matches: verifies a regex pattern matches a string.
-//
-// WHY: xUnit's Assert is the standard API. By reimplementing it here,
-//   test code written in this notebook is directly portable to a real xUnit project.
-//   Just remove this class and add the xUnit NuGet package.
 public static class Assert
 {
     // Equal<T> — checks that expected and actual are equal using Equals() (not ==)
@@ -280,36 +286,36 @@ public static class Assert
 
 ## Unit Testing with xUnit
 
-```csharp
-// Unit Testing with xUnit — the standard C# test framework
-//
-// WHAT: xUnit is the most widely used testing framework in .NET.
-//   [Fact] = a single test case (no parameters).
-//   [Theory] + [InlineData] = a parametrized test (runs once per data row).
-//   Assert.Equal/True/Throws = verify expected behavior.
-//
-// WHY xUnit over NUnit/MSTest:
-//   - Constructor injection: xUnit creates a new class instance per test (isolation).
-//   - No [SetUp]/[TearDown]: use constructor/IDisposable instead (cleaner).
-//   - Industry standard: used by ASP.NET Core, EF Core, and most OSS projects.
-//
-// ANTI-PATTERNS:
-//   - Don't share state between tests — each test should be independent.
-//   - Don't test private methods — test the public API that uses them.
-//   - Don't assert on implementation details — assert on observable behavior.
-//
-// KEY CONCEPTS:
-// - xUnit: modern test framework for .NET. Runs with `dotnet test`.
-// - [Fact]: marks a test method (no parameters). Like a pytest test_* function.
-// - [Theory] + [InlineData]: parametrized test. Like @pytest.mark.parametrize.
-// - Assert.Equal(), Assert.True(), etc. — explicit assertion methods.
-// - Test classes: xUnit creates a new instance per test (isolation).
-//
-// NOTEBOOK NOTE:
-// xUnit normally runs via `dotnet test` with a test project.
-// In a notebook, we call test methods directly and report results.
-// In production, tests live in a separate MyProject.Tests project.
-```
+> [!warning] Unit Testing with xUnit — the standard C# test framework
+> Unit Testing with xUnit — the standard C# test framework
+>
+> WHAT: xUnit is the most widely used testing framework in .NET.
+>   [Fact] = a single test case (no parameters).
+>   [Theory] + [InlineData] = a parametrized test (runs once per data row).
+>   Assert.Equal/True/Throws = verify expected behavior.
+>
+> WHY xUnit over NUnit/MSTest:
+>   - Constructor injection: xUnit creates a new class instance per test (isolation).
+>   - No [SetUp]/[TearDown]: use constructor/IDisposable instead (cleaner).
+>   - Industry standard: used by ASP.NET Core, EF Core, and most OSS projects.
+>
+> ANTI-PATTERNS:
+>   - Don't share state between tests — each test should be independent.
+>   - Don't test private methods — test the public API that uses them.
+>   - Don't assert on implementation details — assert on observable behavior.
+>
+> KEY CONCEPTS:
+> - xUnit: modern test framework for .NET. Runs with `dotnet test`.
+> - [Fact]: marks a test method (no parameters). Like a pytest test_* function.
+> - [Theory] + [InlineData]: parametrized test. Like @pytest.mark.parametrize.
+> - Assert.Equal(), Assert.True(), etc. — explicit assertion methods.
+> - Test classes: xUnit creates a new instance per test (isolation).
+>
+> NOTEBOOK NOTE:
+> xUnit normally runs via `dotnet test` with a test project.
+> In a notebook, we call test methods directly and report results.
+> In production, tests live in a separate MyProject.Tests project.
+>
 
 #### Helper to run tests in notebook
 
@@ -408,14 +414,15 @@ RunTest("Missing key throws KeyNotFoundException", () =>
 
 ## Theory and InlineData
 
-```csharp
-// [Theory] + [InlineData] — C# equivalent of @pytest.mark.parametrize.
-// [Fact] = single test case (no parameters).
-// [Theory] = parametrized test — runs once per [InlineData] set.
-//
-// In a notebook we simulate this with a loop.
-// In a real test project, xUnit discovers and runs each InlineData automatically.
+> [!abstract]- [Theory] + [InlineData] — C# equivalent of @pytest.mark.parametrize
+> [Theory] + [InlineData] — C# equivalent of @pytest.mark.parametrize.
+> [Fact] = single test case (no parameters).
+> [Theory] = parametrized test — runs once per [InlineData] set.
+>
+> In a notebook we simulate this with a loop.
+> In a real test project, xUnit discovers and runs each InlineData automatically.
 
+```csharp
 void RunTest(string name, Action test)
 {
     try { test(); Console.WriteLine($"  ✓ {name}"); }
@@ -425,14 +432,15 @@ void RunTest(string name, Action test)
 
 #### Parametrize: fee tier calculation
 
-```csharp
-// In a real test project:
-// [Theory]
-// [InlineData(50_000,    30)]   // tier 1: < $100K → 30 bps
-// [InlineData(500_000,   20)]   // tier 2: $100K-$1M → 20 bps
-// [InlineData(5_000_000, 10)]   // tier 3: > $1M → 10 bps
-// public void FeeTier_ReturnsCorrectBps(long volume, int expectedBps) { ... }
+> [!info] In a real test project:
+> In a real test project:
+> [Theory]
+> [InlineData(50_000,    30)]   // tier 1: < $100K → 30 bps
+> [InlineData(500_000,   20)]   // tier 2: $100K-$1M → 20 bps
+> [InlineData(5_000_000, 10)]   // tier 3: > $1M → 10 bps
+> public void FeeTier_ReturnsCorrectBps(long volume, int expectedBps) { ... }
 
+```csharp
 static int GetFeeBps(long volume) => volume switch
 {
     < 100_000    => 30,
@@ -457,33 +465,34 @@ foreach (var (vol, bps) in feeCases)
 
 #### Parametrize: currency conversion
 
-```csharp
-// Parametrized test — currency conversion with multiple FX rates
-//
-// WHAT THIS DOES, step by step:
-//   1. fxCases is an array of tuples — each tuple is one test case with 4 fields:
-//      (amountUsd, rate, expected, label). This is the C# equivalent of
-//      @pytest.mark.parametrize("amt,rate,exp", [(1000, 0.92, 920), ...]) in Python.
-//
-//   2. foreach destructures each tuple: var (amt, rate, exp, label) = fxCases[i]
-//      This gives us named variables instead of .Item1, .Item2, etc.
-//
-//   3. RunTest takes a test name + a lambda (Action). It runs the lambda inside
-//      a try/catch — if it throws, the test FAILs; if it returns normally, it PASSes.
-//
-//   4. Assert.Equal(exp, amt * rate, precision: 5) checks that the actual result
-//      (amt * rate) matches the expected value within 5 decimal places.
-//      Floating-point math can produce tiny rounding errors (e.g., 0.92 * 1000 =
-//      919.9999999... in IEEE 754), so precision: 5 allows tolerance of 0.00001.
-//
-// WHY: in a real xUnit project, you'd use [Theory] + [InlineData]:
-//   [Theory]
-//   [InlineData(1000.0, 0.92, 920.0, "USD→EUR")]
-//   [InlineData(1000.0, 149.5, 149500.0, "USD→JPY")]
-//   public void ConvertCurrency(double amt, double rate, double exp, string label)
-//       => Assert.Equal(exp, amt * rate, 5);
-//   xUnit runs the method once per [InlineData] row — same logic, declarative syntax.
+> [!abstract]- Parametrized test — currency conversion with multiple FX rates
+> Parametrized test — currency conversion with multiple FX rates
+>
+> WHAT THIS DOES, step by step:
+>   1. fxCases is an array of tuples — each tuple is one test case with 4 fields:
+>      (amountUsd, rate, expected, label). This is the C# equivalent of
+>      @pytest.mark.parametrize("amt,rate,exp", [(1000, 0.92, 920), ...]) in Python.
+>
+>   2. foreach destructures each tuple: var (amt, rate, exp, label) = fxCases[i]
+>      This gives us named variables instead of .Item1, .Item2, etc.
+>
+>   3. RunTest takes a test name + a lambda (Action). It runs the lambda inside
+>      a try/catch — if it throws, the test FAILs; if it returns normally, it PASSes.
+>
+>   4. Assert.Equal(exp, amt * rate, precision: 5) checks that the actual result
+>      (amt * rate) matches the expected value within 5 decimal places.
+>      Floating-point math can produce tiny rounding errors (e.g., 0.92 * 1000 =
+>      919.9999999... in IEEE 754), so precision: 5 allows tolerance of 0.00001.
+>
+> WHY: in a real xUnit project, you'd use [Theory] + [InlineData]:
+>   [Theory]
+>   [InlineData(1000.0, 0.92, 920.0, "USD→EUR")]
+>   [InlineData(1000.0, 149.5, 149500.0, "USD→JPY")]
+>   public void ConvertCurrency(double amt, double rate, double exp, string label)
+>       => Assert.Equal(exp, amt * rate, 5);
+>   xUnit runs the method once per [InlineData] row — same logic, declarative syntax.
 
+```csharp
 Console.WriteLine("\n=== Currency Conversion [Theory] ===");
 var fxCases = new (double amountUsd, double rate, double expected, string label)[]
 {
@@ -505,28 +514,29 @@ foreach (var (amt, rate, exp, label) in fxCases)
 
 #### Parametrize: OHLCV validation
 
-```csharp
-// Parametrized test — OHLCV candle validation
-//
-// WHAT THIS TESTS:
-//   IsValidBar checks the mathematical invariants of an OHLCV candle:
-//     - high >= max(open, close): the highest price of the day must be >= both open and close
-//     - low <= min(open, close): the lowest price must be <= both open and close
-//     - volume >= 0: trade volume can be 0 (holiday/no trades) but never negative
-//   If any invariant is violated, the data is corrupt (bad API response, transform bug).
-//
-// HOW IT WORKS:
-//   1. IsValidBar is a static local function — a pure predicate that returns true/false.
-//   2. ohlcvCases is an array of test tuples: (open, high, low, close, volume, expectedResult, label).
-//      Each tuple describes one candle and whether it should be valid or invalid.
-//   3. foreach runs RunTest for each case — Assert.Equal checks that IsValidBar
-//      returns the expected boolean (true for valid bars, false for corrupt ones).
-//
-// WHY THIS MATTERS:
-//   Financial APIs occasionally return garbage: high < open (impossible by definition),
-//   negative volume, or close outside the high/low range. A pipeline that doesn't
-//   validate this will feed bad data into models, producing wrong trading signals.
+> [!info] Parametrized test — OHLCV candle validation
+> Parametrized test — OHLCV candle validation
+>
+> WHAT THIS TESTS:
+>   IsValidBar checks the mathematical invariants of an OHLCV candle:
+>     - high >= max(open, close): the highest price of the day must be >= both open and close
+>     - low <= min(open, close): the lowest price must be <= both open and close
+>     - volume >= 0: trade volume can be 0 (holiday/no trades) but never negative
+>   If any invariant is violated, the data is corrupt (bad API response, transform bug).
+>
+> HOW IT WORKS:
+>   1. IsValidBar is a static local function — a pure predicate that returns true/false.
+>   2. ohlcvCases is an array of test tuples: (open, high, low, close, volume, expectedResult, label).
+>      Each tuple describes one candle and whether it should be valid or invalid.
+>   3. foreach runs RunTest for each case — Assert.Equal checks that IsValidBar
+>      returns the expected boolean (true for valid bars, false for corrupt ones).
+>
+> WHY THIS MATTERS:
+>   Financial APIs occasionally return garbage: high < open (impossible by definition),
+>   negative volume, or close outside the high/low range. A pipeline that doesn't
+>   validate this will feed bad data into models, producing wrong trading signals.
 
+```csharp
 Console.WriteLine("\n=== OHLCV Validation [Theory] ===");
 
 // Pure validation function — returns true if the candle is physically possible
@@ -578,23 +588,24 @@ foreach (var (ticker, valid) in tickerCases)
 
 ## Mocking with Moq
 
+> [!warning] Mocking in C# — hand-written mocks for notebooks, Moq for real projects
+> Mocking in C# — hand-written mocks for notebooks, Moq for real projects
+>
+> KEY CONCEPTS:
+> - In production C#, you use Moq (NuGet) to auto-generate mocks from interfaces.
+>   Moq API:  new Mock<IService>()  →  mock.Setup(s => s.Method()).Returns(value)
+> - In notebooks, Moq triggers assembly version warnings on .NET 10.
+>   So we write mocks by hand — same pattern, just explicit.
+> - The core idea is identical: implement the interface with fake behavior,
+>   then verify your code called the right methods with the right arguments.
+>
+> WHY MOCK?
+> - Don't call real Bloomberg/exchange/database in tests.
+> - Tests must be fast, isolated, deterministic.
+> - Mock the boundary (interface), test the logic.
+
 ```csharp
 #nullable enable
-
-// Mocking in C# — hand-written mocks for notebooks, Moq for real projects
-//
-// KEY CONCEPTS:
-// - In production C#, you use Moq (NuGet) to auto-generate mocks from interfaces.
-//   Moq API:  new Mock<IService>()  →  mock.Setup(s => s.Method()).Returns(value)
-// - In notebooks, Moq triggers assembly version warnings on .NET 10.
-//   So we write mocks by hand — same pattern, just explicit.
-// - The core idea is identical: implement the interface with fake behavior,
-//   then verify your code called the right methods with the right arguments.
-//
-// WHY MOCK?
-// - Don't call real Bloomberg/exchange/database in tests.
-// - Tests must be fast, isolated, deterministic.
-// - Mock the boundary (interface), test the logic.
 
 void RunTest(string name, Action test)
 {
@@ -615,18 +626,20 @@ Console.WriteLine("=== Mock Basics ===");
 
 #### Type declarations (must be after top-level statements)
 
+> [!info] Type declarations for mocking — interfaces + domain types
+> Type declarations for mocking — interfaces + domain types
+>
+> WHAT: in C#, you mock INTERFACES, not concrete classes.
+>   An interface declares what methods exist; a mock implements them
+>   with fake behavior (return canned data, throw errors, record calls).
+>
+> WHY interfaces:
+>   - Production code depends on IMarketDataClient (interface)
+>   - In tests: inject MockMarketDataClient (returns fake data)
+>   - In production: inject RealMarketDataClient (calls live API)
+>   - The code under test doesn't know or care which implementation it gets
+
 ```csharp
-// Type declarations for mocking — interfaces + domain types
-//
-// WHAT: in C#, you mock INTERFACES, not concrete classes.
-//   An interface declares what methods exist; a mock implements them
-//   with fake behavior (return canned data, throw errors, record calls).
-//
-// WHY interfaces:
-//   - Production code depends on IMarketDataClient (interface)
-//   - In tests: inject MockMarketDataClient (returns fake data)
-//   - In production: inject RealMarketDataClient (calls live API)
-//   - The code under test doesn't know or care which implementation it gets
 public interface IMarketDataClient { Quote GetQuote(string ticker); }
 public interface IBrokerClient { OrderResult SubmitOrder(Order order); }
 public interface IExchangeGateway { string Send(string message); }
@@ -700,19 +713,21 @@ public class MockExchangeGateway : IExchangeGateway
 
 #### Mock: market data client
 
-```csharp
-// Hand-written mock — implements the interface with canned return values
-//
-// WHAT: MockMarketDataClient implements IMarketDataClient and returns
-//   predefined data. It also records what was called (LastRequestedSymbol, CallCount)
-//   so the test can verify that the code under test called the right methods.
-//
-// WHY hand-written vs Moq: Moq is the standard mocking library (mock.Setup(...)),
-//   but hand-written mocks are clearer for learning. Both achieve the same goal:
-//   control what the dependency returns, verify how it was called..
-// Moq equivalent: new Mock<IMarketDataClient>()
+> [!info] Hand-written mock — implements the interface with canned return values
+> Hand-written mock — implements the interface with canned return values
+>
+> WHAT: MockMarketDataClient implements IMarketDataClient and returns
+>   predefined data. It also records what was called (LastRequestedSymbol, CallCount)
+>   so the test can verify that the code under test called the right methods.
+>
+> WHY hand-written vs Moq: Moq is the standard mocking library (mock.Setup(...)),
+>   but hand-written mocks are clearer for learning. Both achieve the same goal:
+>   control what the dependency returns, verify how it was called..
+> Moq equivalent: new Mock<IMarketDataClient>()
+>
+> TEST: mock returns canned price, records which symbol was requested
 
-// TEST: mock returns canned price, records which symbol was requested
+```csharp
 RunTest("Mock market data quote", () =>
 {
     var mock = new MockMarketDataClient();
@@ -752,23 +767,25 @@ RunTest("Mock order submission", () =>
 
 #### Mock: transient failure (side_effect equivalent)
 
+> [!warning] Testing transient failures — mock that fails N times then succeeds
+> Testing transient failures — mock that fails N times then succeeds
+>
+> WHAT: MockExchangeGateway.FailCount controls how many calls throw IOException
+>   before returning a successful "ACK". The test retries up to 3 times.
+>   This simulates real-world transient errors: network timeouts, API 503s,
+>   DB deadlocks — errors that succeed if you just try again.
+>
+> WHY: retry logic is critical in DE pipelines. Without testing it:
+>   - You don't know if your retry actually retries (off-by-one: retries 2 times not 3)
+>   - You don't know if it gives up correctly after max attempts
+>   - You don't know if it returns the right result on eventual success
+>
+> PATTERN: set mock to fail N times → run code with retry loop → assert success + call count
+>
+> TEST: retry loop handles N failures then succeeds on attempt N+1
+
 ```csharp
 #nullable enable
-// Testing transient failures — mock that fails N times then succeeds
-//
-// WHAT: MockExchangeGateway.FailCount controls how many calls throw IOException
-//   before returning a successful "ACK". The test retries up to 3 times.
-//   This simulates real-world transient errors: network timeouts, API 503s,
-//   DB deadlocks — errors that succeed if you just try again.
-//
-// WHY: retry logic is critical in DE pipelines. Without testing it:
-//   - You don't know if your retry actually retries (off-by-one: retries 2 times not 3)
-//   - You don't know if it gives up correctly after max attempts
-//   - You don't know if it returns the right result on eventual success
-//
-// PATTERN: set mock to fail N times → run code with retry loop → assert success + call count
-
-// TEST: retry loop handles N failures then succeeds on attempt N+1
 RunTest("Mock with transient failure + retry", () =>
 {
     var mock = new MockExchangeGateway();
@@ -827,15 +844,16 @@ Console.WriteLine(@"
 
 ## Test Patterns for Data Engineering
 
-```csharp
-// DE/Finance test patterns — testing pipelines, transforms, data quality.
-//
-// KEY PATTERNS:
-// 1. Test transform functions (pure logic).
-// 2. Mock external systems (exchange APIs, databases, cloud storage).
-// 3. Constructor injection for test data (xUnit creates new instance per test).
-// 4. Theory + InlineData for edge cases.
+> [!info] DE/Finance test patterns — testing pipelines, transforms, data quality
+> DE/Finance test patterns — testing pipelines, transforms, data quality.
+>
+> KEY PATTERNS:
+> 1. Test transform functions (pure logic).
+> 2. Mock external systems (exchange APIs, databases, cloud storage).
+> 3. Constructor injection for test data (xUnit creates new instance per test).
+> 4. Theory + InlineData for edge cases.
 
+```csharp
 void RunTest(string name, Action test)
 {
     try { test(); Console.WriteLine($"  ✓ {name}"); }
@@ -845,31 +863,33 @@ void RunTest(string name, Action test)
 
 #### Type declarations
 
-```csharp
-// Domain types and mock for DE pipeline testing
-//
-// IIndexDataClient: interface for fetching index constituents (e.g., Euro Stoxx 50 members).
-//   In production: calls a real API (Twelve Data, Bloomberg, etc.).
-//   In tests: replaced by MockIndexDataClient that returns canned data.
-//   By depending on the interface (not the concrete class), the pipeline code
-//   works with both — no code changes needed between test and production.
-//
-// Constituent: represents one stock in an index — ticker + market cap.
-//   Used by the pipeline to know which stocks to fetch data for.
-//
-// EodPrice: end-of-day price bar for one stock — the core data structure in any
-//   financial data pipeline. Fields match what APIs like yfinance/Twelve Data return.
-//   Close, High, Low, Volume, PrevClose are the standard OHLCV fields.
-//   PrevClose enables daily return calculation: (Close - PrevClose) / PrevClose.
-//
-// MockIndexDataClient: hand-written mock that implements IIndexDataClient.
-//   - ConstituentsToReturn: set this in the test to control what GetConstituents returns.
-//   - LastRequestedIndex: records what index was requested (verify correct API call).
-//   - CallCount: tracks how many times GetConstituents was called.
-//   This pattern (record inputs + return canned outputs) is exactly what Moq does
-//   behind the scenes with mock.Setup(...).Returns(...) and mock.Verify(...).
+> [!info] Domain types and mock for DE pipeline testing
+> Domain types and mock for DE pipeline testing
+>
+> IIndexDataClient: interface for fetching index constituents (e.g., Euro Stoxx 50 members).
+>   In production: calls a real API (Twelve Data, Bloomberg, etc.).
+>   In tests: replaced by MockIndexDataClient that returns canned data.
+>   By depending on the interface (not the concrete class), the pipeline code
+>   works with both — no code changes needed between test and production.
+>
+> Constituent: represents one stock in an index — ticker + market cap.
+>   Used by the pipeline to know which stocks to fetch data for.
+>
+> EodPrice: end-of-day price bar for one stock — the core data structure in any
+>   financial data pipeline. Fields match what APIs like yfinance/Twelve Data return.
+>   Close, High, Low, Volume, PrevClose are the standard OHLCV fields.
+>   PrevClose enables daily return calculation: (Close - PrevClose) / PrevClose.
+>
+> MockIndexDataClient: hand-written mock that implements IIndexDataClient.
+>   - ConstituentsToReturn: set this in the test to control what GetConstituents returns.
+>   - LastRequestedIndex: records what index was requested (verify correct API call).
+>   - CallCount: tracks how many times GetConstituents was called.
+>   This pattern (record inputs + return canned outputs) is exactly what Moq does
+>   behind the scenes with mock.Setup(...).Returns(...) and mock.Verify(...).
+>
+> Interface — the contract that both real and mock implementations satisfy
 
-// Interface — the contract that both real and mock implementations satisfy
+```csharp
 public interface IIndexDataClient { List<Constituent> GetConstituents(string index); }
 
 // Constituent — one stock in an index
@@ -907,17 +927,19 @@ public class MockIndexDataClient : IIndexDataClient
 
 #### Test a data transform
 
+> [!info] Test a data transform — verify pure business logic in isolation
+> Test a data transform — verify pure business logic in isolation
+>
+> WHAT: NormalizeTrades is a pure function (no side effects, no DB, no API).
+>   It takes raw trade dictionaries and returns cleaned ones.
+>   Tests verify: missing fields are skipped, tickers are uppercased,
+>   negative prices are filtered, output format is correct.
+>
+> WHY: transform tests are the most valuable — they run fast (no I/O),
+>   are deterministic (same input = same output), and catch logic bugs.
+>   If this test fails, the bug is in YOUR code, not in the API or DB.
+
 ```csharp
-// Test a data transform — verify pure business logic in isolation
-//
-// WHAT: NormalizeTrades is a pure function (no side effects, no DB, no API).
-//   It takes raw trade dictionaries and returns cleaned ones.
-//   Tests verify: missing fields are skipped, tickers are uppercased,
-//   negative prices are filtered, output format is correct.
-//
-// WHY: transform tests are the most valuable — they run fast (no I/O),
-//   are deterministic (same input = same output), and catch logic bugs.
-//   If this test fails, the bug is in YOUR code, not in the API or DB.
 static List<Dictionary<string, object>> NormalizeTrades(List<Dictionary<string, object>> raw)
 {
     var cleaned = new List<Dictionary<string, object>>();
@@ -1018,22 +1040,24 @@ RunTest("Index weight calculation with mock", () =>
 
 #### Data quality checks
 
+> [!info] Data quality checks — validate OHLCV financial data invariants
+> Data quality checks — validate OHLCV financial data invariants
+>
+> WHAT: ValidateEodPrices takes a list of end-of-day prices and returns
+>   a list of error strings. Each error describes one violated invariant.
+>   Empty list = all data is valid. Non-empty = specific violations found.
+>
+> INVARIANTS CHECKED:
+>   - close > 0 (no negative or zero prices)
+>   - high >= low (by definition of OHLCV candles)
+>   - volume >= 0 (can be 0 on holidays)
+>   - daily return < 20% (catches data corruption, not normal volatility)
+>
+> WHY: bad API data is common — APIs return 0 for missing fields,
+>   negative prices from currency conversion bugs, or extreme values
+>   from stock splits that weren't adjusted. These tests catch them all.
+
 ```csharp
-// Data quality checks — validate OHLCV financial data invariants
-//
-// WHAT: ValidateEodPrices takes a list of end-of-day prices and returns
-//   a list of error strings. Each error describes one violated invariant.
-//   Empty list = all data is valid. Non-empty = specific violations found.
-//
-// INVARIANTS CHECKED:
-//   - close > 0 (no negative or zero prices)
-//   - high >= low (by definition of OHLCV candles)
-//   - volume >= 0 (can be 0 on holidays)
-//   - daily return < 20% (catches data corruption, not normal volatility)
-//
-// WHY: bad API data is common — APIs return 0 for missing fields,
-//   negative prices from currency conversion bugs, or extreme values
-//   from stock splits that weren't adjusted. These tests catch them all.
 Console.WriteLine("\n=== Data Quality Tests ===");
 
 static List<string> ValidateEodPrices(List<EodPrice> prices)
@@ -1094,45 +1118,46 @@ RunTest("Catches invalid prices", () =>
 
 #### Database connection and test helper
 
-```csharp
-// Integration testing against the stoxx SQL Server database
-//
-// WHAT: integration tests verify code against real dependencies (DB, APIs, files).
-//   Unlike unit tests that mock the DB, these execute real SQL against SQL Server.
-//   The stoxx database has a medallion architecture: bronze → silver → gold.
-//
-// WHY: unit tests with mocks can pass while real queries fail because:
-//   - SQL syntax differs between engines (SQL Server vs Postgres vs SQLite)
-//   - Schema migrations may have failed or drifted
-//   - Data constraints (FK, UNIQUE, NOT NULL) only exist in the real DB
-//   - Stored procedures or views may have been altered
-//
-// WHEN TO USE: after ETL runs, before deploying schema changes, in CI with Testcontainers
-// ANTI-PATTERNS:
-//   - Don't run destructive tests against production — use staging or ephemeral DB
-//   - Don't hardcode connection strings — use env vars or config files
-//   - Don't depend on specific data values — test invariants and ranges
-//
-// DATABASE SCHEMA (stoxx — Euro Stoxx 50 financial data):
-//   bronze.eurostoxx50_ohlcv: raw daily OHLCV data (50 stocks, ingested from API)
-//   silver.eurostoxx50_ohlcv: cleaned + gap-filled (is_filled flag for synthetic rows)
-//   gold.index_performance:   aggregated index-level returns and volatility
-//   gold.scores_daily:        per-stock composite scores and rankings
-//
-// WHAT: integration tests verify that your code works with real dependencies
-//   (databases, APIs, file systems) — not just mocked interfaces.
-//
-// WHY: mocked tests can pass while real queries fail because:
-//   - SQL syntax differs between engines
-//   - Schema migrations may have failed
-//   - Data constraints (FK, UNIQUE, NOT NULL) only exist in the real DB
-//
-// WHEN TO USE: data layer validation, ETL pipeline verification, schema checks
-// ANTI-PATTERNS:
-//   - Don't run integration tests in production DB — use staging/test instance
-//   - Don't mutate shared test data — use transactions that rollback
-//   - In CI: use Testcontainers for ephemeral, isolated DB instances
+> [!warning] Integration testing against the stoxx SQL Server database
+> Integration testing against the stoxx SQL Server database
+>
+> WHAT: integration tests verify code against real dependencies (DB, APIs, files).
+>   Unlike unit tests that mock the DB, these execute real SQL against SQL Server.
+>   The stoxx database has a medallion architecture: bronze → silver → gold.
+>
+> WHY: unit tests with mocks can pass while real queries fail because:
+>   - SQL syntax differs between engines (SQL Server vs Postgres vs SQLite)
+>   - Schema migrations may have failed or drifted
+>   - Data constraints (FK, UNIQUE, NOT NULL) only exist in the real DB
+>   - Stored procedures or views may have been altered
+>
+> WHEN TO USE: after ETL runs, before deploying schema changes, in CI with Testcontainers
+> ANTI-PATTERNS:
+>   - Don't run destructive tests against production — use staging or ephemeral DB
+>   - Don't hardcode connection strings — use env vars or config files
+>   - Don't depend on specific data values — test invariants and ranges
+>
+> DATABASE SCHEMA (stoxx — Euro Stoxx 50 financial data):
+>   bronze.eurostoxx50_ohlcv: raw daily OHLCV data (50 stocks, ingested from API)
+>   silver.eurostoxx50_ohlcv: cleaned + gap-filled (is_filled flag for synthetic rows)
+>   gold.index_performance:   aggregated index-level returns and volatility
+>   gold.scores_daily:        per-stock composite scores and rankings
+>
+> WHAT: integration tests verify that your code works with real dependencies
+>   (databases, APIs, file systems) — not just mocked interfaces.
+>
+> WHY: mocked tests can pass while real queries fail because:
+>   - SQL syntax differs between engines
+>   - Schema migrations may have failed
+>   - Data constraints (FK, UNIQUE, NOT NULL) only exist in the real DB
+>
+> WHEN TO USE: data layer validation, ETL pipeline verification, schema checks
+> ANTI-PATTERNS:
+>   - Don't run integration tests in production DB — use staging/test instance
+>   - Don't mutate shared test data — use transactions that rollback
+>   - In CI: use Testcontainers for ephemeral, isolated DB instances
 
+```csharp
 var connStr = "Data Source=localhost,1434;Initial Catalog=stoxx;"
             + "User ID=sa;Password=EsgDev2026Pass1;"
             + "TrustServerCertificate=True;Encrypt=True;";
@@ -1175,19 +1200,21 @@ Console.WriteLine("  DB connection ready.");
 
 #### Schema validation tests
 
-```csharp
-// Schema validation — verify tables exist and columns have expected types
-//
-// WHAT: queries INFORMATION_SCHEMA to check that expected tables and columns exist.
-//   These tests catch schema drift: a migration that renamed a column,
-//   dropped a table, or changed a data type will break downstream queries.
-//
-// WHY: schema changes are the #1 cause of silent pipeline failures.
-//   A renamed column produces NULLs instead of errors. A dropped table
-//   crashes at runtime. Schema tests catch these at deploy time.
-// Catches schema drift: renamed columns, dropped tables, changed data types
+> [!info] Schema validation — verify tables exist and columns have expected types
+> Schema validation — verify tables exist and columns have expected types
+>
+> WHAT: queries INFORMATION_SCHEMA to check that expected tables and columns exist.
+>   These tests catch schema drift: a migration that renamed a column,
+>   dropped a table, or changed a data type will break downstream queries.
+>
+> WHY: schema changes are the #1 cause of silent pipeline failures.
+>   A renamed column produces NULLs instead of errors. A dropped table
+>   crashes at runtime. Schema tests catch these at deploy time.
+> Catches schema drift: renamed columns, dropped tables, changed data types
+>
+> TEST: all medallion layers exist for Euro Stoxx 50
 
-// TEST: all medallion layers exist for Euro Stoxx 50
+```csharp
 var expectedTables = new[] {
     "bronze.eurostoxx50_ohlcv", "silver.eurostoxx50_ohlcv",
     "gold.index_performance", "gold.scores_daily",
@@ -1223,18 +1250,20 @@ AssertTest("silver has fake_column (expected FAIL)", hasFake == 1);
 
 #### Data completeness tests
 
-```csharp
-// Data completeness — verify expected row counts and symbol coverage
-//
-// WHAT: checks that the ETL pipeline ingested all expected data.
-//   Tests: correct number of symbols, silver > bronze (backfill worked),
-//   no NULL close prices (gap-filling succeeded), all indices present.
-//
-// WHY: a silent API failure might ingest 40 of 50 stocks.
-//   Without completeness tests, the pipeline reports success but
-//   downstream analytics are based on incomplete data.
+> [!info] Data completeness — verify expected row counts and symbol coverage
+> Data completeness — verify expected row counts and symbol coverage
+>
+> WHAT: checks that the ETL pipeline ingested all expected data.
+>   Tests: correct number of symbols, silver > bronze (backfill worked),
+>   no NULL close prices (gap-filling succeeded), all indices present.
+>
+> WHY: a silent API failure might ingest 40 of 50 stocks.
+>   Without completeness tests, the pipeline reports success but
+>   downstream analytics are based on incomplete data.
+>
+> TEST: exactly 50 distinct symbols in bronze (Euro Stoxx 50 = 50 stocks)
 
-// TEST: exactly 50 distinct symbols in bronze (Euro Stoxx 50 = 50 stocks)
+```csharp
 var bronzeSymbols = QueryScalar<int>("SELECT COUNT(DISTINCT symbol) FROM bronze.eurostoxx50_ohlcv");
 AssertTest($"bronze has {bronzeSymbols} distinct symbols (expected 50)", bronzeSymbols == 50);
 
@@ -1260,21 +1289,23 @@ AssertTest($"gold has {goldIndices} indices (expected {dimIndices})", goldIndice
 
 #### Data quality tests
 
-```csharp
-// Data quality — verify OHLCV invariants and business rules
-//
-// WHAT: checks mathematical invariants that must hold for all financial data:
-//   - high >= low (by definition of OHLCV candles)
-//   - close is between low and high
-//   - no negative prices or volumes
-//   - no future dates (data from the future = bug or timezone error)
-//
-// WHY: bad API responses, timezone bugs, or transform errors can produce
-//   data that looks valid but violates basic financial invariants.
-//   A model trained on data where high < low will produce garbage.
-// Catches data corruption, bad API responses, or transform bugs
+> [!info] Data quality — verify OHLCV invariants and business rules
+> Data quality — verify OHLCV invariants and business rules
+>
+> WHAT: checks mathematical invariants that must hold for all financial data:
+>   - high >= low (by definition of OHLCV candles)
+>   - close is between low and high
+>   - no negative prices or volumes
+>   - no future dates (data from the future = bug or timezone error)
+>
+> WHY: bad API responses, timezone bugs, or transform errors can produce
+>   data that looks valid but violates basic financial invariants.
+>   A model trained on data where high < low will produce garbage.
+> Catches data corruption, bad API responses, or transform bugs
+>
+> TEST: OHLCV invariant — high >= low for all rows
 
-// TEST: OHLCV invariant — high >= low for all rows
+```csharp
 var badOhlcv = QueryScalar<int>("SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv WHERE high < low");
 AssertTest($"high >= low ({badOhlcv} violations)", badOhlcv == 0);
 
@@ -1305,20 +1336,22 @@ AssertTest($"no negative volume ({negVol} violations)", negVol == 0);
 
 #### Cross-layer consistency tests
 
-```csharp
-// Cross-layer consistency — verify bronze → silver → gold pipeline integrity
-//
-// WHAT: checks that data flows correctly between medallion layers.
-//   Each layer transforms the previous: bronze (raw) → silver (clean) → gold (aggregated).
-//   If these tests fail, there is a bug in the ETL transform between layers.
-//
-// TESTS:
-//   - silver has >= symbols as bronze (no stocks lost during cleaning)
-//   - gap-filled rows (is_filled=1) are < 1% of total (minimal synthetic data)
-//   - composite scores in valid z-score range (not [0,1] — common assumption bug!)
-//   - daily returns within ±20% (catches extreme outliers from data errors)
+> [!info] Cross-layer consistency — verify bronze → silver → gold pipeline integrity
+> Cross-layer consistency — verify bronze → silver → gold pipeline integrity
+>
+> WHAT: checks that data flows correctly between medallion layers.
+>   Each layer transforms the previous: bronze (raw) → silver (clean) → gold (aggregated).
+>   If these tests fail, there is a bug in the ETL transform between layers.
+>
+> TESTS:
+>   - silver has >= symbols as bronze (no stocks lost during cleaning)
+>   - gap-filled rows (is_filled=1) are < 1% of total (minimal synthetic data)
+>   - composite scores in valid z-score range (not [0,1] — common assumption bug!)
+>   - daily returns within ±20% (catches extreme outliers from data errors)
+>
+> TEST: silver has at least as many symbols as bronze
 
-// TEST: silver has at least as many symbols as bronze
+```csharp
 var silverSymCount = QueryScalar<int>("SELECT COUNT(DISTINCT symbol) FROM silver.eurostoxx50_ohlcv");
 AssertTest($"silver symbols ({silverSymCount}) >= bronze ({bronzeSymbols})", silverSymCount >= bronzeSymbols);
 
@@ -1355,32 +1388,34 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 
 #### Validate service registration
 
+> [!warning] DI Validation — catch missing service registrations at test time
+> DI Validation — catch missing service registrations at test time
+>
+> WHAT: IServiceCollection is .NET's dependency injection container.
+>   Services are registered with AddSingleton/AddScoped/AddTransient.
+>   GetRequiredService<T>() resolves a service — throws if not registered.
+>
+> WHY: the #1 startup crash in .NET services is a missing DI registration.
+>   Forgetting services.AddScoped<IFoo, Foo>() compiles fine but crashes
+>   at runtime with "No service for type IFoo has been registered".
+>   A DI validation test catches this during the build, not in production.
+>
+> WHEN TO USE: any project with DI (ASP.NET Core, worker services, console apps)
+> ANTI-PATTERNS:
+>   - Don't only test leaf services — resolve root services (they pull the full graph)
+>   - Don't register services in tests that aren't registered in production
+>   - Test lifetime mismatches: Scoped into Singleton throws at runtime
+>
+> WHAT: build a ServiceProvider and try to resolve every root service.
+>   Missing registrations throw here (in tests) instead of crashing at runtime.
+>
+> WHY: forgetting AddScoped<IFoo, Foo>() in DI setup crashes at runtime
+>   with "No service for type IFoo". This test catches it before deployment.
+>
+>
+> Register services
+
 ```csharp
-// DI Validation — catch missing service registrations at test time
-//
-// WHAT: IServiceCollection is .NET's dependency injection container.
-//   Services are registered with AddSingleton/AddScoped/AddTransient.
-//   GetRequiredService<T>() resolves a service — throws if not registered.
-//
-// WHY: the #1 startup crash in .NET services is a missing DI registration.
-//   Forgetting services.AddScoped<IFoo, Foo>() compiles fine but crashes
-//   at runtime with "No service for type IFoo has been registered".
-//   A DI validation test catches this during the build, not in production.
-//
-// WHEN TO USE: any project with DI (ASP.NET Core, worker services, console apps)
-// ANTI-PATTERNS:
-//   - Don't only test leaf services — resolve root services (they pull the full graph)
-//   - Don't register services in tests that aren't registered in production
-//   - Test lifetime mismatches: Scoped into Singleton throws at runtime
-//
-// WHAT: build a ServiceProvider and try to resolve every root service.
-//   Missing registrations throw here (in tests) instead of crashing at runtime.
-//
-// WHY: forgetting AddScoped<IFoo, Foo>() in DI setup crashes at runtime
-//   with "No service for type IFoo". This test catches it before deployment.
-
-
-// Register services
 var services = new ServiceCollection();
 services.AddSingleton<IMarketDataService, FakeMarketData>();
 services.AddTransient<IPipelineRunner, PipelineRunner>();
@@ -1484,18 +1519,19 @@ KEY GITHUB ACTIONS CONCEPTS:
       pip install -r ...   dotnet restore
       tox / nox            dotnet test matrix
 
-```csharp
-// GitHub Actions — automated testing on every push/PR.
-//
-// KEY CONCEPTS:
-// - Workflow file: .github/workflows/test.yml
-// - `dotnet test` runs xUnit/NUnit/MSTest tests automatically.
-// - Matrix: test across multiple .NET versions (net8.0, net9.0).
-// - Secrets: injected as env vars for integration tests.
-// - coverlet: the standard .NET code coverage tool.
-//
-// This cell prints a production-ready workflow file.
+> [!info] GitHub Actions — automated testing on every push/PR
+> GitHub Actions — automated testing on every push/PR.
+>
+> KEY CONCEPTS:
+> - Workflow file: .github/workflows/test.yml
+> - `dotnet test` runs xUnit/NUnit/MSTest tests automatically.
+> - Matrix: test across multiple .NET versions (net8.0, net9.0).
+> - Secrets: injected as env vars for integration tests.
+> - coverlet: the standard .NET code coverage tool.
+>
+> This cell prints a production-ready workflow file.
 
+```csharp
 var workflow = @"
 # .github/workflows/test.yml
 name: Tests
@@ -1612,45 +1648,46 @@ Console.WriteLine(workflow);
 
 #### Testing cheat sheet
 
-```csharp
-// Summary — C# testing cheat sheet
-//
-// FRAMEWORK:
-// dotnet test                     Run all tests
-// dotnet test --filter "Trade"    Run tests matching pattern
-// dotnet test -v detailed         Verbose output
-//
-// xUnit ATTRIBUTES:
-// [Fact]                          Single test case (like pytest def test_)
-// [Theory] + [InlineData]         Parametrized (like @pytest.mark.parametrize)
-// [Theory] + [MemberData]         Parametrized from method/property
-//
-// ASSERTIONS (Xunit.Assert):
-// Assert.Equal(expected, actual)  Equality
-// Assert.True(condition)          Boolean
-// Assert.Null(obj)                Null check
-// Assert.Contains(item, coll)     Membership
-// Assert.Throws<T>(() => ...)     Expect exception
-// Assert.Matches(regex, str)      Regex match
-// Assert.Empty(collection)        Collection empty
-// Assert.Single(collection)       Exactly one element
-//
-// MOCKING (Moq):
-// new Mock<IService>()            Create mock
-// mock.Setup(s => ...).Returns()  Configure return
-// mock.Object                     Get the fake instance
-// mock.Verify(s => ..., Times)    Assert call was made
-// It.IsAny<T>()                   Match any argument
-// It.Is<T>(predicate)             Match argument by condition
-//
-// xUnit           → pytest
-// Assert.Equal    → assert x == y
-// [Fact]          → def test_()
-// [Theory]        → @pytest.mark.parametrize
-// Moq             → unittest.mock
-// constructor     → @pytest.fixture
-// IDisposable     → yield in fixture
+> [!abstract]- Summary — C# testing cheat sheet
+> Summary — C# testing cheat sheet
+>
+> FRAMEWORK:
+> dotnet test                     Run all tests
+> dotnet test --filter "Trade"    Run tests matching pattern
+> dotnet test -v detailed         Verbose output
+>
+> xUnit ATTRIBUTES:
+> [Fact]                          Single test case (like pytest def test_)
+> [Theory] + [InlineData]         Parametrized (like @pytest.mark.parametrize)
+> [Theory] + [MemberData]         Parametrized from method/property
+>
+> ASSERTIONS (Xunit.Assert):
+> Assert.Equal(expected, actual)  Equality
+> Assert.True(condition)          Boolean
+> Assert.Null(obj)                Null check
+> Assert.Contains(item, coll)     Membership
+> Assert.Throws<T>(() => ...)     Expect exception
+> Assert.Matches(regex, str)      Regex match
+> Assert.Empty(collection)        Collection empty
+> Assert.Single(collection)       Exactly one element
+>
+> MOCKING (Moq):
+> new Mock<IService>()            Create mock
+> mock.Setup(s => ...).Returns()  Configure return
+> mock.Object                     Get the fake instance
+> mock.Verify(s => ..., Times)    Assert call was made
+> It.IsAny<T>()                   Match any argument
+> It.Is<T>(predicate)             Match argument by condition
+>
+> xUnit           → pytest
+> Assert.Equal    → assert x == y
+> [Fact]          → def test_()
+> [Theory]        → @pytest.mark.parametrize
+> Moq             → unittest.mock
+> constructor     → @pytest.fixture
+> IDisposable     → yield in fixture
 
+```csharp
 Console.WriteLine("Testing cheat sheet loaded — see comments above.");
 Console.WriteLine();
 Console.WriteLine("Typical project layout:");

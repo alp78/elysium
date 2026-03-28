@@ -85,49 +85,51 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 
 <h4><code style="font-size:0.75em">TransformBlock</code> and <code style="font-size:0.75em">ActionBlock</code></h4>
 
+> [!warning] TPL Dataflow — TransformBlock and ActionBlock for pipeline stages
+> TPL Dataflow — TransformBlock and ActionBlock for pipeline stages
+>
+> Technique: TransformBlock<TIn, TOut> transforms items with configurable
+>   parallelism. ActionBlock<T> is a terminal consumer. LinkTo connects
+>   blocks. Complete() + Completion signals end-of-pipeline.
+>
+> Benefits:
+>   - Independent parallelism per stage — I/O stages can have more concurrency
+>   - Built-in buffering and backpressure — slow stages don't OOM
+>   - Automatic linking — data flows between blocks without manual wiring
+>   - PropagateCompletion — shutdown cascades through the pipeline
+>
+> Anti-patterns:
+>   - Not calling Complete() — downstream blocks wait forever
+>   - Unbounded buffer — BoundedCapacity prevents OOM from fast producers
+>   - Too many parallel stages — diminishing returns, resource contention
+>
+> When to use:
+>   - Multi-stage ETL: extract (I/O) → transform (CPU) → load (I/O)
+>
+> When NOT to use:
+>   - Simple sequential processing — plain async/await is simpler
+>
+> TPL Dataflow — build multi-stage concurrent pipelines with independent concurrency per stage
+>
+> WHAT: System.Threading.Tasks.Dataflow provides blocks that process items concurrently.
+>   - TransformBlock<TIn, TOut>: takes input, produces output (like Select but concurrent)
+>   - ActionBlock<T>: terminal consumer — processes items with no output (like ForEach)
+>   - Blocks are linked together: data flows from one block to the next automatically
+>
+> WHY: each stage can have different concurrency limits. A 3-stage pipeline:
+>   Fetch (IO, 3 concurrent) → Parse (CPU, 2 concurrent) → Save (IO, 1 sequential)
+>   Without Dataflow you'd need manual Channel wiring, thread management, backpressure.
+>
+> WHEN TO USE: multi-stage ETL, parallel API ingestion, fan-out/fan-in processing
+> ANTI-PATTERNS:
+>   - Don't forget PropagateCompletion — without it, downstream blocks never finish
+>   - Don't use unbounded parallelism (default) — set MaxDegreeOfParallelism explicitly
+>   - Don't call .Wait() or .Result on blocks — use await (deadlock risk)
+>
+> Stage 1: Fetch — IO-bound work, 3 concurrent requests
+> TransformBlock<string, (string, double)>: input = symbol name, output = (symbol, price) tuple
+
 ```csharp
-// TPL Dataflow — TransformBlock and ActionBlock for pipeline stages
-//
-// Technique: TransformBlock<TIn, TOut> transforms items with configurable
-//   parallelism. ActionBlock<T> is a terminal consumer. LinkTo connects
-//   blocks. Complete() + Completion signals end-of-pipeline.
-//
-// Benefits:
-//   - Independent parallelism per stage — I/O stages can have more concurrency
-//   - Built-in buffering and backpressure — slow stages don't OOM
-//   - Automatic linking — data flows between blocks without manual wiring
-//   - PropagateCompletion — shutdown cascades through the pipeline
-//
-// Anti-patterns:
-//   - Not calling Complete() — downstream blocks wait forever
-//   - Unbounded buffer — BoundedCapacity prevents OOM from fast producers
-//   - Too many parallel stages — diminishing returns, resource contention
-//
-// When to use:
-//   - Multi-stage ETL: extract (I/O) → transform (CPU) → load (I/O)
-//
-// When NOT to use:
-//   - Simple sequential processing — plain async/await is simpler
-
-// TPL Dataflow — build multi-stage concurrent pipelines with independent concurrency per stage
-//
-// WHAT: System.Threading.Tasks.Dataflow provides blocks that process items concurrently.
-//   - TransformBlock<TIn, TOut>: takes input, produces output (like Select but concurrent)
-//   - ActionBlock<T>: terminal consumer — processes items with no output (like ForEach)
-//   - Blocks are linked together: data flows from one block to the next automatically
-//
-// WHY: each stage can have different concurrency limits. A 3-stage pipeline:
-//   Fetch (IO, 3 concurrent) → Parse (CPU, 2 concurrent) → Save (IO, 1 sequential)
-//   Without Dataflow you'd need manual Channel wiring, thread management, backpressure.
-//
-// WHEN TO USE: multi-stage ETL, parallel API ingestion, fan-out/fan-in processing
-// ANTI-PATTERNS:
-//   - Don't forget PropagateCompletion — without it, downstream blocks never finish
-//   - Don't use unbounded parallelism (default) — set MaxDegreeOfParallelism explicitly
-//   - Don't call .Wait() or .Result on blocks — use await (deadlock risk)
-
-// Stage 1: Fetch — IO-bound work, 3 concurrent requests
-// TransformBlock<string, (string, double)>: input = symbol name, output = (symbol, price) tuple
 var fetchBlock = new TransformBlock<string, (string Symbol, double Price)>(
     async symbol =>
     {
@@ -269,44 +271,46 @@ Console.WriteLine($"  Done in {sw.ElapsedMilliseconds}ms");
 
 #### Parallel fetch with rate limiting
 
-```csharp
-// Parallel fetch with SemaphoreSlim rate limiting
-//
-// Technique: SemaphoreSlim(maxConcurrent) limits simultaneous API calls.
-//   WaitAsync blocks when limit reached. Release in finally ensures cleanup.
-//   Task.WhenAll runs all fetches concurrently within the limit.
-//
-// Benefits:
-//   - Prevents overwhelming APIs — respects rate limits
-//   - Maximum throughput within the concurrency constraint
-//   - Exception-safe — Release in finally prevents deadlocks
-//
-// Anti-patterns:
-//   - Unbounded concurrency — gets rate-limited or banned by APIs
-//   - Not releasing semaphore on error — deadlocks remaining tasks
-//   - Sequential fetching when parallel is possible — wastes time
-//
-// When to use:
-//   - Batch API ingestion with rate limits (3-10 concurrent requests)
-//
-// When NOT to use:
-//   - Single API call — no semaphore needed
+> [!warning] Parallel fetch with SemaphoreSlim rate limiting
+> Parallel fetch with SemaphoreSlim rate limiting
+>
+> Technique: SemaphoreSlim(maxConcurrent) limits simultaneous API calls.
+>   WaitAsync blocks when limit reached. Release in finally ensures cleanup.
+>   Task.WhenAll runs all fetches concurrently within the limit.
+>
+> Benefits:
+>   - Prevents overwhelming APIs — respects rate limits
+>   - Maximum throughput within the concurrency constraint
+>   - Exception-safe — Release in finally prevents deadlocks
+>
+> Anti-patterns:
+>   - Unbounded concurrency — gets rate-limited or banned by APIs
+>   - Not releasing semaphore on error — deadlocks remaining tasks
+>   - Sequential fetching when parallel is possible — wastes time
+>
+> When to use:
+>   - Batch API ingestion with rate limits (3-10 concurrent requests)
+>
+> When NOT to use:
+>   - Single API call — no semaphore needed
+>
+> Parallel fetch with SemaphoreSlim rate limiting
+>
+> WHAT: SemaphoreSlim(n) limits how many tasks can run a critical section concurrently.
+>   WaitAsync() blocks if n tasks are already inside; Release() lets the next one in.
+>   ConcurrentBag<T> is a thread-safe unordered collection for collecting results.
+>
+> WHY: APIs have rate limits (e.g., 8 requests/minute). Without throttling, all 8
+>   requests fire simultaneously → API returns 429 Too Many Requests → data loss.
+>   SemaphoreSlim(3) ensures at most 3 concurrent requests at any time.
+>
+> WHEN TO USE: any parallel I/O with rate limits — API calls, DB connections, file handles
+> ANTI-PATTERNS:
+>   - Don't forget Release() in finally — a crash without release = permanent deadlock
+>   - Don't use SemaphoreSlim for CPU-bound work — use Parallel.ForEachAsync instead
+>   - Don't create one SemaphoreSlim per call — share ONE across all concurrent tasks
 
-// Parallel fetch with SemaphoreSlim rate limiting
-//
-// WHAT: SemaphoreSlim(n) limits how many tasks can run a critical section concurrently.
-//   WaitAsync() blocks if n tasks are already inside; Release() lets the next one in.
-//   ConcurrentBag<T> is a thread-safe unordered collection for collecting results.
-//
-// WHY: APIs have rate limits (e.g., 8 requests/minute). Without throttling, all 8
-//   requests fire simultaneously → API returns 429 Too Many Requests → data loss.
-//   SemaphoreSlim(3) ensures at most 3 concurrent requests at any time.
-//
-// WHEN TO USE: any parallel I/O with rate limits — API calls, DB connections, file handles
-// ANTI-PATTERNS:
-//   - Don't forget Release() in finally — a crash without release = permanent deadlock
-//   - Don't use SemaphoreSlim for CPU-bound work — use Parallel.ForEachAsync instead
-//   - Don't create one SemaphoreSlim per call — share ONE across all concurrent tasks
+```csharp
 var tdSymbols = new[] { "SAP", "ASML", "TTE", "UL", "DEO", "SNY", "NVS", "AZN" };
 var tdKey = TWELVE_DATA_KEY;
 
@@ -459,45 +463,47 @@ await producer; // ensure producer completed without exceptions
 
 <h4><code style="font-size:0.75em">Process</code> — spawn external programs</h4>
 
-```csharp
-// Process — spawn external programs and capture output
-//
-// Technique: Process.Start with RedirectStandardOutput captures the child
-//   process's stdout. WaitForExitAsync for non-blocking wait. ExitCode
-//   indicates success (0) or failure. Separate OS process — own memory.
-//
-// Benefits:
-//   - Language-agnostic — child can be Python, Go, Rust, shell script
-//   - Isolation — child crash doesn't crash the parent
-//   - Redirect captures stdout/stderr for processing
-//
-// Anti-patterns:
-//   - Shell=true with user input — command injection risk
-//   - Not checking ExitCode — silent failures
-//   - Large output via stdout — use files for large data exchange
-//
-// When to use:
-//   - Running CLI tools, cross-language orchestration, system commands
-//
-// When NOT to use:
-//   - .NET-to-.NET — use in-process calls or gRPC
+> [!warning] Process — spawn external programs and capture output
+> Process — spawn external programs and capture output
+>
+> Technique: Process.Start with RedirectStandardOutput captures the child
+>   process's stdout. WaitForExitAsync for non-blocking wait. ExitCode
+>   indicates success (0) or failure. Separate OS process — own memory.
+>
+> Benefits:
+>   - Language-agnostic — child can be Python, Go, Rust, shell script
+>   - Isolation — child crash doesn't crash the parent
+>   - Redirect captures stdout/stderr for processing
+>
+> Anti-patterns:
+>   - Shell=true with user input — command injection risk
+>   - Not checking ExitCode — silent failures
+>   - Large output via stdout — use files for large data exchange
+>
+> When to use:
+>   - Running CLI tools, cross-language orchestration, system commands
+>
+> When NOT to use:
+>   - .NET-to-.NET — use in-process calls or gRPC
+>
+> System.Diagnostics.Process — spawn a child OS process, capture its output
+>
+> WHAT: Process.Start() creates a new operating system process (separate memory space).
+>   ProcessStartInfo configures: executable, arguments, stdio redirection, window behavior.
+>   RedirectStandardOutput = true: stdout goes to a pipe you can read from C#.
+>   UseShellExecute = false: required for stdio redirection (no shell involved).
+>
+> WHY: strict memory isolation — a crash in the child doesn't take down the parent.
+>   Use when: invoking Python/R scripts from a C# pipeline, running CLI tools (gcloud, bq),
+>   executing untrusted code safely, launching crash-resilient worker processes.
+>
+> ANTI-PATTERNS:
+>   - Don't read stdout AFTER WaitForExit — can deadlock if the pipe buffer fills up.
+>     Always read stdout/stderr BEFORE WaitForExitAsync.
+>   - Don't forget to Dispose the Process — leaks OS handles.
+>   - Don't pass user input directly into Arguments without sanitization — command injection risk.
 
-// System.Diagnostics.Process — spawn a child OS process, capture its output
-//
-// WHAT: Process.Start() creates a new operating system process (separate memory space).
-//   ProcessStartInfo configures: executable, arguments, stdio redirection, window behavior.
-//   RedirectStandardOutput = true: stdout goes to a pipe you can read from C#.
-//   UseShellExecute = false: required for stdio redirection (no shell involved).
-//
-// WHY: strict memory isolation — a crash in the child doesn't take down the parent.
-//   Use when: invoking Python/R scripts from a C# pipeline, running CLI tools (gcloud, bq),
-//   executing untrusted code safely, launching crash-resilient worker processes.
-//
-// ANTI-PATTERNS:
-//   - Don't read stdout AFTER WaitForExit — can deadlock if the pipe buffer fills up.
-//     Always read stdout/stderr BEFORE WaitForExitAsync.
-//   - Don't forget to Dispose the Process — leaks OS handles.
-//   - Don't pass user input directly into Arguments without sanitization — command injection risk.
+```csharp
 var pyCode = "import json; print(json.dumps({'source': 'python', 'value': 42}))";
 var psi = new ProcessStartInfo
 {

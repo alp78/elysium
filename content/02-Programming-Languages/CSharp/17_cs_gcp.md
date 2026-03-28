@@ -95,16 +95,16 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
+> [!abstract]- GCP Authentication — how C# connects to Google Cloud
+> GCP Authentication — how C# connects to Google Cloud.
+>
+> KEY CONCEPTS:
+> - Same GOOGLE_APPLICATION_CREDENTIALS env var as Python.
+> - All Google.Cloud.* libraries auto-detect the service account key.
+> - GoogleCredential.GetApplicationDefault() reads the ADC chain.
+> - Python equivalent: same env var, Client(project=...) pattern.
+
 ```csharp
-// GCP Authentication — how C# connects to Google Cloud.
-//
-// KEY CONCEPTS:
-// - Same GOOGLE_APPLICATION_CREDENTIALS env var as Python.
-// - All Google.Cloud.* libraries auto-detect the service account key.
-// - GoogleCredential.GetApplicationDefault() reads the ADC chain.
-// - Python equivalent: same env var, Client(project=...) pattern.
-
-
 var projectId = "index-lab-2";
 var region = "europe-west1";
 var bucketName = $"{projectId}-index-data";
@@ -315,16 +315,18 @@ if (ackIds.Count > 0)
 
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
-```csharp
-// Firestore -- NoSQL document database.
-// Python equivalent: from google.cloud import firestore
-//
-// NOTE: Firestore SDK reads hit a missing assembly bug on .NET 10.
-// Writes work fine. For reads, we use the Firestore REST API.
-// In a real .NET 8/9 project, SDK reads work perfectly.
+> [!abstract]- Firestore -- NoSQL document database
+> Firestore -- NoSQL document database.
+> Python equivalent: from google.cloud import firestore
+>
+> NOTE: Firestore SDK reads hit a missing assembly bug on .NET 10.
+> Writes work fine. For reads, we use the Firestore REST API.
+> In a real .NET 8/9 project, SDK reads work perfectly.
+>
+> Create Firestore client — connects to the document database
+> Pipeline role: REAL-TIME layer — latest scores for dashboards
 
-// Create Firestore client — connects to the document database
-// Pipeline role: REAL-TIME layer — latest scores for dashboards
+```csharp
 var firestoreDb = FirestoreDb.Create(projectId);
 
 // --- Write sample scores (SDK) ---
@@ -413,18 +415,19 @@ Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
     
       Cleaned up 3 score documents
 
-```csharp
-// Firestore Real-Time Polling via REST API.
-//
-// The SDK's Listen() also hits the AsyncInterfaces bug on .NET 10.
-// In a real .NET 8/9 project, use the push listener:
-//   firestoreDb.Collection("pulse_live").Listen(snapshot => { ... });
-//
-// Python equivalent: collection.on_snapshot(callback) -- true push listener.
-//
-// Run pulse_scheduler.py in a separate terminal first:
-//   python pulse_scheduler.py --minutes 5
+> [!abstract]- Firestore Real-Time Polling via REST API
+> Firestore Real-Time Polling via REST API.
+>
+> The SDK's Listen() also hits the AsyncInterfaces bug on .NET 10.
+> In a real .NET 8/9 project, use the push listener:
+>   firestoreDb.Collection("pulse_live").Listen(snapshot => { ... });
+>
+> Python equivalent: collection.on_snapshot(callback) -- true push listener.
+>
+> Run pulse_scheduler.py in a separate terminal first:
+>   python pulse_scheduler.py --minutes 5
 
+```csharp
 var cred = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
     .CreateScoped("https://www.googleapis.com/auth/datastore");
 var accessToken = await cred.UnderlyingCredential.GetAccessTokenForRequestAsync();
@@ -635,46 +638,46 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 
 ## 8. Summary
 
-```csharp
-// Summary — GCP C# cheat sheet
-//
-// AUTHENTICATION:
-// GoogleCredential.GetApplicationDefault()           Auto-detect ADC
-// GOOGLE_APPLICATION_CREDENTIALS env var             Service account key
-//
-// CLOUD STORAGE (Google.Cloud.Storage.V1):
-// StorageClient.Create()                             Create client
-// client.UploadObject(bucket, name, type, stream)    Upload
-// client.DownloadObject(bucket, name, stream)        Download
-// client.ListObjects(bucket, prefix)                 List blobs
-//
-// BIGQUERY (Google.Cloud.BigQuery.V2):
-// BigQueryClient.Create(projectId)                   Create client
-// client.ExecuteQuery(sql, params)                   Run SQL
-// client.InsertRows(datasetId, tableId, rows)        Insert rows
-//
-// PUB/SUB (Google.Cloud.PubSub.V1):
-// PublisherClient.CreateAsync(topicName)              Create publisher
-// publisher.PublishAsync(message)                     Publish
-// subscriber.Pull(subName, maxMessages)              Pull messages
-//
-// FIRESTORE (Google.Cloud.Firestore):
-// FirestoreDb.Create(projectId)                      Create client
-// collection.Document(id).SetAsync(data)             Write document
-// collection.GetSnapshotAsync()                      Read all docs
-//
-// SECRET MANAGER (Google.Cloud.SecretManager.V1):
-// client.AccessSecretVersion(name)                   Read secret
-// client.ListSecrets(projectName)                    List all secrets
-//
-// CLOUD MONITORING (Google.Cloud.Monitoring.V3):
-// client.CreateTimeSeries(project, timeSeries)       Write metric
-//
-// PYTHON EQUIVALENTS:
-// StorageClient           → storage.Client()
-// BigQueryClient           → bigquery.Client()
-// PublisherClient           → pubsub_v1.PublisherClient()
-// FirestoreDb              → firestore.Client()
-// SecretManagerServiceClient → secretmanager.SecretManagerServiceClient()
-// MetricServiceClient       → monitoring_v3.MetricServiceClient()
-```
+> [!abstract]- Summary — GCP C# cheat sheet
+> Summary — GCP C# cheat sheet
+>
+> AUTHENTICATION:
+> GoogleCredential.GetApplicationDefault()           Auto-detect ADC
+> GOOGLE_APPLICATION_CREDENTIALS env var             Service account key
+>
+> CLOUD STORAGE (Google.Cloud.Storage.V1):
+> StorageClient.Create()                             Create client
+> client.UploadObject(bucket, name, type, stream)    Upload
+> client.DownloadObject(bucket, name, stream)        Download
+> client.ListObjects(bucket, prefix)                 List blobs
+>
+> BIGQUERY (Google.Cloud.BigQuery.V2):
+> BigQueryClient.Create(projectId)                   Create client
+> client.ExecuteQuery(sql, params)                   Run SQL
+> client.InsertRows(datasetId, tableId, rows)        Insert rows
+>
+> PUB/SUB (Google.Cloud.PubSub.V1):
+> PublisherClient.CreateAsync(topicName)              Create publisher
+> publisher.PublishAsync(message)                     Publish
+> subscriber.Pull(subName, maxMessages)              Pull messages
+>
+> FIRESTORE (Google.Cloud.Firestore):
+> FirestoreDb.Create(projectId)                      Create client
+> collection.Document(id).SetAsync(data)             Write document
+> collection.GetSnapshotAsync()                      Read all docs
+>
+> SECRET MANAGER (Google.Cloud.SecretManager.V1):
+> client.AccessSecretVersion(name)                   Read secret
+> client.ListSecrets(projectName)                    List all secrets
+>
+> CLOUD MONITORING (Google.Cloud.Monitoring.V3):
+> client.CreateTimeSeries(project, timeSeries)       Write metric
+>
+> PYTHON EQUIVALENTS:
+> StorageClient           → storage.Client()
+> BigQueryClient           → bigquery.Client()
+> PublisherClient           → pubsub_v1.PublisherClient()
+> FirestoreDb              → firestore.Client()
+> SecretManagerServiceClient → secretmanager.SecretManagerServiceClient()
+> MetricServiceClient       → monitoring_v3.MetricServiceClient()
+>

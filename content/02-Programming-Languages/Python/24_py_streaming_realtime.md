@@ -721,17 +721,18 @@ localhost (0ms network) with cross-continent GCP (300ms RTT) would be meaningles
 
 #### Local protocols — WebSocket vs SSE throughput (localhost, no network)
 
+> [!warning] Local protocols — p50 one-way latency (µs), both measured the same way
+> Local protocols — p50 one-way latency (µs), both measured the same way
+>
+> WebSocket is ~1.5x faster at p50 — binary frames (2-6 byte header) have less
+> per-message overhead than SSE's HTTP chunked text encoding (chunk size + 'data: ' prefix +
+>
+> SSE tail latency (p99) is significantly worse due to HTTP line parsing edge cases
+> (partial reads, buffer boundaries) that don't affect binary WebSocket framing.
+> Both are sub-millisecond on localhost — in production, network RTT dominates.
+> SSE trade-off: works through CDNs/proxies, built-in auto-reconnect, simpler to implement.
+
 ```python
-# Local protocols — p50 one-way latency (µs), both measured the same way
-#
-# WebSocket is ~1.5x faster at p50 — binary frames (2-6 byte header) have less
-# per-message overhead than SSE's HTTP chunked text encoding (chunk size + 'data: ' prefix + 
-
-# SSE tail latency (p99) is significantly worse due to HTTP line parsing edge cases
-# (partial reads, buffer boundaries) that don't affect binary WebSocket framing.
-# Both are sub-millisecond on localhost — in production, network RTT dominates.
-# SSE trade-off: works through CDNs/proxies, built-in auto-reconnect, simpler to implement.
-
 local_data = {
     'WebSocket': ws_p50,
     'SSE': sse_p50,

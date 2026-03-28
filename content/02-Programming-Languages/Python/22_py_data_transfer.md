@@ -131,14 +131,15 @@ def fmt_time(ms):
 
 #### Define file sets for upload, SQL insert, and BigQuery benchmarks
 
-```python
-# Three separate file sets for different benchmark categories.
-# Each set uses real data at appropriate sizes for its operation.
-#
-# Upload files: test network transfer speed at increasing sizes
-# SQL insert files: test insert methods on existing table schemas
-# BigQuery files: test load/query on existing table schemas
+> [!info] Three separate file sets for different benchmark categories
+> Three separate file sets for different benchmark categories.
+> Each set uses real data at appropriate sizes for its operation.
+>
+> Upload files: test network transfer speed at increasing sizes
+> SQL insert files: test insert methods on existing table schemas
+> BigQuery files: test load/query on existing table schemas
 
+```python
 upload_files = {
     "small":  DATA_DIR / "small_upload.csv",    # ~10 MB
     "medium": DATA_DIR / "medium_upload.csv",   # ~200 MB 

@@ -23,8 +23,6 @@ status: complete
 #### Install NuGet packages
 
 ```csharp
-// Suppress CS1701/CS1702 assembly version mismatch warnings
-// that occur when NuGet packages reference slightly different versions.
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -189,12 +187,14 @@ Console.WriteLine($"  Scope: devstorage.read_only (storage only, no KMS/BQ/etc.)
 
 #### Application Default Credentials (ADC) lookup chain
 
+> [!info] ADC checks these locations in order:
+> ADC checks these locations in order:
+>   1. GOOGLE_APPLICATION_CREDENTIALS env var (set above)
+>   2. gcloud default credentials (~/.config/gcloud/)
+>   3. GCE/GKE metadata server
+> In this notebook, #1 is used because we set the env var.
+
 ```csharp
-// ADC checks these locations in order:
-//   1. GOOGLE_APPLICATION_CREDENTIALS env var (set above)
-//   2. gcloud default credentials (~/.config/gcloud/)
-//   3. GCE/GKE metadata server
-// In this notebook, #1 is used because we set the env var.
 var adcCredential = GoogleCredential.GetApplicationDefault();
 Console.WriteLine($"  ADC type: {adcCredential.UnderlyingCredential.GetType().Name}");
 Console.WriteLine($"  Source:   GOOGLE_APPLICATION_CREDENTIALS={SA_KEY_PATH}");
@@ -205,21 +205,23 @@ Console.WriteLine($"  Source:   GOOGLE_APPLICATION_CREDENTIALS={SA_KEY_PATH}");
 
 #### Service account impersonation — keyless authentication
 
+> [!warning] Service Account Impersonation: act as another SA without holding its key
+> Service Account Impersonation: act as another SA without holding its key.
+> The source identity requests a short-lived token for the target SA.
+> Requires roles/iam.serviceAccountTokenCreator on the target.
+>
+> When to use:
+>   - Developer needs to test what a production SA can do, without its key
+>   - CI/CD pipeline escalates to a deploy SA for a single step
+>   - Cross-project access without broad IAM grants
+>   - Local dev: impersonate the app SA so code behaves like production
+>
+> Anti-patterns:
+>   - Granting serviceAccountTokenCreator at project level
+>   - Using impersonation instead of attaching the SA to the resource
+>   - Not auditing who can impersonate
+
 ```csharp
-// Service Account Impersonation: act as another SA without holding its key.
-// The source identity requests a short-lived token for the target SA.
-// Requires roles/iam.serviceAccountTokenCreator on the target.
-//
-// When to use:
-//   - Developer needs to test what a production SA can do, without its key
-//   - CI/CD pipeline escalates to a deploy SA for a single step
-//   - Cross-project access without broad IAM grants
-//   - Local dev: impersonate the app SA so code behaves like production
-//
-// Anti-patterns:
-//   - Granting serviceAccountTokenCreator at project level
-//   - Using impersonation instead of attaching the SA to the resource
-//   - Not auditing who can impersonate
 var sourceCredential = GoogleCredential.GetApplicationDefault();
 var impersonated = sourceCredential.Impersonate(new ImpersonatedCredential.Initializer(SA_EMAIL)
 {
@@ -293,17 +295,19 @@ foreach (var name in secretNames)
 
 #### Create a new secret with labels and replication
 
+> [!warning] Create a secret programmatically with metadata labels and replication config
+> Create a secret programmatically with metadata labels and replication config.
+> When to use Secret Manager:
+>   - API keys, OAuth tokens, database passwords needed at runtime
+>   - Certificates and private keys rotated on a schedule
+>   - Any credential shared across multiple services or environments
+>
+> Anti-patterns:
+>   - Hardcoding secrets in source code or notebooks
+>   - Storing secrets in env vars baked into Docker images
+>   - Using the same secret version forever instead of rotating
+
 ```csharp
-// Create a secret programmatically with metadata labels and replication config.
-// When to use Secret Manager:
-//   - API keys, OAuth tokens, database passwords needed at runtime
-//   - Certificates and private keys rotated on a schedule
-//   - Any credential shared across multiple services or environments
-//
-// Anti-patterns:
-//   - Hardcoding secrets in source code or notebooks
-//   - Storing secrets in env vars baked into Docker images
-//   - Using the same secret version forever instead of rotating
 var newSecretId = "notebook-demo-secret-cs";
 try
 {
@@ -329,14 +333,16 @@ catch (Grpc.Core.RpcException e) when (e.StatusCode == Grpc.Core.StatusCode.Alre
 
 #### Add a secret version — rotation scenario
 
+> [!tip] Key rotation: replace a secret with a new value by adding a new version
+> Key rotation: replace a secret with a new value by adding a new version.
+> Old versions stay accessible until explicitly disabled or destroyed.
+>
+> Recommended rotation frequency:
+>   - API keys / SA keys: 90 days
+>   - Database passwords: 30-90 days
+>   - Certificates: before expiry, typically 1 year max
+
 ```csharp
-// Key rotation: replace a secret with a new value by adding a new version.
-// Old versions stay accessible until explicitly disabled or destroyed.
-//
-// Recommended rotation frequency:
-//   - API keys / SA keys: 90 days
-//   - Database passwords: 30-90 days
-//   - Certificates: before expiry, typically 1 year max
 var newPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(24));
 var version = smClient.AddSecretVersion(new AddSecretVersionRequest
 {
@@ -412,18 +418,19 @@ catch (Exception e)
 
 #### What Cloud KMS does and when to use it
 
-```csharp
-// Core concepts:
-//   Key ring — logical grouping of keys, bound to a region; cannot be deleted
-//   CryptoKey — the named key inside a ring; has a rotation schedule and purpose
-//   Key version — the actual key material; KMS rotates automatically
-//   Envelope encryption — KMS encrypts a short DEK, your app encrypts data with the DEK
-//
-// Anti-patterns:
-//   Encrypting large payloads directly (64 KB limit) — use envelope encryption
-//   Same key for all environments — separate key rings per env
-//   Destroying key versions before re-encrypting data — permanent data loss
+> [!warning] Core concepts:
+> Core concepts:
+>   Key ring — logical grouping of keys, bound to a region; cannot be deleted
+>   CryptoKey — the named key inside a ring; has a rotation schedule and purpose
+>   Key version — the actual key material; KMS rotates automatically
+>   Envelope encryption — KMS encrypts a short DEK, your app encrypts data with the DEK
+>
+> Anti-patterns:
+>   Encrypting large payloads directly (64 KB limit) — use envelope encryption
+>   Same key for all environments — separate key rings per env
+>   Destroying key versions before re-encrypting data — permanent data loss
 
+```csharp
 var kmsClient = KeyManagementServiceClient.Create();
 var keyName = new CryptoKeyName(PROJECT_ID, KMS_LOCATION, KMS_KEYRING, KMS_KEY);
 Console.WriteLine($"  KMS client ready");
@@ -435,15 +442,17 @@ Console.WriteLine($"  Key: {keyName}");
 
 #### Symmetric encryption — encrypt plaintext with KMS
 
+> [!warning] When to use KMS encrypt directly:
+> When to use KMS encrypt directly:
+>   - Small, sensitive values: API keys, tokens, config secrets under 64 KB
+>   - Audit trail required: every KMS call is logged in Cloud Audit Logs
+>   - Key rotation needed: KMS rotates automatically; old ciphertext still decrypts
+>
+> When NOT to use:
+>   - Payloads over 64 KB: use envelope encryption
+>   - High-throughput: each call is a network round-trip to Google's HSM
+
 ```csharp
-// When to use KMS encrypt directly:
-//   - Small, sensitive values: API keys, tokens, config secrets under 64 KB
-//   - Audit trail required: every KMS call is logged in Cloud Audit Logs
-//   - Key rotation needed: KMS rotates automatically; old ciphertext still decrypts
-//
-// When NOT to use:
-//   - Payloads over 64 KB: use envelope encryption
-//   - High-throughput: each call is a network round-trip to Google's HSM
 var plaintext = Encoding.UTF8.GetBytes("Sensitive financial data: EUROSTOXX50 daily returns");
 
 var encryptResponse = kmsClient.Encrypt(keyName, ByteString.CopyFrom(plaintext));
@@ -475,16 +484,18 @@ Console.WriteLine($"  Match:     {plaintext.SequenceEqual(decrypted)}");
 
 #### Envelope encryption — wrap a local data encryption key
 
+> [!example] Envelope encryption: generate a local DEK, encrypt data with it,
+> Envelope encryption: generate a local DEK, encrypt data with it,
+> then wrap (encrypt) the DEK with the KMS key.
+>
+> When to use:
+>   - Payloads over 64 KB (files, documents, database rows)
+>   - High-throughput: data encrypted locally, one KMS call per DEK
+>   - Minimizing KMS costs: billing is per API call
+>
+> .NET has AES-GCM built into System.Security.Cryptography
+
 ```csharp
-// Envelope encryption: generate a local DEK, encrypt data with it,
-// then wrap (encrypt) the DEK with the KMS key.
-//
-// When to use:
-//   - Payloads over 64 KB (files, documents, database rows)
-//   - High-throughput: data encrypted locally, one KMS call per DEK
-//   - Minimizing KMS costs: billing is per API call
-//
-// .NET has AES-GCM built into System.Security.Cryptography
 var dek = RandomNumberGenerator.GetBytes(32);  // 256-bit DEK
 var nonce = RandomNumberGenerator.GetBytes(12); // 96-bit nonce
 Console.WriteLine($"  DEK (b64):  {Convert.ToBase64String(dek)[..30]}...");
@@ -580,25 +591,25 @@ foreach (var v in versions)
 
 ## Cloud SQL — SQL Server Authentication and Encryption
 
-```csharp
-// Cloud SQL Authentication Methods:
-//
-// 1. SQL authentication (username + password)
-//    Best for: dev notebooks, DBA maintenance, legacy apps
-//
-// 2. SSL/TLS server certificate verification
-//    Best for: public internet connections, compliance (PCI-DSS, SOC2)
-//
-// 3. Cloud SQL Auth Proxy
-//    Best for: production services on GKE/Cloud Run, CI/CD pipelines
-//
-// 4. IP allowlisting (authorized networks)
-//    Best for: dev access from known office/VPN IP
-//
-// For Cloud SQL SQL Server, username + password is the only practical
-// client auth method. The cert verifies the server; the password verifies you.
-// C# advantage: Microsoft.Data.SqlClient is native — not a FreeTDS wrapper.
-```
+> [!info] Cloud SQL Authentication Methods:
+> Cloud SQL Authentication Methods:
+>
+> 1. SQL authentication (username + password)
+>    Best for: dev notebooks, DBA maintenance, legacy apps
+>
+> 2. SSL/TLS server certificate verification
+>    Best for: public internet connections, compliance (PCI-DSS, SOC2)
+>
+> 3. Cloud SQL Auth Proxy
+>    Best for: production services on GKE/Cloud Run, CI/CD pipelines
+>
+> 4. IP allowlisting (authorized networks)
+>    Best for: dev access from known office/VPN IP
+>
+> For Cloud SQL SQL Server, username + password is the only practical
+> client auth method. The cert verifies the server; the password verifies you.
+> C# advantage: Microsoft.Data.SqlClient is native — not a FreeTDS wrapper.
+>
 
 #### SQL Server password authentication — direct connect
 
@@ -706,16 +717,18 @@ catch (Exception e)
 
 #### SSL-verified connection — validate server identity
 
+> [!warning] Connect with Encrypt=Mandatory and validate the server certificate
+> Connect with Encrypt=Mandatory and validate the server certificate.
+> TrustServerCertificate=false forces the client to verify the cert chain.
+> For Cloud SQL, the server uses a Google-signed CA cert.
+>
+> C# advantage: Microsoft.Data.SqlClient has native TLS support with
+> full certificate validation — no FreeTDS workarounds needed.
+>
+> When to use: any connection over public internet, compliance requirements.
+> Anti-pattern: TrustServerCertificate=true in production.
+
 ```csharp
-// Connect with Encrypt=Mandatory and validate the server certificate.
-// TrustServerCertificate=false forces the client to verify the cert chain.
-// For Cloud SQL, the server uses a Google-signed CA cert.
-//
-// C# advantage: Microsoft.Data.SqlClient has native TLS support with
-// full certificate validation — no FreeTDS workarounds needed.
-//
-// When to use: any connection over public internet, compliance requirements.
-// Anti-pattern: TrustServerCertificate=true in production.
 var sslConnStr = new SqlConnectionStringBuilder
 {
     DataSource = $"{SQL_IP},1433",
@@ -774,13 +787,15 @@ else
 
 #### SqlBulkCopy — high-performance data loading
 
+> [!info] C# advantage over Python: SqlBulkCopy streams data directly to SQL Server
+> C# advantage over Python: SqlBulkCopy streams data directly to SQL Server
+> using the TDS bulk insert protocol — no temp files, no bcp CLI.
+> This is the equivalent of bcp but fully in-process.
+>
+> In Python we needed: GCS parquet → pyarrow → temp TSV → bcp CLI → SQL Server
+> In C#:               DataTable → SqlBulkCopy → SQL Server (single step)
+
 ```csharp
-// C# advantage over Python: SqlBulkCopy streams data directly to SQL Server
-// using the TDS bulk insert protocol — no temp files, no bcp CLI.
-// This is the equivalent of bcp but fully in-process.
-//
-// In Python we needed: GCS parquet → pyarrow → temp TSV → bcp CLI → SQL Server
-// In C#:               DataTable → SqlBulkCopy → SQL Server (single step)
 try
 {
     using var conn = new SqlConnection(connStr);
@@ -868,13 +883,15 @@ foreach (var row in results)
 
 #### Column-level encryption — encrypt sensitive values before insert
 
+> [!info] Client-side column encryption: encrypt individual field values with KMS
+> Client-side column encryption: encrypt individual field values with KMS
+> before inserting into BigQuery. The table stores ciphertext; only callers
+> with KMS decrypt access can recover the original values.
+>
+> When required: PII protection, GDPR/CCPA, multi-tenant isolation.
+> When NOT needed: non-sensitive data, BigQuery CMEK already sufficient.
+
 ```csharp
-// Client-side column encryption: encrypt individual field values with KMS
-// before inserting into BigQuery. The table stores ciphertext; only callers
-// with KMS decrypt access can recover the original values.
-//
-// When required: PII protection, GDPR/CCPA, multi-tenant isolation.
-// When NOT needed: non-sensitive data, BigQuery CMEK already sufficient.
 var sampleData = new[] {
     new { symbol = "AAPL", portfolio_id = "PF-001", allocation = 15.5 },
     new { symbol = "MSFT", portfolio_id = "PF-002", allocation = 22.0 },
@@ -1161,47 +1178,47 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 
 ## Security Operations Audit Summary
 
-```csharp
-// Security Operations Audit Summary (C#)
-//
-// Identity & Authentication:
-//   - SA key file authentication (ServiceAccountCredential)
-//   - Application Default Credentials (ADC)
-//   - Service account impersonation
-//   - Short-lived access tokens
-//
-// Secret Manager:
-//   - Read/create/rotate/disable secrets
-//   - JSON secret parsing
-//
-// Cloud KMS:
-//   - Symmetric encrypt/decrypt
-//   - Envelope encryption with AesGcm (built-in .NET)
-//   - Key versioning
-//
-// Cloud SQL:
-//   - SqlClient native TLS connection
-//   - CRUD with parameterized queries
-//   - SSL certificate verification
-//   - SqlBulkCopy (in-process bulk insert)
-//   - CMEK verification
-//
-// BigQuery:
-//   - SA-authenticated queries
-//   - Column-level KMS encryption + decryption
-//
-// Firestore:
-//   - SA-authenticated CRUD
-//   - Field-level KMS encryption
-//
-// Cloud Storage:
-//   - CMEK upload/verify
-//   - Client-side AES-GCM encryption (built-in .NET)
-//   - Signed URLs with UrlSigner
-//
-// C# advantages over Python:
-//   - SqlClient is native (not FreeTDS wrapper)
-//   - SqlBulkCopy: no temp files, direct streaming
-//   - AesGcm built into System.Security.Cryptography
-//   - Compile-time type safety catches errors early
-```
+> [!abstract]- Security Operations Audit Summary (C#)
+> Security Operations Audit Summary (C#)
+>
+> Identity & Authentication:
+>   - SA key file authentication (ServiceAccountCredential)
+>   - Application Default Credentials (ADC)
+>   - Service account impersonation
+>   - Short-lived access tokens
+>
+> Secret Manager:
+>   - Read/create/rotate/disable secrets
+>   - JSON secret parsing
+>
+> Cloud KMS:
+>   - Symmetric encrypt/decrypt
+>   - Envelope encryption with AesGcm (built-in .NET)
+>   - Key versioning
+>
+> Cloud SQL:
+>   - SqlClient native TLS connection
+>   - CRUD with parameterized queries
+>   - SSL certificate verification
+>   - SqlBulkCopy (in-process bulk insert)
+>   - CMEK verification
+>
+> BigQuery:
+>   - SA-authenticated queries
+>   - Column-level KMS encryption + decryption
+>
+> Firestore:
+>   - SA-authenticated CRUD
+>   - Field-level KMS encryption
+>
+> Cloud Storage:
+>   - CMEK upload/verify
+>   - Client-side AES-GCM encryption (built-in .NET)
+>   - Signed URLs with UrlSigner
+>
+> C# advantages over Python:
+>   - SqlClient is native (not FreeTDS wrapper)
+>   - SqlBulkCopy: no temp files, direct streaming
+>   - AesGcm built into System.Security.Cryptography
+>   - Compile-time type safety catches errors early
+>

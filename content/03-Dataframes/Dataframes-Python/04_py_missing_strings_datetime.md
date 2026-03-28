@@ -1224,23 +1224,23 @@ display(df.with_columns(
 
 ## Date/Time Types
 
-```python
-# Pandas types
-print("Pandas date dtype:", ohlcv_pd["date"].dtype)
-print("Pandas Timestamp:", pd.Timestamp("2026-03-15"))
-print("Pandas Timedelta:", pd.Timedelta(days=5))
-```
+> [!info]- Pandas types
+> Pandas types
+> print("Pandas date dtype:", ohlcv_pd["date"].dtype)
+> Pandas Timestamp:", pd.Timestamp("2026-03-15
+> print("Pandas Timedelta:", pd.Timedelta(days=5))
+>
 
     Pandas date dtype: object
     Pandas Timestamp: 2026-03-15 00:00:00
     Pandas Timedelta: 5 days 00:00:00
 
-```python
-# Polars types
-print("Polars date dtype:", ohlcv_pl["date"].dtype)
-print("Polars Date:", pl.Series(["2026-03-15"]).str.to_date())
-print("Polars Duration:", pl.duration(days=5))
-```
+> [!info]- Polars types
+> Polars types
+> print("Polars date dtype:", ohlcv_pl["date"].dtype)
+> print("Polars Date:", pl.Series(["2026-03-15"]).str.to_date())
+> print("Polars Duration:", pl.duration(days=5))
+>
 
     Polars date dtype: Date
     Polars Date: shape: (1,)

@@ -20,38 +20,39 @@ status: complete
 
 #### Creation
 
+> [!warning] Lists — ordered, mutable, dynamic arrays
+> Lists — ordered, mutable, dynamic arrays
+>
+> Technique: list is Python's primary collection. Supports mixed types,
+>   duplicate values, and dynamic sizing. Initialize with [], list(), or
+>   comprehension. O(1) append, O(1) index access, O(n) insert/remove.
+>
+> Benefits:
+>   - Dynamic sizing — grows automatically, no capacity declaration
+>   - Rich API — append, insert, extend, remove, pop, sort, reverse
+>   - Indexable — O(1) access by position; supports negative indexing
+>
+> Anti-patterns:
+>   - Using list for O(1) membership tests — use set for large data
+>   - insert(0, x) frequently — O(n) shift; use deque.appendleft()
+>   - Modifying during iteration — use a copy or comprehension instead
+>
+> When to use:
+>   - General-purpose ordered collections, most day-to-day scenarios
+>
+> When NOT to use:
+>   - Frequent membership tests — use set; FIFO queues — use deque
+>
+> Lists — Python's primary collection (dynamic array)
+>
+> KEY CONCEPTS:
+> - list: ordered, mutable, allows duplicates, mixed types allowed.
+> - No fixed-size array built-in (use array.array or numpy for that).
+> - Lists are dynamic — grow/shrink automatically, no size declaration needed.
+> - 0-indexed. Supports negative indexing ([-1] = last element).
+> - Slicing: list[start:stop:step] — returns a new list.
+
 ```python
-# Lists — ordered, mutable, dynamic arrays
-#
-# Technique: list is Python's primary collection. Supports mixed types,
-#   duplicate values, and dynamic sizing. Initialize with [], list(), or
-#   comprehension. O(1) append, O(1) index access, O(n) insert/remove.
-#
-# Benefits:
-#   - Dynamic sizing — grows automatically, no capacity declaration
-#   - Rich API — append, insert, extend, remove, pop, sort, reverse
-#   - Indexable — O(1) access by position; supports negative indexing
-#
-# Anti-patterns:
-#   - Using list for O(1) membership tests — use set for large data
-#   - insert(0, x) frequently — O(n) shift; use deque.appendleft()
-#   - Modifying during iteration — use a copy or comprehension instead
-#
-# When to use:
-#   - General-purpose ordered collections, most day-to-day scenarios
-#
-# When NOT to use:
-#   - Frequent membership tests — use set; FIFO queues — use deque
-
-# Lists — Python's primary collection (dynamic array)
-#
-# KEY CONCEPTS:
-# - list: ordered, mutable, allows duplicates, mixed types allowed.
-# - No fixed-size array built-in (use array.array or numpy for that).
-# - Lists are dynamic — grow/shrink automatically, no size declaration needed.
-# - 0-indexed. Supports negative indexing ([-1] = last element).
-# - Slicing: list[start:stop:step] — returns a new list.
-
 from collections import Counter
 from collections import defaultdict
 from collections import deque
@@ -203,38 +204,39 @@ print(f"stack:  {stack}")
 
 #### Creation
 
+> [!warning] Dictionaries — key-value mapping with O(1) lookup
+> Dictionaries — key-value mapping with O(1) lookup
+>
+> Technique: Hash-based mapping. Keys must be hashable (immutable).
+>   Insertion-ordered since Python 3.7. O(1) average lookup, insert,
+>   and delete. Initialize with {}, dict(), or comprehension.
+>
+> Benefits:
+>   - O(1) average lookup — far faster than list scan for large data
+>   - Insertion order preserved — iteration matches insertion sequence
+>   - Flexible initialization — literal, constructor, comprehension, zip
+>
+> Anti-patterns:
+>   - Mutable keys (lists, dicts) — TypeError; use tuples instead
+>   - Bracket access without checking key — KeyError; use .get()
+>   - dict for ordered data when list of tuples suffices
+>
+> When to use:
+>   - Config, caches, frequency counts, indexes, name-value mappings
+>
+> When NOT to use:
+>   - Ordered sequences — use list; unique values — use set
+>
+> Dictionaries — key-value mapping
+>
+> KEY CONCEPTS:
+> - dict: insertion-ordered (since Python 3.7), mutable, no duplicate keys.
+> - Keys must be hashable (immutable): str, int, float, tuple, frozenset. NOT list or dict.
+> - O(1) average lookup by key — very fast. Lists are O(n) for lookup.
+> - defaultdict: auto-creates missing keys with a factory function.
+> - Counter: specialized dict for counting occurrences.
+
 ```python
-# Dictionaries — key-value mapping with O(1) lookup
-#
-# Technique: Hash-based mapping. Keys must be hashable (immutable).
-#   Insertion-ordered since Python 3.7. O(1) average lookup, insert,
-#   and delete. Initialize with {}, dict(), or comprehension.
-#
-# Benefits:
-#   - O(1) average lookup — far faster than list scan for large data
-#   - Insertion order preserved — iteration matches insertion sequence
-#   - Flexible initialization — literal, constructor, comprehension, zip
-#
-# Anti-patterns:
-#   - Mutable keys (lists, dicts) — TypeError; use tuples instead
-#   - Bracket access without checking key — KeyError; use .get()
-#   - dict for ordered data when list of tuples suffices
-#
-# When to use:
-#   - Config, caches, frequency counts, indexes, name-value mappings
-#
-# When NOT to use:
-#   - Ordered sequences — use list; unique values — use set
-
-# Dictionaries — key-value mapping
-#
-# KEY CONCEPTS:
-# - dict: insertion-ordered (since Python 3.7), mutable, no duplicate keys.
-# - Keys must be hashable (immutable): str, int, float, tuple, frozenset. NOT list or dict.
-# - O(1) average lookup by key — very fast. Lists are O(n) for lookup.
-# - defaultdict: auto-creates missing keys with a factory function.
-# - Counter: specialized dict for counting occurrences.
-
 empty = {}
 person = {"name": "Alice", "age": 30, "city": "NYC"}
 from_pairs = dict([("a", 1), ("b", 2)])            # from list of tuples
@@ -367,38 +369,39 @@ print(f"Total:        {c.total()}")
 
 #### Creation
 
+> [!warning] Sets — unordered unique elements with O(1) operations
+> Sets — unordered unique elements with O(1) operations
+>
+> Technique: set stores unique hashable elements. Duplicates silently
+>   dropped on creation. O(1) average for add, remove, and in checks.
+>   frozenset is the immutable variant — can be dict keys or set elements.
+>
+> Benefits:
+>   - O(1) membership testing — far faster than list for large data
+>   - Automatic deduplication — set([1,1,2,2,3]) = {1,2,3}
+>   - Set algebra: union, intersection, difference built in
+>
+> Anti-patterns:
+>   - Using list + in for uniqueness — O(n); use set
+>   - Mutable elements (lists, dicts) — unhashable, raises TypeError
+>   - Relying on set order — unordered (though CPython 3.7+ has some order)
+>
+> When to use:
+>   - Deduplication, membership testing, set algebra operations
+>
+> When NOT to use:
+>   - Ordered data — use list; indexed access — use list or tuple
+>
+> Sets — unordered unique elements
+>
+> KEY CONCEPTS:
+> - set: unordered, mutable, NO duplicates. Elements must be hashable.
+> - frozenset: immutable set — can be used as a dict key or inside another set.
+> - Set operations: union, intersection, difference, symmetric difference.
+>   Useful in DE for comparing datasets, finding missing records, deduplication.
+> - O(1) average membership check — much faster than list's O(n).
+
 ```python
-# Sets — unordered unique elements with O(1) operations
-#
-# Technique: set stores unique hashable elements. Duplicates silently
-#   dropped on creation. O(1) average for add, remove, and in checks.
-#   frozenset is the immutable variant — can be dict keys or set elements.
-#
-# Benefits:
-#   - O(1) membership testing — far faster than list for large data
-#   - Automatic deduplication — set([1,1,2,2,3]) = {1,2,3}
-#   - Set algebra: union, intersection, difference built in
-#
-# Anti-patterns:
-#   - Using list + in for uniqueness — O(n); use set
-#   - Mutable elements (lists, dicts) — unhashable, raises TypeError
-#   - Relying on set order — unordered (though CPython 3.7+ has some order)
-#
-# When to use:
-#   - Deduplication, membership testing, set algebra operations
-#
-# When NOT to use:
-#   - Ordered data — use list; indexed access — use list or tuple
-
-# Sets — unordered unique elements
-#
-# KEY CONCEPTS:
-# - set: unordered, mutable, NO duplicates. Elements must be hashable.
-# - frozenset: immutable set — can be used as a dict key or inside another set.
-# - Set operations: union, intersection, difference, symmetric difference.
-#   Useful in DE for comparing datasets, finding missing records, deduplication.
-# - O(1) average membership check — much faster than list's O(n).
-
 empty = set()                           # NOT {} — that's an empty dict!
 nums = {1, 2, 3, 4, 5}
 from_list = set([1, 2, 2, 3, 3, 3])    # duplicates removed: {1, 2, 3}
@@ -505,37 +508,38 @@ print(f"As dict key:  {cache}")
 
 #### Tuple basics
 
+> [!warning] Tuples — ordered, immutable sequences
+> Tuples — ordered, immutable sequences
+>
+> Technique: (1, 2, 3) or tuple() creates an immutable sequence. Single
+>   element requires trailing comma: (1,). Supports indexing, slicing,
+>   unpacking. Hashable (if all elements are hashable) — valid as dict keys.
+>
+> Benefits:
+>   - Immutable — safe to share, use as dict keys, pass without copy concerns
+>   - Unpacking: x, y = point — clean multi-value assignment
+>   - Lighter than list — less memory, faster creation
+>
+> Anti-patterns:
+>   - Using tuple when mutability is needed — use list instead
+>   - Forgetting trailing comma for single-element: (1) is int, not tuple
+>
+> When to use:
+>   - Fixed data, dict keys, function return values, database rows
+>
+> When NOT to use:
+>   - When you need add/remove — use list
+>
+> Tuples — ordered, IMMUTABLE sequences
+>
+> KEY CONCEPTS:
+> - tuple: ordered, IMMUTABLE sequence. Once created, can't add/remove/change elements.
+> - namedtuple: tuple with named fields — like a lightweight immutable class.
+> - Enum: a set of named constants representing a fixed set of values.
+> - Why immutable? Tuples can be dict keys, set elements, and function return values
+>   because they're hashable. Lists can't be used as dict keys (mutable = unhashable).
+
 ```python
-# Tuples — ordered, immutable sequences
-#
-# Technique: (1, 2, 3) or tuple() creates an immutable sequence. Single
-#   element requires trailing comma: (1,). Supports indexing, slicing,
-#   unpacking. Hashable (if all elements are hashable) — valid as dict keys.
-#
-# Benefits:
-#   - Immutable — safe to share, use as dict keys, pass without copy concerns
-#   - Unpacking: x, y = point — clean multi-value assignment
-#   - Lighter than list — less memory, faster creation
-#
-# Anti-patterns:
-#   - Using tuple when mutability is needed — use list instead
-#   - Forgetting trailing comma for single-element: (1) is int, not tuple
-#
-# When to use:
-#   - Fixed data, dict keys, function return values, database rows
-#
-# When NOT to use:
-#   - When you need add/remove — use list
-
-# Tuples — ordered, IMMUTABLE sequences
-#
-# KEY CONCEPTS:
-# - tuple: ordered, IMMUTABLE sequence. Once created, can't add/remove/change elements.
-# - namedtuple: tuple with named fields — like a lightweight immutable class.
-# - Enum: a set of named constants representing a fixed set of values.
-# - Why immutable? Tuples can be dict keys, set elements, and function return values
-#   because they're hashable. Lists can't be used as dict keys (mutable = unhashable).
-
 empty = ()
 single = (42,)                          # trailing comma required for single element!
 point = (3, 4)
@@ -703,38 +707,38 @@ if status == PipelineStatus.RUNNING:
 
 #### Stacks, queues, and deques overview
 
-```python
-# Stacks, queues, and deques — specialized access patterns
-#
-# Technique: Stack (LIFO): list with append/pop. Queue (FIFO): deque
-#   with append/popleft. Deque: double-ended with O(1) both ends.
-#   PriorityQueue: heapq for min-heap ordering.
-#
-# Benefits:
-#   - Each type enforces a specific access pattern — prevents misuse
-#   - deque is O(1) at both ends — list.pop(0) is O(n)
-#   - heapq provides priority ordering without sorting
-#
-# Anti-patterns:
-#   - list.pop(0) for FIFO — O(n); use deque.popleft() which is O(1)
-#   - Using list as both stack and queue — confusing semantics
-#
-# When to use:
-#   - Stack: DFS, undo, backtracking; Queue: BFS, task processing
-#   - Deque: sliding windows, both-ends access; heapq: priority ordering
-#
-# When NOT to use:
-#   - Random access — use list; sorted unique — use SortedSet
-
-# Stacks, Queues & Deques
-#
-# KEY CONCEPTS:
-# - Stack (LIFO): Last In, First Out. Use list (append/pop) or collections.deque.
-# - Queue (FIFO): First In, First Out.
-#   Use collections.deque (NOT list — list.pop(0) is O(n), deque.popleft() is O(1)).
-# - Deque (double-ended queue): efficiently add/remove from BOTH ends.
-# - Priority Queue: items come out in priority order, not insertion order (heapq module).
-```
+> [!warning] Stacks, queues, and deques — specialized access patterns
+> Stacks, queues, and deques — specialized access patterns
+>
+> Technique: Stack (LIFO): list with append/pop. Queue (FIFO): deque
+>   with append/popleft. Deque: double-ended with O(1) both ends.
+>   PriorityQueue: heapq for min-heap ordering.
+>
+> Benefits:
+>   - Each type enforces a specific access pattern — prevents misuse
+>   - deque is O(1) at both ends — list.pop(0) is O(n)
+>   - heapq provides priority ordering without sorting
+>
+> Anti-patterns:
+>   - list.pop(0) for FIFO — O(n); use deque.popleft() which is O(1)
+>   - Using list as both stack and queue — confusing semantics
+>
+> When to use:
+>   - Stack: DFS, undo, backtracking; Queue: BFS, task processing
+>   - Deque: sliding windows, both-ends access; heapq: priority ordering
+>
+> When NOT to use:
+>   - Random access — use list; sorted unique — use SortedSet
+>
+> Stacks, Queues & Deques
+>
+> KEY CONCEPTS:
+> - Stack (LIFO): Last In, First Out. Use list (append/pop) or collections.deque.
+> - Queue (FIFO): First In, First Out.
+>   Use collections.deque (NOT list — list.pop(0) is O(n), deque.popleft() is O(1)).
+> - Deque (double-ended queue): efficiently add/remove from BOTH ends.
+> - Priority Queue: items come out in priority order, not insertion order (heapq module).
+>
 
 #### Stack (LIFO)
 
@@ -855,26 +859,28 @@ while task_queue:
 
 #### Collection cheat sheet
 
-```python
-# Collection cheat sheet — ordered, mutable, duplicates, lookup complexity
-#
-# Technique: Reference table comparing all collection types by ordering,
-#   mutability, duplicate handling, and lookup complexity.
-#
-# Benefits:
-#   - Single-page comparison for choosing the right collection
-#   - Complexity column shows O(1) vs O(n) tradeoffs
-#
-# Anti-patterns:
-#   - Choosing by familiarity alone — match collection to access pattern
-#
-# When to use:
-#   - Quick lookup when selecting a collection type
-#
-# When NOT to use:
-#   - N/A — this is a reference table
+> [!warning] Collection cheat sheet — ordered, mutable, duplicates, lookup complexity
+> Collection cheat sheet — ordered, mutable, duplicates, lookup complexity
+>
+> Technique: Reference table comparing all collection types by ordering,
+>   mutability, duplicate handling, and lookup complexity.
+>
+> Benefits:
+>   - Single-page comparison for choosing the right collection
+>   - Complexity column shows O(1) vs O(n) tradeoffs
+>
+> Anti-patterns:
+>   - Choosing by familiarity alone — match collection to access pattern
+>
+> When to use:
+>   - Quick lookup when selecting a collection type
+>
+> When NOT to use:
+>   - N/A — this is a reference table
+>
+> Collection cheat sheet — ordered, mutable, duplicates, and lookup complexity
 
-# Collection cheat sheet — ordered, mutable, duplicates, and lookup complexity
+```python
 comparison = """
 Collection    | Ordered | Mutable | Duplicates | Lookup  | Use When
 --------------+---------+---------+------------+---------+----------------------------------
@@ -958,20 +964,20 @@ print(guide)
 
 #### Common DE patterns
 
-```python
-# Common data engineering patterns — collection selection by use case
-
-print("ETL records:      list[dict]   or  list[namedtuple]")
-print("Config/params:    dict")
-print("Deduplication:    set")
-print("Lookup table:     dict  (id → record)")
-print("Grouping:         defaultdict(list)")
-print("Counting:         Counter")
-print("Task queue:       deque")
-print("Priority tasks:   heapq")
-print("Schema fields:    tuple or frozenset (immutable)")
-print("Cache key:        tuple or frozenset (hashable)")
-```
+> [!example]- Common data engineering patterns — collection selection by use case
+> Common data engineering patterns — collection selection by use case
+>
+> ETL records:      list[dict]   or  list[namedtuple]
+> Config/params:    dict
+> Deduplication:    set
+> Lookup table:     dict  (id → record)
+> Grouping:         defaultdict(list)
+> Counting:         Counter
+> Task queue:       deque
+> Priority tasks:   heapq
+> Schema fields:    tuple or frozenset (immutable)
+> Cache key:        tuple or frozenset (hashable)
+>
 
     ETL records:      list[dict]   or  list[namedtuple]
     Config/params:    dict

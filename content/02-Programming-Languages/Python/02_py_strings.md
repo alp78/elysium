@@ -115,43 +115,43 @@ print(f"Modified: {s}")
 
 #### Indexing (0-based)
 
-```python
-# Indexing and slicing — s[i], s[-i], s[a:b], s[a:b:step]
-#
-# Technique: s[i] accesses by index (0-based). s[-1] is the last character.
-#   s[a:b] slices from a to b (exclusive). s[::2] takes every 2nd char.
-#   s[::-1] reverses the string. Slicing never raises IndexError.
-#
-# Benefits:
-#   - Negative indexing eliminates len(s)-1 boilerplate
-#   - Slices are forgiving — out-of-range indices are silently clamped
-#   - Step parameter enables stride, reversal, and subsampling
-#
-# Anti-patterns:
-#   - Forgetting slices are right-exclusive — s[0:5] is indices 0-4
-#   - Using s[len(s)-1] instead of s[-1] — less Pythonic
-#
-# When to use:
-#   - Extracting substrings, accessing characters, reversing strings
-#
-# When NOT to use:
-#   - Pattern extraction — use regex or split instead of index math
-
-#     0123456789...
-
-print(f"s[0]:     '{s[0]}'")        # H
-print(f"s[1]:     '{s[1]}'")        # e
-print(f"s[-1]:    '{s[-1]}'")       # ! (last char)
-print(f"s[-2]:    '{s[-2]}'")       # d (second to last)
-print(f"s[0:5]:   '{s[0:5]}'")      # Hello (stop is exclusive)
-print(f"s[:5]:    '{s[:5]}'")        # Hello (start defaults to 0)
-print(f"s[7:]:    '{s[7:]}'")        # World! (stop defaults to end)
-print(f"s[-6:]:   '{s[-6:]}'")       # orld! (negative index)
-print(f"s[::2]:   '{s[::2]}'")      # Hlo ol! (every 2nd char)
-print(f"s[::-1]:  '{s[::-1]}'")      # !dlroW ,olleH (reversed)
-print(f"s[7:12]:  '{s[7:12]}'")     # World
-print(f"s[2:10:2]:'{s[2:10:2]}'")   # lo o (slice with step)
-```
+> [!warning]- Indexing and slicing — s[i], s[-i], s[a:b], s[a:b:step]
+> Indexing and slicing — s[i], s[-i], s[a:b], s[a:b:step]
+>
+> Technique: s[i] accesses by index (0-based). s[-1] is the last character.
+>   s[a:b] slices from a to b (exclusive). s[::2] takes every 2nd char.
+>   s[::-1] reverses the string. Slicing never raises IndexError.
+>
+> Benefits:
+>   - Negative indexing eliminates len(s)-1 boilerplate
+>   - Slices are forgiving — out-of-range indices are silently clamped
+>   - Step parameter enables stride, reversal, and subsampling
+>
+> Anti-patterns:
+>   - Forgetting slices are right-exclusive — s[0:5] is indices 0-4
+>   - Using s[len(s)-1] instead of s[-1] — less Pythonic
+>
+> When to use:
+>   - Extracting substrings, accessing characters, reversing strings
+>
+> When NOT to use:
+>   - Pattern extraction — use regex or split instead of index math
+>
+>     0123456789...
+>
+> s[0]:     '{s[0]}'
+> s[1]:     '{s[1]}'
+> s[-1]:    '{s[-1]}'
+> s[-2]:    '{s[-2]}'
+> s[0:5]:   '{s[0:5]}'
+> s[:5]:    '{s[:5]}'
+> s[7:]:    '{s[7:]}'
+> s[-6:]:   '{s[-6:]}'
+> s[::2]:   '{s[::2]}'
+> s[::-1]:  '{s[::-1]}'
+> s[7:12]:  '{s[7:12]}'
+> s[2:10:2]:'{s[2:10:2]}'
+>
 
     s[0]:     'H'
     s[1]:     'e'
@@ -199,28 +199,29 @@ for i, ch in enumerate(s[:5]):
 
 #### Case Methods  — Case, Whitespace, Checking, Searching, Replacing
 
-```python
-# Case methods — upper, lower, title, capitalize, swapcase, casefold
-#
-# Technique: Built-in methods for case conversion. casefold() is more
-#   aggressive than lower() — handles Unicode: "Strasse".casefold() = "strasse"
-#   from German "Strasse". title() capitalizes first letter of each word.
-#
-# Benefits:
-#   - casefold() is the correct way to do case-insensitive comparison
-#   - title()/capitalize() handle word boundaries automatically
-#   - All are Unicode-aware — work correctly with non-ASCII characters
-#
-# Anti-patterns:
-#   - Using lower() for case-insensitive comparison — casefold() handles more Unicode
-#   - Comparing upper() results — casefold() is designed for this purpose
-#
-# When to use:
-#   - Display formatting, case-insensitive search, normalization
-#
-# When NOT to use:
-#   - Locale-sensitive case rules — use locale module for Turkish i, etc.
+> [!warning] Case methods — upper, lower, title, capitalize, swapcase, casefold
+> Case methods — upper, lower, title, capitalize, swapcase, casefold
+>
+> Technique: Built-in methods for case conversion. casefold() is more
+>   aggressive than lower() — handles Unicode: "Strasse".casefold() = "strasse"
+>   from German "Strasse". title() capitalizes first letter of each word.
+>
+> Benefits:
+>   - casefold() is the correct way to do case-insensitive comparison
+>   - title()/capitalize() handle word boundaries automatically
+>   - All are Unicode-aware — work correctly with non-ASCII characters
+>
+> Anti-patterns:
+>   - Using lower() for case-insensitive comparison — casefold() handles more Unicode
+>   - Comparing upper() results — casefold() is designed for this purpose
+>
+> When to use:
+>   - Display formatting, case-insensitive search, normalization
+>
+> When NOT to use:
+>   - Locale-sensitive case rules — use locale module for Turkish i, etc.
 
+```python
 s = "  Hello, World!  "
 
 print(f"upper():       '{'hello world'.upper()}'")
@@ -240,18 +241,18 @@ print(f"casefold():    '{'Straße'.casefold()}'")       # aggressive lowercase f
 
 #### Whitespace & Padding
 
-```python
-# Whitespace and padding — strip, ljust, rjust, center, zfill
-
-print(f"lstrip():      '{s.lstrip()}'")          # left only
-print(f"rstrip():      '{s.rstrip()}'")          # right only
-print(f"strip('!'):    '{'Hello!!'.strip('!')}'")  # strip specific chars
-print(f"center(20):    '{'hello'.center(20)}'")
-print(f"center(20,'*'):'{'hello'.center(20, '*')}'")
-print(f"ljust(20):     '{'hello'.ljust(20)}'")
-print(f"rjust(20):     '{'hello'.rjust(20)}'")
-print(f"zfill(8):      '{'42'.zfill(8)}'")       # zero-pad numbers
-```
+> [!info]- Whitespace and padding — strip, ljust, rjust, center, zfill
+> Whitespace and padding — strip, ljust, rjust, center, zfill
+>
+> lstrip():      '{s.lstrip()}'
+> rstrip():      '{s.rstrip()}'
+> strip('!'):    '{'Hello!!'.strip('!')}'
+> center(20):    '{'hello'.center(20)}'
+> center(20,'*'):'{'hello'.center(20, '*')}'
+> ljust(20):     '{'hello'.ljust(20)}'
+> rjust(20):     '{'hello'.rjust(20)}'
+> zfill(8):      '{'42'.zfill(8)}'
+>
 
     strip():       'Hello, World!'
     lstrip():      'Hello, World!  '
@@ -303,19 +304,19 @@ for method, example in checks.items():
 
 #### Searching
 
-```python
-# Searching — find, index, count, startswith, endswith, in
-
-print(f"find('Hello'):      {s.find('Hello')}")        # 0 (first occurrence)
-print(f"find('Hello', 1):   {s.find('Hello', 1)}")     # 14 (start from index 1)
-print(f"rfind('Hello'):     {s.rfind('Hello')}")       # 14 (last occurrence)
-print(f"find('Java'):       {s.find('Java')}")         # -1 (not found)
-print(f"index('World'):     {s.index('World')}")       # 7 (like find but raises ValueError)
-print(f"count('Hello'):     {s.count('Hello')}")       # 2
-print(f"startswith('Hello'):{s.startswith('Hello')}")
-print(f"endswith('!'):      {s.endswith('!')}")
-print(f"'World' in s:       {'World' in s}")            # True (membership)
-```
+> [!info]- Searching — find, index, count, startswith, endswith, in
+> Searching — find, index, count, startswith, endswith, in
+>
+> find('Hello'):      {s.find('Hello')}
+> find('Hello', 1):   {s.find('Hello', 1)}
+> rfind('Hello'):     {s.rfind('Hello')}
+> find('Java'):       {s.find('Java')}
+> index('World'):     {s.index('World')}
+> count('Hello'):     {s.count('Hello')}
+> startswith('Hello'):{s.startswith('Hello')}
+> endswith('!'):      {s.endswith('!')}
+> 'World' in s:       {'World' in s}
+>
 
     find('Hello'):      0
     find('Hello', 1):   14
@@ -418,30 +419,31 @@ print(f"encode('ascii'):   {'hello'.encode('ascii')}")
 
 #### f-strings (recommended, Python 3.6+)
 
-```python
-# f-strings — inline expression embedding (Python 3.6+)
-#
-# Technique: f"..." embeds any expression in {braces}. Supports format
-#   specifiers: f"{n:.2f}", method calls: f"{s.upper()}", and expressions:
-#   f"{a + 1}". Also shows .format() and % operator for comparison.
-#
-# Benefits:
-#   - Most readable — expressions are inline, no positional placeholders
-#   - Any expression allowed: f"{len(items)}", f"{x if x else 'N/A'}"
-#   - Faster than .format() — compiled to efficient bytecode
-#
-# Anti-patterns:
-#   - .format() in new code when f-strings work — f-strings are cleaner
-#   - f-strings in SQL or shell commands — injection risk
-#   - %-formatting in new code — legacy, error-prone with tuple/dict
-#
-# When to use:
-#   - f-strings for all new code; .format() when template is a variable
-#
-# When NOT to use:
-#   - SQL/command strings — use parameterised queries
-#   - Logging — use logger.info("msg %s", val) for lazy evaluation
+> [!warning] f-strings — inline expression embedding (Python 3.6+)
+> f-strings — inline expression embedding (Python 3.6+)
+>
+> Technique: f"..." embeds any expression in {braces}. Supports format
+>   specifiers: f"{n:.2f}", method calls: f"{s.upper()}", and expressions:
+>   f"{a + 1}". Also shows .format() and % operator for comparison.
+>
+> Benefits:
+>   - Most readable — expressions are inline, no positional placeholders
+>   - Any expression allowed: f"{len(items)}", f"{x if x else 'N/A'}"
+>   - Faster than .format() — compiled to efficient bytecode
+>
+> Anti-patterns:
+>   - .format() in new code when f-strings work — f-strings are cleaner
+>   - f-strings in SQL or shell commands — injection risk
+>   - %-formatting in new code — legacy, error-prone with tuple/dict
+>
+> When to use:
+>   - f-strings for all new code; .format() when template is a variable
+>
+> When NOT to use:
+>   - SQL/command strings — use parameterised queries
+>   - Logging — use logger.info("msg %s", val) for lazy evaluation
 
+```python
 name, age = "Alice", 30
 n = 1234567.89123
 pct = 0.856
@@ -546,31 +548,31 @@ except ImportError:
 
 #### Efficient string building — why + in loops is slow
 
-```python
-# String building overview — immutability makes + in loops O(n squared)
-#
-# Technique: Strings are immutable — each += copies the entire string.
-#   For n concatenations, this is O(n squared) total work. Use "".join()
-#   or io.StringIO for O(n) string building.
-#
-# Benefits:
-#   - Understanding this prevents major performance bottlenecks
-#   - join() and StringIO are the standard efficient alternatives
-#
-# Anti-patterns:
-#   - += in loops — each iteration copies the growing string
-#   - Assuming Python optimizes string += — CPython may, but it's not guaranteed
-#
-# When to use:
-#   - Always consider the building strategy for >10 concatenations
-#
-# When NOT to use:
-#   - 2-5 string concatenations — + is fine for small numbers
-
-# Efficient String Building
-# Strings are IMMUTABLE — each + creates a new string object
-# For many concatenations, use join() or io.StringIO instead
-```
+> [!warning] String building overview — immutability makes + in loops O(n squared)
+> String building overview — immutability makes + in loops O(n squared)
+>
+> Technique: Strings are immutable — each += copies the entire string.
+>   For n concatenations, this is O(n squared) total work. Use "".join()
+>   or io.StringIO for O(n) string building.
+>
+> Benefits:
+>   - Understanding this prevents major performance bottlenecks
+>   - join() and StringIO are the standard efficient alternatives
+>
+> Anti-patterns:
+>   - += in loops — each iteration copies the growing string
+>   - Assuming Python optimizes string += — CPython may, but it's not guaranteed
+>
+> When to use:
+>   - Always consider the building strategy for >10 concatenations
+>
+> When NOT to use:
+>   - 2-5 string concatenations — + is fine for small numbers
+>
+> Efficient String Building
+> Strings are IMMUTABLE — each + creates a new string object
+> For many concatenations, use join() or io.StringIO instead
+>
 
 #### BAD: O(n²) — each + copies the entire string
 
@@ -643,24 +645,25 @@ print("Rule: use + for 2-5 strings, join() for loops/many strings")
 
 #### Regex setup — import and test text
 
-```python
-# Regex setup — declare test text for pattern matching demonstrations
-#
-# Technique: Define a multi-format test string containing emails, phone
-#   numbers, and other patterns for regex demonstrations.
-#
-# Benefits:
-#   - Single test string reused across all regex demo cells
-#
-# Anti-patterns:
-#   - Re-declaring test data in every cell — wastes space
-#
-# When to use:
-#   - When multiple cells demonstrate patterns on the same text
-#
-# When NOT to use:
-#   - Self-contained cells — declare test data inline
+> [!warning] Regex setup — declare test text for pattern matching demonstrations
+> Regex setup — declare test text for pattern matching demonstrations
+>
+> Technique: Define a multi-format test string containing emails, phone
+>   numbers, and other patterns for regex demonstrations.
+>
+> Benefits:
+>   - Single test string reused across all regex demo cells
+>
+> Anti-patterns:
+>   - Re-declaring test data in every cell — wastes space
+>
+> When to use:
+>   - When multiple cells demonstrate patterns on the same text
+>
+> When NOT to use:
+>   - Self-contained cells — declare test data inline
 
+```python
 text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
 ```
 

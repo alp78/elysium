@@ -52,44 +52,44 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 #### Parquet overview — columnar format for analytics
 
+> [!warning] Parquet — columnar binary format for analytics and data lakes
+> Parquet — columnar binary format for analytics and data lakes
+>
+> Technique: Parquet stores data column-by-column with per-column
+>   compression. Schema is embedded in the file footer. Supports
+>   column pruning, predicate pushdown, and partitioning.
+>
+> Benefits:
+>   - Columnar — read only needed columns (projection pushdown)
+>   - Compressed — 5-10x smaller than CSV for typical data
+>   - Typed schema — no parsing overhead, self-describing
+>   - Standard — BigQuery, Spark, DuckDB, Athena all read Parquet natively
+>
+> Anti-patterns:
+>   - Parquet for simple data exchange — CSV is more universal
+>   - Small files (<1MB) — Parquet overhead exceeds benefit
+>   - Frequent appends — Parquet is immutable; use Avro/JSONL for streaming
+>
+> When to use:
+>   - Data lake storage, analytics pipelines, large datasets
+>
+> When NOT to use:
+>   - Streaming/append workloads — use Avro or JSONL
+>
+> Parquet Files — columnar storage for analytics & data lakes
+>
+> KEY CONCEPTS:
+> - Parquet: columnar binary format. Designed for analytics — read only the columns you need.
+>   Standard format in data lakes (GCS, S3, ADLS), BigQuery exports, Spark, dbt.
+> - Columnar vs row-based: CSV stores row-by-row (read entire row even for 1 column).
+>   Parquet stores column-by-column — reading 3 columns from a 100-column table is fast.
+> - Built-in compression: snappy (default, fast), gzip (smaller), zstd (best ratio).
+> - Schema is embedded: column names, types, and nullability are stored in the file metadata.
+>   No need for a separate schema file or header row.
+> - pyarrow: Apache Arrow for Python. The standard library for parquet I/O.
+>   pip install pyarrow
+
 ```python
-# Parquet — columnar binary format for analytics and data lakes
-#
-# Technique: Parquet stores data column-by-column with per-column
-#   compression. Schema is embedded in the file footer. Supports
-#   column pruning, predicate pushdown, and partitioning.
-#
-# Benefits:
-#   - Columnar — read only needed columns (projection pushdown)
-#   - Compressed — 5-10x smaller than CSV for typical data
-#   - Typed schema — no parsing overhead, self-describing
-#   - Standard — BigQuery, Spark, DuckDB, Athena all read Parquet natively
-#
-# Anti-patterns:
-#   - Parquet for simple data exchange — CSV is more universal
-#   - Small files (<1MB) — Parquet overhead exceeds benefit
-#   - Frequent appends — Parquet is immutable; use Avro/JSONL for streaming
-#
-# When to use:
-#   - Data lake storage, analytics pipelines, large datasets
-#
-# When NOT to use:
-#   - Streaming/append workloads — use Avro or JSONL
-
-# Parquet Files — columnar storage for analytics & data lakes
-#
-# KEY CONCEPTS:
-# - Parquet: columnar binary format. Designed for analytics — read only the columns you need.
-#   Standard format in data lakes (GCS, S3, ADLS), BigQuery exports, Spark, dbt.
-# - Columnar vs row-based: CSV stores row-by-row (read entire row even for 1 column).
-#   Parquet stores column-by-column — reading 3 columns from a 100-column table is fast.
-# - Built-in compression: snappy (default, fast), gzip (smaller), zstd (best ratio).
-# - Schema is embedded: column names, types, and nullability are stored in the file metadata.
-#   No need for a separate schema file or header row.
-# - pyarrow: Apache Arrow for Python. The standard library for parquet I/O.
-#   pip install pyarrow
-
-
 tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 ```
 
@@ -313,64 +313,64 @@ Use case             Simple exchange, legacy      Data lakes, analytics, BigQuer
 
 #### Avro and Protobuf overview
 
-```python
-# Enterprise serialization overview — Avro and Protobuf vs JSON/pickle
-#
-# Technique: Compares binary formats (Avro, Protobuf) with text (JSON)
-#   and Python-native (pickle). Binary formats provide schema enforcement,
-#   cross-language support, and compact serialization.
-#
-# Benefits:
-#   - Schema enforcement — catches type mismatches at serialization time
-#   - Cross-language — same schema generates code for any language
-#   - Compact — 3-10x smaller than JSON for the same data
-#
-# Anti-patterns:
-#   - JSON for high-throughput pipelines — binary formats are faster
-#   - pickle for cross-language data — Python-only format
-#
-# When to use:
-#   - Understanding when to upgrade from JSON to binary formats
-#
-# When NOT to use:
-#   - N/A — this is a conceptual overview
-
-# Enterprise serialization — cross-language binary formats with schema evolution
-#
-# WHY NOT JSON/PICKLE:
-#   - JSON: text-based, no schema enforcement, slow to parse at scale
-#   - pickle: Python-only, insecure (arbitrary code execution), no schema
-#
-# PRODUCTION ALTERNATIVES:
-#
-# Apache Avro:
-#   - Binary format with embedded schema (self-describing)
-#   - Schema evolution: add/remove fields without breaking consumers
-#   - Standard for Kafka messages in data engineering
-#   - Python: fastavro library
-#   - Compact: ~50-70% smaller than JSON for structured data
-#
-# Protocol Buffers (Protobuf):
-#   - Binary format with separate .proto schema files
-#   - Code generation: protoc compiles .proto into Python/Java/Go/C# classes
-#   - Standard for gRPC microservices
-#   - Python: protobuf library (google.protobuf)
-#   - Compact: ~60-80% smaller than JSON
-#
-# WHEN TO USE WHAT:
-#   JSON:     human-readable APIs, config files, small payloads
-#   Avro:     Kafka events, data lake storage, schema registry
-#   Protobuf: gRPC services, high-performance IPC, mobile APIs
-#   pickle:   NEVER in production (insecure, Python-only)
-
-print("Format      Size    Speed     Schema    Cross-lang  Use case")
-print("─" * 70)
-print("JSON        Large   Slow      No        Yes         APIs, config")
-print("Avro        Small   Fast      Yes       Yes         Kafka, data lakes")
-print("Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile")
-print("pickle      Medium  Fast      No        No          NEVER in prod")
-print("struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols")
-```
+> [!danger]- Enterprise serialization overview — Avro and Protobuf vs JSON/pickle
+> Enterprise serialization overview — Avro and Protobuf vs JSON/pickle
+>
+> Technique: Compares binary formats (Avro, Protobuf) with text (JSON)
+>   and Python-native (pickle). Binary formats provide schema enforcement,
+>   cross-language support, and compact serialization.
+>
+> Benefits:
+>   - Schema enforcement — catches type mismatches at serialization time
+>   - Cross-language — same schema generates code for any language
+>   - Compact — 3-10x smaller than JSON for the same data
+>
+> Anti-patterns:
+>   - JSON for high-throughput pipelines — binary formats are faster
+>   - pickle for cross-language data — Python-only format
+>
+> When to use:
+>   - Understanding when to upgrade from JSON to binary formats
+>
+> When NOT to use:
+>   - N/A — this is a conceptual overview
+>
+> Enterprise serialization — cross-language binary formats with schema evolution
+>
+> WHY NOT JSON/PICKLE:
+>   - JSON: text-based, no schema enforcement, slow to parse at scale
+>   - pickle: Python-only, insecure (arbitrary code execution), no schema
+>
+> PRODUCTION ALTERNATIVES:
+>
+> Apache Avro:
+>   - Binary format with embedded schema (self-describing)
+>   - Schema evolution: add/remove fields without breaking consumers
+>   - Standard for Kafka messages in data engineering
+>   - Python: fastavro library
+>   - Compact: ~50-70% smaller than JSON for structured data
+>
+> Protocol Buffers (Protobuf):
+>   - Binary format with separate .proto schema files
+>   - Code generation: protoc compiles .proto into Python/Java/Go/C# classes
+>   - Standard for gRPC microservices
+>   - Python: protobuf library (google.protobuf)
+>   - Compact: ~60-80% smaller than JSON
+>
+> WHEN TO USE WHAT:
+>   JSON:     human-readable APIs, config files, small payloads
+>   Avro:     Kafka events, data lake storage, schema registry
+>   Protobuf: gRPC services, high-performance IPC, mobile APIs
+>   pickle:   NEVER in production (insecure, Python-only)
+>
+> Format      Size    Speed     Schema    Cross-lang  Use case
+> print("─" * 70)
+> JSON        Large   Slow      No        Yes         APIs, config
+> Avro        Small   Fast      Yes       Yes         Kafka, data lakes
+> Protobuf    Small   Fastest   Yes       Yes         gRPC, mobile
+> pickle      Medium  Fast      No        No          NEVER in prod
+> struct      Tiny    Fastest   Manual    Manual      IoT, binary protocols
+>
 
     Format      Size    Speed     Schema    Cross-lang  Use case
     ──────────────────────────────────────────────────────────────────────
@@ -638,29 +638,31 @@ print("""
 
 #### Generate test data
 
-```python
-# Generate OHLCV test data — three sizes for format benchmarking
-#
-# Technique: Create synthetic OHLCV records matching the stoxx database
-#   schema. Three tiers: 100 (small), 10K (medium), 100K (large).
-#   Fixed random seed (42) for reproducible benchmarks.
-#
-# Benefits:
-#   - Reproducible — fixed seed gives consistent results
-#   - Realistic schema — matches actual financial data structure
-#   - Three sizes reveal scaling characteristics of each format
-#
-# Anti-patterns:
-#   - Benchmarking with tiny data only — doesn't reveal scaling
-#   - Unrealistic schemas — results won't transfer to production
-#
-# When to use:
-#   - Comparing serialization format performance
-#
-# When NOT to use:
-#   - Production decisions — benchmark with actual production data
+> [!warning] Generate OHLCV test data — three sizes for format benchmarking
+> Generate OHLCV test data — three sizes for format benchmarking
+>
+> Technique: Create synthetic OHLCV records matching the stoxx database
+>   schema. Three tiers: 100 (small), 10K (medium), 100K (large).
+>   Fixed random seed (42) for reproducible benchmarks.
+>
+> Benefits:
+>   - Reproducible — fixed seed gives consistent results
+>   - Realistic schema — matches actual financial data structure
+>   - Three sizes reveal scaling characteristics of each format
+>
+> Anti-patterns:
+>   - Benchmarking with tiny data only — doesn't reveal scaling
+>   - Unrealistic schemas — results won't transfer to production
+>
+> When to use:
+>   - Comparing serialization format performance
+>
+> When NOT to use:
+>   - Production decisions — benchmark with actual production data
+>
+> Generate OHLCV test data — same schema as stoxx database
 
-# Generate OHLCV test data — same schema as stoxx database
+```python
 random.seed(42)
 
 symbols = ["SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","SIE.DE","ALV.DE",

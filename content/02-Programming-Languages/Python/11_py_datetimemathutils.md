@@ -20,29 +20,31 @@ status: complete
 
 #### Creating date and time objects
 
-```python
-# Creating date and time objects — datetime, date, time, timedelta
-#
-# Technique: datetime.now() for local time. datetime.now(timezone.utc) for
-#   UTC. date.today() for date-only. datetime(y,m,d,h,m,s) for specific
-#   moments. Naive datetimes have no timezone — aware ones include tzinfo.
-#
-# Benefits:
-#   - Separate types: datetime (full), date (date-only), time (time-only)
-#   - timedelta for arithmetic — add/subtract days, hours, seconds
-#   - timezone.utc gives an aware UTC datetime with no external library
-#
-# Anti-patterns:
-#   - datetime.now() for storage — timezone-naive; use datetime.now(timezone.utc)
-#   - Comparing naive and aware datetimes — TypeError
-#
-# When to use:
-#   - datetime.now(timezone.utc) for timestamps; date.today() for calendar dates
-#
-# When NOT to use:
-#   - datetime.now() for cross-timezone systems — use timezone-aware
+> [!warning] Creating date and time objects — datetime, date, time, timedelta
+> Creating date and time objects — datetime, date, time, timedelta
+>
+> Technique: datetime.now() for local time. datetime.now(timezone.utc) for
+>   UTC. date.today() for date-only. datetime(y,m,d,h,m,s) for specific
+>   moments. Naive datetimes have no timezone — aware ones include tzinfo.
+>
+> Benefits:
+>   - Separate types: datetime (full), date (date-only), time (time-only)
+>   - timedelta for arithmetic — add/subtract days, hours, seconds
+>   - timezone.utc gives an aware UTC datetime with no external library
+>
+> Anti-patterns:
+>   - datetime.now() for storage — timezone-naive; use datetime.now(timezone.utc)
+>   - Comparing naive and aware datetimes — TypeError
+>
+> When to use:
+>   - datetime.now(timezone.utc) for timestamps; date.today() for calendar dates
+>
+> When NOT to use:
+>   - datetime.now() for cross-timezone systems — use timezone-aware
+>
+> Creating date and time objects
 
-# Creating date and time objects
+```python
 from datetime import datetime, date, time, timedelta
 
 # Current date and time
@@ -448,9 +450,9 @@ print(f"dt1 > dt2:   {dt1 > dt2}")
 
 #### Arithmetic on different date/time objects
 
-```python
-# Arithmetic on different date/time objects — what supports what
-```
+> [!info] Arithmetic on different date/time objects — what supports what
+> Arithmetic on different date/time objects — what supports what
+>
 
 #### datetime: supports full arithmetic
 
@@ -581,35 +583,35 @@ print(f"+ 1y 2m 3d:      {dt + relativedelta(years=1, months=2, days=3)}")
 
 #### Basic math
 
-```python
-# Basic math — abs, max, min are built-in; clamp with max(lo, min(val, hi))
-#
-# Technique: abs(), max(), min() are built-in (no import). Clamp pattern:
-#   max(lo, min(val, hi)). math module adds floor, ceil, sqrt, log, pow,
-#   trig functions. No separate Math class — functions are module-level.
-#
-# Benefits:
-#   - Built-ins (abs, max, min) need no import — always available
-#   - max/min accept any number of arguments: max(a, b, c, d)
-#   - math module covers all standard mathematical functions
-#
-# Anti-patterns:
-#   - numpy for scalar math — math module is sufficient and faster
-#   - Manual clamp with if/else — max(lo, min(val, hi)) is one line
-#
-# When to use:
-#   - All numeric computation — built-ins and math module
-#
-# When NOT to use:
-#   - Vectorized array math — use numpy instead
-
-# Basic math — abs, max, min are built-in; clamp uses max(lo, min(val, hi))
-
-print(f"abs(-42):        {abs(-42)}")
-print(f"max(10, 20):     {max(10, 20)}")
-print(f"min(10, 20):     {min(10, 20)}")
-print(f"clamp(15, 0,10): {max(0, min(15, 10))}")
-```
+> [!warning]- Basic math — abs, max, min are built-in; clamp with max(lo, min(val, hi))
+> Basic math — abs, max, min are built-in; clamp with max(lo, min(val, hi))
+>
+> Technique: abs(), max(), min() are built-in (no import). Clamp pattern:
+>   max(lo, min(val, hi)). math module adds floor, ceil, sqrt, log, pow,
+>   trig functions. No separate Math class — functions are module-level.
+>
+> Benefits:
+>   - Built-ins (abs, max, min) need no import — always available
+>   - max/min accept any number of arguments: max(a, b, c, d)
+>   - math module covers all standard mathematical functions
+>
+> Anti-patterns:
+>   - numpy for scalar math — math module is sufficient and faster
+>   - Manual clamp with if/else — max(lo, min(val, hi)) is one line
+>
+> When to use:
+>   - All numeric computation — built-ins and math module
+>
+> When NOT to use:
+>   - Vectorized array math — use numpy instead
+>
+> Basic math — abs, max, min are built-in; clamp uses max(lo, min(val, hi))
+>
+> abs(-42):        {abs(-42)}
+> max(10, 20):     {max(10, 20)}
+> min(10, 20):     {min(10, 20)}
+> clamp(15, 0,10): {max(0, min(15, 10))}
+>
 
     abs(-42):        42
     max(10, 20):     20
@@ -618,16 +620,16 @@ print(f"clamp(15, 0,10): {max(0, min(15, 10))}")
 
 #### Rounding
 
-```python
-# Rounding — floor, ceil, round with banker's rounding default
-
-print(f"math.floor(3.7):     {math.floor(3.7)}")       # → 3
-print(f"math.ceil(3.2):      {math.ceil(3.2)}")         # → 4
-print(f"round(3.5):          {round(3.5)}")              # → 4 (banker's)
-print(f"round(2.5):          {round(2.5)}")              # → 2 (banker's — rounds to even!)
-print(f"math.trunc(3.9):     {math.trunc(3.9)}")        # → 3
-print(f"int(3.9):            {int(3.9)}")
-```
+> [!info]- Rounding — floor, ceil, round with banker's rounding default
+> Rounding — floor, ceil, round with banker's rounding default
+>
+> math.floor(3.7):     {math.floor(3.7)}
+> math.ceil(3.2):      {math.ceil(3.2)}
+> round(3.5):          {round(3.5)}
+> round(2.5):          {round(2.5)}
+> math.trunc(3.9):     {math.trunc(3.9)}
+> int(3.9):            {int(3.9)}
+>
 
     math.floor(3.7):     3
     math.ceil(3.2):      4
@@ -638,21 +640,21 @@ print(f"int(3.9):            {int(3.9)}")
 
 #### Powers, roots, and logarithms
 
-```python
-# Powers, roots, logarithms — ** operator, math.sqrt, math.log
-
-print(f"2 ** 10:             {2 ** 10}")                 # 1024 (operator)
-print(f"math.pow(2, 10):     {math.pow(2, 10)}")         # 1024.0 (returns float)
-print(f"pow(2, 10):          {pow(2, 10)}")               # 1024 (built-in, returns int)
-print(f"math.sqrt(144):      {math.sqrt(144)}")           # 12.0
-print(f"math.isqrt(144):     {math.isqrt(144)}")          # 12 (integer sqrt, 3.8+)
-
-# Logarithms — log is natural (ln), log10 and log2 for other bases
-print(f"math.log(100):       {math.log(100)}")
-print(f"math.log10(100):     {math.log10(100)}")
-print(f"math.log2(1024):     {math.log2(1024)}")
-print(f"math.exp(1):         {math.exp(1)}")
-```
+> [!info]- Powers, roots, logarithms — ** operator, math.sqrt, math.log
+> Powers, roots, logarithms — ** operator, math.sqrt, math.log
+>
+> 2 ** 10:             {2 ** 10}
+> math.pow(2, 10):     {math.pow(2, 10)}
+> pow(2, 10):          {pow(2, 10)}
+> math.sqrt(144):      {math.sqrt(144)}
+> math.isqrt(144):     {math.isqrt(144)}
+>
+> Logarithms — log is natural (ln), log10 and log2 for other bases
+> math.log(100):       {math.log(100)}
+> math.log10(100):     {math.log10(100)}
+> math.log2(1024):     {math.log2(1024)}
+> math.exp(1):         {math.exp(1)}
+>
 
     2 ** 10:             1024
     math.pow(2, 10):     1024.0
@@ -666,18 +668,18 @@ print(f"math.exp(1):         {math.exp(1)}")
 
 #### Trigonometry and constants
 
-```python
-# Trigonometry and constants — pi, e, tau, sin, cos, atan2
-
-print(f"math.pi:             {math.pi}")
-print(f"math.e:              {math.e}")
-print(f"math.tau:            {math.tau}")                 # 2π
-print(f"math.sin(π/2):       {math.sin(math.pi / 2)}")
-print(f"math.cos(0):         {math.cos(0)}")
-print(f"math.atan2(1, 1):    {math.atan2(1, 1)}")
-print(f"math.degrees(π):     {math.degrees(math.pi)}")
-print(f"math.radians(180):   {math.radians(180)}")
-```
+> [!info]- Trigonometry and constants — pi, e, tau, sin, cos, atan2
+> Trigonometry and constants — pi, e, tau, sin, cos, atan2
+>
+> math.pi:             {math.pi}
+> math.e:              {math.e}
+> math.tau:            {math.tau}
+> math.sin(π/2):       {math.sin(math.pi / 2)}
+> math.cos(0):         {math.cos(0)}
+> math.atan2(1, 1):    {math.atan2(1, 1)}
+> math.degrees(π):     {math.degrees(math.pi)}
+> math.radians(180):   {math.radians(180)}
+>
 
     math.pi:             3.141592653589793
     math.e:              2.718281828459045
@@ -690,15 +692,15 @@ print(f"math.radians(180):   {math.radians(180)}")
 
 #### Special float values
 
-```python
-# Special float values — inf, nan, and detection functions
-
-print(f"math.inf:            {math.inf}")
-print(f"math.nan:            {math.nan}")
-print(f"math.isnan(nan):     {math.isnan(math.nan)}")
-print(f"math.isinf(inf):     {math.isinf(math.inf)}")
-print(f"math.isfinite(42):   {math.isfinite(42)}")
-```
+> [!info]- Special float values — inf, nan, and detection functions
+> Special float values — inf, nan, and detection functions
+>
+> math.inf:            {math.inf}
+> math.nan:            {math.nan}
+> math.isnan(nan):     {math.isnan(math.nan)}
+> math.isinf(inf):     {math.isinf(math.inf)}
+> math.isfinite(42):   {math.isfinite(42)}
+>
 
     math.inf:            inf
     math.nan:            nan
@@ -827,43 +829,45 @@ for i in range(8):
 
 #### Logging overview — levels, handlers, formatters
 
+> [!danger] logging module — Python's built-in structured logging framework
+> logging module — Python's built-in structured logging framework
+>
+> Technique: Loggers form a hierarchy (root > app > app.module). Handlers
+>   direct output (console, file, network). Formatters control message
+>   layout. Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL.
+>
+> Benefits:
+>   - Built-in — no external dependency
+>   - Hierarchical — set level on parent, children inherit
+>   - Lazy evaluation — logger.info("msg %s", val) only formats if level active
+>   - Multiple handlers — same logger can write to console AND file
+>
+> Anti-patterns:
+>   - print() for logging — no levels, timestamps, or filtering
+>   - f-string in log calls — always evaluated, even if level is filtered
+>   - basicConfig in library code — should only be in the entry point
+>
+> When to use:
+>   - Every production application — logging is a best practice
+>
+> When NOT to use:
+>   - N/A — always use logging instead of print for production
+>
+> logging module — Python's built-in logging framework.
+>
+> KEY CONCEPTS:
+> - Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL
+> - Logger hierarchy: loggers form a tree by dot-separated names.
+>   "etl.extract" is a child of "etl" — messages propagate up.
+> - NEVER use print() for operational logging — print can't be filtered, routed, or leveled.
+>
+> WARNING: In Jupyter, logging config can be tricky because the root logger
+> may already have handlers. We reset handlers to get clean output.
+>
+>
+> ── Basic logging setup ──
+
 ```python
-# logging module — Python's built-in structured logging framework
-#
-# Technique: Loggers form a hierarchy (root > app > app.module). Handlers
-#   direct output (console, file, network). Formatters control message
-#   layout. Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL.
-#
-# Benefits:
-#   - Built-in — no external dependency
-#   - Hierarchical — set level on parent, children inherit
-#   - Lazy evaluation — logger.info("msg %s", val) only formats if level active
-#   - Multiple handlers — same logger can write to console AND file
-#
-# Anti-patterns:
-#   - print() for logging — no levels, timestamps, or filtering
-#   - f-string in log calls — always evaluated, even if level is filtered
-#   - basicConfig in library code — should only be in the entry point
-#
-# When to use:
-#   - Every production application — logging is a best practice
-#
-# When NOT to use:
-#   - N/A — always use logging instead of print for production
-
-# logging module — Python's built-in logging framework.
-#
-# KEY CONCEPTS:
-# - Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL
-# - Logger hierarchy: loggers form a tree by dot-separated names.
-#   "etl.extract" is a child of "etl" — messages propagate up.
-# - NEVER use print() for operational logging — print can't be filtered, routed, or leveled.
-#
-# WARNING: In Jupyter, logging config can be tricky because the root logger
-# may already have handlers. We reset handlers to get clean output.
-
-
-# ── Basic logging setup ──
 logger = logging.getLogger("PipelineDemo")
 logger.setLevel(logging.DEBUG)  # accept DEBUG and above
 
@@ -894,9 +898,9 @@ logger.critical("Critical: pipeline halted")                   # shown
 
 #### Structured logging & logging best practices
 
-```python
-# Structured logging and best practices — templates, not f-strings
-```
+> [!tip] Structured logging and best practices — templates, not f-strings
+> Structured logging and best practices — templates, not f-strings
+>
 
 #### Simulating a pipeline run with logging
 
@@ -973,32 +977,33 @@ json_logger.warning("Schema drift detected in %s", "users")
 
 #### Environment variables — reading and setting
 
+> [!warning] Environment variables — os.environ for process-level configuration
+> Environment variables — os.environ for process-level configuration
+>
+> Technique: os.environ["KEY"] raises KeyError if missing. os.environ.get("KEY",
+>   default) returns default silently. os.environ["KEY"] = value sets for
+>   the current process. Standard for Docker, K8s, CI/CD.
+>
+> Benefits:
+>   - Universal — works across all platforms and deployment targets
+>   - No files — values set by the runtime environment
+>   - Secure for secrets — not stored in source code
+>
+> Anti-patterns:
+>   - Hardcoding secrets in code — use env vars or secret managers
+>   - os.environ["KEY"] without handling KeyError — crashes if missing
+>   - Setting env vars in code — only affects the current process
+>
+> When to use:
+>   - Connection strings, API keys, deployment-specific config
+>
+> When NOT to use:
+>   - Complex structured config — use config files + env var overrides
+>
+> Environment variables — the simplest config mechanism.
+> Used everywhere: Docker, Kubernetes, CI/CD, cloud functions.
+
 ```python
-# Environment variables — os.environ for process-level configuration
-#
-# Technique: os.environ["KEY"] raises KeyError if missing. os.environ.get("KEY",
-#   default) returns default silently. os.environ["KEY"] = value sets for
-#   the current process. Standard for Docker, K8s, CI/CD.
-#
-# Benefits:
-#   - Universal — works across all platforms and deployment targets
-#   - No files — values set by the runtime environment
-#   - Secure for secrets — not stored in source code
-#
-# Anti-patterns:
-#   - Hardcoding secrets in code — use env vars or secret managers
-#   - os.environ["KEY"] without handling KeyError — crashes if missing
-#   - Setting env vars in code — only affects the current process
-#
-# When to use:
-#   - Connection strings, API keys, deployment-specific config
-#
-# When NOT to use:
-#   - Complex structured config — use config files + env var overrides
-
-# Environment variables — the simplest config mechanism.
-# Used everywhere: Docker, Kubernetes, CI/CD, cloud functions.
-
 print("=== Environment Variables ===")
 
 # Read common env vars
@@ -1062,9 +1067,9 @@ print(f"  ... ({len(os.environ)} total)")
 
 #### Configuration files
 
-```python
-# Configuration files — configparser, .env, TOML for structured settings
-```
+> [!info] Configuration files — configparser, .env, TOML for structured settings
+> Configuration files — configparser, .env, TOML for structured settings
+>
 
 <h4><code style="font-size:0.75em">configparser</code> — INI-style config</h4>
 

@@ -152,15 +152,16 @@ catch (Exception ex)
 
 #### Note: Polars.NET 0.4.0 does not expose SQLContext
 
-```csharp
-// Summary: Polars.NET 0.4.0 does NOT expose SQLContext.
-// The Rust-side polars-sql crate exists, but the .NET bindings don't wrap it yet.
-//
-// Workarounds:
-//   1. Use DuckDB.NET for SQL queries (Section 2)
-//   2. Use Polars.NET expressions for DataFrame operations (no SQL syntax)
-//   3. Load DuckDB query results into Polars DataFrames (Section 2.7)
+> [!warning] Summary: Polars.NET 0.4.0 does NOT expose SQLContext
+> Summary: Polars.NET 0.4.0 does NOT expose SQLContext.
+> The Rust-side polars-sql crate exists, but the .NET bindings don't wrap it yet.
+>
+> Workarounds:
+>   1. Use DuckDB.NET for SQL queries (Section 2)
+>   2. Use Polars.NET expressions for DataFrame operations (no SQL syntax)
+>   3. Load DuckDB query results into Polars DataFrames (Section 2.7)
 
+```csharp
 Console.WriteLine("Polars.NET 0.4.0: SQLContext not available.");
 Console.WriteLine("Proceeding with DuckDB.NET for SQL operations.");
 ```

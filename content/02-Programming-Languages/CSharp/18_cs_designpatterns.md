@@ -44,20 +44,21 @@ Console.WriteLine("WarningLevel set to 0.");
 
 ## 1. Dependency Injection
 
+> [!abstract]- Dependency Injection — the foundation of testable C# architecture
+> Dependency Injection — the foundation of testable C# architecture.
+>
+> KEY CONCEPTS:
+> - Interface: defines the contract (what, not how).
+> - Constructor injection: class receives dependencies via constructor.
+> - IServiceCollection: .NET's built-in DI container.
+>   builder.Services.AddTransient<IRepo, SqlRepo>() — new instance per request
+>   builder.Services.AddScoped<IRepo, SqlRepo>()    — one per scope (HTTP request)
+>   builder.Services.AddSingleton<IRepo, SqlRepo>() — one for entire app
+> - Python equivalent: just pass objects via __init__ (no container needed).
+>
+> ─── Interfaces ───
+
 ```csharp
-// Dependency Injection — the foundation of testable C# architecture.
-//
-// KEY CONCEPTS:
-// - Interface: defines the contract (what, not how).
-// - Constructor injection: class receives dependencies via constructor.
-// - IServiceCollection: .NET's built-in DI container.
-//   builder.Services.AddTransient<IRepo, SqlRepo>() — new instance per request
-//   builder.Services.AddScoped<IRepo, SqlRepo>()    — one per scope (HTTP request)
-//   builder.Services.AddSingleton<IRepo, SqlRepo>() — one for entire app
-// - Python equivalent: just pass objects via __init__ (no container needed).
-
-// ─── Interfaces ───
-
 Console.WriteLine("=== Dependency Injection ===");
 
 // ─── Production wiring ───
@@ -334,16 +335,17 @@ public class StockScorer
 
 ## 3. Data Validation
 
-```csharp
-// Data Validation with DataAnnotations — built into .NET.
-// Python equivalent: Pydantic BaseModel with Field() constraints.
-//
-// KEY CONCEPTS:
-// - [Required], [Range], [StringLength], [RegularExpression] — attribute-based.
-// - Validator.TryValidateObject() — validate and collect all errors.
-// - In ASP.NET, model binding auto-validates incoming requests.
-// - For complex rules: IValidatableObject.Validate() or FluentValidation.
+> [!abstract]- Data Validation with DataAnnotations — built into .NET
+> Data Validation with DataAnnotations — built into .NET.
+> Python equivalent: Pydantic BaseModel with Field() constraints.
+>
+> KEY CONCEPTS:
+> - [Required], [Range], [StringLength], [RegularExpression] — attribute-based.
+> - Validator.TryValidateObject() — validate and collect all errors.
+> - In ASP.NET, model binding auto-validates incoming requests.
+> - For complex rules: IValidatableObject.Validate() or FluentValidation.
 
+```csharp
 Console.WriteLine("=== Valid Data ===");
 var validRecord = new OhlcvRecord
 {
@@ -653,50 +655,50 @@ IndexPipeline/
 
 ## 6. Summary
 
-```csharp
-// Summary — C# Design Patterns cheat sheet
-//
-// DEPENDENCY INJECTION:
-// interface IRepo { ... }              Define contract
-// class SqlRepo : IRepo { ... }        Implement it
-// class Service(IRepo repo)            Constructor injection
-// builder.Services.AddScoped<IRepo, SqlRepo>()  DI registration
-//
-// SINGLETON:
-// static readonly Lazy<T> _instance    Thread-safe singleton
-// AddSingleton<T>()                    DI-managed singleton
-//
-// FACTORY:
-// static IClient Create(string type)   Return right implementation
-//   => type switch { "gcs" => new GCS(), ... }
-//
-// OBSERVER:
-// event Action<T> EventName            C# event/delegate
-// EventName += handler                 Subscribe
-// EventName?.Invoke(data)              Publish
-//
-// STRATEGY:
-// interface IStrategy { double Score(double[] p); }
-// class Scorer(IStrategy s)            Inject algorithm
-//
-// VALIDATION:
-// [Required], [Range], [StringLength]  DataAnnotations
-// IValidatableObject.Validate()        Cross-field rules
-// Validator.TryValidateObject()        Manual validation
-//
-// REFLECTION:
-// obj.GetType()                        Get runtime type
-// type.GetProperties()                 List properties
-// type.GetMethods()                    List methods
-// prop.GetValue(obj)                   Read property dynamically
-// Activator.CreateInstance(type, args) Create instance dynamically
-//
-// PYTHON EQUIVALENTS:
-// interface                → ABC + abstractmethod
-// constructor injection   → __init__(self, dep)
-// AddSingleton<T>()       → module-level instance
-// event Action<T>         → callback list / event bus
-// DataAnnotations         → Pydantic Field()
-// System.Reflection       → type(), dir(), inspect
-// GetType().Name          → type(obj).__name__
-```
+> [!abstract]- Summary — C# Design Patterns cheat sheet
+> Summary — C# Design Patterns cheat sheet
+>
+> DEPENDENCY INJECTION:
+> interface IRepo { ... }              Define contract
+> class SqlRepo : IRepo { ... }        Implement it
+> class Service(IRepo repo)            Constructor injection
+> builder.Services.AddScoped<IRepo, SqlRepo>()  DI registration
+>
+> SINGLETON:
+> static readonly Lazy<T> _instance    Thread-safe singleton
+> AddSingleton<T>()                    DI-managed singleton
+>
+> FACTORY:
+> static IClient Create(string type)   Return right implementation
+>   => type switch { "gcs" => new GCS(), ... }
+>
+> OBSERVER:
+> event Action<T> EventName            C# event/delegate
+> EventName += handler                 Subscribe
+> EventName?.Invoke(data)              Publish
+>
+> STRATEGY:
+> interface IStrategy { double Score(double[] p); }
+> class Scorer(IStrategy s)            Inject algorithm
+>
+> VALIDATION:
+> [Required], [Range], [StringLength]  DataAnnotations
+> IValidatableObject.Validate()        Cross-field rules
+> Validator.TryValidateObject()        Manual validation
+>
+> REFLECTION:
+> obj.GetType()                        Get runtime type
+> type.GetProperties()                 List properties
+> type.GetMethods()                    List methods
+> prop.GetValue(obj)                   Read property dynamically
+> Activator.CreateInstance(type, args) Create instance dynamically
+>
+> PYTHON EQUIVALENTS:
+> interface                → ABC + abstractmethod
+> constructor injection   → __init__(self, dep)
+> AddSingleton<T>()       → module-level instance
+> event Action<T>         → callback list / event bus
+> DataAnnotations         → Pydantic Field()
+> System.Reflection       → type(), dir(), inspect
+> GetType().Name          → type(obj).__name__
+>

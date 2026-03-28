@@ -45,31 +45,32 @@ from typing import Literal
 
 #### requests — sync GET and response parsing
 
-```python
-# requests — the standard sync HTTP library for Python
-#
-# Technique: requests.get/post/put/delete for HTTP methods. params= for
-#   query strings, json= for JSON body, headers= for custom headers.
-#   resp.json() parses response. resp.raise_for_status() throws on 4xx/5xx.
-#   httpbin.org is a free echo service — returns whatever you send.
-#
-# Benefits:
-#   - Simple API — one function per HTTP method
-#   - json= auto-sets Content-Type and serializes
-#   - resp.ok checks 2xx; raise_for_status() for strict checking
-#   - Widely used — most Python developers know requests
-#
-# Anti-patterns:
-#   - No timeout — requests has no default timeout; always pass timeout=
-#   - New session per request — use requests.Session() for connection reuse
-#   - Hardcoded API keys — use env vars or secret managers
-#
-# When to use:
-#   - Simple sync API calls, scripts, notebooks
-#
-# When NOT to use:
-#   - Concurrent calls — use httpx.AsyncClient instead
+> [!warning] requests — the standard sync HTTP library for Python
+> requests — the standard sync HTTP library for Python
+>
+> Technique: requests.get/post/put/delete for HTTP methods. params= for
+>   query strings, json= for JSON body, headers= for custom headers.
+>   resp.json() parses response. resp.raise_for_status() throws on 4xx/5xx.
+>   httpbin.org is a free echo service — returns whatever you send.
+>
+> Benefits:
+>   - Simple API — one function per HTTP method
+>   - json= auto-sets Content-Type and serializes
+>   - resp.ok checks 2xx; raise_for_status() for strict checking
+>   - Widely used — most Python developers know requests
+>
+> Anti-patterns:
+>   - No timeout — requests has no default timeout; always pass timeout=
+>   - New session per request — use requests.Session() for connection reuse
+>   - Hardcoded API keys — use env vars or secret managers
+>
+> When to use:
+>   - Simple sync API calls, scripts, notebooks
+>
+> When NOT to use:
+>   - Concurrent calls — use httpx.AsyncClient instead
 
+```python
 resp = requests.get("https://httpbin.org/get", params={"ticker": "AAPL", "date": "2024-03-15"})
 
 print("=== GET Request ===")
@@ -168,29 +169,30 @@ except requests.HTTPError as e:
 
 #### httpx — sync usage (drop-in requests replacement)
 
-```python
-# httpx — modern HTTP client with async, HTTP/2, and default timeouts
-#
-# Technique: Same API as requests for sync usage. httpx.Client() pools
-#   connections. httpx.AsyncClient() enables concurrent calls with await.
-#   Timeouts enforced by default (requests has none!).
-#
-# Benefits:
-#   - Async support — concurrent API calls with AsyncClient
-#   - HTTP/2 — multiplexed connections, faster for many requests
-#   - Default timeout — prevents hanging requests
-#   - Connection pooling with Client() — reuse across calls
-#
-# Anti-patterns:
-#   - httpx without Client/AsyncClient — no connection reuse
-#   - requests for concurrent calls — no async support
-#
-# When to use:
-#   - Pipelines with many API calls; any async Python application
-#
-# When NOT to use:
-#   - Simple one-off scripts where requests is already imported
+> [!warning] httpx — modern HTTP client with async, HTTP/2, and default timeouts
+> httpx — modern HTTP client with async, HTTP/2, and default timeouts
+>
+> Technique: Same API as requests for sync usage. httpx.Client() pools
+>   connections. httpx.AsyncClient() enables concurrent calls with await.
+>   Timeouts enforced by default (requests has none!).
+>
+> Benefits:
+>   - Async support — concurrent API calls with AsyncClient
+>   - HTTP/2 — multiplexed connections, faster for many requests
+>   - Default timeout — prevents hanging requests
+>   - Connection pooling with Client() — reuse across calls
+>
+> Anti-patterns:
+>   - httpx without Client/AsyncClient — no connection reuse
+>   - requests for concurrent calls — no async support
+>
+> When to use:
+>   - Pipelines with many API calls; any async Python application
+>
+> When NOT to use:
+>   - Simple one-off scripts where requests is already imported
 
+```python
 resp = httpx.get("https://httpbin.org/get", params={"source": "httpx"})
 print("=== httpx (sync) ===")
 print(f"Status: {resp.status_code}")
@@ -329,29 +331,30 @@ comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 
 #### Pagination — fetch data in pages
 
-```python
-# REST API patterns — pagination, retry, bulk operations
-#
-# Technique: Pagination loops through pages until exhausted. Retry with
-#   exponential backoff handles transient 429/5xx errors. Bulk POST
-#   batches records into one request to reduce round trips.
-#
-# Benefits:
-#   - Pagination handles unbounded result sets without OOM
-#   - Exponential backoff prevents overwhelming failing services
-#   - Bulk POST reduces network round trips by 10-100x
-#
-# Anti-patterns:
-#   - Fetching all pages without limit — unbounded loop if API broken
-#   - Linear retry (no backoff) — hammers the failing service
-#   - One POST per record — N round trips instead of 1
-#
-# When to use:
-#   - Any API integration in data pipelines
-#
-# When NOT to use:
-#   - Streaming APIs (WebSocket, SSE) — use async streaming
+> [!warning] REST API patterns — pagination, retry, bulk operations
+> REST API patterns — pagination, retry, bulk operations
+>
+> Technique: Pagination loops through pages until exhausted. Retry with
+>   exponential backoff handles transient 429/5xx errors. Bulk POST
+>   batches records into one request to reduce round trips.
+>
+> Benefits:
+>   - Pagination handles unbounded result sets without OOM
+>   - Exponential backoff prevents overwhelming failing services
+>   - Bulk POST reduces network round trips by 10-100x
+>
+> Anti-patterns:
+>   - Fetching all pages without limit — unbounded loop if API broken
+>   - Linear retry (no backoff) — hammers the failing service
+>   - One POST per record — N round trips instead of 1
+>
+> When to use:
+>   - Any API integration in data pipelines
+>
+> When NOT to use:
+>   - Streaming APIs (WebSocket, SSE) — use async streaming
 
+```python
 def fetch_paginated(base_url, endpoint, page_size=100):
     all_records = []
     page = 1
@@ -438,33 +441,34 @@ print(f"  Server received: {len(data['json']['trades'])} trades")
 
 #### Pydantic models — request/response schemas
 
+> [!warning] FastAPI — async-first REST framework with auto-validation and OpenAPI docs
+> FastAPI — async-first REST framework with auto-validation and OpenAPI docs
+>
+> Technique: Define Pydantic models for request/response validation.
+>   @app.get/post/delete decorators wire handlers to routes. FastAPI
+>   auto-generates Swagger docs. uvicorn serves the ASGI app.
+>
+> Benefits:
+>   - Pydantic validates request bodies automatically — no manual checks
+>   - Auto-generated OpenAPI/Swagger docs at /docs
+>   - Async-first — native async def handlers for concurrent I/O
+>   - Type hints drive validation, serialization, and documentation
+>
+> Anti-patterns:
+>   - Business logic in route handlers — extract to service functions
+>   - In-memory storage in production — use a database
+>   - No input validation — Pydantic handles it, but add business rules too
+>
+> When to use:
+>   - Internal APIs, microservices, data pipeline endpoints
+>
+> When NOT to use:
+>   - Simple scripts that don't need an API — overkill
+>
+> Pydantic models — like C# record types
+> FastAPI auto-validates incoming requests against these.
+
 ```python
-# FastAPI — async-first REST framework with auto-validation and OpenAPI docs
-#
-# Technique: Define Pydantic models for request/response validation.
-#   @app.get/post/delete decorators wire handlers to routes. FastAPI
-#   auto-generates Swagger docs. uvicorn serves the ASGI app.
-#
-# Benefits:
-#   - Pydantic validates request bodies automatically — no manual checks
-#   - Auto-generated OpenAPI/Swagger docs at /docs
-#   - Async-first — native async def handlers for concurrent I/O
-#   - Type hints drive validation, serialization, and documentation
-#
-# Anti-patterns:
-#   - Business logic in route handlers — extract to service functions
-#   - In-memory storage in production — use a database
-#   - No input validation — Pydantic handles it, but add business rules too
-#
-# When to use:
-#   - Internal APIs, microservices, data pipeline endpoints
-#
-# When NOT to use:
-#   - Simple scripts that don't need an API — overkill
-
-# Pydantic models — like C# record types
-# FastAPI auto-validates incoming requests against these.
-
 class Trade(BaseModel):
     trade_id: str = Field(..., description="Unique trade identifier")
     ticker: str = Field(..., min_length=1, max_length=5)
@@ -833,32 +837,34 @@ Define a model with typed fields. Pydantic validates on construction: wrong type
 Auto-coercion converts compatible types (`"25"` → `int 25`). `model_dump()` serializes to dict.
 Fields without defaults are required; fields with defaults are optional.
 
+> [!warning] Pydantic BaseModel — type-safe data models with automatic validation
+> Pydantic BaseModel — type-safe data models with automatic validation
+>
+> Technique: Inherit from BaseModel, declare fields with type annotations.
+>   Pydantic validates on construction — wrong types raise ValidationError.
+>   Automatic coercion (str "42" -> int 42), serialization, and JSON schema.
+>
+> Benefits:
+>   - Runtime validation — catches type errors at construction, not deep in logic
+>   - Automatic coercion — "42" becomes int 42, "true" becomes bool True
+>   - JSON schema generation — model_json_schema() for API docs
+>   - Serialization — model_dump() to dict, model_dump_json() to JSON string
+>
+> Anti-patterns:
+>   - Plain dicts for API data — no validation, no autocomplete, silent bugs
+>   - Manual if/isinstance checks — Pydantic handles it declaratively
+>   - Ignoring ValidationError — always catch and return proper HTTP errors
+>
+> When to use:
+>   - API request/response models, config loading, ETL schemas, message queues
+>
+> When NOT to use:
+>   - Internal data where dataclass suffices — Pydantic adds overhead
+>
+>
+> Basic model — fields with types, defaults, and required markers
+
 ```python
-# Pydantic BaseModel — type-safe data models with automatic validation
-#
-# Technique: Inherit from BaseModel, declare fields with type annotations.
-#   Pydantic validates on construction — wrong types raise ValidationError.
-#   Automatic coercion (str "42" -> int 42), serialization, and JSON schema.
-#
-# Benefits:
-#   - Runtime validation — catches type errors at construction, not deep in logic
-#   - Automatic coercion — "42" becomes int 42, "true" becomes bool True
-#   - JSON schema generation — model_json_schema() for API docs
-#   - Serialization — model_dump() to dict, model_dump_json() to JSON string
-#
-# Anti-patterns:
-#   - Plain dicts for API data — no validation, no autocomplete, silent bugs
-#   - Manual if/isinstance checks — Pydantic handles it declaratively
-#   - Ignoring ValidationError — always catch and return proper HTTP errors
-#
-# When to use:
-#   - API request/response models, config loading, ETL schemas, message queues
-#
-# When NOT to use:
-#   - Internal data where dataclass suffices — Pydantic adds overhead
-
-
-# Basic model — fields with types, defaults, and required markers
 class User(BaseModel):
     name: str                          # required — no default
     age: int                           # required, auto-coerces "30" -> 30
@@ -1352,36 +1358,36 @@ checklist.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 
 #### Web and APIs cheat sheet
 
-```python
-# Summary — Python Web & APIs cheat sheet
-#
-# HTTP CLIENTS:
-# requests.get(url, params=...)         Sync GET
-# requests.post(url, json=...)          Sync POST with JSON body
-# resp.json()                           Parse JSON response
-# resp.raise_for_status()               Raise on 4xx/5xx
-# httpx.AsyncClient()                   Async client for concurrent calls
-# httpx.Client(base_url=...)            Connection pooling
-#
-# FASTAPI:
-# @app.get("/path")                     Define GET endpoint
-# @app.post("/path", status_code=201)   Define POST endpoint
-# Trade(BaseModel)                      Pydantic model for validation
-# HTTPException(status_code=404)        Return error response
-# Query(), Path(), Body()               Parameter declarations
-# uvicorn main:app --reload             Run the server
-#
-# REST PATTERNS:
-# Pagination                            offset/limit, cursor-based
-# Retry + backoff                       Handle transient failures
-# Rate limit handling                   Respect 429 + Retry-After
-# Bulk POST                             Batch multiple records
-#
-# C# EQUIVALENTS:
-# requests / httpx      → HttpClient
-# FastAPI               → ASP.NET Minimal APIs
-# Pydantic              → record + DataAnnotations
-# uvicorn               → Kestrel (built-in)
-# @app.get              → app.MapGet()
-# HTTPException         → Results.NotFound()
-```
+> [!abstract]- Summary — Python Web & APIs cheat sheet
+> Summary — Python Web & APIs cheat sheet
+>
+> HTTP CLIENTS:
+> requests.get(url, params=...)         Sync GET
+> requests.post(url, json=...)          Sync POST with JSON body
+> resp.json()                           Parse JSON response
+> resp.raise_for_status()               Raise on 4xx/5xx
+> httpx.AsyncClient()                   Async client for concurrent calls
+> httpx.Client(base_url=...)            Connection pooling
+>
+> FASTAPI:
+> @app.get("/path")                     Define GET endpoint
+> @app.post("/path", status_code=201)   Define POST endpoint
+> Trade(BaseModel)                      Pydantic model for validation
+> HTTPException(status_code=404)        Return error response
+> Query(), Path(), Body()               Parameter declarations
+> uvicorn main:app --reload             Run the server
+>
+> REST PATTERNS:
+> Pagination                            offset/limit, cursor-based
+> Retry + backoff                       Handle transient failures
+> Rate limit handling                   Respect 429 + Retry-After
+> Bulk POST                             Batch multiple records
+>
+> C# EQUIVALENTS:
+> requests / httpx      → HttpClient
+> FastAPI               → ASP.NET Minimal APIs
+> Pydantic              → record + DataAnnotations
+> uvicorn               → Kestrel (built-in)
+> @app.get              → app.MapGet()
+> HTTPException         → Results.NotFound()
+>

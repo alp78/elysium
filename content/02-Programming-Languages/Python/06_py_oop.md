@@ -27,32 +27,34 @@ from dataclasses import dataclass, field
 
 #### Type definitions
 
+> [!warning] Class definition — blueprint with __init__, attributes, methods, __str__
+> Class definition — blueprint with __init__, attributes, methods, __str__
+>
+> Technique: class Dog: defines a type. __init__ initializes instance
+>   attributes (self.name). Class attributes (species) are shared by all.
+>   __str__ returns human-readable string for print() and f-strings.
+>
+> Benefits:
+>   - Class attributes shared across instances — no duplication
+>   - __init__ ensures objects start in a valid state
+>   - __str__/__repr__ provide clean display and debugging output
+>
+> Anti-patterns:
+>   - Mutable class attributes (lists/dicts) — shared and mutated by all instances
+>   - Not defining __repr__ — defaults to unhelpful <Dog at 0x...>
+>   - __init__ doing heavy work — use factory methods for complex setup
+>
+> When to use:
+>   - Domain entities with state and behavior
+>
+> When NOT to use:
+>   - Simple data containers — use dataclass or namedtuple
+>
+> Classes and objects — class is the blueprint; instances are created with ClassName()
+>
+> Dog — class attribute shared by all, instance attributes unique to each, methods operate on self
+
 ```python
-# Class definition — blueprint with __init__, attributes, methods, __str__
-#
-# Technique: class Dog: defines a type. __init__ initializes instance
-#   attributes (self.name). Class attributes (species) are shared by all.
-#   __str__ returns human-readable string for print() and f-strings.
-#
-# Benefits:
-#   - Class attributes shared across instances — no duplication
-#   - __init__ ensures objects start in a valid state
-#   - __str__/__repr__ provide clean display and debugging output
-#
-# Anti-patterns:
-#   - Mutable class attributes (lists/dicts) — shared and mutated by all instances
-#   - Not defining __repr__ — defaults to unhelpful <Dog at 0x...>
-#   - __init__ doing heavy work — use factory methods for complex setup
-#
-# When to use:
-#   - Domain entities with state and behavior
-#
-# When NOT to use:
-#   - Simple data containers — use dataclass or namedtuple
-
-# Classes and objects — class is the blueprint; instances are created with ClassName()
-
-# Dog — class attribute shared by all, instance attributes unique to each, methods operate on self
 class Dog:
     species = "Canis familiaris"       # class attribute — shared by ALL instances
 
@@ -161,32 +163,34 @@ print(f"new radius: {c.radius}")
 
 #### Type definitions
 
+> [!warning] Inheritance — base class with methods, derived classes override
+> Inheritance — base class with methods, derived classes override
+>
+> Technique: class Dog(Animal) inherits from Animal. Override methods
+>   by redefining them. super().__init__() calls parent constructor.
+>   Python supports multiple inheritance via MRO (C3 linearization).
+>
+> Benefits:
+>   - Code reuse — shared behavior in the base class
+>   - Polymorphism — derived types substitutable for the base type
+>   - super() handles MRO correctly in multiple inheritance
+>
+> Anti-patterns:
+>   - Deep hierarchies (>3 levels) — prefer composition
+>   - Forgetting super().__init__() — parent state not initialized
+>   - Diamond inheritance without understanding MRO — confusing dispatch
+>
+> When to use:
+>   - IS-A relationships: Dog is an Animal, Circle is a Shape
+>
+> When NOT to use:
+>   - HAS-A relationships — use composition (attributes)
+>
+> Inheritance and polymorphism — child classes extend a parent; method overriding enables runtime dispatch
+>
+> Animal — base class with speak that subclasses can override
+
 ```python
-# Inheritance — base class with methods, derived classes override
-#
-# Technique: class Dog(Animal) inherits from Animal. Override methods
-#   by redefining them. super().__init__() calls parent constructor.
-#   Python supports multiple inheritance via MRO (C3 linearization).
-#
-# Benefits:
-#   - Code reuse — shared behavior in the base class
-#   - Polymorphism — derived types substitutable for the base type
-#   - super() handles MRO correctly in multiple inheritance
-#
-# Anti-patterns:
-#   - Deep hierarchies (>3 levels) — prefer composition
-#   - Forgetting super().__init__() — parent state not initialized
-#   - Diamond inheritance without understanding MRO — confusing dispatch
-#
-# When to use:
-#   - IS-A relationships: Dog is an Animal, Circle is a Shape
-#
-# When NOT to use:
-#   - HAS-A relationships — use composition (attributes)
-
-# Inheritance and polymorphism — child classes extend a parent; method overriding enables runtime dispatch
-
-# Animal — base class with speak that subclasses can override
 class Animal:
     def __init__(self, name, sound):
         self.name = name
@@ -298,33 +302,35 @@ print(f"MRO:   {[c.__name__ for c in Duck.__mro__]}") # Method Resolution Order 
 
 #### Abstract class
 
+> [!warning] Abstract class (ABC) — enforced contract with optional shared implementation
+> Abstract class (ABC) — enforced contract with optional shared implementation
+>
+> Technique: class Shape(ABC) with @abstractmethod defines methods that
+>   subclasses must implement. Concrete methods provide shared logic.
+>   Instantiating an abstract class raises TypeError.
+>
+> Benefits:
+>   - Enforces contract — TypeError if abstract method not implemented
+>   - Shared code in concrete methods — avoids duplication
+>   - Catches missing implementations at instantiation, not at call time
+>
+> Anti-patterns:
+>   - ABC with no shared code — use Protocol for structural typing
+>   - Forgetting @abstractmethod — method becomes optional
+>   - ABC with too many abstract methods — splits into smaller ABCs
+>
+> When to use:
+>   - When subclasses must share common state and implement specific methods
+>
+> When NOT to use:
+>   - Pure contract — use Protocol for duck-typing compatibility
+>
+> Abstract class — Shape defines the contract
+> subclasses must implement area/perimeter
+>
+> Shape — abstract base; area and perimeter are abstract, describe is concrete
+
 ```python
-# Abstract class (ABC) — enforced contract with optional shared implementation
-#
-# Technique: class Shape(ABC) with @abstractmethod defines methods that
-#   subclasses must implement. Concrete methods provide shared logic.
-#   Instantiating an abstract class raises TypeError.
-#
-# Benefits:
-#   - Enforces contract — TypeError if abstract method not implemented
-#   - Shared code in concrete methods — avoids duplication
-#   - Catches missing implementations at instantiation, not at call time
-#
-# Anti-patterns:
-#   - ABC with no shared code — use Protocol for structural typing
-#   - Forgetting @abstractmethod — method becomes optional
-#   - ABC with too many abstract methods — splits into smaller ABCs
-#
-# When to use:
-#   - When subclasses must share common state and implement specific methods
-#
-# When NOT to use:
-#   - Pure contract — use Protocol for duck-typing compatibility
-
-# Abstract class — Shape defines the contract
-# subclasses must implement area/perimeter
-
-# Shape — abstract base; area and perimeter are abstract, describe is concrete
 class Shape(ABC):
     """Can't instantiate Shape directly — must subclass."""
 
@@ -391,19 +397,21 @@ print(f"Total area: {total_area:.2f}")
 
 <h4><code style="font-size:0.75em">Protocol</code> — structural typing</h4>
 
+> [!warning] - Third-party classes that can't inherit your ABC
+>   - Third-party classes that can't inherit your ABC
+>   - Duck typing with type checker support
+>
+> When NOT to use:
+>   - When shared implementation is needed — use ABC instead
+>
+> Protocol — structural typing; any class with the right methods matches, no inheritance needed
+>
+> Drawable — any class with a draw() method qualifies
+
 ```python
 # Protocol — structural typing without inheritance (duck typing formalized)
 
 // When to use:
-#   - Third-party classes that can't inherit your ABC
-#   - Duck typing with type checker support
-#
-# When NOT to use:
-#   - When shared implementation is needed — use ABC instead
-
-# Protocol — structural typing; any class with the right methods matches, no inheritance needed
-
-# Drawable — any class with a draw() method qualifies
 @runtime_checkable
 class Drawable(Protocol):
     """Any class with a draw() method qualifies — no inheritance needed."""
@@ -433,14 +441,14 @@ print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
 
 #### Summary — ABC vs Protocol
 
-```python
-# Summary — ABC vs Protocol comparison
-
-print("ABC:      class must explicitly inherit (class Rect(Shape))")
-print("Protocol: class just needs the right methods (no inheritance)")
-print("ABC:      has concrete methods + abstract methods (partial implementation)")
-print("Protocol: pure contract (just method signatures)")
-```
+> [!abstract]- Summary — ABC vs Protocol comparison
+> Summary — ABC vs Protocol comparison
+>
+> ABC:      class must explicitly inherit (class Rect(Shape))
+> Protocol: class just needs the right methods (no inheritance)
+> ABC:      has concrete methods + abstract methods (partial implementation)
+> Protocol: pure contract (just method signatures)
+>
 
     ABC:      class must explicitly inherit (class Rect(Shape))
     Protocol: class just needs the right methods (no inheritance)
@@ -451,32 +459,34 @@ print("Protocol: pure contract (just method signatures)")
 
 #### Access conventions
 
+> [!warning] Encapsulation — naming conventions for access control
+> Encapsulation — naming conventions for access control
+>
+> Technique: Python uses conventions, not enforcement. name is public.
+>   _name is protected (convention). __name triggers name mangling
+>   (_ClassName__name) — harder to access accidentally.
+>
+> Benefits:
+>   - _prefix signals "internal use" — respected by IDEs and developers
+>   - __mangling prevents accidental override in subclasses
+>   - @property provides validated access to private backing fields
+>
+> Anti-patterns:
+>   - Accessing _private attrs from outside — violates the convention
+>   - Overusing __mangling — makes testing and inheritance harder
+>   - No access control at all — public everything loses encapsulation
+>
+> When to use:
+>   - _ for internal implementation details; __ for name-collision prevention
+>
+> When NOT to use:
+>   - __ for privacy alone — _ convention is sufficient in Python
+>
+> Encapsulation — Python uses naming conventions instead of enforced access modifiers
+>
+> BankAccount — public (name), protected (_balance), private (__pin via name mangling)
+
 ```python
-# Encapsulation — naming conventions for access control
-#
-# Technique: Python uses conventions, not enforcement. name is public.
-#   _name is protected (convention). __name triggers name mangling
-#   (_ClassName__name) — harder to access accidentally.
-#
-# Benefits:
-#   - _prefix signals "internal use" — respected by IDEs and developers
-#   - __mangling prevents accidental override in subclasses
-#   - @property provides validated access to private backing fields
-#
-# Anti-patterns:
-#   - Accessing _private attrs from outside — violates the convention
-#   - Overusing __mangling — makes testing and inheritance harder
-#   - No access control at all — public everything loses encapsulation
-#
-# When to use:
-#   - _ for internal implementation details; __ for name-collision prevention
-#
-# When NOT to use:
-#   - __ for privacy alone — _ convention is sufficient in Python
-
-# Encapsulation — Python uses naming conventions instead of enforced access modifiers
-
-# BankAccount — public (name), protected (_balance), private (__pin via name mangling)
 class BankAccount:
     def __init__(self, owner, balance):
         self.owner = owner           # public (no prefix)
@@ -536,33 +546,35 @@ print("Python: conventions only — nothing is truly private")
 
 #### Type definitions
 
+> [!warning] Static and class methods — @classmethod receives cls, @staticmethod has no self
+> Static and class methods — @classmethod receives cls, @staticmethod has no self
+>
+> Technique: @classmethod gets the class as first arg (cls) — enables
+>   factory methods and inheritance-aware construction. @staticmethod
+>   gets no implicit arg — just a function namespaced to the class.
+>
+> Benefits:
+>   - @classmethod factories: Employee.from_csv(line) creates instances
+>   - @classmethod respects inheritance — cls is the subclass when called on one
+>   - @staticmethod groups utility functions under the class namespace
+>
+> Anti-patterns:
+>   - @staticmethod when a module-level function is clearer
+>   - Instance method when self is never used — make it @staticmethod
+>   - Not using cls in @classmethod — should be @staticmethod instead
+>
+> When to use:
+>   - @classmethod for factories and inheritance-aware methods
+>   - @staticmethod for class-namespaced utilities
+>
+> When NOT to use:
+>   - @staticmethod for methods that need instance state — use regular method
+>
+> Static and class methods — @classmethod receives cls for factories; @staticmethod has no self/cls
+>
+> Employee — instance method (self), @classmethod (cls), @staticmethod (no self/cls)
+
 ```python
-# Static and class methods — @classmethod receives cls, @staticmethod has no self
-#
-# Technique: @classmethod gets the class as first arg (cls) — enables
-#   factory methods and inheritance-aware construction. @staticmethod
-#   gets no implicit arg — just a function namespaced to the class.
-#
-# Benefits:
-#   - @classmethod factories: Employee.from_csv(line) creates instances
-#   - @classmethod respects inheritance — cls is the subclass when called on one
-#   - @staticmethod groups utility functions under the class namespace
-#
-# Anti-patterns:
-#   - @staticmethod when a module-level function is clearer
-#   - Instance method when self is never used — make it @staticmethod
-#   - Not using cls in @classmethod — should be @staticmethod instead
-#
-# When to use:
-#   - @classmethod for factories and inheritance-aware methods
-#   - @staticmethod for class-namespaced utilities
-#
-# When NOT to use:
-#   - @staticmethod for methods that need instance state — use regular method
-
-# Static and class methods — @classmethod receives cls for factories; @staticmethod has no self/cls
-
-# Employee — instance method (self), @classmethod (cls), @staticmethod (no self/cls)
 class Employee:
     company = "Acme Corp"              # class attribute — shared by all instances
     _employee_count = 0
@@ -647,48 +659,48 @@ print(f"Type: {type(mgr).__name__}")       # Manager, not Employee
 
 #### Why dataclasses instead of dicts
 
-```python
-# Why dataclasses over dicts — compile-time safety for known structures
-#
-# Technique: Dicts accept any key (including typos) and any value type —
-#   errors appear only at runtime. Dataclasses enforce field names and
-#   types at definition, with IDE autocomplete and type checker support.
-#
-# Benefits:
-#   - Typos caught by IDE and type checker — not at runtime
-#   - Autocomplete lists all valid fields — no memorizing string keys
-#   - Refactoring tools rename fields across the codebase
-#
-# Anti-patterns:
-#   - Dicts for fixed-structure data — loses safety and tooling
-#   - String keys when field names are known — dataclass is type-safe
-#
-# When to use:
-#   - Any data with a known schema: API responses, configs, DB rows
-#
-# When NOT to use:
-#   - Truly dynamic keys from runtime — dicts are appropriate
-
-# In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored
-# in databases. So why bother with classes for moving data around?
-#
-# SHORT ANSWER: dataclasses aren't for the DATA itself (that flows through
-# pandas/Spark/SQL). They're for everything AROUND the data: configs, metadata,
-# API responses, pipeline state, error reports, task definitions.
-#
-# WHEN DICTS WIN:
-# - Exploratory/ad-hoc work, notebooks
-# - Unknown/dynamic schemas (arbitrary JSON from external API)
-# - Pandas DataFrames (already structured)
-# - Quick scripts you'll run once
-#
-# WHEN DATACLASSES WIN:
-# - Production pipelines that run unattended (typos = 3am failures)
-# - Shared code between team members (self-documenting)
-# - Anything that gets deployed and must not fail silently
-# - APIs (input/output contracts)
-# - Configs, metadata, pipeline orchestration state
-```
+> [!danger] Why dataclasses over dicts — compile-time safety for known structures
+> Why dataclasses over dicts — compile-time safety for known structures
+>
+> Technique: Dicts accept any key (including typos) and any value type —
+>   errors appear only at runtime. Dataclasses enforce field names and
+>   types at definition, with IDE autocomplete and type checker support.
+>
+> Benefits:
+>   - Typos caught by IDE and type checker — not at runtime
+>   - Autocomplete lists all valid fields — no memorizing string keys
+>   - Refactoring tools rename fields across the codebase
+>
+> Anti-patterns:
+>   - Dicts for fixed-structure data — loses safety and tooling
+>   - String keys when field names are known — dataclass is type-safe
+>
+> When to use:
+>   - Any data with a known schema: API responses, configs, DB rows
+>
+> When NOT to use:
+>   - Truly dynamic keys from runtime — dicts are appropriate
+>
+> In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored
+> in databases. So why bother with classes for moving data around?
+>
+> SHORT ANSWER: dataclasses aren't for the DATA itself (that flows through
+> pandas/Spark/SQL). They're for everything AROUND the data: configs, metadata,
+> API responses, pipeline state, error reports, task definitions.
+>
+> WHEN DICTS WIN:
+> - Exploratory/ad-hoc work, notebooks
+> - Unknown/dynamic schemas (arbitrary JSON from external API)
+> - Pandas DataFrames (already structured)
+> - Quick scripts you'll run once
+>
+> WHEN DATACLASSES WIN:
+> - Production pipelines that run unattended (typos = 3am failures)
+> - Shared code between team members (self-documenting)
+> - Anything that gets deployed and must not fail silently
+> - APIs (input/output contracts)
+> - Configs, metadata, pipeline orchestration state
+>
 
 #### Dict — silent typos
 
