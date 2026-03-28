@@ -186,7 +186,7 @@
             display: block;
             box-sizing: border-box;
 
-            // normalize card props
+            // normalize card props — override link defaults
             font-family: inherit;
             font-size: 0.85em;
             line-height: 1.35;
@@ -194,8 +194,9 @@
             text-transform: none;
             text-align: left;
             outline: none;
-            font-weight: inherit;
-            color: var(--gray);
+            font-weight: 400 !important;
+            color: var(--darkgray) !important;
+            text-decoration: none !important;
 
             &:hover,
             &:focus,
@@ -217,11 +218,17 @@
             & > h3 {
               margin: 0;
               font-size: 0.85em;
-              font-weight: 500;
-              color: var(--darkgray);
-              display: flex;
-              align-items: center;
-              gap: 0.4em;
+              font-weight: 400 !important;
+              color: var(--dark) !important;
+              display: block;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+
+              & > .relevance-dot {
+                vertical-align: middle;
+                margin-right: 0.35em;
+              }
             }
 
             .relevance-dot {

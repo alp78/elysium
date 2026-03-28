@@ -28,7 +28,7 @@ date: 2026-03-28
 
 ### Active Ownership
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="56 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 56</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="57 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 57</span>
 
 
 > A responsible investment strategy in which investors use their rights and influence as shareholders to drive improvements in ESG performance at portfolio companies. Active Ownership encompasses proxy voting, filing shareholder resolutions, direct engagement with management and boards, and collaborative engagement through investor coalitions. ISS ESG supports Active Ownership through its proxy voting advisory services and engagement data.
@@ -40,40 +40,39 @@ In plain terms, Active Ownership means investors do not simply buy shares and ho
 
 > [!example]- Source excerpts (5)
 >
-> October 29, 11:00 AM EST; 8:00 AM PST; 4:00 BST; 5:00 PM CEST Institutional Shareholder Services
-> Inc. (ISS) has been a PRI signatory since 2007. Established in 1985, ISS is the leading provider
-> of global governance data and **active ownership** solutions for over 1,700 asset owners and
-> investment managers worldwide. ISS invites you to a one hour int...
+> (ISS) has been a PRI signatory since 2007. Established in 1985, ISS is the leading provider of
+> global governance data and **active ownership** solutions for over 1,700 asset owners and
+> investment managers worldwide. ISS invites you to a one hour introductory webinar replay
+> presentation of ho
 >
 > — [PRI: How ISS Solutions Support Investment Integration, Active Ownership and R...](https://www.issgovernance.com/pri-iss-solutions-support-investment-integration-active-ownership-reporting-webinar)
 >
-> SUSTAINABILITY SOLUTIONS / COLLABORATIVE ENGAGEMENT SERVICES Thematic Engagement Solution Engage
-> with companies on top-priority sustainability themes to improve transparency and performance. On
-> behalf of our clients, we facilitate engagement to promote positive change through **active
-> ownership** and dialogue. Our Thematic Engagement Solution allows...
+> ing process (Principle 1) - Learn how clients globally are increasingly starting to use ISS Data
+> Solutions, including ISS Governance QuickScore. Meet **active ownership** criteria (Principle 2) -
+> Learn how more ISS clients than ever before are choosing custom policies tailored to their own
+> investment approach or using
+>
+> — [PRI: How ISS Solutions Support Investment Integration, Active Ownership and R...](https://www.issgovernance.com/pri-iss-solutions-support-investment-integration-active-ownership-reporting)
+>
+> sustainability themes to improve transparency and performance. On behalf of our clients, we
+> facilitate engagement to promote positive change through **active ownership** and dialogue. Our
+> Thematic Engagement Solution allows investors to participate in a joint outreach and dialogue with
+> companies on material sustainabi
 >
 > — [Thematic Engagement | ISS](https://www.issgovernance.com/sustainability/engagement/thematic-engagement)
 >
-> VOTE DISCLOSURE SERVICES Setting the standards for vote disclosure best practices Turnkey
-> recordkeeping & disclosure services to help efficiently showcase **active ownership** and
-> cost-effectively achieve compliance with global regulatory requirements, stewardship codes, and
-> best practice guidelines. With today’s focus on ESG, asset managers, mutual...
+> DISCLOSURE SERVICES Setting the standards for vote disclosure best practices Turnkey recordkeeping
+> & disclosure services to help efficiently showcase **active ownership** and cost-effectively
+> achieve compliance with global regulatory requirements, stewardship codes, and best practice
+> guidelines. With today’s focus on E
 >
 > — [ISS Proxy Voting - Vote Disclosure Services](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services)
 >
 > Pooled Engagement Webinar: Asia & Australia **Active Ownership** Through Pooled Engagement Leading
 > investors increasingly view engagement as an effective way of addressing environmental, social and
-> governance (ESG) areas of concern. ISS-Ethix’ Pooled Engagement service supports active owners
-> with identifying and managing material ESG issues throu
+> governance (ESG)
 >
 > — [Pooled Engagement Asia &amp; Australia | ISS](https://www.issgovernance.com/pooled-engagement-asia-and-australia)
->
-> An Extensive Suite Of Responsible Investment Solutions For Signatories ISS offers a comprehensive
-> suite of sustainable and responsible investment solutions to assist PRI signatories with
-> incorporating ESG issues into the investment process, promoting **active ownership**, assisting
-> with issuer and stakeholder engagement, and reporting in line with c...
->
-> — [Solutions for PRI Signatories | ISS](https://www.issgovernance.com/solutions/pri-signatories)
 >
 
 ---
@@ -96,10 +95,10 @@ In plain terms, Best-in-Class screening does not ban entire industries outright.
 
 > [!example]- Source excerpts (1)
 >
-> ortfolio based on ESG criteria: a 31% increase from 2016. The second-most popular strategy is ESG
-> integration – the systematic and explicit inclusion of ESG factors into financial analysis, which
-> grew 69% to $18 trillion. The fastest-growing strategies were also the three smallest ones:
-> positive or **best-in-class screening**, sustainability-themed ...
+> of ESG factors into financial analysis, which grew 69% to $18 trillion. The fastest-growing
+> strategies were also the three smallest ones: positive or **best-in-class screening**,
+> sustainability-themed investing, and impact or community investing. While the smaller pools of
+> assets can be expected to grow more rapidly, the tren
 >
 > — [Sustainable Investing Grows 34% in Two Years, GSIA Says | Blog posts | STOXX](https://stoxx.com/sustainable-investing-grows-34-in-two-years-gsia-says)
 >
@@ -108,7 +107,7 @@ In plain terms, Best-in-Class screening does not ban entire industries outright.
 
 ### Biodiversity Impact Assessment Tool (BIAT)
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="65 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 65</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > A specialised analytical framework developed by ISS ESG that quantifies the impact of corporate activities on biodiversity and ecosystem integrity. BIAT evaluates companies based on their land use, pollution outputs, resource extraction, supply chain dependencies on natural capital, and alignment with biodiversity conservation targets such as the Kunming-Montreal Global Biodiversity Framework.
@@ -122,40 +121,38 @@ In simple terms, BIAT measures how much damage (or benefit) a company causes to 
 
 > [!example]- Source excerpts (5)
 >
-> STOXX INDEX METHODOLOGY GUIDE 253/639 14. STOXX SUSTAINABILITY INDICES (BIATPDF/EVIC) scores based
-> on ISS ESG **Biodiversity Impact Assessment Tool (BIAT)**. The ISS ESG BIAT PDF metric aims to
-> quantify the impact of corporates on biodiversity. The metric represents the potential decline in
-> species richness in an area over a period due to unfavourab...
+> Mean Species Abundance (MSA): The Mean Species Abundance based on ISS ESG **Biodiversity Impact
+> Assessment Tool (BIAT)** is a metric used to quantify the impact of corporates on biodiversity. It
+> describes impacts in terms of the mean abundance of original species relati
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 622](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> SUSTAINABILITY SOLUTIONS **Biodiversity Impact Assessment Tool** Assess your portfolio’s impact on
-> biodiversity. Global biodiversity loss can lead to operational, legislative, and reputational
-> risks for investors, but many lack the information needed to conduct a holistic risk assessment.
-> Our **Biodiversity Impact Assessment Tool** enables investors to ...
+> This includes one-third of all marine mammals, 40% of all amphibian species, and nearly 33% of
+> coral reefs. SOURCE: OECD 2022 BENEFITS OF USING THE **BIODIVERSITY IMPACT ASSESSMENT TOOL** The
+> **Biodiversity Impact Assessment Tool** can be used to support compliance with climate-related
+> disclosure frameworks within the European Union, inclu
 >
 > — [Biodiversity Impact Assessment Tool | ISS](https://www.issgovernance.com/sustainability/biodiversity-impact-assessment-tool)
 >
-> . The framework can be used to customize and optimize existing indices, incorporating additional
-> objectives and constraints. Measuring companies’ nature impact A key component of the ISS STOXX
-> Biodiversity framework is the Potentially Disappeared Fraction of Species (PDF)[6], an output of
-> ISS ESG’s **Biodiversity Impact Assessment Tool**. PDF seeks ...
+> omponent of the ISS STOXX Biodiversity framework is the Potentially Disappeared Fraction of
+> Species (PDF), an output of ISS Sustainability Solutions’ **Biodiversity Impact Assessment Tool**.
+> PDF seeks to measure how corporates affect our natural world by considering a set of environmental
+> pressures on species and habitats across the enti
 >
-> — [New report examines rationale, methodology of ISS STOXX Biodiversity indices ...](https://stoxx.com/new-report-examines-rationale-methodology-of-iss-stoxx-biodiversity-indices)
+> — [Monthly Index News February 2026 (PDF), p. 15](https://stoxx.com/monthly-index-news-february-2026)
 >
-> be overweighed in the index. Securities with no commitments or no SBTi approved targets will be
-> subjected to incremental underweighting and securities with no commitments will not be eligible
-> for selection starting 2023. xiv. Mean Species Abundance (MSA): The Mean Species Abundance based
-> on ISS ESG **Biodiversity Impact Assessment Tool (BIAT)** is a...
+> This wasn’t always easy to measure and report on, but, again, with new datasets such as ISS
+> STOXX’s **Biodiversity Impact Assessment Tool (BIAT)**[3], the task is becoming more transparent.”
+> Staying on the topic of biodiversity, DWS and STOXX have collaborated on the Biodiversity Focus
+> SRI ETFs.
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Q&amp;A with DWS’s Frederike Bauer: ‘Data evolution is fostering awareness in...](https://stoxx.com/qa-with-dwss-frederike-bauer-data-evolution-is-fostering-awareness-in-climate-biodiversity-impact-investing)
 >
-> , civilian firearms and military contracting. - involved in specific biodiversity-related products
-> and activities: palm oil, GMO agriculture, hazardous pesticides, animal testing for
-> non-pharmaceutical purposes, fur & exotic leather production. 2. Minimize Our partners at ISS ESG
-> have developed the **Biodiversity Impact Assessment Tool** metric. The...
+> The series leverages data from various solutions, including the ESG Corporate Rating,
+> **Biodiversity Impact Assessment Tool**, Modern Slavery Solution, and Norm-Based Research. This
+> second publication focuses on nickel and cobalt mining.
 >
-> — [New ISS STOXX indices use comprehensive framework to help investors address b...](https://stoxx.com/new-iss-stoxx-indices-use-comprehensive-framework-to-help-investors-address-biodiversity-challenges)
+> — [Critical Mineral Series: Sustainability Considerations for Investors in Cobal...](https://www.issgovernance.com/library/critical-mineral-series-sustainability-considerations-for-investors-in-cobalt-and-nickel-mining)
 >
 
 ---
@@ -164,7 +161,7 @@ In simple terms, BIAT measures how much damage (or benefit) a company causes to 
 
 ### Carbon Risk Rating
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="88 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 88</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="81 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 81</span>
 
 
 > A quantitative assessment of a company's exposure to and management of carbon-related financial risks, including transition risks (policy, technology, market shifts) and physical risks (extreme weather, resource scarcity). ISS ESG evaluates companies on their carbon footprint intensity, emissions reduction targets, fossil fuel reserves, and alignment with Paris Agreement pathways.
@@ -178,38 +175,36 @@ In everyday language, the Carbon Risk Rating tells investors how vulnerable a co
 
 > [!example]- Source excerpts (5)
 >
-> **Carbon Risk Rating** assesses the climate-related performance of companies, taking into account
-> not only industry-specific challenges and risk profiles, but also considers companies positive
-> impact. It provides investors with a central instrument for the future-oriented analysis of
-> CO2-related risks b
+> These can be of a physical, regulatory, technological or financial nature resulting in
+> climate-related risks for investors. **Carbon Risk Rating** provides investors with a
+> comprehensive assessment of the climate-related performance of companies and allows important
+> conclusions to be drawn about
 >
 > — [Carbon Risk Rating | ISS](https://www.issgovernance.com/sustainability/climate-solutions/carbon-risk-rating)
 >
-> STOXX INDEX METHODOLOGY GUIDE 283/639 14. STOXX SUSTAINABILITY INDICES  At least equivalent
-> exposure to issuers with EU Taxonomy-aligned reported capital expenditure as the parent index
-> (from March 2023 onwards)  At least 10% increase in the **carbon risk rating** relative to the
-> parent index  Aligned with IEA NZE Scenario 2030 carbon budget.  A...
+> **Carbon Risk Rating** scores from the eligible securities in the iSTOXX MUTB Japan Quality 150
+> Index. In cases where more than one company has the same **Carbon Risk Rating** score at the 30th
+> threshold, preference is given to the company with the highest composite quality score, as
+> calculated for the iSTOXX MUTB Japan Qua
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 288](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> UTB Japan Quality 150 Index. Companies that are non-compliant with the Global Standards Screening
-> (GSS) or are involved in Controversial Weapons activities, as identified by Sustainalytics, are
-> not eligible. The iSTOXX MUTB Japan Low Carbon Risk 30 Index selects 30 securities with the best
-> (lowest) **Carbon Risk Rating** scores from the eligible sec...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> fuel usage of the top 10 issuers, evaluates the overall energy mix, and considers the impact of
-> fossil fuel subsidies on market dynamics. Additionally, it analyzes the share of oil, gas, and
-> coal reserves to understand resource concentration and long-term risk. The framework incorporates
-> a Country **Carbon Risk Rating** to provide a comprehensive vi...
+> y, it analyzes the share of oil, gas, and coal reserves to understand resource concentration and
+> long-term risk. The framework incorporates a Country **Carbon Risk Rating** to provide a
+> comprehensive view of transition vulnerabilities across jurisdictions. SCENARIO ALIGNMENT Includes
+> a heat map projection for 2050 under
 >
 > — [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics)
 >
-> ment with the SDGs reinforces the indications from the ESG Performance rating and stands in sharp
-> contrast with the relatively weak SDG alignment of the Magnificent 7, which, on a weighted average
-> basis, was not only below the STOXX USA 500, but only slightly above the neutral value of 0. While
-> the **Carbon Risk Rating** provides a forward-looking a...
+> This is with the intention of incentivizing companies to commit and set science-based targets. ISS
+> ESG’s **Carbon Risk Rating** data assesses companies’ capacity to manage future climate change
+> related challenges and opportunities arising from the transition to a low-carbon ec
+>
+> — [Stoxx Index Guide (PDF), p. 614](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> Even the two lowest stocks sit comfortably above the Prime threshold. Next, Figure 2 shows the
+> **Carbon Risk Rating** (CRR), which focuses exclusively on the climate-related performance of
+> companies.
 >
 > — [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective)
 >
@@ -218,7 +213,7 @@ In everyday language, the Carbon Risk Rating tells investors how vulnerable a co
 
 ### Climetrics
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="55 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 55</span>
 
 
 > A fund-level climate rating developed by CDP and ISS ESG that evaluates mutual funds and ETFs on their portfolio holdings' climate performance. It assigns a rating from one to five leaves, assessing three dimensions: the carbon performance of portfolio companies, the fund's investment policy on climate, and the asset manager's governance on climate issues.
@@ -232,38 +227,36 @@ Think of Climetrics as a "climate score for your investment fund." It checks whe
 
 > [!example]- Source excerpts (5)
 >
-> **Climetrics** Integrate climate impact into your investment decisions. The world’s first climate
-> impact rating for equity funds. The **Climetrics** rating – symbolized by green leaves issued on a
-> scale of one to five – provides fund managers with transparency on the climate impact of their
-> investment funds
+> The license includes free access to the portfolio reports for the corresponding funds. Portfolio
+> Report The **Climetrics** portfolio reports provides an in-depth overview of a fund’s climate
+> performance: Portfolio Holdings Score What is the climate impact of the portfolio
 >
 > — [Climetrics | ISS](https://www.issgovernance.com/sustainability/climetrics)
 >
-> a key part of its overall **Climetrics** rating. Investee companies are scored on their current
-> carbon emissions, exposure to fossil fuels and use of clean technology, and their future
-> strategies for managing long-term climate and deforestation risks. Analysis of 50 of the
-> best-rated equity funds under **Climetrics**’ new methodology found that two-thir...
+> **Climetrics** was catalysed and funded by Climate-KIC, the European Union’s main climate
+> innovation initiative. Top-rated funds can be found for free on **climetrics**-rating.org, with
+> deeper fund results offered on a subscription basis. Commercial use of the rating by funds will be
+> licensed, allowing asset managers
+>
+> — [World&#039;s First Climate Rating for Equity Funds Launched | ISS](https://www.issgovernance.com/worlds-first-climate-rating-equity-funds-launched)
+>
+> -traded funds, **Climetrics**, has advanced its methodology by scoring funds for investing in
+> companies with public commitments to science-based targets. **Climetrics**’ 1-5 leaf ratings give
+> investors wide-ranging transparency on the climate impact of equity funds and a simple view of a
+> fund’s exposure to climate ri
 >
 > — [European investment funds rated on alignment with 2°C Paris climate target | ISS](https://www.issgovernance.com/european-investment-funds-rated-on-alignment-with-2c-paris-climate-target)
 >
-> , Head of ISS-climate adds: “The expansion of the **Climetrics** analysis into the Japanese market
-> is an important step for the global responsible investment community as it allows for meaningful
-> insight into the carbon exposure and climate-related risks on a global scale.“ Until this current
-> analysis, **Climetrics** has only rated funds available for s...
->
-> — [Japanese Equity Funds Outperform Global Peers on Climate Change Exposure | ISS](https://www.issgovernance.com/japanese-equity-funds-outperform-global-peers-on-climate-change-exposure)
->
-> underlying **Climetrics**, the world’s first climate impact rating for funds developed jointly by
-> CDP and ISS-Ethix Climate Solutions, finds just over 60% of funds and ETFs offered by asset
-> management firms based in Sweden receive either a 4 or a 5 leaf rating, representing the two top
-> marks under the **Climetrics** rating scale. Launched on July 6, 201...
+> % of funds and ETFs offered by asset management firms based in Sweden receive either a 4 or a 5
+> leaf rating, representing the two top marks under the **Climetrics** rating scale. Launched on
+> July 6, 2017, **Climetrics** measures climate impact more comprehensively than any fund rating to
+> date, capturing three aspects
 >
 > — [Swedish Funds Ranked Best in Europe for Climate Impact | ISS](https://www.issgovernance.com/swedish-funds-ranked-best-europe-climate-impact)
 >
 > - Investment funds from BNP Paribas AM, La Banque Postale AM and Candriam among 10 awarded by
 > **Climetrics** - French asset managers lead sustainability trend – with 7 of the 10 most
-> climate-friendly funds in Europe. - Analysis shows approximately half (46%) of the top company
-> holdings in the 10 identified funds are rated A by CDP this year. Feb 19,...
+> climate-friendly funds in Europe. - Analysis shows approximately half (46%)
 >
 > — [Top Ten European Equity Funds for Climate Performance Revealed | ISS](https://www.issgovernance.com/top-ten-european-equity-funds-for-climate-performance-revealed)
 >
@@ -272,7 +265,7 @@ Think of Climetrics as a "climate score for your investment fund." It checks whe
 
 ### Controversy Rating
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="247 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 247</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="254 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 254</span>
 
 
 > A backward-looking assessment that evaluates the severity of a company's involvement in environmental, social, or governance controversies. ISS ESG monitors global media, NGO reports, regulatory filings, and other public sources to identify incidents and assigns a severity score based on the impact, recurrence, and company response.
@@ -286,40 +279,38 @@ A Controversy Rating measures how badly a company has been caught behaving. If a
 
 > [!example]- Source excerpts (5)
 >
-> G performance. Controversy is defined as an event or aggregation of events relating to an ESG
-> topic. An event is assessed on its severity on a scale of 1 to 5 (1- Low, 2- Moderate, 3-
-> Significant, 4- High, 5- Severe). The highest Event rating under a controversy indicator,
-> automatically becomes the **Controversy Rating** for a given company. Controv...
+> TIC INDICES »>10% significant ownership of a company that is involved in distribution and/or
+> retail sale (>10% total revenues) of tobacco products. » **Controversy Rating**s: STOXX will
+> exclude companies that Sustainalytics identifies to have a **Controversy Rating** of Category 5
+> (Severe). Sustainalytics assesses companies’
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 416](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> DEDUCTIONS) The remaining companies in the index universe are screened for all of the following
-> criteria: - Minimum liquidity: 3-month Average Daily Traded Volume (ADTV) in EUR equal to or
-> exceeding 10 million EUR. - Minimum size: Free float market cap in EUR equal to or exceeding 1
-> billion EUR. - **Controversy Rating**s: STOXX will exclude companie...
+> The following weapons that Sustainalytics identifies to have a are considered controversial:
+> anti-personnel **Controversy Rating** of Category 5 (Severe). mines, biological weapons, chemical
+> weapons, Sustainalytics assesses companies’ cluster munitions, depleted uranium program,
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Market Consultation Stoxx Index 20250925 (PDF), p. 2](https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_STOXX_Index_20250925.pdf)
 >
-> their underlying conventions. Controversial Weapons: **Controversy Rating**: Not involved in
-> Controversial Weapons activities, Additionally, STOXX will exclude companies as identified by
-> ISS-ESG. The following weapons that Sustainalytics identifies to have a are considered
-> controversial: anti-personnel **Controversy Rating** of Category 5 (Severe). mine...
+> es Switch and DAX Futures Leverage indices Effective Creation of Version 3.43 11/11/2022 − Change
+> to the DAX ESG Target Index methodology addition of **Controversy Rating**s Effective Creation of
+> Version 3.42 05/10/2022 − Renaming of DAX ESG+ Index to DAX 50 ESG+ Index DAX STRATEGY INDEX GUIDE
+> 53/57 14.
 >
-> — [Market Consultation Stoxx Index 20250925 (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_STOXX_Index_20250925.pdf)
+> — [Dax Strategy Index Guide (PDF), p. 52](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
 >
-> es from extracting oil sands. This category evaluates oil sands’ share of total oil and gas
-> average production in barrels of oil equivalent per day > 5% revenues from shale energy
-> exploration and/or production (e) ESG Controversy STOXX will exclude companies that Sustainalytics
-> identifies to have a **Controversy Rating** of Category 5 (Severe) (f) E...
+> Standards Screening assessment or are involved in Controversial Weapons and other controversial
+> activities. Moreover, companies that display high ESG **Controversy Rating**s are also excluded.
+> The index applies liquidity and size screens and aims to have a minimum number of 80 components.
 >
-> — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
+> — [Ixarobu (PDF), p. 2](https://www.stoxx.com/document/Bookmarks/CurrentFactsheets/IXAROBU.pdf)
 >
-> o identify innovators in lithium battery technology. This unique dual approach yields diversified
-> exposure to both established and pioneering industry players across the entire lithium value
-> chain. Companies that are non-compliant with the Global Standards Screening or display a Severe
-> (Category 5) **Controversy Rating**, as identified by Sustainaly...
+> the relevant underlying conventions. » **Controversy Rating**s: STOXX excludes companies that
+> Sustainalytics identifies as having a Category 5 (“Severe”) **Controversy Rating**. Sustainalytics
+> assesses companies’ involvement in incidents with negative environmental, social and governance
+> (ESG) implications.
 >
-> — [Monthly Index News October 2023 (PDF)](https://stoxx.com/monthly-index-news-october-2023)
+> — [Dax Equity Index Methodology Guide 5526498614 (PDF), p. 54](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
 >
 
 ---
@@ -340,19 +331,19 @@ Controversy Level is the "headline summary" of a company's controversy profile. 
 
 > [!example]- Source excerpts (2)
 >
-> iSTOXX® METHODOLOGY GUIDE 513/1024 60. iSTOXX USA Ocean Care 40 - Risk level less than 2 in
-> **Controversy Level**: Operations Incidents - Emissions, Effluents and Waste. Tobacco: STOXX will
-> exclude companies that Sustainalytics identifies to have: • >0% revenues from manufacturing
-> tobacco products Thermal Coal: STOXX will exclude companies that Sust...
+> Daily Traded Volume (ADTV) in EUR equal to or exceeding 10 million EUR - Each Ocean Care KPI with
+> a score greater than 0 - Risk level less than 2 in **Controversy Level**: Operations Incidents -
+> Emissions, Effluents and Waste. For each company of the selection list the adjusted_ffmcap is
+> calculated, 𝑎𝑑𝑗𝑢𝑠𝑡𝑒𝑑_𝑓𝑓𝑚𝑐𝑎𝑝 =𝑎𝑣
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 509](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> etwork administration systems, electronic payment processors and express couriers. In addition,
-> the STOXX Global Digitalisation Index screens out companies involved in activities deemed
-> undesirable from a sustainability perspective. This includes those in breach of global norms or
-> with a severe ESG **controversy level** as identified by Sustainalyti...
+> anies involved in activities deemed undesirable from a sustainability perspective. This includes
+> those in breach of global norms or with a severe ESG **controversy level** as identified by
+> Sustainalytics. Also excluded are companies involved in Controversial Weapons, Small Arms and
+> Military Contracting, Conventional and
 >
-> — [Monthly Index News August 2022 (PDF)](https://stoxx.com/monthly-index-news-august-2022)
+> — [Monthly Index News August 2022 (PDF), p. 4](https://stoxx.com/monthly-index-news-august-2022)
 >
 
 ---
@@ -371,7 +362,7 @@ In everyday language, a Controversy-Adjusted Score is an ESG rating with a penal
 
 ### Corporate Rating (ISS ESG)
 
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,383 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,383</span>
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,349 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,349</span>
 
 
 > The flagship company-level ESG assessment produced by ISS ESG. It evaluates over 10,000 issuers on up to 100 industry-specific ESG indicators across the Environmental, Social, and Governance pillars. Ratings are issued on an absolute letter-grade scale from A+ (excellent) to D- (poor), with industry-specific weightings reflecting materiality.
@@ -385,47 +376,45 @@ The ISS ESG Corporate Rating is the core ESG grade for a company. Analysts exami
 
 > [!example]- Source excerpts (5)
 >
-> STOXX INDEX METHODOLOGY GUIDE 252/639 14. STOXX SUSTAINABILITY INDICES Animal Testing STOXX will
-> exclude companies that ISS ESG identifies to have: Involvement in animal testing for
-> non-pharmaceutical purposes. The "Non-Pharmaceutical" factor refers to the use of live animal
-> testing as part of the development of non-pharmaceutical products. Fur ...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> ity should be within 0.999 and 1 of 𝐼 where 𝐼 is the minimum of 50% of the carbon intensity of the
-> parent index or a 𝑡 𝑡 7% reduction from the previous period’s carbon intensity exposure, adjusted
-> by inflation of EVIC. - Security level carbon intensity data is defined as (Scope 1+2+3 emissions
-> from ISS ESG) / Enterprise value including cash in E...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> tments to the Sustainable Development Goals, measure and report on the alignment of their
-> portfolios to the SDGs and develop their own investment solutions based on specific themes such as
-> biodiversity, climate, gender equality and health. The new SDG Impact Rating is the first of two
-> new solutions ISS ESG will be launching this year to support ...
->
-> — [ISS ESG Launches New SDG Impact Rating | ISS](https://www.issgovernance.com/iss-esg-launches-new-sdg-impact-rating)
->
-> ng represents the statistical distribution of the companies. Figure 1: ISS ESG Performance Score
-> The GRANOLAS score 64.2 while the remaining companies are meaningfully below that, at 54.7. One
-> noteworthy observation is that all 11 stocks have an ESG score above 50, which is the threshold
-> indicating ISS ESG’s Prime status. This designation refers...
+> One noteworthy observation is that all 11 stocks have an ESG score above 50, which is the
+> threshold indicating ISS ESG’s Prime status. This designation refers to a company’s demonstrated
+> ability to adequately manage material ESG risks, mitigate negative and generate p
 >
 > — [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective)
 >
-> Weapons: Not involved in Controversial Weapons activities, as identified by ISS-ESG. The following
-> weapons are considered controversial: anti-personnel mines, biological weapons, chemical weapons,
-> cluster munitions, depleted uranium program, nuclear weapons (including Non-NPT) and white
-> phosphorus. ISS ESG’s Controversial Weapons Research is des...
+> Security level carbon intensity data is equal to (Scope 1+2 emissions from ISS ESG) / (Enterprise
+> value including cash (EVIC)) from March 2019 onwards. Carbon intensity is calculated as (Scope 1+2
+> emissions from ISS ESG) / Revenue f
 >
-> — [Results Of Market Consultation On Proposed Changes To The Methodology Of The ... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results%20of%20Market%20Consultation%20on%20proposed%20changes%20to%20the%20methodology%20of%20the%20STOXX%20Paris-Aligned%20and%20Climate%20Transition%20Benchmark%20Indices.pdf)
+> — [Istoxx Index Guide (PDF), p. 790](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+>
+> /processing is defined as taking the raw fur or hide and processing it so that it can be used in a
+> product. Tobacco STOXX will exclude companies that ISS ESG identifies to have:  >0% revenues from
+> involvement in the production of tobacco products.  >5% revenues from services related to tobacco
+> products.
+>
+> — [Stoxx Index Guide (PDF), p. 247](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> 55 methodology document. This value is reported only if the benchmark is a PAB or 62
+> Item10c_Temperature_ Scenario_Provider CTB index. "IEA module by ISS ESG" for CTB/PAB Text 255
+> indices This value is reported only if the benchmark is a PAB or Item10d_Temperature_ 63 CTB
+> index.
+>
+> — [Index Files Guide 20230619 (PDF), p. 101](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+>
+> Indices were designed to help reduce the carbon footprint of portfolios and limit their exposure
+> to climate-related risks. They use data from CDP and ISS ESG. Risk and Return Characteristics
+> Return (%) Annualized volatility (%) EUR USD EUR USD 1M YTD 1Y 1M YTD 1Y 1M YTD 1Y 1M YTD 1Y P/B
+> 1.
+>
+> — [Monthly Index News April 2021 (PDF), p. 15](https://stoxx.com/monthly-index-news-april-2021)
 >
 
 ---
 
 ### Country Rating
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
 
 
 > An ESG assessment at the sovereign level that evaluates nations on their environmental stewardship, social conditions, and governance quality. ISS ESG Country Ratings cover areas such as climate policy, biodiversity, human rights, education, corruption, and institutional stability, producing a composite score used for sovereign bond screening and country-level allocation decisions.
@@ -439,47 +428,39 @@ Country Ratings work like corporate ESG ratings but applied to governments. They
 
 > [!example]- Source excerpts (5)
 >
-> NEW YORK (April 7, 2020) – ISS ESG, the responsible investment arm of Institutional Shareholder
+> ORK (April 7, 2020) – ISS ESG, the responsible investment arm of Institutional Shareholder
 > Services Inc., today announced enhancements to the ISS ESG **Country Rating**, which provides
-> fixed income investors with superior coverage of almost 100% of issued global sovereign debt. This
-> is the first of several product enhancements this year, augmen...
+> fixed income investors with superior coverage of almost 100% of issued global sovereign debt.
 >
 > — [ISS ESG Announces Enhanced ESG Country Rating | ISS](https://www.issgovernance.com/iss-esg-announces-enhanced-esg-country-rating)
 >
 > ESG **Country Rating**s are an ideal complement to conventional financial ratings. They provide
-> detailed analyses of the sustainability performance and risks of all EU, OECD and BRICS countries
-> as well as other important sovereign issuers from Asia and South America. ESG **Country Rating**s
-> are an important ind
+> detailed analyses of the sustainability performance and risks of all EU, OEC
 >
 > — [ESG Country Rating | ISS](https://www.issgovernance.com/sustainability/ratings/country-rating)
 >
-> ale of -10 (significant negative impact) to +10 (significant positive impact). Our Fund Rating
-> evaluates the environmental, social and governance performance of equity and bond funds globally.
-> The key fund rating results are mainly derived from the pioneering Sustainability Solutions’
-> Corporate and **Country Rating**s, which provide financially mate...
+> Financially material & holistic sustainability signals The key fund rating results are mainly
+> derived from our pioneering Corporate and **Country Rating**s, which provide financially material
+> and holistic sustainability signals on companies’ and countries’ current and future performance.
 >
-> — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway)
+> — [ESG Fund Rating | ISS](https://www.issgovernance.com/sustainability/fund-rating)
 >
-> tify & track passive ESG investments Benchmark portfolio performance UNPARALLELED ESG INSIGHTS A
-> solid foundation of comprehensive & high quality data to meet your ESG investing goals.
-> Controversial Weapons Research Energy & Extractive Screening Sector-Based Screening Global
-> Sanctions Screening ESG **Country Rating** Environmental & Social Disclosur...
+> ISS ESG can assist investors through services such as Sector-based Screening Solutions, the ISS
+> ESG **Country Rating**, and the ISS ESG Modern Slavery Scorecard.
 >
-> — [ISS ESG Turnkey Index Solutions](https://www.issgovernance.com/sustainability/index-solutions/turnkey-index-solutions-2)
+> — [Hand-Rolled &amp; Unfiltered Cigarettes: Regulation and Existing Health and L...](https://www.issgovernance.com/library/hand-rolled-unfiltered-cigarettes-regulation-and-existing-health-and-labour-rights-risks)
 >
-> t across a range of asset classes. - A high level perspective is essential to understanding the
-> local context of a company’s operations and offers a proxy for asset classes that are less well
-> covered by traditional ESG products. - ISS ESG supports investors by providing a macro
-> perspective. The ESG **Country Rating** offers a perspective on, for exa...
+> ed accounts, and fulfillment of their asset management mandates. oekom’s suite of responsible
+> investment solutions includes: corporate, industry, and **country rating**s; portfolio analysis;
+> sustainability impact services; green bond services; climate risk services; and engagement
+> services. Drawing on an experienced
 >
-> — [Filling the Blank Spots on the Map: Using Country Risk Analysis to Assess ESG...](https://www.issgovernance.com/library/using-country-risk-analysis-to-assess-esg-risks)
+> — [oekom research AG to Join Institutional Shareholder Services | ISS](https://www.issgovernance.com/oekom-research-ag-join-institutional-shareholder-services)
 >
 
 ---
 
 ### Custom ESG Ratings
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > Bespoke ESG scoring frameworks that ISS ESG constructs for institutional clients, allowing them to apply proprietary weightings, materiality definitions, exclusion criteria, and thematic overlays to the underlying ISS ESG data universe. Custom ratings enable investors to reflect their own values, regulatory requirements, or investment beliefs within a rigorous quantitative framework.
@@ -490,22 +471,11 @@ Some investors want ESG ratings tailored to their own priorities. A European pen
 
 > [!tip] Related terms
 > [[#Corporate Rating (ISS ESG)]], [[#ESG Scorecard]], [[#Best-in-Class Screening]]
-
-> [!example]- Source excerpts (1)
->
-> climate data, Scope 1&2 and Scope 3 emissions, for 25,000+ listed companies and issuers of
-> corporate debt. Advisory services are available for all asset classes, including Private Equity,
-> Fixed Income, Real Estate, Loan Books, Infrastructure, Hedge Strategies, Forestry, Agriculture and
-> Green Bonds. **Custom ESG Ratings** A unique and flexible rating...
->
-> — [Screening, Research &amp; Analytics | ISS](https://www.issgovernance.com/sustainability/screening-research-analytics)
->
-
 ---
 
 ### Cyber Risk Score
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="39 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 39</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
 > A specialised assessment that evaluates a company's exposure to and management of cybersecurity-related risks, including data breaches, system vulnerabilities, regulatory compliance (e.g., GDPR), incident response preparedness, and board-level cyber governance. ISS ESG incorporates cyber risk indicators into its broader governance and social pillar assessments.
@@ -519,40 +489,37 @@ The Cyber Risk Score tells investors whether a company is likely to suffer a dam
 
 > [!example]- Source excerpts (5)
 >
-> k Mitigation ROCKVILLE, Md. (October 21, 2020) — Institutional Shareholder Services Inc. (ISS),
-> the leading provider of high-quality data, analytics, and insight to the institutional investor
-> and corporate issuer communities, today announced it has entered into a definitive agreement to
-> acquire the **cyber risk score** business of FICO®. The transac...
+> The transaction is expected to close over the coming weeks, subject to customary closing
+> conditions. The FICO® **Cyber Risk Score** provides a long-term indicator of network security risk
+> based on a diverse set of inputs, global cybersecurity threats, and proprietary analytical me
 >
 > — [ISS Announces Agreement to Acquire FICO® Cyber Risk Score Business | ISS](https://www.issgovernance.com/iss-announces-agreement-to-acquire-fico-cyber-risk-score-business)
 >
-> d maintains its cyber security posture, powered by a machine learning model trained to identify
-> the relative likelihood of a portfolio company suffering a material cybersecurity incident within
-> the next 12 months. CYBER RISK DECILE Describes how the subject organization ranks (in terms of
-> their ISS **Cyber Risk Score**), on a decile basis, within an...
+> ng a material cybersecurity incident within the next 12 months. CYBER RISK DECILE Describes how
+> the subject organization ranks (in terms of their ISS **Cyber Risk Score**), on a decile basis,
+> within an ISS-defined peer group based on size and sector. CYBER GOVERNANCE DECILE Describes how
+> the subject organization ranks
 >
 > — [Cyber Risk Score](https://www.issgovernance.com/sustainability/cyber-risk)
 >
-> Acquisition of FICO® **Cyber Risk Score** Business providing a long-term indicator of network
-> security risk based on a diverse set of inputs, global cybersecurity threats, and proprietary
-> analytical [...] Ethix acquisition provided 15+ years of industry-leading expertise in SRI issues,
-> environmental, human rights, labor sta
->
-> — [ESG Timeline Archives | ISS](https://www.issgovernance.com/ctl-stories/esg-timeline)
->
-> ountry Ratings, which provide financially material and holistic sustainability signals on
-> companies’ and countries’ current and future sustainability performance. Additionally, the fund
-> rating includes input from our Governance QualityScore, Norm-Based Research, and Carbon and
-> Climate Data. The ISS **Cyber Risk Score** is a data-driven scoring and s...
+> Additionally, the fund rating includes input from our Governance QualityScore, Norm-Based
+> Research, and Carbon and Climate Data. The ISS **Cyber Risk Score** is a data-driven scoring and
+> screening solution designed to enable objective assessment of the cyber risk posture of any
+> company.
 >
 > — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway)
 >
-> h-quality, reliable, and relevant ESG data. US CYBER RISK INDEX US Cyber Risk Serious cyber
-> security incidents can lead to operational, legislative, and reputational risks for investors. ISS
-> ESG US CYBER RISK INDEX Screen for companies with low or negligible cyber-related risks based on
-> the ISS ESG **Cyber Risk Score**, which represents the likeliho...
+> nd reputational risks for investors. ISS ESG US CYBER RISK INDEX Screen for companies with low or
+> negligible cyber-related risks based on the ISS ESG **Cyber Risk Score**, which represents the
+> likelihood that an organization will suffer a material cyber incident within the next 12 months.
 >
 > — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
+>
+> nd reputational risks for investors. ISS ESG US CYBER RISK INDEX Screen for companies with low or
+> negligible cyber-related risks based on the ISS ESG **Cyber Risk Score**, which represents the
+> likelihood that an organization will suffer a material cyber incident within the next 12 months.
+>
+> — [ESG Index Solutions](https://www.issgovernance.com/sustainability/index-solutions)
 >
 
 ---
@@ -561,7 +528,7 @@ The Cyber Risk Score tells investors whether a company is likely to suffer a dam
 
 ### Data Verification
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="80 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 80</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > The process by which ISS ESG validates the accuracy, completeness, and consistency of company-reported ESG data against independent sources, including regulatory filings, audited reports, third-party databases, and proprietary analyst research. Data Verification is a core component of the ISS ESG rating methodology and ensures that self-reported disclosures are reliable enough to underpin investment-grade ESG ratings.
@@ -573,40 +540,38 @@ Data Verification is the quality control behind ESG ratings. Companies may self-
 
 > [!example]- Source excerpts (5)
 >
-> ISS’ Proxy Research **Data Verification** Introduced in January 2022, ISS’ new **data
-> verification** (DV) portal for U.S. corporations represents a major expansion of ISS’ current DV
-> program now used by many companies that are the subject of ISS’ proxy research and
-> recommendations. The program allows for verification of more t
+> My company does not have an equity plan on the ballot this year. Does Equity Plan **Data
+> Verification** still apply to me? No. Equity Plan **Data Verification** is a new option for
+> companies with an equity plan on the ballot. If your company has a new or revised equity plan next
+> year, then Equity Plan Data Ve
 >
-> — [ISS’ Proxy Research Data Verification | ISS](https://www.issgovernance.com/iss-proxy-research-data-verification)
->
-> Technical Manual. For more information on the S&P 500 Draft Review process, consult the ISS Draft
-> Review Process for U.S. Issuers. 15. Can my company review the Equity Plan **Data Verification**
-> in advance of the Equity Plan **Data Verification** form opening? The list of questions included
-> in Equity Plan Data Verification is available in Appendix A of ...
->
-> — [Equity Plan Data Verification (PDF)](http://www.issgovernance.com/file/faq/equity-plan-data-verification.pdf)
+> — [Equity Plan Data Verification (PDF), p. 3](http://www.issgovernance.com/file/faq/equity-plan-data-verification.pdf)
 >
 > Companies within the ISS QualityScore coverage universe can review, verify and provide feedback on
 > the data used to determine their scores via a **Data Verification** tool accessed through the
 > Compass platform. Submissions of corrected or updated data factors can be made online through the
-> platform. **Data verification** is not available during the peri...
+> platform. Data verificati
 >
 > — [Data Verification | ISS](https://www.issgovernance.com/sustainability/ratings/data-verification)
 >
-> U.S. Companies Offered New Option to Examine Equity Plan Data Rockville, MD (August 14, 2014) –
-> Institutional Shareholder Services Inc. (ISS), a leading provider of corporate governance
-> solutions to the global financial community, announced today the launch of a new **data
-> verification** portal covering critical information on equity-based compensat...
+> (ISS), a leading provider of corporate governance solutions to the global financial community,
+> announced today the launch of a new **data verification** portal covering critical information on
+> equity-based compensation plans that U.S.
 >
 > — [Institutional Shareholder Services Launches New Data Verification Portal | ISS](https://www.issgovernance.com/institutional-shareholder-services-launches-new-data-verification-portal)
 >
-> ISS Governance QualityScore **Data Verification** Thank you for verifying your ISS Governance
-> QualityScoredata. Use the **Data Verification** tool to: 1) Review the criteria used to generate
-> your company’s QualityScore; 2) review your company’s underlying data; and 3) submit data update
-> requests to ISS. How to Verify Your Company’s IS
+> ernance and compensation datapoints, including those related to stock plans previously available
+> for verification through the now-retired Equity Plan **Data Verification** platform. Datapoints
+> available for verification are principally those used and reflected in ISS’ proxy research report
+> on companies, including: - Ind
 >
-> — [How To Verify Your Qualityscore Data November 2017 (PDF)](https://www.issgovernance.com/file/faq/how-to-verify-your-qualityscore-data-november-2017.pdf)
+> — [ISS’ Proxy Research Data Verification | ISS](https://www.issgovernance.com/iss-proxy-research-data-verification)
+>
+> Submissions of corrected or updated data factors can be made online through the platform. **Data
+> verification** is not available during the period between the filing of a company’s proxy
+> statement and the publication of ISS’ proxy analysis for the company’s ann
+>
+> — [QualityScore | Data Verification | ISS](https://www.issgovernance.com/solutions/qualityscore-data-verification)
 >
 
 ---
@@ -627,17 +592,16 @@ Decile-Based Scoring converts raw ESG numbers into a simple 1-to-10 rank within 
 
 > [!example]- Source excerpts (2)
 >
-> ’ Special Situations Research recommending in a detailed analysis that shareholders vote for
-> neither Wynn nor incumbent board members due to a variety of governance and compensation concerns.
 > Wynn Resorts is rated a “10” by ISS QuickScore, representing the highest level of governance risk
-> under the **decile-based scoring** system. This contest has g...
+> under the **decile-based scoring** system. This contest has generated significant media interest
+> as a $13 billion company, but also because it has all the makings of a Las Vegas drama.
 >
 > — [Increase in Number of Contested Meetings | ISS](https://www.issgovernance.com/increase-in-number-of-contested-meetings)
 >
-> and analytics to support and improve their decision-making,” said Stephen Harvey, Head of the ISS
-> Governance Business. “ISS Governance QuickScore helps investors identify and understand factors
-> within a company’s governance structure and practices that could potentially impact performance.”
-> The new **decile-based scoring** solution uses a quantitati...
+> s investors identify and understand factors within a company’s governance structure and practices
+> that could potentially impact performance.” The new **decile-based scoring** solution uses a
+> quantitatively-driven methodology that looks for correlations between governance factors and key
+> financial metrics, with a secondary
 >
 > — [Institutional Shareholder Services Launches Governance Quickscore | ISS](https://www.issgovernance.com/iss-launches-governance-quickscore)
 >
@@ -666,77 +630,42 @@ In simple terms, traditional materiality asks: "Does climate change hurt this co
 > [!tip] Related terms
 > [[#Materiality]], [[#ESG Risk Rating]], [[#Principal Adverse Impact (PAI)]]
 
-> [!example]- Source excerpts (10)
+> [!example]- Source excerpts (5)
 >
-> with equal right to dividends, which were forbidden by the previous Companies Act. It furthermore
-> enables companies to issue bearer shares. Shares with no voting rights do not carry any special
-> cash-flow rights (such as a preferential dividend). When analyzing multiple voting rights, ISS
-> applies a **double materiality** test by (1) examining the imp...
->
-> — [Analysis: Differentiated Voting Rights in Europe | ISS](https://www.issgovernance.com/analysis-differentiated-voting-rights-in-europe)
->
-> with equal right to dividends, which were forbidden by the previous Companies Act. It furthermore
-> enables companies to issue bearer shares. Shares with no voting rights do not carry any special
-> cash-flow rights (such as a preferential dividend). When analyzing multiple voting rights, ISS
-> applies a **double materiality** test by (1) examining the imp...
->
-> — [Analysis: Differentiated Voting Rights in Europe | ISS](https://www.issgovernance.com/analysis-differentiated-voting-rights-in-europe)
->
-> lying with the requirements, there have been complaints from industry members about a lack of
-> harmonization between new and existing sustainable finance legislations, and on the misalignment
-> between SFDR definitions and market practitioners’ own terminology. Such definitions include the
-> concepts of **double materiality**, sustainable investment and ...
->
-> — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting)
->
-> lying with the requirements, there have been complaints from industry members about a lack of
-> harmonization between new and existing sustainable finance legislations, and on the misalignment
-> between SFDR definitions and market practitioners’ own terminology. Such definitions include the
-> concepts of **double materiality**, sustainable investment and ...
->
-> — [Europe’s SFDR: A challenge worth meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting-2)
->
-> e in 2023 and are likely to extend into 2024, Warberg and Karakulova wrote. In July, the EC
-> adopted new European Sustainability Reporting Standards (ESRS), which provide more details on the
-> Corporate Sustainability Reporting Directive (CSRD) from last year. ESRS requires companies to
-> report on the “**double materiality**” environmental impact of the...
+> SRS), which provide more details on the Corporate Sustainability Reporting Directive (CSRD) from
+> last year. ESRS requires companies to report on the “**double materiality**” environmental impact
+> of their operations and value chain, and relieves them — for now — of mandatory disclosures on
+> climate mitigation, biodiversity
 >
 > — [Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg)
 >
-> n essential prerequisite for high-quality sustainable investment products and for higher and
-> faster acceptance from investors. If the available data is too superficial, financial service
-> providers are limited in what they can do and will struggle to adhere to sustainable investment
-> standards. Only “**double materiality**”2 — i.e., the documentation ...
+> This data set should not be limited to climate factors. European regulators could set precedence
+> by defining the concept of **double materiality** in a broad context and with a long-term
+> perspective. The European Single Access Point (ESAP) for financial and non-financial information
+> can play an
 >
 > — [The role of indices and data analytics in sustainable investing | Blog posts ...](https://stoxx.com/the-role-of-indices-and-data-analytics-in-sustainable-investing)
 >
-> lying with the requirements, there have been complaints from industry members about a lack of
-> harmonization between new and existing sustainable finance legislations, and on the misalignment
-> between SFDR definitions and market practitioners’ own terminology. Such definitions include the
-> concepts of **double materiality**, sustainable investment and ...
+> ce legislations, and on the misalignment between SFDR definitions and market practitioners’ own
+> terminology. Such definitions include the concepts of **double materiality**, sustainable
+> investment and PAIs on sustainability factors. Investment firms could therefore be forgiven for
+> feeling anxious in the face of a regulat
 >
 > — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting)
 >
-> lying with the requirements, there have been complaints from industry members about a lack of
-> harmonization between new and existing sustainable finance legislations, and on the misalignment
-> between SFDR definitions and market practitioners’ own terminology. Such definitions include the
-> concepts of **double materiality**, sustainable investment and ...
+> ce legislations, and on the misalignment between SFDR definitions and market practitioners’ own
+> terminology. Such definitions include the concepts of **double materiality**, sustainable
+> investment and PAIs on sustainability factors. Investment firms could therefore be forgiven for
+> feeling anxious in the face of a regulat
 >
 > — [Europe’s SFDR: A challenge worth meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting-2)
 >
-> e in 2023 and are likely to extend into 2024, Warberg and Karakulova wrote. In July, the EC
-> adopted new European Sustainability Reporting Standards (ESRS), which provide more details on the
-> Corporate Sustainability Reporting Directive (CSRD) from last year. ESRS requires companies to
-> report on the “**double materiality**” environmental impact of the...
+> th no voting rights do not carry any special cash-flow rights (such as a preferential dividend).
+> When analyzing multiple voting rights, ISS applies a **double materiality** test by (1) examining
+> the impact of the multiple voting rights relative to the total number of voting rights (if this
+> has high impact, for instance m
 >
-> — [Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg)
->
-> n essential prerequisite for high-quality sustainable investment products and for higher and
-> faster acceptance from investors. If the available data is too superficial, financial service
-> providers are limited in what they can do and will struggle to adhere to sustainable investment
-> standards. Only “**double materiality**”2 — i.e., the documentation ...
->
-> — [The role of indices and data analytics in sustainable investing | Blog posts ...](https://stoxx.com/the-role-of-indices-and-data-analytics-in-sustainable-investing)
+> — [Analysis: Differentiated Voting Rights in Europe | ISS](https://www.issgovernance.com/analysis-differentiated-voting-rights-in-europe)
 >
 
 ---
@@ -755,7 +684,7 @@ In everyday language, Engagement Escalation is the "raising the pressure" playbo
 
 ### ESG (Environmental, Social, Governance)
 
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,534 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,534</span>
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8,515 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 8,515</span>
 
 
 > The three central pillars used to evaluate the sustainability and ethical impact of an investment. Environmental criteria examine resource use, pollution, climate impact, and biodiversity. Social criteria assess labour practices, human rights, community relations, and product safety. Governance criteria cover board structure, executive compensation, audit integrity, shareholder rights, and anti-corruption measures.
@@ -767,47 +696,44 @@ ESG is the overarching framework. It says: "To judge whether a company is respon
 
 > [!example]- Source excerpts (5)
 >
-> STOXX INDEX METHODOLOGY GUIDE 252/639 14. STOXX SUSTAINABILITY INDICES Animal Testing STOXX will
-> exclude companies that ISS **ESG** identifies to have: Involvement in animal testing for
-> non-pharmaceutical purposes. The "Non-Pharmaceutical" factor refers to the use of live animal
-> testing as part of the development of non-pharmaceutical products. Fur ...
+> ISS **ESG**’s Controversial Weapons implications. Controversy involvement is one Research is
+> designed to identify all companies in key measure of **ESG** performance. A a corporate structure
+> that have control over the controversy is defined as an event or relevant business activities,
+> i.e., all immedia
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Market Consultation Stoxx Index 20250925 (PDF), p. 2](https://www.stoxx.com/document/Resources/MarketConsultation/Market_Consultation_STOXX_Index_20250925.pdf)
 >
-> R equal to or exceeding 1 billion EUR. - Controversy Ratings: STOXX will exclude companies that
-> Sustainalytics identifies to have a Controversy Rating of Category 4 (High) and 5 (Severe).
-> Sustainalytics assesses companies’ involvement in incidents with negative environmental, social
-> and governance (**ESG**) implications. Controversy involvement is o...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> DECODING **ESG** What are the investor implications of Modern Slavery? NOVEMBER 2, 2022 Modern
-> slavery, one of the top three international crimes, is a violation of the fundamental human rights
-> to freedom, decent work, and dignity. It refers to situations a person cannot refuse or leave due
-> to threats, violence,
->
-> — [Decoding ESG: What are the investor implications of Modern Slavery? | ISS](https://www.issgovernance.com/library/decoding-esg-what-are-the-investor-implications-of-modern-slavery)
->
-> DAX STRATEGY INDEX GUIDE 33/57 8. DAX DECREMENT INDICES 8.2.2. CALCULATION The index is calculated
-> as follows: U ACT(t−1,t) t IV =IV × ( −D ) t t−1 U 360 t−1 Whereby: IV = index value on day t t IV
-> = 1000 on 20 March 2017 0 U = index value of underlying DAX 30 **ESG** (Net Return) index on day t
-> t D = constant number of percentage subtracted (4%) AC...
->
-> — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
->
-> EURO STOXX Index. The replacement will be the largest company in the peer group with an **ESG**
-> score higher than that of the exiting stock. EURO STOXX 50 **ESG** Index components are weighted
-> by their market capitalization, maintaining the same methodology as the benchmark. As is the case
-> with other STOXX ESG indices, the EURO STOXX 50 ESG includes a ‘...
+> **ESG** Index components are weighted by their market capitalization, maintaining the same
+> methodology as the benchmark. As is the case with other STOXX **ESG** indices, the EURO STOXX 50
+> ESG includes a ‘fast exit’ rule. This means that any component whose Controversy ESG risk level by
+> Sustainalytics increase
 >
 > — [EURO STOXX 50 ESG Index – The Eurozone’s Sustainable Benchmark | Blog posts |...](https://stoxx.com/euro-stoxx-50-esg-index-the-eurozones-sustainable-benchmark)
+>
+> If there are no companies that meet these conditions, the successor is determined by relaxing the
+> **ESG** score criterion twice, by five ranks each time (e.g., to 60/65 and then 60/70 in the DAX
+> 50 **ESG** rankings).
+>
+> — [Dax Equity Index Methodology Guide 5526498614 (PDF), p. 52](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+>
+> GHG Intensity is defined as the sum of Scope 1, Scope 2 and Scope 3 emissions from ISS **ESG**
+> over Enterprise Value Including Cash (EVIC). If the GHG intensity reduction is not at least 30%
+> versus the parent index, companies will be excluded b
+>
+> — [Stoxx Index Guide (PDF), p. 248](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> One noteworthy observation is that all 11 stocks have an **ESG** score above 50, which is the
+> threshold indicating ISS **ESG**’s Prime status. This designation refers to a company’s
+> demonstrated ability to adequately manage material ESG risks, mitigate negative and generate p
+>
+> — [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective)
 >
 
 ---
 
 ### ESG Corporate Rating
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
 
 > Synonymous with the ISS ESG Corporate Rating. A comprehensive assessment of a company's ESG performance based on up to 100 industry-specific key performance indicators, covering both ESG risks and opportunities. The rating evaluates the degree to which a company manages material ESG issues relative to sector-specific expectations.
@@ -822,37 +748,35 @@ This is the same concept as the Corporate Rating (ISS ESG) entry above, referred
 > [!example]- Source excerpts (5)
 >
 > **ESG Corporate Rating** Survey At the end of 2023, ISS ESG conducted its inaugural **ESG
-> Corporate Rating** Survey, which received over 500 responses. During this webinar Kristina Rüter
-> our Global Head of ESG Methodology, presented key findings and the Survey results, which was
-> conducted by the ISS ESG Rat
+> Corporate Rating** Survey, which received over 500 responses.
 >
 > — [ESG Corporate Rating Survey | ISS](https://www.issgovernance.com/esg-corporate-rating-survey)
 >
-> The SDG Impact Rating aggregation model ensures that a company’s overall impact is based on those
-> SDGs in which it, within its sphere of influence, can have the greatest impact. Highly
-> Industry-Specific Approach A company’s operations score is based on industry-specific indicators,
-> derived from the **ESG Corporate Rating**, that are mapped to the re...
+> Discussion Plenary 5: The power of nature: Understanding biodiversity risk | 14:30 – 15:30 BST
+> Mirtha Kastrapeli, Executive Director – Research, and **ESG Corporate Rating**s Sector Head of
+> Consumer at ISS ESG, will be speaking on this panel alongside experts from S&P Global Sustainable1
+> and Scottish Widows. Explore Our E
 >
-> — [SDG Impact Rating | ISS](https://www.issgovernance.com/sustainability/impact-un-sdg/sdg-impact-rating)
+> — [ISS ESG RI Europe 2023](https://www.issgovernance.com/ri-europe-2023)
 >
-> ESG US CYBER RISK INDEX Screen for companies with low or negligible cyber-related risks based on
-> the ISS ESG Cyber Risk Score, which represents the likelihood that an organization will suffer a
-> material cyber incident within the next 12 months. The index constituents also have a medium or
-> high ISS **ESG Corporate Rating** and comply with market stan...
+> This metric provides a numerical score from 0 to 100 and is comparable over all rated entities.
+> For corporate issuers Prime Status is based on the **ESG Corporate Rating** and a sector specific
+> Prime threshold. All rated entities with values > 50 are Prime, companies with values < 50 are Not
+> Prime. STOXX IND
+>
+> — [Stoxx Index Guide (PDF), p. 229](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> SG Water Risk Rating, which considers companies’ Water Risk Exposure and Water Risk Management.
+> The index constituents also have a medium or high ISS **ESG Corporate Rating** and comply with
+> standards related to international norms and controversial weapons. EVA LEADERS INDEX ESG + F ESG
+> + F (financial materiality) is here
 >
 > — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
 >
-> ICB Supersector, ESG score and free-float market capitalization of each excluded company. The ESG
-> scores are sourced from ISS-ESG ESG Performance Score. This metric provides a numerical score from
-> 0 to 100 and is comparable over all rated entities. For corporate issuers Prime Status is based on
-> the **ESG Corporate Rating** and a sector specific Prim...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> services to help financial market participants understand, measure, and act on climate-related
-> risks across all asset classes. In addition, our solutions cover corporate and country research
-> and ratings enabling its clients to identify material social and environmental risks and
-> opportunities. The **ESG Corporate Rating** provides highly relevant, m...
+> ions cover corporate and country research and ratings enabling its clients to identify material
+> social and environmental risks and opportunities. The **ESG Corporate Rating** provides highly
+> relevant, material and forward-looking environmental, social, and governance data and performance
+> assessments.
 >
 > — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway)
 >
@@ -861,7 +785,7 @@ This is the same concept as the Corporate Rating (ISS ESG) entry above, referred
 
 ### ESG Disclosure
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
 
 > A measure of the extent and quality of a company's public reporting on environmental, social, and governance factors. ESG Disclosure encompasses regulatory filings, sustainability reports, CDP responses, proxy statements, and other communications that provide investors with the information necessary to assess ESG performance. ISS ESG evaluates disclosure quality as part of its Corporate Rating methodology.
@@ -875,45 +799,42 @@ ESG Disclosure is about how much a company tells the world about its sustainabil
 >
 > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS Benchmark **ESG Disclosure** Dataset Disclose the
 > ESG attributes of your Indexes according to EU’s new disclosure requirements. Meet your regulatory
-> reporting & disclosure obligations with the help of our Benchmark **ESG Disclosure** Dataset. EU
-> Benchmark Regulations aim to improve transparency and compara...
+> reporting & disclosure obliga
 >
 > — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset)
 >
-> PAB were originally introduced in February 2019, when co-legislators agreed to amend the European
-> Benchmark Regulation. In that context, a Technical Expert Group (TEG) received a mandate to
-> suggest minimum technical requirements for the methodology of both climate benchmarks and
-> recommendations on **ESG disclosure**s, including associated disclosure...
+> Because European practitioners’ approach to ESG data is quite unique, it is important for the
+> region to set **ESG disclosure** standards, he said. “It is a strategy move for the European Union
+> to be the standard setter,” Déau said. Coincidentally, ESG ratings were also the fo
+>
+> — [Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...](https://stoxx.com/qontigo-summit-europe-must-lead-in-standardization-of-esg-data)
+>
+> Expert Group (TEG) received a mandate to suggest minimum technical requirements for the
+> methodology of both climate benchmarks and recommendations on **ESG disclosure**s, including
+> associated disclosure templates. The indices are constructed to follow the requirements outlined
+> by the European Commission in the TEG’s
 >
 > — [Qontigo introduces EU-compliant climate benchmarks | Blog posts | STOXX](https://stoxx.com/qontigo-introduces-eu-compliant-climate-benchmarks)
 >
-> ISS ESG WHITE PAPER SERIES: ESG THEMES & TRENDS 2021 Volatile Transitions: Navigating ESG in 2021
-> AUSTRALIA & NEW ZEALAND EDITION FEBRUARY 10, 2021 KEY TAKEAWAYS - Investors in Australia and New
-> Zealand continue to lead in ESG integration, whilst corporate **ESG disclosure** in the region
-> lags behind global counterparts. - Investor initiatives have ...
+> & NEW ZEALAND EDITION FEBRUARY 10, 2021 KEY TAKEAWAYS - Investors in Australia and New Zealand
+> continue to lead in ESG integration, whilst corporate **ESG disclosure** in the region lags behind
+> global counterparts. - Investor initiatives have acted decisively on a range of climate change and
+> ESG risks in the absence
 >
 > — [ISS ESG White Paper Series: ESG Themes and Trends 2021 – Australia &amp; New ...](https://www.issgovernance.com/library/esg-themes-trends-2021-anz)
 >
-> A vast majority of companies in the S&P 500 Index now issue corporate, social and responsibility
-> (CSR) reports, whereas four or five years ago possibly less than half of them did. The other
-> driver is exchanges. Various stock exchanges around the world are working more closely with
-> companies around **ESG disclosure**s. They want to encourage companie...
+> Various stock exchanges around the world are working more closely with companies around **ESG
+> disclosure**s. They want to encourage companies within their domicile to be thinking about
+> environmental, social and governance issues such that it does provide t
 >
 > — [ESG Data: Q&amp;A with Sustainalytics’ Wattamwar | Blog posts | STOXX](https://stoxx.com/esg-data-qa-with-sustainalytics-wattamwar)
->
-> **ESG disclosure** was always set to be high on the agenda for investors in 2023, and developments
-> so far confirm regulators and agencies are on track to push through some key legislative packages.
-> In a midyear review report, ISS ESG, a leading provider of ESG data, analytics and insights, and a
-> partner
->
-> — [Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg)
 >
 
 ---
 
 ### ESG Fund Rating
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > An assessment of the overall ESG quality of a mutual fund or ETF based on the aggregated ESG performance of its underlying holdings. ISS ESG calculates the fund-level score by weighting the ESG Corporate Ratings of each portfolio constituent by its allocation, then normalising the result to produce a single fund-level grade or score.
@@ -925,28 +846,20 @@ ESG Fund Ratings answer the question: "If I buy this fund, how ESG-friendly is m
 > [!tip] Related terms
 > [[#Fund Rating]], [[#Climetrics]], [[#Corporate Rating (ISS ESG)]]
 
-> [!example]- Source excerpts (2)
+> [!example]- Source excerpts (1)
 >
-> ust 5, 2020) — ISS ESG, the responsible investment arm of Institutional Shareholder Services Inc.
-> (ISS), today announced the launch of a new, best-in-class fund ratings solution assessing the
-> environmental, social, and governance (ESG) performance of more than 20,000 investment funds,
-> globally. ISS **ESG Fund Rating**s and Screening provides clients...
+> Fund rating coverage requires that a minimum of 65 percent of a fund’s holdings by weight be
+> covered by ISS ESG’s Corporate Ratings. ISS **ESG Fund Rating**s will have broad utility for a
+> wide swath of financial investing professionals.
 >
 > — [ISS Unveils Innovative &amp; Comprehensive ESG Fund Ratings Solution | ISS](https://www.issgovernance.com/iss-unveils-innovative-comprehensive-esg-fund-ratings-solution)
->
-> ss all asset classes. In addition, solutions cover corporate and country research and ratings
-> enabling its clients to identify material social and environmental risks and opportunities.
-> COVERAGE - - ESG Corporate Rating: 12,000 issuers (8,100 companies) - ESG Country Rating: 820
-> sovereign issuers - **ESG Fund Rating**s: 28,000 funds - Screenings & C...
->
-> — [Sustainability Solutions](https://www.issgovernance.com/sustainability)
 >
 
 ---
 
 ### ESG Integration
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="149 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 149</span>
 
 
 > The systematic inclusion of ESG factors into traditional financial analysis and investment decision-making processes. ESG Integration goes beyond negative screening or exclusion; it involves explicitly incorporating ESG risks and opportunities into valuation models, portfolio construction, risk management frameworks, and asset allocation decisions. ISS ESG provides data, ratings, and analytics that facilitate ESG Integration across asset classes.
@@ -958,40 +871,38 @@ ESG Integration means treating ESG data the same way you treat financial data: a
 
 > [!example]- Source excerpts (5)
 >
-> reduce returns relative to a market benchmark. Full **ESG integration** was the highest rated
-> strategy, with more than 60% of respondents saying it has a beneficial impact on investment
-> performance.4 Still, a State Street survey also last year indicated that only 21% of institutional
-> investors use full **ESG integration**, either alone or in combination...
+> USD. 2 Morgan Stanley, ‘Morgan Stanley Survey Finds Interest in Sustainable Investing Stronger
+> than ever,’ Aug. 9, 2017. 3 Cappucci, Michael T., ‘The **ESG Integration** Paradox,’ Jun. 8, 2017.
+> 4 Amel‐ Zaheh, Amir and Serafeim, George, ‘Why and How Investors Use ESG Information: Evidence
+> from a Global Survey,’ March 2
 >
 > — [Outlook 2018 IV: the Road to Wider ESG Integration | Blog posts | STOXX](https://stoxx.com/outlook-2018-iv-the-road-to-wider-esg-integration)
 >
-> CDP and ISS ESG, whose data have allowed us to develop the most innovative and complete indices
-> tracking the world’s ESG pioneers and outperformers. Among them are the EURO STOXX® 50 Low Carbon
-> Index and the STOXX® Europe Climate Impact Ex Global Compact Controversial Weapons & Tobacco
-> Index. Wider **ESG integration** The PRI’s guidelines come at a ...
->
-> — [PRI’s New Rules Reinforce Sustainability Progress | Blog posts | STOXX](https://stoxx.com/pris-new-rules-reinforce-sustainability-progress)
->
-> lobal Standards Screening (GSS)2, involvement in controversial weapons, tobacco producers and
-> thermal coal3 – is applied to the remaining portfolio. Excluded companies are replaced by
-> companies with higher ESG scores from the same Industry Classification Benchmark (ICB)
-> supersector, fulfilling both **ESG integration** and negative exclusion strategi...
+> xcluded companies are replaced by companies with higher ESG scores from the same Industry
+> Classification Benchmark (ICB) supersector, fulfilling both **ESG integration** and negative
+> exclusion strategies. Between Dec. 20, 2019 and Aug. 7, 2020,4 the EURO STOXX 50 ESG Index
+> outperformed the flagship EURO STOXX 50 Index
 >
 > — [ESG Integration on Eurozone Stocks Has Topped Exclusions Returns in 2020 | Bl...](https://stoxx.com/esg-integration-on-eurozone-stocks-has-topped-exclusions-returns-in-2020)
 >
-> In this short video, learn about ISS’ customizable, full-service tool that connects governance
-> teams with investment professionals, proxy committees, and other parties involved in proxy voting
-> or **ESG integration**. TOWARDS A PARTICIPATORY & INCLUSIVE PROXY VOTING PROCESS A customizable,
-> full-service engagement solution Delivers curated content via...
+> 9 EURO STOXX 50® ESG INDEX – INTEGRATING SUSTAINABILITY As can be seen from Figure 8, replacing
+> stocks using the **eSG integration** methodology did not have a material impact on the liquidity
+> of the eUrO STOXX 50®eSG in general. iMPACT OF **eSG iNTeGrATiON** ON PerFOrMANCe excluding c
 >
-> — [ISS Communicator | ISS](https://www.issgovernance.com/solutions/communicator)
+> — [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF), p. 9](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
 >
-> OXX® USA 500 ESG-X Index, which were at the time of listing the first derivatives in Europe
-> tracking ESG exclusions on US stocks and the first worldwide to include a screening for
-> thermal-coal mining and coal-fired power plants. Investors can also access options on the STOXX
-> Europe 600 ESG-X Index. **ESG integration** Since November, two Qontigo sec...
+> That means that any tracking error relative to benchmarks will be the result of both the negative
+> exclusions and of positive **ESG integration**. In this article, we will focus on the former. For
+> this, we draw from a Qontigo research study published earlier this month1 .
 >
-> — [STOXX Europe 600 ESG-X Futures Reach 1 Million Traded Contracts Milestone | B...](https://stoxx.com/stoxx-europe-600-esg-x-futures-reach-1-million-traded-contracts-milestone)
+> — [Gauging the Effect of ESG Exclusions on German Stocks | STOXX](https://stoxx.com/gauging-the-effect-of-esg-exclusions-on-german-stocks)
+>
+> Volume in the STOXX 600 ESG-X futures now amounts to over 7% of the total in the benchmark’s
+> products. Figure 1: STOXX 600 ESG-X derivatives volume **ESG integration** As investors’
+> objectives and preferences evolved, the number and type of available solutions have increased —
+> and Eurex and STOXX have continued to p
+>
+> — [Fifth anniversary of STOXX ESG derivatives sees broadening innovation, adopti...](https://stoxx.com/fifth-anniversary-of-stoxx-esg-derivatives-sees-broadening-innovation-adoption)
 >
 
 ---
@@ -1020,7 +931,7 @@ ESG Risk Categories are the buckets into which all possible sustainability risks
 
 ### ESG Risk Rating
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="151 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 151</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="137 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 137</span>
 
 
 > A forward-looking assessment of the degree of unmanaged ESG risk that a company faces. It combines the company's exposure to material ESG risks (based on industry and geography) with its management of those risks (based on policies, programmes, and performance). The residual, unmanaged portion of risk determines the final rating.
@@ -1034,40 +945,39 @@ The ESG Risk Rating separates exposure from management. A company might be heavi
 
 > [!example]- Source excerpts (5)
 >
-> 4.26.3. SCORING MODEL In general, corporate sustainability is measured by three criteria:
-> environmental, social and governance corporate sustainability, i.e., the ESG-criteria.
-> Sustainalytics has defined a set of indicators which evaluate the performance within each
-> criterion. The E,S,G and overall **ESG Risk Rating** Management Scores assesses how ...
+> The highest Event rating under a controversy indicator, automatically becomes the Controversy
+> Rating for a given company. » **ESG Risk Rating**s64: STOXX will exclude companies that
+> Sustainalytics identifies to have a “Severe” **ESG Risk Rating**. The ESG Risk Rating evaluates
+> the degree of a com
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 371](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> XX® METHODOLOGY GUIDE 465/1024 50. iSTOXX GLOBAL CITIES OF TOMORROW SELECT 30 INDEX rating scores,
-> and the 50% companies with the highest **ESG risk rating** scores, rounded upwards to the next
-> integer, are excluded from the selection process. In case two companies for a given cutoff date
-> have the same **ESG risk rating** score, priority is given to the...
+> The companies in the parent index are then ranked in ascending order in terms of their **ESG risk
+> rating** scores, and the 50% companies with the highest **ESG risk rating** scores, rounded
+> upwards iSTOXX® METHODOLOGY GUIDE 643/1024 78.
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 642](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> MONTHLY INDEX NEWS / August 2023 SRI indices Key points The STOXX® SRI (Socially Responsible
-> Investing) indices apply a set of involvement, carbon emission intensity, compliance and **ESG
-> risk rating**s and controversies screens, and additionally track the best ESG performers in each
-> industry group within a selection of STOXX benchmarks. Risk and re...
+> SRI indices Key points The STOXX® SRI (Socially Responsible Investing) indices apply a set of
+> involvement, carbon emission intensity, compliance and **ESG risk rating**s and controversies
+> screens, and additionally track the best ESG performers in each industry group within a selection
+> of STOXX benchmarks. Risk and re
 >
-> — [Monthly Index News August 2023 (PDF)](https://stoxx.com/monthly-index-news-august-2023)
+> — [Monthly Index News August 2023 (PDF), p. 12](https://stoxx.com/monthly-index-news-august-2023)
 >
-> aluates oil sands’ share of total oil and gas average production in barrels of oil equivalent per
-> day > 5% revenues from shale energy exploration and/or production (e) ESG Controversy STOXX will
-> exclude companies that Sustainalytics identifies to have a Controversy Rating of Category 5
-> (Severe) (f) **ESG Risk Rating**s STOXX will exclude companies t...
+> acco products - 0% revenues from the mining of thermal coal Companies with no data in any of the
+> above fields will not be eligible for the SI label » **ESG risk rating**: The weighted average
+> **ESG Risk rating** of the final selection must be lower compared to the benchmark Where
+> infeasibilities arise, the tracking error,
 >
-> — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
+> — [Dax Equity Index Methodology Guide 5526498614 (PDF), p. 57](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
 >
-> production of tobacco products - 5% revenues from services related to tobacco products - 5%
-> revenues from the wholesale or retail distribution of tobacco products - 0% revenues from the
-> mining of thermal coal Companies with no data in any of the above fields will not be eligible for
-> the SI label » **ESG risk rating**: The weighted average ESG Risk r...
+> a swift response to any eSG breaches by quickly removing offenders, and hence limiting investor
+> risk. if Sustainalytics raises an index constituent’s **eSG risk rating** to level 5, the company
+> concerned is removed from the index two trading days after the announcement and its weight is
+> distributed pro rata across the
 >
-> — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+> — [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF), p. 5](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
 >
 
 ---
@@ -1086,10 +996,10 @@ The ESG Scorecard is the report card. It takes all the detailed analysis behind 
 
 > [!example]- Source excerpts (1)
 >
-> ISS ESG / RATINGS & RANKINGS **ESG SCORECARD** Conduct material ESG performance and risk
-> assessments of private companies. Use ISS ESG’s standardized scorecard to assess environmental,
-> social and governance risks and opportunities in just a few steps. The **ESG Scorecard**
-> facilitates an industry-specific scoring of a company’s ESG ris
+> & DO-IT-YOURSELF ESG ASSESSMENT TOOL Score the ESG performance of private companies on a scale
+> from 0 to 100 EXPLORE **ESG SCORECARD** USE CASES THE FIVE **ESG SCORECARD** ELEMENTS The ESG
+> Scorecard is based on the ISS ESG Corporate Rating methodology, applying the same thorough
+> performance requirements. ASSESSMENT ELEM
 >
 > — [ESG Scorecard | ISS](https://www.issgovernance.com/sustainability/ratings/esg-scorecard)
 >
@@ -1122,10 +1032,9 @@ The Environmental Pillar measures everything related to a company's relationship
 
 > [!example]- Source excerpts (1)
 >
-> nal Platform on Sustainable Finance[1]. In Europe, companies have started reporting their share of
-> alignment to the Taxonomy and investors can assess such information for their portfolios. The
-> development of the Taxonomy has, however, proven to be a challenging process[2] and, as of today,
-> only the **Environmental pillar** is covered and only partly...
+> The development of the Taxonomy has, however, proven to be a challenging process[2] and, as of
+> today, only the **Environmental pillar** is covered and only partly so. Until the Taxonomy is
+> fully developed, the European Commission has introduced a complementary concept to serve as an a
 >
 > — [Searching for the sustainability north star | Blog posts | STOXX](https://stoxx.com/searching-for-the-sustainability-north-star)
 >
@@ -1148,17 +1057,17 @@ Exposure Score is the starting point before management is factored in. A coal mi
 
 > [!example]- Source excerpts (2)
 >
-> /EVIC. 3. Enable In a third step, the indices select companies with the highest exposure to SDGs
-> chosen for their impact on biodiversity and climate.[9] Here, the methodology differentiates
-> between the Biodiversity and Biodiversity Leaders indices. In the former, we calculate each
-> stock’s total SDG **exposure score** among seven SDGs and select the ...
+> 9] Here, the methodology differentiates between the Biodiversity and Biodiversity Leaders indices.
+> In the former, we calculate each stock’s total SDG **exposure score** among seven SDGs and select
+> the top 80% into the index. The latter adopts a more stringent approach by selecting only
+> companies with high revenues (b
 >
 > — [ISS STOXX indices use comprehensive framework to help investors address biodi...](https://stoxx.com/iss-stoxx-indices-use-comprehensive-framework-to-help-investors-address-biodiversity-challenges)
 >
-> EVIC. 3. Enable In a third step, the indices select companies with the highest exposure to SDGs
-> chosen for their impact on biodiversity and climate.[10] Here, the methodology differentiates
-> between the Biodiversity and Biodiversity Leaders indices. In the former, we calculate each
-> stock’s total SDG **exposure score** among seven SDGs and select the ...
+> 0] Here, the methodology differentiates between the Biodiversity and Biodiversity Leaders indices.
+> In the former, we calculate each stock’s total SDG **exposure score** among seven SDGs and select
+> the top 80% into the index. The latter adopt a more stringent approach by selecting only companies
+> with high revenues (be
 >
 > — [New ISS STOXX indices use comprehensive framework to help investors address b...](https://stoxx.com/new-iss-stoxx-indices-use-comprehensive-framework-to-help-investors-address-biodiversity-challenges)
 >
@@ -1169,7 +1078,7 @@ Exposure Score is the starting point before management is factored in. A coal mi
 
 ### Fund Rating
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > A generic term for any ESG assessment applied at the fund level rather than the individual company level. ISS ESG produces several fund-level products, including the ESG Fund Rating (overall ESG quality), Climetrics (climate performance), and regulatory-aligned disclosures (e.g., SFDR Article 8/9 compliance assessments). Fund Ratings aggregate company-level data weighted by portfolio allocation.
@@ -1179,39 +1088,32 @@ Fund Rating is the umbrella term for scoring an entire investment fund on ESG cr
 > [!tip] Related terms
 > [[#ESG Fund Rating]], [[#Climetrics]], [[#ESG Corporate Rating]]
 
-> [!example]- Source excerpts (5)
+> [!example]- Source excerpts (4)
 >
-> New Offering Provides More Data Point Assessments and ESG Themes Compared with Existing Ratings
-> MUNICH (August 5, 2020) — ISS ESG, the responsible investment arm of Institutional Shareholder
-> Services Inc. (ISS), today announced the launch of a new, best-in-class **fund rating**s solution
-> assessing the environmental, social, and governance (ESG) perf...
+> 2020) — ISS ESG, the responsible investment arm of Institutional Shareholder Services Inc. (ISS),
+> today announced the launch of a new, best-in-class **fund rating**s solution assessing the
+> environmental, social, and governance (ESG) performance of more than 20,000 investment funds,
+> globally. ISS ESG **Fund Rating**s
 >
 > — [ISS Unveils Innovative &amp; Comprehensive ESG Fund Ratings Solution | ISS](https://www.issgovernance.com/iss-unveils-innovative-comprehensive-esg-fund-ratings-solution)
 >
-> Financially material & holistic sustainability signals The key **fund rating** results are mainly
-> derived from our pioneering Corporate and Country Ratings, which provide financially material and
-> holistic sustainability signals on companies’ and countries’ current and future performance.
+> Companies are rated on a scale of -10 (significant negative impact) to +10 (significant positive
+> impact). Our **Fund Rating** evaluates the environmental, social and governance performance of
+> equity and bond funds globally.
 >
-> — [ESG Fund Rating | ISS](https://www.issgovernance.com/sustainability/fund-rating)
+> — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway)
 >
-> G mandate? Application Program Interface (API) The API enables fund platform providers and banks
-> to automatically feed Climetrics’ **fund rating** into internal or external systems. Advisory
-> Services ISS-Ethix Climate Solutions experts provide fund managers with critical insights about
-> their Climetrics **Fund Rating** and the steps they would need to im...
+> have an explicit ESG mandate? Application Program Interface (API) The API enables fund platform
+> providers and banks to automatically feed Climetrics’ **fund rating** into internal or external
+> systems. Advisory Services ISS-Ethix Climate Solutions experts provide fund managers with critical
+> insights about their Cli
 >
 > — [Climetrics | ISS](https://www.issgovernance.com/sustainability/climetrics)
 >
-> ll asset classes. In addition, solutions cover corporate and country research and ratings enabling
-> its clients to identify material social and environmental risks and opportunities. COVERAGE - -
-> ESG Corporate Rating: 12,000 issuers (8,100 companies) - ESG Country Rating: 820 sovereign issuers
-> - ESG **Fund Rating**s: 28,000 funds - Screenings & Contr...
->
-> — [Sustainability Solutions](https://www.issgovernance.com/sustainability)
->
-> mate Solutions, finds just over 60% of funds and ETFs offered by asset management firms based in
-> Sweden receive either a 4 or a 5 leaf rating, representing the two top marks under the Climetrics
-> rating scale. Launched on July 6, 2017, Climetrics measures climate impact more comprehensively
-> than any **fund rating** to date, capturing three aspects of...
+> nting the two top marks under the Climetrics rating scale. Launched on July 6, 2017, Climetrics
+> measures climate impact more comprehensively than any **fund rating** to date, capturing three
+> aspects of analysis to assess a fund along its entire investment process, including the climate
+> impact of its portfolio hold
 >
 > — [Swedish Funds Ranked Best in Europe for Climate Impact | ISS](https://www.issgovernance.com/swedish-funds-ranked-best-europe-climate-impact)
 >
@@ -1233,7 +1135,7 @@ The Governance Pillar examines whether a company is run properly. It asks questi
 
 ### Governance QualityScore
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="73 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 73</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="68 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 68</span>
 
 
 > A data-driven governance risk scoring system within the ISS QualityScore suite that evaluates companies across four governance pillars: Board Structure, Compensation/Remuneration, Shareholder Rights, and Audit & Risk Oversight. Scores are calculated using 200+ data points and presented as decile rankings relative to regional and industry peers.
@@ -1245,77 +1147,38 @@ Governance QualityScore zeroes in on the G of ESG with granular detail. It answe
 > [!tip] Related terms
 > [[#ISS QualityScore]], [[#Governance Pillar]], [[#Decile-Based Scoring]]
 
-> [!example]- Source excerpts (10)
+> [!example]- Source excerpts (5)
 >
-> New Board Diversity Subcategory ROCKVILLE, Md. (November 29, 2018) — Institutional Shareholder
-> Services Inc. (ISS), a leading provider of end-to-end governance and responsible investment
-> solutions to the global financial community, today announced the release of methodology
-> enhancements to its ISS **Governance QualityScore** global corporate profili...
+> (December 2, 2019) — ISS ESG, the responsible investment arm of Institutional Shareholder Services
+> Inc., today announced methodology enhancements to **Governance QualityScore** to provide users
+> with deeper, actionable insights, particularly with respect to sustainability factors. Methodology
+> enhancements include a Shareholde
 >
-> — [ISS Enhances Methodology for Governance QualityScore | ISS](https://www.issgovernance.com/iss-enhances-methodology-for-governance-qualityscore)
+> — [ISS ESG Enhances Governance QualityScore Methodology with Sustainability Fact...](https://www.issgovernance.com/iss-esg-enhances-governance-qualityscore-methodology-with-sustainability-factors)
 >
-> New Board Diversity Subcategory ROCKVILLE, Md. (November 29, 2018) — Institutional Shareholder
-> Services Inc. (ISS), a leading provider of end-to-end governance and responsible investment
-> solutions to the global financial community, today announced the release of methodology
-> enhancements to its ISS **Governance QualityScore** global corporate profili...
->
-> — [ISS Enhances Methodology for Governance QualityScore | ISS](https://www.issgovernance.com/iss-enhances-methodology-for-governance-qualityscore)
->
-> ble governance data to help you more efficiently analyze results. Use **Governance QualityScore**
-> to help: Enhance your Stock Selection Process Analyze Portfolio Risk Screen for Engagements
-> Incorporate Raw Factor Data and Scores into Quant Models Support Policy Development Inform Proxy
-> Voting Decisions **Governance QualityScore** is a data-driven scorin...
->
-> — [Governance QualityScore | ISS](https://www.issgovernance.com/sustainability/ratings/governance-qualityscore)
->
-> ble governance data to help you more efficiently analyze results. Use **Governance QualityScore**
-> to help: Enhance your Stock Selection Process Analyze Portfolio Risk Screen for Engagements
-> Incorporate Raw Factor Data and Scores into Quant Models Support Policy Development Inform Proxy
-> Voting Decisions **Governance QualityScore** is a data-driven scorin...
+> SUSTAINABILITY SOLUTIONS / RATINGS & RANKINGS **Governance QualityScore** Identify corporate
+> governance risk within your portfolio. Corporate governance risk can expose a company and its
+> stakeholders to legal, regulatory, a
 >
 > — [Governance QualityScore | ISS](https://www.issgovernance.com/sustainability/ratings/governance-qualityscore)
 >
 > EVA and **Governance QualityScore** – Emerging Markets FEBRUARY 10, 2022 In a post-pandemic world,
-> investors are focusing on identifying the right governance and ESG topics. A key element in this
-> decision is understanding financial materiality and governance quality at investee companies and
-> potential new inves
+> investors are focusing on identifying the right governance and ESG topics.
 >
 > — [EVA and Governance QualityScore – Emerging Markets | ISS](https://www.issgovernance.com/library/esg-eva-and-gov-qualityscore-emerging-markets)
 >
-> EVA and **Governance QualityScore** – Emerging Markets FEBRUARY 10, 2022 In a post-pandemic world,
-> investors are focusing on identifying the right governance and ESG topics. A key element in this
-> decision is understanding financial materiality and governance quality at investee companies and
-> potential new inves
+> Allows for screening of multi-level fund holdings, fully extendable to underlying fund-in-fund
+> structures. **Governance QualityScore** **Governance QualityScore** provides data and scores for
+> companies across board structure, compensation/remuneration, shareholder rights, and audit & ris
 >
-> — [EVA and Governance QualityScore – Emerging Markets | ISS](https://www.issgovernance.com/library/esg-eva-and-gov-qualityscore-emerging-markets)
+> — [Screening, Research &amp; Analytics | ISS](https://www.issgovernance.com/sustainability/screening-research-analytics)
 >
-> (EVA Margin), medium to high ESG performance, and adherence to key international norms and
+> VA Margin), medium to high ESG performance, and adherence to key international norms and
 > controversial weapons frameworks. Learn more about EVA here. **GOVERNANCE QUALITYSCORE** INDEX
 > Good corporate governance is a foundation for the responsible management of business risks and
-> opportunities. ISS ESG **GOVERNANCE QUALITYSCORE** INDEX SERIES Identify w...
+> opportunities. ISS ESG **GOVERNANCE QUALITYSCORE** I
 >
 > — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
->
-> (EVA Margin), medium to high ESG performance, and adherence to key international norms and
-> controversial weapons frameworks. Learn more about EVA here. **GOVERNANCE QUALITYSCORE** INDEX
-> Good corporate governance is a foundation for the responsible management of business risks and
-> opportunities. ISS ESG **GOVERNANCE QUALITYSCORE** INDEX SERIES Identify w...
->
-> — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
->
-> Data-driven insights for a complete ESG risk evaluation. The Pillars of QualityScore Environmental
-> & Social QualityScore, paired with **Governance QualityScore**, provides a comprehensive ESG
-> assessment of risk. QualityScore uses a numeric, decile-based score that indicates a company’s
-> governance risk across Governance, Environmental & Social catego...
->
-> — [QualityScore | ISS](https://www.issgovernance.com/solutions/qualityscore)
->
-> Data-driven insights for a complete ESG risk evaluation. The Pillars of QualityScore Environmental
-> & Social QualityScore, paired with **Governance QualityScore**, provides a comprehensive ESG
-> assessment of risk. QualityScore uses a numeric, decile-based score that indicates a company’s
-> governance risk across Governance, Environmental & Social catego...
->
-> — [QualityScore | ISS](https://www.issgovernance.com/solutions/qualityscore)
 >
 
 ---
@@ -1336,36 +1199,35 @@ Greenwashing Risk is the danger that something labelled "green" or "sustainable"
 >
 > As the European Securities and Markets Authority (ESMA) tightens guidelines on fund names to
 > mitigate **greenwashing risk**s, fund managers face new challenges. In our latest report, we
-> explore the implications of ESMA’s new rules on the use of terms like “ESG” and “sustainable” in
-> fund names, and how these changes may impact both investment strateg...
+> explore the implications of ESMA’s new rules on the use of terms like “ESG” and “sustai
 >
 > — [What’s in a sustainability fund name? In Europe, increasing rigor | Whitepape...](https://stoxx.com/whats-in-a-sustainability-fund-name-in-europe-increasing-rigor)
 >
-> lish which funds can carry terms such as ‘ESG’ or ‘SRI’ in their names. While the guidelines are
-> designed for funds, they are likely to impact the names and methodologies of underlying indices
-> too. As the European Securities and Markets Authority (ESMA) tightens guidelines on fund names to
-> mitigate **greenwashing risk**s, fund managers face new chal...
+> es and methodologies of underlying indices too. As the European Securities and Markets Authority
+> (ESMA) tightens guidelines on fund names to mitigate **greenwashing risk**s, fund managers face
+> new challenges. In our latest report, we explore the implications of ESMA’s new rules on the use
+> of terms like “ESG” and “sustai
 >
 > — [Regulation | STOXX](https://stoxx.com/category/regulatory-reporting)
 >
-> input from relevant stakeholders and interested third parties on whether the methodologies of the
-> rest of STOXX and DAX ESG & Sustainability indices should be modified along ESMA’s guidelines. We
-> strongly believe that clear rules to define investment strategies ultimately benefit investors,
-> reduce **greenwashing risk** and foster market confidence.”...
+> should be modified along ESMA’s guidelines. We strongly believe that clear rules to define
+> investment strategies ultimately benefit investors, reduce **greenwashing risk** and foster market
+> confidence.” Christine, what’s going to happen to ESG index derivatives if clients demand
+> ESMA-aligned contracts? Christine: “Regar
 >
 > — [New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...](https://stoxx.com/new-esma-fund-names-rules-qa-with-eurex-and-stoxx-on-changes-to-esg-index-derivatives)
 >
-> cial ESG type — for both developers and deployers of AI systems. As the technology advances
-> quickly, governments and companies are stepping up efforts to ensure it is not prone to misuse and
-> abuse. As the European Securities and Markets Authority (ESMA) tightens guidelines on fund names
-> to mitigate **greenwashing risk**s, fund managers face new chal...
+> to ensure it is not prone to misuse and abuse. As the European Securities and Markets Authority
+> (ESMA) tightens guidelines on fund names to mitigate **greenwashing risk**s, fund managers face
+> new challenges. In our latest report, we explore the implications of ESMA’s new rules on the use
+> of terms like “ESG” and “sustai
 >
 > — [Whitepapers | STOXX](https://stoxx.com/post-type/whitepapers)
 >
-> input from relevant stakeholders and interested third parties on whether the methodologies of the
-> rest of STOXX and DAX ESG & Sustainability indices should be modified along ESMA’s guidelines. “We
-> strongly believe that clear rules to define investment strategies ultimately benefit investors,
-> reduce **greenwashing risk** and foster market confidence,...
+> hould be modified along ESMA’s guidelines. “We strongly believe that clear rules to define
+> investment strategies ultimately benefit investors, reduce **greenwashing risk** and foster market
+> confidence,” he adds. Antonio noted that the four STOXX index families discussed earlier exceed
+> the requirements in the ESMA guidel
 >
 > — [Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...](https://stoxx.com/screening-stoxx-indices-through-esmas-new-fund-naming-guidelines)
 >
@@ -1376,7 +1238,7 @@ Greenwashing Risk is the danger that something labelled "green" or "sustainable"
 
 ### Impact Investing
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="53 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 53</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
 
 > An investment approach that intentionally seeks to generate measurable positive social or environmental outcomes alongside financial returns. ISS ESG supports Impact Investing through its SDG Impact Ratings, sustainability solutions assessments, and thematic data products that enable investors to identify and measure the real-world impact of their portfolio allocations.
@@ -1388,40 +1250,36 @@ Impact Investing goes beyond simply avoiding harm or managing risk. It actively 
 
 > [!example]- Source excerpts (5)
 >
-> A joint study1 by Qontigo and Clarity AI this August shed light on the current state of **impact
-> investing**2 by reviewing prominent impact management and measurement frameworks, and assessing
-> the alignment between theory and practice as applied by the industry. Understanding the concept of
-> impact and, more importantly, elaborating ways to measure i...
->
-> — [Impact investing: a guide to quantifying companies’ societal effects through ...](https://stoxx.com/impact-investing-a-guide-to-quantifying-companies-societal-effects-through-the-un-sdgs)
->
-> n. It is a promise that seeking collective societal benefits will eventually translate into better
-> conditions for long-term sustainable returns.” 1 Different organizations have provided an estimate
-> of the size of the impact strategies market. According to the Global Sustainable Investment
-> Alliance, **impact investing** accounted for USD352 billion a...
->
-> — [Impact Investing: What Is It, and How Can Investors Get It Right? | Blog post...](https://stoxx.com/impact-investing-what-is-it-and-how-can-investors-get-it-right)
->
-> argets. “The SDGs provide a framework in which you can bring in a taxonomy of the different
-> impacts that companies create,” said Lastra. The framework allows an assessment and “makes
-> information accessible and comparable across companies and asset classes.” Drivers of demand Quyen
-> Tran, Director of **Impact Investing** and Head of Sustainable Invest...
+> There was a positive take-out shared by most of the panelists: despite confusion and difficulties
+> in settings clear rules for **impact investing**, there is reason for optimism in the rising
+> awareness from investors, and in innovation in the use of frameworks such as the SDGs to measure
+> real-wor
 >
 > — [Panel of experts explores challenges and possibilities of fast-growing impact...](https://stoxx.com/panel-of-experts-explores-challenges-and-possibilities-of-fast-growing-impact-investing-market)
 >
-> ,” Déau said. Coincidentally, ESG ratings were also the focus of criticism in another panel of the
-> day. The World Bank’s Katya Gratcheva said during her presentation that current such scores in the
-> sovereign bond market carry inherent biases. We’ll report on Gratcheva’s views in a separate
-> article. **Impact investing** Another strategy that has emer...
+> **Impact investing** has garnered much attention for its potential to channel capital into
+> material social and environmental objectives.1 This segment of responsible inve
 >
-> — [Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...](https://stoxx.com/qontigo-summit-europe-must-lead-in-standardization-of-esg-data)
+> — [Impact Investing: What Is It, and How Can Investors Get It Right? | Blog post...](https://stoxx.com/impact-investing-what-is-it-and-how-can-investors-get-it-right)
 >
-> certain companies? Or are they looking to create a really opportunistic portfolio that captures a
-> particular theme? And these are not necessarily mutually exclusive objectives. However, each of
-> these approaches will result in very different portfolios. We’re hearing more interest about the
-> topic of **impact investing**. How does ESG data capture tha...
+> r growth in the industry As the authors write, the challenge of measuring impact correctly is at
+> the heart of the theory-vs.-practice misalignment in **impact investing**. Using the SDGs as a
+> framework for understanding what constitutes impact provides a starting point for a common
+> measurement approach that can help br
+>
+> — [Impact investing: a guide to quantifying companies’ societal effects through ...](https://stoxx.com/impact-investing-a-guide-to-quantifying-companies-societal-effects-through-the-un-sdgs)
+>
+> However, each of these approaches will result in very different portfolios. We’re hearing more
+> interest about the topic of **impact investing**. How does ESG data capture that? **Impact
+> investing** is indeed getting more attention and it pertains to the more thematic portfolios.
 >
 > — [ESG Data: Q&amp;A with Sustainalytics’ Wattamwar | Blog posts | STOXX](https://stoxx.com/esg-data-qa-with-sustainalytics-wattamwar)
+>
+> “The Taxonomy’s scope will be wider, and that will have an impact on requirements for labels.”
+> **Impact investing** To finish, the panel was asked if **impact investing** is well served by
+> current labels. Van den Berghe said labels are frequently used as engagement too
+>
+> — [Webinar: ESG fund labeling — ‘friend or foe’ of the sustainability transition...](https://stoxx.com/webinar-esg-fund-labeling-friend-or-foe-of-the-sustainability-transition)
 >
 
 ---
@@ -1442,47 +1300,44 @@ ISS ESG Corporate Rating is the formal, unabbreviated name for the Corporate Rat
 
 > [!example]- Source excerpts (5)
 >
-> ISS ESG US CYBER RISK INDEX Screen for companies with low or negligible cyber-related risks based
-> on the ISS ESG Cyber Risk Score, which represents the likelihood that an organization will suffer
-> a material cyber incident within the next 12 months. The index constituents also have a medium or
-> high **ISS ESG Corporate Rating** and comply with market ...
+> SS ESG Water Risk Rating, which considers companies’ Water Risk Exposure and Water Risk
+> Management. The index constituents also have a medium or high **ISS ESG Corporate Rating** and
+> comply with standards related to international norms and controversial weapons. EVA LEADERS INDEX
+> ESG + F ESG + F (financial materiality) is here
 >
 > — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
 >
-> e future, based on whether their **ISS ESG Corporate Rating**s Overall Numeric Scores have
-> improved at least 5 times over the past 5 years in case of new constituents and 3 times in case of
-> existing constituents. The methodology also removes securities whose issuers are poor ESG
-> performers, where their **ISS ESG Corporate Rating**s Overall Numeric Score...
+> The methodology also removes securities whose issuers are poor ESG performers, where their **ISS
+> ESG Corporate Rating**s Overall Numeric Score is lower than 1.75. Securities whose issuers do not
+> receive ESG Ratings as of the effective review are also excluded. Companie
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 263](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> to business activities typical for the industry, as covered under the EU Taxonomy. INTUITIVE &
-> DO-IT-YOURSELF ESG ASSESSMENT TOOL Score the ESG performance of private companies on a scale from
-> 0 to 100 EXPLORE ESG SCORECARD USE CASES THE FIVE ESG SCORECARD ELEMENTS The ESG Scorecard is
-> based on the **ISS ESG Corporate Rating** methodology, applying ...
+> mance of private companies on a scale from 0 to 100 EXPLORE ESG SCORECARD USE CASES THE FIVE ESG
+> SCORECARD ELEMENTS The ESG Scorecard is based on the **ISS ESG Corporate Rating** methodology,
+> applying the same thorough performance requirements. ASSESSMENT ELEMENTS Climate, Social,
+> Governance Risk Evaluation tool for general su
 >
 > — [ESG Scorecard | ISS](https://www.issgovernance.com/sustainability/ratings/esg-scorecard)
 >
-> ESG Performance and Enterprise Value: Do Firms with Stronger ESG Performance Have Higher Valuation
-> Ratios? January 20, 2023 - This report investigates the relationship between the ISS ESG
-> Performance Score (a normalized version of the **ISS ESG Corporate Rating**) and two valuation
-> ratios from the ISS Economic Value Added (EVA) framework. Notable fe...
+> Thereafter, the 30 securities with the highest ESG Performance Score from the **ISS ESG Corporate
+> Rating** are finally included in the DAX 30 ESG. ISS’s ESG Corporate Rating system allows
+> investors to evaluate companies’ ESG-related risks and factors, and
 >
-> — [ESG Performance and Enterprise Value: Do Firms with Stronger ESG Performance ...](https://www.issgovernance.com/library/esg-performance-and-enterprise-value-do-firms-with-stronger-esg-performance-have-higher-valuation-ratios)
+> — [DZ BANK to issue certificates on new DAX ESG benchmark  | Blog posts | STOXX](https://stoxx.com/dz-bank-to-issue-certificates-on-new-dax-esg-benchmark)
 >
-> est ESG performance score determined by reference to the **ISS ESG Corporate Rating** and drawing
-> from the largest companies listed on the Frankfurt Stock Exchange, following initial exclusionary
-> ESG screening. “We have developed the DAX 30 ESG Index in collaboration with DZ Bank. The index
-> employs the **ISS ESG Corporate Rating** which enables investor...
+> A new ISS study finds that good social corporate responsibility does not undermine returns. In
+> fact, highly rated **ISS ESG Corporate Rating** firms tend to be more profitable through the
+> Economic Value Added (EVA) lens.
 >
-> — [STOXX licenses new ESG version of the DAX to DZ BANK | Press releases | STOXX](https://stoxx.com/stoxx-licenses-new-esg-version-of-the-dax-to-dz-bank)
+> — [Materiality in ESG Investing: Why profitability could be your starting point ...](https://www.issgovernance.com/the-materiality-of-esg-investing-webinar)
 >
 
 ---
 
 ### ISS QualityScore
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="47 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 47</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="51 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 51</span>
 
 
 > A quantitative governance, environmental, and social risk scoring system that evaluates companies on hundreds of data points across multiple pillars. ISS QualityScore produces decile-based scores (1 = lowest risk, 10 = highest risk) for Governance, Environmental, and Social dimensions, enabling investors to identify potential risk areas through peer-relative benchmarking.
@@ -1496,40 +1351,35 @@ ISS QualityScore is a risk-focused scoring tool. Unlike the ESG Corporate Rating
 
 > [!example]- Source excerpts (5)
 >
-> actors on Remuneration Report Support Levels, Use of Show-of-Hands SYDNEY, Australia (January 18,
-> 2017) – Institutional Shareholder Services Inc. (ISS), a leading provider of end-to-end governance
-> and responsible investment solutions to the global financial community, today announced the
-> release of **ISS QualityScore** updates for the Asia-Pacific r...
+> ), a leading provider of end-to-end governance and responsible investment solutions to the global
+> financial community, today announced the release of **ISS QualityScore** updates for the
+> Asia-Pacific region slated for 17 February. A focal point of the updates will be the augmentation
+> of the **ISS QualityScore** methodology
 >
 > — [ISS QualityScore Enhances Methodology, Expands Coverage for Asia-Pacific Comp...](https://www.issgovernance.com/iss-qualityscore-enhances-methodology-expands-coverage-australasia-companies)
 >
-> l, basis.” **ISS QualityScore** provides a score for each company in its coverage universe that
-> measures the company’s level of corporate governance risk, both overall and within four broad
-> pillars: board structure, compensation/remuneration, shareholder rights, and audit & risk
-> oversight. Importantly, **ISS QualityScore** subscribers have the ability t...
->
-> — [ISS QualityScore Enhances Methodology for Coverage of Australian Companies | ISS](https://www.issgovernance.com/iss-qualityscore-enhances-methodology-for-coverage-of-australian-companies)
->
-> Proxy Season 2017: **ISS QualityScore** Can Help You Distill the Big Data Challenge Proxy season
-> is right around the corner, and thousands of companies will be issuing updated disclosures over
-> the next month. Within those disclosures will be buried tens of thousands of important governance
-> and compensation data points. Va
->
-> — [Proxy Season 2017: ISS QualityScore Can Help You Distill the Big Data Challen...](https://www.issgovernance.com/qs-preseason)
->
-> ta to get a feel for what might be happening in the boardroom – and to assess how likely the board
-> is to be focused on serving their fiduciary responsibilities. ISS Analytics recognizes this
-> problem, and to address it we continue to build datasets available in ISS DataDesk and
-> methodologies such as **ISS QualityScore**. In this paper, ISS describes ...
+> ISS Analytics recognizes this problem, and to address it we continue to build datasets available
+> in ISS DataDesk and methodologies such as **ISS QualityScore**. In this paper, ISS describes one
+> such model of evaluating outside-in board effectiveness and its measures.
 >
 > — [Case Study: Using ISS QualityScore to Identify “Outlier” Boards | ISS](https://www.issgovernance.com/library/case-study-using-iss-qualityscore-to-identify-outlier-boards)
 >
+> Proxy Season 2017: **ISS QualityScore** Can Help You Distill the Big Data Challenge Proxy season
+> is right around the corner, and thousands of companies will be issuing updated disclosures o
+>
+> — [Proxy Season 2017: ISS QualityScore Can Help You Distill the Big Data Challen...](https://www.issgovernance.com/qs-preseason)
+>
 > SUSTAINABILITY SOLUTIONS / RATINGS Display your Scores/Ratings **ISS QualityScore** and Corporate
 > Rating We often receive requests from companies seeking permission to publicly disclose their
-> Sustainability scores and/or ratings. We permit companies to disclose their overall ratings and/or
-> scores as long as such disclosure complies with the below te...
+> Sustainability scores and/or ratings.
 >
 > — [Display Your Scores/Ratings | ISS](https://www.issgovernance.com/sustainability/ratings/badge)
+>
+> Clients can gain insights by combining these factors with other subscribed datasets, including
+> **ISS QualityScore**, director data and other financial and non-financial datasets. Here are just
+> a few reasons why ISS-Ethix’s Norm-Based Research is the industry benchm
+>
+> — [2017 Norms-Based Research Methodology Changes | ISS](https://www.issgovernance.com/sustainability/2017-norms-based-research-methodology-changes)
 >
 
 ---
@@ -1550,7 +1400,7 @@ In plain terms, Key Issue Weighting is the behind-the-scenes formula that decide
 
 ### Management Score
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
 
 > A measure of how effectively a company manages its material ESG risks through policies, programmes, targets, certifications, and demonstrated performance outcomes. The Management Score is the counterpart to the Exposure Score within the ESG Risk Rating framework; it represents the portion of inherent risk that the company has actively addressed.
@@ -1562,42 +1412,35 @@ The Management Score is the "what are you doing about it?" assessment. A company
 > [!tip] Related terms
 > [[#Exposure Score]], [[#ESG Risk Rating]], [[#ESG Risk Categories]]
 
-> [!example]- Source excerpts (4)
+> [!example]- Source excerpts (3)
 >
-> MODEL In general, corporate sustainability is measured by three criteria: environmental, social
-> and governance corporate sustainability, i.e., the ESG-criteria. Sustainalytics has defined a set
-> of indicators which evaluate the performance within each criterion. The E,S,G and overall ESG Risk
-> Rating **Management Score**s assesses how well a company i...
+> ̅𝑟̅̅𝑒̅𝑘̅ 𝑖 𝑖 𝑗 where: 𝐾𝑃𝐼 𝑆𝑐𝑜𝑟𝑒𝑘 =Value of KPI Score k for stock i 𝑖 𝐾̅̅̅𝑃̅̅𝐼̅
+> ̅𝑆̅𝑐̅̅𝑜̅𝑟̅̅𝑒̅𝑘̅=Average value of KPI Score k in peer group j 𝑗 The ESG **Management Score**, which
+> is used for the final composite score calculation, is calculated as the average of the peer
+> group-adjusted KPI Scores from the following list,
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 271](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> MODEL In general, corporate sustainability is measured by three criteria: environmental, social
-> and governance corporate sustainability, i.e., the ESG-criteria. Sustainalytics has defined a set
-> of indicators which evaluate the performance within each criterion. The E,S,G and overall ESG Risk
-> Rating **Management Score**s assesses how well a company i...
+> Sustainalytics has defined a set of indicators which evaluate the performance within each
+> criterion. The E,S,G and overall ESG Risk Rating **Management Score**s assesses how well a company
+> is managing the ESG issues that are considered most material for that company from a financial
+> perspective.
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 288](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> METHODOLOGY GUIDE 273/1024 10. iSTOXX MUTB INDICES Percentile ranks are calculated based on the
-> ESG **Management Score**. In the cases where the score is the same for two stocks, the larger
-> stock by free-float market capitalization shall have the higher percentile rank. In a second step,
-> the final ESG **Management Score** ranks for each stock i are calc...
+> Sustainalytics has defined a set of indicators which evaluate the performance within each
+> criterion. The E,S,G and overall ESG Risk Rating **Management Score**s assesses how well a company
+> is managing the ESG issues that are considered most material for that company from a financial
+> perspective.
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> nvolvement in the extraction of fossil fuels, and the generation of power from fossil fuels,
-> nuclear and renewable sources. - Proprietary analysis based on latest available peer-reviewed
-> climate models (CMIP5) - Includes Physical Risk Score allowing peer comparisons, Value at Risk and
-> Physical Risk **Management Score**. Assessment of a portfolio’s a...
->
-> — [Climate Analytics | ISS](https://www.issgovernance.com/sustainability/climate-solutions/climate-analytics)
+> — [Stoxx Index Guide (PDF), p. 288](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
 
 ---
 
 ### Materiality
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="364 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 364</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
 
 
 > The principle that ESG factors should be weighted according to their financial relevance and impact significance for a given industry. ISS ESG applies sector-specific materiality matrices that determine which ESG issues receive the highest weighting in the Corporate Rating. Materiality ensures that ratings reflect the issues most likely to affect a company's financial performance, operational resilience, and stakeholder relationships.
@@ -1609,47 +1452,45 @@ Materiality is the reason a bank and a mining company are not rated on the same 
 
 > [!example]- Source excerpts (5)
 >
-> **Materiality** in ESG Investing WHY PROFITABILITY COULD BE YOUR STARTING POINT Join us for this
-> webinar to discuss financial **materiality** in ESG investing with Anthony Campagna (Global
-> Director of Research, ISS EVA) and Dr. G. Kevin Spellman (Senior Advisor, ISS EVA). Interest in
-> ESG issues is growing,
->
-> — [Materiality in ESG Investing: Why profitability could be your starting point ...](https://www.issgovernance.com/the-materiality-of-esg-investing-webinar)
->
 > ISS EVA Webinar Series Exploring Financial **Materiality** in ESG Investing ESG has been buzzing
 > around the investing lexicon for the better part of two decades now, and for good reason, because
-> ESG Matters. What we explore in our most recent white paper is just how important ESG is in
-> financial analysis and what we are thrilled to highlight is
+> ESG Matters.
 >
 > — [ISS EVA Webinar Series: Exploring Financial Materiality in ESG Investing | ISS](https://www.issgovernance.com/iss-eva-webinar-series-exploring-financial-materiality-in-esg-investing)
 >
-> Transparency. Inclusiveness. Global Expertise.  Represents customer, supplier, creditor, banker,
-> or other entity with which company maintains transactional/commercial relationship (unless company
-> discloses information to apply a **materiality** test, which indicates **materiality** if the
-> company makes or receives annual payments exceeding the greater ...
+> MANAGEMENT CONTROVERSIES ACCESS IMPACT SCORES ACROSS: 0 SDGs 0 Data factors 0 Issuers Data as of
+> December 2024. All figures are approximate. Focus on **Materiality** The SDG Impact Rating
+> aggregation model ensures that a company’s overall impact is based on those SDGs in which it,
+> within its sphere of influence, c
 >
-> — [2014Issafricaguidelines (PDF)](https://www.issgovernance.com/file/2014_Policies/2014ISSAfricaGuidelines.pdf)
+> — [SDG Impact Rating | ISS](https://www.issgovernance.com/sustainability/impact-un-sdg/sdg-impact-rating)
 >
-> GUIDE TO THE EUROGOV® BOND INDICES 27/30 7. METHODOLOGY REVIEW Annual methodology review schedule
-> IMC, IGC Initiation of ad hoc methodology reviews IMC Determination regarding **materiality** of
-> changes to the index methodology IMC Deviation from standard consultation period in case of
-> material changes of IGC the index methodology Deviation from not...
+> In the case of a company which follows neither of the preceding standards, ISS will apply the
+> NASDAQ-based **materiality** test. (The recipient is the party receiving the financial proceeds
+> from the transaction). 2014 Sustainability U.S.Proxy Voting Guidelines - 17 - [PA
 >
-> — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
+> — [2014 Iss Usa Sustainability (PDF), p. 17](https://www.issgovernance.com/file/2014_Policies/2014_ISS_USA_Sustainability.pdf)
 >
-> The case of participation in a banking syndicate by a non-lead bank should be considered a
-> participation in a banking syndicate by a non-lead bank should be considered a transaction (and
-> hence subject to the associated **materiality** test) rather than a transaction (and hence subject
-> to the associated **materiality** test) rather than a professional re...
+> e company, other than a › A director with any material3 relationship to the company, other than a
+> board seat. board seat. Footnotes: Footnotes: 1 The **materiality** threshold for transactions is
+> A$500,000 per annum for large 1 The **materiality** threshold for transactions is A$50,000 per
+> annum.
 >
-> — [Israel And South Africa Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2021/updates/Israel-and-South-Africa-Policy-Updates.pdf)
+> — [Australia New Zealand Policy Updates (PDF), p. 3](https://www.issgovernance.com/file/policy/2018/updates/Australia-New-Zealand-Policy-Updates.pdf)
+>
+> ESG Corporate Rating and comply with standards related to international norms and controversial
+> weapons. EVA LEADERS INDEX ESG + F ESG + F (financial **materiality**) is here to stay, as ISS’
+> proprietary research demonstrates that firms that exhibit both high-ESG performance and high-EVA
+> Margin significantly outpe
+>
+> — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
 >
 
 ---
 
 ### Mean Species Abundance (MSA)
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > A biodiversity indicator used by ISS ESG that measures the average relative abundance of original native species in a given area compared to their abundance in undisturbed ecosystems. MSA ranges from 0% (completely destroyed ecosystem, no original species remaining) to 100% (fully intact ecosystem, all original species at natural population levels). ISS ESG uses MSA as a core metric in its biodiversity impact assessments to quantify corporate footprints on natural capital.
@@ -1663,40 +1504,39 @@ Mean Species Abundance is a single number that captures how "intact" an ecosyste
 
 > [!example]- Source excerpts (5)
 >
-> PDF quantifies the potential decline in species richness in an area over a defined period due to
-> unfavorable conditions associated with environmental pressures. Species richness refers to the
-> number of unique species in an area. Another metric that is available for inclusion in the
-> framework is the **Mean Species Abundance (MSA)**. MSA quantifies th...
+> Species richness refers to the number of unique species in an area. Another metric that is
+> available for inclusion in the framework is the **Mean Species Abundance (MSA)**. MSA quantifies
+> the mean abundance of original species relative to their abundance in undisturbed ecosystems.
 >
 > — [New report examines rationale, methodology of ISS STOXX Biodiversity indices ...](https://stoxx.com/new-report-examines-rationale-methodology-of-iss-stoxx-biodiversity-indices)
 >
-> SD 500 billion per year, and the mobilization of at least USD 200 billion per year from public and
-> private sources for biodiversity-related funding. The accord also calls for requiring
-> transnational companies and financial institutions to assess and disclose risks and impacts on
-> biodiversity. 2 The **Mean Species Abundance (MSA)** is a metric that d...
+> : Total Reported Aligned Revenue (atleast 10%) iSTOXX® METHODOLOGY GUIDE 628/1024 74. EURO iSTOXX
+> AMBITION CLIMAT PAB INDEX Biodiversity: **Mean Species Abundance** over EVIC compared to the EURO
+> STOXX TMI (at most equal) Weighing process: weights derived through an optimization process to
+> meet EU PAB requirement
 >
-> — [Antonio Celeste on how investors should urgently mitigate against biodiversit...](https://stoxx.com/antonio-celeste-on-how-investors-should-urgently-mitigate-against-biodiversity-loss)
+> — [Istoxx Index Guide (PDF), p. 628](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> elated product involvement filters: Biodiversity palm oil, GMO agriculture, hazardous pesticides,
-> Filters animail welfare and fur involvement Economic activity identification ISS ESG Supply chain
-> impact assessment Biodiversity Impact Potentially Disappeared Fraction of Species (PDF) Assessment
-> Tool **Mean Species Abundance (MSA)** Sustainable ISS ES...
->
-> — [Stoxx Integrate Biodiversity Infographic 202402 (PDF)](https://stoxx.com/wp-content/uploads/2024/05/STOXX_Integrate_Biodiversity_Infographic_202402.pdf)
->
-> not committed with SBTi Securities with targets verified by the SBTi will be overweighed in the
-> index. Securities with no commitments or no SBTi approved targets will be subjected to incremental
-> underweighting and securities with no commitments will not be eligible for selection starting
-> 2023. xiv. **Mean Species Abundance (MSA)**: The Mean Species ...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> s how well a company is managing them. Lastly, we now see new and existing data providers
-> producing biodiversity metrics to help investors measure the impact of their investment portfolios
-> on biodiversity in alignment with scientific and economic frameworks. The two most widely used
-> metrics are the **Mean Species Abundance (MSA)** and the Potentiall...
+> impact of their investment portfolios on biodiversity in alignment with scientific and economic
+> frameworks. The two most widely used metrics are the **Mean Species Abundance (MSA)** and the
+> Potentially Disappearing Fraction of Species (PDF). Qontigo’s data partner ISS ESG has recently
+> released a dataset providing company-level PD
 >
 > — [World, investors gear up action to combat biodiversity loss and related risks...](https://stoxx.com/world-investors-gear-up-action-to-combat-biodiversity-loss-and-related-risks)
+>
+> gy at ISS ESG, described the methodology and spirit behind the two key metrics employed in
+> biodiversity analyses and assessed by his company: PDF and **Mean Species Abundance (MSA)**. PDF
+> represents the potential decline in species richness in an area over a period due to unfavorable
+> conditions associated with environmental pressu
+>
+> — [Unveiling the biodiversity paradigm: an emerging risk frontier for portfolios...](https://stoxx.com/unveiling-the-biodiversity-paradigm-an-emerging-risk-frontier-for-portfolios)
+>
+> metrics that biologists and scientists have developed. The two most common metrics are the
+> Potentially Disappeared Fraction of Species (PDF) and the **Mean Species Abundance (MSA)**, both
+> part of ISS ESG’s Biodiversity Impact Assessment Tool (BIAT). PDF quantifies the potential loss of
+> species richness due to adverse environmenta
+>
+> — [Expert view: Unpacking the new Xtrackers biodiversity ETFs and their ISS STOX...](https://stoxx.com/expert-view-unpacking-the-new-xtrackers-biodiversity-etfs-and-their-iss-stoxx-indices)
 >
 
 ---
@@ -1717,36 +1557,31 @@ The Modern Slavery Scorecard checks whether a company is taking concrete steps t
 >
 > SUSTAINABILITY SOLUTIONS **Modern Slavery Scorecard** Identify, evaluate and act on modern slavery
 > risks and their impact on investments. We help investors to meaningfully identify and address
-> modern slavery risks in their portfolios using actionable sustainability data and analyses. WHAT
-> IS Modern Slavery? Modern slavery is an
+> modern sla
 >
 > — [Modern Slavery Scorecard | ISS](https://www.issgovernance.com/sustainability/screening/modern-slavery-scorecard)
 >
-> lysts gather information through the media and other public sources, conduct interviews with
-> stakeholders, and collect information on company policies and practices. Extensive company and
-> stakeholder dialogue, coupled with strict verification, ensures objectivity and exhaustiveness of
-> the research. **MODERN SLAVERY SCORECARD** Play a pivotal role in...
+> Extensive company and stakeholder dialogue, coupled with strict verification, ensures objectivity
+> and exhaustiveness of the research. **MODERN SLAVERY SCORECARD** Play a pivotal role in tackling
+> the pressing issue of modern slavery through monitoring, reporting and engagement.
 >
 > — [Screening &amp; Controversies | ISS](https://www.issgovernance.com/sustainability/screening)
 >
-> a Everywhere: The ESG Data and Ratings Puzzle Julia Leske, Managing Director, Head of APAC
-> Institutional Sales at ISS ESG will be speaking on this panel alongside experts from the industry.
-> Explore Our Solutions Identify, evaluate and act on modern slavery risks and their impact on
-> investments with **Modern Slavery Scorecard**
+> The response from corporate Australia is lagging, however. ISS ESG’s **Modern Slavery Scorecard**
+> and Monash University Centre for Financial Studies’ (MCFS) research on corporate disclosures under
+> the MSA identify three key gaps in S&P/ASX 300 mod
 >
-> — [ISS ESG RI Australia 2023](https://www.issgovernance.com/ri-australia-2023)
+> — [Driving Improvements in Modern Slavery Reporting: The Role for Australian Inv...](https://www.issgovernance.com/library/driving-improvements-in-modern-slavery-reporting)
 >
-> Investors may choose to avoid these health and labour issues and potential regulatory conflicts,
-> or to use their investments to encourage different company practices. ISS ESG can assist investors
-> through services such as Sector-based Screening Solutions, the ISS ESG Country Rating, and the ISS
-> ESG **Modern Slavery Scorecard**.
+> ISS ESG can assist investors through services such as Sector-based Screening Solutions, the ISS
+> ESG Country Rating, and the ISS ESG **Modern Slavery Scorecard**.
 >
 > — [Hand-Rolled &amp; Unfiltered Cigarettes: Regulation and Existing Health and L...](https://www.issgovernance.com/library/hand-rolled-unfiltered-cigarettes-regulation-and-existing-health-and-labour-rights-risks)
 >
-> PM AEST | 2.00 PM HKT Modern Slavery in the ESG Stewardship Conversation – Practical Application |
-> WEBINAR 3 This webinar will explore how modern slavery can be integrated into the stewardship and
-> investment process, through examples from Asset Owners and Asset managers and insights from ISS
-> ESG’s **Modern Slavery Scorecard**, a new tool recently la...
+> very can be integrated into the stewardship and investment process, through examples from Asset
+> Owners and Asset managers and insights from ISS ESG’s **Modern Slavery Scorecard**, a new tool
+> recently launched to help Australian investors assess, evaluate and act on modern slavery risks.
+> SPEAKERS: Liza McDonald, Head of Respons
 >
 > — [Modern Slavery and Responsible Investment Webinar Series | ISS](https://www.issgovernance.com/modern-slavery-and-responsible-investment-webinar-series)
 >
@@ -1769,17 +1604,17 @@ Muni QualityScore adapts the ISS QualityScore concept for the municipal bond mar
 
 > [!example]- Source excerpts (2)
 >
-> TY SOLUTIONS / RATINGS & RANKINGS ESG MuniQuality Score Assess the performance of U.S. municipal
-> bonds with a unique scoring solution. Municipal bonds can play a large role in shifting capital
-> flows to investments that address societal issues and have a tangible impact on local communities.
-> Our ESG **Muni QualityScore** provides scoring for the U.S....
+> can play a large role in shifting capital flows to investments that address societal issues and
+> have a tangible impact on local communities. Our ESG **Muni QualityScore** provides scoring for
+> the U.S. municipal market at the GEO.id level, as well as at the CUSIP6 level for issuers. LARGEST
+> COVERAGE IN THE MARKET The ES
 >
 > — [ESG Muni QualityScore | ISS](https://www.issgovernance.com/sustainability/ratings/muni-qualityscore)
 >
-> vestor. - Municipal Bonds (Munis) are securities issued by a range of government and related
-> entities including States; Cities; Counties; School Districts; Hospitals and Health Care
-> facilities; Transportation bodies; Water and Sewerage bodies; Higher Education entities; and Gas
-> Districts. - ISS ESG **Muni QualityScore** provides a detailed assessmen...
+> icts; Hospitals and Health Care facilities; Transportation bodies; Water and Sewerage bodies;
+> Higher Education entities; and Gas Districts. - ISS ESG **Muni QualityScore** provides a detailed
+> assessment of the environmental and socioeconomic risks faced by upwards of 29,000 US cities and
+> towns; 3,141 counties; and 13,50
 >
 > — [At the ESG Frontier: Understanding the U.S. Municipal Bond Market | ISS](https://www.issgovernance.com/library/at-the-esg-frontier-understanding-the-us-municipal-bond-market)
 >
@@ -1790,7 +1625,7 @@ Muni QualityScore adapts the ISS QualityScore concept for the municipal bond mar
 
 ### Negative Screening
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
 
 > An investment approach that systematically excludes companies, sectors, or countries from a portfolio based on predefined ESG criteria. Common exclusion grounds include involvement in controversial weapons, tobacco production, thermal coal extraction, severe human rights violations, and persistent environmental norm breaches. ISS ESG provides exclusion screening data and STOXX applies negative screens in the construction of its ESG index families.
@@ -1802,47 +1637,43 @@ Negative Screening is the most straightforward form of responsible investing: it
 
 > [!example]- Source excerpts (5)
 >
-> MONTHLY INDEX NEWS / May 2021 Featured Index The recently launched DAX® ESG Target Index offers an
-> ESG alternative to Germany’s flagship DAX® that aims to improve the portfolio’s sustainability
-> profile relative to the benchmark through **negative screening** and ESG scoring integration, and
-> reduce its carbon intensity by at least 30%. Stock weightin...
->
-> — [Monthly Index News May 2021 (PDF)](https://stoxx.com/monthly-index-news-may-2021)
->
-> s are therefore exempted from analysis in said fields. It is also important to note that companies
-> with high ESG scores are not given selection priority nor a larger weight in the index. The idea
-> is to choose companies with a minimum standard of quality across all KPIs, rather than the
-> leaders. ESG **negative screening** Companies are also excluded ...
+> The idea is to choose companies with a minimum standard of quality across all KPIs, rather than
+> the leaders. ESG **negative screening** Companies are also excluded if they fail to pass
+> Sustainalytics’ Global Standards Screening (GSS).
 >
 > — [Introducing the iSTOXX Blue and Green Economy Select 50 Index | Blog posts | ...](https://stoxx.com/introducing-the-istoxx-blue-and-green-economy-select-50-index)
 >
-> ental, social and governance factors into financial analysis2. it is the second-most popular
-> sustainable investment strategy globally after negative/exclusionary screening, with a total of
-> USD 17.5 trillion in professionally managed assets and a CAGr of 69% between 2016 and 2018
-> (Figure1). Although **negative screening** is the most common strategy ...
+> The index combines the two most popular sustainable approaches for equity investing: **negative
+> screening** and ESG integration. Focus on sustainability and tradeability The selection universe
+> for the DAX 50 ESG Index is the HDAX® Index, which groups all eq
 >
-> — [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF)](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
+> — [Introducing the DAX 50 ESG Index | STOXX](https://stoxx.com/introducing-the-dax-50-esg-index)
 >
-> 9 and Aug. 7, 2020,4 the EURO STOXX 50 ESG Index outperformed the flagship EURO STOXX 50 Index by
-> 3.77 percentage points.5 While performances were closely aligned during January, they diverged
-> thereafter, particularly during the COVID-19 pandemic. Excluding companies due to product- and
-> norms-based **negative screening** added 1.59 percentage points...
+> They are the DAX® 50 ESG, DAX® ESG Target and DAX® ESG Screened indices. While the DAX ESG
+> Screened represents a straightforward negative-screening strategy, the other two indices combine
+> exclusionary screening and best-in-class ESG integration.
 >
-> — [ESG Integration on Eurozone Stocks Has Topped Exclusions Returns in 2020 | Bl...](https://stoxx.com/esg-integration-on-eurozone-stocks-has-topped-exclusions-returns-in-2020)
+> — [DAX’s two-year methodology overhaul cements German benchmark’s standing with ...](https://stoxx.com/daxs-two-year-methodology-overhaul-cements-german-benchmarks-standing-with-investors-issuers-2)
 >
-> In May, STOXX introduced a fully-fledged ESG-X Index family comprised of versions of established
-> benchmarks that exclude companies based on standard environmental, social and governance (ESG)
-> principles. The ESG-X Indices implement **negative screening** based on norms (United Nations
-> Global Compact principles) and products (controversial weapons, t...
+> xclusionary screening, with a total of USD 17.5 trillion in professionally managed assets and a
+> CAGr of 69% between 2016 and 2018 (Figure1). Although **negative screening** is the most common
+> strategy in europe, eSG integration remains the front runner (measured in terms of total assets)
+> in North America, Australia and N
 >
-> — [New Study Looks at Impact of ESG Exclusions Across Regions | Blog posts | STOXX](https://stoxx.com/new-study-looks-at-impact-of-esg-exclusions-across-regions)
+> — [Stoxx Research   Euro Stoxx 50%C2%Ae Esg   Integrating Sustainability (Septem... (PDF), p. 3](https://www.stoxx.com/document/Research/STOXX%20Research%20-%20EURO%20STOXX%2050%C2%AE%20ESG%20-%20Integrating%20Sustainability%20(September%202019).pdf)
+>
+> This is likely to be of interest to the increasing number of investment managers looking beyond
+> **negative screening** strategies, where the focus is more on alignment with moral codes than on
+> enhancing a benchmark’s risk-return profile. The EURO STOXX 50 ESG Index of
+>
+> — [Taking Stock of the EURO STOXX 50 ESG Index | Blog posts | STOXX](https://stoxx.com/taking-stock-of-the-euro-stoxx-50-esg-index)
 >
 
 ---
 
 ### Norm-Based Research
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="42 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 42</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="32 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 32</span>
 
 
 > A research methodology that systematically identifies company involvement in incidents that violate international norms and standards, including the UN Global Compact Principles, the OECD Guidelines for Multinational Enterprises, the UN Guiding Principles on Business and Human Rights, and International Humanitarian Law. ISS ESG's Norm-Based Research produces assessments of the severity and status of each identified violation.
@@ -1858,31 +1689,27 @@ Norm-Based Research is the investigative process behind controversy screening. A
 >
 > 2017 Norms-Based Research Methodology Changes As part of the annual review of the scope of
 > **Norm-Based Research**, ISS-Ethix has taken into consideration emerging environmental and social
-> issues and regulatory developments that impact existing coverage. Specifically, enhancements and
-> amendments have been made to **Norm-Based Research**’s coverage of co...
+> issues and regulatory developments that impact existing coverage.
 >
 > — [2017 Norms-Based Research Methodology Changes | ISS](https://www.issgovernance.com/sustainability/2017-norms-based-research-methodology-changes)
 >
-> Energy & Extractives Screens - Global Sanctions Screening - Sovereign Research & Screening - Fund
-> Screening - Governance QualityScore **Norm-Based Research** & Screening Assesses companies’
-> adherence to international norms on Human Rights, Labor Standards, Environmental Protection, and
-> Anti-Corruption. **Norm-Based Research** Company Reports provide an ...
+> Commentaries ensure the most critical risks are in focus. Learn more | View sample report
+> Research, Screening & Analysis | **Norm-Based Research** | Assesses companies’ adherence to global
+> principles on Human Rights, Labor Standards, Environmental protection, and Anti-Corruption.
 >
-> — [Screening, Research &amp; Analytics | ISS](https://www.issgovernance.com/sustainability/screening-research-analytics)
+> — [Screen for Company Performance | ISS](https://www.issgovernance.com/sustainability/screen-for-company-performance)
 >
-> Wide Ranging Data Sets to Cover Carbon Impacts, **Norm-Based Research**, and Executive Pay, Among
-> Others ROCKVILLE, Md. (September 3, 2019) — ISS ESG, the responsible investment arm of
-> Institutional Shareholder Services Inc., today announced the addition of new data sets on the
-> Open:FactSet Marketplace to aid investors seeking to integrate extra-fina
+> Additionally, the fund rating includes input from our Governance QualityScore, **Norm-Based
+> Research**, and Carbon and Climate Data. The ISS Cyber Risk Score is a data-driven scoring and
+> screening solution designed to enable objective assessment of the
 >
-> — [ISS ESG to Provide Robust Data Sets Through the Open:FactSet Marketplace | ISS](https://www.issgovernance.com/iss-esg-to-provide-robust-data-sets-through-the-openfactset-marketplace)
+> — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway)
 >
-> I NEW YORK 2019 Learn more about ISS ESG’s full suite of ESG solutions. DOWNLOAD NOW ISS ESG Ocean
-> Bottle Did you know that your brand new ISS ESG-branded Ocean Bottle was made from ocean-bound
-> plastic and funded the collection of 1000 ocean-bound plastic bottles? LEARN MORE View our sample
-> reports **NORM-BASED RESEARCH** REPORT Apple Inc. VIEW PDF ...
+> Pandemic Webinar Series: **Norm-Based Research** & Screening at a Time of Pandemic Emergency
+> Opening Webinar The spread of COVID-19 has presented a large array of challenges to the global
+> economy an
 >
-> — [ISS ESG | ISS](https://www.issgovernance.com/sustainability/iss-esg-events)
+> — [NBR and Screening at a time of pandemic emergency | ISS](https://www.issgovernance.com/pandemic-nbr-and-screening)
 >
 > We have sustainability experts that facilitate investor dialogue with approximately 100 listed
 > companies annually identified under **Norm-Based Research** as failing to prevent or address
@@ -1908,40 +1735,39 @@ Norm-Based Screening is the investment action that follows from Norm-Based Resea
 
 > [!example]- Source excerpts (5)
 >
-> Low Carbon Index STOXX® Europe Climate Impact Ex Global Compact Controversial Weapons & Tobacco
-> Index 1 AUM data as of 2019. Source: Swedbank 2019 Annual and Sustainability Report. 2 The ESG-X
-> indices also implement product-involvement exclusions for controversial weapons and tobacco, as
-> well as a **norm-based screening** for United Nations Global C...
+> ESG investment approaches.” The ESG-X index family is based on involvement screening for
+> controversial weapons, tobacco and thermal coal as well as a **norm-based screening** that follows
+> the United Nations Global Compact principles of human and labor rights, the environment, business
+> ethics and anti-corruption.
 >
-> — [Q&amp;A: Swedbank’s Linder on New STOXX USA 500 ESG-X ESG Futures | STOXX](https://stoxx.com/qa-swedbanks-linder-on-new-stoxx-usa-500-esg-x-esg-futures)
+> — [STOXX And Eurex Expand ESG Footprint To Cover US Market | Press releases | STOXX](https://stoxx.com/stoxx-and-eurex-expand-esg-footprint-to-cover-us-market)
 >
-> 0® Index. Media Contact General Inquiries: media@qontigo.com Index Inquiries: Andreas von Brevern
-> +49 (0) 69 211 14284 The ESG-X index concept was developed based on input from asset owners and
-> includes a product involvement screening for controversial weapons, tobacco and thermal coal as
-> well as a **norm-based screening** that follows the United Na...
->
-> — [STOXX Extends Its Suite Of ESG-X Indices | Press releases | STOXX](https://stoxx.com/stoxx-extends-its-suite-of-esg-x-indices)
->
-> X Indices are ESG-compliant versions of established STOXX benchmarks that aim to limit market and
-> reputational risks while keeping a similar risk-return profile to the respective benchmark. They
-> include product-involvement exclusions for controversial weapons, tobacco and thermal coal; as
-> well as a **norm-based screening** for United Nations Global ...
+> They include product-involvement exclusions for controversial weapons, tobacco and thermal coal;
+> as well as a **norm-based screening** for United Nations Global Compact principles. STOXX
+> cooperates with leading data provider Sustainalytics for the screenings. Avoiding exposure to sus
 >
 > — [STOXX USA ESG-X Futures Launched Today | STOXX](https://stoxx.com/stoxx-usa-esg-x-futures-launched-today)
 >
-> risk premia harvesting. Investors who prefer to incorporate ESG principles into their factor-based
-> portfolios, can do so without sacrificing returns, whether actual or risk-adjusted. 1 The STOXX
-> ESG-X universe is a filtered version of that of the STOXX benchmarks. The exclusion criteria
-> consist of **norm-based screening** (Sustainalytics’ Global Sta...
+> Thematic and Factor Solutions. The EURO STOXX 50 ESG Index excludes ten percent of the least
+> sustainable companies based on ESG scores. It applies a **norm-based screening** that follows the
+> United Nations Global Compact principles of human and labor rights, the environment, business
+> ethics and anti-corruption.
 >
-> — [Combining ESG Screens and Factor Tilts: A Study on Portfolio Returns | Blog p...](https://stoxx.com/combining-esg-screens-and-factor-tilts-a-study-on-portfolio-returns)
+> — [STOXX Launches EURO STOXX 50 ESG Index | Press releases | STOXX](https://stoxx.com/stoxx-launches-euro-stoxx-50-esg-index)
 >
-> difference between these two offerings is in the benchmark universe. The STOXX ESG-X universe is a
-> filtered version of that of the STOXX benchmarks. This affects both the eligible pool of stocks
-> and the benchmark used for the constraints in the index methodology. The exclusion criteria
-> consist of a **norm-based screening** (Global Standards Screenin...
+> his affects both the eligible pool of stocks and the benchmark used for the constraints in the
+> index methodology. The exclusion criteria consist of a **norm-based screening** (Global Standards
+> Screening4), as well as a product-involvement screening (controversial weapons, thermal coal and
+> tobacco), based on data from Susta
 >
 > — [Can ESG and Factor Tilts Be Combined? — Yes | Blog posts | STOXX](https://stoxx.com/can-esg-and-factor-tilts-be-combined-yes)
+>
+> whether actual or risk-adjusted. 1 The STOXX ESG-X universe is a filtered version of that of the
+> STOXX benchmarks. The exclusion criteria consist of **norm-based screening** (Sustainalytics’
+> Global Standards Screening), as well as product-involvement screening (controversial weapons,
+> thermal coal and tobacco), based on da
+>
+> — [Combining ESG Screens and Factor Tilts: A Study on Portfolio Returns | Blog p...](https://stoxx.com/combining-esg-screens-and-factor-tilts-a-study-on-portfolio-returns)
 >
 
 ---
@@ -1950,7 +1776,7 @@ Norm-Based Screening is the investment action that follows from Norm-Based Resea
 
 ### Peer Group Comparison
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="39 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 39</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
 
 > A relative assessment methodology in which a company's ESG performance is evaluated against a defined set of industry, regional, or size-based peers. ISS ESG and STOXX use peer group comparisons to contextualise absolute ESG scores, ensuring that ratings reflect not only what a company does but how it compares to the most relevant benchmark companies. Peer groups are typically defined by industry classification (e.g., GICS, ICB) and sometimes further segmented by region or market capitalisation.
@@ -1962,40 +1788,38 @@ Peer Group Comparison answers the question: "Is this company good at ESG relativ
 
 > [!example]- Source excerpts (5)
 >
-> Low concern level for the overall scenario, all tests must have a Low concern level How is the
-> model used in ISS benchmark research? From the 2014 ISS Policy Survey, 83 per cent of investors
-> who responded supported the development of a European pay for performance methodology, including
-> the use of **peer group comparison**s. After having implemented...
+> If the bar set for the performance-based program is too low based on the company’s historical or
+> **peer group comparison**, generally vote for the proposal. Furthermore, if target performance
+> results in an above target payout, vote for the shareholder proposal due to prog
 >
-> — [European Pay For Performance Methodology Faq (PDF)](https://www.issgovernance.com/file/policy/2020/emea/European-Pay-for-Performance-Methodology-FAQ.pdf)
+> — [Sri Us Voting Guidelines (PDF), p. 59](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
 >
-> UNITED STATES PROXY VOTING GUIDELINES ▪ Second, assess the rigor of the company’s
-> performance-based equity program. If the bar set for the performance-based program is too low
-> based on the company’s historical or **peer group comparison**, generally vote for the proposal.
-> Furthermore, if target performance results in an above target payout, vote for...
+> revealed that 83 percent of investors who responded had indicated that a European pay for
+> performance quantitative methodology, including the use of **peer group comparison**s, would be
+> useful as a factor in such evaluations. ISS Enabling the financial community to manage governance
+> risk for the benefit of shareholders. ©
 >
-> — [Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2020/americas/US-Voting-Guidelines.pdf)
+> — [Executive Summary Of Key 2017 Updates And Policy (PDF), p. 10](https://www.issgovernance.com/file/policy/executive-summary-of-key-2017-updates-and-policy.pdf)
 >
-> he demand for a similar methodology for European companies from clients and investors in general
-> became evident. The 2014 policy survey results revealed that 83 percent of investors who responded
-> had indicated that a European pay for performance quantitative methodology (EP4P), including the
-> use of **peer group comparison**s, would be useful as a fa...
+> ed that 83 percent of investors who responded had indicated that a European pay for performance
+> quantitative methodology (EP4P), including the use of **peer group comparison**s, would be useful
+> as a factor in such evaluations. A methodology was developed for European companies in 2015 and
+> introduced in 2016. Already this ye
 >
-> — [2017 Public Fund International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2017-public-fund-international-policy-updates.pdf)
+> — [2017 Public Fund International Policy Updates (PDF), p. 6](https://www.issgovernance.com/file/policy/2017-public-fund-international-policy-updates.pdf)
 >
-> vestors identified significant interest in a quantitative pay-for- performance model for Europe.
-> The 2014 ISS Policy Survey noted that 83 percent of investors who responded indicated that they
-> supported the development of a European pay for performance quantitative methodology, including
-> the use of **peer group comparison**s. Considering this feedba...
->
-> — [European Pay For Performance Methodology Overview (PDF)](https://www.issgovernance.com/file/policy/2020/emea/European-Pay-for-Performance-Methodology-Overview.pdf)
->
-> erformance and pay structure) are considered more important.” - For European markets where
-> shareholders are offered say-on-pay proposals or other executive compensation related items, 83
-> percent of investors indicate that a European pay for performance quantitative methodology,
-> including the use of **peer group comparison**s, would be useful as a fa...
+> utive compensation related items, 83 percent of investors indicate that a European pay for
+> performance quantitative methodology, including the use of **peer group comparison**s, would be
+> useful as a factor in such evaluations. Of investor respondents answering in the affirmative on
+> the use of peer groups as a factor in eval
 >
 > — [ISS Releases Results of Annual Global Voting Policy Survey | ISS](https://www.issgovernance.com/iss-releases-results-annual-global-voting-policy-survey)
+>
+> If the bar set for the performance- based program is too low based on the company’s historical or
+> **peer group comparison**, generally vote for the proposal. Furthermore, if target performance
+> results in an above target payout, vote for the shareholder proposal due to prog
+>
+> — [2017 Sustainability Us Voting Guidelines (PDF), p. 52](https://www.issgovernance.com/file/policy/2017-sustainability-us-voting-guidelines.pdf)
 >
 
 ---
@@ -2024,38 +1848,37 @@ Positive Screening flips the script from "who do we exclude?" to "who do we incl
 
 > [!example]- Source excerpts (5)
 >
-> 0 ESG tracks the 50 largest, most liquid German stocks that have comparably good performance based
-> on environmental, social and governance (ESG) criteria. The index employs two complementary
-> sustainability approaches: standardized negative screens for controversial or unsustainable
-> activities1; and **positive screening** based on ESG scores. The met...
+> The index employs two complementary sustainability approaches: standardized negative screens for
+> controversial or unsustainable activities1; and **positive screening** based on ESG scores. The
+> methodology is designed to ensure a German market ESG flagship index whose liquidity and
+> risk-return characteristics are sim
 >
 > — [DAX 50 ESG Index to Serve as Benchmark for Active Fund | Blog posts | STOXX](https://stoxx.com/dax-50-esg-index-benchmark-for-active-fund)
 >
-> the Austrian Raiffeisen Centrobank as an underlying for a certificate. The DAX 50 ESG index
-> employs two complementary approaches to incorporate ESG principles into the selection criteria:
-> standardized negative screens for companies that are involved in controversial or unsustainable
-> activities; and **positive screening** based on ESG scores. The met...
+> inciples into the selection criteria: standardized negative screens for companies that are
+> involved in controversial or unsustainable activities; and **positive screening** based on ESG
+> scores. The methodology is designed to ensure a German market ESG flagship index whose liquidity
+> and risk-return characteristics are sim
 >
 > — [DAX 50 ESG Index Licensed To Raiffeisen Centrobank | Press releases | STOXX](https://stoxx.com/dax-50-esg-index-licensed-to-raiffeisen-centrobank)
 >
-> stors embracing sustainable principles. Selection of the 50 constituents from the HDAX® Index
-> universe1 is based on ranking by market capitalization and ESG score. The index employs two
-> complementary sustainability approaches: exclusionary screens for controversial or unsustainable
-> activities2, and **positive screening** based on ESG scores. Both cr...
+> nd ESG score. The index employs two complementary sustainability approaches: exclusionary screens
+> for controversial or unsustainable activities2, and **positive screening** based on ESG scores.
+> Both criteria are provided by Sustainalytics. “Sustainability is an integral part of LBBW’s
+> corporate strategy and business poli
 >
 > — [Germany’s LBBW licenses DAX 50 ESG decrement index for structured products | ...](https://stoxx.com/germanys-lbbw-licenses-dax-50-esg-decrement-index-for-structured-products)
 >
-> nd that can measure or replicate an active strategy of incorporating ESG factors positively. Thus,
-> the world of ESG indexing will start moving from negative and norm-based screening — which I call
-> Phase 1 of responsible index investment approaches — to a next stage that includes ESG integration
-> and **positive screening**. That is, selecting and over...
+> gative and norm-based screening — which I call Phase 1 of responsible index investment approaches
+> — to a next stage that includes ESG integration and **positive screening**. That is, selecting and
+> overweighting companies with the highest responsible credentials and underweighting the ESG
+> laggards.
 >
 > — [The Next Evolution in Index-Based ESG Strategies | Blog posts | STOXX](https://stoxx.com/the-next-evolution-in-index-based-esg-strategies)
 >
-> able investing Our upcoming SRI solutions make up the third main ESG index pillar for Qontigo.
-> These will take sustainable investing to an even more focused level, where ESG key performance
-> indicators (KPIs) guide allocation — assuring maximum impact investing. The indices will combine
-> negative and **positive screening**s, and favor company characte...
+> ocused level, where ESG key performance indicators (KPIs) guide allocation — assuring maximum
+> impact investing. The indices will combine negative and **positive screening**s, and favor company
+> characteristics that actively contribute to specific sustainability goals.
 >
 > — [The Qontigo ESG Ecosystem: A Route Map for the Sustainable Investor | Blog po...](https://stoxx.com/the-qontigo-esg-ecosystem-a-route-map-for-the-sustainable-investor)
 >
@@ -2064,7 +1887,7 @@ Positive Screening flips the script from "who do we exclude?" to "who do we incl
 
 ### Principal Adverse Impact (PAI)
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > A regulatory concept introduced by the EU Sustainable Finance Disclosure Regulation (SFDR) that requires financial market participants to report on the most significant negative impacts of their investment decisions on sustainability factors. ISS ESG provides PAI data solutions covering mandatory indicators (e.g., GHG emissions, biodiversity impact, gender pay gap, controversial weapons exposure) and optional indicators across environmental and social domains.
@@ -2078,40 +1901,38 @@ PAI is a regulatory requirement, not a score. European fund managers must disclo
 
 > [!example]- Source excerpts (5)
 >
+> The new screens have the objective of a stricter ESG screening criteria as well as broadening
+> considerations of some SFDR **principal adverse impact (PAI)** indicators, at the same time
+> keeping to a consistent threshold approach and maintaining a close tracking error to the parent
+> benchmarks. Results Duri
+>
+> — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF), p. 1](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
+>
+> te No Harm Flag: Data attribute to identify negative impact of the investments on Environmental
+> and Social issues. The set of indicators used include **Principal Adverse Impact (PAI)** required
+> by SFDR. APG Real Estate CRREM-aligned Flag: Data attribute that measures transition risk by
+> assessing the relative Greenhouse Gas (GH
+>
+> — [Istoxx Index Guide (PDF), p. 857](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+>
+> According to the sustainable finance platform Good Governance, a prerequisite for all Arts. 8 and
+> 9 products should be measured through **Principal Adverse Impact (PAI)** 11. This indicator
+> identifies the share of investments in companies with due diligence processes to ensure compliance
+> with the UN Global Compact and
+>
+> — [Searching for the sustainability north star | Blog posts | STOXX](https://stoxx.com/searching-for-the-sustainability-north-star)
+>
 > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS SFDR **Principal Adverse Impact** Solution Measure
 > your investments against regulatory-defined **Principal Adverse Impact** metrics. Assess and
-> report on the Principal Adverse Impacts of your products and portfolios Our SFDR PAI Solution
-> enables Financial Market Participants to measure the performance of t...
+> report on the Principal Adverse Impacts of
 >
 > — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution)
 >
-> lid Reputation Flag: Data attribute to identify companies that are facing substantial reputational
-> risks, such as severe open incidents. APG Real Estate No Harm Flag: Data attribute to identify
-> negative impact of the investments on Environmental and Social issues. The set of indicators used
-> include **Principal Adverse Impact (PAI)** required by SFDR...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
 > Achieving SFDR Compliance and Reporting on **Principal Adverse Impact** This webinar sets out to
 > explore and explain the Sustainable Finance Disclosure Regulation (SFDR), both at the entity and
-> the product level. The presentation will cover the various relevant dates of application of the
-> level 1 and level 2 requirements and the differences betw
+> the product level.
 >
 > — [Sustainable Finance Disclosure Regulation Webinar | ISS](https://www.issgovernance.com/sustainable-finance-disclosure-regulation-webinar)
->
-> ions for engagement outlined in the United States Conference of Catholic Bishops guidelines. Our
-> SFDR Collaborative Engagement solution allows investors to participate in a joint outreach and
-> dialogue with companies on material ESG themes that are aligned thematically with most of the key
-> mandatory **Principal Adverse Impact** indicators within the ...
->
-> — [Collaborative Engagement Services | ISS](https://www.issgovernance.com/sustainability/engagement)
->
-> current developments in the sustainable finance space - i.e. Sustainable Finance Disclosure
-> Regulation (SFDR)1 and the Markets in Financial Instruments Directive II (MiFID II)2. The new
-> screens have the objective of a stricter ESG screening criteria as well as broadening
-> considerations of some SFDR **principal adverse impact (PAI)** indicators, at t...
->
-> — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
 >
 
 ---
@@ -2120,7 +1941,7 @@ PAI is a regulatory requirement, not a score. European fund managers must disclo
 
 ### Responsible Investment
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="658 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 658</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="612 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 612</span>
 
 
 > A broad investment philosophy that incorporates ESG considerations into investment decision-making and ownership practices with the goal of generating sustainable long-term returns while contributing to positive societal outcomes. Responsible Investment encompasses strategies ranging from negative screening and norm-based exclusions through ESG integration, active ownership, and impact investing. ISS ESG provides the data infrastructure, ratings, and advisory services that underpin Responsible Investment across the investment chain.
@@ -2132,38 +1953,37 @@ Responsible Investment is the umbrella term for all the ways investors can take 
 
 > [!example]- Source excerpts (5)
 >
-> Qontigo’s partner APG has received a prize at this year’s Pensioen Pro awards for its pioneering
-> work in the pensions sector, following the firm’s introduction of the iSTOXX APG World
-> **Responsible Investment** (RI) Indices. The indices were launched jointly by APG and Qontigo in
-> September 2021 and use data from the Sustainable Development Investmen...
+> ISS-Ethix will continue to be led by Ethix’s Managing Director and Founding Partner, Ulrika
+> Hasselgren, a veteran of the **responsible investment** industry who has advised institutional
+> investors in sustainable and **responsible investment** for more than 15 years. “With the
+> combination of ISS’ comp
 >
-> — [iSTOXX APG World Responsible Investment indices recognized at Dutch pension a...](https://stoxx.com/istoxx-apg-world-responsible-investment-indices-recognized-at-dutch-pension-awards)
+> — [Ethix SRI Advisors Acquired by Institutional Shareholder Services in Responsi...](https://www.issgovernance.com/ethix-sri-advisors-acquired-by-institutional-shareholder-services-in-responsible-investment-business-expansion)
 >
-> ISS ESG and **Responsible Investment** Association Australasia (RIAA) Webinar Series SESSION 1 –
-> MAY 4 Making the Grade: **Responsible Investment** Industry Standards in the APAC Region As ESG
-> investment becomes business as usual, both voluntary and mandatory ESG regulations are being
-> utilised by finance industry bodie
+> Topics include: - What are the most significant voluntary and regulatory initiatives driving
+> **responsible investment**? - What were the drivers for the new guidance for investors? - Why are
+> investors expected to “know and show” their contribution to sustainable develo
 >
-> — [ISS ESG and Responsible Investment Association Australasia (RIAA) Webinar Ser...](https://www.issgovernance.com/iss-esg-and-responsible-investment-association-australasia-webinar-series)
+> — [OECD Guidelines for Responsible Investment: New Drivers for E&amp;S Company A...](https://www.issgovernance.com/understanding-the-environmental-and-social-impacts-of-portfolio-companies)
 >
-> SG, the **responsible investment** arm of Institutional Shareholder Services, is highlighting its
-> latest offerings that collectively provide for an integrated end-to-end solution for institutional
-> investors. ISS ESG offers an industry leading suite of solutions that allow investors to execute
-> on varied **responsible investment** strategies and to align ...
+> Sustainable Future: The End-To-End ESG Solutions Ecosystem PARIS & MUNICH (September 9, 2019) – At
+> this year´s PRI in Person conference, ISS ESG, the **responsible investment** arm of Institutional
+> Shareholder Services, is highlighting its latest offerings that collectively provide for an
+> integrated end-to-end solution for i
 >
 > — [ISS ESG to Present Latest Responsible Investment Solutions at PRI in Person |...](https://www.issgovernance.com/iss-esg-to-present-latest-responsible-investment-solutions-at-pri-in-person)
 >
-> NEW YORK, January 26, 2021 – Qontigo has become a signatory to the Principles for **Responsible
-> Investment** (PRI), the United Nations-supported proponent of responsible investing, underscoring
-> Qontigo’s commitment to advance sustainability in the global investment community. Media Contact
-> General Inquiries: media@qontigo.com Index Inquiries: Andrea...
+> l see voluntary labels, standards, and awards, appear in the market. In the first session of the
+> webinar series, hear from Simon O’Connor, CEO of The **Responsible Investment** Association
+> Australasia (RIAA), about recent developments for the **Responsible Investment** Certification
+> Program in Australia and New Zealand; and from
 >
-> — [Qontigo Becomes a Principles for Responsible Investment Signatory | Press rel...](https://stoxx.com/qontigo-becomes-a-principles-for-responsible-investment-signatory)
+> — [ISS ESG and Responsible Investment Association Australasia (RIAA) Webinar Ser...](https://www.issgovernance.com/iss-esg-and-responsible-investment-association-australasia-webinar-series)
 >
-> Modern Slavery and **Responsible Investment** Webinar Series Moral, reputational, financial, and
-> regulatory imperatives are driving a growing number of investors to address the global human
-> rights crisis of modern slavery. Recent initiatives highlight the significant leverage investors
-> have in influencing companies to mee
+> ISS ESG along with guest speakers from the industry will come together to discuss the role of
+> modern slavery within **responsible investment** in a three-part webinar series. Modern Slavery –
+> An Introduction for Investors | WEBINAR 1 By taking an in-depth look at modern slavery in the
+> privat
 >
 > — [Modern Slavery and Responsible Investment Webinar Series | ISS](https://www.issgovernance.com/modern-slavery-and-responsible-investment-webinar-series)
 >
@@ -2174,7 +1994,7 @@ Responsible Investment is the umbrella term for all the ways investors can take 
 
 ### SDG Impact Rating
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="46 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 46</span>
 
 
 > An assessment of how a company's products, services, and operations contribute to or detract from the achievement of the United Nations Sustainable Development Goals (SDGs). ISS ESG evaluates companies' net impact across all 17 SDGs, distinguishing between positive contributions (e.g., providing clean energy) and negative impacts (e.g., generating pollution), and producing an overall net impact classification.
@@ -2188,40 +2008,40 @@ The SDG Impact Rating connects corporate behaviour to the UN's 17 global goals. 
 
 > [!example]- Source excerpts (5)
 >
-> , following the SDG framework, as well as at an aggregate level. For each of the seventeen SDGs, a
-> company’s impact is determined by three pillars – the company’s products and services, the
-> company’s operational management and its involvement in and responsiveness to controversies. As a
-> result, the **SDG Impact Rating** provides over 100 data points...
->
-> — [ISS ESG Launches New SDG Impact Rating | ISS](https://www.issgovernance.com/iss-esg-launches-new-sdg-impact-rating)
->
-> 17 SDGs. Figure 3 shows the overall SDG rating, which is measured on a -10 to +10 scale, with
-> negative values indicating obstruction and positive values indicating alignment. The rating is
-> based on each company’s products and services, operations and controversies. Compared with the ESG
-> rating, the **SDG Impact Rating** offers a more targeted measur...
->
-> — [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective)
->
-> SUSTAINABILITY SOLUTIONS / IMPACT & UN SDGS **SDG Impact Rating** Conduct a holistic assessment of
-> a company’s impact on the UN SDGs. Unique Approach to Measuring Impact Determine a company’s
-> positive or negative impact on the United Nations’ Sustainable Development Goals (SDGs) across
-> three key pillars. PRODUCTS & SERVICES OPERATIONS MANAGEMENT
+> OVERSIES ACCESS IMPACT SCORES ACROSS: 0 SDGs 0 Data factors 0 Issuers Data as of December 2024.
+> All figures are approximate. Focus on Materiality The **SDG Impact Rating** aggregation model
+> ensures that a company’s overall impact is based on those SDGs in which it, within its sphere of
+> influence, can have the greatest i
 >
 > — [SDG Impact Rating | ISS](https://www.issgovernance.com/sustainability/impact-un-sdg/sdg-impact-rating)
 >
-> ot give a normative preference to one goal over the other. When it comes to businesses’
-> contribution to the SDGs, it is argued that companies can and should focus their efforts on goals
-> on which they can have the highest impact – based on their business model. Therefore, at the
-> aggregate level, the **SDG Impact Rating** is determined by the most dis...
+> e new ISS ESG **SDG Impact Rating** available for an initial coverage universe of more than 6,500
+> companies, to be expanded on a going forward basis. The **SDG Impact Rating** provides a holistic
+> metric of impact using the United Nations (UN) Sustainable Development Goals (SDGs) as a reference
+> framework.
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [ISS ESG Launches New SDG Impact Rating | ISS](https://www.issgovernance.com/iss-esg-launches-new-sdg-impact-rating)
 >
-> driven scoring and screening solution designed to enable quality reviews of corporate governance
-> across four key areas: Board Structure, Compensation, Shareholder Rights, and Audit & Risk
-> Oversight. The scores provide an indication of relative risk and range from 1 (low risk) to 10
-> (high risk). The **SDG Impact Rating** provides a holistic measureme...
+> For each of the 17 SDGs, a company’s impact is determined by three pillars – products and
+> services, operations, and controversies. As a result, the **SDG Impact Rating** provides 120
+> distinct data points per company, allowing for granular thematic assessments, as well as aggregate
+> impact measurements.
 >
-> — [Sustainability Gateway | ISS](https://www.issgovernance.com/sustainability/sustainability-gateway)
+> — [SDG Index Series Launched in Partnership with Solactive | ISS](https://www.issgovernance.com/sdg-index-series-launched-in-partnership-with-solactive)
+>
+> e Development Goals (SDGs) provide a framework for directing investments towards sustainable
+> development priorities. Based on this framework, the ISS **SDG Impact Rating** holistically scores
+> a company’s positive or negative impact on the 17 SDGs. Figure 3 shows the overall SDG rating,
+> which is measured on a -10 to +10
+>
+> — [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective)
+>
+> The fourth step is to screen out the bottom 20% of securities within each ICB Sector in the
+> universe with the lowest biodiversity-related **SDG Impact Rating** aggregated score. Constituents
+> that are in the index but have no **SDG Impact Rating** data are given a zero score. In the event
+> that companies that qual
+>
+> — [Stoxx Index Guide (PDF), p. 253](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
 
 ---
@@ -2250,10 +2070,10 @@ The Social Pillar evaluates how a company treats people. Are workers paid fairly
 
 > [!example]- Source excerpts (1)
 >
-> LEED-certified,2 or carbon-efficient, buildings. These companies have significantly lower
-> operating costs and their shares have had higher-than-average returns. LEED data is available to
-> anyone and can be turned into investable data, Dr. Ang said. Investors can find sustainability
-> alpha within the **Social pillar** of ESG, too. For example, BlackRoc...
+> LEED data is available to anyone and can be turned into investable data, Dr. Ang said. Investors
+> can find sustainability alpha within the **Social pillar** of ESG, too. For example, BlackRock’s
+> Systematic team has applied natural-language processing techniques to measure corporate culture by
+> scouring con
 >
 > — [BlackRock’s Ang on sustainability alpha signals: ESG and factors as ‘best fri...](https://stoxx.com/blackrocks-ang-on-sustainability-alpha-signals-esg-and-factors-as-best-friends)
 >
@@ -2274,17 +2094,15 @@ Stakeholder Capitalism challenges the traditional view that a company exists sol
 
 > [!example]- Source excerpts (2)
 >
-> has been laid. Shared value creation ESG principles and impact investing are pieces of a larger
-> puzzle in which the corporate world plays a protagonist role. More and more companies are rising
-> up to their responsibilities as trustees and integral parts of the societies they operate in. This
-> is the ‘**stakeholder capitalism**’ proposed by the WEF’s f...
+> More and more companies are rising up to their responsibilities as trustees and integral parts of
+> the societies they operate in. This is the ‘**stakeholder capitalism**’ proposed by the WEF’s
+> founder, Professor Klaus Schwab, in the 1970s. To accompany the change we are seeing in corporate
+> culture, Schwab and the WEF
 >
 > — [Davos’ World Economic Forum Focuses on Sustainable Growth | STOXX](https://stoxx.com/davos-world-economic-forum-focuses-on-sustainable-growth)
 >
-> ajor ESG issue, but disclosure on responsible tax practices is noticeable by its absence. -
-> Responsible investors are increasingly taking into account the implications of fair taxation for
-> social issues such as global inequality, particularly given an increased focus on outcomes-based
-> investing and **stakeholder capitalism**.
+> the implications of fair taxation for social issues such as global inequality, particularly given
+> an increased focus on outcomes-based investing and **stakeholder capitalism**.
 >
 > — [The Taxes Paradigm Shift – From Burden to Impact | ISS](https://www.issgovernance.com/library/the-taxes-paradigm-shift-from-burden-to-impact)
 >
@@ -2293,7 +2111,7 @@ Stakeholder Capitalism challenges the traditional view that a company exists sol
 
 ### Sustainability Bond Rating
 
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > An assessment of fixed-income instruments (green bonds, social bonds, sustainability bonds, and sustainability-linked bonds) that evaluates the alignment of the bond's framework, use of proceeds, and issuer credentials with recognised standards such as the ICMA Green Bond Principles, Social Bond Principles, and the EU Green Bond Standard. ISS ESG provides Second Party Opinions (SPOs) and ongoing monitoring of labelled bond issuances.
@@ -2307,17 +2125,15 @@ A Sustainability Bond Rating tells investors whether a "green" or "social" bond 
 
 > [!example]- Source excerpts (2)
 >
-> Integrate Relevant Sustainability Assessments Into Your Fixed Income Investment Management Process
-> Our **Sustainability Bond Rating** provides a relevant assessment of the ESG and climate impact
-> and risk exposure of global labeled debt. It also allows investors to assess how compliant their
-> Green, Social, Sustainability, Transition, and Sustainabili...
+> entify key sustainability-related drivers of the sustainable bonds market and credit performance.
+> Benefit From a Comprehensive Rating Methodology The **Sustainability Bond Rating** utilizes
+> hundreds of data points to provide an in-depth analysis of the sustainability impact and risks of
+> the financed activity of a bond based on t
 >
 > — [Sustainability Bond Rating | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating)
 >
 > **Sustainability Bond Rating** – The New Asset Level Assessment Available Now Understand the
-> sustainability and climate impact and risk exposure of global labelled debt. For investors to
-> assess how compliant their Green, Social, Sustainability, Transition, and Sustainability-linked
-> fixed income securiti
+> sustainability and climate impact and risk exposure of global labelled debt.
 >
 > — [ESG Ratings | ISS](https://www.issgovernance.com/sustainability/ratings)
 >
@@ -2340,10 +2156,10 @@ The Sustainability Solutions Assessment measures whether a company is part of th
 
 > [!example]- Source excerpts (1)
 >
-> tfolio contribution and obstruction regarding the social and environmental dimensions - Heat map
-> of attributable revenues per category for all 15 Sustainability Objectives, based on a
-> hypothetical USD 1M investment - Highlights top and bottom holdings based on the SDG Solutions
-> Assessment Score THE **SUSTAINABILITY SOLUTIONS ASSESSMENT** Supports in...
+> ainability Objectives, based on a hypothetical USD 1M investment - Highlights top and bottom
+> holdings based on the SDG Solutions Assessment Score THE **SUSTAINABILITY SOLUTIONS ASSESSMENT**
+> Supports investors in aligning their investment decisions with the UN SDGs. - Assessment of the
+> net impact of each product group per objective along
 >
 > — [SDG Solutions Assessment | ISS](https://www.issgovernance.com/sustainability/impact-un-sdg/sustainability-solutions-assessment)
 >
@@ -2368,38 +2184,34 @@ The Water Risk Rating measures whether a company is likely to face water-related
 
 > [!example]- Source excerpts (5)
 >
-> NKINGS **Water Risk Rating** Access a holistic assessment of companies’ exposure to
-> freshwater-related risks. **Water Risk Rating** helps you mitigate freshwater-related risks across
-> your investment portfolio by identifying industries and companies that depend on or greatly impact
-> freshwater resources. Our Water Risk Rating solution enables investors to...
+> SUSTAINABILITY SOLUTIONS / RATINGS & RANKINGS **Water Risk Rating** Access a holistic assessment
+> of companies’ exposure to freshwater-related risks. **Water Risk Rating** helps you mitigate
+> freshwater-related risks across
 >
 > — [Water Risk Rating | ISS](https://www.issgovernance.com/sustainability/ratings/water-risk-rating)
 >
-> t 14% of the remaining STOXX 600 constituents, which are. While ITRs should not be viewed in
-> isolation of other climate metrics, they provide a straightforward-to-relate-to data point that
-> can aid in climate risk analysis. The final sustainability metric presented in this analysis,
-> Figure 6, is the **Water Risk Rating** (WRR). As climate change and ...
+> The WRR runs on a scale from 0 to 100, with higher values indicating lower risk. Figure 6: ISS ESG
+> **Water Risk Rating** Regarding water risk, the industry diversification of the GRANOLAS paints a
+> mixed picture.
 >
 > — [Europe’s ‘GRANOLAS’ stocks: A sustainability and climate perspective | Blog p...](https://stoxx.com/europes-granolas-stocks-a-sustainability-perspective)
 >
 > ISS ESG’s Water Risk Management Toolkit for Investors Join our team of ESG experts for a 50
 > minutes’ session to learn more about the **Water Risk Rating** methodology, use cases, and how the
-> rating can be used for constructing thematic freshwater-focused ESG indices. In addition, we’ll
-> provide an overview of how ISS ESG’s Water Thematic Engagement c...
+> rating can be used for constructing thematic freshwater-focused ESG indices.
 >
 > — [ISS ESG&#039;s Water Risk Management Toolkit for Investors | ISS](https://www.issgovernance.com/iss-esgs-water-risk-management-toolkit-for-investors)
 >
-> sial weapons. FRESHWATER INDEX As the occurrence of severe droughts and floods is increasing,
-> investors are keen to understand the potential impact on their investment portfolios. ISS ESG
-> FRESHWATER INDEX SERIES Identify companies with low or negligible freshwater-related risks based
-> on the ISS ESG **Water Risk Rating**, which considers companies’ W...
+> their investment portfolios. ISS ESG FRESHWATER INDEX SERIES Identify companies with low or
+> negligible freshwater-related risks based on the ISS ESG **Water Risk Rating**, which considers
+> companies’ Water Risk Exposure and Water Risk Management.
 >
 > — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
 >
-> the recent announcement of the Ceres-backed Valuing Water Finance Initiative. - When looking at
-> water risks in their portfolios, investors are able to consider both the risk to an investee’s
-> business and the risks to water supplies arising from the business’ operations. - With the launch
-> of the new **Water Risk Rating**, ISS ESG clients have access ...
+> consider both the risk to an investee’s business and the risks to water supplies arising from the
+> business’ operations. - With the launch of the new **Water Risk Rating**, ISS ESG clients have
+> access to thorough coverage of how companies in their portfolios depend on or affect freshwater
+> resources.
 >
 > — [Freshwater &amp; Finance: Investor Action in the Face of a Global Crisis | ISS](https://www.issgovernance.com/library/freshwater-finance-investor-action-in-the-face-of-a-global-crisis)
 >

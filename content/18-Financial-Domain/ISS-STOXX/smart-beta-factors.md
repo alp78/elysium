@@ -28,7 +28,7 @@ date: 2026-03-28
 
 ### Accruals
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="30 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 30</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
 
 > The non-cash component of reported earnings, computed as the difference between
@@ -48,38 +48,38 @@ $$
 
 > [!example]- Source excerpts (5)
 >
-> ore extraordinary items divided by total assets net income before extraordinary items ROA = t0 t0
-> total assets t0 - CFO ratio greater than or equal to zero. The ratio is calculated as Cash Flow
-> from Operation (CFO) divided by total assets cash flow from operation CFO Ratio = t0 t0 total
-> assets t0 - **Accruals** less than or equal to zero. **Accruals** a...
+> The ratio is calculated as Cash Flow from Operation (CFO) divided by total assets cash flow from
+> operation CFO Ratio = t0 t0 total assets t0 - **Accruals** less than or equal to zero.
+> **Accruals** are calculated as ROA minus CFO Ratio Accruals =ROA −CFO Ratio t0 t0 t0 - Positive or
+> zero 1-year growth in ROA
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 75](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> ested awards delivered through an equity incentive scheme, whether it be in the form of options or
-> shares, is not considered to be in line with best practice, as it is generally expected that
-> dividend payments only apply to vested shares. ISS already evaluates the provision of dividend
-> payments and **accruals** on vested incentive awards in South Af...
+> ractice, as it is generally expected that dividend payments only apply to vested shares. ISS
+> already evaluates the provision of dividend payments and **accruals** on vested incentive awards
+> in South Africa. The level of disclosure of companies' policies on dividend payments and
+> **accruals** is growing.
 >
-> — [Israel And South Africa Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2021/updates/Israel-and-South-Africa-Policy-Updates.pdf)
+> — [Israel And South Africa Policy Updates (PDF), p. 20](https://www.issgovernance.com/file/policy/2021/updates/Israel-and-South-Africa-Policy-Updates.pdf)
 >
-> l is z-scored using the Parent Index weights and truncated at +/- 3 standard deviations. The
-> Momentum Factor combines the Signals at 25%, 50% and 25% weights, respectively, and is again
-> z-scored and truncated at +/-3 standard deviations. The Quality Factor is a composite of the
-> following 6 Signals: **Accruals**, Dilution, Gross Profitability, Change...
+> weights, respectively, and is again z-scored and truncated at +/-3 standard deviations. The
+> Quality Factor is a composite of the following 6 Signals: **Accruals**, Dilution, Gross
+> Profitability, Change in Net Operating Assets (NOA), Carbon Emissions Intensity, and Science Based
+> Targets (SBTI).  **Accruals** is giv
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 587](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> at there is less overweighting of large caps. And thirdly, multi premia gains exposure to very
-> diverse factor premia. Normally, for a fund tracking a market-cap-weighted flagship index such as
-> the EURO STOXX 50 Index, you have a matching futures market to equitize cash. How do you equitize
-> dividend **accruals** in the case of the CSIF (Lux) Equity E...
+> market-cap-weighted flagship index such as the EURO STOXX 50 Index, you have a matching futures
+> market to equitize cash. How do you equitize dividend **accruals** in the case of the CSIF (Lux)
+> Equity EURO STOXX Multi Premia fund? As there are no perfectly-matching futures for this strategy,
+> the fund uses EURO S
 >
 > — [Q&amp;A: Credit Suisse’s Froehlich on Multi-Premia Investing | Blog posts | S...](https://stoxx.com/qa-credit-suisses-froehlich-on-multi-premia-investing)
 >
-> ace known as smart beta, however, the strategy is a relatively new addition to the factor mix.
-> This may be why compared to other factors ‘the dispersion in definitions is substantially
-> largerfor quality,’ according to a 2016 study.3The paper’s authors found that definitions range
-> from low levels of **accruals**, gross profitability and low investmen...
+> on in definitions is substantially largerfor quality,’ according to a 2016 study.3The paper’s
+> authors found that definitions range from low levels of **accruals**, gross profitability and low
+> investments to bottom-line profitability measures such as return-on-equity and margins. Behind the
+> iSTOXX Europe Quality
 >
 > — [The Quality Factor | Blog posts | STOXX](https://stoxx.com/the-quality-factor)
 >
@@ -104,40 +104,40 @@ In plain terms, this is a guardrail that prevents a smart beta index from accide
 
 > [!example]- Source excerpts (4)
 >
-> Solutions Industry Neutral Factor Indices For investors looking to accurately access pure factor
-> returns, without unintended sector exposures. The STOXX® Industry Neutral Ax Factor Indices
-> implement the same methodology of the STOXX® Factor Indices while reducing the **active industry
-> constraint** from +/- 5% to near neutral. The STOXX Factor Indice...
+> tended sector exposures. The STOXX® Industry Neutral Ax Factor Indices implement the same
+> methodology of the STOXX® Factor Indices while reducing the **active industry constraint** from
+> +/- 5% to near neutral. The STOXX Factor Indices and STOXX Industry Neutral Ax Factor Indices rely
+> on proven factor models and seek precise expo
 >
 > — [Industry Neutral Factor Indices | STOXX](https://stoxx.com/industry-neutral-factor-indices)
 >
-> -construction tools and risk models. The indices target high exposures to proven sources of excess
-> returns and, as well, manage liquidity and unintended risk exposures. The STOXX® Industry Neutral
-> Factor Indices (Table 1) implement the same methodology of the STOXX Factor Indices while reducing
-> the **active industry constraint** from +/- 5% to near ...
->
-> — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
->
-> ix styles: Value, Momentum, Size, Low Risk, Quality and Multi-Factor. The futures will start
-> trading on Apr. 26, Eurex said in a press release. The STOXX Industry Neutral Ax Factor Indices
-> were introduced in February and implement the same methodology of the STOXX® Factor Indices while
-> reducing the **active industry constraint** from +/- 5% to near ...
+> OXX Industry Neutral Ax Factor Indices were introduced in February and implement the same
+> methodology of the STOXX® Factor Indices while reducing the **active industry constraint** from
+> +/- 5% to near neutral. In all but eliminating industry deviations, the STOXX Industry Neutral Ax
+> Factor Indices may sacrifice some factor expos
 >
 > — [Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...](https://stoxx.com/eurex-to-list-futures-on-stoxx-industry-neutral-ax-factor-indices)
 >
-> hirdly, the index methodology upholds diversification through constraints on country and industry
-> exposures, as well as individual security weights. “It may also be useful to highlight that the
-> STOXX Industry Neutral Ax Factor Indices are versions of the standard STOXX Factor Indices that
-> limit the **active industry constraint** from +/- 5% to near ...
+> It may also be useful to highlight that the STOXX Industry Neutral Ax Factor Indices are versions
+> of the standard STOXX Factor Indices that limit the **active industry constraint** from +/- 5% to
+> near neutral. This was one of the feedbacks from the joint market consultation with Eurex, where
+> potential investors favored sacrifici
 >
 > — [Q&amp;A: What do Eurex’s new futures on STOXX Factor Indices offer? | Blog po...](https://stoxx.com/qa-what-do-eurexs-new-futures-on-stoxx-factor-indices-offer)
+>
+> ed risk exposures. The STOXX® Industry Neutral Factor Indices (Table 1) implement the same
+> methodology of the STOXX Factor Indices while reducing the **active industry constraint** from +/-
+> 5% to near neutral. In all but eliminating the overall industry deviations, the STOXX Industry
+> Neutral Factor Indices may sacrifice some fac
+>
+> — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
 >
 
 ---
 
 ### Alpha Signal
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > A quantitative score assigned to each security that predicts relative future
@@ -158,40 +158,36 @@ where $z_{i,k}$ is the standardized score for security $i$ on factor $k$, and $w
 
 > [!example]- Source excerpts (5)
 >
-> ating complementary ESG metrics into historically rewarded sources of returns, the latter can
-> become more robust. “This is part of a longer journey for our investors,” said Dr. Ang. “We
-> continuously want to push the definitions of these factors.” Other ESG signals An additional
-> example of a climate **alpha signal** can be found in companies with the...
+> Ang. “We continuously want to push the definitions of these factors.” Other ESG signals An
+> additional example of a climate **alpha signal** can be found in companies with the most
+> LEED-certified,2 or carbon-efficient, buildings.
 >
 > — [BlackRock’s Ang on sustainability alpha signals: ESG and factors as ‘best fri...](https://stoxx.com/blackrocks-ang-on-sustainability-alpha-signals-esg-and-factors-as-best-friends)
 >
-> STOXX INDEX METHODOLOGY GUIDE 586/639 18. STOXX FACTOR INDICES STOXX EQUITY FACTOR INDEX FAMILY
-> 18.4.1. OVERVIEW The STOXX Equity Factor Index Family are constructed by maximizing the index
-> exposure to a multi- factor **alpha signal** while satisfying a set of constraints intended to
-> closely track their parent indices. Universe: The constituents of ...
+> Values are z-scored and truncated at +/- 3 standard deviations. Individual signal z-scores are set
+> to 0 where data is missing. The Multi-Factor **Alpha Signal** is created by combining the
+> following Factors with respective weights per index: STOXX INDEX METHODOLOGY GUIDE 589/639 18.
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 588](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> XX MUTB EURO Paris Aligned indices provide investors with investable portfolios that meet the
-> Paris Agreement objectives without greenwashing. The indices are compliant with the Paris- Aligned
-> Benchmark regulations. Furthermore, these indices are expected to outperform their parent indices
-> by using **alpha signal**s based on multiple measures associ...
+> Furthermore, these indices are expected to outperform their parent indices by using **alpha
+> signal**s based on multiple measures associated with climate transition. Universe: The indices are
+> derived from their parent indices as described below Index
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 313](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> Equity Factor indices is to offer systematic and diversified access to a portfolio that tilts
-> towards five historical drivers of returns: Quality, Value, Momentum, Low Size and Low Volatility.
-> The indices select stocks through an optimization process that maximizes the allocation to a
-> multi-factor **alpha signal**, while limiting undesirable exposur...
->
-> — [BlackRock and STOXX collaboration: iShares multi-factor ETFs track STOXX indi...](https://stoxx.com/blackrock-and-stoxx-collaboration-ishares-multi-factor-etfs-track-stoxx-indices-to-deliver-consistent-risk-managed-exposure-for-a-portfolios-core)
->
-> they understand how we derive the overall percentage that we consider is aligned with SDGs.” Data
-> transparency was a recurrent point throughout the presentation, as panelists highlighted the
-> importance of basing investment decisions on reliable information and eliminating the risk of
-> greenwashing. **Alpha signal** A recent Qontigo whitepaper1 looked...
+> resentation, as panelists highlighted the importance of basing investment decisions on reliable
+> information and eliminating the risk of greenwashing. **Alpha signal** A recent Qontigo
+> whitepaper1 looked into the effectiveness of the SDI AOP’s SDI Innovation Outlook score in
+> predicting equity returns.
 >
 > — [Asset-owner panel discusses drivers, merits of integrating SDGs into investme...](https://stoxx.com/asset-owner-panel-discusses-drivers-merits-of-integrating-sdgs-into-investment-portfolios)
+>
+> ) intensity relative to the parent benchmark. The indices’ methodology follows an optimization
+> process that maximizes the allocation to a multifactor **alpha signal**, while satisfying a set of
+> constraints to avoid unintended and uncompensated bets, and control for active risk.
+>
+> — [iShares adopts STOXX indices to underlie EMEA multifactor ETFs with exclusion...](https://stoxx.com/ishares-adopts-stoxx-indices-to-underlie-emea-multifactor-etfs-with-exclusionary-screens)
 >
 
 ---
@@ -216,26 +212,26 @@ In plain terms, capping stops any one stock from dominating the index. Even if a
 
 > [!example]- Source excerpts (3)
 >
-> THODOLOGY GUIDE 937/1024 128.iSTOXX APG EMERGING MARKETS-X AND RESPONSIBLE INDICES Individual
-> Issuer Capping: The maximum weight of each issuer in the index is 8%. The sum of the weights of
-> those issuers above 4.5% cannot exceed 35%. If the parent index itself does not satisfy the
-> individual issuer **capping constraint**s, then those constraints are...
+> Developed Markets ex USA, Emerging Markets) January 2021: Clarification of rules for STOXX Minimum
+> Variance and STOXX Factor indices regarding weight **capping constraint**s February 2021: Change
+> of review cut-off date for STOXX Global Infrastructure indices. February 2021 (2): Addition of
+> STOXX Industry Neutral Factor I
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 16](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> breaching these thresholds, and reduce the gravity of the breaches if and when they occur. There
-> is the additional limit that the individual weights cannot be greater than 20 times the company’s
-> weight in the corresponding parent benchmark. If the parent index itself does not satisfy the
-> individual **capping constraint**s those are not enforced on t...
+> Developed Markets ex USA, Emerging Markets) January 2021: Clarification of rules for STOXX Minimum
+> Variance and STOXX Factor indices regarding weight **capping constraint**s February 2021: Change
+> of review cut-off date for STOXX Global Infrastructure indices. February 2021 (2): Addition of
+> STOXX Industry Neutral Factor I
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 16](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> breaching these thresholds, and reduce the gravity of the breaches if and when they occur. There
-> is the additional limit that the individual weights cannot be greater than 20 times the company’s
-> weight in the corresponding parent benchmark. If the parent index itself does not satisfy the
-> individual **capping constraint**s those are not enforced on t...
+> The sum of the weights of those issuers above 4.5% cannot exceed 35%. If the parent index itself
+> does not satisfy the individual issuer **capping constraint**s those are not enforced on the
+> corresponding child indices. Active Issuer Constraint: The maximum active issuer weight is 1%.
+> Active Share Constraint
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 685](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
 
 ---
@@ -264,10 +260,9 @@ where $R_f$ is the risk-free rate, $R_m$ is the market return, and $\beta_i = \f
 
 > [!example]- Source excerpts (1)
 >
-> rk, a vast number of empirical studies looked into characteristics of minimum variance portfolios
-> with a focus on how to best implement such strategies in practice[2]. In recent years, however,
-> academia has shifted its focus to the explanation of the so-called low volatility factor. The
-> traditional **Capital Asset Pricing Model (CAPM)** explains ass...
+> In recent years, however, academia has shifted its focus to the explanation of the so-called low
+> volatility factor. The traditional **Capital Asset Pricing Model (CAPM)** explains asset returns
+> in excess of the risk-free rate as compensation for systematic, i.e. non-diversifiable, risk[3].
 >
 > — [The low volatility premium – An analysis of factor exposures of minimum varia...](https://stoxx.com/the-low-volatility-premium-an-analysis-of-factor-exposures-of-minimum-variance-strategies-blog)
 >
@@ -276,7 +271,7 @@ where $R_f$ is the risk-free rate, $R_m$ is the market return, and $\beta_i = \f
 
 ### Carry Factor
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="20 mentions across STOXX & ISS pages (low)">▰▰ 20</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
 
 
 > A factor that captures the return earned from holding higher-yielding assets
@@ -298,40 +293,37 @@ where $D_i$ is the expected annual dividend and $P_i$ is the current price. More
 
 > [!example]- Source excerpts (5)
 >
-> Neutral Indices posted a positive return, while the remaining two still outperformed the benchmark
-> index. The iSTOXX Europe Factor Market Neutral Indices neutralize systematic risk by holding a
-> short position in futures on the STOXX Europe 600. The best performer in the group was the iSTOXX®
-> Europe **Carry Factor** Market Neutral Index, which reboun...
+> The other only index in the family to have fallen in eight of the nine months so far in 2019 is
+> the iSTOXX® Europe **Carry Factor** Market Neutral Index. For the whole of 2019, the iSTOXX®
+> Europe Size Factor Market Neutral Index shows the worst performance — an 8.6% retreat. The i
 >
-> — [Monthly Index News August 2018 (PDF)](https://stoxx.com/monthly-index-news-august-2018)
+> — [Monthly Index News September 2019 (PDF), p. 7](https://stoxx.com/monthly-index-news-september-2019)
 >
-> The index, which includes stocks that trade at lower prices than the market’s average, which tend
-> to do better in times of market upswings. These seem to have fallen out of favor with investors,
-> perhaps reflecting their concerns about the pace of global expansion. By comparison, the iSTOXX®
-> Europe **Carry Factor** Market Neutral Index is cementing i...
+> The index offers exposure to stocks that appear undervalued relative to earnings and cash flow. At
+> the other end, the iSTOXX® Europe **Carry Factor** Market Neutral Index, which targets cheap
+> stocks with high growth potential based on earnings and dividends, added 1.4%. The iSTOXX Europe
+> Factor Mar
 >
-> — [Monthly Index News June 2018 (PDF)](https://stoxx.com/monthly-index-news-june-2018)
+> — [Monthly Index News February 2020 (PDF), p. 7](https://stoxx.com/monthly-index-news-february-2020)
 >
-> MONTHLY INDEX NEWS / October Europe Factor Market Neutral Indices Key Points There were mixed
-> performances in October from the iSTOXX® Europe Factor Market Neutral Indices, which hold a short
-> position in STOXX Europe 600 futures to help investors neutralize systematic risk. The iSTOXX®
-> Europe **Carry Factor** Market Neutral Index was the month’s bes...
+> hold a short position in STOXX Europe 600 futures to help investors neutralize systematic risk,
+> had positive returns during August The iSTOXX® Europe **Carry Factor** Market Neutral Index was
+> the month’s best performer after adding 1.4% on a net-return basis.
 >
-> — [Monthly Index News October 2020 (PDF)](https://stoxx.com/monthly-index-news-october-2020)
+> — [Monthly Index News August 2020 (PDF), p. 23](https://stoxx.com/monthly-index-news-august-2020)
 >
-> systematic risk, had a loss for the month. The iSTOXX® Europe Value Factor Market Neutral Index
-> posted the narrowest loss, although it was still its eighth consecutive monthly retreat. The other
-> only index in the family to have fallen in eight of the nine months so far in 2019 is the iSTOXX®
-> Europe **Carry Factor** Market Neutral Index. For the whol...
+> tures on the STOXX Europe 600, posted losses. Increased bullishness may have been behind a style
+> rotation among factor strategies. The iSTOXX® Europe **Carry Factor** Market Neutral Index, which
+> beat all other five strategies in the iSTOXX® Europe Factor Indices in the previous month, fell
+> 1.8%.
 >
-> — [Monthly Index News September 2019 (PDF)](https://stoxx.com/monthly-index-news-september-2019)
+> — [Monthly Index News July 2018 (PDF), p. 3](https://stoxx.com/monthly-index-news-july-2018)
 >
-> ary. Five of the seven indices posted a loss during the month on a net-return basis, with the
-> iSTOXX® Europe Value Market Neutral Index showing the worst performance. The index offers exposure
-> to stocks that appear undervalued relative to earnings and cash flow. At the other end, the
-> iSTOXX® Europe **Carry Factor** Market Neutral Index, which target...
+> m to have fallen out of favor with investors, perhaps reflecting their concerns about the pace of
+> global expansion. By comparison, the iSTOXX® Europe **Carry Factor** Market Neutral Index is
+> cementing its position as the leading factor in the past year.
 >
-> — [Monthly Index News February 2020 (PDF)](https://stoxx.com/monthly-index-news-february-2020)
+> — [Monthly Index News June 2018 (PDF), p. 3](https://stoxx.com/monthly-index-news-june-2018)
 >
 
 ---
@@ -361,26 +353,26 @@ $$
 
 > [!example]- Source excerpts (2)
 >
-> . returns in excess of the benchmark) for the quarter, broken down into pre- and post-Feb. 19,
-> 2020, the day that marked the peak before the virus-driven downturn. Chart 1 Sources of
-> out/underperformance will be explored later in this post, but we observe some results that match
-> intuition. The more **defensive factor**s (Low Risk and Quality) had th...
->
-> — [STOXX Factor Indices – Q1 2020 Review | STOXX](https://stoxx.com/stoxx-factor-indices-q1-2020-review)
->
-> s such, the STOXX Equity Factor indices upweight Quality. Value and Momentum are natural pairs,
-> and so they have the same weight relative to each other. The Small Size factor, for its part, is a
-> high beta, pro-cyclical factor, relative to the Low Volatility factor, which is low beta and a
-> much more **defensive factor**. Those are opposing factors pu...
+> r. The Small Size factor, for its part, is a high beta, pro-cyclical factor, relative to the Low
+> Volatility factor, which is low beta and a much more **defensive factor**. Those are opposing
+> factors pulling in opposite directions. And so, they each have a 5% weight so that we’re not
+> moving too far away from the core.”
 >
 > — [BlackRock’s Jamie Forbes: Implementing ‘evolutionary’ factor advancements in ...](https://stoxx.com/blackrocks-jamie-forbes-implementing-evolutionary-factor-advancements-in-investments)
+>
+> ven downturn. Chart 1 Sources of out/underperformance will be explored later in this post, but we
+> observe some results that match intuition. The more **defensive factor**s (Low Risk and Quality)
+> had the strongest post-crisis returns. On the other hand, ‘riskier’ factors, such as Value and
+> Size, had significant drawdown
+>
+> — [STOXX Factor Indices – Q1 2020 Review | STOXX](https://stoxx.com/stoxx-factor-indices-q1-2020-review)
 >
 
 ---
 
 ### Dilution
 
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,648 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,648</span>
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,626 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,626</span>
 
 
 > In the STOXX quality framework, dilution captures the change in a company's
@@ -400,40 +392,38 @@ $$
 
 > [!example]- Source excerpts (5)
 >
-> 29. How is **dilution** calculated? For purposes of the **dilution** scoring factor, dilution is
-> calculated as the sum of a plan's A, B, and C shares (as defined above with respect to SVT)
-> divided by the number of shares outstanding as disclosed in the most recent circular. For
-> informational purposes, full dilution (i.e. including shares allocated from ...
+> ury or purchased on the open market, shareholder approval will be required and ISS will assume
+> that the plan is funded by treasury shares. 27. How is **dilution** calculated? For purposes of
+> the **dilution** scoring factor, dilution is calculated as the sum of a plan's A, B, and C shares
+> (as defined above with resp
 >
-> — [Canada Equity Plan Scorecard (PDF)](https://www.issgovernance.com/file/policy/2022/americas/Canada-Equity-Plan-Scorecard.pdf)
+> — [Canadian Equity Plan Scorecard Faq (PDF), p. 14](https://www.issgovernance.com/file/policy/2018/americas/Canadian-Equity-Plan-Scorecard-FAQ.pdf)
 >
-> hree years. ▪ Performance is measured over a period shorter than three years. ▪ The plan allows
-> for option repricing or issue of options at a discount or ▪ The plan allows for option repricing
-> or issue of options at a discount or backdating of options. backdating of options. ▪ The potential
-> maximum **dilution** under all share incentive schemes exce...
+> However, when companies make issuances without preemptive rights, shareholders experience
+> **dilution** of their economic interest and voting rights. Therefore, to protect shareholders from
+> potentially excessive **dilution**, widely- accepted best practice
 >
-> — [Emea Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2021/updates/EMEA-Policy-Updates.pdf)
+> — [6 2017 Comment Period Template Europe General Share Issuance Request Proposals (PDF), p. 1](https://www.issgovernance.com/file/policy/6-2017-comment-period-template-europe-general-share-issuance-request-proposals.pdf)
 >
-> Corporations Act (British Columbia), permit companies to have an unlimited authorized capital. ISS
-> prefers to see companies with a fixed maximum limit on authorized capital, with at least 30
-> percent of the authorized stock issued and outstanding. Limited capital structures protect against
-> excessive **dilution** and can be increased when needed with ...
+> , exercise period, exercise price, and performance hurdles (if any). While **dilution** is an
+> important factor in evaluating options, Japanese companies' **dilution**, particularly at large
+> companies, has been modest. As such, this is seldom an issue.
 >
-> — [2015Canadaventurevotingguidelines (PDF)](https://www.issgovernance.com/file/policy/2015canadaventurevotingguidelines.pdf)
+> — [2013Issjapanguidelinessummaryrev01312013 (PDF), p. 16](https://www.issgovernance.com/file/2013-policies/2013ISSJapanGuidelinesSummaryRev01312013.pdf)
 >
-> 2016 Taft-Hartley U.S. Proxy Voting Guidelines Voting Power **Dilution** (VPD) Calculation Voting
-> power **dilution**, or VPD, measures the amount of voting power represented by the number of
-> shares reserved over the life of the plan. Industry norm dictates that ten percent dilution over
-> the life of a ten‐year plan is reasonable for most mature companies...
+> When evaluating equity-based compensation items on ballot, the following elements will be
+> considered: Primary Considerations: › **Dilution**: Vote against plans in which the potential
+> voting power **dilution** (VPD) of all shares outstanding exceeds fifteen percent. Enabling the
+> financial comm
 >
-> — [2016 Taft Hartley Advisory Services Us Guidelines (PDF)](https://www.issgovernance.com/file/policy/2016-taft-hartley-advisory-services-us-guidelines.pdf)
+> — [2015 Us Public Fund Guidelines (PDF), p. 27](https://www.issgovernance.com/file/policy/2015-us-public-fund-guidelines.pdf)
 >
-> -scored using the Parent Index weights and truncated at +/- 3 standard deviations. The Momentum
-> Factor combines the Signals at 50%, and 50% weights, respectively, and is again z-scored and
-> truncated at +/-3 standard deviations. The Quality Factor is a composite of the following 4
-> Signals: Accruals, **Dilution**, Gross Profitability, and Change in Ne...
+> Policy Recommendation: Vote case-by-case on proposals regarding private placements, warrants, and
+> convertible debentures taking into consideration: › **Dilution** to existing shareholders'
+> position: The amount and timing of shareholder ownership **dilution** should be weighed against
+> the needs and proposed sharehol
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [2017 Sustainability Us Voting Guidelines (PDF), p. 37](https://www.issgovernance.com/file/policy/2017-sustainability-us-voting-guidelines.pdf)
 >
 
 ---
@@ -464,38 +454,35 @@ Tracing out all $\sigma^*$ values produces the frontier.
 
 > [!example]- Source excerpts (5)
 >
-> indices and funds increasing, the optimal allocation of a portfolio’s risk budget will become only
-> more crucial with time. To download the whitepaper and find out more about the active risk, active
-> variance analysis and comparative returns of an optimized exclusions portfolio, click here. 1
-> ‘Green **efficient frontier**s. Part 1: Minimizing the risk...
+> and find out more about the active risk, active variance analysis and comparative returns of an
+> optimized exclusions portfolio, click here. 1 ‘Green **efficient frontier**s. Part 1: Minimizing
+> the risk impact of exclusions,’ Qontigo, March 2023.
 >
 > — [Green efficient frontiers: Minimizing the risk impact of exclusions in sustai...](https://stoxx.com/green-efficient-frontiers-minimizing-the-risk-impact-of-exclusions-in-sustainable-portfolios)
 >
-> STOXX LIMITED 5 STOXX MINIMUM VARIANCE INDICES 1 Overview of minimum variance investing As
-> mentioned above, the theoretical MVP has been widely known since the seminal paper by Harry
-> Markowitz was published in 1952. In diagrammatic terms, the MVP is found at the very left tip of a
-> mean- variance **efficient frontier** of feasible portfolios, as show...
->
-> — [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
->
-> dices in the families that compose our Enhance category cover the world’s major markets. “Overall,
-> our new sustainability suite offers investors a flexible menu to address their different needs,”
-> said Seegopaul. “With the appropriate solution, we aim to help them reach the optimal spot on
-> their new **efficient frontier** of impact, risk and returns....
+> “With the appropriate solution, we aim to help them reach the optimal spot on their new
+> **efficient frontier** of impact, risk and returns.” Our DNA and philosophy Qontigo’s ESG
+> framework offers access to curated databases that allow for cutting-edge index cre
 >
 > — [Qontigo’s ‘Enhance’ sustainable index category – optimizing ESG investing | B...](https://stoxx.com/qontigo-esg-enhance-sustainability-index-category)
 >
-> this, with continuously growing datasets updated quarterly, to assess companies’ contributions to
-> the UN Sustainable Development Goals. James Leaton, Research Director of the SDI AOP, discusses
-> the latest platform developments led by its asset-owner led community. Index | ESG &
-> Sustainability Green **efficient frontier**s: Minimizing the risk impact...
+> In diagrammatic terms, the MVP is found at the very left tip of a mean- variance **efficient
+> frontier** of feasible portfolios, as shown in Figure 1. FIGURE 1: **EFFICIENT FRONTIER** OF
+> FEASIBLE PORTFOLIOS. No expected returns are used in the construction o
+>
+> — [Stoxx Minvar Paper (PDF), p. 5](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
+>
+> Research Director of the SDI AOP, discusses the latest platform developments led by its
+> asset-owner led community. Index | ESG & Sustainability Green **efficient frontier**s: Minimizing
+> the risk impact of exclusions in sustainable portfolios A new whitepaper from Qontigo’s research
+> team explores the benefits of construct
 >
 > — [Portfolio Construction | STOXX](https://stoxx.com/category/portfolio-construction)
 >
-> world of tomorrow in the same way we thought about the world of yesterday,” Bocquet said during a
-> panel at the Sustainable Investment Forum Europe 2021 on April 20. “The traditional
-> risk-and-return framework is outdated. It needs to be updated with a third dimension: societal
-> impact. Therefore, new **efficient frontier**s within these three dimensio...
+> “The traditional risk-and-return framework is outdated. It needs to be updated with a third
+> dimension: societal impact. Therefore, new **efficient frontier**s within these three dimensions
+> will have to be defined by investors.” The panel’s topic was ‘Intelligent ESG,’ and participants
+> debated whether susta
 >
 > — [Sustainability Impact of Investments Calls for Redefined View of Asset Manage...](https://stoxx.com/sustainability-impact-of-investments-calls-for-redefined-view-of-asset-management-says-qontigos-bocquet)
 >
@@ -504,7 +491,7 @@ Tracing out all $\sigma^*$ values produces the frontier.
 
 ### Earnings Announcement Drift
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > The empirically documented tendency for stock prices to continue moving in the
@@ -519,24 +506,24 @@ In plain terms, when a company reports earnings that beat (or miss) expectations
 
 > [!example]- Source excerpts (3)
 >
-> STOXX INDEX METHODOLOGY GUIDE 587/639 18. STOXX FACTOR INDICES The Momentum Factor is a composite
-> of the following 3 Signals: **Earnings Announcement Drift**, Earnings Momentum, and Price
-> Momentum.  **Earnings Announcement Drift** is given by the sum of idiosyncratic returns from the
-> Axioma Risk Model on the most recent earnings announcement date and t...
+> The Factors are combined to create a Multi-Factor Alpha Signal, as described below. The Momentum
+> Factor is a composite of the following 3 Signals: **Earnings Announcement Drift**, Earnings
+> Momentum, and Price Momentum.  **Earnings Announcement Drift** is given by the sum of
+> idiosyncratic returns from the Axioma Risk Model on the
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 593](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> STOXX INDEX METHODOLOGY GUIDE 587/639 18. STOXX FACTOR INDICES The Momentum Factor is a composite
-> of the following 3 Signals: **Earnings Announcement Drift**, Earnings Momentum, and Price
-> Momentum.  **Earnings Announcement Drift** is given by the sum of idiosyncratic returns from the
-> Axioma Risk Model on the most recent earnings announcement date and t...
+> The Factors are combined to create a Multi-Factor Alpha Signal, as described below. The Momentum
+> Factor is a composite of the following 3 Signals: **Earnings Announcement Drift**, Earnings
+> Momentum, and Price Momentum.  **Earnings Announcement Drift** is given by the sum of
+> idiosyncratic returns from the Axioma Risk Model on the
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 593](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> obal Equity Factor Index | STOXX World AC Index | From the respective starting universes,
-> constituents are selected and weighted to maximize exposure to a multifactor signal created from
-> the following five factors: Momentum The momentum score is calculated from price momentum,
-> earnings momentum and **earnings announcement drift** (i.e., the differen...
+> to a multifactor signal created from the following five factors: Momentum The momentum score is
+> calculated from price momentum, earnings momentum and **earnings announcement drift** (i.e., the
+> difference between a stock’s performance on and immediately following an earnings announcement
+> date). Quality The quality score is calcula
 >
 > — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices)
 >
@@ -545,7 +532,7 @@ In plain terms, when a company reports earnings that beat (or miss) expectations
 
 ### Earnings Momentum
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
 
 
 > A factor signal based on the direction and magnitude of analyst earnings
@@ -564,47 +551,46 @@ $$
 
 > [!example]- Source excerpts (5)
 >
-> , 12-month share-price appreciation, excluding the most recent month to avoid short-term reversal
-> effects. But today’s markets are faster, flooded with information and more prone to short-term
-> noise. Our research has shown that combining Momentum signals across both price and fundamentals —
-> such as **earnings momentum** or **earnings momentum** drift — ...
+> The quarterly rebalance schedule will resume as normal in June 2025. STOXX INDEX METHODOLOGY GUIDE
+> 594/639 18. STOXX FACTOR INDICES  **Earnings Momentum** is given by the sum of the number of EPS
+> upgrades for the current (FY1) and following (FY2) fiscal years minus the sum of the FY1 and FY2
+> EPS downgra
+>
+> — [Stoxx Index Guide (PDF), p. 594](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> Our research has shown that combining Momentum signals across both price and fundamentals — such
+> as **earnings momentum** or **earnings momentum** drift — enhances signal strength (Figure 2).
+> This approach helps us avoid simplistic exposures and better reflect what Momentum
 >
 > — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
 >
-> STOXX INDEX METHODOLOGY GUIDE 587/639 18. STOXX FACTOR INDICES The Momentum Factor is a composite
-> of the following 3 Signals: Earnings Announcement Drift, **Earnings Momentum**, and Price
-> Momentum.  Earnings Announcement Drift is given by the sum of idiosyncratic returns from the
-> Axioma Risk Model on the most recent earnings announcement date and t...
+> he Factors are combined to create a - Multi-Factor Alpha Signal, as described below. F The
+> Momentum Factor is a composite of the following 2 Signals: **Earnings Momentum**, and Price
+> Momentum. A • **Earnings Momentum** is given by the sum of the number of EPS upgrades for the
+> current C (FY1) and following (FY2) fiscal years
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 918](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> he Multi-Factor Alpha Signal is derived from sixteen Signals, which are combined to create 5
-> Factors - Momentum, Quality, Value, and Low Volatility. The Factors are combined to create a -
-> Multi-Factor Alpha Signal, as described below. F The Momentum Factor is a composite of the
-> following 2 Signals: **Earnings Momentum**, and Price Momentum. A • Earn...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
->
-> Cap Index | | STOXX Global Equity Factor Index | STOXX World AC Index | From the respective
-> starting universes, constituents are selected and weighted to maximize exposure to a multifactor
-> signal created from the following five factors: Momentum The momentum score is calculated from
-> price momentum, **earnings momentum** and earnings announcement dri...
->
-> — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices)
->
-> hnology adoption grows rapidly, and incomes and quality of life continue to improve. This presents
-> a robust, long-term investment opportunity for investors. “In today’s low-rate environment,
-> investors need to broaden their sources of income as well as diversify them. With strong economic
-> growth and **earnings momentum**, a number of EM companies can...
+> stors. “In today’s low-rate environment, investors need to broaden their sources of income as well
+> as diversify them. With strong economic growth and **earnings momentum**, a number of EM companies
+> can be an attractive source of returns and income for investors.” “While EMs offer an outstanding
+> growth opportunity and ha
 >
 > — [Q&amp;A with FlexShares: Quality and ESG as risk-control tools for EM Low-Vol...](https://stoxx.com/qa-with-flexshares-quality-and-esg-as-risk-control-tools-for-em-low-vol-high-dividend-strategies)
+>
+> to maximize exposure to a multifactor signal created from the following five factors: Momentum The
+> momentum score is calculated from price momentum, **earnings momentum** and earnings announcement
+> drift (i.e., the difference between a stock’s performance on and immediately following an earnings
+> announcement date). Qual
+>
+> — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices)
 >
 
 ---
 
 ### Equal Risk Contribution
 
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
 > A portfolio construction method where each constituent is weighted so that it
@@ -624,12 +610,12 @@ $$
 
 > [!example]- Source excerpts (1)
 >
-> IVEST INDICES Active Risk: The active risk of the index relative to the Parent Index is
-> constrained to a maximum of 1%. Limit turnover: The Index has a quarterly one-way turnover limit
-> of 7.5%. Effective number of names: The minimum effective number of names in the Index is 30% of
-> the Parent Index. **Equal Risk Contribution** by targeted factors: Ri...
+> ithin 0.25 standard deviations of Parent Index Active targeted style factor exposures > 0 vs
+> Parent Index **Equal Risk Contribution** by targeted factors **Equal Risk Contribution** by
+> targeted factors Active Risk Within 1% w.r.t. Parent Index Limit turnover 7.5% one-way on a
+> quarterly basis Effective number of names Minimum of 3
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 702](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
 
 ---
@@ -638,7 +624,7 @@ $$
 
 ### Factor (Definition)
 
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6,492 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 6,492</span>
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,508 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,508</span>
 
 
 > A systematic, persistent, and economically motivated driver of security
@@ -654,40 +640,38 @@ In plain terms, a factor is a measurable characteristic of stocks — like cheap
 
 > [!example]- Source excerpts (5)
 >
-> STOXX INDEX METHODOLOGY GUIDE 113/639 10. STOXX DIVIDEND INDICES where ADTVi represents the
-> Average Daily Traded Value of the ith non-component stock over the 3- month period ending on the
-> month prior to the review month. 4. Outperformance **factor** calculation To obtain the selection
-> list all companies are ranked according to an outperformance fac...
+> ADTV 𝐸𝑈𝑅 𝑖 𝑤 = 𝑖𝑡 ∑40 6𝑀 𝐴𝐷𝑇𝑉 𝐸𝑈𝑅 𝑗=1 𝑗 where the denominator is the sum of the six-month ADTV in
+> EUR of all 40 companies in the index. The weighting **factor** of component i at time t is
+> calculated as follows: 𝑤 𝑖𝑡 𝑤𝑓 =100bn∗ 𝑖𝑡 𝑝 𝑖𝑡 with 𝑝 being the closing price of component i at
+> time t.
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Dax Equity Index Methodology Guide 5526498614 (PDF), p. 93](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
 >
-> CANADA FAQ: EQUITY PLAN SCORECARD 29. How are performance-based equity awards defined? For the
-> purposes of the CEO Performance-based Equity **Factor**, which assesses whether the CEO has
-> received performance-based equity, a performance-based equity award is defined as any form of
-> equity award where: ▪ the ultimate value of the award is tied, through...
+> 1999 to Jul. 2016. Factors shown are the standard Axioma style factors. Note: cumulative
+> **factor** exposures of a strategy relative to a benchmark do not generally add to zero as it is
+> measured in terms of risk allocation.. STOXX LIMITED
 >
-> — [Canada Equity Plan Scorecard (PDF)](https://www.issgovernance.com/file/policy/2020/americas/Canada-Equity-Plan-Scorecard.pdf)
+> — [Stoxx Minvar Paper (PDF), p. 8](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
 >
-> -1)+Fn+4(t-1)] is the numbers of contracts 12.3.3. ROLLING On December expiry of year n, the
-> number of contracts has to be adjusted by a rolling **factor** RFN- N+1 so that the index notional
-> is invested in a new number of contracts in the next five EURO STOXX 50 DVP futures after the
-> roll. The rolling **factor** RFN-N+1 is calculated as follows: 𝐹 (𝑡)+...
+> How are performance-based equity awards defined? For the purposes of the CEO Performance-based
+> Equity **Factor**, which assesses whether the CEO has received performance- based equity, a
+> performance-based equity award is defined as any form of equity award where
 >
-> — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
+> — [Canadian Equity Plan Scorecard Faq (PDF), p. 15](https://www.issgovernance.com/file/policy/2018/americas/Canadian-Equity-Plan-Scorecard-FAQ.pdf)
 >
-> 30 or above, then 1, else if the ratio is 15 or below 30, then 0.5, else zero ▪ Day care facility
-> or allowance. If exists, then 1, else zero ▪ Re-employment plan. If exists, then 1, else zero The
-> empowering women score is calculated as the average of the three sub-items The human capital
-> investment **factor** is calculated as the average of the five...
+> )∙ + ) 𝑖 𝑐𝑤 𝑤 𝑛 0.07 𝑖 𝑖=1 The previous year’s GHG intensity reduction (starting from 2022 with
+> respect to 2021) is calculated as: 147 Standard decay **factor**, suggested and used by
+> Riskmetrics iSTOXX® METHODOLOGY GUIDE 753/1024 103.iSTOXX GLOBAL CLIMATE CHANGE ESG INDEX 𝐼𝑛𝑑𝑒𝑥
+> 𝐺𝐻𝐺 𝐼𝑛𝑡𝑒𝑛𝑠𝑖𝑡𝑦 ∙(𝐼𝑛
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 752](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> Transparency. Inclusiveness. Global Expertise. DEFINITIONS AND EXPLANATIONS The term "widely held"
-> refers to companies that ISS designates as such based on their membership in a major index and/or
-> the number of ISS clients holding the securities. For stylistic purposes, this document may use
-> the adjectival form of country names to refer to compa
+> , the Code refers to one-third independence, depending on each company’s circumstances, including
+> governance structure. This proposed policy does not **factor** in outside directors’ independence.
+> While independence is conceptually important, too much emphasis on independence at this stage of
+> Japan’s corporat
 >
-> — [Europeansummaryguidelines (PDF)](https://www.issgovernance.com/file/2014_Policies/EuropeanSummaryGuidelines.pdf)
+> — [10 2017 Comment Period Template Japan Director Elections Outside Directors (PDF), p. 2](https://www.issgovernance.com/file/policy/10-2017-comment-period-template-japan-director-elections-outside-directors.pdf)
 >
 
 ---
@@ -724,38 +708,37 @@ In plain terms, different factors "take turns" performing well. Value might stru
 
 > [!example]- Source excerpts (5)
 >
-> phase such as in 2018, quality and low-risk stocks, well-known for their defensive
-> characteristics, outperformed by 6.3 percentage points and 3.9 points, respectively. On the other
-> hand, value and reversal stocks, which are described as countercyclical, slightly underperformed
-> the market. Figure 1: **Factor diversification** in practice Drawdown ris...
+> On the other hand, value and reversal stocks, which are described as countercyclical, slightly
+> underperformed the market. Figure 1: **Factor diversification** in practice Drawdown risk The
+> distribution of returns in Figure 1 highlights an essential aspect of the EURO STOXX Multi Premia
+> Index: its diversific
 >
 > — [The Power of Factor Diversification | Blog posts | STOXX](https://stoxx.com/the-power-of-factor-diversification)
 >
-> e factors that have positive performance but different cyclicality and often uncorrelated return
-> profiles. The STOXX Multifactor Indices do not invest in multiple single-factor portfolios
-> according to desired weights, but rather seek to integrate the different factors in an efficient
-> way to capture **factor diversification**. For every security, an ...
->
-> — [Introducing the STOXX Factor Indices | STOXX](https://stoxx.com/introducing-the-stoxx-factor-indices)
->
-> r approach becomes evident. Several of the single-factor portfolios — including Low Risk at
-> different times, and Value and Small Size most recently — showed significant periods of
-> underperformance. The multifactor portfolio, on the other hand, did not exhibit any sustained
-> underwater periods. Intra-**factor diversification** A final consideration in...
+> The multifactor portfolio, on the other hand, did not exhibit any sustained underwater periods.
+> Intra-**factor diversification** A final consideration involves the construction of individual
+> factors. Just as the combination of styles in a multi-factor portfolio can perform bett
 >
 > — [Multifactor strategies: Proving their worth in the factor investment landscap...](https://stoxx.com/multifactor-strategies-proving-their-worth-in-the-factor-investment-landscape)
 >
-> e-average exposures to multiple factors, with practical portfolio and trading elements such as
-> diversification, turnover and tracking error considerations. These include market-relative caps on
-> sector and country weights as well as absolute and market-relative limits on individual security
-> weights. **Factor diversification** Additional consideration...
+> These include market-relative caps on sector and country weights as well as absolute and
+> market-relative limits on individual security weights. **Factor diversification** Additional
+> considerations include criteria around systematic exposures, or how much the index can be tilted
+> toward any single factor.
 >
 > — [Qontigo launches modern STOXX multifactor indices to underlie iShares ETFs ma...](https://stoxx.com/qontigo-launches-modern-stoxx-multifactor-indices-to-underlie-ishares-etfs-managed-by-blackrock)
 >
-> time-tested strategies through an ETF. It’s convenient, it’s transparent and it’s low cost. We can
-> take exposures in the core of our portfolios, strategically seek outperformance, or implement
-> tactical views with factor ETFs.” You highlight risk management. Why is it important for investors
-> to have **factor diversification** from that perspective? L...
+> in multiple single-factor portfolios according to desired weights, but rather seek to integrate
+> the different factors in an efficient way to capture **factor diversification**. For every
+> security, an aggregate multifactor score is computed as the average of the individual factor
+> scores.
+>
+> — [Introducing the STOXX Factor Indices | STOXX](https://stoxx.com/introducing-the-stoxx-factor-indices)
+>
+> egically seek outperformance, or implement tactical views with factor ETFs.” You highlight risk
+> management. Why is it important for investors to have **factor diversification** from that
+> perspective? Lukas: “Factor investing is all about accessing differentiated sources of risk and
+> returns.
 >
 > — [BlackRock and STOXX collaboration: iShares multi-factor ETFs track STOXX indi...](https://stoxx.com/blackrock-and-stoxx-collaboration-ishares-multi-factor-etfs-track-stoxx-indices-to-deliver-consistent-risk-managed-exposure-for-a-portfolios-core)
 >
@@ -764,7 +747,7 @@ In plain terms, different factors "take turns" performing well. Value might stru
 
 ### Factor Investing
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="170 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 170</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
 
 
 > An investment approach that targets specific, evidence-based return drivers
@@ -781,38 +764,36 @@ In plain terms, instead of buying the whole market by size, factor investing del
 >
 > Continue active refreshing of this index's data? Continue active refreshing of this index's data?
 > **Factor Investing** Most Recent **Factor Investing** A rotation out of technology and AI-related
-> stocks weighed on US indices in February, while inflows into lower-valuation, more traditional
-> sectors lifted European benchmarks for an eighth straight month....
+> stocks weighed on US indices in February, while inflows into lower-valuation
 >
 > — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing)
 >
-> line with traditional core solutions.” What does a systematic, index-based methodology add to
-> **factor investing**? And what is the benefit of collaborating with an index provider like STOXX?
-> “A systematic, index-based approach brings transparency, consistency and cost efficiency —
-> hallmarks of modern **factor investing**. By clearly defining, weighting...
+> An increase in the number of passive investment vehicles that offer such strategies in a
+> systematic way has opened up the world of **factor investing** to a much larger audience. We spoke
+> to Jan-Carl Plagge, head of applied research at STOXX Ltd., to ask him why factor-based passive
+> strategies are pr
 >
-> — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
+> — [Factor Investing: Q&amp;A on Flows, Outlook | Blog posts | STOXX](https://stoxx.com/factor-investing-qa-on-flows-outlook)
 >
-> **Factor investing** has received much attention in recent years as a source of above-market
-> returns. It’s also been the target of some criticism, mainly due to recent years’ underperformance
-> of styles such as Value and Size. Contrary to skeptics’ views, a well-constructed portfolio that
-> invests along r
+> In 2021, “alpha produced a return that was more than two percentage points higher than in 2011,
+> the next-best year.” “Rumors of **factor investing**’s demise have been greatly exaggerated,” she
+> concludes. We invite you to download and read the white paper. 1 Brown, M., ‘Unpacking the alpha
+> compone
 >
 > — [Not so fast. Factor investing is alive and doing well! | Blog posts | STOXX](https://stoxx.com/not-so-fast-factor-investing-is-alive-and-doing-well)
 >
 > This video first appeared on Asset TV’s MASTERCLASS: **Factor Investing** – June 2023. Recent
 > market developments and investing trends have prompted investors to reconsider their investment
-> allocations. Factors assist investors in understanding the present market and informing their
-> investment decisions. Melissa Brown, Managing Director of Applied R...
+> allocations.
 >
 > — [MASTERCLASS: Factor Investing - June 2023 | Blog posts | STOXX](https://stoxx.com/masterclass-factor-investing-june-2023)
 >
-> of **factor investing** to a much larger audience. We spoke to Jan-Carl Plagge, head of applied
-> research at STOXX Ltd., to ask him why factor-based passive strategies are proving so popular, and
-> what the outlook for the sector is going forward. Jan, why have passive factor strategies become
-> so popular? **Factor investing** has been around for quite a wh...
+> ting, what defines a modern factor strategy, and what the collaboration with STOXX has brought to
+> the iShares offering. Below is our exchange. Priya, **factor investing** has evolved in recent
+> years. How have BlackRock’s factor strategies changed? “**Factor investing**, of course, has been
+> around for decades.
 >
-> — [Factor Investing: Q&amp;A on Flows, Outlook | Blog posts | STOXX](https://stoxx.com/factor-investing-qa-on-flows-outlook)
+> — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
 >
 
 ---
@@ -842,47 +823,46 @@ where the long (short) portfolio holds the top (bottom) quintile on factor $k$.
 
 > [!example]- Source excerpts (5)
 >
-> , shedding 7.7%. The value index has underperformed the average of the other six factor gauges in
-> all but one year since 2013. The iSTOXX Europe Factor Market Neutral Indices hold a short position
-> in futures on the STOXX Europe 600 to neutralize systematic risk and hence gain exposure purely to
-> the **factor premium**. ESG strategies to pay off Follo...
+> Based on relevant and scientifically proven ratios, the best stocks from the investment universe
+> are selected for each **factor premium** — value, size, momentum, residual momentum, reversal, low
+> risk and quality.
 >
-> — [2019 Market Outlook II – Dollar Down, Risk Up? | Blog posts | STOXX](https://stoxx.com/2019-market-outlook-ii-dollar-down-risk-up)
+> — [Q&amp;A: Credit Suisse’s Froehlich on Multi-Premia Investing | Blog posts | S...](https://stoxx.com/qa-credit-suisses-froehlich-on-multi-premia-investing)
 >
-> monthly, stocks with weaker momentum scores are reduced or sold. The methodology ensures that the
-> portfolio is made up of each month’s best-of-momentum stocks with all constraints considered.
-> Opportunities in 2018 Many investors say momentum will continue to perform well in 2018, although,
-> like all **factor premium**s, it is subject to cyclicality a...
->
-> — [Evaluating the true cost of momentum investing | Blog posts | STOXX](https://stoxx.com/evaluating-the-true-cost-of-momentum-investing)
->
-> iodic rebalancings, he estimated the transaction costs of trading and rebalancing the portfolios
-> of each factor strategy. Costs were then compared against the factor risk premia associated with
-> these ETFs, using the Axioma Equity Factor Risk Model.2 For all but two of 14 strategy types, the
-> average **factor premium** exceeded the average rebalancing...
->
-> — [Study Shines Light on Smart Beta’s Effectiveness and Capacity | Blog posts | ...](https://stoxx.com/study-shines-light-on-smart-betas-effectiveness-and-capacity)
->
-> tially smoother investment profile over time. Figure 1: Components of the Multifactor signal in
-> the STOXX Equity Factor indices Risk premium The paper reviews the risk management,
-> diversification and turnover constraints built into the index methodology, a process that upholds
-> the harvesting of the **factor premium** in an investable and repeatable ...
+> reviews the risk management, diversification and turnover constraints built into the index
+> methodology, a process that upholds the harvesting of the **factor premium** in an investable and
+> repeatable framework. One of the key takeaways from the study is that the customized Multifactor
+> signal behind the index has a “
 >
 > — [A behind-the-scenes look at the STOXX Equity Factor indices | Blog posts | STOXX](https://stoxx.com/a-behind-the-scenes-look-at-the-stoxx-equity-factor-indices)
 >
-> roach with those of passive replication is a very good proposition. Can you briefly describe the
-> stock selection methodology? The multi-premia methodology was developed by Finreon. Based on
-> relevant and scientifically proven ratios, the best stocks from the investment universe are
-> selected for each **factor premium** — value, size, momentum, residua...
+> r Market Neutral Indices hold a short position in futures on the STOXX Europe 600 to neutralize
+> systematic risk and hence gain exposure purely to the **factor premium**. ESG strategies to pay
+> off Following a difficult year, environmental, social and governance (ESG) strategies may catch up
+> as more investors adopt res
 >
-> — [Q&amp;A: Credit Suisse’s Froehlich on Multi-Premia Investing | Blog posts | S...](https://stoxx.com/qa-credit-suisses-froehlich-on-multi-premia-investing)
+> — [2019 Market Outlook II – Dollar Down, Risk Up? | Blog posts | STOXX](https://stoxx.com/2019-market-outlook-ii-dollar-down-risk-up)
+>
+> typical tracking error target of 1–2% helps ensure that the portfolio stays suitable for core
+> allocations, while still aiming to deliver a persistent **factor premium**. In other words, it’s
+> not about giving each factor the same weight — but rather giving them the appropriate risk budget
+> within a diversified, long-te
+>
+> — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
+>
+> m stocks with all constraints considered. Opportunities in 2018 Many investors say momentum will
+> continue to perform well in 2018, although, like all **factor premium**s, it is subject to
+> cyclicality and reversals. The BlackRock Investment Institute cites continued global economic
+> expansion and a low-volatility regim
+>
+> — [Evaluating the true cost of momentum investing | Blog posts | STOXX](https://stoxx.com/evaluating-the-true-cost-of-momentum-investing)
 >
 
 ---
 
 ### Factor Rotation
 
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A dynamic strategy that adjusts factor exposures over time based on the
@@ -896,19 +876,12 @@ In plain terms, factor rotation is the idea of being a "factor timer" — overwe
 > [!tip] Related terms
 > [[#Factor Diversification]], [[#Factor Crowding]], [[#Multi-Factor]]
 
-> [!example]- Source excerpts (2)
+> [!example]- Source excerpts (1)
 >
-> ISS EVA RESOURCE CENTER REPORTS Giving Credit Where and When Credit is Due **Factor Rotation**s:
-> When Do Growth and Value Outperform? Manage Risk by Managing Expectations ESG Matters: How ESG and
-> EVA Indicators Relate to Market Performance EVA and Governance QualityScore – Emerging Markets
-> Getting Tangible About Intangibles ESG Matters (Part II) Dri...
->
-> — [ISS EVA Resource Center | ISS](https://www.issgovernance.com/eva/iss-eva-resource-center)
->
-> arket cycles. These ETFs are designed to replace traditional core equity holdings with balanced
-> exposures to long-term drivers of returns.” To finish off, how has the iShares multifactor suite
-> performed since launch three years ago? “The past three years have been a volatile period, marked
-> by sharp **factor rotation**s, inflation surprises and diver...
+> off, how has the iShares multifactor suite performed since launch three years ago? “The past three
+> years have been a volatile period, marked by sharp **factor rotation**s, inflation surprises and
+> diverging Growth and Value performance. Yet the suite held up well, demonstrating the benefits of
+> diversification and disci
 >
 > — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
 >
@@ -938,38 +911,37 @@ where $\kappa$ controls the aggressiveness of the tilt and $z_i$ is the factor z
 
 > [!example]- Source excerpts (5)
 >
-> . Other constraints the iSTOXX factor indices methodology include a limit in the number of stocks
-> and a cap on each stock’s weight. Methodology and optimization approach help trigger sell signal A
-> strict sell discipline is a function of the iSTOXX factor indices’ process. The indices aim for a
-> high **factor tilt**, a proxy for a stock’s expected ret...
+> These constraints around country, sector and currency risk embedded in the methodology seek to
+> provide a **factor tilt** as pure as possible, while being neutral around all other sources of
+> risk. “There is a direct link between information decay, tracking error, rebalan
 >
 > — [Evaluating the true cost of momentum investing | Blog posts | STOXX](https://stoxx.com/evaluating-the-true-cost-of-momentum-investing)
 >
-> s offer robust factor definitions and targeted factor exposures, and ensure the tradability of
-> component stocks. They employ the institutionally tested analytics of Axioma Factor Risk Models.
-> On a global basis, Size showed the best performance last month while Low Risk had the weakest one.
-> The Size **factor tilt**s towards the smallest-capitalizatio...
->
-> — [Monthly Index News December 2023 (PDF)](https://stoxx.com/monthly-index-news-december-2023)
->
-> ontribution, only overshadowed by very strong performances from a few other factors. Exhibit 4:
-> Heat map of targeted factor contributions, 2002 to 2021 The STOXX Europe 600 Industry Neutral Ax
-> Multi-Factor Index is constructed so that it gets most of its risk – and therefore return – from
-> its style **factor tilt**s, and we see that that is the case ...
+> 1 The STOXX Europe 600 Industry Neutral Ax Multi-Factor Index is constructed so that it gets most
+> of its risk – and therefore return – from its style **factor tilt**s, and we see that that is the
+> case in most years. In a few years we see a large ‘specific return,’ or the proportion of actual
+> return not explained b
 >
 > — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
 >
-> and Responsible Minimum Volatility Indices are a set of indices designed by optimizing the parent
-> index (iSTOXX World A index) to produce a set of indices that G have the lowest absolute ex-ante
-> volatility under different ESG, Carbon and SDI constraints. Those indices also place controls over
-> style **factor tilt**s, industry / country exposures and ...
+> d analytics of Axioma Factor Risk Models. On a global basis, Size showed the best performance last
+> month while Low Risk had the weakest one. The Size **factor tilt**s towards the
+> smallest-capitalization stocks. Over the entire 2023, Quality was the strongest factor. Risk and
+> return characteristics Return (%) Annua
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Monthly Index News December 2023 (PDF), p. 24](https://stoxx.com/monthly-index-news-december-2023)
 >
-> r the entire year, all markets except Hong Kong gained. Sixteen of 20 emerging markets tracked by
-> STOXX rose in the year. Factor investing On a global basis, Size showed the best performance in
-> December while Low Risk was the weakest style, according to the STOXX Factor indices (Figure 5).
-> The Size **factor tilt**s towards the smallest-capitalizatio...
+> ices that G have the lowest absolute ex-ante volatility under different ESG, Carbon and SDI
+> constraints. Those indices also place controls over style **factor tilt**s, industry / country
+> exposures and liquidity / tradability. W Indices: The iSTOXX APG World-X and Responsible Minimum
+> Volatility Index Range is O com
+>
+> — [Istoxx Index Guide (PDF), p. 802](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+>
+> basis, Size showed the best performance in December while Low Risk was the weakest style,
+> according to the STOXX Factor indices (Figure 5). The Size **factor tilt**s towards the
+> smallest-capitalization stocks. For 2023, the STOXX® Global 1800 Ax Quality was the strongest
+> factor with a 30.6% gain. Figure 5: STOXX
 >
 > — [Stocks extend gains in December, lifting indices to record highs | Blog posts...](https://stoxx.com/stocks-extend-gains-in-december-lifting-indices-to-record-highs)
 >
@@ -994,40 +966,39 @@ In plain terms, a factor-based index is like a regular stock index — the S&P 5
 
 > [!example]- Source excerpts (5)
 >
-> ZUG, Switzerland (September 11, 2025) – STOXX Ltd., part of the ISS STOXX group of companies,
-> today announced its expanding collaboration with L&G, with L&G’s launch of three developed world
-> **factor-based index** funds tracking customized iSTOXX indices. These funds, built on customized
-> iSTOXX indices, reflect L&G’s proprietary factor research and ...
+> TOXX Ltd., part of the ISS STOXX group of companies, today announced its expanding collaboration
+> with L&G, with L&G’s launch of three developed world **factor-based index** funds tracking
+> customized iSTOXX indices. These funds, built on customized iSTOXX indices, reflect L&G’s
+> proprietary factor research and aim to bring
 >
 > — [STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...](https://stoxx.com/stoxx-and-lg-collaborate-on-launch-of-three-lg-developed-world-factor-based-index-funds)
 >
-> etween the market-neutral factor indices, i.e. the risk premia, and the benchmark STOXX® Europe
-> 600 index were very low and even negative over the study period, meaning they can also serve as a
-> great source of diversification. You mentioned low cost. How important is that as a driver for
-> flows into **factor-based index** products? Our experience is ...
+> dy period, meaning they can also serve as a great source of diversification. You mentioned low
+> cost. How important is that as a driver for flows into **factor-based index** products? Our
+> experience is that lower fees can be a defining variable when comparing active versus passive
+> strategies. But what investors also focus
 >
 > — [Factor Investing: Q&amp;A on Flows, Outlook | Blog posts | STOXX](https://stoxx.com/factor-investing-qa-on-flows-outlook)
 >
-> ed. Stocks rose for the sixth consecutive month in September, the longest positive run in four
-> years, on investor expectations that falling US interest rates and sustained economic growth will
-> help corporate earnings. Factor Investing STOXX and L&G collaborate on launch of three L&G
-> developed world **factor-based index** funds STOXX Ltd. today annou...
+> Derived from the STOXX® World AC index, which covers large- and mid-cap developed and emerging
+> markets, this sustainable, **factor-based index** solution uses the Axioma optimizer to balance
+> multiple investment objectives and considerations.
 >
-> — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing)
+> — [Q&amp;A: Building customized, sustainable portfolios based on the STOXX World...](https://stoxx.com/qa-building-customized-sustainable-portfolios-based-on-the-stoxx-world-indices)
 >
-> Legal & General Investment Management (LGIM), the biggest UK-based asset manager, has switched to
-> the iSTOXX® World Min Vol ESG index to manage a mandate for a large pension-fund client. At the
-> center of this sustainable, **factor-based index** solution is a systematic process that uses the
-> Axioma optimizer to balance multiple investment objectives ...
->
-> — [LGIM switches to iSTOXX World Min Vol ESG index for pension fund mandate | Bl...](https://stoxx.com/lgim-switches-to-istoxx-world-min-vol-esg-index-for-pension-fund-mandate)
->
-> OXX’s parent Qontigo. “The transformation of investment universes with an ESG focus is catching up
-> with the most important benchmarks, creating an acceleration of the phenomenon,” said Roberto
-> Lazzarotto, Global Head of Sales at STOXX. ESG stands for environmental, social and governance
-> strategies. **Factor-based index** strategies, which select sto...
+> eleration of the phenomenon,” said Roberto Lazzarotto, Global Head of Sales at STOXX. ESG stands
+> for environmental, social and governance strategies. **Factor-based index** strategies, which
+> select stocks according to specific sources of risk and returns, attracted a net 9.7 billion
+> euros, the most in at least a decade.
 >
 > — [ETF Inflows Grow, Assets Reach Record | STOXX](https://stoxx.com/etf-inflows-grow-assets-reach-record)
+>
+> t rates and sustained economic growth will help corporate earnings. Factor Investing STOXX and L&G
+> collaborate on launch of three L&G developed world **factor-based index** funds STOXX Ltd. today
+> announced its expanding collaboration with L&G, with L&G’s launch of three developed world
+> **factor-based index** funds tracking c
+>
+> — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing)
 >
 
 ---
@@ -1056,10 +1027,10 @@ $$
 
 > [!example]- Source excerpts (1)
 >
-> Figure 8 shows the active style-factor exposures of the AI index relative to the parent universe
-> of the STOXX® World AC. The AI index has its largest positive active exposures in the Market
-> Sensitivity, Volatility and Liquidity factors, while also being more exposed to the Medium-Term
-> Momentum and **Growth factor**s. Negative active exposures includ...
+> positive active exposures in the Market Sensitivity, Volatility and Liquidity factors, while also
+> being more exposed to the Medium-Term Momentum and **Growth factor**s. Negative active exposures
+> include those to the Dividend Yield, Exchange Rate Sensitivity and Earnings Yield factors. Figure
+> 8: Active style-factor
 >
 > — [The AI revolution is taking place now – a look inside the STOXX Global Artifi...](https://stoxx.com/the-ai-revolution-is-taking-place-now-a-look-inside-the-stoxx-global-artificial-intelligence-index)
 >
@@ -1070,7 +1041,7 @@ $$
 
 ### Industry Neutral
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="201 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 201</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="102 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 102</span>
 
 
 > A portfolio construction constraint ensuring that the aggregate weight of each
@@ -1085,40 +1056,36 @@ In plain terms, if the benchmark has 12% in pharmaceuticals, the factor index al
 
 > [!example]- Source excerpts (5)
 >
-> Eurex is listing futures tracking 12 STOXX® **Industry Neutral** Ax Factor Indices covering the
-> European and US markets, allowing investors to target well-researched and robust factor strategies
-> relying on Axioma’s Risk Models and optimization tools. The STOXX **Industry Neutral** Ax Factor
-> Indices are derived from two well-established market-capitaliza...
->
-> — [Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...](https://stoxx.com/eurex-to-list-futures-on-stoxx-industry-neutral-ax-factor-indices)
->
-> Solutions **Industry Neutral** Factor Indices For investors looking to accurately access pure
-> factor returns, without unintended sector exposures. The STOXX® **Industry Neutral** Ax Factor
-> Indices implement the same methodology of the STOXX® Factor Indices while reducing the active
-> industry constraint from +/- 5% to
->
-> — [Industry Neutral Factor Indices | STOXX](https://stoxx.com/industry-neutral-factor-indices)
->
-> The STOXX® Europe 600 **Industry Neutral** Ax Multi-Factor index provides investors with a broadly
-> diversified portfolio designed to maximize exposure to several well-known style factors while
-> minimizing exposures to industries and other style factors that may add to a portfolio’s risk but
-> are not typically compensated. The
+> Before we dive into the analysis, let’s briefly review the methodology and offering of the STOXX
+> **Industry Neutral** Single and Multi-Factor indices. STOXX **Industry Neutral** Factor Indices
+> The standard STOXX® Factor Indices are built using commercially accepted and i
 >
 > — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
 >
-> Maximum Dividend Indices October 2016 (5): Addition of revised Minimum Variance methodology in
-> chapter 16.1, STOXX Minimum Variance and Minimum Variance Unconstrained October 2016 (6): Addition
-> of STOXX China A 900 Minimum Variance Indices in chapter 16.1. November 2016: Addition of STOXX
-> Regional **Industry Neutral** ESG and STOXX Regional Excludin...
+> Solutions **Industry Neutral** Factor Indices For investors looking to accurately access pure
+> factor returns, without unintended sector exposures. The STOXX® **Industry Neutral** Ax Fa
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Industry Neutral Factor Indices | STOXX](https://stoxx.com/industry-neutral-factor-indices)
 >
-> procedure, the benchmark is defined as the new composition of the STOXX Global 1800 which becomes
-> effective on the review date on the 3rd Friday of March, June, September and December. Weighting
-> scheme: All components are free float market cap weighted with a capping algorithm which delivers
-> an ICB **Industry Neutral** weighting compared to the benc...
+> The futures will start trading on Apr. 26, Eurex said in a press release. The STOXX **Industry
+> Neutral** Ax Factor Indices were introduced in February and implement the same methodology of the
+> STOXX® Factor Indices while reducing the active industry cons
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...](https://stoxx.com/eurex-to-list-futures-on-stoxx-industry-neutral-ax-factor-indices)
+>
+> Index represents the performance of the 60 largest Canadian companies by free-float market
+> capitalization from among the 11 ICB Industries. It is an **industry neutral** index and is
+> derived from the STOXX Canada 240 index. Universe: The index universe is defined as the new
+> composition of the STOXX Canada 240 index wh
+>
+> — [Stoxx Index Guide (PDF), p. 106](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> Indices while reducing the active industry1 constraint from +/- 5% to near neutral. In all but
+> eliminating the overall industry deviations, the STOXX **Industry Neutral** Factor Indices may
+> sacrifice some factor exposure, but benefit from targeting lower levels of active industry risk
+> and avoiding potential performance
+>
+> — [Introducing the STOXX Industry Neutral Ax Factor Indices | Blog posts | STOXX](https://stoxx.com/introducing-the-stoxx-industry-neutral-ax-factor-indices)
 >
 
 ---
@@ -1143,40 +1110,39 @@ In plain terms, the low risk factor is the finding that boring, steady stocks ha
 
 > [!example]- Source excerpts (5)
 >
-> Market Neutral Indices, which hold a short position in futures on the STOXX Europe 600 to help
-> investors neutralize systematic risk, fell on a net-return basis. The iSTOXX® Europe Size Factor
-> Market Neutral Index retreated 2.3%, its sixth straight monthly loss. At the other end, the
-> iSTOXX® Europe **Low Risk Factor** Market Neutral Index dropped the...
+> All indices avoided the extent of losses recorded by the STOXX Europe 600 during the month. The
+> iSTOXX® Europe **Low Risk Factor** Market Neutral Index had the best return during the month,
+> consolidating its outperformance during the full year.
 >
-> — [Monthly Index News July 2019 (PDF)](https://stoxx.com/monthly-index-news-july-2019)
+> — [Monthly Index News December 2018 (PDF), p. 5](https://stoxx.com/monthly-index-news-december-2018)
 >
-> Index, which seeks to extract the risk premium of small-capitalization shares, fell 1.8%.
-> Investing in factors in isolation of the market risk has been a winning proposition in the past
-> year, with all iSTOXX Europe Factor Market Neutral Indices outperforming the STOXX Europe 600. The
-> iSTOXX® Europe **Low Risk Factor** Market Neutral Index has been t...
+> This does not adequately compare with MVP which gives the optimal factor allocation in order to
+> reduce portfolio risk, albeit with a significant **Low Risk factor** bias. STOXX LIMITED 14 STOXX
+> MINIMUM VARIANCE INDICES 5 A tale of two minimum variance indices The STOXX Minimum Variance
+> Indices provide
 >
-> — [Monthly Index News October 2018 (PDF)](https://stoxx.com/monthly-index-news-october-2018)
+> — [Stoxx Minvar Paper (PDF), p. 13](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
 >
-> May 2019 Europe Factor Market Neutral Indices Key points Only two of the seven iSTOXX® Europe
-> Factor Market Neutral Indices, which hold a short position in futures on the STOXX Europe 600 to
-> help investors neutralize systematic risk, posted a positive return during May. The iSTOXX® Europe
-> **Low Risk Factor** Market Neutral Index advanced 1% and the ...
+> ESG-X Factor Indices – Regional: Asia/Pacific Key Points Within the responsibly-screened universe
+> in Asia/Pacific, Momentum also led gains while the **Low Risk factor** trailed all other
+> strategies. Risk and Return Characteristics Return (%) Annualized volatility (%) EUR USD EUR USD
+> 1M YTD 1Y 1M YTD 1Y 1M YTD 1Y 1M Y
 >
-> — [Monthly Index News May 2019 (PDF)](https://stoxx.com/monthly-index-news-may-2019)
+> — [Monthly Index News November 2020 (PDF), p. 22](https://stoxx.com/monthly-index-news-november-2020)
 >
-> variance index than a simple risk-reduction strategy. Drawdowns are smaller and occur less often
-> for the MVP and it has a higher average return. Further, the market capitalization weighted
-> benchmark has fatter tails. In other words, a low risk weighted portfolio is an impure attempt at
-> achieving a **Low Risk factor** allocation. This does not adequa...
->
-> — [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
->
-> For the first half of 2020, the illustrative Mixed portfolio has underperformed the benchmark,
-> while the Integrated approach has fared only slightly better, with a poorer Q2. Looking at the
-> attribution for this period, we observe that the Mixed portfolio was able to better capitalize
-> overall on the **Low Risk factor** (as defined by Market Sensitivi...
+> Looking at the attribution for this period, we observe that the Mixed portfolio was able to better
+> capitalize overall on the **Low Risk factor** (as defined by Market Sensitivity and Residual
+> Volatility in the Axioma Risk Model), and Value and Size exposures acted as a drag on both
+> methods.
 >
 > — [STOXX Factor and STOXX ESG-X Factor Indices Q2 Spotlight – Mixed Performance,...](https://stoxx.com/stoxx-factor-and-stoxx-esg-x-factor-indices-q2-spotlight-mixed-performance-strong-exposures-and-rebounding-correlations)
+>
+> turn basis. The iSTOXX® Europe Size Factor Market Neutral Index retreated 2.3%, its sixth straight
+> monthly loss. At the other end, the iSTOXX® Europe **Low Risk Factor** Market Neutral Index
+> dropped the least. The iSTOXX Europe Factor Market Neutral Indices are designed to offer exposure
+> to factor investing in isolati
+>
+> — [Monthly Index News July 2019 (PDF), p. 7](https://stoxx.com/monthly-index-news-july-2019)
 >
 
 ---
@@ -1204,38 +1170,34 @@ Securities with the smallest $\sigma_i$ receive the highest weights.
 
 > [!example]- Source excerpts (5)
 >
-> 1952][1]. In the years following his work, a vast number of empirical studies looked into
-> characteristics of minimum variance portfolios with a focus on how to best implement such
-> strategies in practice[2]. In recent years, however, academia has shifted its focus to the
-> explanation of the so-called **low volatility factor**. The traditional Capital ...
+> The Value Factor combines the 5 Signals equally at 20% weights and is again z-scored and
+> truncated. The **Low Volatility Factor** is given by the standard deviation of monthly total
+> returns in local currency, calculated over the 12 complete months prior to the review cut-off dat
+>
+> — [Stoxx Index Guide (PDF), p. 588](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> In recent years, however, academia has shifted its focus to the explanation of the so-called **low
+> volatility factor**. The traditional Capital Asset Pricing Model (CAPM) explains asset returns in
+> excess of the risk-free rate as compensation for systematic, i.e.
 >
 > — [The low volatility premium – An analysis of factor exposures of minimum varia...](https://stoxx.com/the-low-volatility-premium-an-analysis-of-factor-exposures-of-minimum-variance-strategies-blog)
 >
-> is given by the latest 12-month net income divided by the total market capitalization. Signals are
-> z-scored using the Parent Index weights and outliers are truncated at +/- 3 standard deviations.
-> The Value Factor combines the 5 Signals equally at 20% weights and is again z-scored and
-> truncated. The **Low Volatility Factor** is given by the standard ...
+> rket information in order to always hold the portfolio with minimum risk. Importantly, minimum
+> variance does not equate to a simple allocation to the **low volatility factor**, which would be
+> represented by a portfolio with long low volatility stocks and short high volatility stocks.
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Minvar Paper (PDF), p. 7](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
 >
-> ortfolio and offers that little bit lower risk profile. As such, the STOXX Equity Factor indices
-> upweight Quality. Value and Momentum are natural pairs, and so they have the same weight relative
-> to each other. The Small Size factor, for its part, is a high beta, pro-cyclical factor, relative
-> to the **Low Volatility factor**, which is low beta and a ...
+> s, and so they have the same weight relative to each other. The Small Size factor, for its part,
+> is a high beta, pro-cyclical factor, relative to the **Low Volatility factor**, which is low beta
+> and a much more defensive factor. Those are opposing factors pulling in opposite directions.
 >
 > — [BlackRock’s Jamie Forbes: Implementing ‘evolutionary’ factor advancements in ...](https://stoxx.com/blackrocks-jamie-forbes-implementing-evolutionary-factor-advancements-in-investments)
 >
-> n order to reduce risk. This involves dynamically rotating around stock, industry, geographical
-> and factor allocations, taking into account current market information in order to always hold the
-> portfolio with minimum risk. Importantly, minimum variance does not equate to a simple allocation
-> to the **low volatility factor**, which would be represent...
->
-> — [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
->
-> k as much as they are used to target higher-growth areas. Factors and minimum variance The boom in
-> factor-based strategies in the past decade has also allowed investors to allocate resources to
-> stocks whose features can help make them less vulnerable in volatile markets. That’s true not just
-> of the **low volatility factor**, but also of quality, hig...
+> allowed investors to allocate resources to stocks whose features can help make them less
+> vulnerable in volatile markets. That’s true not just of the **low volatility factor**, but also of
+> quality, high dividend and even value. Factor investing has also provided a channel for a popular
+> risk-mitigation approach: that of mini
 >
 > — [The New Faces of Risk Management | Blog posts | STOXX](https://stoxx.com/the-new-faces-of-risk-management)
 >
@@ -1288,7 +1250,7 @@ The optimizer finds $w^*$ that maximizes $\text{DR}(w)$.
 
 ### Minimum Variance
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="872 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 872</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="769 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 769</span>
 
 
 > A portfolio optimization strategy that seeks the set of weights producing the
@@ -1308,47 +1270,44 @@ $$
 
 > [!example]- Source excerpts (5)
 >
-> Based on Modern Portfolio Theory, the STOXX **Minimum Variance** indices aim to limit volatility
-> using a consistently applied and rules-based methodology. The index suite, which uses our
-> factor-model approach two versions of every benchmark — constrained and unconstrained. Key indices
-> STOXX Europe 600 **Minimum Variance** Loading… STOXX USA 900 Minim
+> STOXX Ltd. has introduced the STOXX® Emerging Markets 800 LO **Minimum Variance** Index (STOXX EM
+> 800 LO MinVar), expanding its suite of rules-based **minimum variance** strategies to the universe
+> of developing nations. The new index i
 >
-> — [Minimum Variance Indices | STOXX](https://stoxx.com/minimum-variance-indices)
+> — [A Minimum Variance Strategy for Emerging Markets | Blog posts | STOXX](https://stoxx.com/a-minimum-variance-strategy-for-emerging-markets)
 >
-> **Minimum Variance** Indices are designed to achieve the lowest return volatility in a given
-> investable universe. Every index in the family is constructed via an optimization process using
-> the Axioma optimizer, risk models and an estimated covariance matrix. A new study1 by Qontigo
-> examines whether the **Minimum Variance** indices can still deliver thei...
->
-> — [Minimum Variance Indices: A Reading Through Geopolitical Risk | Blog posts | ...](https://stoxx.com/minimum-variance-indices-a-reading-through-geopolitical-risk)
->
-> , climbed 3.7% between January and September and fell 4.5% in October. Quick math shows that the
-> MinVar index is now outperforming its market cap-weighted benchmark this year, after an extremely
-> volatile month that came to disrupt tranquil spring and summer trading. One month is all it took
-> for the **minimum variance** strategy to undo the 2018 unde...
->
-> — [Minimum Variance’s Prowess in Risk Protection | Blog posts | STOXX](https://stoxx.com/minimum-variances-prowess-in-risk-protection)
->
-> filter which involves looking at the factors’ exposures of the min var portfolio and setting a
-> threshold for those to remain within a certain range of the benchmark. This means that the min var
-> version will likely have similar attributes to the benchmark as well as achieving the objective of
-> having **minimum variance**. The min var approach is popul...
+> the benchmark. This means that the min var version will likely have similar attributes to the
+> benchmark as well as achieving the objective of having **minimum variance**. The min var approach
+> is popular with a broad cross section of clients from traditional ETF product users who use it as
+> an alternative to typical bet
 >
 > — [Minimum Variance has its ‘day in the sun’ - ETF Express](https://stoxx.com/minimum-variance-has-its-day-in-the-sun)
 >
-> The STOXX® Global Select 100 EUR Index, which is measured in euros, climbed 6.1%. The index blends
-> increasing dividend yields with low volatility. All three indices had lost 20% in March. Despite
-> the gains, all three gauges posted in April their second-highest monthly volatility reading on
-> record. **Minimum variance** lags behind Also lagging benchm...
+> This observation is found to exist across geographies. These findings are likely of great
+> importance for investors while implementing **minimum variance** strategies. Investors need to be
+> aware of interactions among factors in order to apply appropriate countermeasures.
 >
-> — [Stocks Post Best Month in 11 Years in April, Paring 2020 Losses | STOXX](https://stoxx.com/stocks-post-best-month-in-11-years-in-april-paring-2020-losses)
+> — [The low volatility premium – An analysis of factor exposures of minimum varia...](https://stoxx.com/the-low-volatility-premium-an-analysis-of-factor-exposures-of-minimum-variance-strategies-blog)
+>
+> One month is all it took for the **minimum variance** strategy to undo the 2018 underperformance
+> carried since April. The STOXX **Minimum Variance** indices track stocks that have exhibited the
+> lowest individual levels of historical volatility.
+>
+> — [Minimum Variance’s Prowess in Risk Protection | Blog posts | STOXX](https://stoxx.com/minimum-variances-prowess-in-risk-protection)
+>
+> The analysis is run on the STOXX® Global 1800 **Minimum Variance** Index, STOXX® USA 900 **Minimum
+> Variance** Index, EURO STOXX® Minimum Variance Index, and respective unconstrained versions,3 as
+> well as on their benchmarks. Stress test results (Table1) show that the Minimum Variance indices
+> pr
+>
+> — [Minimum Variance Indices: A Reading Through Geopolitical Risk | Blog posts | ...](https://stoxx.com/minimum-variance-indices-a-reading-through-geopolitical-risk)
 >
 
 ---
 
 ### Momentum Factor
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="58 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 58</span>
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
 
 > A factor that captures the tendency of recent winners to continue outperforming
@@ -1369,47 +1328,47 @@ The most recent month is excluded to avoid the short-term reversal effect.
 
 > [!example]- Source excerpts (5)
 >
-> 𝑖𝑧𝑒 𝑖=𝑁 𝐵̂𝑃𝑅 𝑖=𝑁 𝜀 𝑖=𝑁 where 𝛽 ̂𝑀𝑜𝑚 : standardized 12-month momentum adjusted with market beta
-> factor of stock i 𝑎𝑑𝑗 𝑖 𝑠̂𝑖𝑧𝑒 : standardized size factor of stock i 𝑖 𝐵̂𝑃𝑅 : standardized BPR of
-> stock i 𝑖 ε : residual error i α* : alpha N : number of stocks in the parent index The risk-factor
-> adjusted **momentum factor** is defined as the residual erro...
+> At each iteration, a standardized factor is calculated as: (𝑎𝑑𝑗𝑀𝑜𝑚 −𝑎𝑣𝑒) 𝑠𝑡𝑎𝑛𝑑𝑎𝑟𝑑𝑖𝑧𝑒𝑑 𝑓𝑎𝑐𝑡𝑜𝑟
+> 𝑎𝑑̂𝑗𝑀𝑜𝑚 = 𝑖 𝑖 𝜎 where 𝑎𝑑𝑗𝑀𝑜𝑚 : the risk-factor adjusted **momentum factor** of stock i 𝑖 𝑎𝑣𝑒:
+> factor average weighted by the stocks’ weights in the parent index 𝜎：factor standard deviation At
+> each iteration, if the standardiz
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 266](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> Europe Factor Market Neutral Indices Key points The iSTOXX® Europe Factor Market Neutral Indices,
-> which hold a short position in futures on the STOXX Europe 600 to help investors neutralize
-> systematic risk, struggled in April. Six of the seven indices posted a loss for the month. The
-> iSTOXX® Europe **Momentum Factor** Market Neutral Index was the ex...
->
-> — [Monthly Index News April 2019 (PDF)](https://stoxx.com/monthly-index-news-april-2019)
->
-> STOXX INDEX METHODOLOGY GUIDE 587/639 18. STOXX FACTOR INDICES The **Momentum Factor** is a
-> composite of the following 3 Signals: Earnings Announcement Drift, Earnings Momentum, and Price
-> Momentum.  Earnings Announcement Drift is given by the sum of idiosyncratic returns from the
-> Axioma Risk Model on the most recent earnings announcement date and t...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> entum or earnings momentum drift — enhances signal strength (Figure 2). This approach helps us
-> avoid simplistic exposures and better reflect what Momentum truly represents: a behavioral
-> phenomenon rooted in investor underreaction, and not just a statistical artifact.” Figure 2:
-> Active returns – USA **Momentum factor** “It’s worth emphasizing here th...
+> ntum truly represents: a behavioral phenomenon rooted in investor underreaction, and not just a
+> statistical artifact.” Figure 2: Active returns – USA **Momentum factor** “It’s worth emphasizing
+> here that innovating in factor design does not mean neglecting traditional factor definitions, but
+> rather building on them to
 >
 > — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
 >
-> 2 ISIN Fund ISIN Text 12 3 NAME Name of the fund Text 255 4 CURRENCY ISO currency of the fund Text
-> 3 5 COUNTRY ISO country code of the fund Text 2 6 SECTOR Citywire sector of the fund Text 255 7
-> ASSET_CLASS Asset class of the fund Text 19 8 RATING Citywire rating of the fund Text 3
-> MOMENTUM_FACT 9 **Momentum factor** of the fund Number 15 OR 10 WEIG...
+> The STOXX® Global 1800 Basic Resources Index (-6%)3 led losses. The STOXX® Global 1800 Technology
+> Index jumped 7.2% to top all other sectors. **Momentum factor** back in favor Momentum regained
+> its lead among factor strategies covering global markets, paced by a strong performance from the
+> factor in the US.
 >
-> — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
+> — [Global Stocks Rise for Fifth Straight Month in June on Continued Economic Opt...](https://stoxx.com/global-stocks-rise-for-fifth-straight-month-in-june)
+>
+> Europe 600 to help investors neutralize systematic risk, struggled in April. Six of the seven
+> indices posted a loss for the month. The iSTOXX® Europe **Momentum Factor** Market Neutral Index
+> was the exception, posting a 0.7% advance. The indices are designed to give investors exposure to
+> pure factor investing. Risk an
+>
+> — [Monthly Index News April 2019 (PDF), p. 6](https://stoxx.com/monthly-index-news-april-2019)
+>
+> /stoxxnet/Documents/Resources/Data_Vendor_Codes/vendor_codes_sheet.csv STOXX INDEX METHODOLOGY
+> GUIDE 587/639 18. STOXX FACTOR INDICES The **Momentum Factor** is a composite of the following 3
+> Signals: Earnings Announcement Drift, Earnings Momentum, and Price Momentum.  Earnings
+> Announcement Drift is given
+>
+> — [Stoxx Index Guide (PDF), p. 587](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
 
 ---
 
 ### Multi-Factor
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="317 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 317</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="239 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 239</span>
 
 
 > An index or strategy that systematically combines two or more factor signals
@@ -1425,47 +1384,43 @@ In plain terms, instead of betting on one factor, you bet on several at once —
 
 > [!example]- Source excerpts (5)
 >
-> The STOXX® Europe 600 Industry Neutral Ax **Multi-Factor** index provides investors with a broadly
-> diversified portfolio designed to maximize exposure to several well-known style factors while
-> minimizing exposures to industries and other style factors that may add to a portfolio’s risk but
-> are not typically compensated. The expectation — and be
+> Before we dive into the analysis, let’s briefly review the methodology and offering of the STOXX
+> Industry Neutral Single and **Multi-Factor** indices. STOXX Industry Neutral Factor Indices The
+> standard STOXX® Factor Indices are built using commercially accepted and institutionally tested fa
 >
 > — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
 >
 > Last June, BlackRock revitalized its **multi-factor** product suite with the relaunch of the
-> iShares U.S. Equity Factor ETF (LRGF) and iShares International Equity Factor ETF (INTF). We sat
-> down with Lukas Smart, Head of US iShares Sustainable and Factors Product Segments, and Arun
-> Singhal, Global Head of Index Product Management at STOXX,
+> iShares U.S. Equity Factor ETF (LRGF) and iShares International Equity Factor ETF (INTF).
 >
 > — [BlackRock and STOXX collaboration: iShares multi-factor ETFs track STOXX indi...](https://stoxx.com/blackrock-and-stoxx-collaboration-ishares-multi-factor-etfs-track-stoxx-indices-to-deliver-consistent-risk-managed-exposure-for-a-portfolios-core)
 >
-> inciples, controversial weapons, thermal coal, nuclear power and tobacco producers. The index then
-> seeks to diversify across the factors of profitability, earnings yield, leverage, value and low
-> volatility (accomplished through a minimum variance objective), with constituent weights
-> determined by a **multi-factor** optimization process. ECBV is link...
+> ity, earnings yield, leverage, value and low volatility (accomplished through a minimum variance
+> objective), with constituent weights determined by a **multi-factor** optimization process. ECBV
+> is linked to the EURO STOXX ESG-X & Ex Nuclear Power Minimum Variance Unconstrained Index and
+> takes the same approach to E
 >
 > — [UniCredit launches ESG-screened Eurozone multi-factor and low vol ETFs | ETF ...](https://stoxx.com/unicredit-launches-esg-screened-eurozone-multi-factor-and-low-vol-etfs)
 >
 > Last August, Credit Suisse Asset Management (Switzerland) Ltd. launched the first index fund
 > tracking the EURO STOXX® Multi Premia Index, a **multi-factor** strategy based on cutting-edge
 > research. The index integrates the academic research-based Multi Premia® methodology developed by
-> Finreon, a spin-off from University of St. Gallen in Switzerland....
+> Finreon, a spin-off
 >
 > — [Q&amp;A: Credit Suisse’s Froehlich on Multi-Premia Investing | Blog posts | S...](https://stoxx.com/qa-credit-suisses-froehlich-on-multi-premia-investing)
 >
-> STOXX INDEX METHODOLOGY GUIDE 573/639 18. STOXX FACTOR INDICES STOXX Asia/Pacific 600 Ax Momentum
-> STOXX Asia/Pacific 600 Ax Quality STOXX Asia/Pacific 600 Ax Low Risk STOXX Asia/Pacific 600 Ax
-> Size STOXX Asia/Pacific 600 Ax **Multi-Factor** STOXX Japan 600 Ax Value STOXX Japan 600 Ax
-> Momentum STOXX Japan 600 Ax Quality STOXX Japan 600 STOXX Japan 60...
+> CHANGES TO THE GUIDE BOOK Low-Carbon, iSTOXX APG World **Multi-Factor** Responsible SDI and iSTOXX
+> APG World **Multi-Factor** Responsible Low-Carbon SDI Indices » May 2024: Addition of EURO iSTOXX
+> 50 ESG NR Decrement 4% Index » May 2024(2): Methodology update of EURO iSTOXX
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 43](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
 
 ---
 
 ### Multifactor Signal
 
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
 
 
 > The composite score produced by combining individual factor z-scores into a
@@ -1486,38 +1441,36 @@ where $K$ is the number of factors and $z_{i,k}$ is the winsorized z-score for f
 
 > [!example]- Source excerpts (5)
 >
-> Head of Factor and Quantitative Strategies, and Gimani Vidanagamage, Product Research and
-> Development, Factor and Quantitative Strategies, unpicks the design of the indices by looking
-> closely at the STOXX® U.S. Equity Factor index. Factor definitions The authors first explore the
-> composition of the **Multifactor signal** (Figure 1), which, as report...
+> Equity Factor index. Factor definitions The authors first explore the composition of the
+> **Multifactor signal** (Figure 1), which, as reported in previous studies, is grounded in the
+> latest academic research.
 >
 > — [A behind-the-scenes look at the STOXX Equity Factor indices | Blog posts | STOXX](https://stoxx.com/a-behind-the-scenes-look-at-the-stoxx-equity-factor-indices)
 >
+> Equity Factor Index | STOXX World AC Index | From the respective starting universes, constituents
+> are selected and weighted to maximize exposure to a **multifactor signal** created from the
+> following five factors: Momentum The momentum score is calculated from price momentum, earnings
+> momentum and earnings announcement d
+>
+> — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices)
+>
 > This paper explores the design of the STOXX U.S. Equity Factor index and the **Multifactor
 > signal** that lies at the core of the STOXX Equity Factor suite designed in collaboration with
-> BlackRock. The STOXX Equity Factor indices were devised as core solutions that deliver
-> above-average exposure to five factors — Quality, Value, Momentum, Small Size ...
+> BlackRock. The STOXX Equity Factor indices were devised as core
 >
 > — [A behind-the-scenes look at the design of the STOXX U.S. Equity Factor index ...](https://stoxx.com/a-behind-the-scenes-look-at-the-design-of-the-stoxx-us-equity-factor-index)
 >
-> hey employ the institutionally tested analytics of Axioma Factor Risk Models. The STOXX Equity
-> Factor indices are constructed by maximizing the index exposure to a multifactor alpha signal
-> while adhering to a set of constraints intended to closely track their broad equity market parent
-> indices. The **multifactor signal** is composed of the Momentum,...
+> exposure to a multifactor alpha signal while adhering to a set of constraints intended to closely
+> track their broad equity market parent indices. The **multifactor signal** is composed of the
+> Momentum, Quality, Value, Low volatility and Low size factors. The STOXX® Global Equity Factor
+> index has outperformed the benchmar
 >
-> — [Monthly Index News October 2025 (PDF)](https://stoxx.com/monthly-index-news-october-2025)
+> — [Monthly Index News November 2025 (PDF), p. 21](https://stoxx.com/monthly-index-news-november-2025)
 >
-> capture the different aspects and development stages of the targeted theme. This paper uses the AI
-> theme to discuss thematic investing, and explore the identification of key subthemes and
-> construction of thematic indices. This paper explores the design of the STOXX U.S. Equity Factor
-> index and the **Multifactor signal** that lies at the core of the ...
->
-> — [Whitepapers | STOXX](https://stoxx.com/post-type/whitepapers)
->
-> nghal; and SimCorp’s Melissa Brown, analyze the performance of five single-factor portfolios and a
-> multifactor one between March 2002 and June 2023. The authors consider two parent universes: the
-> STOXX® USA 900 and STOXX® Global 1800 ex USA indices. They select an alpha signal (a single
-> factor, the **multifactor signal**[1], or the individual compon...
+> he authors consider two parent universes: the STOXX® USA 900 and STOXX® Global 1800 ex USA
+> indices. They select an alpha signal (a single factor, the **multifactor signal**[1], or the
+> individual components used to create the factors) and then construct a portfolio that maximizes
+> its exposure to that alpha signal, subject
 >
 > — [Multifactor strategies: Proving their worth in the factor investment landscap...](https://stoxx.com/multifactor-strategies-proving-their-worth-in-the-factor-investment-landscape)
 >
@@ -1528,7 +1481,7 @@ where $K$ is the number of factors and $z_{i,k}$ is the winsorized z-score for f
 
 ### Net Operating Assets (Changes in)
 
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="760 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 760</span>
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="755 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 755</span>
 
 
 > A quality signal measuring the year-over-year change in net operating assets
@@ -1548,40 +1501,36 @@ $$
 
 > [!example]- Source excerpts (5)
 >
-> concept of a high-performance workplace has been endorsed by the U.S. Department of Labor and
-> refers to a workplace that is designed to provide workers with the information, skills,
-> incentives, and responsibility to make decisions essential for innovation, quality improvement and
-> rapid response to changes in the marketplace. These standards embr...
+> In such cases, the composition remains unchanged, but new weighting factors will be implemented.
+> Market participants will be notified of such changes in a timely manner. 4.4.2. TURNOVER RATIO The
+> annualized turnover ratio is defined as the median value of the daily traded volume to the free-
+> float sha
 >
-> — [Public Fund Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/Public-Fund-US-Voting-Guidelines.pdf)
+> — [Stoxx World Equity Index Guide (PDF), p. 17](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
 >
-> et capitalization of entire markets, the liquidity requirements can be lowered or the period index
-> review can be postponed to the next quarterly review date. In such cases, the composition remains
-> unchanged, but new weighting factors will be implemented. Market participants will be notified of
-> such changes in a timely manner. 4.4.2. TURNOVER RAT...
+> This responds to investors and traders buying or selling protection (puts) against increasing
+> future moves, prompting changes in implied volatility. Although the main index VSTOXX 30 days is
+> the most popular – and is usually referred to as “the VSTOXX” – eleven other main indic
 >
-> — [Stoxx World Equity Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_world_equity_index_guide.pdf)
+> — [Monthly Index News August 2024 (PDF), p. 4](https://stoxx.com/monthly-index-news-august-2024)
 >
-> The current eligible universe of contributing exchanges is available on the STOXX website. More
-> information regarding procedures to select, add, or remove exchanges can be found in the following
-> sections. 3.4.2. BASE EXCHANGE SCORE The Bitcoin Suisse Base Exchange Score (BES) is used to rank
-> the exchanges in the Bitcoin Suisse Exchange Universe....
+> Factor Correlations (60 days) and Changes in Correlations (vs previous 60 days) 1. Correlations
+> are unweighted and based on daily returns and changes in yield/spread over the past 60 business
+> days. The lower left triangle of the matrix represents current correlations.
 >
-> — [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
+> — [Axioma Multi Asset Class Risk Monitor (PDF), p. 1](https://stoxx.com/axioma-multi-asset-class-risk-monitor)
 >
-> The IMA Principles55 advise that where remuneration committees seek to increase base pay, salary
-> increases should not be approved purely on the basis of benchmarking against peer companies.
-> Pension contribution payments for executives should be clearly disclosed. Any compensation to
-> executives for changes in the tax treatment of pensions is not ...
+> Note that Brazilian companies frequently seek shareholder approval to ratify even non-material
+> changes in share capital. ISSGOVERNANCE.COM 4 of 19 BRAZIL PROXY VOTING GUIDELINES Change in
+> Company Fiscal Term General Recommendation: Vote for reso
 >
-> — [2015Ukandirelandproxyvotingguidelines (PDF)](https://www.issgovernance.com/file/policy/2015ukandirelandproxyvotingguidelines.pdf)
+> — [Brazil Voting Guidelines (PDF), p. 4](https://www.issgovernance.com/file/policy/2021/americas/Brazil-Voting-Guidelines.pdf)
 >
-> sk. The relevance of climate transition risk means that “we are not going to come anywhere near
-> meeting our climate goals just by decarbonizing our supply chains and buying offsets,” said David.
-> “There is a much more fundamental transition. Policy and regulation will develop, there will be
-> complete changes in the markets that we operate in, ther...
+> No EWMA smoothing is applied.  Change in NOA is given by the negative of the monthly change in
+> **net operating assets** divided by the 36-month rolling average of total assets, with **net
+> operating assets** calculated as the monthly delta in operating assets (total assets
 >
-> — [STOXX WTW Climate Transition Indices: Replacing decarbonized portfolios with ...](https://stoxx.com/stoxx-wtw-climate-transition-indices-replacing-decarbonized-portfolios-with-portfolios-for-a-decarbonized-world)
+> — [Stoxx Index Guide (PDF), p. 587](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
 
 ---
@@ -1590,7 +1539,7 @@ $$
 
 ### Price Momentum
 
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
 
 
 > The trailing total return of a security over a defined look-back window,
@@ -1611,40 +1560,39 @@ $$
 
 > [!example]- Source excerpts (5)
 >
-> STOXX INDEX METHODOLOGY GUIDE 587/639 18. STOXX FACTOR INDICES The Momentum Factor is a composite
-> of the following 3 Signals: Earnings Announcement Drift, Earnings Momentum, and **Price
-> Momentum**.  Earnings Announcement Drift is given by the sum of idiosyncratic returns from the
-> Axioma Risk Model on the most recent earnings announcement date and t...
+> This ensures that the index is highly liquid. Companies must also rank among the top 80% in the
+> HDAX universe, measured in terms of **price momentum**, excluding companies with a past price
+> history of less than 12 months. Companies with a past price history stretching back less than 12
+> months (e.g.,
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Dax Equity Index Methodology Guide 5526498614 (PDF), p. 73](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
 >
-> nk among the top 80% in the HDAX in terms of their free-float market capitalization, and among the
-> top 80% for liquidity, measured in terms of their three-month ADTVs. This ensures that the index
-> is highly liquid. Companies must also rank among the top 80% in the HDAX universe, measured in
-> terms of **price momentum**, excluding companies with a past...
+> O R A N D R iSTOXX® METHODOLOGY GUIDE 919/1024 127.iSTOXX APG WORLD MULTI- FACTOR AND RESPONSIBLE
+> INDICES • **Price Momentum** is given by the sum of monthly local currency returns over the 12
+> complete months prior to the review cut-off date, excluding the latest month.
 >
-> — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
+> — [Istoxx Index Guide (PDF), p. 919](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> iSTOXX® METHODOLOGY GUIDE 374/1024 24. iSTOXX DYNAMIC STYLE INDICES • Earnings Revision o 3-month
-> lookback FY1 earnings revision factor o 3-month lookback FY2 earnings revision factor o 3-month
-> **price momentum** Composition list: The selection of stocks and the calculation of the weights of
-> the iSTOXX USA Income Index are determined from an optimis...
+> Their constituency is no longer simply determined by each stock’s domicile — but instead by a wide
+> menu of variables ranging from revenue source to **price momentum** to the number of female board
+> members. Big data has empowered the possibilities of index design, and stock selection relies on
+> novel methodologies.
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [The Index World and Twenty Years of Europe’s ETFs | STOXX](https://stoxx.com/the-index-world-and-twenty-years-of-europes-etfs)
 >
-> ly large and statistically significant alpha after controlling for stock momentum,” they added.
-> AQR is an investment management firm based in Greenwich, Connecticut, with almost $200 billion
-> under management; it is known for its applied research in investment strategies. Large and
-> significant alpha **Price momentum** is the well-researched observati...
+> h, Connecticut, with almost $200 billion under management; it is known for its applied research in
+> investment strategies. Large and significant alpha **Price momentum** is the well-researched
+> observation that assets that have outperformed in the recent past will continue to do so in the
+> immediate future, and vice ver
 >
 > — [Factor Performance Can Be Timed and Exploited, Study Finds Factor Performance...](https://stoxx.com/factor-performance-can-be-timed-and-exploited-study-finds-factor-performance-can-be-timed-and-exploited-study-finds)
 >
-> ing grown assets by an annual 20% in the previous five years.3 Indices have become more granular
-> in their target and more innovative in their approach. Their constituency is no longer simply
-> determined by each stock’s domicile — but instead by a wide menu of variables ranging from revenue
-> source to **price momentum** to the number of female board me...
+> ted and weighted to maximize exposure to a multifactor signal created from the following five
+> factors: Momentum The momentum score is calculated from **price momentum**, earnings momentum and
+> earnings announcement drift (i.e., the difference between a stock’s performance on and immediately
+> following an earnings annou
 >
-> — [The Index World and Twenty Years of Europe’s ETFs | STOXX](https://stoxx.com/the-index-world-and-twenty-years-of-europes-etfs)
+> — [STOXX Equity Factor Indices | STOXX](https://stoxx.com/solutions/stoxx-equity-factor-indices)
 >
 
 ---
@@ -1653,7 +1601,7 @@ $$
 
 ### Quality Factor
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="62 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 62</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > A composite factor that identifies companies with strong profitability, low
@@ -1675,40 +1623,38 @@ where sub-signals $m$ include ROE, accruals, $\Delta$NOA, and dilution.
 
 > [!example]- Source excerpts (5)
 >
-> 1 Focus on a quality track record Most recently, quality strategies gained traction following the
-> subprime crisis that brought banks‘ poor financials to light and made stocks with solid accounts
-> all the more attractive. Since then, quality strategies have proved quite successful. The iSTOXX®
-> Europe **Quality Factor** Index, part of the iSTOXX® Europ...
+> ccruals, gross profitability and low investments to bottom-line profitability measures such as
+> return-on-equity and margins. Behind the iSTOXX Europe **Quality Factor** Index The iSTOXX Europe
+> **Quality Factor** Index assesses a company’s financial health through a combined approach based
+> on profitability, leverage, and
 >
 > — [The Quality Factor | Blog posts | STOXX](https://stoxx.com/the-quality-factor)
 >
-> “Non-Ambitious Target”, then SBTI = 0; Otherwise, SBTI = -1. Signals are z-scored (apart from
-> SBTI) using the Parent Index weights and outliers are truncated at +/- 3 standard deviations. For
-> Carbon Emission Intensity in particular, values are z-scored relative to each stock’s ICB
-> Supersector. The **Quality Factor** combines the Signals at 20%, 20%,...
+> **Quality Factor**s: On a semi-annual basis in June and December, for all remaining stocks in each
+> respective universe, the following **quality factor**s are calculated and two sets of percentile
+> ranks are assigned to the following factors below, where rank 0 is the worst and rank 1 the best.
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 269](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> X NEWS / February 2021 Europe Factor Market Neutral Indices Key Points Four of the seven iSTOXX®
-> Europe Factor Market Neutral Indices had a positive return during February. The indices hold a
-> short position in STOXX Europe 600 futures to help investors neutralize systematic risk. The
-> iSTOXX® Europe **Quality Factor** Market Neutral Index had the hig...
+> Momentum Factor combines the Signals at 25%, 50% and 25% weights, respectively, and is again
+> z-scored and truncated at +/-3 standard deviations. The **Quality Factor** is a composite of the
+> following 6 Signals: Accruals, Dilution, Gross Profitability, Change in Net Operating Assets
+> (NOA), Carbon Emissions Intensity,
 >
-> — [Monthly Index News February 2021 (PDF)](https://stoxx.com/monthly-index-news-february-2021)
+> — [Stoxx Index Guide (PDF), p. 587](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> iSTOXX® METHODOLOGY GUIDE 370/1024 24. iSTOXX DYNAMIC STYLE INDICES The discrete scores for the
-> raw quality components are then aggregated41 to calculate the **Quality Factor** Score (e.g.
-> Profitability Score, Earnings Quality Score etc.) and the **Quality Factor** Scores are then
-> averaged to arrive at a final Value Quality Score. • Profitability o Free...
+> ESG portfolio construction comes from our recent work with Northern Trust’s FlexShares unit to
+> produce indices that combine their own ESG scoring and **quality factor** methodology, with ISS
+> climate data and Qontigo’s index construction and optimization capabilities.
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Flexible approach in use of ESG data is key driver in advancing sustainabilit...](https://stoxx.com/flexible-approach-to-use-of-esg-data-is-key-driver-in-advancing-sustainability-indices)
 >
-> (value factor) systematically beat the market and can better explain stock returns. Later on,
-> additional sources of excess returns were uncovered. Nowadays, the generally accepted ones besides
-> the classical market factor include the size, value, momentum, residual momentum, reversal, low
-> risk, and **quality factor**s. Multi- and single-factor perfor...
+> The indices hold a short position in STOXX Europe 600 futures to help investors neutralize
+> systematic risk. The iSTOXX® Europe **Quality Factor** Market Neutral Index had the highest
+> return, at 1.2%. The iSTOXX Europe Factor Market Neutral Indices are designed to offer exposure to
+> pure factor i
 >
-> — [The Power of Factor Diversification | Blog posts | STOXX](https://stoxx.com/the-power-of-factor-diversification)
+> — [Monthly Index News February 2021 (PDF), p. 23](https://stoxx.com/monthly-index-news-february-2021)
 >
 
 ---
@@ -1732,38 +1678,38 @@ In plain terms, a risk budget is like a spending cap but for risk. Instead of sa
 
 > [!example]- Source excerpts (5)
 >
-> k – Managing Director at APG Asset Management Using the iSTOXX World-A Index, a World Developed
-> Markets Index, as the starting universe, the indices incrementally ‘layer in’ specific ESG filters
-> (Exclusions, ESG Leaders, Carbon and SDI) allowing APG to measure and report on the impact on
-> return and **risk budget** (measured by tracking error) for ea...
->
-> — [APG and Qontigo Launch STOXX Family of Groundbreaking Responsible Indices: Bl...](https://stoxx.com/apg-and-qontigo-launch-stoxx-family-of-groundbreaking-responsible-indices)
->
-> he construction of sustainability portfolios, Qontigo analysts Melissa Brown and Rob Stubbs look
-> into the risk implications of a basic negative screening strategy. Importantly, they show that the
-> use of an optimizer and a risk model in the process can help reduce active risk, freeing up more
-> of the **risk budget** to increase the allocation to susta...
+> Importantly, they show that the use of an optimizer and a risk model in the process can help
+> reduce active risk, freeing up more of the **risk budget** to increase the allocation to
+> sustainable holdings or to those expected to generate better returns. Brown and Stubbs analyze the
+> risk profile of a po
 >
 > — [Green efficient frontiers: Minimizing the risk impact of exclusions in sustai...](https://stoxx.com/green-efficient-frontiers-minimizing-the-risk-impact-of-exclusions-in-sustainable-portfolios)
 >
-> criteria and proprietary data; minimization of tracking error relative to the broad developed
-> market by managing unintended bets including sector, country, and factor exposures that might
-> emerge as an outcome of the sustainability targets; and the ability to measure and report on the
-> impact of the **risk budget** on each of the ESG criteria or const...
+> ncrementally ‘layer in’ specific ESG filters (Exclusions, ESG Leaders, Carbon and SDI) allowing
+> APG to measure and report on the impact on return and **risk budget** (measured by tracking error)
+> for each of the individual criteria. The five customized indices launched are: - iSTOXX APG
+> World-X Index - iSTOXX APG W
+>
+> — [APG and Qontigo Launch STOXX Family of Groundbreaking Responsible Indices: Bl...](https://stoxx.com/apg-and-qontigo-launch-stoxx-family-of-groundbreaking-responsible-indices)
+>
+> untry, and factor exposures that might emerge as an outcome of the sustainability targets; and the
+> ability to measure and report on the impact of the **risk budget** on each of the ESG criteria or
+> constraints. To meet all of these objectives, APG required a flexible and nimble partner with
+> expertise in sustainable
 >
 > — [&quot;Layered&quot; Approach to ESG Results in Innovative Responsible Indices...](https://stoxx.com/layered-approach-to-esg-results-in-innovative-responsible-indices-for-apg)
 >
-> sure for its own sake. Our typical tracking error target of 1–2% helps ensure that the portfolio
-> stays suitable for core allocations, while still aiming to deliver a persistent factor premium. In
-> other words, it’s not about giving each factor the same weight — but rather giving them the
-> appropriate **risk budget** within a diversified, long-term inv...
+> ng to deliver a persistent factor premium. In other words, it’s not about giving each factor the
+> same weight — but rather giving them the appropriate **risk budget** within a diversified,
+> long-term investment solution.” Can you briefly describe, in that context, how you build the
+> multifactor portfolio? “We start b
 >
 > — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
 >
-> t of various layers of ESG investing on a global equities portfolio. The new suite consists of
-> five indices (Figure 1), each one incrementally implementing a different ESG, carbon and
-> Sustainable Development Investments (SDI) strategy and quantifying the resulting effect on a
-> portfolio’s return and **risk budget**. The indices use Qontigo’s line of ...
+> nting a different ESG, carbon and Sustainable Development Investments (SDI) strategy and
+> quantifying the resulting effect on a portfolio’s return and **risk budget**. The indices use
+> Qontigo’s line of Axioma portfolio construction tools, STOXX index design capabilities and, for
+> the first time ever, data derived fr
 >
 > — [Qontigo’s Seegopaul and Gu: ‘iSTOXX APG Responsible Investment Indices Design...](https://stoxx.com/qontigos-seegopaul-and-gu-istoxx-apg-responsible-investment-indices)
 >
@@ -1788,24 +1734,22 @@ In plain terms, risk parity says: "Bonds are much less risky than stocks, so if 
 
 > [!example]- Source excerpts (3)
 >
-> emia, stocks are selected using academically founded and widely recognized criteria. An aggregated
-> score is calculated for each factor, and is used as the basis to select the top third of stocks to
-> be included in each individual risk-premium portfolio. The weighting of the stocks is determined
-> by a risk-parity approach, whereby each constituent ...
+> the basis to select the top third of stocks to be included in each individual risk-premium
+> portfolio. The weighting of the stocks is determined by a risk-parity approach, whereby each
+> constituent contributes equally to the overall risk of the portfolio.
 >
 > — [Equity Risk Premia with Academic Foundation | Blog posts | STOXX](https://stoxx.com/equity-risk-premia-with-academic-foundation)
 >
-> d by Finreon. Based on relevant and scientifically proven ratios, the best stocks from the
-> investment universe are selected for each factor premium — value, size, momentum, residual
-> momentum, reversal, low risk and quality. Within these individual factor portfolios of the EURO
-> STOXX Multi Premia, a risk-parity approach is used to weight the indi...
+> Within these individual factor portfolios of the EURO STOXX Multi Premia, a risk-parity approach
+> is used to weight the individual securities. This promotes a high level of diversification and
+> good risk-return efficiency.
 >
 > — [Q&amp;A: Credit Suisse’s Froehlich on Multi-Premia Investing | Blog posts | S...](https://stoxx.com/qa-credit-suisses-froehlich-on-multi-premia-investing)
 >
-> vide a tool for investors seeking to capture a premium to the market’s move. Gianluca Oderda at
-> Ersel Asset Management has argued that an optimal portfolio can be constructed by long positions
-> in four non-market-cap-weighted schemes: a global minimum-variance portfolio, an equal-weight
-> portfolio, a **risk parity** portfolio and a dividend-weighted p...
+> folio can be constructed by long positions in four non-market-cap-weighted schemes: a global
+> minimum-variance portfolio, an equal-weight portfolio, a **risk parity** portfolio and a
+> dividend-weighted portfolio; hedged via short positions in four respective market indices.4, 5
+> DAX, the iconic blue-chip index for Ge
 >
 > — [What’s Behind the Edge in Equal-Weight Strategies? | Blog posts | STOXX](https://stoxx.com/whats-behind-the-edge-in-equal-weight-strategies)
 >
@@ -1814,7 +1758,7 @@ In plain terms, risk parity says: "Bonds are much less risky than stocks, so if 
 
 ### Risk Premia
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="124 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 124</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="120 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 120</span>
 
 
 > The excess return earned by bearing systematic, non-diversifiable risk
@@ -1829,40 +1773,36 @@ In plain terms, a risk premium is the reward investors receive for taking on a p
 
 > [!example]- Source excerpts (5)
 >
-> Factor investing has gained enormous traction in recent years as a transparent and low-cost way to
-> exploit widely-acknowledged sources of market-excess returns, so-called **risk premia**. To
-> complement our continuous effort in that space we have launched the EURO STOXX® Multi Premia® and
-> Single Premium Indices, which integrate the academic research-...
+> ad and liquid universe of Eurozone equities that is the EURO STOXX® Index. Proven track record
+> Testament to their well-researched drivers, all single **risk premia** have demonstrated their
+> prowess in producing market-beating returns. Chart 1 shows the performance of the seven single
+> premium indices since their da
 >
 > — [Equity Risk Premia with Academic Foundation | Blog posts | STOXX](https://stoxx.com/equity-risk-premia-with-academic-foundation)
 >
-> eptember and December, coinciding with the expiration of futures. Facilitating the access to
-> **risk premia** Factor-based investing has become one of the most popular indexing segments in
-> recent years. The new futures bring an innovative alternative to access the strategies, combining
-> proven sources of **risk premia**, a transparent and state-of-the-art...
+> TOXX UNIVEST WORLD FACTOR INDEX OVERVIEW The iSTOXX Univest World Factor Index provides exposure
+> to the Univest Value, Momentum, Quality and Low Risk risk-premia factors, closely tracks the STOXX
+> Developed World parent index with an ex-ante tracking error of 1% while ensuring tradability and
+> diversification. P
 >
-> — [Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...](https://stoxx.com/eurex-to-list-futures-on-stoxx-industry-neutral-ax-factor-indices)
+> — [Istoxx Index Guide (PDF), p. 710](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> AX Covered Call ATM index, designed to reflect a hypothetical portfolio invested in the DAX and
-> that simultaneously sells a DAX ATM call traded at Eurex.1 Covered call strategies provide extra
-> income to holders of the underlying asset from the proceeds of writing the option, offering an
-> alternative **risk premia** from the monetization of volatility...
->
-> — [Monthly Index News November 2025 (PDF)](https://stoxx.com/monthly-index-news-november-2025)
->
-> STOXX INDEX METHODOLOGY GUIDE 572/639 1188.. STSOTOXXX XF AFACCTOTOR RIN INDDICICESE S STOXX
-> FACTOR INDICES 18.1.1. OVERVIEW STOXX single and multi-factor indices aim to harvest the **risk
-> premia** of several academically validated style factors – Value, Momentum, Quality, Size and Low
-> Risk. At the same time the index rules ensure tradability and di...
->
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
->
-> -compliant indices track the standard factor indices closely in terms of target factor exposure
-> and performance. This is, firstly, because excluded stocks contribute only a small amount to the
-> target factor exposures. Second, applying the methodology on a slightly narrower benchmark does
-> not impede **risk premia** harvesting. Investors who prefer to...
+> Second, applying the methodology on a slightly narrower benchmark does not impede **risk premia**
+> harvesting. Investors who prefer to incorporate ESG principles into their factor-based portfolios,
+> can do so without sacrificing returns, whether act
 >
 > — [Combining ESG Screens and Factor Tilts: A Study on Portfolio Returns | Blog p...](https://stoxx.com/combining-esg-screens-and-factor-tilts-a-study-on-portfolio-returns)
+>
+> This is evidence that these are potentially more efficient vehicles for accessing factor **risk
+> premia** than most current product offerings, the author wrote. Growing assets Smart beta and
+> factor **risk premia** products have attracted strong flows in recen
+>
+> — [Study Shines Light on Smart Beta’s Effectiveness and Capacity | Blog posts | ...](https://stoxx.com/study-shines-light-on-smart-betas-effectiveness-and-capacity)
+>
+> The first of these indices is designed to exploit sources of market-excess returns, so-called
+> **risk premia**, while filtering out companies deemed in contravention of ESG principles.
+>
+> — [Q&amp;A: UniCredit’s Kilian on ESG+Factor Strategies | Blog posts | STOXX](https://stoxx.com/qa-unicredits-kilian-on-esgfactor-strategies)
 >
 
 ---
@@ -1885,7 +1825,7 @@ In plain terms, this is the hard ceiling on how big any single stock can get in 
 
 ### Size Factor
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
 
 
 > A factor that captures the historical tendency of smaller-capitalization stocks
@@ -1906,40 +1846,39 @@ Negative log ensures that smaller companies receive higher scores.
 
 > [!example]- Source excerpts (5)
 >
-> on in futures on the STOXX Europe 600, returned 1.4%. As markets recovered in April and May, the
-> **size factor**’s outperformance has grown. The iSTOXX Europe **Size Factor** Index rose 8%
-> between Apr. 1 and May 15, while the STOXX Europe 600 Index added 7.3%. The theory behind the size
-> premium What is the size factor, anyway? The relationship between a...
+> +7.1%). So far, this pattern has not continued in 2018. While February and March saw the STOXX®
+> Europe 600 Index drop 5.7%, the iSTOXX Europe **Size Factor** Index lost ground by only 4.2%. The
+> iSTOXX® Europe **Size Factor** Market Neutral Index, which neutralizes systematic risk by holding
+> a short position in
 >
 > — [A Closer Look at the Size Factor | Blog posts | STOXX](https://stoxx.com/a-closer-look-at-the-size-factor)
 >
-> SDAX dividends are reinvested in the whole index portfolio rather than in the distributing stock
-> as it happened earlier. The index is reviewed twice a year but goes through a quarterly so-called
-> Fast Exit/Fast Entry review to account for significant changes in companies’ market
-> capitalization. The **size factor** To many investors, small-caps are th...
+> a year but goes through a quarterly so-called Fast Exit/Fast Entry review to account for
+> significant changes in companies’ market capitalization. The **size factor** To many investors,
+> small-caps are the holy grail of stock-picking. Often young companies in the early stages of
+> expansion, with low analyst coverage
 >
 > — [Exploring SDAX, the benchmark for German small companies | Blog posts | STOXX](https://stoxx.com/exploring-sdax-the-benchmark-for-german-small-companies)
 >
-> iSTOXX® METHODOLOGY GUIDE 266/1024 10. iSTOXX MUTB INDICES 𝛽𝑎𝑑̂𝑗𝑀𝑜𝑚 𝑖=1 𝑠̂𝑖𝑧𝑒 𝑖=1 𝐵̂𝑃𝑅 𝑖=1 𝜀 𝑖=1 (
-> ⋮ )= 𝛽 ( ⋮ )+𝛽 ( ⋮ )+𝛼∗+( ⋮ ) 𝑠𝑖𝑧𝑒 𝐵𝑃𝑅 𝛽𝑎𝑑̂𝑗𝑀𝑜𝑚 𝑖=𝑁 𝑠̂𝑖𝑧𝑒 𝑖=𝑁 𝐵̂𝑃𝑅 𝑖=𝑁 𝜀 𝑖=𝑁 where 𝛽 ̂𝑀𝑜𝑚 :
-> standardized 12-month momentum adjusted with market beta factor of stock i 𝑎𝑑𝑗 𝑖 𝑠̂𝑖𝑧𝑒 :
-> standardized **size factor** of stock i 𝑖 𝐵̂𝑃𝑅 : standardized BPR of st...
+> ] MONTHLY INDEX NEWS / October ESG-X Factor Indices – Regional: Asia/Pacific Key Points Within the
+> responsible-screened universe in Asia/Pacific, the **size factor** led losses during October, with
+> the STOXX® Asia/Pacific 600 ESG-X Ax Size Index shedding 2.3%.
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Monthly Index News October 2020 (PDF), p. 22](https://stoxx.com/monthly-index-news-october-2020)
 >
-> January 2019 EURO STOXX® Multi Premia® and Single Premium Indices Key points Five of the eight
-> EURO STOXX® Multi Premia® and Single Premium Indices outperformed the market during January.
-> Again, it was the **size factor** – which seeks to exploit the ‘small-cap’ premium – that
-> performed best during the month among the index family. The indices integ...
+> TOXX Equity Factor indices upweight Quality. Value and Momentum are natural pairs, and so they
+> have the same weight relative to each other. The Small **Size factor**, for its part, is a high
+> beta, pro-cyclical factor, relative to the Low Volatility factor, which is low beta and a much
+> more defensive factor.
 >
-> — [Monthly Index News January 2019 (PDF)](https://stoxx.com/monthly-index-news-january-2019)
+> — [BlackRock’s Jamie Forbes: Implementing ‘evolutionary’ factor advancements in ...](https://stoxx.com/blackrocks-jamie-forbes-implementing-evolutionary-factor-advancements-in-investments)
 >
-> methodology used for dividends reinvested net of withholding taxes; determining the benchmark can
-> no - they are calculated on individual countries and longer be ensured, such as when the regional
-> combinations of countries; administrator deems the liquidity in the - they are calculated
-> according to **size factor**s, underlying market as insufficient;...
+> qual-weighted variant since 2002. Chart 2 Source: STOXX, total returns after taxes in USD, Mar.
+> 18, 2002 – Oct. 31, 2018. From risk management to the **size factor** Various studies have put
+> forward several explanations as to why an equal-weight strategy may outperform a
+> market-cap-weighted one. One of the first a
 >
-> — [Dax Equity Index Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_Equity_Index_Family_Benchmark_Statement.pdf)
+> — [What’s Behind the Edge in Equal-Weight Strategies? | Blog posts | STOXX](https://stoxx.com/whats-behind-the-edge-in-equal-weight-strategies)
 >
 
 ---
@@ -1963,40 +1902,35 @@ In plain terms, smart beta sits between passive index investing and active manag
 
 > [!example]- Source excerpts (5)
 >
+> It reflects our dedication to our clients and the innovative contribution we make to their
+> businesses. Our smart-beta expertise in factor and thematic strategies allows us to address rising
+> sophistication among Asian investors looking to diversify beyond traditional
+>
+> — [STOXX Awarded “Best Smart Beta Index Provider, Asia-Pacific” By SRP | Press r...](https://stoxx.com/stoxx-awarded-best-smart-beta-index-provider-asia-pacific-by-srp)
+>
 > In “An Aussie sense of style”, Axioma’s latest paper on **smart beta** products, we take a look at
 > the inherent compromise between delivering target factor purity versus maximizing factor exposure.
-> The decision has to be made at the portfolio construction stage and constraints are the weapon of
-> choice in this battle for investment compliance. Armed ...
 >
 > — [Smart Beta versus Dumb Alpha | Blog posts | STOXX](https://stoxx.com/smart-beta-versus-dumb-alpha)
 >
 > A new Qontigo report1 takes a comprehensive look at the market for ‘**smart beta**’ funds tracking
 > factor strategies, to assess their prowess in boosting returns and their capacity as money inflows
-> grow. The study by Frank Siu, Executive Director of Quantitative and Multi-Asset Solutions at
-> Qontigo, looked at exchange-traded funds (ETFs) tracking eq...
+> grow. The study by Frank Siu, Exec
 >
 > — [Study Shines Light on Smart Beta’s Effectiveness and Capacity | Blog posts | ...](https://stoxx.com/study-shines-light-on-smart-betas-effectiveness-and-capacity)
 >
-> Zurich/Singapore (April 30, 2018) – STOXX Ltd., the operator of Deutsche Boerse Group’s index
-> business and a global provider of innovative and tradable index concepts, has been recognized as
-> 2018’s “Best **Smart Beta** Index Provider, Asia-Pacific” by Structured Retail Products (SRP).
-> This is the first time STOXX Ltd. has received this award. The aw...
+> IANCE INDICES 2 Characteristics of a minimum variance portfolio (MVP) There is a common
+> misconception that minimum variance indices are just another “**smart beta**” product, but we
+> would argue differently. Most indices can be used as building blocks as part of a greater
+> portfolio and need to be used as such, bei
 >
-> — [STOXX Awarded “Best Smart Beta Index Provider, Asia-Pacific” By SRP | Press r...](https://stoxx.com/stoxx-awarded-best-smart-beta-index-provider-asia-pacific-by-srp)
+> — [Stoxx Minvar Paper (PDF), p. 7](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
 >
-> ection of assets, index choice and static factor exposure.2 That means that when an investor picks
-> an ETF, not only are they buying an entire market — they are also actively choosing an asset
-> class, geography, an index methodology, a style and a factor exposure and the timing of the
-> purchase. Enter **smart beta** The menu of index choices has also b...
+> Top among them are ETFs’ ease of use, market access, speed of execution, liquidity and low cost.
+> **Smart beta** gains in popularity The share of institutional investors who invest in
+> non-market-cap weighted ETFs, which seek to exploit specific sources of premia
 >
-> — [The Index World and Twenty Years of Europe’s ETFs | STOXX](https://stoxx.com/the-index-world-and-twenty-years-of-europes-etfs)
->
-> STOXX LIMITED 7 STOXX MINIMUM VARIANCE INDICES 2 Characteristics of a minimum variance portfolio
-> (MVP) There is a common misconception that minimum variance indices are just another “**smart
-> beta**” product, but we would argue differently. Most indices can be used as building blocks as
-> part of a greater portfolio and need to be used as such, being u...
->
-> — [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
+> — [European Investors Expand Use of ETFs, Survey Finds | Blog posts | STOXX](https://stoxx.com/european-investors-expand-use-of-etfs-survey-finds)
 >
 
 ---
@@ -2039,10 +1973,10 @@ $$
 
 > [!example]- Source excerpts (1)
 >
-> till get others that come along for the ride. That’s good news as well.” A limited tracking error
-> is almost a universal demand of investors, but this may change over time, DWS’ Schiele said. “As
-> investors become more comfortable with a particular topic, they will also, over time, allow for a
-> higher **tracking error budget**” in their bespoke solutio...
+> may change over time, DWS’ Schiele said. “As investors become more comfortable with a particular
+> topic, they will also, over time, allow for a higher **tracking error budget**” in their bespoke
+> solutions, he said. More targeted themes Rounding off, the panelists mentioned some of the big
+> trends they see in sustainability in
 >
 > — [Navigating Europe’s equities and sustainable investing landscape  | Blog post...](https://stoxx.com/navigating-europes-equities-and-sustainable-investing-landscape)
 >
@@ -2072,42 +2006,37 @@ where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 
 > [!example]- Source excerpts (5)
 >
-> STOXX INDEX METHODOLOGY GUIDE 298/639 16. STOXX RISK BASED INDICES For the tracking error
-> constrained version it is defined as: H ≥H ∙60%
-> (cid:2897)(cid:2919)(cid:2924)(cid:2906)(cid:2911)(cid:2928)
-> (cid:2886)(cid:2911)(cid:2929)(cid:2915) Maximum turnover The Unconstrained version has a 5%
-> one-way **turnover constraint**, or 10% two-way. This means...
+> STOXX FACTOR INDICES Maximum turnover: The indices have a 12.5% one-way **turnover constraint**,
+> or 25% two-way. This means up to 12.5% of the portfolio is sold in order to purchase other
+> constituents (absolute maximum annual turnover is 100%).
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 585](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> STOXX INDEX METHODOLOGY GUIDE 298/639 16. STOXX RISK BASED INDICES For the tracking error
-> constrained version it is defined as: H ≥H ∙60%
-> (cid:2897)(cid:2919)(cid:2924)(cid:2906)(cid:2911)(cid:2928)
-> (cid:2886)(cid:2911)(cid:2929)(cid:2915) Maximum turnover The Unconstrained version has a 5%
-> one-way **turnover constraint**, or 10% two-way. This means...
+> STOXX FACTOR INDICES Maximum turnover: The indices have a 12.5% one-way **turnover constraint**,
+> or 25% two-way. This means up to 12.5% of the portfolio is sold in order to purchase other
+> constituents (absolute maximum annual turnover is 100%).
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Stoxx Index Guide (PDF), p. 585](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> Combining factors with low correlations to each other can offer diversification benefits and a
-> potentially smoother investment profile over time. Figure 1: Components of the Multifactor signal
-> in the STOXX Equity Factor indices Risk premium The paper reviews the risk management,
-> diversification and **turnover constraint**s built into the index metho...
+> re 1: Components of the Multifactor signal in the STOXX Equity Factor indices Risk premium The
+> paper reviews the risk management, diversification and **turnover constraint**s built into the
+> index methodology, a process that upholds the harvesting of the factor premium in an investable
+> and repeatable framework. One of the
 >
 > — [A behind-the-scenes look at the STOXX Equity Factor indices | Blog posts | STOXX](https://stoxx.com/a-behind-the-scenes-look-at-the-stoxx-equity-factor-indices)
 >
-> chmark at 5% and limit the tracking error to a maximum of 5%. Other constraints are employed to
-> ensure liquidity and tradability. There is a minimum weighted average days-to-trade ratio
-> threshold for securities to avoid material build-ups in illiquid positions. The indices also have
-> a 12.5% one-way **turnover constraint** per quarter, meaning that a...
+> ment 3.75% Index » February 2019 (2): Addition of iSTOXX Developed and Emerging Markets ex USA PK
+> VN Real Estate Index » February 2019 (3): Change of **turnover constraint** and quality filter for
+> both iSTOXX A.C.I. USA Pure Growth Index and iSTOXX A.C.I.
+>
+> — [Istoxx Index Guide (PDF), p. 32](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+>
+> eighted average days-to-trade ratio threshold for securities to avoid material build-ups in
+> illiquid positions. The indices also have a 12.5% one-way **turnover constraint** per quarter,
+> meaning that a maximum of 12.5% of the current index weight can be changed to meet the overall
+> index objectives, using the latest data a
 >
 > — [Eurex to List Futures on STOXX Industry Neutral Ax Factor Indices | Blog post...](https://stoxx.com/eurex-to-list-futures-on-stoxx-industry-neutral-ax-factor-indices)
->
-> ruary 2019: Addition of EURO iSTOXX ESG Leaders 50 GR Decrement 5% Index, EURO iSTOXX ESG Leaders
-> 50 NR Decrement 5% Index and EURO iSTOXX 50 GR Decrement 3.75% Index » February 2019 (2): Addition
-> of iSTOXX Developed and Emerging Markets ex USA PK VN Real Estate Index » February 2019 (3):
-> Change of **turnover constraint** and quality filter for both...
->
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
 
 ---
@@ -2116,7 +2045,7 @@ where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 
 ### Value Factor
 
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="85 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 85</span>
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="75 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 75</span>
 
 
 > A factor that identifies undervalued securities by ranking them on fundamental
@@ -2138,40 +2067,38 @@ where B/P = book-to-price, E/P = earnings-to-price, D/P = dividend yield.
 
 > [!example]- Source excerpts (5)
 >
-> Bound, the normalized ratio is set to -4 - with fundamental ratios not available, the normalized
-> ratio is set to -4 After normalization, for each stock i, a composite **value factor** is
-> calculated as an average of the three normalized fundamental ratio as follows: (B̂PR +ÊPR +ĈFPR
-> ) i i i Composite **value factor** = i 3 After applying the screening,...
+> ized ratio is set to -4 - with fundamental ratios not available, the normalized ratio is set to -4
+> After normalization, for each stock i, a composite **value factor** is calculated as an average of
+> the three normalized fundamental ratio as follows: (B̂PR +ÊPR +ĈFPR ) i i i Composite **value
+> factor** = i 3 After apply
 >
-> — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
+> — [Istoxx Index Guide (PDF), p. 259](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> MONTHLY INDEX NEWS / July 2021 Europe Factor Market Neutral Indices Key Points The **Value
-> factor** was a strong underperformer among the iSTOXX® Europe Factor Market Neutral Indices, which
-> assume a short position in STOXX Europe 600 futures to help investors neutralize systematic risk.
-> The indices are designed to offer exposure to pure factor inves...
->
-> — [Monthly Index News July 2021 (PDF)](https://stoxx.com/monthly-index-news-july-2021)
->
-> .9% in the US currency and 0.1% in euros. Travel & Leisure hit All but two of 20 Supersectors in
-> the STOXX Global 1800 declined in the month. The STOXX® Global 1800 Travel & Leisure Index
-> (-8.7%)3 yielded the widest loss. At the other end, the STOXX® Global 1800 Technology Index gained
-> 3%. Size and **Value factor**s post heavy losses Most factor-bas...
+> At the other end, the STOXX® Global 1800 Technology Index gained 3%. Size and **Value factor**s
+> post heavy losses Most factor-based strategies provided outperformance relative to markets during
+> November, according to the STOXX Factor Indices.
 >
 > — [Stocks drop in November amid emergence of Omicron virus variant | Blog posts ...](https://stoxx.com/stocks-drop-in-november-amid-emergence-of-omicron-virus-variant)
 >
-> STOXX INDEX METHODOLOGY GUIDE 595/639 18. STOXX FACTOR INDICES each stock’s ICB Supersector. The
-> Quality Factor combines the Signals at 20%, 20%, 20%, 20%, 13%, and 7% weights, respectively, and
-> is again z-scored and truncated. The **Value Factor** is a composite of the following 5 Signals:
-> Book to Price, Cash Flow Yield, Time Series Normalized Cash...
+> This multi-signal approach avoids the overreliance on any single distorted metric that can
+> negatively impact returns.” Figure 1: Active returns – USA **Value factor** “Momentum is another
+> compelling example. Traditionally, it’s been defined using a stock’s simple, 12-month share-price
+> appreciation, excluding the mo
 >
-> — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+> — [Q&amp;A with BlackRock: fourth year of multifactor collaboration with STOXX a...](https://stoxx.com/qa-with-blackrock-fourth-year-of-multifactor-collaboration-with-stoxx-amid-evolving-factor-investing-landscape)
 >
-> OXX® Europe **Value Factor** Market Neutral Index has had poorer results in the past 12 months.
-> The iSTOXX® Europe Size Factor Market Neutral Index had the best performance during January,
-> rising nearly 1%, its best monthly showing since December 2017. The market-neutral gauges tracking
-> the quality and **value factor**s also rose during the month. Overa...
+> The Quality Factor combines the Signals at 20%, 20%, 20%, 20%, 13%, and 7% weights, respectively,
+> and is again z-scored and truncated. The **Value Factor** is a composite of the following 5
+> Signals: Book to Price, Cash Flow Yield, Time Series Normalized Cash Flow Yield, Dividend Yield
+> and Earnings Yield.
 >
-> — [Monthly Index News January 2019 (PDF)](https://stoxx.com/monthly-index-news-january-2019)
+> — [Stoxx Index Guide (PDF), p. 588](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
+>
+> The index targets cheap stocks with high growth potential based on earnings and dividends. The
+> iSTOXX® Europe **Value Factor** Market Neutral Index, meanwhile, posted a ninth consecutive
+> monthly retreat. The iSTOXX Europe Factor Market Neutral Indices are designed to offer ex
+>
+> — [Monthly Index News October 2019 (PDF), p. 7](https://stoxx.com/monthly-index-news-october-2019)
 >
 
 ---
@@ -2203,10 +2130,9 @@ where $D_i$ is dividends per share, Net Buybacks is repurchases minus issuance, 
 
 > [!example]- Source excerpts (1)
 >
-> AC. The AI index has its largest positive active exposures in the Market Sensitivity, Volatility
-> and Liquidity factors, while also being more exposed to the Medium-Term Momentum and Growth
-> factors. Negative active exposures include those to the Dividend Yield, Exchange Rate Sensitivity
-> and Earnings **Yield factor**s. Figure 8: Active style-factor ex...
+> Negative active exposures include those to the Dividend Yield, Exchange Rate Sensitivity and
+> Earnings **Yield factor**s. Figure 8: Active style-factor exposures Conclusion The STOXX Global
+> Artificial Intelligence index helps investors track a specific thematic segment
 >
 > — [The AI revolution is taking place now – a look inside the STOXX Global Artifi...](https://stoxx.com/the-ai-revolution-is-taking-place-now-a-look-inside-the-stoxx-global-artificial-intelligence-index)
 >
