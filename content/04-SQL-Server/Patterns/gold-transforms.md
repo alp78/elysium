@@ -31,7 +31,7 @@ File: `db/ddl/gold_schema.sql`
 
 Stores relative value, momentum, sentiment, and composite factor scores for each stock per day. Also includes SMA-based price metrics computed from OHLCV.
 
-**Full DDL for gold.scores_daily:**
+#### CREATE TABLE gold.scores_daily — factor scores DDL
 
 ```sql
 CREATE TABLE gold.scores_daily (
@@ -94,7 +94,7 @@ GO
 
 Stores quality z-scores, financial health flags, and governance (ISS) scores. Updated once per pipeline run using the latest quarterly data.
 
-**Full DDL for gold.scores_quarterly:**
+#### CREATE TABLE gold.scores_quarterly — quarterly factor scores DDL
 
 ```sql
 CREATE TABLE gold.scores_quarterly (
@@ -146,7 +146,7 @@ GO
 
 Stores cap-weighted index performance metrics: daily returns, rolling returns, volatility, and cross-sectional aggregates (avg PE, avg PB, etc.).
 
-**Full DDL for gold.index_performance:**
+#### CREATE TABLE gold.index_performance — cap-weighted returns DDL
 
 ```sql
 CREATE TABLE gold.index_performance (
@@ -186,7 +186,7 @@ Z-score computation and composite scoring happens in Python/pandas (not SQL). Th
 
 ### Z-Score by Group (`_gold_utils.py`)
 
-**zscore_by_group — standardizes a column within groups (e.g., within sector):**
+#### zscore_by_group — standardize a column within sector/industry groups
 
 ```python
 # _gold_utils.py — computes z-scores within groups (e.g. within sector)
@@ -220,7 +220,7 @@ def zscore_by_group(df, col, group_cols, min_peers=3, fallback_cols=None):
 
 ### Score Computation Logic
 
-**Relative Value score (cheap = positive, so valuation ratios are inverted):**
+#### Relative Value score — inverted P/E, P/B z-scores (cheap = positive)
 
 ```python
 df['pe_zscore']        = -zscore_by_group(df, 'forward_pe', ['_index', 'sector'])   # inverted
@@ -230,7 +230,7 @@ df['yield_zscore']     =  zscore_by_group(df, 'dividend_yield', ['_index', 'sect
 df['relative_value_score'] = nanmean(pe_z, pb_z, ev_z, yield_z)  # row-wise average
 ```
 
-**Financial Health Flags (rules-based, no z-scores):**
+#### Financial Health Flags — rules-based quality score (no z-scores)
 
 ```python
 df['flag_liquidity']      = current_ratio < 1        # can't cover short-term debts
@@ -241,7 +241,7 @@ df['health_flags_count']  = sum of above 4 flags (0-4)
 df['health_risk_level']   = {0: 'healthy', 1: 'watch', 2: 'warning', 3+: 'critical'}
 ```
 
-**Governance Score (inverted ISS scale — higher = better governance):**
+#### Governance Score — inverted ISS scale (higher = better)
 
 ```python
 avg_risk = nanmean(overall_risk, audit_risk, board_risk, compensation_risk, shareholder_rights_risk)
@@ -256,7 +256,7 @@ File: `ingestion/transforms/transform_scores_daily.py`
 
 ### Step 1: Find the Latest Signal Date
 
-**Anchor date for all scoring:**
+#### SELECT MAX(signal_date) — anchor date for all scoring
 
 ```sql
 -- transform_scores_daily.py (line 36)
@@ -268,7 +268,7 @@ SELECT MAX(signal_date) FROM silver.signals_daily
 
 ### Step 2: Pull Signals Joined with Stock Metadata
 
-**Pull all signals for the latest date, joined with stock dimension:**
+#### JOIN signals + index_dim — pull latest signals with stock metadata
 
 ```sql
 -- transform_scores_daily.py (lines 45-58)
@@ -303,7 +303,7 @@ JOIN silver.index_dim d
 WHERE s.signal_date = ?              -- latest date only
 ```
 
-**Sample result (3 of 150 rows):**
+#### Sample result — signals joined with stock dimension
 
 | _index | symbol | signal_date | forward_pe | price_to_book | sector | country |
 |--------|--------|-------------|-----------|--------------|--------|---------|
@@ -315,7 +315,7 @@ WHERE s.signal_date = ?              -- latest date only
 
 The most complex SQL in the transform — uses window functions and CTEs to compute moving averages and period returns in a single query.
 
-**CTE for 30/90-day SMA, daily/5-day/YTD price changes from OHLCV:**
+#### CTE with AVG() OVER — 30/90-day SMA, daily/5-day/YTD price changes
 
 ```sql
 -- transform_scores_daily.py (lines 179-221)
@@ -400,7 +400,7 @@ LEFT JOIN ytd_price yp ON r.symbol = yp.symbol
 WHERE r.rn = 1          -- most recent date only
 ```
 
-**Sample result:**
+#### Sample result — SMA and price change metrics
 
 | symbol | sma_30_close | sma_90_close | day_change_pct | five_day_change_pct | ytd_change_pct |
 |--------|-------------|-------------|----------------|--------------------|----|
@@ -410,7 +410,7 @@ WHERE r.rn = 1          -- most recent date only
 
 ### Step 4: Write to gold.scores_daily
 
-**Delete existing scores for this date, then insert fresh scores:**
+#### DELETE + INSERT by date — refresh daily factor scores
 
 ```sql
 -- transform_scores_daily.py (line 240)
@@ -441,7 +441,7 @@ File: `ingestion/transforms/transform_scores_quarterly.py`
 
 ### Step 1: Get Latest Quarterly Data Per Stock
 
-**Correlated subquery to get the most recent quarter per stock (different stocks may report on different dates):**
+#### Correlated subquery MAX(quarter) — most recent quarter per stock
 
 ```sql
 -- transform_scores_quarterly.py (lines 38-53)
@@ -480,7 +480,7 @@ WHERE q.as_of_date = (
 
 ### Step 2: Get Latest Market Cap and Beta from Daily Signals
 
-**Market cap and beta for FCF yield calculation:**
+#### JOIN market_cap + beta — FCF yield and risk-adjusted return inputs
 
 ```sql
 -- transform_scores_quarterly.py (lines 66-73)
@@ -508,7 +508,7 @@ This transform is **incremental** — it only processes new dates, and refreshes
 
 ### Step 1: Check OHLCV Table Exists
 
-**Existence check before querying a dynamic table:**
+#### OBJECT_ID IS NOT NULL — existence check before querying dynamic table
 
 ```sql
 -- transform_index_performance.py (lines 67-70)
@@ -522,7 +522,7 @@ WHERE s.name = ?       -- e.g. 'silver'
 
 ### Step 2: Find Latest Computed Date
 
-**Incremental boundary — only compute new dates:**
+#### SELECT MAX(perf_date) — incremental boundary for new dates only
 
 ```sql
 -- transform_index_performance.py (lines 77-79)
@@ -534,7 +534,7 @@ WHERE _index = ?       -- e.g. 'market_index'
 
 ### Step 3: Pull OHLCV Close Prices
 
-**All close prices for cap-weighted return computation:**
+#### SELECT close, LAG(close) — all prices for cap-weighted daily returns
 
 ```sql
 -- transform_index_performance.py (lines 84-89)
@@ -549,7 +549,7 @@ ORDER BY symbol, date
 
 ### Step 4: Pull Market Cap and Fundamentals
 
-**Cap-weighting data and cross-sectional aggregates:**
+#### SUM(market_cap * daily_return) / SUM(market_cap) — cap-weighted aggregation
 
 ```sql
 -- transform_index_performance.py (lines 105-112)
@@ -569,7 +569,7 @@ ORDER BY symbol, signal_date
 
 ### Step 5: Delete Refresh Window + Insert New Data
 
-**Delete last 7 days (refresh window) and insert updated data:**
+#### DELETE + INSERT rolling 7 days — refresh index performance window
 
 ```sql
 -- transform_index_performance.py (lines 262-265)
@@ -595,7 +595,7 @@ The Blazor dashboard reads gold tables through C# repositories using Dapper. All
 
 ### Latest Index Performance Snapshot (Overview Page)
 
-**Get the most recent performance row per index:**
+#### ROW_NUMBER() PARTITION BY _index — most recent performance per index
 
 ```sql
 -- IndexPerformanceRepository.GetLatestSnapshotAsync()
@@ -629,7 +629,7 @@ ORDER BY p._index
 
 ### Historical Performance Time Series (Line Charts)
 
-**Full time series with optional index and date range filters:**
+#### SELECT WHERE _index = @idx AND perf_date BETWEEN — full time series query
 
 ```sql
 -- IndexPerformanceRepository.GetPerformanceAsync()
@@ -656,7 +656,7 @@ ORDER BY _index, perf_date
 
 ### Latest Daily Scores (Radar Chart, Signal Tables, Donut Chart)
 
-**Latest factor scores for all stocks in an index using CTE for max date:**
+#### CTE MAX(score_date) — latest factor scores for all stocks in an index
 
 ```sql
 -- ScoresRepository.GetDailyScoresAsync()
@@ -705,7 +705,7 @@ ORDER BY sd._index, sd.index_weight DESC
 
 ### Latest Quarterly Scores (Quality & Governance)
 
-**One row per stock using ROW_NUMBER for deduplication:**
+#### ROW_NUMBER() PARTITION BY symbol — deduplicate to one row per stock
 
 ```sql
 -- ScoresRepository.GetQuarterlyScoresAsync()
@@ -744,7 +744,7 @@ ORDER BY _index, quality_rank
 
 ### OHLCV Chart with Server-Side Moving Averages (Stock Explorer)
 
-**Server-side SMA computation ensures MA values are correct at any date range boundary:**
+#### AVG() OVER ROWS BETWEEN — server-side SMA correct at date boundaries
 
 ```sql
 -- StockRepository.GetOhlcvAsync()
@@ -816,14 +816,14 @@ ORDER BY date
 
 ## Gold Freshness Checks
 
-**Gold scores and performance freshness:**
+#### SELECT MAX(score_date), MAX(perf_date) — gold freshness check
 
 ```sql
 SELECT _index, MAX(score_date) FROM gold.scores_daily GROUP BY _index
 SELECT _index, MAX(perf_date) FROM gold.index_performance GROUP BY _index
 ```
 
-**Cleanup stale gold rows if needed:**
+#### DELETE WHERE score_date < cutoff — cleanup stale gold rows
 
 ```sql
 -- Delete stale gold rows if needed

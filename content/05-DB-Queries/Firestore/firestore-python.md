@@ -20,7 +20,7 @@ status: complete
 Comprehensive reference for querying, writing, and managing Firestore collections
 using the `google-cloud-firestore` Python SDK.
 
-**Collections in this database:**
+#### Firestore collections — stocks, prices, scores, index_performance
 
 | Collection | Description | Key Features |
 |---|---|---|

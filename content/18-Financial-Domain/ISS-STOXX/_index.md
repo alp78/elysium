@@ -1,5 +1,5 @@
 ---
-title: "ISS & STOXX Financial Domain Glossary"
+title: "ISS-STOXX"
 description: "Comprehensive glossary of financial, ESG, index construction, and governance terminology extracted from STOXX and ISS Governance."
 tags:
   - stoxx

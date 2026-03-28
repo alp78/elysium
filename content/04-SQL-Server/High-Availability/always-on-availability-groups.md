@@ -22,7 +22,7 @@ Always On Availability Groups (AGs) are the primary high-availability mechanism 
 
 A single SQL Server instance is a single point of failure. If the VM crashes, the disk corrupts, or you need to patch the OS, your database is down. HA ensures the database remains accessible during planned maintenance and unplanned outages by maintaining redundant copies of data that can take over automatically.
 
-**Key HA metrics:**
+#### RPO, RTO, SLA uptime — key HA metrics
 
 | Metric | Definition | Target |
 |--------|-----------|--------|
@@ -53,7 +53,7 @@ A single SQL Server instance is a single point of failure. If the VM crashes, th
       │◄──── ack ──────────│◄──── ack ──────────│
 ```
 
-**Replication modes:**
+#### Synchronous vs asynchronous — AG replication modes
 
 | Mode | How It Works | RPO | Use Case |
 |------|-------------|-----|----------|
@@ -340,7 +340,7 @@ sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 
 ## Monitoring the AG — Essential DMVs
 
-**Replica state and synchronization health:**
+#### sys.dm_hadr_availability_replica_states — replica sync health
 
 ```sql
 SELECT
@@ -361,7 +361,7 @@ JOIN sys.dm_hadr_availability_replica_states ars
 ORDER BY ars.role_desc, ar.replica_server_name;
 ```
 
-**Healthy output:**
+#### Healthy AG output — SYNCHRONIZED, CONNECTED, PRIMARY/SECONDARY
 
 ```
 ag_name    replica        current_role  sync_mode    connected    sync_health
@@ -372,7 +372,7 @@ project_ag   analytics-sql-03   SECONDARY     ASYNCHRONOUS CONNECTED    HEALTHY
 
 Any value other than `CONNECTED` + `HEALTHY` needs investigation.
 
-**Database-level replication status (log send queue and redo queue):**
+#### sys.dm_hadr_database_replica_states — log send queue and redo queue
 
 ```sql
 SELECT
@@ -396,7 +396,7 @@ JOIN sys.databases d
 ORDER BY d.name, ar.replica_server_name;
 ```
 
-**Key columns to watch:**
+#### log_send_queue_size, redo_queue_size — key replication lag columns
 
 | Column | Alert If |
 |--------|----------|
@@ -405,7 +405,7 @@ ORDER BY d.name, ar.replica_server_name;
 | `is_suspended` | = 1 (manual intervention needed) |
 | `sync_state` | NOT SYNCHRONIZING = broken |
 
-**Automatic seeding progress:**
+#### sys.dm_hadr_automatic_seeding — automatic seeding progress
 
 ```sql
 -- Check seeding status when adding a new database or replica
@@ -428,7 +428,7 @@ JOIN sys.databases d
     ON hadr_s.ag_db_id = d.group_database_id;
 ```
 
-**Log send and redo performance monitoring:**
+#### dm_hadr_database_replica_states — log send and redo throughput monitoring
 
 ```sql
 -- Monitor log send and redo rates over time
@@ -479,7 +479,7 @@ Used when the primary is down and cannot be recovered quickly.
 ALTER AVAILABILITY GROUP [project_ag] FORCE_FAILOVER_ALLOW_DATA_LOSS;
 ```
 
-**After a forced failover, you must:**
+#### Post-forced-failover checklist — resume databases, reverse replication
 
 1. Check for data inconsistencies between the new primary and remaining secondaries
 2. When the old primary comes back online, it may have transactions that the new primary doesn't — these "divergent" transactions must be resolved
@@ -532,7 +532,7 @@ MODIFY REPLICA ON N'analytics-sql-02' WITH (
 );
 ```
 
-**Application connection strings:**
+#### ApplicationIntent=ReadOnly — read-only routing connection strings
 
 ```
 # Read-write (goes to primary)
@@ -542,7 +542,7 @@ Server=analytics-sql-ag.internal,1433;Database=analytics_db;ApplicationIntent=Re
 Server=analytics-sql-ag.internal,1433;Database=analytics_db;ApplicationIntent=ReadOnly;
 ```
 
-**Verify routing is working:**
+#### @@SERVERNAME, CONNECTIONPROPERTY — verify read-only routing
 
 ```sql
 -- Run on a read-only connection to see which server you're on
@@ -557,7 +557,7 @@ SELECT @@SERVERNAME AS connected_to,
 
 ### Issue 1: Secondary Shows NOT SYNCHRONIZING
 
-**Diagnosis:**
+#### AG troubleshooting — diagnosis queries for sync lag and connection issues
 
 ```sql
 -- Check if data movement is suspended
@@ -597,7 +597,7 @@ JOIN sys.availability_replicas ar ON drs.replica_id = ar.replica_id
 WHERE drs.redo_queue_size > 0;
 ```
 
-**Fixes:**
+#### AG sync lag fixes — network, redo bottleneck, log throughput
 - Check secondary disk I/O: `iostat -xz 1` — look for high `%util` or `await`
 - Ensure secondary has enough CPU for redo thread (it's single-threaded per database in most cases)
 - If secondary is also serving read queries, those queries may hold schema locks blocking redo. Use [[blocking-and-locking|RCSI]] on the secondary to avoid this
@@ -629,12 +629,12 @@ sudo crm_mon -1              # one-shot cluster status
 
 Two nodes both think they're the primary. This is the most dangerous HA failure.
 
-**Prevention:**
+#### Split-brain prevention — witness, quorum, fencing
 - Always configure proper fencing (STONITH) — Pacemaker can use `fence_gce` to forcibly shut down a GCP VM
 - Set `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1` so the primary stops accepting writes if it can't reach a secondary
 - Use odd number of nodes (or a config-only witness) for clean majority
 
-**Detection:**
+#### Split-brain detection — check both replicas claim PRIMARY
 
 ```sql
 -- Run on both nodes — if both say PRIMARY, you have split-brain
@@ -646,7 +646,7 @@ JOIN sys.availability_replicas ar ON ars.replica_id = ar.replica_id
 WHERE ars.role_desc = 'PRIMARY';
 ```
 
-**Recovery:**
+#### Split-brain recovery — identify divergent data, reseed secondary
 1. Immediately stop writes to both nodes (bring applications offline)
 2. Determine which node has the most recent data (compare `last_hardened_lsn`)
 3. Demote the stale node: force stop SQL Server, then rejoin as secondary

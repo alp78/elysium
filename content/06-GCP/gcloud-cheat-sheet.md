@@ -178,7 +178,7 @@ TOKEN=$(gcloud auth print-identity-token)
 curl -H "Authorization: Bearer ${TOKEN}" https://prices-api-xyz-ew.a.run.app/health
 ```
 
-**`gcloud auth application-default login` flags:**
+#### gcloud auth application-default login — ADC flags reference
 
 | Flag | Description |
 |---|---|
@@ -200,7 +200,7 @@ gcloud auth application-default login --no-launch-browser
 
 ### gcloud config
 
-**Set / unset / list properties:**
+#### gcloud config set/unset/list — manage configuration properties
 
 ```bash
 # Set properties
@@ -351,7 +351,7 @@ gcloud projects get-iam-policy fin-prod-project --format=json | jq '.bindings[] 
 gcloud compute instances create INSTANCE_NAME [INSTANCE_NAME ...] [FLAGS]
 ```
 
-**Required / commonly required flags:**
+#### gcloud compute instances create — required and common flags
 
 | Flag | Description | Default |
 |---|---|---|
@@ -361,7 +361,7 @@ gcloud compute instances create INSTANCE_NAME [INSTANCE_NAME ...] [FLAGS]
 | `--image-project` | Project that owns the image family (`debian-cloud`, `ubuntu-os-cloud`, `cos-cloud`) | — |
 | `--image` | Specific image name (alternative to `--image-family`) | — |
 
-**Disk flags:**
+#### --boot-disk-size, --boot-disk-type — VM disk flags
 
 | Flag | Description | Default |
 |---|---|---|
@@ -369,7 +369,7 @@ gcloud compute instances create INSTANCE_NAME [INSTANCE_NAME ...] [FLAGS]
 | `--boot-disk-type` | `pd-standard`, `pd-balanced`, `pd-ssd`, `pd-extreme` | `pd-balanced` |
 | `--boot-disk-auto-delete` / `--no-boot-disk-auto-delete` | Delete boot disk when instance is deleted | auto-delete enabled |
 
-**Network / security flags:**
+#### --network, --subnet, --no-address — VM network and security flags
 
 | Flag | Description |
 |---|---|
@@ -384,7 +384,7 @@ gcloud compute instances create INSTANCE_NAME [INSTANCE_NAME ...] [FLAGS]
 | `--shielded-vtpm` | Enable virtual TPM |
 | `--shielded-integrity-monitoring` | Enable integrity monitoring |
 
-**Metadata / labels flags:**
+#### --metadata, --labels — VM metadata and labeling flags
 
 | Flag | Description |
 |---|---|
@@ -392,7 +392,7 @@ gcloud compute instances create INSTANCE_NAME [INSTANCE_NAME ...] [FLAGS]
 | `--metadata-from-file` | Key=file path, e.g. `startup-script=/path/to/script.sh` |
 | `--labels` | Resource labels, comma-separated key=value pairs |
 
-**Other useful flags:**
+#### --preemptible, --deletion-protection, --shielded-secure-boot — other VM flags
 
 | Flag | Description |
 |---|---|
@@ -538,7 +538,7 @@ gcloud compute scp prices-etl-vm:/home/user/output.csv ./output.csv \
   --tunnel-through-iap
 ```
 
-**`--tunnel-through-iap` prerequisites:**
+#### --tunnel-through-iap prerequisites — IAP API, firewall, IAM roles
 1. `compute.googleapis.com` and `iap.googleapis.com` enabled.
 2. Your account/SA has `roles/iap.tunnelResourceAccessor` on the instance or project.
 3. Firewall rule allows ingress from `35.235.240.0/20` on port 22 (or target port).
@@ -725,7 +725,7 @@ gcloud compute addresses delete prices-api-ip --region=europe-west1 --quiet
 bq [GLOBAL_FLAGS] COMMAND [COMMAND_FLAGS] [ARGS]
 ```
 
-**Global flags (apply before the command):**
+#### bq global flags — --project_id, --format, --headless
 
 | Flag | Description | Example |
 |---|---|---|
@@ -740,12 +740,12 @@ bq [GLOBAL_FLAGS] COMMAND [COMMAND_FLAGS] [ARGS]
 
 ### bq query
 
-**Anatomy:**
+#### bq query anatomy
 ```
 bq [--project_id=PROJECT] query [FLAGS] 'SQL_STRING'
 ```
 
-**Flags:**
+#### bq query flags — --use_legacy_sql, --max_rows, --destination_table
 
 | Flag | Description | Default |
 |---|---|---|
@@ -844,12 +844,12 @@ bq query \
 
 ### bq load
 
-**Anatomy:**
+#### bq load anatomy
 ```
 bq load [FLAGS] DESTINATION_TABLE SOURCE_URI [SCHEMA]
 ```
 
-**Flags:**
+#### bq load flags — --source_format, --autodetect, --write_disposition
 
 | Flag | Description | Default |
 |---|---|---|
@@ -922,7 +922,7 @@ bq load \
 
 ### bq extract
 
-**Anatomy:**
+#### bq extract anatomy
 ```
 bq extract [FLAGS] SOURCE_TABLE DESTINATION_URI
 ```
@@ -1097,7 +1097,7 @@ bq cancel bqjob_r12345abcde_00000192a1234b_1_1
 gcloud run services deploy SERVICE_NAME [FLAGS]
 ```
 
-**Key flags:**
+#### gcloud run deploy flags — --image, --region, --allow-unauthenticated
 
 | Flag | Description |
 |---|---|
@@ -1197,7 +1197,7 @@ gcloud run revisions delete prices-api-00040-abc --region=europe-west1 --quiet
 
 ### Jobs: create and execute
 
-**Anatomy:**
+#### gcloud run jobs create/execute anatomy
 ```
 gcloud run jobs create JOB_NAME [FLAGS]
 gcloud run jobs execute JOB_NAME [FLAGS]
@@ -1463,7 +1463,7 @@ gcloud storage buckets add-iam-policy-binding gs://fin-datalake-bucket \
 gcloud storage buckets get-iam-policy gs://fin-landing-bucket
 ```
 
-**Common lifecycle.json template (move to NEARLINE after 30 days, COLDLINE after 90, delete after 365):**
+#### lifecycle.json template — NEARLINE after 30d, COLDLINE after 90d, delete after 365d
 
 ```json
 {
@@ -1771,7 +1771,7 @@ gcloud iam roles update pipelineRunner \
 
 ### gcloud logging read
 
-**Full anatomy and filter syntax:**
+#### gcloud logging read — full anatomy and filter syntax
 
 ```
 gcloud logging read FILTER [FLAGS]

@@ -174,7 +174,7 @@ WHERE is_current = 1    -- only active records
 
 Python compares each `(index, symbol)` pair. If attributes changed:
 
-**Step 3a — Close the old record (set end-date, mark as historical):**
+#### UPDATE SET is_current = 0, valid_to — SCD2 step 3a: close old record
 
 ```sql
 -- transform_index_dim.py (lines 131-134)
@@ -186,7 +186,7 @@ WHERE _index = ? AND symbol = ?
   AND is_current = 1
 ```
 
-**Step 3b — Insert the new version (automatically gets is_current = 1):**
+#### INSERT new version — SCD2 step 3b: insert with is_current = 1
 
 ```sql
 -- transform_index_dim.py (lines 124-126)
@@ -206,7 +206,7 @@ File: `ingestion/transforms/transform_signals_daily.py`
 
 Bronze holds only today's snapshot (truncated each run). This transform preserves history in silver by upserting: insert new dates, update changed values, skip unchanged.
 
-**Step 1 — Load all existing silver data for comparison:**
+#### SELECT silver signals — upsert step 1: load existing for comparison
 
 ```sql
 -- transform_signals_daily.py (lines 41-44)
@@ -222,7 +222,7 @@ SELECT _index,
 FROM silver.signals_daily
 ```
 
-**Step 2 — Read today's bronze snapshot:**
+#### SELECT bronze snapshot — upsert step 2: read today's source data
 
 ```sql
 -- transform_signals_daily.py (lines 51-54)
@@ -240,7 +240,7 @@ FROM bronze.signals_daily
 
 Python compares each `(_index, symbol, date)` key:
 
-**Step 3 — INSERT, UPDATE, or SKIP based on comparison:**
+#### INSERT / UPDATE / SKIP — upsert step 3: compare and apply changes
 
 ```sql
 -- Step 3a: INSERT if this date doesn't exist in silver yet
@@ -256,7 +256,7 @@ WHERE _index = ? AND symbol = ? AND signal_date = ?
 -- Step 3c: SKIP if values are identical (no market movement since last fetch)
 ```
 
-**Typical run output:**
+#### Upsert run output — inserted, updated, skipped counts
 
 ```
 records_inserted=50  records_updated=45  records_unchanged=5
@@ -271,7 +271,7 @@ File: `ingestion/transforms/transform_ohlcv.py`
 
 The OHLCV transform uses the [[bronze-layer-loading#bronze.trading_calendar|trading calendar]] to detect gaps — dates where the exchange was open but no price data arrived. These gaps are forward-filled from the previous day's close.
 
-**Identifying gaps using the trading calendar:**
+#### LEFT JOIN trading_calendar — identify OHLCV data gaps
 
 ```sql
 -- Find trading days with no OHLCV row in silver (i.e., gaps)
@@ -288,7 +288,7 @@ WHERE c.exchange_code = ?         -- e.g. 'AMS' for Amsterdam
   )
 ```
 
-**Insert forward-filled rows (is_filled = 1):**
+#### INSERT is_filled = 1 — forward-fill missing OHLCV rows
 
 ```sql
 -- For each gap date, insert the previous day's prices
@@ -319,7 +319,7 @@ WHERE symbol = ?
 > ```
 > See common pipeline errors for details.
 
-**Verify gap-fill is clean (should return 0 for healthy data):**
+#### SELECT COUNT gaps — verify gap-fill completeness (should return 0)
 
 ```sql
 SELECT COUNT(*) FROM silver.index_europe_ohlcv
@@ -357,7 +357,7 @@ WHERE is_filled = 1 AND date > CAST(GETDATE() AS DATE)
 
 ## Useful Data Freshness Queries
 
-**Check silver OHLCV freshness (excluding forward-fills):**
+#### SELECT MAX(date) WHERE is_filled = 0 — check silver OHLCV freshness
 
 ```sql
 SELECT 'euro' AS idx, MAX(date) AS latest FROM silver.index_europe_ohlcv WHERE is_filled = 0
@@ -365,7 +365,7 @@ UNION ALL SELECT 'asia', MAX(date) FROM silver.index_asia_ohlcv WHERE is_filled 
 UNION ALL SELECT 'usa', MAX(date) FROM silver.index_usa_ohlcv WHERE is_filled = 0
 ```
 
-**Row counts across all silver tables:**
+#### sys.partitions rows — row counts across all silver tables
 
 ```sql
 SELECT s.name AS [schema], t.name AS [table], p.rows
@@ -376,7 +376,7 @@ WHERE s.name = 'silver'
 ORDER BY t.name
 ```
 
-**Cleanup stale forward-filled rows (emergency):**
+#### DELETE WHERE is_filled = 1 — cleanup stale forward-filled rows (emergency)
 
 ```sql
 -- Delete forward-filled rows beyond today
