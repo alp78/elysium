@@ -135,7 +135,7 @@ Console.WriteLine($"  Credentials: {SA_KEY_PATH} (exists: {File.Exists(SA_KEY_PA
       SA:          notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
       Credentials: ./gcp-sa-key.json (exists: True)
 
-#### Verify GCP authentication
+#### GoogleCredential.GetApplicationDefault — verify GCP authentication
 
 ```csharp
 // Load SA credentials from the JSON key file
@@ -153,7 +153,7 @@ Console.WriteLine($"  SA key loaded from: {SA_KEY_PATH}");
 
 ## Identity and Authentication
 
-#### Service Account key file authentication
+#### GoogleCredential.FromFile — service account key file authentication
 
 ```csharp
 // Authenticate using the SA JSON key and call the Resource Manager API
@@ -169,7 +169,7 @@ Console.WriteLine($"  State:    {project.State}");
       Name:     Security Lab
       State:    Active
 
-#### Scoped credentials — restrict API access
+#### GoogleCredential.CreateScoped — restrict API access by scope
 
 ```csharp
 // Scoped credentials limit which APIs the token can access.
@@ -220,7 +220,7 @@ Console.WriteLine($"  Token (first 30): {token[..30]}...");
       Impersonating: notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
       Token (first 30): ya29.c.c0AZ4bNpYDOg1GXze7sTabO...
 
-#### Short-lived OAuth2 access tokens
+#### IAMCredentialsClient — generate short-lived OAuth2 access tokens
 
 ```csharp
 // Generate a short-lived access token (300s-3600s) for time-boxed operations.
@@ -246,7 +246,7 @@ Console.WriteLine($"  Lifetime:         600 seconds");
 
 ## Secret Manager — Secure Secret Lifecycle
 
-#### Access existing secrets — test-api-key, db-password, db-config
+#### SecretManagerServiceClient.AccessSecretVersion — read secrets
 
 ```csharp
 // Read secrets stored during project setup.
@@ -276,7 +276,7 @@ foreach (var name in secretNames)
       db-password          version=1        value=EsgD***ass1
       db-config            version=1        value={"ho***xx"}
 
-#### Create a new secret with labels and replication
+#### SecretManagerServiceClient.CreateSecret — labels and replication
 
 Use Secret Manager for API keys, passwords, certificates. Never hardcode secrets or bake them into Docker images.
 
@@ -304,7 +304,7 @@ catch (Grpc.Core.RpcException e) when (e.StatusCode == Grpc.Core.StatusCode.Alre
 
       Created: projects/922174528852/secrets/notebook-demo-secret-cs
 
-#### Add a secret version — rotation scenario
+#### SecretManagerServiceClient.AddSecretVersion — secret rotation
 
 Add a new version — old versions stay until disabled. Rotate: API/SA keys 90 days, DB passwords 30–90 days, certificates before expiry.
 
@@ -325,7 +325,7 @@ Console.WriteLine($"  Value (first 8): {newPassword[..8]}...");
       State:       Enabled
       Value (first 8): 5jzVIRIA...
 
-#### Disable and destroy old secret versions
+#### SecretManagerServiceClient — disable and destroy old versions
 
 ```csharp
 // After rotation, disable the old version so it cannot be accessed,
@@ -396,7 +396,7 @@ Console.WriteLine($"  Key: {keyName}");
       KMS client ready
       Key: projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
 
-#### Symmetric encryption — encrypt plaintext with KMS
+#### KeyManagementServiceClient.Encrypt — symmetric encryption
 
 KMS encrypt: for small values (<64 KB) with audit trail. Each call is logged. Key rotation automatic. For >64 KB or high-throughput, use envelope encryption.
 
@@ -415,7 +415,7 @@ Console.WriteLine($"  Ciphertext size:  {ciphertext.Length} bytes");
       Ciphertext (b64): CiQAvMIMG5In14bQf0oRroUVEdJZH5as1mM2OWQFVcRKEUz2Ib4SXAA/1XLb...
       Ciphertext size:  132 bytes
 
-#### Symmetric decryption — decrypt ciphertext with KMS
+#### KeyManagementServiceClient.Decrypt — symmetric decryption
 
 ```csharp
 // Decrypt the ciphertext back to plaintext using the same KMS key.
@@ -430,7 +430,7 @@ Console.WriteLine($"  Match:     {plaintext.SequenceEqual(decrypted)}");
       Decrypted: Sensitive financial data: EUROSTOXX50 daily returns
       Match:     True
 
-#### Envelope encryption — wrap a local data encryption key
+#### AesGcm + KeyManagementServiceClient — envelope encryption
 
 Envelope encryption: generate local DEK, encrypt data with AES-GCM (built into .NET), wrap DEK with KMS. For >64 KB, high-throughput, or cost optimization (one KMS call per DEK).
 
@@ -474,7 +474,7 @@ Console.WriteLine($"    Wrapped DEK:    {wrappedDek.Length} bytes");
         Tag:            16 bytes
         Wrapped DEK:    113 bytes
 
-#### Envelope decryption — unwrap DEK and decrypt data
+#### AesGcm + KeyManagementServiceClient — envelope decryption
 
 ```csharp
 // Reverse the envelope: unwrap DEK with KMS, then decrypt data locally.
@@ -498,7 +498,7 @@ Console.WriteLine($"  Data match:       {largeData.SequenceEqual(decryptedData)}
       Data decrypted:   10000 bytes
       Data match:       True
 
-#### List KMS key versions and rotation
+#### KeyManagementServiceClient.GetCryptoKey — list key versions and rotation
 
 ```csharp
 // Show current key versions — KMS automatically manages version history.
@@ -643,7 +643,7 @@ catch (Exception e)
           2  MSFT          88.2  26-Mar-26 4:34:20
       Dropped security_test table
 
-#### SSL-verified connection — validate server identity
+#### SqlConnection + SSL — verified connection to Cloud SQL
 
 `Encrypt=true` + `TrustServerCertificate=false` forces cert chain validation. C# advantage: `SqlClient` has native TLS — no FreeTDS workarounds. Never use `TrustServerCertificate=true` in production.
 
@@ -704,7 +704,7 @@ else
       kind: sql#diskEncryptionStatus
       kmsKeyVersionName: projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
 
-#### SqlBulkCopy — high-performance data loading
+#### System.Data.SqlClient SqlBulkCopy — high-performance bulk insert
 
 C# advantage: `SqlBulkCopy` streams data directly via TDS bulk insert — no temp files, no `bcp` CLI. Python needs: GCS → pyarrow → temp TSV → bcp → SQL Server. C#: `DataTable` → `SqlBulkCopy` → SQL Server (single step).
 
@@ -760,7 +760,7 @@ catch (Exception e)
 
 ## BigQuery — Secure Data Operations
 
-#### Query BigQuery with service account credentials
+#### BigQueryClient — query with service account credentials
 
 ```csharp
 // Authenticate to BigQuery using the SA key and run a query.
@@ -794,7 +794,7 @@ foreach (var row in results)
          9. SU.PA      close=  254.65 momentum=  -1.03%
         10. ASML.AS    close=  1190.8 momentum=  -1.13%
 
-#### Column-level encryption — encrypt sensitive values before insert
+#### KeyManagementServiceClient + BigQuery — column-level encryption
 
 Encrypt individual field values with KMS before inserting into BigQuery — table stores ciphertext, only KMS decrypt access can recover values. For PII (GDPR, CCPA) and multi-tenant isolation.
 
@@ -832,7 +832,7 @@ Console.WriteLine($"  Inserted {encryptedRows.Count} rows with encrypted portfol
 
       Inserted 3 rows with encrypted portfolio_id
 
-#### Decrypt column values after query
+#### KeyManagementServiceClient.Decrypt — decrypt BigQuery column values
 
 ```csharp
 // Query the encrypted table, then decrypt each portfolio_id with KMS.
@@ -856,7 +856,7 @@ foreach (var row in encResults)
 
 ## Firestore — Secure Document Operations
 
-#### Read and write documents with SA credentials
+#### FirestoreDb — read and write documents with SA credentials
 
 ```csharp
 // Firestore access is controlled by IAM roles (datastore.user or higher).
@@ -931,7 +931,7 @@ Console.WriteLine("  Cleaned up test document");
         "message"...
       Cleaned up test document
 
-#### Field-level encryption — encrypt sensitive document fields
+#### KeyManagementServiceClient + Firestore — field-level encryption
 
 ```csharp
 // Encrypt sensitive fields with KMS before writing to Firestore via REST.
@@ -969,7 +969,7 @@ Console.WriteLine("  Cleaned up encrypted document");
 
 ## Cloud Storage — Encryption and Access Control
 
-#### Upload to CMEK-encrypted bucket
+#### StorageClient — upload to CMEK-encrypted GCS bucket
 
 ```csharp
 // Upload a file to the CMEK-encrypted bucket and verify encryption metadata.
@@ -992,7 +992,7 @@ Console.WriteLine($"  Size:     {obj.Size} bytes");
       KMS key:  projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
       Size:     30 bytes
 
-#### Client-side encryption with AES-GCM before upload
+#### AesGcm — client-side encryption before GCS upload
 
 ```csharp
 // Encrypt data locally with AES-GCM before uploading to GCS.
@@ -1022,7 +1022,7 @@ Console.WriteLine($"  Original: {cseData.Length} bytes, Encrypted: {cseEncrypted
       Uploaded client-side encrypted: 62 bytes
       Original: 34 bytes, Encrypted: 34 + 16 tag + 12 nonce
 
-#### Download and decrypt client-side encrypted file
+#### AesGcm — download and decrypt client-side encrypted file
 
 ```csharp
 // Download the encrypted blob and decrypt locally.
@@ -1046,7 +1046,7 @@ Console.WriteLine($"  Decrypted:  {Encoding.UTF8.GetString(dlPlain)}");
       Downloaded: 62 bytes
       Decrypted:  Client-side encrypted data from C#
 
-#### Signed URLs — time-limited access without credentials
+#### UrlSigner.FromCredential — generate signed URLs for time-limited access
 
 ```csharp
 // Signed URLs: grant time-limited access to a private GCS object

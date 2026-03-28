@@ -18,7 +18,7 @@ Data pipelines frequently interact with REST APIs (financial data providers, clo
 
 ## Linux — curl
 
-**Basic requests:**
+#### curl — basic GET requests
 
 ```bash
 # Basic GET request
@@ -38,7 +38,7 @@ curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
 # Use case: health checks in monitoring scripts
 ```
 
-**POST with JSON body:**
+#### curl -X POST — send JSON body
 
 ```bash
 # POST with JSON body
@@ -51,7 +51,7 @@ curl -X POST https://api.example.com/webhook \
 # -d = request body
 ```
 
-**Download a file with retry and timeout:**
+#### curl --retry --connect-timeout — download with retry and timeout
 
 ```bash
 # Download a file with retry and timeout

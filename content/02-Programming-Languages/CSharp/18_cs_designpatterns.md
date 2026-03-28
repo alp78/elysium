@@ -44,18 +44,9 @@ Console.WriteLine("WarningLevel set to 0.");
 
 ## 1. Dependency Injection
 
-```csharp
-// Dependency Injection — the foundation of testable C# architecture.
-//
-// KEY CONCEPTS:
-// - Interface: defines the contract (what, not how).
-// - Constructor injection: class receives dependencies via constructor.
-// - IServiceCollection: .NET's built-in DI container.
-//   builder.Services.AddTransient<IRepo, SqlRepo>() — new instance per request
-//   builder.Services.AddScoped<IRepo, SqlRepo>()    — one per scope (HTTP request)
-//   builder.Services.AddSingleton<IRepo, SqlRepo>() — one for entire app
-// - Python equivalent: just pass objects via __init__ (no container needed).
+Interface defines the contract (what, not how). Constructor injection passes dependencies via the constructor. .NET's built-in `IServiceCollection` container offers three lifetimes: `AddTransient` (new per request), `AddScoped` (one per HTTP request), `AddSingleton` (one for the entire app). Python equivalent: just pass objects via `__init__` (no container needed).
 
+```csharp
 // ─── Interfaces ───
 
 Console.WriteLine("=== Dependency Injection ===");
@@ -334,16 +325,9 @@ public class StockScorer
 
 ## 3. Data Validation
 
-```csharp
-// Data Validation with DataAnnotations — built into .NET.
-// Python equivalent: Pydantic BaseModel with Field() constraints.
-//
-// KEY CONCEPTS:
-// - [Required], [Range], [StringLength], [RegularExpression] — attribute-based.
-// - Validator.TryValidateObject() — validate and collect all errors.
-// - In ASP.NET, model binding auto-validates incoming requests.
-// - For complex rules: IValidatableObject.Validate() or FluentValidation.
+Attribute-based validation built into .NET: `[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]`. `Validator.TryValidateObject()` validates and collects all errors. In ASP.NET, model binding auto-validates incoming requests. For complex cross-field rules, use `IValidatableObject.Validate()` or FluentValidation. Python equivalent: Pydantic `BaseModel` with `Field()` constraints.
 
+```csharp
 Console.WriteLine("=== Valid Data ===");
 var validRecord = new OhlcvRecord
 {

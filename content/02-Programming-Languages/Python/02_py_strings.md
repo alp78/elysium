@@ -115,28 +115,9 @@ print(f"Modified: {s}")
 
 #### Indexing (0-based)
 
-```python
-# Indexing and slicing — s[i], s[-i], s[a:b], s[a:b:step]
-#
-# Technique: s[i] accesses by index (0-based). s[-1] is the last character.
-#   s[a:b] slices from a to b (exclusive). s[::2] takes every 2nd char.
-#   s[::-1] reverses the string. Slicing never raises IndexError.
-#
-# Benefits:
-#   - Negative indexing eliminates len(s)-1 boilerplate
-#   - Slices are forgiving — out-of-range indices are silently clamped
-#   - Step parameter enables stride, reversal, and subsampling
-#
-# Anti-patterns:
-#   - Forgetting slices are right-exclusive — s[0:5] is indices 0-4
-#   - Using s[len(s)-1] instead of s[-1] — less Pythonic
-#
-# When to use:
-#   - Extracting substrings, accessing characters, reversing strings
-#
-# When NOT to use:
-#   - Pattern extraction — use regex or split instead of index math
+`s[i]` accesses by index (0-based). `s[-1]` is the last character, eliminating `len(s)-1` boilerplate. `s[a:b]` slices from `a` to `b` (right-exclusive). `s[::2]` takes every 2nd char; `s[::-1]` reverses. Slicing never raises `IndexError` — out-of-range indices are silently clamped. For pattern extraction, use regex or split instead of index math.
 
+```python
 #     0123456789...
 
 print(f"s[0]:     '{s[0]}'")        # H
@@ -199,28 +180,9 @@ for i, ch in enumerate(s[:5]):
 
 #### Case Methods  — Case, Whitespace, Checking, Searching, Replacing
 
-```python
-# Case methods — upper, lower, title, capitalize, swapcase, casefold
-#
-# Technique: Built-in methods for case conversion. casefold() is more
-#   aggressive than lower() — handles Unicode: "Strasse".casefold() = "strasse"
-#   from German "Strasse". title() capitalizes first letter of each word.
-#
-# Benefits:
-#   - casefold() is the correct way to do case-insensitive comparison
-#   - title()/capitalize() handle word boundaries automatically
-#   - All are Unicode-aware — work correctly with non-ASCII characters
-#
-# Anti-patterns:
-#   - Using lower() for case-insensitive comparison — casefold() handles more Unicode
-#   - Comparing upper() results — casefold() is designed for this purpose
-#
-# When to use:
-#   - Display formatting, case-insensitive search, normalization
-#
-# When NOT to use:
-#   - Locale-sensitive case rules — use locale module for Turkish i, etc.
+`casefold()` is more aggressive than `lower()` — handles Unicode correctly (`"Straße".casefold()` = `"strasse"`). Use `casefold()` for case-insensitive comparison, not `lower()`. `title()`/`capitalize()` handle word boundaries automatically. All methods are Unicode-aware. For locale-sensitive case rules (Turkish `i`), use the `locale` module.
 
+```python
 s = "  Hello, World!  "
 
 print(f"upper():       '{'hello world'.upper()}'")
@@ -418,30 +380,12 @@ print(f"encode('ascii'):   {'hello'.encode('ascii')}")
 
 #### f-strings (recommended, Python 3.6+)
 
-```python
-# f-strings — inline expression embedding (Python 3.6+)
-#
-# Technique: f"..." embeds any expression in {braces}. Supports format
-#   specifiers: f"{n:.2f}", method calls: f"{s.upper()}", and expressions:
-#   f"{a + 1}". Also shows .format() and % operator for comparison.
-#
-# Benefits:
-#   - Most readable — expressions are inline, no positional placeholders
-#   - Any expression allowed: f"{len(items)}", f"{x if x else 'N/A'}"
-#   - Faster than .format() — compiled to efficient bytecode
-#
-# Anti-patterns:
-#   - .format() in new code when f-strings work — f-strings are cleaner
-#   - f-strings in SQL or shell commands — injection risk
-#   - %-formatting in new code — legacy, error-prone with tuple/dict
-#
-# When to use:
-#   - f-strings for all new code; .format() when template is a variable
-#
-# When NOT to use:
-#   - SQL/command strings — use parameterised queries
-#   - Logging — use logger.info("msg %s", val) for lazy evaluation
+`f"..."` embeds any expression in `{braces}` — supports format specifiers (`f"{n:.2f}"`), method calls (`f"{s.upper()}"`), and expressions (`f"{a + 1}"`). Faster than `.format()` and more readable. Use f-strings for all new code; `.format()` when the template is a variable.
 
+> [!danger] Injection risk
+> Never use f-strings in SQL or shell commands — use parameterized queries. For logging, use `logger.info("msg %s", val)` for lazy evaluation.
+
+```python
 name, age = "Alice", 30
 n = 1234567.89123
 pct = 0.856
@@ -621,23 +565,6 @@ print("Rule: use + for 2-5 strings, join() for loops/many strings")
 #### re module — import and test text setup
 
 ```python
-# Regex setup — declare test text for pattern matching demonstrations
-#
-# Technique: Define a multi-format test string containing emails, phone
-#   numbers, and other patterns for regex demonstrations.
-#
-# Benefits:
-#   - Single test string reused across all regex demo cells
-#
-# Anti-patterns:
-#   - Re-declaring test data in every cell — wastes space
-#
-# When to use:
-#   - When multiple cells demonstrate patterns on the same text
-#
-# When NOT to use:
-#   - Self-contained cells — declare test data inline
-
 text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
 ```
 

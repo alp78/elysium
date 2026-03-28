@@ -18,31 +18,16 @@ status: complete
 
 ## Classes & Objects
 
-#### Type declarations
+#### Class declaration — auto-properties, constructors, methods, ToString
+
+Classes define types with **auto-properties** (`get`/`set`), constructors for initialization, methods for behavior, and `ToString` for display. Auto-properties eliminate boilerplate backing fields, and constructors enforce required initialization at creation. For simple data carriers without behavior, prefer `record` instead.
+
+> [!warning] Anti-patterns
+> - **Public fields** instead of properties — loses validation and encapsulation
+> - **Constructors doing heavy work** — use factory methods or init logic
+> - **Not overriding `ToString`** — defaults to type name, which isn't useful
 
 ```csharp
-// Class declarations — auto-properties, constructors, methods, ToString
-//
-// Technique: Classes define types with auto-properties (get/set), constructors
-//   for initialization, methods for behavior, and ToString for display.
-//   In notebooks, type declarations must be in their own cell.
-//
-// Benefits:
-//   - Auto-properties eliminate boilerplate backing fields
-//   - Constructor enforces required initialization at creation
-//   - ToString integrates with Console.WriteLine and $"" interpolation
-//
-// Anti-patterns:
-//   - Public fields instead of properties — loses validation and encapsulation
-//   - Constructors doing heavy work — use factory methods or init logic
-//   - Not overriding ToString — defaults to type name, not useful
-//
-// When to use:
-//   - Any domain entity or data structure with behavior
-//
-// When NOT to use:
-//   - Simple data carriers — use record instead
-
 // Classes and objects — type declarations must be in their own cell in notebooks
 
 // Dog — basic class with auto-properties, constructor, methods, and ToString
@@ -87,7 +72,7 @@ class Circle
 }
 ```
 
-#### Using Dog
+#### Using class instances — new, property access, method calls
 
 ```csharp
 // Using classes — instantiation, method calls, and string representation
@@ -131,31 +116,16 @@ Console.WriteLine($"New radius: {c.Radius}");
 
 ## Inheritance & Polymorphism
 
-#### Type declarations
+#### Inheritance — base class, virtual, override, sealed
+
+`virtual` marks a method for overriding; `override` in a child class provides a new implementation. `base.Method()` calls the parent version. C# supports single inheritance only — one base class per type. Use inheritance for IS-A relationships; prefer composition (fields/properties) for HAS-A.
+
+> [!warning] Anti-patterns
+> - **Deep hierarchies** (>3 levels) — prefer composition
+> - **Forgetting `virtual`** — method won't dispatch polymorphically
+> - **`new` keyword hiding** instead of `override` — silently breaks polymorphism
 
 ```csharp
-// Inheritance — base class with virtual methods, derived classes override
-//
-// Technique: virtual marks a method for overriding. override in child
-//   provides a new implementation. base.Method() calls parent version.
-//   Single inheritance only — C# classes extend one base class.
-//
-// Benefits:
-//   - Code reuse — shared behavior in the base class
-//   - Polymorphism — derived types substitutable for the base type
-//   - virtual/override is explicit — no accidental method hiding
-//
-// Anti-patterns:
-//   - Deep inheritance hierarchies (>3 levels) — prefer composition
-//   - Forgetting virtual — method won't dispatch polymorphically
-//   - new keyword hiding instead of override — breaks polymorphism
-//
-// When to use:
-//   - IS-A relationships: Dog is an Animal, Circle is a Shape
-//
-// When NOT to use:
-//   - HAS-A relationships — use composition (fields/properties)
-
 // Inheritance and polymorphism — child classes extend a parent; virtual/override enable runtime dispatch
 
 // Animal — base class with a virtual method that subclasses can override
@@ -199,7 +169,7 @@ class Cat : Animal
 }
 ```
 
-#### Using inheritance
+#### Using inheritance — polymorphic calls and base.Method()
 
 ```csharp
 // Using inheritance — instantiate derived classes and call overridden methods
@@ -218,7 +188,7 @@ Console.WriteLine($"dog.Breed:    {dog.Breed}");
     cat.Speak():  Whiskers says Meow... when it feels like it.
     dog.Breed:    German Shepherd
 
-#### Polymorphism — AnimalRollCall
+#### Polymorphism — virtual dispatch via base class reference
 
 ```csharp
 // Polymorphism — operate on base type, dispatch to derived implementation
@@ -270,29 +240,14 @@ Console.WriteLine($"as Cat: {maybeCat?.Name ?? "null"}");
 
 #### Abstract class
 
-```csharp
-// Abstract class — contract with optional shared implementation
-//
-// Technique: abstract class cannot be instantiated. abstract methods
-//   must be overridden by derived classes. Concrete methods provide
-//   shared implementation. Can have fields, constructors, and state.
-//
-// Benefits:
-//   - Enforces a contract — derived classes must implement abstract methods
-//   - Shared code — concrete methods avoid duplication in derived classes
-//   - Constructor initializes shared state for all derived types
-//
-// Anti-patterns:
-//   - Abstract class with no shared code — use interface instead
-//   - Too many abstract methods — interface is more appropriate
-//   - Deep abstract hierarchies — prefer composition over inheritance
-//
-// When to use:
-//   - When derived classes share common state and behavior
-//
-// When NOT to use:
-//   - Pure contract with no shared code — use interface
+An `abstract` class cannot be instantiated — `abstract` methods must be overridden by derived classes, while concrete methods provide shared implementation. Unlike interfaces, abstract classes can have fields, constructors, and state. Use them when derived classes share common state and behavior; for a pure contract with no shared code, use an interface instead.
 
+> [!warning] Anti-patterns
+> - **Abstract class with no shared code** — use an interface instead
+> - **Too many abstract methods** — interface is more appropriate
+> - **Deep abstract hierarchies** — prefer composition over inheritance
+
+```csharp
 // Abstract classes — can't be instantiated; define a contract with abstract methods and shared logic with concrete methods
 
 // Shape — abstract base with Area/Perimeter that subclasses must implement
@@ -343,7 +298,7 @@ class CircleShape : Shape
 }
 ```
 
-#### Interface declarations
+#### interface declaration — contract with default implementations
 
 ```csharp
 // Interface declarations — pure contract with no implementation
@@ -375,7 +330,7 @@ class TextBox : IDrawable                    // only IDrawable, not IResizable
 }
 ```
 
-#### Using abstract classes
+#### Using abstract classes — subclass instantiation and abstract call
 
 ```csharp
 // Using abstract classes — instantiate derived types, call abstract methods
@@ -396,7 +351,7 @@ Console.WriteLine($"Total area: {totalArea:F2}");
     circ: blue CircleShape: area=50.27
     Total area: 65.27
 
-#### Using interfaces and polymorphism
+#### Using interfaces — is, as, pattern matching, polymorphic dispatch
 
 ```csharp
 // Using interfaces and polymorphism — multiple interface implementation
@@ -453,26 +408,6 @@ Properties with `private set` allow read from outside, write only inside. `init`
 #### OOP theory — access modifiers and abstract vs interface
 
 ```csharp
-// Access modifier reference — visibility rules and usage guidelines
-//
-// Technique: Six access levels control who can see a member. Default
-//   for class members is private. Default for top-level types is internal.
-//   Choose the most restrictive level that works.
-//
-// Benefits:
-//   - Minimal public surface — easier to maintain and evolve
-//   - Private implementation can change without breaking callers
-//
-// Anti-patterns:
-//   - Defaulting to public — exposes implementation details
-//   - protected for non-inheritance scenarios — use private
-//
-// When to use:
-//   - Every class — set access explicitly on every member
-//
-// When NOT to use:
-//   - N/A — access modifiers are always applicable
-
 Console.WriteLine(@"
   ═══ ACCESS MODIFIERS ═══
 
@@ -496,28 +431,9 @@ Console.WriteLine(@"
 
 #### Abstract class vs interface decision guide
 
-```csharp
-// Abstract class vs interface — detailed comparison and decision criteria
-//
-// Technique: Abstract classes provide shared implementation + contract.
-//   Interfaces define pure contracts. Classes can implement multiple
-//   interfaces but inherit only one abstract class.
-//
-// Benefits:
-//   - Abstract: shared code in base, constructor, fields, state
-//   - Interface: multiple implementation, loose coupling, testability
-//
-// Anti-patterns:
-//   - Abstract with no shared code — interface is lighter
-//   - Interface when shared implementation needed — code duplication
-//
-// When to use:
-//   - Abstract: IS-A with shared behavior (Shape → Rectangle, Circle)
-//   - Interface: CAN-DO capabilities (IDrawable, IClickable, IDisposable)
-//
-// When NOT to use:
-//   - Abstract when multiple inheritance needed — C# only allows one base class
+Abstract classes provide shared implementation plus a contract; interfaces define pure contracts. A class can implement multiple interfaces but inherit only one abstract class. Use abstract for IS-A with shared behavior (`Shape` → `Rectangle`, `Circle`); use interfaces for CAN-DO capabilities (`IDrawable`, `IDisposable`). If you need both shared code and multiple implementation, combine abstract classes with interfaces.
 
+```csharp
 Console.WriteLine(@"
   ═══ ABSTRACT CLASS vs INTERFACE ═══
 
@@ -542,39 +458,16 @@ Console.WriteLine(@"
 
 ## Static Members
 
-#### Type declarations
+#### static members — shared state, factory methods, utility classes
+
+`static` fields/properties are shared by all instances — one copy exists per type. `static` methods don't need an instance (called via `ClassName.Method()`), and `static` constructors run once when the type is first used. A `static` class can only contain static members and cannot be instantiated. Unlike Python's `@classmethod`, C# static methods cannot be overridden in subclasses.
+
+> [!warning] Anti-patterns
+> - **Mutable static state** shared across threads — race conditions
+> - **Static methods that should be instance methods** — testability suffers
+> - **God classes** with many static methods — violates single responsibility
 
 ```csharp
-// Static members — shared state and behavior on the class itself
-//
-// Technique: static fields/properties are shared by all instances — one
-//   copy exists per type. static methods don't need an instance to call.
-//   static constructors run once when the type is first used.
-//
-// Benefits:
-//   - Shared counters, caches, configuration accessible via ClassName.Member
-//   - Factory methods: Employee.FromCsv(line) creates instances
-//   - No instance needed — utility methods like Math.Sqrt()
-//
-// Anti-patterns:
-//   - Mutable static state shared across threads — race conditions
-//   - Static methods that should be instance methods — testability suffers
-//   - God classes with many static methods — violates single responsibility
-//
-// When to use:
-//   - Counters, factories, utility methods, constants, caches
-//
-// When NOT to use:
-//   - When instance-level state is needed — use regular members
-
-// Static Members — belong to the CLASS, not to instances
-//
-// KEY CONCEPTS:
-// - static field/property: shared by ALL instances. Only one copy exists.
-// - static method: called on the class, not on an instance. No 'this'.
-// - static class: a class that can ONLY contain static members. Can't be instantiated.
-// - C# has no @classmethod equivalent — static methods can't be overridden in subclasses.
-
 class Employee
 {
     // Static field — shared by ALL instances
@@ -611,7 +504,7 @@ class Employee
 }
 ```
 
-#### Using static members
+#### Using static methods and properties — Counter, MathHelper, Config
 
 ```csharp
 // Using static members — shared state and factory methods in action
@@ -636,30 +529,11 @@ Console.WriteLine($"Company:  {Employee.Company}");  // static property on CLASS
 
 ## Records & Init-Only Properties
 
-#### Why records instead of dictionaries
+#### record vs Dictionary — why records for structured data
+
+`Dictionary<string, object>` accepts any key (including typos) and any value type — errors only appear at runtime. Records enforce property names and types at compile time, with IntelliSense autocomplete and refactoring support. Use records for any data with a known, fixed structure (API responses, configs, DTOs); dictionaries are only appropriate for truly dynamic keys determined at runtime.
 
 ```csharp
-// Why records over dictionaries — compile-time safety vs runtime errors
-//
-// Technique: Dictionary<string, object> accepts any key (including typos)
-//   and any value type — errors only appear at runtime. Records enforce
-//   property names and types at compile time.
-//
-// Benefits:
-//   - Records catch typos at compile time — "amout" is a build error
-//   - IntelliSense provides autocomplete for record properties
-//   - Refactoring tools rename properties across the codebase
-//
-// Anti-patterns:
-//   - Dictionaries for known-structure data — loses compile-time safety
-//   - String keys for fixed schemas — records are type-safe alternatives
-//
-// When to use:
-//   - Any data with a known, fixed structure (API responses, configs, DTOs)
-//
-// When NOT to use:
-//   - Truly dynamic keys determined at runtime — dictionaries are appropriate
-
 // Dictionary — typo is silent, fails at runtime:
 var record = new Dictionary<string, object>
 {
@@ -769,7 +643,7 @@ record PipelineRecord(string TableName, int RowCount, string Status = "pending")
 }
 ```
 
-#### Value equality and deconstruction
+#### record value equality, with expression, Deconstruct
 
 ```csharp
 // Value equality and deconstruction — records compare by content

@@ -20,29 +20,14 @@ status: complete
 
 #### Basic try / except
 
-```python
-# Basic try/except — structured exception handling
-#
-# Technique: Wrap risky code in try:. Catch specific exception types with
-#   except ExceptionType as e:. The except block handles the error.
-#   Unmatched exceptions propagate up the call stack.
-#
-# Benefits:
-#   - Separates normal flow from error handling — cleaner code
-#   - Catch specific types — handle each error appropriately
-#   - as e gives access to exception message and attributes
-#
-# Anti-patterns:
-#   - Bare except: — catches everything including KeyboardInterrupt
-#   - except Exception with pass — silently swallows all errors
-#   - Using exceptions for flow control — slow, use if/else instead
-#
-# When to use:
-#   - I/O operations, parsing external data, network calls
-#
-# When NOT to use:
-#   - Expected conditions — use if/else, .get(), or LBYL checks
+Wrap risky code in `try:` and catch specific exception types with `except ExceptionType as e:`. Unmatched exceptions propagate up the call stack. Use for I/O operations, parsing external data, and network calls — not for expected conditions (use `if`/`else`, `.get()`, or LBYL checks instead).
 
+> [!warning] Anti-patterns
+> - **Bare `except:`** — catches everything including `KeyboardInterrupt`
+> - **`except Exception` with `pass`** — silently swallows all errors
+> - **Exceptions for flow control** — slow; use `if`/`else` instead
+
+```python
 # Basic try/except — wrap risky code in try; except handles specific exception types
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -166,28 +151,12 @@ except RuntimeError as e:
 
 #### Exception hierarchy — BaseException tree, args, __cause__
 
-```python
-# Exception hierarchy — inheritance tree and key properties
-#
-# Technique: BaseException at root — SystemExit, KeyboardInterrupt are
-#   siblings of Exception. Always catch Exception, not BaseException.
-#   Properties: args (tuple), __cause__ (from), __context__ (implicit chain).
-#
-# Benefits:
-#   - Hierarchical catching — except OSError catches all OS-related errors
-#   - __cause__/__context__ preserve the full error chain
-#   - Custom exceptions inherit from Exception for correct semantics
-#
-# Anti-patterns:
-#   - Catching BaseException — prevents Ctrl+C and sys.exit()
-#   - Catching Exception in __exit__ — may mask context manager errors
-#
-# When to use:
-#   - Understanding which exception type to catch for a given operation
-#
-# When NOT to use:
-#   - N/A — this is a reference for the exception type system
+`BaseException` is the root — `SystemExit` and `KeyboardInterrupt` are siblings of `Exception`. Always catch `Exception`, not `BaseException`. Properties: `args` (tuple), `__cause__` (from `raise ... from`), `__context__` (implicit chaining). Hierarchical catching means `except OSError` catches all OS-related errors.
 
+> [!danger] Never catch `BaseException`
+> This prevents `Ctrl+C` (`KeyboardInterrupt`) and `sys.exit()` from working.
+
+```python
 # Exception hierarchy — BaseException at root; always catch Exception (not BaseException)
 #
 #   BaseException
@@ -283,28 +252,9 @@ for v in ["3.14", "bad", None, "42"]:
 
 #### Custom exception classes
 
-```python
-# Custom exception classes — domain-specific with structured attributes
-#
-# Technique: class CsvParseError(Exception) adds row_number, column_name,
-#   raw_value attributes. class PipelineError wraps any exception with
-#   pipeline name and stage. Both preserve __cause__ chain.
-#
-# Benefits:
-#   - Structured context — row_number, column_name directly on the exception
-#   - Type-safe catching — except CsvParseError vs generic Exception
-#   - __cause__ chain preserves the full error history
-#
-# Anti-patterns:
-#   - Custom exceptions without additional context — use built-in types
-#   - Too many custom exception types — group related errors
-#
-# When to use:
-#   - Domain errors with structured diagnostic fields (row, column, stage)
-#
-# When NOT to use:
-#   - Generic errors — built-in ValueError, FileNotFoundError suffice
+Custom exceptions add structured diagnostic fields (`row_number`, `column_name`, `raw_value`) that built-in types lack. Type-safe catching (`except CsvParseError`) is more precise than catching generic `Exception`. The `__cause__` chain preserves full error history. Only create custom exceptions when you need extra context — otherwise built-in types like `ValueError` or `FileNotFoundError` suffice.
 
+```python
 # Custom exception classes — inherit from Exception; add domain-specific attributes
 
 # CsvParseError — structured context for CSV parsing failures
@@ -405,29 +355,13 @@ except ConfigError as e:
 
 <h4>Basic <code style="font-size:0.75em">with</code> statement</h4>
 
-```python
-# with statement — guaranteed cleanup via context manager protocol
-#
-# Technique: with open(path) as f: calls __enter__ on start, __exit__
-#   on end (even on exception). No finally needed — cleanup is automatic.
-#   Stacking: with open(a) as f1, open(b) as f2: manages both.
-#
-# Benefits:
-#   - Guaranteed cleanup — no resource leaks even on exceptions
-#   - Cleaner than try/finally — one line instead of five
-#   - Composable — multiple resources in one with statement
-#
-# Anti-patterns:
-#   - Manual try/finally when with statement is available
-#   - Not closing files, connections, or cursors — resource leaks
-#   - with on objects that don't support it — AttributeError
-#
-# When to use:
-#   - Files, DB connections, locks, temp directories, network sockets
-#
-# When NOT to use:
-#   - Objects without __enter__/__exit__ — implement or use contextmanager
+`with open(path) as f:` calls `__enter__` on start and `__exit__` on end (even on exception). No `finally` needed — cleanup is automatic. Multiple resources can be stacked in one statement: `with open(a) as f1, open(b) as f2:`. Use for files, DB connections, locks, temp directories, and network sockets.
 
+> [!warning] Anti-patterns
+> - **Manual `try`/`finally`** when `with` is available — more verbose, easier to forget
+> - **Not closing** files, connections, or cursors — resource leaks
+
+```python
 # with statement — calls __enter__ on start, __exit__ on end (even on exception)
 
 # Create temp CSV
@@ -541,28 +475,9 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
 
 #### Safe parse helpers — return default on failure instead of raising
 
-```python
-# Safe parse helpers — return default instead of raising on bad data
-#
-# Technique: safe_int(value, default=0) wraps int() in try/except and
-#   returns the default on failure. Much cleaner than try/catch around
-#   every parse call. Combines with dataclass for structured results.
-#
-# Benefits:
-#   - No exception overhead — returns default for expected bad data
-#   - Clean call site — safe_int("bad") returns 0, no try/except needed
-#   - Composable — use in comprehensions and map() calls
-#
-# Anti-patterns:
-#   - try/except around every int() call — repetitive boilerplate
-#   - Ignoring parse failures entirely — log or collect errors
-#
-# When to use:
-#   - Parsing CSV/JSON fields where bad values are expected
-#
-# When NOT to use:
-#   - When invalid data should halt processing — raise explicitly
+`safe_int(value, default=0)` wraps `int()` in `try`/`except` and returns the default on failure — much cleaner than `try`/`except` around every parse call. Composable in comprehensions and `map()` calls. Use for parsing CSV/JSON fields where bad values are expected; when invalid data should halt processing, raise explicitly instead.
 
+```python
 # Safe parse helpers — return a default instead of raising; much cleaner for expected bad data
 
 def safe_int(value, default=None):

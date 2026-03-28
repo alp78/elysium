@@ -20,28 +20,13 @@ status: complete
 
 #### datetime module — creating date, time, datetime, timedelta objects
 
-```python
-# Creating date and time objects — datetime, date, time, timedelta
-#
-# Technique: datetime.now() for local time. datetime.now(timezone.utc) for
-#   UTC. date.today() for date-only. datetime(y,m,d,h,m,s) for specific
-#   moments. Naive datetimes have no timezone — aware ones include tzinfo.
-#
-# Benefits:
-#   - Separate types: datetime (full), date (date-only), time (time-only)
-#   - timedelta for arithmetic — add/subtract days, hours, seconds
-#   - timezone.utc gives an aware UTC datetime with no external library
-#
-# Anti-patterns:
-#   - datetime.now() for storage — timezone-naive; use datetime.now(timezone.utc)
-#   - Comparing naive and aware datetimes — TypeError
-#
-# When to use:
-#   - datetime.now(timezone.utc) for timestamps; date.today() for calendar dates
-#
-# When NOT to use:
-#   - datetime.now() for cross-timezone systems — use timezone-aware
+`datetime.now()` for local time; `datetime.now(timezone.utc)` for UTC. `date.today()` for date-only, `time()` for time-only. `timedelta` for arithmetic — add/subtract days, hours, seconds. Naive datetimes have no timezone; aware ones include `tzinfo`.
 
+> [!warning] Anti-patterns
+> - **`datetime.now()` for storage** — timezone-naive; use `datetime.now(timezone.utc)`
+> - **Comparing naive and aware** datetimes — raises `TypeError`
+
+```python
 # Creating date and time objects
 from datetime import datetime, date, time, timedelta
 
@@ -575,28 +560,9 @@ print(f"+ 1y 2m 3d:      {dt + relativedelta(years=1, months=2, days=3)}")
 
 #### Built-in math — abs(), max(), min(), divmod(), clamp
 
-```python
-# Basic math — abs, max, min are built-in; clamp with max(lo, min(val, hi))
-#
-# Technique: abs(), max(), min() are built-in (no import). Clamp pattern:
-#   max(lo, min(val, hi)). math module adds floor, ceil, sqrt, log, pow,
-#   trig functions. No separate Math class — functions are module-level.
-#
-# Benefits:
-#   - Built-ins (abs, max, min) need no import — always available
-#   - max/min accept any number of arguments: max(a, b, c, d)
-#   - math module covers all standard mathematical functions
-#
-# Anti-patterns:
-#   - numpy for scalar math — math module is sufficient and faster
-#   - Manual clamp with if/else — max(lo, min(val, hi)) is one line
-#
-# When to use:
-#   - All numeric computation — built-ins and math module
-#
-# When NOT to use:
-#   - Vectorized array math — use numpy instead
+`abs()`, `max()`, `min()` are built-in (no import needed). `max`/`min` accept any number of arguments. Clamp pattern: `max(lo, min(val, hi))`. The `math` module adds `floor`, `ceil`, `sqrt`, `log`, `pow`, and trig functions. For vectorized array math, use NumPy instead.
 
+```python
 # Basic math — abs, max, min are built-in; clamp uses max(lo, min(val, hi))
 
 print(f"abs(-42):        {abs(-42)}")
@@ -821,42 +787,14 @@ for i in range(8):
 
 #### logging module — levels, handlers, formatters, basicConfig
 
+Loggers form a hierarchy (root > app > app.module) — set level on parent, children inherit. Handlers direct output (console, file, network); formatters control layout. Levels: `DEBUG` < `INFO` < `WARNING` < `ERROR` < `CRITICAL`. Use lazy evaluation: `logger.info("msg %s", val)` only formats if the level is active.
+
+> [!warning] Anti-patterns
+> - **`print()` for logging** — no levels, timestamps, or filtering
+> - **f-string in log calls** — always evaluated, even if level is filtered
+> - **`basicConfig` in library code** — should only be in the entry point
+
 ```python
-# logging module — Python's built-in structured logging framework
-#
-# Technique: Loggers form a hierarchy (root > app > app.module). Handlers
-#   direct output (console, file, network). Formatters control message
-#   layout. Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL.
-#
-# Benefits:
-#   - Built-in — no external dependency
-#   - Hierarchical — set level on parent, children inherit
-#   - Lazy evaluation — logger.info("msg %s", val) only formats if level active
-#   - Multiple handlers — same logger can write to console AND file
-#
-# Anti-patterns:
-#   - print() for logging — no levels, timestamps, or filtering
-#   - f-string in log calls — always evaluated, even if level is filtered
-#   - basicConfig in library code — should only be in the entry point
-#
-# When to use:
-#   - Every production application — logging is a best practice
-#
-# When NOT to use:
-#   - N/A — always use logging instead of print for production
-
-# logging module — Python's built-in logging framework.
-#
-# KEY CONCEPTS:
-# - Levels: DEBUG < INFO < WARNING < ERROR < CRITICAL
-# - Logger hierarchy: loggers form a tree by dot-separated names.
-#   "etl.extract" is a child of "etl" — messages propagate up.
-# - NEVER use print() for operational logging — print can't be filtered, routed, or leveled.
-#
-# WARNING: In Jupyter, logging config can be tricky because the root logger
-# may already have handlers. We reset handlers to get clean output.
-
-
 # ── Basic logging setup ──
 logger = logging.getLogger("PipelineDemo")
 logger.setLevel(logging.DEBUG)  # accept DEBUG and above
@@ -961,29 +899,13 @@ json_logger.warning("Schema drift detected in %s", "users")
 
 #### os.environ — reading and setting environment variables
 
-```python
-# Environment variables — os.environ for process-level configuration
-#
-# Technique: os.environ["KEY"] raises KeyError if missing. os.environ.get("KEY",
-#   default) returns default silently. os.environ["KEY"] = value sets for
-#   the current process. Standard for Docker, K8s, CI/CD.
-#
-# Benefits:
-#   - Universal — works across all platforms and deployment targets
-#   - No files — values set by the runtime environment
-#   - Secure for secrets — not stored in source code
-#
-# Anti-patterns:
-#   - Hardcoding secrets in code — use env vars or secret managers
-#   - os.environ["KEY"] without handling KeyError — crashes if missing
-#   - Setting env vars in code — only affects the current process
-#
-# When to use:
-#   - Connection strings, API keys, deployment-specific config
-#
-# When NOT to use:
-#   - Complex structured config — use config files + env var overrides
+`os.environ["KEY"]` raises `KeyError` if missing; `os.environ.get("KEY", default)` returns the default silently. `os.environ["KEY"] = value` sets for the current process only. Standard for Docker, Kubernetes, CI/CD. For complex structured config, use config files with env var overrides.
 
+> [!warning] Anti-patterns
+> - **Hardcoding secrets in code** — use env vars or secret managers
+> - **`os.environ["KEY"]` without handling `KeyError`** — crashes if missing
+
+```python
 # Environment variables — the simplest config mechanism.
 # Used everywhere: Docker, Kubernetes, CI/CD, cloud functions.
 

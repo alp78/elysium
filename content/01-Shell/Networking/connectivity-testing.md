@@ -18,7 +18,7 @@ The first question in any network debugging session is: "Can my client reach the
 
 ## Linux — nc, dig, traceroute, mtr, ss
 
-**Testing port reachability:**
+#### nc (netcat) — testing port reachability
 
 ```bash
 # Test if a specific port is reachable (the single most useful network command)
@@ -46,7 +46,7 @@ done
 # 1433 = SQL Server, 5432 = PostgreSQL, 6379 = Redis, 8080 = Airflow webserver
 ```
 
-**DNS lookup:**
+#### dig — DNS lookup and record queries
 
 ```bash
 # DNS lookup
@@ -60,7 +60,7 @@ dig @8.8.8.8 hostname    # query specific DNS server (Google's)
 # Use case: "Is DNS resolving our internal hostname correctly?"
 ```
 
-**Network path tracing:**
+#### traceroute, mtr, ss — network path tracing and listening ports
 
 ```bash
 # Trace the network path (where is the packet getting lost?)

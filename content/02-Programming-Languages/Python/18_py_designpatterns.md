@@ -28,29 +28,17 @@ Topics covered:
 > [!tip] Related pattern
 > dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [[dbt-core-concepts]] for details.
 
-```python
-# Dependency Injection (DI) — pass dependencies in, don't create them inside.
-#
-# KEY CONCEPTS:
-# - DI: a class receives its dependencies (DB connection, API client, logger)
-#   through its constructor, NOT by creating them internally.
-# - Why: testability (swap real DB for mock), flexibility (swap providers),
-#   single responsibility (class does its job, not wiring).
-# - Python: no framework needed — just pass objects via __init__.
-#   C# equivalent: Microsoft.Extensions.DependencyInjection (builder.Services.AddXxx)
-#
-# WITHOUT DI (bad — hard to test, tightly coupled):
-#   class PipelineService:
-#       def __init__(self):
-#           self.db = PostgresConnection("prod-host")  # hardcoded!
-#           self.storage = GCSClient("prod-bucket")     # hardcoded!
-#
-# WITH DI (good — inject dependencies):
-#   class PipelineService:
-#       def __init__(self, db, storage):  # injected!
-#           self.db = db
-#           self.storage = storage
+A class receives its dependencies (DB connection, API client, logger) through its constructor, NOT by creating them internally. This enables testability (swap real DB for mock), flexibility (swap providers), and single responsibility. In Python, no framework is needed — just pass objects via `__init__`. C# equivalent: `Microsoft.Extensions.DependencyInjection` (`builder.Services.AddXxx`).
 
+> [!warning] Anti-pattern — hardcoded dependencies
+> ```python
+> class PipelineService:
+>     def __init__(self):
+>         self.db = PostgresConnection("prod-host")  # hardcoded!
+> ```
+> Instead, inject via constructor: `def __init__(self, db, storage):`
+
+```python
 from abc import ABC, abstractmethod
 
 # ─── Define interfaces (abstract base classes) ───
@@ -166,16 +154,9 @@ print(f"  Notifications sent: {mock_notifier.messages}")
 
 ## 2. Design Patterns
 
-```python
-# Singleton — ensure a class has exactly ONE instance.
-#
-# Use case: database connection pool, configuration manager, logger.
-# In Python: use a module-level variable (simplest) or __new__.
-# C# equivalent: static readonly instance, or AddSingleton<T>() in DI.
-#
-# WARNING: singletons make testing harder (global state).
-# Prefer DI with a single instance over the Singleton pattern.
+Ensures a class has exactly ONE instance — useful for database connection pools, configuration managers, or loggers. In Python, use a module-level variable (simplest) or `__new__`. C# equivalent: `static readonly` instance, or `AddSingleton<T>()` in DI. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
 
+```python
 class Config:
     """Singleton configuration — only one instance ever created."""
     _instance = None
@@ -214,14 +195,9 @@ print(f"  c1.project_id: {c1.project_id}")
       c1 is c2: True
       c1.project_id: index-lab-2
 
+Creates objects without specifying the exact class — select the right implementation based on config or environment. In Python, use a function or `@classmethod` that returns the right subclass. C# equivalent: static factory method, or `IServiceProvider.GetService<T>()`.
+
 ```python
-# Factory — create objects without specifying the exact class.
-#
-# Use case: create the right DataRepository based on config/environment.
-# In Python: a function or classmethod that returns the right subclass.
-# C# equivalent: static factory method, or IServiceProvider.GetService<T>().
-
-
 class StorageClient(ABC):
     @abstractmethod
     def upload(self, path: str, data: bytes) -> str: ...
@@ -264,15 +240,9 @@ for provider in ["gcs", "s3", "local"]:
       s3    -> s3://bucket/bronze/data.csv (10 bytes)
       local -> file://bronze/data.csv (10 bytes)
 
+Notifies multiple listeners when something happens — pipeline events (step completed, error occurred, data ready). Multiple consumers react to the same event without coupling. C# equivalent: `event`/`delegate` pattern, or `IObservable<T>`. GCP equivalent: Pub/Sub (same pattern, distributed).
+
 ```python
-# Observer — notify multiple listeners when something happens.
-#
-# Use case: pipeline events (step completed, error occurred, data ready).
-# Multiple consumers react to the same event without coupling.
-# C# equivalent: event/delegate pattern, or IObservable<T>.
-# GCP equivalent: Pub/Sub (same pattern, distributed).
-
-
 class PipelineEventBus:
     """Simple observer/event bus — subscribe to events, publish notifications."""
     def __init__(self):
@@ -321,14 +291,9 @@ bus.publish("step_completed", {"step": "gold_score", "status": "error", "message
       [LOG]   {'step': 'gold_score', 'status': 'error', 'message': 'BQ timeout'}
       [ALERT] Pipeline error: BQ timeout
 
+Swaps algorithms at runtime — different scoring algorithms, export formats, or retry policies. The context class delegates to a strategy object. C# equivalent: interface + DI, or `Func<T>` delegate.
+
 ```python
-# Strategy — swap algorithms at runtime.
-#
-# Use case: different scoring algorithms, different export formats,
-# different retry policies. The context class delegates to a strategy.
-# C# equivalent: interface + DI, or Func<T> delegate.
-
-
 class ScoringStrategy(ABC):
     """Interface for different scoring algorithms."""
     @abstractmethod
@@ -396,21 +361,9 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
 
 ## 3. Data Validation
 
+Define data shape with type hints — Pydantic validates on construction and raises `ValidationError` if invalid. `Field()` adds constraints (min, max, regex, default). `model_validate()` parses dict → model; `model_dump()` serializes model → dict. Catches bad data at the boundary (API input, file load, config parse) before it flows into pipelines. C# equivalent: `DataAnnotations` (`[Required]`, `[Range]`) + FluentValidation.
+
 ```python
-# Data Validation with Pydantic — type-safe data models.
-#
-# KEY CONCEPTS:
-# - Pydantic BaseModel: define data shape with type hints.
-#   Validates on construction — raises ValidationError if invalid.
-# - Field(): add constraints (min, max, regex, default).
-# - model_validate(): parse dict → model (formerly parse_obj).
-# - model_dump(): model → dict (formerly dict()).
-# - C# equivalent: DataAnnotations ([Required], [Range]) + FluentValidation.
-#
-# Why: catch bad data at the boundary (API input, file load, config parse)
-# before it flows into your pipeline and causes silent corruption.
-
-
 # ─── Model definitions ───
 
 class OhlcvRecord(BaseModel):
@@ -487,16 +440,9 @@ for case in bad_inputs:
 
 ## 4. Reflection / Introspection
 
+Python is deeply introspective — you can inspect any object's type, attributes, methods, source code, and module at runtime. C# equivalent: `System.Reflection` (`typeof`, `GetType`, `GetProperties`, `GetMethods`). Use cases include plugin systems, serializers, ORMs, debugging, and documentation generation.
+
 ```python
-# Reflection / Introspection — inspect objects at runtime.
-#
-# Python is deeply introspective — you can inspect any object's type,
-# attributes, methods, source code, and module at runtime.
-# C# equivalent: System.Reflection (typeof, GetType, GetProperties, GetMethods).
-#
-# Use cases: plugin systems, serializers, ORMs, debugging, documentation.
-
-
 class TradeOrder:
     """Sample class to inspect."""
     MAX_QUANTITY = 1_000_000

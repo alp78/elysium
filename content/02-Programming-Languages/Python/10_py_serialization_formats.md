@@ -52,44 +52,14 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 #### Parquet overview — columnar format for analytics
 
+Parquet stores data **column-by-column** with per-column compression (snappy, gzip, zstd). Schema is embedded in the file footer — self-describing, no separate schema file needed. Supports column pruning (projection pushdown), predicate pushdown, and partitioning. 5-10x smaller than CSV. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB, Athena. Use `pyarrow` for parquet I/O in Python.
+
+> [!warning] When NOT to use Parquet
+> - **Small files** (<1MB) — Parquet overhead exceeds benefit
+> - **Frequent appends** — Parquet is immutable; use Avro/JSONL for streaming
+> - **Simple data exchange** — CSV is more universal
+
 ```python
-# Parquet — columnar binary format for analytics and data lakes
-#
-# Technique: Parquet stores data column-by-column with per-column
-#   compression. Schema is embedded in the file footer. Supports
-#   column pruning, predicate pushdown, and partitioning.
-#
-# Benefits:
-#   - Columnar — read only needed columns (projection pushdown)
-#   - Compressed — 5-10x smaller than CSV for typical data
-#   - Typed schema — no parsing overhead, self-describing
-#   - Standard — BigQuery, Spark, DuckDB, Athena all read Parquet natively
-#
-# Anti-patterns:
-#   - Parquet for simple data exchange — CSV is more universal
-#   - Small files (<1MB) — Parquet overhead exceeds benefit
-#   - Frequent appends — Parquet is immutable; use Avro/JSONL for streaming
-#
-# When to use:
-#   - Data lake storage, analytics pipelines, large datasets
-#
-# When NOT to use:
-#   - Streaming/append workloads — use Avro or JSONL
-
-# Parquet Files — columnar storage for analytics & data lakes
-#
-# KEY CONCEPTS:
-# - Parquet: columnar binary format. Designed for analytics — read only the columns you need.
-#   Standard format in data lakes (GCS, S3, ADLS), BigQuery exports, Spark, dbt.
-# - Columnar vs row-based: CSV stores row-by-row (read entire row even for 1 column).
-#   Parquet stores column-by-column — reading 3 columns from a 100-column table is fast.
-# - Built-in compression: snappy (default, fast), gzip (smaller), zstd (best ratio).
-# - Schema is embedded: column names, types, and nullability are stored in the file metadata.
-#   No need for a separate schema file or header row.
-# - pyarrow: Apache Arrow for Python. The standard library for parquet I/O.
-#   pip install pyarrow
-
-
 tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 ```
 
@@ -590,27 +560,6 @@ For the architecture-level decision guide on when to use each format across the 
 #### Generate synthetic OHLCV test data — three sizes for benchmarks
 
 ```python
-# Generate OHLCV test data — three sizes for format benchmarking
-#
-# Technique: Create synthetic OHLCV records matching the stoxx database
-#   schema. Three tiers: 100 (small), 10K (medium), 100K (large).
-#   Fixed random seed (42) for reproducible benchmarks.
-#
-# Benefits:
-#   - Reproducible — fixed seed gives consistent results
-#   - Realistic schema — matches actual financial data structure
-#   - Three sizes reveal scaling characteristics of each format
-#
-# Anti-patterns:
-#   - Benchmarking with tiny data only — doesn't reveal scaling
-#   - Unrealistic schemas — results won't transfer to production
-#
-# When to use:
-#   - Comparing serialization format performance
-#
-# When NOT to use:
-#   - Production decisions — benchmark with actual production data
-
 # Generate OHLCV test data — same schema as stoxx database
 random.seed(42)
 

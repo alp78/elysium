@@ -294,7 +294,7 @@ Directory.Delete(tmpDir, recursive: true);
 
 ## JSON
 
-#### Type declarations
+#### JsonSerializerOptions — configure camelCase, indentation, encoding
 
 `JsonSerializerOptions` configures serialization globally: `WriteIndented`, `PropertyNamingPolicy` for camelCase, `Encoder` for Unicode. Reuse one instance — don't create new options per call.
 
@@ -664,7 +664,7 @@ Multi-document    No                      Yes (--- separator)
 
 For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro across the full pipeline, see [[serialization-formats]]. The `GZipStream` and `DeflateStream` wrappers used with these streams map to the codec decisions covered in [[compression]].
 
-#### Stream hierarchy
+#### System.IO Stream hierarchy — FileStream, MemoryStream, StreamReader
 
 `Stream` is the abstract base — `FileStream` for files, `MemoryStream` for in-memory, `NetworkStream` for network. `StreamReader`/`Writer` wrap for text. Uniform API with async support. Always dispose streams.
 
@@ -726,7 +726,7 @@ using (var ms = new MemoryStream())
       Content: PIPELINE_DATA
     etl_001|success|15000
 
-#### Cloud upload pattern — build CSV in memory
+#### MemoryStream + StreamWriter — build CSV in memory for cloud upload
 
 ```csharp
 // Cloud upload pattern — build CSV in MemoryStream and upload directly
@@ -934,7 +934,7 @@ Directory.Delete(tmpDir, recursive: true);
 
 ## Advanced JSON Patterns
 
-#### JSON Source Generators
+#### System.Text.Json Source Generators — AOT-friendly serialization
 
 `[JsonSerializable]` generates serialization code at compile time — no reflection, 2–5x faster, zero allocations, AOT-compatible. Required for Native AOT. Use for high-throughput APIs (>1000 req/s), serverless (cold start), hot paths. Overkill for prototyping.
 
@@ -1192,7 +1192,7 @@ Console.WriteLine($"  Split: {parts[0]}, close={parts[2]}");
 
 ## Encoding and Decoding
 
-#### Character encoding — UTF-8, ASCII, Unicode
+#### Encoding.UTF8, Encoding.ASCII — character encoding conversion
 
 `Encoding.UTF8.GetBytes(string)` converts text to bytes. `.GetString(bytes)` converts back. C# strings are internally UTF-16; APIs/files use UTF-8. Always specify encoding explicitly — without it, you get mojibake or data corruption.
 
@@ -1233,7 +1233,7 @@ Console.WriteLine($"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"
       Latin-1:  40 bytes, roundtrip=False
       UTF-8 BOM: [0xEF, 0xBB, 0xBF] (3 bytes)
 
-#### Base64 encoding
+#### Convert.ToBase64String / FromBase64String — Base64 encoding
 
 ```csharp
 // Base64 encoding — binary data as printable ASCII text
@@ -1269,7 +1269,7 @@ Console.WriteLine($"  URL-safe:  {urlSafe}");
       Standard:  U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
       URL-safe:  U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
 
-#### Hexadecimal encoding
+#### Convert.ToHexString / FromHexString — hexadecimal encoding
 
 ```csharp
 // Hexadecimal encoding — bytes as 0-9, A-F character pairs
@@ -1297,7 +1297,7 @@ Console.WriteLine($"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex ch
       SHA-256 of "SAP.DE": a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
       Length: 32 bytes = 64 hex chars
 
-#### URL encoding
+#### Uri.EscapeDataString, WebUtility.UrlEncode — URL encoding
 
 ```csharp
 // URL encoding — escape special characters for safe URL use

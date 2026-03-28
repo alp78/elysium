@@ -38,7 +38,7 @@ using System.Runtime.CompilerServices;
 > - **`await` in a loop** when `Task.WhenAll` works — sequential instead of concurrent
 > - For **CPU-bound work**, use `Task.Run` or `Parallel` instead
 
-#### Basic async method
+#### async/await Task — basic async method
 
 ```csharp
 // Basic async method — async Task<T> with await Task.Delay
@@ -56,7 +56,7 @@ async Task<Dictionary<string, object>> FetchDataAsync(string source, double dela
 }
 ```
 
-#### Sequential vs concurrent
+#### Task.WhenAll — sequential vs concurrent execution
 
 ```csharp
 // Sequential vs concurrent — await one-by-one vs Task.WhenAll
@@ -187,7 +187,7 @@ async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
 }
 ```
 
-#### Cancel after timeout
+#### CancellationTokenSource — cancel after timeout
 
 ```csharp
 // Cancel after timeout — automatic cancellation with CancelAfter
@@ -215,7 +215,7 @@ catch (OperationCanceledException)
       huge_events: chunk 3/10
       Export cancelled after 2s timeout
 
-#### Manual cancellation
+#### CancellationTokenSource.Cancel — manual cooperative cancellation
 
 ```csharp
 // Manual cancellation — cancel on demand from external trigger
@@ -295,7 +295,7 @@ Console.WriteLine($"    ... ({results.Length - 3} more)");
         https://api.example.com/page/2 (491ms)
         ... (7 more)
 
-#### Retry with exponential backoff
+#### Retry with exponential backoff — async transient error recovery
 
 ```csharp
 // Retry with exponential backoff — recover from transient failures
@@ -647,7 +647,7 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 > - Not joining threads — orphaned threads may prevent shutdown
 > - Shared mutable state without synchronization — race conditions
 
-#### Basic threading
+#### Thread class — basic thread creation and Join
 
 ```csharp
 // Basic threading — create, start, join, and collect results
@@ -718,7 +718,7 @@ Console.WriteLine($"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ?
       Expected: 400,000
       Got:      398'731  (WRONG — race condition!)
 
-#### Fixed with lock
+#### lock statement — fix race condition with mutual exclusion
 
 ```csharp
 // Fixed with lock — mutual exclusion prevents lost updates
@@ -873,28 +873,11 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 
 <h4><code style="font-size:0.75em">ReaderWriterLockSlim</code></h4>
 
-```csharp
-// ReaderWriterLockSlim — many readers OR one writer
-//
-// Technique: EnterReadLock allows multiple concurrent readers. EnterWriteLock
-//   gives exclusive access (blocks readers and other writers). Optimized
-//   for read-heavy workloads where writes are infrequent.
-//
-// Benefits:
-//   - Concurrent reads — much higher throughput than exclusive lock
-//   - Exclusive writes — data integrity guaranteed during updates
-//   - UpgradeableReadLock — promote reader to writer without releasing
-//
-// Anti-patterns:
-//   - ReaderWriterLockSlim for write-heavy workloads — lock is simpler and faster
-//   - Not releasing in finally — deadlock on exception
-//
-// When to use:
-//   - Read-heavy shared caches, configuration, lookup tables
-//
-// When NOT to use:
-//   - Write-heavy workloads — simple lock is better
+`EnterReadLock` allows multiple concurrent readers; `EnterWriteLock` gives exclusive access. Optimized for read-heavy workloads where writes are infrequent. `UpgradeableReadLock` promotes a reader to writer without releasing. For write-heavy workloads, a simple `lock` is better.
 
+> [!warning] Always release in `finally` — deadlock on exception otherwise.
+
+```csharp
 // ReaderWriterLockSlim — allows many concurrent readers OR one exclusive writer
 //
 // WHAT: a synchronization primitive optimized for read-heavy workloads.

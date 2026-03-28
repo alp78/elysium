@@ -27,29 +27,14 @@ from dataclasses import dataclass, field
 
 #### Class definition — __init__, attributes, __str__
 
-```python
-# Class definition — blueprint with __init__, attributes, methods, __str__
-#
-# Technique: class Dog: defines a type. __init__ initializes instance
-#   attributes (self.name). Class attributes (species) are shared by all.
-#   __str__ returns human-readable string for print() and f-strings.
-#
-# Benefits:
-#   - Class attributes shared across instances — no duplication
-#   - __init__ ensures objects start in a valid state
-#   - __str__/__repr__ provide clean display and debugging output
-#
-# Anti-patterns:
-#   - Mutable class attributes (lists/dicts) — shared and mutated by all instances
-#   - Not defining __repr__ — defaults to unhelpful <Dog at 0x...>
-#   - __init__ doing heavy work — use factory methods for complex setup
-#
-# When to use:
-#   - Domain entities with state and behavior
-#
-# When NOT to use:
-#   - Simple data containers — use dataclass or namedtuple
+`class Dog:` defines a type. `__init__` initializes instance attributes (`self.name`), while class attributes (`species`) are shared by all instances. `__str__` provides human-readable output for `print()` and f-strings. For simple data containers without behavior, prefer `dataclass` or `namedtuple`.
 
+> [!warning] Anti-patterns
+> - **Mutable class attributes** (lists/dicts) — shared and mutated by all instances
+> - **Not defining `__repr__`** — defaults to unhelpful `<Dog at 0x...>`
+> - **`__init__` doing heavy work** — use factory methods for complex setup
+
+```python
 # Classes and objects — class is the blueprint; instances are created with ClassName()
 
 # Dog — class attribute shared by all, instance attributes unique to each, methods operate on self
@@ -161,29 +146,14 @@ print(f"new radius: {c.radius}")
 
 #### Inheritance — base class, super().__init__, method override
 
-```python
-# Inheritance — base class with methods, derived classes override
-#
-# Technique: class Dog(Animal) inherits from Animal. Override methods
-#   by redefining them. super().__init__() calls parent constructor.
-#   Python supports multiple inheritance via MRO (C3 linearization).
-#
-# Benefits:
-#   - Code reuse — shared behavior in the base class
-#   - Polymorphism — derived types substitutable for the base type
-#   - super() handles MRO correctly in multiple inheritance
-#
-# Anti-patterns:
-#   - Deep hierarchies (>3 levels) — prefer composition
-#   - Forgetting super().__init__() — parent state not initialized
-#   - Diamond inheritance without understanding MRO — confusing dispatch
-#
-# When to use:
-#   - IS-A relationships: Dog is an Animal, Circle is a Shape
-#
-# When NOT to use:
-#   - HAS-A relationships — use composition (attributes)
+`class Dog(Animal)` inherits from `Animal`. Override methods by redefining them; `super().__init__()` calls the parent constructor. Python supports multiple inheritance via MRO (C3 linearization). Use inheritance for IS-A relationships; prefer composition (attributes) for HAS-A.
 
+> [!warning] Anti-patterns
+> - **Deep hierarchies** (>3 levels) — prefer composition
+> - **Forgetting `super().__init__()`** — parent state not initialized
+> - **Diamond inheritance** without understanding MRO — confusing dispatch
+
+```python
 # Inheritance and polymorphism — child classes extend a parent; method overriding enables runtime dispatch
 
 # Animal — base class with speak that subclasses can override
@@ -298,31 +268,15 @@ print(f"MRO:   {[c.__name__ for c in Duck.__mro__]}") # Method Resolution Order 
 
 #### Abstract class
 
-```python
-# Abstract class (ABC) — enforced contract with optional shared implementation
-#
-# Technique: class Shape(ABC) with @abstractmethod defines methods that
-#   subclasses must implement. Concrete methods provide shared logic.
-#   Instantiating an abstract class raises TypeError.
-#
-# Benefits:
-#   - Enforces contract — TypeError if abstract method not implemented
-#   - Shared code in concrete methods — avoids duplication
-#   - Catches missing implementations at instantiation, not at call time
-#
-# Anti-patterns:
-#   - ABC with no shared code — use Protocol for structural typing
-#   - Forgetting @abstractmethod — method becomes optional
-#   - ABC with too many abstract methods — splits into smaller ABCs
-#
-# When to use:
-#   - When subclasses must share common state and implement specific methods
-#
-# When NOT to use:
-#   - Pure contract — use Protocol for duck-typing compatibility
+`class Shape(ABC)` with `@abstractmethod` defines methods that subclasses must implement. Concrete methods provide shared logic. Instantiating an abstract class raises `TypeError`. For pure contracts without shared code, use `Protocol` for duck-typing compatibility instead.
 
-# Abstract class — Shape defines the contract
-# subclasses must implement area/perimeter
+> [!warning] Anti-patterns
+> - **ABC with no shared code** — use `Protocol` for structural typing
+> - **Forgetting `@abstractmethod`** — method becomes optional, not enforced
+> - **Too many abstract methods** — split into smaller ABCs
+
+```python
+# Abstract class — Shape defines the contract; subclasses must implement area/perimeter
 
 # Shape — abstract base; area and perimeter are abstract, describe is concrete
 class Shape(ABC):
@@ -440,29 +394,14 @@ print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
 
 #### Encapsulation — public, _protected, __private name mangling
 
-```python
-# Encapsulation — naming conventions for access control
-#
-# Technique: Python uses conventions, not enforcement. name is public.
-#   _name is protected (convention). __name triggers name mangling
-#   (_ClassName__name) — harder to access accidentally.
-#
-# Benefits:
-#   - _prefix signals "internal use" — respected by IDEs and developers
-#   - __mangling prevents accidental override in subclasses
-#   - @property provides validated access to private backing fields
-#
-# Anti-patterns:
-#   - Accessing _private attrs from outside — violates the convention
-#   - Overusing __mangling — makes testing and inheritance harder
-#   - No access control at all — public everything loses encapsulation
-#
-# When to use:
-#   - _ for internal implementation details; __ for name-collision prevention
-#
-# When NOT to use:
-#   - __ for privacy alone — _ convention is sufficient in Python
+Python uses conventions, not enforcement: `name` is public, `_name` is protected (convention), and `__name` triggers name mangling (`_ClassName__name`) to prevent accidental override in subclasses. `@property` provides validated access to private backing fields. Use `_` for internal implementation details and `__` only for name-collision prevention — `__` for privacy alone is overkill.
 
+> [!warning] Anti-patterns
+> - **Accessing `_private` attrs from outside** — violates the convention
+> - **Overusing `__mangling`** — makes testing and inheritance harder
+> - **No access control at all** — public everything loses encapsulation
+
+```python
 # Encapsulation — Python uses naming conventions instead of enforced access modifiers
 
 # BankAccount — public (name), protected (_balance), private (__pin via name mangling)
@@ -525,30 +464,14 @@ print("Python: conventions only — nothing is truly private")
 
 #### @staticmethod and @classmethod — definition and factory methods
 
-```python
-# Static and class methods — @classmethod receives cls, @staticmethod has no self
-#
-# Technique: @classmethod gets the class as first arg (cls) — enables
-#   factory methods and inheritance-aware construction. @staticmethod
-#   gets no implicit arg — just a function namespaced to the class.
-#
-# Benefits:
-#   - @classmethod factories: Employee.from_csv(line) creates instances
-#   - @classmethod respects inheritance — cls is the subclass when called on one
-#   - @staticmethod groups utility functions under the class namespace
-#
-# Anti-patterns:
-#   - @staticmethod when a module-level function is clearer
-#   - Instance method when self is never used — make it @staticmethod
-#   - Not using cls in @classmethod — should be @staticmethod instead
-#
-# When to use:
-#   - @classmethod for factories and inheritance-aware methods
-#   - @staticmethod for class-namespaced utilities
-#
-# When NOT to use:
-#   - @staticmethod for methods that need instance state — use regular method
+`@classmethod` receives the class as first argument (`cls`) — enables factory methods and inheritance-aware construction (cls is the subclass when called on one). `@staticmethod` gets no implicit argument — just a function namespaced to the class. Use `@classmethod` for factories and `@staticmethod` for class-namespaced utilities.
 
+> [!warning] Anti-patterns
+> - **`@staticmethod` when a module-level function is clearer** — unnecessary nesting
+> - **Instance method when `self` is never used** — make it `@staticmethod`
+> - **Not using `cls` in `@classmethod`** — should be `@staticmethod` instead
+
+```python
 # Static and class methods — @classmethod receives cls for factories; @staticmethod has no self/cls
 
 # Employee — instance method (self), @classmethod (cls), @staticmethod (no self/cls)

@@ -20,31 +20,13 @@ status: complete
 
 <h4>Array — <code style="font-size:0.75em">T[]</code> (fixed size)</h4>
 
+Arrays are fixed-size, contiguous memory with O(1) index access — the fastest collection type due to cache locality. Size is set at creation and cannot be changed. Use arrays for fixed data, buffers, interop, and performance-critical indexed access. For dynamic sizing (add/remove), use `List<T>` instead.
+
+> [!warning] Anti-patterns
+> - **`Array.Resize`** creates a new array and copies — it's not in-place
+> - **Resizing arrays manually** — use `List<T>` for dynamic collections
+
 ```csharp
-// Array (T[]) — fixed-size, contiguous memory, O(1) index access
-//
-// Technique: int[] nums = { 1, 2, 3 } creates a fixed-size array.
-//   Size is set at creation — cannot add/remove elements. Supports
-//   indexing, Range slicing, LINQ, and Array.Sort() in place.
-//
-// Benefits:
-//   - Fastest collection — contiguous memory with best cache locality
-//   - Fixed size prevents accidental growth — intent is clear
-//   - Interop-friendly — matches C/C++ array layout
-//
-// Anti-patterns:
-//   - Resizing arrays manually — use List<T> for dynamic sizing
-//   - Array.Resize — creates a new array and copies (not in-place)
-//
-// When to use:
-//   - Fixed data, buffers, interop, performance-critical indexed access
-//
-// When NOT to use:
-//   - Dynamic collections — use List<T> for add/remove operations
-
-// - Array (int[]): fixed size, declared at creation, cannot add/remove.
-//   Slightly faster than List.
-
 int[] nums = { 1, 2, 3, 4, 5 };                      // literal
 int[] zeros = new int[5];                            // [0, 0, 0, 0, 0]
 int[] ranged = Enumerable.Range(0, 5).ToArray();     // [0, 1, 2, 3, 4]
@@ -109,7 +91,7 @@ Console.WriteLine($"Clear():    [{string.Join(", ", lst)}]");
     Pop last:   [3, 2, 4] (popped: 5)
     Clear():    []
 
-#### Search and membership
+#### List Contains, IndexOf, Find, Exists — search and membership
 
 ```csharp
 // Search and membership — Contains, IndexOf, FindAll, Find, Exists
@@ -128,7 +110,7 @@ Console.WriteLine($"Find(>25):     {lst.Find(x => x > 25)}");
     Exists(>40):   True
     Find(>25):     30
 
-#### Sorting
+#### List Sort, OrderBy, ThenBy — sorting and custom comparers
 
 ```csharp
 // Sorting — OrderBy (new sequence) vs Sort (in-place mutation)
@@ -158,7 +140,7 @@ Console.WriteLine($"By length DESC then Alpha:   [{string.Join(", ", wordList.Or
     By length DESC:   [banana, cherry, apple]
     By length DESC then Alpha:   [banana, cherry, apple]
 
-#### Copying and conversion
+#### List ToArray, ToList, shallow copy — copying and conversion
 
 ```csharp
 // Copying and conversion — shallow copy, ToArray, ToList
@@ -322,41 +304,16 @@ Console.WriteLine($"Substring:     '{sub1}'");
 
 ## Dictionaries
 
-#### Creation
+#### Dictionary&lt;TKey, TValue&gt; creation — initializer, indexer, TryGetValue
+
+Hash-based mapping with O(1) average lookup, insert, and remove. Keys must implement `GetHashCode`/`Equals` properly (built-in types like `string`, `int` work out of the box). `SortedDictionary<K,V>` keeps keys sorted. C# has no `defaultdict` — use `GetValueOrDefault` or `TryGetValue` pattern. No `Counter` — use `GroupBy` + `Count` or a manual dictionary.
+
+> [!warning] Anti-patterns
+> - **Duplicate keys in initializer** — throws `ArgumentException`
+> - **Bracket access without checking** key exists — `KeyNotFoundException`
+> - **Mutable keys** — changing a key's hash after insertion breaks lookup
 
 ```csharp
-// Dictionary<TKey, TValue> — key-value mapping with O(1) lookup
-//
-// Technique: Hash-based mapping. Keys must implement GetHashCode/Equals.
-//   Initialize with collection initializer: new Dictionary { ["key"] = value }.
-//   O(1) average lookup, insert, and remove.
-//
-// Benefits:
-//   - O(1) average lookup — far faster than list scan for large data
-//   - Collection initializer syntax is clean and readable
-//   - Generic — type-safe keys and values
-//
-// Anti-patterns:
-//   - Duplicate keys in initializer — throws ArgumentException
-//   - Using bracket access without checking key exists — KeyNotFoundException
-//   - Mutable keys — changing a key's hash after insertion breaks lookup
-//
-// When to use:
-//   - Config, caches, frequency counts, indexes, name-value mappings
-//
-// When NOT to use:
-//   - Ordered data — use SortedDictionary for sorted keys
-
-// Dictionaries — key-value mapping
-//
-// KEY CONCEPTS:
-// - Dictionary<TKey, TValue>: unordered (no guaranteed order), mutable, no duplicate keys.
-// - Keys must implement GetHashCode/Equals properly. String, int, etc. work out of the box.
-// - O(1) average lookup.
-// - SortedDictionary<K,V>: keeps keys sorted.
-// - No defaultdict — use GetValueOrDefault or TryGetValue pattern.
-// - No Counter — use GroupBy + Count or manual dict.
-
 var empty = new Dictionary<string, int>();
 var person = new Dictionary<string, object>
 {
@@ -378,7 +335,7 @@ Console.WriteLine($"scores: {string.Join(", ", scores.Select(kv => $"{kv.Key}:{k
     person: name:Alice, age:30, city:NYC
     scores: Alice:85, Bob:92, Charlie:78
 
-#### Access and update
+#### Dictionary [], TryGetValue, ContainsKey — access and update
 
 ```csharp
 // Dictionary access and update — bracket, TryGetValue, GetValueOrDefault
@@ -399,7 +356,7 @@ Console.WriteLine($"GetValueOrDefault:    {scores.GetValueOrDefault("Unknown", -
     Bob's score:          92
     GetValueOrDefault:    -1
 
-#### Removing
+#### Dictionary Remove, Clear — removing entries
 
 ```csharp
 // Dictionary removing — Remove by key and Clear
@@ -414,7 +371,7 @@ Console.WriteLine($"After Clear:     Count={d.Count}");
     After Remove(b): a:1, c:3
     After Clear:     Count=0
 
-#### Iterating and membership
+#### Dictionary foreach KeyValuePair — iterating and membership
 
 ```csharp
 // Dictionary iteration and membership — foreach and ContainsKey/Value
@@ -437,7 +394,7 @@ Console.WriteLine($"Values: [{string.Join(", ", dd.Values)}]");
     Keys:   [name, age, city]
     Values: [Alice, 30, NYC]
 
-#### LINQ filtering, grouping, and counting
+#### LINQ Where, GroupBy, Count — dictionary filtering and grouping
 
 ```csharp
 // LINQ on dictionaries — filtering, grouping, and counting
@@ -481,39 +438,15 @@ foreach (var (key, value) in sorted)
 
 ## Sets
 
-#### Creation
+#### HashSet&lt;T&gt; creation — unordered unique elements
+
+`HashSet<T>` stores unique elements with O(1) membership testing, deduplication, and built-in set algebra (`UnionWith`, `IntersectWith`, `ExceptWith`, `SymmetricExceptWith`). `SortedSet<T>` keeps elements sorted. No `frozenset` equivalent — use `ImmutableHashSet` from `System.Collections.Immutable`.
+
+> [!warning] Anti-patterns
+> - **`List` + `Contains`** for uniqueness checks — O(n) per check vs O(1) for `HashSet`
+> - **Mutable elements** — hash changes break lookup
 
 ```csharp
-// HashSet<T> — unordered unique elements with O(1) operations
-//
-// Technique: HashSet stores unique elements using hashing. Add ignores
-//   duplicates (returns false). Contains/Remove are O(1) average.
-//   Elements must implement GetHashCode and Equals.
-//
-// Benefits:
-//   - O(1) membership testing — far faster than List.Contains for large sets
-//   - Automatic deduplication — Add silently ignores duplicates
-//   - Set algebra: union, intersection, difference operations built in
-//
-// Anti-patterns:
-//   - Using List + Contains for uniqueness checks — O(n) per check
-//   - Mutable elements — hash changes break lookup
-//
-// When to use:
-//   - Deduplication, membership testing, set algebra operations
-//
-// When NOT to use:
-//   - Ordered data — use SortedSet; indexed access — use List
-
-// Sets — unordered unique elements
-//
-// KEY CONCEPTS:
-// - HashSet<T>: unordered, mutable, NO duplicates. O(1) lookup.
-// - SortedSet<T>: always keeps elements sorted.
-// - Set operations: UnionWith, IntersectWith, ExceptWith, SymmetricExceptWith.
-//   Useful in DE for comparing datasets, deduplication.
-// - No frozenset equivalent — use ImmutableHashSet from System.Collections.Immutable.
-
 var empty = new HashSet<int>();
 var nums = new HashSet<int> { 1, 2, 3, 4, 5 };
 var fromList = new List<int> { 1, 2, 2, 3, 3, 3 }.ToHashSet();
@@ -528,7 +461,7 @@ Console.WriteLine($"fromStr:  {{{string.Join(", ", fromStr)}}}");
     fromList: {1, 2, 3}
     fromStr:  {a, b, r, c, d}
 
-#### Adding and removing
+#### HashSet Add, Remove, RemoveWhere — modify set elements
 
 ```csharp
 // HashSet add and remove — Add returns bool, Remove returns bool
@@ -545,7 +478,7 @@ Console.WriteLine($"Set: {{{string.Join(", ", s)}}}");
     Remove(1): True
     Set: {2, 3, 4}
 
-#### Set operations
+#### HashSet UnionWith, IntersectWith, ExceptWith, SymmetricExceptWith
 
 ```csharp
 // Set operations — union, intersection, difference, symmetric difference
@@ -569,7 +502,7 @@ Console.WriteLine($"Symmetric: {{{string.Join(", ", symm)}}}");
     Except:    {1, 2}
     Symmetric: {1, 2, 7, 6}
 
-#### Data comparison use case
+#### HashSet Except — data comparison for missing and extra items
 
 ```csharp
 // Data comparison use case — ExceptWith for finding missing items
@@ -604,37 +537,9 @@ Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
 
 <h4><code style="font-size:0.75em">ValueTuple</code> basics</h4>
 
+`ValueTuple` is a lightweight value type with named fields — lives on the stack, compared by value, no heap allocation. Deconstruction (`var (x, y) = tuple`) unpacks into separate variables. Avoid `System.Tuple` (older reference type using `Item1`/`Item2`) in new code. For tuples with more than 3-4 fields, use a `record` or class instead. For public APIs, records are more discoverable and documented.
+
 ```csharp
-// ValueTuple — lightweight value type with named fields
-//
-// Technique: (string Name, int Age) creates a ValueTuple with named fields.
-//   Value type — lives on stack, compared by value, no heap allocation.
-//   Deconstruction: var (name, age) = GetPerson().
-//
-// Benefits:
-//   - Named fields — point.X is clearer than Item1
-//   - Value semantics — equality by content, not by reference
-//   - No class definition needed — inline return of multiple values
-//
-// Anti-patterns:
-//   - Tuples with >3-4 fields — use a record or class instead
-//   - Using System.Tuple (old reference type) — ValueTuple is faster
-//
-// When to use:
-//   - Returning multiple values, temporary groupings, internal data
-//
-// When NOT to use:
-//   - Public APIs — records are more discoverable and documented
-
-// Tuples & Enums
-//
-// KEY CONCEPTS:
-// - ValueTuple: lightweight, value type, supports named fields.
-// - System.Tuple: older, reference type, uses Item1/Item2. Avoid in new code.
-// - Deconstruction: var (x, y) = tuple; unpacks into separate variables.
-// - Enum: a set of named integer constants. Always integers underneath.
-// - [Flags] enum: bitwise combinable enum (covered in notebook 01).
-
 var point = (3, 4);
 var person = (Name: "Alice", Age: 30, City: "NYC");
 
@@ -649,7 +554,7 @@ Console.WriteLine($"person.Age:  {person.Age}");
     person.Name: Alice
     person.Age:  30
 
-#### Deconstruction and swap
+#### Tuple deconstruction (var (a,b) = ...) and swap
 
 ```csharp
 // Deconstruction and swap — unpack tuples into separate variables
@@ -687,7 +592,7 @@ enum Direction { North, South, East, West }           // auto: 0, 1, 2, 3
 enum PipelineStatus { Pending, Running, Success, Failed }
 ```
 
-#### Using enums
+#### Enum usage — switch, ToString, Enum.Parse, IsDefined
 
 ```csharp
 // Using enums — access, cast, parse, and iterate
@@ -707,30 +612,9 @@ Console.WriteLine($"All values:      [{string.Join(", ", Enum.GetValues<Color>()
 
 <h4>Stack — <code style="font-size:0.75em">Stack&lt;T&gt;</code> (LIFO)</h4>
 
+`Push` adds to top, `Pop` removes and returns top, `Peek` reads top without removing — all O(1). `TryPop`/`TryPeek` return `false` if empty instead of throwing. Natural for undo systems, DFS traversal, balanced bracket checking, and reverse iteration. For FIFO processing use `Queue<T>`; for indexed access use `List<T>`.
+
 ```csharp
-// Stack<T> — Last In, First Out (LIFO) collection
-//
-// Technique: Push adds to top. Pop removes and returns top. Peek reads
-//   top without removing. TryPop/TryPeek return false if empty instead
-//   of throwing. All operations are O(1).
-//
-// Benefits:
-//   - O(1) push/pop — backed by an array with amortized growth
-//   - TryPop/TryPeek avoid exception overhead for empty checks
-//   - Natural for undo, DFS, expression evaluation, call simulation
-//
-// Anti-patterns:
-//   - Pop on empty stack — throws InvalidOperationException; use TryPop
-//   - Using as general collection — no indexed access, FIFO, or iteration order guarantee
-//
-// When to use:
-//   - Undo systems, DFS traversal, balanced bracket checking, reverse iteration
-//
-// When NOT to use:
-//   - FIFO processing — use Queue; indexed access — use List
-
-// - Stack<T> (LIFO): Last In, First Out. Push/Pop from top only.
-
 var stack = new Stack<string>();
 stack.Push("first");
 stack.Push("second");
@@ -828,26 +712,6 @@ while (taskQueue.Count > 0)
 #### Collection cheat sheet
 
 ```csharp
-// Collection cheat sheet — ordered, mutable, duplicates, lookup complexity
-//
-// Technique: Reference table comparing all collection types by ordering,
-//   mutability, duplicate handling, and lookup complexity. Covers arrays,
-//   lists, dictionaries, sets, stacks, queues, and linked lists.
-//
-// Benefits:
-//   - Single-page comparison for choosing the right collection
-//   - Complexity column shows O(1) vs O(n) vs O(log n) tradeoffs
-//
-// Anti-patterns:
-//   - Choosing by familiarity alone — match the collection to the access pattern
-//
-// When to use:
-//   - Quick lookup when selecting a collection type
-//
-// When NOT to use:
-//   - N/A — this is a reference table
-
-// Collection cheat sheet — ordered, mutable, duplicates, and lookup complexity
 Console.WriteLine(@"
 Collection          | Ordered | Mutable | Duplicates | Lookup
 --------------------+---------+---------+------------+---------

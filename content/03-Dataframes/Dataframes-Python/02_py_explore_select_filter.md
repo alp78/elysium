@@ -3259,7 +3259,7 @@ display(profile_pl(ohlcv_pl))
 
 ### 11.3 Profile all three datasets
 
-#### eurostoxx50_ohlcv
+#### Profile eurostoxx50_ohlcv — Pandas vs Polars describe comparison
 
 ```python
 prof_pd = profile_pd(ohlcv_pd)
@@ -3410,7 +3410,7 @@ display(prof_pl)
 </style>
 <small>shape: (12, 6)</small><table border="1" class="dataframe"><thead><tr><th>column</th><th>dtype</th><th>null_count</th><th>null_pct</th><th>n_unique</th><th>sample</th></tr><tr><td>str</td><td>str</td><td>i64</td><td>f64</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;id&quot;</td><td>&quot;Int64&quot;</td><td>0</td><td>0.0</td><td>66355</td><td>&quot;[21160, 21161, 21162]&quot;</td></tr><tr><td>&quot;symbol&quot;</td><td>&quot;String&quot;</td><td>0</td><td>0.0</td><td>50</td><td>&quot;[&#x27;ABI.BR&#x27;, &#x27;ABI.BR&#x27;, &#x27;ABI.BR&#x27;]&quot;</td></tr><tr><td>&quot;date&quot;</td><td>&quot;Date&quot;</td><td>0</td><td>0.0</td><td>1331</td><td>&quot;[datetime.date(2021, 1, 4), da…</td></tr><tr><td>&quot;open&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>29671</td><td>&quot;[58.15, 56.9, 57.96]&quot;</td></tr><tr><td>&quot;high&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>31651</td><td>&quot;[58.85, 57.98, 58.94]&quot;</td></tr><tr><td>&quot;low&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>31695</td><td>&quot;[56.78, 56.75, 57.39]&quot;</td></tr><tr><td>&quot;close&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>31505</td><td>&quot;[57.21, 57.18, 58.77]&quot;</td></tr><tr><td>&quot;adj_close&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>57739</td><td>&quot;[53.5761, 53.548, 55.037]&quot;</td></tr><tr><td>&quot;volume&quot;</td><td>&quot;Int64&quot;</td><td>0</td><td>0.0</td><td>65199</td><td>&quot;[1513937, 1382722, 1370204]&quot;</td></tr><tr><td>&quot;dividends&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>216</td><td>&quot;[0.0, 0.0, 0.0]&quot;</td></tr><tr><td>&quot;stock_splits&quot;</td><td>&quot;Float64&quot;</td><td>0</td><td>0.0</td><td>6</td><td>&quot;[0.0, 0.0, 0.0]&quot;</td></tr><tr><td>&quot;is_filled&quot;</td><td>&quot;Boolean&quot;</td><td>0</td><td>0.0</td><td>2</td><td>&quot;[False, False, False]&quot;</td></tr></tbody></table></div>
 
-#### index_dim
+#### Profile index_dim — Pandas vs Polars describe comparison
 
 ```python
 prof_pd = profile_pd(dim_pd)
@@ -3500,7 +3500,7 @@ display(prof_pl.head())
 </style>
 <small>shape: (5, 6)</small><table border="1" class="dataframe"><thead><tr><th>column</th><th>dtype</th><th>null_count</th><th>null_pct</th><th>n_unique</th><th>sample</th></tr><tr><td>str</td><td>str</td><td>i64</td><td>f64</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;id&quot;</td><td>&quot;Int64&quot;</td><td>0</td><td>0.0</td><td>169</td><td>&quot;[1, 2, 3]&quot;</td></tr><tr><td>&quot;_index&quot;</td><td>&quot;String&quot;</td><td>0</td><td>0.0</td><td>4</td><td>&quot;[&#x27;euro_stoxx_50&#x27;, &#x27;euro_stoxx_…</td></tr><tr><td>&quot;symbol&quot;</td><td>&quot;String&quot;</td><td>0</td><td>0.0</td><td>167</td><td>&quot;[&#x27;ASML.AS&#x27;, &#x27;MC.PA&#x27;, &#x27;RMS.PA&#x27;]&quot;</td></tr><tr><td>&quot;long_name&quot;</td><td>&quot;String&quot;</td><td>0</td><td>0.0</td><td>166</td><td>&quot;[&#x27;ASML Holding N.V.&#x27;, &#x27;LVMH Mo…</td></tr><tr><td>&quot;short_name&quot;</td><td>&quot;String&quot;</td><td>0</td><td>0.0</td><td>167</td><td>&quot;[&#x27;ASML HOLDING&#x27;, &#x27;LVMH&#x27;, &#x27;HERM…</td></tr></tbody></table></div>
 
-#### scores_daily
+#### Profile scores_daily — Pandas vs Polars describe comparison
 
 ```python
 prof_pd = profile_pd(scores_pd)

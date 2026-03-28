@@ -1149,11 +1149,6 @@ Export data from SQL Server, BigQuery, and Firestore.
 Query into DataFrame, write to local CSV.
 
 ```python
-# SQL Server → local CSV export via pandas read_sql + to_csv
-#
-# Technique: Query SQL Server into a DataFrame, write to local CSV.
-#   Simple but entire result set must fit in RAM.
-
 EXPORT_DIR = DATA_DIR / 'exports'
 EXPORT_DIR.mkdir(exist_ok=True)
 
@@ -1179,12 +1174,6 @@ for tier in tiers:
 Server-side export — BigQuery writes directly to GCS.
 
 ```python
-# BigQuery → GCS export via extract_table (server-side)
-#
-# Technique: Server-side operation — BigQuery writes directly to GCS.
-#   No data passes through the local machine. Supports CSV, JSON, Avro.
-#   For tiers with fewer rows than ohlcv_bench, we query into a temp table first.
-
 def bq_export(tier):
     row_limit = tiers[tier]['rows']
     # Create a temp table with the correct row count
@@ -1215,12 +1204,6 @@ for tier in tiers:
 Stream documents, write as NDJSON.
 
 ```python
-# Firestore → local JSON export via collection.stream()
-#
-# Technique: Streams documents from a collection over gRPC in batches,
-#   writes each as a JSON line to a local NDJSON file.
-#   Uses order_by + start_after pagination to avoid query timeout on large collections.
-
 def fs_export(tier):
     path = EXPORT_DIR / f'ohlcv_firestore_{tier}.json'
     target = tiers[tier]['rows']

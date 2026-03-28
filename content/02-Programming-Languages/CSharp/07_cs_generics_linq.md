@@ -66,30 +66,10 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 
 #### Generic method
 
-```csharp
-// Generic method — one method works with any type T
-//
-// Technique: T First<T>(T[] items) declares a type parameter T that the
-//   compiler infers from the argument. One method handles int[], string[],
-//   double[] — no overloads needed. Type safety preserved at compile time.
-//
-// Benefits:
-//   - Write once — works with any type without code duplication
-//   - Type-safe — compiler checks T consistency (no casting)
-//   - Inference — First(new[] { 1, 2, 3 }) infers T = int automatically
-//
-// Anti-patterns:
-//   - Using object instead of generics — loses type safety, requires casting
-//   - Overusing generics for single-type methods — adds complexity without value
-//
-// When to use:
-//   - Utility methods that work identically across types (First, Max, Swap)
-//
-// When NOT to use:
-//   - Type-specific logic — use overloads or type-specific methods
+`T First<T>(T[] items)` declares a type parameter `T` that the compiler infers from the argument. One method handles `int[]`, `string[]`, `double[]` — no overloads needed. Type safety is preserved at compile time. Avoid using `object` instead of generics (loses type safety, requires casting).
 
-// Generic method — one method works with any type T
-// compiler infers T from the argument
+```csharp
+// Generic method — one method works with any type T; compiler infers T from the argument
 T First<T>(T[] items) => items[0];
 
 Console.WriteLine($"int:    {First(new[] { 1, 2, 3 })}");
@@ -165,27 +145,6 @@ Console.WriteLine($"pair2: {pair2}");
 #### Sample data
 
 ```csharp
-// Sample data — anonymous type array for LINQ demonstrations
-//
-// Technique: new[] { new { Name, Dept, Salary, Level } } creates an array
-//   of anonymous types. The compiler infers the type from the properties.
-//   Used as shared test data across all LINQ demo cells.
-//
-// Benefits:
-//   - Anonymous types eliminate class definitions for demo data
-//   - Compiler-generated Equals/GetHashCode enable LINQ operations
-//   - Clean tabular data representation without boilerplate
-//
-// Anti-patterns:
-//   - Anonymous types in public APIs — they're internal-only
-//   - Redefining sample data in every cell — share via a single cell
-//
-// When to use:
-//   - LINQ demos, prototyping, internal projections
-//
-// When NOT to use:
-//   - Public method return types — use named types or records
-
 // Sample data used throughout the LINQ section
 var employees = new[]
 {

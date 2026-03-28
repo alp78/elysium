@@ -95,16 +95,9 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 **Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
 
+Same `GOOGLE_APPLICATION_CREDENTIALS` env var as Python. All `Google.Cloud.*` libraries auto-detect the service account key. `GoogleCredential.GetApplicationDefault()` reads the ADC chain.
+
 ```csharp
-// GCP Authentication — how C# connects to Google Cloud.
-//
-// KEY CONCEPTS:
-// - Same GOOGLE_APPLICATION_CREDENTIALS env var as Python.
-// - All Google.Cloud.* libraries auto-detect the service account key.
-// - GoogleCredential.GetApplicationDefault() reads the ADC chain.
-// - Python equivalent: same env var, Client(project=...) pattern.
-
-
 var projectId = "index-lab-2";
 var region = "europe-west1";
 var bucketName = $"{projectId}-index-data";

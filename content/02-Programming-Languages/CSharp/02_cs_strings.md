@@ -79,7 +79,7 @@ Console.WriteLine($"Raw string literal:\n{s5}");
     This is a
     raw string literal
 
-#### String from Other Types
+#### ToString(), Convert.ToString() — string from other types
 
 ```csharp
 #nullable enable
@@ -156,29 +156,9 @@ Console.WriteLine($"Modified: {s}");
 
 #### Indexing (0-based)
 
-```csharp
-// Indexing and slicing — s[i], s[^i], and s[a..b] range syntax
-//
-// Technique: s[i] returns a char at position i. s[^i] indexes from the
-//   end (^1 = last char). s[a..b] returns a substring (Range syntax, C# 8+).
-//   Ranges are exclusive on the right: s[0..5] = first 5 chars.
-//
-// Benefits:
-//   - ^i eliminates s[s.Length - i] boilerplate for end-relative access
-//   - Range syntax s[2..5] is more readable than Substring(2, 3)
-//   - Consistent with array slicing — same syntax for strings and arrays
-//
-// Anti-patterns:
-//   - Forgetting ranges are right-exclusive — s[0..5] is indices 0-4
-//   - Using Substring when range syntax is available (C# 8+)
-//   - No step/stride support — must use LINQ for every-nth-char
-//
-// When to use:
-//   - Extracting substrings, accessing characters, end-relative indexing
-//
-// When NOT to use:
-//   - Pattern extraction — use Regex or Split instead of index math
+`s[i]` returns a `char` at position `i`. `s[^i]` indexes from the end (`^1` = last char), eliminating `s[s.Length - i]` boilerplate. `s[a..b]` returns a substring using Range syntax (C# 8+) — right-exclusive, so `s[0..5]` is indices 0-4. Consistent with array slicing. No step/stride support — use LINQ for every-nth-char. For pattern extraction, use Regex or Split instead of index math.
 
+```csharp
 string s = "Hello, World!";
 //           0123456789...
 
@@ -239,7 +219,7 @@ Console.WriteLine("s[0..100] → ArgumentOutOfRangeException (range must be with
     s[100]    → IndexOutOfRangeException
     s[0..100] → ArgumentOutOfRangeException (range must be within bounds)
 
-#### Iterate over characters
+#### foreach char — iterate over string characters
 
 ```csharp
 // Character iteration — foreach yields each char in the string
@@ -290,27 +270,12 @@ for (int i = 0; i < 5; i++)
 
 #### Case Methods
 
-```csharp
-// Case methods — ToUpper, ToLower, ToTitleCase for case conversion
-//
-// Technique: ToUpper()/ToLower() convert all characters. ToTitleCase()
-//   (via CultureInfo.CurrentCulture.TextInfo) capitalizes each word.
-//   No built-in swapcase or casefold — use LINQ for custom transforms.
-//
-// Benefits:
-//   - Culture-aware — ToUpper(CultureInfo) handles locale-specific rules
-//   - ToTitleCase handles word boundary detection automatically
-//
-// Anti-patterns:
-//   - Using ToUpper() for case-insensitive comparison — use StringComparison.OrdinalIgnoreCase
-//   - Ignoring culture — Turkish 'i' uppercases to 'İ', not 'I'
-//
-// When to use:
-//   - Display formatting, normalization, case-insensitive search prep
-//
-// When NOT to use:
-//   - Case-insensitive comparison — use string.Equals with OrdinalIgnoreCase
+`ToUpper()`/`ToLower()` convert all characters. `ToTitleCase()` (via `CultureInfo.CurrentCulture.TextInfo`) capitalizes each word. No built-in `swapcase` or `casefold`. Culture-aware — `ToUpper(CultureInfo)` handles locale-specific rules (e.g., Turkish `i` uppercases to `İ`, not `I`).
 
+> [!warning] Anti-pattern
+> Don't use `ToUpper()` for case-insensitive comparison — use `StringComparison.OrdinalIgnoreCase` instead.
+
+```csharp
 #nullable enable
 
 string s = "  Hello, World!  ";
@@ -459,7 +424,7 @@ Console.WriteLine($"Concat:            '{string.Concat(parts)}'");
     Join('->'):        'hello->world->csharp'
     Concat:            'helloworldcsharp'
 
-#### Encoding
+#### Encoding.UTF8.GetBytes / GetString — text encoding
 
 ```csharp
 // Encoding — convert between strings and byte arrays
@@ -480,24 +445,7 @@ Console.WriteLine($"Back:  '{System.Text.Encoding.UTF8.GetString(utf8)}'");
 #### String formatting setup — declare format demo variables
 
 ```csharp
-// String formatting setup — declare variables for format demonstrations
-//
-// Technique: Declare name, age, double, and percentage variables in a
-//   separate cell for reuse across formatting demo cells.
-//
-// Benefits:
-//   - Keeps formatting cells focused on the format specifiers
-//
-// Anti-patterns:
-//   - Re-declaring variables in every demo cell
-//
-// When to use:
-//   - When multiple cells share the same test data
-//
-// When NOT to use:
-//   - Self-contained cells — declare inline
-
-// (moved from 01_Basics and extended)
+// Variables for formatting demonstrations
 
 string name = "Alice";
 int age = 30;
@@ -595,32 +543,11 @@ Console.WriteLine($"GBP: {amt.ToString("C2", new CultureInfo("en-GB"))}");
 
 ## Efficient String Building (StringBuilder)
 
-#### Performance: + vs StringBuilder
+#### StringBuilder vs string + — concatenation performance comparison
+
+`StringBuilder` modifies an internal char buffer in place — `Append`/`AppendLine`/`Insert`/`Replace` avoid creating new string objects. O(n) for n appends vs O(n²) for `string +` in a loop. Pre-allocate capacity for known sizes: `new StringBuilder(1024)`. Use for building strings in loops, large template assembly, and CSV generation. For simple concatenation (2-5 strings), `+` or `$""` is cleaner; for joining collections, `string.Join` is optimized.
 
 ```csharp
-// StringBuilder — mutable string buffer for efficient concatenation
-//
-// Technique: StringBuilder modifies an internal char buffer in place.
-//   Append/AppendLine/Insert/Replace avoid creating new string objects.
-//   Pre-allocate capacity for known sizes: new StringBuilder(1024).
-//
-// Benefits:
-//   - O(n) for n appends vs O(n²) for string + in a loop
-//   - Pre-allocated capacity avoids buffer resizing
-//   - Dramatically faster for >10 concatenations
-//
-// Anti-patterns:
-//   - Using StringBuilder for 2-3 concatenations — + is fine and simpler
-//   - Not calling .ToString() — StringBuilder is not a string
-//   - Forgetting to pre-allocate capacity for large known sizes
-//
-// When to use:
-//   - Building strings in loops, large template assembly, CSV generation
-//
-// When NOT to use:
-//   - Simple concatenation (2-5 strings) — + or $"" is cleaner
-//   - Joining collections — string.Join is optimized for that
-
 // string is IMMUTABLE — each + creates a new string object
 // StringBuilder modifies in-place, much faster for loops
 
@@ -648,7 +575,7 @@ Console.WriteLine($"StringBuilder is {t1/t2:F1}x faster");
     StringBuilder (50k): 0.0005s  len=238890
     StringBuilder is 8989.1x faster
 
-#### StringBuilder API
+#### StringBuilder Append, Insert, Replace, Remove — mutable string building
 
 ```csharp
 // StringBuilder API — Append, AppendLine, Insert, Replace, Remove
@@ -677,7 +604,7 @@ Console.WriteLine($"Pre-alloc capacity: {sb2.Capacity}");
     Capacity: 33
     Pre-alloc capacity: 1000
 
-#### Join & Concat
+#### string.Join, string.Concat — efficient multi-string assembly
 
 ```csharp
 // Join and Concat — efficient collection-to-string conversion
@@ -702,29 +629,13 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 
 #### Regex.Match() — First Match
 
-```csharp
-// Regex.Match and Matches — find patterns in text
-//
-// Technique: Regex.Match returns the first match (check .Success).
-//   Regex.Matches returns all matches as MatchCollection. Pattern syntax
-//   uses @"" verbatim strings to avoid double-escaping backslashes.
-//
-// Benefits:
-//   - Match.Success avoids null checks — always returns a Match object
-//   - Matches returns all occurrences in one call
-//   - Groups[0] is the full match; Groups[1..n] are capture groups
-//
-// Anti-patterns:
-//   - Not checking .Success before reading .Value — empty match is not null
-//   - Using IndexOf for pattern matching — Regex is more expressive
-//   - Recompiling the same pattern in a loop — cache with new Regex()
-//
-// When to use:
-//   - Extracting structured data: emails, phones, dates, IPs from text
-//
-// When NOT to use:
-//   - Simple Contains/StartsWith checks — string methods are faster
+`Regex.Match` returns the first match (check `.Success`). `Regex.Matches` returns all matches as `MatchCollection`. Use `@""` verbatim strings to avoid double-escaping backslashes. `Groups[0]` is the full match; `Groups[1..n]` are capture groups. For simple `Contains`/`StartsWith` checks, string methods are faster.
 
+> [!warning] Anti-patterns
+> - **Not checking `.Success`** before reading `.Value` — empty match is not null
+> - **Recompiling the same pattern in a loop** — cache with `new Regex()`
+
+```csharp
 string text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210.";
 
 // Regex.Match & Matches — find first or all matches; check Success before reading Value
@@ -753,7 +664,7 @@ Console.WriteLine($"IsMatch(mixed):  {Regex.IsMatch("123a5", @"^\d+$")}");    //
     IsMatch(digits): True
     IsMatch(mixed):  False
 
-#### Capture Groups
+#### Regex capture groups — numbered and named (?&lt;name&gt;...)
 
 ```csharp
 // Capture groups — extract sub-matches with numbered and named groups
@@ -783,7 +694,7 @@ if (match.Success)
     User:     support
     Domain:   email.com
 
-#### Replace, Split & Compile
+#### Regex.Replace, Regex.Split, new Regex() — replace, split, compile
 
 ```csharp
 // Regex Replace, Split, and Compiled — advanced pattern operations
@@ -927,7 +838,7 @@ if (m2.Success) Console.WriteLine($"Verbose:     {m2.Groups[1]}-{m2.Groups[2]}-{
 
     Verbose:     123-456-7890
 
-#### Combine flags
+#### RegexOptions bitwise OR — combine multiple flags
 
 ```csharp
 // Combining regex flags — use | to apply multiple RegexOptions

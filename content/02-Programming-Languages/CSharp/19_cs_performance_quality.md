@@ -18,39 +18,11 @@ status: complete
 
 #### Stopwatch timing and BenchmarkDotNet
 
+`Stopwatch` for high-resolution timing (hardware counters). `BenchmarkDotNet` for production-grade micro-benchmarks (warm-up, JIT, GC, statistics). Python equivalent: `time.perf_counter()`, `timeit`.
+
+> [!tip] Never optimize without measuring first. Don't use `DateTime.Now` for benchmarks (15ms resolution).
+
 ```csharp
-// Timing and benchmarking — measure execution time accurately
-//
-// Technique: Stopwatch for high-resolution wall-clock timing in code.
-//   BenchmarkDotNet for production-grade micro-benchmarks with warm-up,
-//   statistical analysis, and GC tracking. Always measure before optimizing.
-//
-// Benefits:
-//   - Stopwatch uses hardware counters — sub-microsecond resolution
-//   - BenchmarkDotNet handles warm-up, JIT, and GC automatically
-//   - Prevents premature optimization — data-driven decisions
-//
-// Anti-patterns:
-//   - DateTime.Now for timing — 15ms resolution, not suitable for benchmarks
-//   - Single-run timing — JIT and caching skew first run; use multiple iterations
-//   - Optimizing without measuring — guessing where bottlenecks are
-//
-// When to use:
-//   - Comparing algorithm alternatives, validating optimizations
-//
-// When NOT to use:
-//   - Production monitoring — use Application Insights or Prometheus instead
-
-// Timing & Benchmarking — measure how long code takes.
-//
-// KEY CONCEPTS:
-// - Stopwatch: high-resolution timer (System.Diagnostics).
-// - BenchmarkDotNet: production-grade benchmarking (warmup, GC, statistics).
-// - DateTime.Now is NOT suitable for benchmarking (low resolution, ~15ms).
-// - Python equivalent: time.perf_counter(), timeit.
-//
-// GOLDEN RULE: Never optimize without measuring first.
-
 using System.Diagnostics;
 
 // --- Stopwatch (manual timing) ---
@@ -123,40 +95,11 @@ MeasureTime(() => dataDict.ContainsKey(99_999), "Dict.ContainsKey (O(1))");
 
 #### GC.GetTotalMemory — measure managed heap allocations
 
+`GC.GetTotalMemory(true)` returns managed heap size — measure before/after to get delta. Value types (struct) live on stack; reference types (class) on heap. Boxing (`int` → `object`) allocates.
+
+> [!tip] Every `new` is an allocation. Every allocation is future GC pressure.
+
 ```csharp
-// Memory measurement — understand the cost of allocations
-//
-// Technique: GC.GetTotalMemory(forceFullCollection: true) returns total
-//   managed heap size. Measure before and after allocation to get the
-//   delta. GC.GetGCMemoryInfo() provides detailed GC statistics.
-//
-// Benefits:
-//   - Quick allocation measurement without external tools
-//   - forceFullCollection gives accurate snapshot (no pending garbage)
-//   - Reveals hidden allocations from LINQ, closures, boxing
-//
-// Anti-patterns:
-//   - Not forcing GC before measurement — stale garbage inflates numbers
-//   - Measuring in Debug — allocations differ from Release builds
-//   - Ignoring LOH (Large Object Heap) — objects >85KB allocated differently
-//
-// When to use:
-//   - Comparing memory footprint of data structures and approaches
-//
-// When NOT to use:
-//   - Production memory monitoring — use dotMemory or Application Insights
-
-// Memory Measurement — understand the cost of allocations.
-//
-// KEY CONCEPTS:
-// - GC.GetTotalMemory(): total managed heap size.
-// - GC.GetGCMemoryInfo(): detailed GC stats.
-// - Value types (struct) live on the stack; reference types (class) on the heap.
-// - Boxing (int -> object) allocates on the heap.
-// - Python equivalent: sys.getsizeof(), tracemalloc.
-//
-// GOLDEN RULE: Every 'new' is an allocation. Every allocation is future GC pressure.
-
 // Measure allocation impact
 GC.Collect();
 GC.WaitForPendingFinalizers();
@@ -237,41 +180,9 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 
 #### Span and zero-allocation patterns
 
+`Span<T>` — stack-only view into contiguous memory. Slicing creates a view (no copy, no allocation). `ReadOnlySpan<char>` for string parsing without `Substring` allocations. `stackalloc` for stack arrays (no GC, ~1MB limit). Can't store in fields or use across `await`.
+
 ```csharp
-// Span<T> — zero-allocation slicing for high-performance parsing
-//
-// Technique: Span<T> is a stack-only view into contiguous memory.
-//   Slicing creates a new view (no copy). ReadOnlySpan<char> for string
-//   parsing without substring allocations. stackalloc for stack arrays.
-//
-// Benefits:
-//   - Zero allocation — no GC pressure from slicing operations
-//   - Works with arrays, strings, and stack memory uniformly
-//   - Orders of magnitude faster for heavy parsing (CSV, protocols)
-//
-// Anti-patterns:
-//   - Span in class fields — stack-only, compiler error
-//   - Span across await — not allowed (stack frame may be gone)
-//   - Using Span for simple operations — overhead of understanding isn't worth it
-//
-// When to use:
-//   - High-throughput parsing, buffer processing, protocol handling
-//
-// When NOT to use:
-//   - General string manipulation — Substring is simpler
-
-// Span<T> — zero-allocation slicing of arrays, strings, and stack memory.
-//
-// KEY CONCEPTS:
-// - Span<T>: a view into contiguous memory. No allocation, no copy.
-// - ReadOnlySpan<T>: immutable view (for strings).
-// - stackalloc: allocate on the stack (no GC). Limited size (~1MB).
-// - Python equivalent: memoryview, numpy views, Polars zero-copy.
-//
-// GOLDEN RULE: If you're slicing arrays or parsing strings, Span avoids allocations.
-//
-// NOTE: Span<T> cannot be stored in fields, so we wrap in a local function scope.
-
 // Array slicing: copy vs Span
 {
     int[] data = Enumerable.Range(0, 1000).ToArray();
@@ -306,48 +217,17 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 
 #### Big-O complexity and collection performance cheat sheet
 
+| Operation | `List<T>` | `Array` | `Dict<K,V>` | `HashSet` | `SortedDict` |
+|---|---|---|---|---|---|
+| Index/Key | O(1) | O(1) | O(1) | — | O(log n) |
+| Search | O(n) | O(n) | O(1) | O(1) | O(log n) |
+| Add end | O(1)* | — | O(1) | O(1) | O(log n) |
+| Add front | O(n) | — | — | — | — |
+| Remove | O(n) | — | O(1) | O(1) | O(log n) |
+
+> [!tip] `Dictionary`/`HashSet` for fast lookup. `List` for ordered indexed access. Never use `List.Contains()` on large data.
+
 ```csharp
-// Collection performance cheat sheet — Big-O for common operations
-//
-// Technique: Reference table showing time complexity for each operation
-//   (lookup, insert, remove, iterate) on each collection type (List,
-//   Array, Dictionary, HashSet, SortedDictionary, LinkedList).
-//
-// Benefits:
-//   - Quick lookup for choosing the right collection by access pattern
-//   - Shows why Dictionary/HashSet are O(1) for lookup vs List O(n)
-//   - Covers edge cases: List.Insert(0) is O(n), LinkedList is O(1)
-//
-// Anti-patterns:
-//   - List.Contains in hot loops — O(n); switch to HashSet for O(1)
-//   - SortedDictionary when order doesn't matter — Dictionary is faster
-//
-// When to use:
-//   - Choosing collections based on performance requirements
-//
-// When NOT to use:
-//   - N/A — this is a reference table
-
-// Collection Performance Cheat Sheet
-//
-// | Operation        | List<T> | Array   | Dict<K,V> | HashSet | SortedDict | LinkedList |
-// |-----------------|---------|---------|-----------|---------|------------|------------|
-// | Index/Key       | O(1)    | O(1)    | O(1)      | -       | O(log n)   | O(n)       |
-// | Search          | O(n)    | O(n)    | O(1)      | O(1)    | O(log n)   | O(n)       |
-// | Add end         | O(1)*   | -       | O(1)      | O(1)    | O(log n)   | O(1)       |
-// | Add front       | O(n)    | -       | -         | -       | -          | O(1)       |
-// | Remove          | O(n)    | -       | O(1)      | O(1)    | O(log n)   | O(1)**     |
-// | Sort            | O(nlogn)| O(nlogn)| -         | -       | sorted     | O(nlogn)   |
-// | Memory          | Compact | Compact | Heavy     | Heavy   | Heavy      | Heavy      |
-//
-// *amortized   **if you have the node reference
-//
-// GOLDEN RULE: Use Dictionary/HashSet when you need fast lookup.
-//              Use List when you need ordered, indexed access.
-//              Use SortedDictionary when you need sorted keys.
-//              NEVER use List.Contains() on large data.
-
-
 int n = 100_000;
 var list = Enumerable.Range(0, n).ToList();
 var hashSet = new HashSet<int>(list);
@@ -371,72 +251,19 @@ MeasureTime(() => sorted.ContainsKey(n - 1), "SortedDict (O(log n))");
 
 #### Golden rules of C# performance
 
+> [!tip] Golden Rules of C# Performance
+> 1. **Measure first** — BenchmarkDotNet or Stopwatch. Never guess.
+> 2. **Algorithm > micro-optimization** — O(n²) → O(n log n) beats any inlining
+> 3. **Minimize allocations** — every `new` = GC pressure. Use structs, `Span<T>`, `ArrayPool`
+> 4. **Right collection** — `Dictionary` > `List` for lookups. `HashSet` for membership
+> 5. **Avoid boxing** — `int` → `object` allocates. Use generics, not `object`
+> 6. **String `+=` is O(n²)** — use `StringBuilder`. Prefer `StringComparison.Ordinal`
+> 7. **Async for I/O, not CPU** — `Parallel.ForEach` for CPU-bound
+> 8. **Pool resources** — `ArrayPool<T>.Shared`, one `HttpClient` per app
+> 9. **Seal classes** — `sealed` enables devirtualization (inline calls)
+> 10. **`readonly struct`** — avoids defensive copies. `ImmutableArray<T>` for thread safety
+
 ```csharp
-// Golden rules of performance — principles before micro-optimization
-//
-// Technique: Ten rules: measure first, avoid premature optimization,
-//   prefer built-in APIs, minimize allocations, use value types for
-//   small data, pool buffers, use Span for parsing, batch I/O.
-//
-// Benefits:
-//   - Prioritizes high-impact optimizations over micro-optimizations
-//   - Measure-first approach prevents wasted effort
-//   - Covers the 80/20 of C# performance improvements
-//
-// Anti-patterns:
-//   - Optimizing without profiling — solving the wrong problem
-//   - Micro-optimizing cold paths — only hot paths matter
-//
-// When to use:
-//   - Before any optimization work — review these rules first
-//
-// When NOT to use:
-//   - N/A — these principles are always applicable
-
-// GOLDEN RULES OF C# PERFORMANCE
-//
-// 1. MEASURE BEFORE OPTIMIZING
-//    Use BenchmarkDotNet or Stopwatch. Never guess.
-//    Profile with dotTrace or PerfView for production code.
-//
-// 2. ALGORITHM > MICRO-OPTIMIZATION
-//    O(n²) → O(n log n) is always better than inlining or unrolling.
-//
-// 3. MINIMIZE ALLOCATIONS
-//    Every 'new' = heap allocation = future GC pause.
-//    Use structs, Span<T>, stackalloc, ArrayPool<T>.Shared.
-//    Reuse objects instead of creating new ones in hot loops.
-//
-// 4. USE THE RIGHT COLLECTION
-//    Dictionary > List for lookups. HashSet for membership tests.
-//    List<T> with initial capacity when size is known.
-//
-// 5. AVOID BOXING
-//    int → object = heap allocation. Use generics instead of object.
-//    List<int> not ArrayList (which boxes everything).
-//
-// 6. STRING HANDLING
-//    string += in loop is O(n²). Use StringBuilder.
-//    Use string.Create() or Span<char> for high-performance parsing.
-//    Prefer StringComparison.Ordinal over culture-sensitive comparisons.
-//
-// 7. ASYNC FOR I/O, NOT CPU
-//    async/await is for I/O-bound work (network, disk).
-//    For CPU-bound parallelism, use Parallel.ForEach or Task.Run.
-//
-// 8. POOL RESOURCES
-//    ArrayPool<T>.Shared for temporary arrays.
-//    HttpClient: ONE instance per app (connection pooling).
-//    DbConnection: use connection pooling (built into ADO.NET).
-//
-// 9. SEALED CLASSES ARE FASTER
-//    `sealed` enables devirtualization (compiler can inline calls).
-//    Seal classes that aren't designed for inheritance.
-//
-// 10. READONLY & IMMUTABLE WHEN POSSIBLE
-//     readonly struct avoids defensive copies.
-//     ImmutableArray<T> for thread-safe collections.
-
 // Demo: ArrayPool (reuse instead of allocate)
 
 var pool = ArrayPool<int>.Shared;
@@ -481,58 +308,16 @@ try {
 
 #### Code smells and anti-patterns
 
-```csharp
-// Code smells — design issues that indicate deeper problems
-//
-// Technique: Catalog of common smells: god class (too many methods),
-//   primitive obsession (string for email), deep nesting, feature envy,
-//   magic numbers, boolean parameters, dead code.
-//
-// Benefits:
-//   - Recognition guide — spot smells during code review
-//   - Each smell has a concrete refactoring solution
-//   - Prevents technical debt accumulation
-//
-// Anti-patterns:
-//   - God class — split by single responsibility
-//   - Primitive obsession — wrap in value objects
-//   - Magic numbers — extract to named constants
-//   - Deep nesting — extract to methods, use guard clauses
-//
-// When to use:
-//   - Code review, refactoring planning, design improvement
-//
-// When NOT to use:
-//   - Premature refactoring — fix smells when they cause real problems
+> [!warning] Code smells
+> 1. **God class** — 50+ methods. Split by SRP
+> 2. **Primitive obsession** — `string` for email → create `Email` value object
+> 3. **Feature envy** — method uses another class's data more than its own
+> 4. **Magic strings/numbers** — `if (status == "active")` → use `enum`
+> 5. **Deep inheritance** — prefer composition over inheritance
+> 6. **Service locator** — hidden dependency. Use constructor injection
+> 7. **Boolean parameters** — `Process(data, true, false, true)` → use enums or named params
 
-// CODE SMELLS IN C#
-//
-// 1. GOD CLASS
-//    One class with 50+ methods. Split by responsibility (SRP).
-//
-// 2. PRIMITIVE OBSESSION
-//    Using string for email, int for money, Guid for everything.
-//    Create value objects: Email, Money, CustomerId.
-//
-// 3. FEATURE ENVY
-//    A method that uses another class's data more than its own.
-//    Move the method to the class that owns the data.
-//
-// 4. MAGIC STRINGS / NUMBERS
-//    if (status == "active") → use enum or const.
-//    if (timeout > 86400) → use TimeSpan.FromDays(1).
-//
-// 5. DEEP INHERITANCE HIERARCHIES
-//    Base > Sub > SubSub > SubSubSub = fragile, hard to reason about.
-//    Prefer composition over inheritance.
-//
-// 6. SERVICE LOCATOR PATTERN
-//    var service = ServiceLocator.Get<IMyService>() → hidden dependency.
-//    Use constructor injection instead.
-//
-// 7. BOOLEAN PARAMETERS
-//    Process(data, true, false, true) → unreadable.
-//    Use enums, named parameters, or separate methods.
+```csharp
 record Email {
     public string Value { get; }
     public Email(string value) {
@@ -569,39 +354,11 @@ try {
 
 #### Nullable reference types and static analysis
 
+`#nullable enable` turns on compiler null analysis. `string?` = nullable, `string` = non-nullable. Catches `NullReferenceException` at compile time. The `!` operator (null-forgiving) suppresses warnings — use sparingly. On by default since .NET 6.
+
+> [!tip] Enable NRT in all new projects — free bug prevention. Don't ignore nullable warnings or overuse `!`.
+
 ```csharp
-// Nullable reference types (NRT) — compile-time null safety
-//
-// Technique: #nullable enable turns on compiler null analysis. string?
-//   marks nullable, string is non-nullable. Compiler warns on potential
-//   null dereference. The null-forgiving operator (!) suppresses warnings.
-//
-// Benefits:
-//   - Catches NullReferenceException at compile time, not runtime
-//   - Documents nullable intent in the type system
-//   - Works with existing code — enable gradually per file
-//
-// Anti-patterns:
-//   - Ignoring nullable warnings — defeats the purpose
-//   - Overusing ! (null-forgiving) — hides real null risks
-//   - Not enabling NRT in new projects — missing free bug prevention
-//
-// When to use:
-//   - Every new C# project — NRT is on by default since .NET 6
-//
-// When NOT to use:
-//   - N/A — NRT should always be enabled
-
-// Nullable Reference Types (NRT) — C#'s answer to the billion-dollar mistake.
-//
-// KEY CONCEPTS:
-// - #nullable enable: compiler warns on potential null dereference.
-// - string? = nullable; string = non-nullable (by convention + compiler check).
-// - The ! operator (null-forgiving) suppresses warnings. Use sparingly.
-// - Python equivalent: Optional[str], type hints with mypy strict mode.
-//
-// GOLDEN RULE: Enable nullable in ALL new projects. It catches bugs at compile time.
-
 #nullable enable
 
 string GetName(bool exists) {
@@ -635,41 +392,14 @@ Console.WriteLine($"Chained: {result ?? "(null)"}");
 
 #### LINQ performance pitfalls
 
+> [!warning] LINQ performance pitfalls
+> - **Multiple enumeration** — `.Where().Count()` then `.Where().ToList()` = 2 passes. Materialize with `ToList()` if reused
+> - **`.Count() > 0`** — use `.Any()` instead (short-circuits)
+> - **`OrderBy().First()`** — sorts everything to get one item. Use `MinBy()`
+> - **Deferred execution** — `.Where()` doesn't execute until consumed. Returning deferred queries causes multiple enumerations
+> - **Closure allocations** — lambdas capture variables, allocating on heap
+
 ```csharp
-// LINQ performance pitfalls — common traps in LINQ pipelines
-//
-// Technique: Multiple enumeration (calling .Count() then .ToList() scans
-//   twice), deferred execution surprises, OrderBy vs Sort (allocation
-//   difference), materialization timing with ToList/ToArray.
-//
-// Benefits:
-//   - Awareness prevents common LINQ performance mistakes
-//   - Each pitfall has a concrete fix
-//   - Profiling reveals which LINQ calls are costly
-//
-// Anti-patterns:
-//   - Multiple enumeration — materialize with ToList() if reused
-//   - .Count() > 0 instead of .Any() — Any() short-circuits
-//   - OrderBy in a loop — sort once outside the loop
-//   - Deferred query as return value — callers may enumerate multiple times
-//
-// When to use:
-//   - Reviewing LINQ-heavy code for performance issues
-//
-// When NOT to use:
-//   - Simple LINQ on small data — these pitfalls matter at scale
-
-// LINQ is elegant but has performance traps.
-//
-// PITFALLS:
-// 1. Multiple enumeration: .Where().Count() then .Where().ToList() = 2 passes.
-// 2. Deferred execution: .Where() doesn't execute until you consume it.
-// 3. Closure allocations: lambdas capture variables, allocating on heap.
-// 4. OrderBy().First() = sort everything to get one item. Use MinBy().
-//
-// RULE: Materialize (.ToList()) when you'll enumerate multiple times.
-// RULE: Use MinBy/MaxBy instead of OrderBy().First().
-
 var data = Enumerable.Range(0, 100_000).ToList();
 
 // BAD: OrderBy + First (sorts everything O(n log n))

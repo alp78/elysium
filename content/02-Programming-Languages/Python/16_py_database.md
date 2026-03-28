@@ -48,29 +48,12 @@ _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="inde
 
 #### SQLite — connect and CREATE TABLE
 
-```python
-# SQLite — Python's built-in embedded database
-#
-# Technique: sqlite3.connect(":memory:") for in-memory, or a file path.
-#   cursor.execute(sql, params) for queries. ? placeholders for parameters.
-#   context manager (with conn:) auto-commits or rolls back.
-#
-# Benefits:
-#   - Built-in — no pip install, no server, works everywhere
-#   - Same SQL as SQL Server for basic operations
-#   - context manager handles commit/rollback automatically
-#
-# Anti-patterns:
-#   - f-strings in SQL — injection risk; always use ? parameters
-#   - Not closing connections — resource leak
-#   - SQLite for concurrent writes — single-writer lock
-#
-# When to use:
-#   - Tests, prototyping, embedded apps, local caches
-#
-# When NOT to use:
-#   - Concurrent multi-user access — use SQL Server or PostgreSQL
+`sqlite3.connect(":memory:")` for in-memory or a file path. `cursor.execute(sql, params)` with `?` placeholders for parameterized queries. The context manager (`with conn:`) auto-commits on success or rolls back on exception. Built-in — no pip install, no server. Use for tests, prototyping, and local caches; for concurrent multi-user access, use SQL Server or PostgreSQL.
 
+> [!danger] SQL injection
+> Never use f-strings in SQL — always use `?` parameter placeholders.
+
+```python
 conn = sqlite3.connect(":memory:")
 conn.row_factory = sqlite3.Row  # dict-like row access
 cur = conn.cursor()
@@ -428,27 +411,9 @@ The SQL patterns used below (parameterised queries, window functions, CTEs) foll
 
 #### SQL Server — connect and list schemas/tables
 
-```python
-# SQL Server with pyodbc + SQLAlchemy engine
-#
-# Technique: pyodbc.connect() for direct cursor operations (INSERT/UPDATE/DELETE).
-#   SQLAlchemy create_engine() for pd.read_sql() (avoids the DBAPI2 warning).
-#   Both use the same ODBC Driver 18 connection underneath.
-#
-# Benefits:
-#   - pyodbc cursor for DML — direct, fast, rowcount available
-#   - SQLAlchemy engine for pd.read_sql — no warnings, connection pooling
-#
-# Anti-patterns:
-#   - pd.read_sql with raw pyodbc — works but triggers UserWarning
-#   - f-strings in SQL — injection risk; use ? or :param
-#
-# When to use:
-#   - Direct SQL queries, scripts, notebooks
-#
-# When NOT to use:
-#   - ORM scenarios — use SQLAlchemy ORM
+`pyodbc.connect()` for direct cursor operations (INSERT/UPDATE/DELETE) and `SQLAlchemy create_engine()` for `pd.read_sql()` — both use ODBC Driver 18 underneath. Use `pyodbc` cursor for DML (fast, `rowcount` available) and SQLAlchemy engine for `pd.read_sql` (avoids DBAPI2 warnings, adds connection pooling). For ORM scenarios, use SQLAlchemy ORM instead.
 
+```python
 import urllib.parse
 
 conn_str = (
@@ -1200,28 +1165,13 @@ pd.read_sql("""
 
 #### pandas — read_sql into DataFrame with SQLAlchemy engine
 
-```python
-# pandas + SQLAlchemy engine — the standard pattern
-#
-# Technique: pd.read_sql(sql, engine) executes SQL and returns DataFrame.
-#   SQLAlchemy engine handles connection pooling and dialect translation.
-#   pd.read_sql works with raw pyodbc too but SQLAlchemy is preferred.
-#
-# Benefits:
-#   - One-liner: SQL result → DataFrame ready for analysis
-#   - SQLAlchemy engine handles connection lifecycle
-#   - Works with any database SQLAlchemy supports
-#
-# Anti-patterns:
-#   - pd.read_sql with raw pyodbc — works but triggers Pylance warnings
-#   - Reading entire large table — add WHERE/LIMIT clauses
-#
-# When to use:
-#   - Any time you need SQL results as a DataFrame
-#
-# When NOT to use:
-#   - Streaming large results row by row — use cursor.fetchmany()
+`pd.read_sql(sql, engine)` executes SQL and returns a DataFrame in one line. SQLAlchemy engine handles connection pooling and dialect translation, and works with any database SQLAlchemy supports. For streaming large results row by row, use `cursor.fetchmany()` instead.
 
+> [!warning] Anti-patterns
+> - **`pd.read_sql` with raw `pyodbc`** — works but triggers Pylance/UserWarning
+> - **Reading entire large table** — add `WHERE`/`LIMIT` clauses
+
+```python
 odbc_params = urllib.parse.quote_plus(
     'Driver={ODBC Driver 18 for SQL Server};'
     'Server=localhost,1434;Database=stoxx;'
@@ -1372,28 +1322,13 @@ with engine.connect() as c:
 
 #### SQLAlchemy — define ORM model classes
 
-```python
-# SQLAlchemy ORM — Python's equivalent of EF Core
-#
-# Technique: Define model classes inheriting from DeclarativeBase.
-#   Mapped[type] declares typed columns. Session manages transactions.
-#   session.add() + session.commit() generates INSERT SQL automatically.
-#
-# Benefits:
-#   - Python classes = database tables — type-safe, autocomplete
-#   - Session tracks changes — commit generates INSERT/UPDATE/DELETE
-#   - Alembic for migrations (like EF Core dotnet ef)
-#
-# Anti-patterns:
-#   - N+1 queries — use joinedload() or selectinload()
-#   - Session per query — reuse sessions within a request
-#
-# When to use:
-#   - CRUD applications, complex relationships
-#
-# When NOT to use:
-#   - Complex analytics SQL — use raw SQL or DuckDB
+Python's equivalent of EF Core. Define model classes inheriting from `DeclarativeBase` with `Mapped[type]` for typed columns. `Session` manages transactions — `session.add()` + `session.commit()` generates INSERT SQL automatically. Use Alembic for migrations (like `dotnet ef`). For complex analytics SQL, use raw SQL or DuckDB instead.
 
+> [!warning] Anti-patterns
+> - **N+1 queries** — use `joinedload()` or `selectinload()`
+> - **Session per query** — reuse sessions within a request
+
+```python
 class Base(DeclarativeBase):
     pass
 
@@ -1550,28 +1485,9 @@ df
 
 #### DuckDB — connect and CREATE TABLE
 
-```python
-# DuckDB — embedded columnar database for analytics
-#
-# Technique: duckdb.connect(":memory:") for in-memory. Full SQL:2003
-#   with window functions, CTEs, QUALIFY, PIVOT. Queries files directly.
-#
-# Benefits:
-#   - No server — embedded, in-process
-#   - Columnar engine — 10-100x faster for analytics
-#   - SQL on files — SELECT * FROM 'data.parquet'
-#   - Returns pandas DataFrames natively with .df()
-#
-# Anti-patterns:
-#   - DuckDB for OLTP — use SQL Server
-#   - Concurrent writers — single-writer
-#
-# When to use:
-#   - Analytics, notebooks, ETL validation, file queries
-#
-# When NOT to use:
-#   - Multi-user transactional systems
+Embedded columnar database — no server, in-process, 10-100x faster than row-stores for analytics. Full SQL:2003 with window functions, CTEs, `QUALIFY`, `PIVOT`. Queries files directly (`SELECT * FROM 'data.parquet'`) and returns pandas DataFrames natively with `.df()`. Not suited for OLTP or concurrent writers — use SQL Server for those.
 
+```python
 duck = duckdb.connect(":memory:")
 duck.execute("""
     CREATE OR REPLACE TABLE ohlcv (

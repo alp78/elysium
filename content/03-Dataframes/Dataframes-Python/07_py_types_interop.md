@@ -442,7 +442,7 @@ print(f"Temp dir: {TMP}")
 
 ### 1.1 Separators & Delimiters
 
-#### Pandas
+#### Pandas read_csv sep — tab, pipe, fixed-width delimiters
 
 ```python
 # Tab-separated
@@ -553,7 +553,7 @@ display(pd.read_fwf(io.StringIO(fwf)))
   </tbody>
 </table>
 
-#### Polars
+#### Polars read_csv separator — tab, pipe, fixed-width delimiters
 
 ```python
 # Tab-separated
@@ -598,7 +598,7 @@ display(pl.read_csv(io.StringIO(pipe), separator="|"))
 
 ### 1.2 Column Names & Headers
 
-#### Pandas
+#### Pandas read_csv — header, names, usecols, prefix
 
 ```python
 # No header in file — provide names
@@ -713,7 +713,7 @@ display(pd.read_csv(io.StringIO(raw), header=[0, 1]))
   </tbody>
 </table>
 
-#### Polars
+#### Polars read_csv — has_header, new_columns, column selection
 
 ```python
 # No header — provide names
@@ -758,7 +758,7 @@ display(pl.read_csv(io.StringIO(raw), skip_rows_after_header=1))
 
 ### 1.3 Type Control & Parsing
 
-#### Pandas
+#### Pandas read_csv dtype, parse_dates, converters — type control
 
 ```python
 raw = "id,name,score,date,active\n1,Alice,3.14,2024-01-15,true\n2,Bob,2.72,2024-02-20,false"
@@ -924,7 +924,7 @@ display(df)
   </tbody>
 </table>
 
-#### Polars
+#### Polars read_csv dtypes, try_parse_dates — type control and parsing
 
 ```python
 # Per-column null values (one sentinel per column)
@@ -943,7 +943,7 @@ display(df)
 
 ### 1.4 Quoting & Escaping
 
-#### Pandas
+#### Pandas read_csv quoting, escapechar — quoting and escaping
 
 ```python
 # Fields containing commas, quotes, newlines
@@ -997,7 +997,7 @@ print(df.to_csv(index=False, quoting=csv.QUOTE_NONNUMERIC))
     "Alice","Likes cats, dogs"
     "Bob","Said hello"
 
-#### Polars
+#### Polars read_csv quote_char, eol_char — quoting and escaping
 
 ```python
 # Polars handles standard RFC 4180 quoting automatically
@@ -1033,7 +1033,7 @@ print(df.write_csv(quote_style="always"))
 
 ### 1.5 Error Handling & Bad Lines
 
-#### Pandas
+#### Pandas read_csv on_bad_lines — skip or warn on malformed rows
 
 ```python
 # on_bad_lines: "skip" drops malformed rows
@@ -1130,7 +1130,7 @@ display(pd.read_csv(io.StringIO(raw), comment="#"))
   </tbody>
 </table>
 
-#### Polars
+#### Polars read_csv truncate_ragged_lines — handle malformed rows
 
 ```python
 # Truncate ragged lines (extra fields)
@@ -1175,7 +1175,7 @@ display(pl.read_csv(io.StringIO(raw), comment_prefix="#"))
 
 ### 1.6 CSV Compression (read & write)
 
-#### Pandas
+#### Pandas read_csv/to_csv compression — gzip, bz2, xz, zstd
 
 ```python
 # Write compressed CSV
@@ -1266,7 +1266,7 @@ for ext in ["csv.gz", "csv.bz2", "csv.zip", "csv.zst"]:
     csv.zip   :    2,488 bytes
     csv.zst   :    2,305 bytes
 
-#### Polars
+#### Polars read_csv/write_csv — compressed CSV with gzip, zstd
 
 ```python
 # Polars reads compressed CSV automatically from extension
@@ -1292,7 +1292,7 @@ print(f"Compressed: {(TMP / 'ohlcv_pl.csv.gz').stat().st_size:,} bytes")
 
 ### 1.7 Writing Options
 
-#### Pandas
+#### Pandas to_csv — index, float_format, quoting, date_format
 
 ```python
 df = ohlcv_pd.head(5)
@@ -1357,7 +1357,7 @@ print(df[["close", "volume"]].head(3).to_csv(index=False, float_format="%.2f"))
     57.18,1382722
     58.77,1370204
 
-#### Polars
+#### Polars write_csv — float_precision, date_format, null_value
 
 ```python
 df = ohlcv_pl.head(5)
@@ -1417,7 +1417,7 @@ print(f"Written: {(TMP / 'polars_out.csv').stat().st_size:,} bytes")
 
 ### 1.8 Chunked & Streaming Reading
 
-#### Pandas
+#### Pandas read_csv chunksize — iterate DataFrame chunks
 
 ```python
 # chunksize returns an iterator of DataFrames
@@ -1439,7 +1439,7 @@ print(f"Average close: {avg_close / n:.2f}")
     Read 66,355 rows in chunks of 10,000
     Average close: 197.03
 
-#### Polars
+#### Polars scan_csv — lazy streaming without full memory load
 
 ```python
 # Polars: use scan_csv (lazy) — never loads everything at once
@@ -1650,7 +1650,7 @@ for orient in orientations:
 
 ### 2.2 Nested JSON & Flattening
 
-#### Pandas
+#### Pandas json_normalize — flatten nested JSON records
 
 ```python
 # Nested JSON records
@@ -1776,7 +1776,7 @@ display(df_emp)
   </tbody>
 </table>
 
-#### Polars
+#### Polars unnest, explode — flatten nested JSON Struct and List types
 
 ```python
 # Polars represents nested JSON as Struct and List types
@@ -1919,7 +1919,7 @@ print(f"\nLazy schema: {lf.collect_schema()}")
 
 ### 2.4 JSON Writing Options
 
-#### Pandas
+#### Pandas to_json — orient, date_format, double_precision
 
 ```python
 df = ohlcv_pd.head(3)[["symbol", "date", "close"]]
@@ -1977,7 +1977,7 @@ print(f"\nCompressed JSON: {(TMP / 'ohlcv.json.gz').stat().st_size:,} bytes")
     
     Compressed JSON: 113 bytes
 
-#### Polars
+#### Polars write_json, write_ndjson — JSON writing options
 
 ```python
 df = ohlcv_pl.head(3).select("symbol", "date", "close")
@@ -2097,7 +2097,7 @@ display(df)
 
 ### 3.1 Compression Codecs
 
-#### Pandas
+#### Pandas read_parquet/to_parquet — snappy, gzip, brotli, zstd compression
 
 ```python
 df = ohlcv_pd.head(10_000)
@@ -2129,7 +2129,7 @@ for level in [1, 5, 9, 19]:
     zstd(level= 9):    291,326 bytes
     zstd(level=19):    283,439 bytes
 
-#### Polars
+#### Polars write_parquet compression — snappy, gzip, zstd, lz4
 
 ```python
 df = ohlcv_pl.head(10_000)
@@ -2215,7 +2215,7 @@ print(f"\nWith stats: {path_small.stat().st_size:,}, without: {path_no_stats.sta
 
 ### 3.3 Schema Control & Type Mapping
 
-#### Pandas
+#### Pandas read_parquet columns, dtype_backend — schema control
 
 ```python
 # Read with specific columns only
@@ -2293,7 +2293,7 @@ print(pq.read_schema(TMP / "typed.parquet"))
     -- schema metadata --
     pandas: '{"index_columns": [], "column_indexes": [{"name": null, "field_n' + 533
 
-#### Polars
+#### Polars read_parquet columns, rechunk — schema and type mapping
 
 ```python
 # Read with column projection
@@ -2448,7 +2448,7 @@ print(f"\nRound-trip metadata: {table_back.schema.metadata[b'version']}")
 
 ### 4.1 Character Encodings
 
-#### Pandas
+#### Pandas read_csv encoding — UTF-8, Latin-1, chardet detection
 
 ```python
 # Create files with different encodings
@@ -2489,7 +2489,7 @@ except ImportError:
     
     Detected encoding: {'encoding': 'Windows-1252', 'confidence': 0.09340473165624712, 'language': 'pt', 'mime_type': 'text/plain'}
 
-#### Polars
+#### Polars read_csv — UTF-8 only, decode non-UTF-8 before reading
 
 ```python
 # Polars only reads UTF-8 natively.

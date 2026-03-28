@@ -787,7 +787,7 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 <iframe src="/static/plotly/dt_cs_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Cleanup benchmark blobs
+#### StorageClient — cleanup benchmark blobs
 
 ```csharp
 // Delete all benchmark blobs from the bucket
@@ -1203,7 +1203,7 @@ Plotly.NET.CSharp.Chart.Combine(cpTierCharts)
 
 from VM (`notebook-vm`, `europe-west1-b`)
 
-#### Copy upload files and SA key to VM
+#### Renci.SshNet SftpClient — copy upload files and SA key to VM
 
 ```csharp
 // Copy upload files (small/medium/large CSV) + service account key to the VM via SFTP.
@@ -1237,7 +1237,7 @@ using (var ssh = CreateSshClient())
       Copying large_upload.csv (1.19 GB)... 6.4min  (3.2 MB/s)
       Copying gcp-sa-key.json (2.3 KB)... 91ms  (25.5 KB/s)
 
-#### Run upload benchmarks on VM
+#### Renci.SshNet SshClient — run upload benchmarks on VM via SSH
 
 Executes the same upload methods on the VM via SSH. The VM is in `europe-west1-b`, same region as the bucket. The Python benchmark script is uploaded via SFTP and run with `python3 -u` over an interactive `ShellStream` — results stream back line-by-line as JSON, parsed and saved locally after each method completes.
 
@@ -1815,7 +1815,7 @@ foreach (var r in parallelResults)
       threaded_8              8    1.51 GB     3.6min       7.1 MB/s
       async_4                 8    1.51 GB     3.6min       7.1 MB/s
 
-#### Cleanup parallel benchmark blobs
+#### StorageClient — cleanup parallel benchmark blobs
 
 ```csharp
 // Delete parallel benchmark blobs

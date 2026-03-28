@@ -25,25 +25,7 @@ Topics covered:
 #### Imports and warning suppression
 
 ```csharp
-// Imports — namespaces for date/time, math, logging, and configuration
-//
-// Technique: Import System.Globalization, Microsoft.Extensions.Logging,
-//   and Microsoft.Extensions.Configuration namespaces. Suppress CS1701/CS1702.
-//
-// Benefits:
-//   - All dependencies visible in one cell
-//   - Warning suppression keeps output clean
-//
-// Anti-patterns:
-//   - Importing inside methods — hard to track
-//
-// When to use:
-//   - Top of every notebook using these libraries
-//
-// When NOT to use:
-//   - N/A — imports always belong at the top
-
-// Suppress CS1701/CS1702 warnings and import namespaces used in this notebook
+// Imports and warning suppression for date/time, math, logging, and configuration
 
 using System.Globalization;
 using System.Reflection;
@@ -74,30 +56,15 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 ## Date and Time
 
-#### Creating date and time objects
+#### DateTime, DateOnly, TimeOnly, DateTimeOffset — creating objects
+
+`DateTime.Now` for local, `DateTime.UtcNow` for UTC. `DateOnly` for dates without time, `TimeOnly` for times without date (.NET 6+). `DateTimeOffset` carries timezone offset — always prefer UTC for storage. Separate types prevent misuse; `UtcNow` is monotonic (no DST jumps).
+
+> [!warning] Anti-patterns
+> - **`DateTime.Now` for storage** — timezone-dependent; use `UtcNow`
+> - **Comparing `DateTime` with different `Kind`s** — undefined behavior
 
 ```csharp
-// Creating date and time objects — DateTime, DateOnly, TimeOnly
-//
-// Technique: DateTime.Now for local, DateTime.UtcNow for UTC. DateOnly
-//   for dates without time. TimeOnly for times without date. DateTimeOffset
-//   carries timezone offset. Always prefer UTC for storage.
-//
-// Benefits:
-//   - Separate types for date-only and time-only prevent misuse
-//   - DateTimeOffset preserves timezone — no ambiguity
-//   - UtcNow is monotonic — no DST jumps
-//
-// Anti-patterns:
-//   - DateTime.Now for storage — timezone-dependent; use UtcNow
-//   - Comparing DateTime with different Kinds — undefined behavior
-//
-// When to use:
-//   - UtcNow for timestamps; DateOnly for calendar dates; DateTimeOffset for cross-zone
-//
-// When NOT to use:
-//   - DateTime.Now for cross-timezone systems — use DateTimeOffset
-
 // Creating date and time objects
 
 // Current date and time
@@ -141,7 +108,7 @@ Console.WriteLine($"With ticks:        {dtTicks}");
     Specific TimeOnly: 14:30
     With ticks:        15-Mar-24 14:30:45
 
-#### Accessing components
+#### DateTime .Year, .Month, .Day, .Hour — accessing components
 
 ```csharp
 // Accessing date/time components — Year, Month, Day, Hour, etc.
@@ -271,7 +238,7 @@ foreach (var (s, d) in inputs)
       '2024-03-15T14:30:45.1234560'    -> 15-Mar-24 14:30:45
       'Fri, 15 Mar 2024 14:30:45'      -> 15-Mar-24 14:30:45
 
-#### Safe parsing with TryParseExact
+#### DateTime.TryParseExact — safe parsing with explicit format
 
 ```csharp
 // TryParseExact — safe date parsing that returns false on invalid input
@@ -452,7 +419,7 @@ Console.WriteLine($"  Offset:        {dto.Offset}");
       Local:         15-Mar-24 10:00:45
       Offset:        05:30:00
 
-#### Timezone management
+#### TimeZoneInfo.FindSystemTimeZoneById — timezone management
 
 ```csharp
 // Timezone management — DateTime.Kind and timezone conversion
@@ -470,7 +437,7 @@ Console.WriteLine($"UTC:         {utc}, Kind={utc.Kind}");
     Local:       15-Mar-24 14:30:45, Kind=Local
     UTC:         15-Mar-24 14:30:45, Kind=Utc
 
-#### Converting between timezones
+#### TimeZoneInfo.ConvertTime — converting between timezones
 
 ```csharp
 // Converting between timezones — UTC to Eastern, Tokyo, etc.
@@ -553,7 +520,7 @@ Console.WriteLine($"+ 1 year:           {dt.AddYears(1)}");
     + 6 months:         15-Sep-24 14:30:45
     + 1 year:           15-Mar-25 14:30:45
 
-#### Difference between dates
+#### TimeSpan — difference between dates
 
 ```csharp
 // Difference between dates — subtracting DateTimes returns TimeSpan
@@ -575,7 +542,7 @@ Console.WriteLine($"Total hours:        {diff.TotalHours}");
     Total days:         285
     Total hours:        6840
 
-#### Comparing dates
+#### DateTime.Compare, CompareTo — comparing dates
 
 ```csharp
 // Comparing dates — operators and DateTime.Compare
@@ -726,28 +693,9 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 <h4><code style="font-size:0.75em">Math</code> class</h4>
 
-```csharp
-// Math class — basic arithmetic functions (Abs, Max, Min, Clamp)
-//
-// Technique: Math.Abs for absolute value, Math.Max/Min for comparisons,
-//   Math.Clamp(value, min, max) restricts to a range. All static methods
-//   on the Math class — no instance needed.
-//
-// Benefits:
-//   - Built-in — no external library for common math operations
-//   - Clamp replaces manual if/else for range restriction
-//   - Overloaded for int, double, decimal, etc.
-//
-// Anti-patterns:
-//   - Manual if/else for clamping — Math.Clamp is one call
-//   - Abs on unsigned types — unnecessary, always positive
-//
-// When to use:
-//   - Data normalization, bounds checking, absolute differences
-//
-// When NOT to use:
-//   - Complex math — use MathNet.Numerics library
+`Math.Abs` for absolute value, `Math.Max`/`Min` for comparisons, `Math.Clamp(value, min, max)` restricts to a range — all static methods, overloaded for `int`, `double`, `decimal`. `Clamp` replaces manual `if`/`else` for range restriction. For complex math, use the `MathNet.Numerics` library.
 
+```csharp
 // Basic math — Abs, Max, Min, Clamp; all static methods on Math class
 Console.WriteLine($"Abs(-42):        {Math.Abs(-42)}");
 Console.WriteLine($"Max(10, 20):     {Math.Max(10, 20)}");
@@ -760,7 +708,7 @@ Console.WriteLine($"Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}");
     Min(10, 20):     10
     Clamp(15, 0, 10):10
 
-#### Rounding
+#### Math.Floor, Math.Ceiling, Math.Round — rounding strategies
 
 ```csharp
 // Rounding — Floor, Ceiling, Round, and banker's rounding
@@ -780,7 +728,7 @@ Console.WriteLine($"Truncate(3.9):   {Math.Truncate(3.9)}");
     Round(2.5, AwayFromZero): 3
     Truncate(3.9):   3
 
-#### Powers, roots, and logarithms
+#### Math.Sqrt, Math.Log, Math.Pow — powers, roots, logarithms
 
 ```csharp
 // Powers, roots, and logarithms — Pow, Sqrt, Log, Exp
@@ -802,7 +750,7 @@ Console.WriteLine($"Exp(1):          {Math.Exp(1)}");
     Log2(1024):      10
     Exp(1):          2.718281828459045
 
-#### Trigonometry and constants
+#### Math.Sin, Math.Cos, Math.PI, Math.E — trigonometry and constants
 
 ```csharp
 // Trigonometry and constants — PI, E, Tau, Sin, Cos, Atan2
@@ -822,7 +770,7 @@ Console.WriteLine($"Atan2(1, 1):     {Math.Atan2(1, 1)}");
     Cos(0):          1
     Atan2(1, 1):     0.7853981633974483
 
-#### Special float values and NaN
+#### double.NaN, double.IsNaN, double.PositiveInfinity — special values
 
 ```csharp
 // Special float values and NaN — detection and propagation rules
@@ -838,7 +786,7 @@ Console.WriteLine($"IsInfinity(1.0/0.0):   {double.IsInfinity(1.0 / 0.0)}");
     IsNaN(0.0/0.0):        True
     IsInfinity(1.0/0.0):   True
 
-#### Percentile calculation
+#### LINQ OrderBy + ElementAt — percentile calculation
 
 ```csharp
 // Percentile calculation — common for scoring and anomaly detection
@@ -856,7 +804,7 @@ Console.WriteLine($"P95 latency: {p95:F2} ms");
     Latencies: [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
     P95 latency: 90.01 ms
 
-#### Random number generation
+#### Random.Shared.Next, NextDouble — random number generation
 
 ```csharp
 // Random number generation — seed for reproducibility, Next for integers
@@ -912,7 +860,7 @@ Console.WriteLine($"Random pick: {colors[rng.Next(colors.Length)]}");
 
     Random pick: red
 
-#### Synthetic test data generation
+#### Random + DateTime — synthetic OHLCV test data generation
 
 ```csharp
 // Synthetic test data generation — OHLCV-style records for pipelines
@@ -946,42 +894,14 @@ for (int i = 0; i < 8; i++)
 
 ## Logging
 
-#### Basic logging setup
+#### Microsoft.Extensions.Logging — ILogger, LoggerFactory setup
+
+The standard .NET logging abstraction — same API for console, file, and cloud providers. `ILoggerFactory` creates typed loggers; `ILogger<T>` provides category-based filtering. Log levels: `Trace` < `Debug` < `Information` < `Warning` < `Error` < `Critical`. Use **structured logging** with named placeholders (`logger.LogInformation("Processed {Count} rows", rowCount)`) — backends like Seq, ELK, and GCP index the values.
+
+> [!warning] Anti-pattern
+> Don't use `Console.WriteLine` for logging — it has no levels, timestamps, or filtering.
 
 ```csharp
-// Basic logging setup — Microsoft.Extensions.Logging with console provider
-//
-// Technique: ILoggerFactory creates typed loggers. AddSimpleConsole configures
-//   format with timestamp. LogLevel filters: Trace < Debug < Information <
-//   Warning < Error < Critical. SetMinimumLevel controls output verbosity.
-//
-// Benefits:
-//   - Standard .NET logging — same API for console, file, cloud
-//   - Log levels enable filtering without code changes
-//   - ILogger<T> provides category-based filtering
-//
-// Anti-patterns:
-//   - Console.WriteLine for logging — no levels, timestamps, or filtering
-//   - Hardcoded log level — use configuration for runtime control
-//
-// When to use:
-//   - Every .NET application — structured logging is a best practice
-//
-// When NOT to use:
-//   - N/A — logging is always appropriate for production code
-
-
-// Logging in .NET — Microsoft.Extensions.Logging
-// The standard logging abstraction for .NET apps, pipelines, and services.
-//
-// KEY CONCEPTS:
-// - ILogger<T>: the logging interface — you inject it, never create directly.
-// - LogLevel: Trace < Debug < Information < Warning < Error < Critical
-// - Structured logging: log key-value pairs, not just strings.
-//   e.g., logger.LogInformation("Processed {Count} rows", rowCount)
-//   The {Count} is a named placeholder — logging backends (Seq, ELK, GCP) index it.
-// - In notebooks/scripts we use LoggerFactory directly (no DI container).
-
 // ── Basic console logging ──
 // In a real app, this comes from dependency injection (builder.Services.AddLogging()).
 // In a notebook/script, we build the factory manually.
@@ -1017,7 +937,7 @@ for (int i = 0; i < 8; i++)
     crit: PipelineDemo[0]
           Critical: pipeline halted — data loss risk
 
-#### Structured logging and log levels
+#### ILogger.LogInformation, LogWarning, LogError — structured log levels
 
 ```csharp
 // Structured logging — log templates with named parameters
@@ -1064,30 +984,11 @@ for (int i = 0; i < 8; i++)
 
 ## Configuration and Environment Variables
 
-#### Environment variables
+#### Environment.GetEnvironmentVariable — read and set env vars
+
+`Environment.GetEnvironmentVariable("NAME")` reads a single variable; `GetEnvironmentVariables()` returns all as `IDictionary`. Standard across all platforms. Use for connection strings, API keys, and deployment-specific settings — never hardcode secrets in code. Always provide defaults with `??` for variables that may not exist. For complex structured config, use `appsettings.json` + `IConfiguration`.
 
 ```csharp
-// Environment variables — reading system and process-level configuration
-//
-// Technique: Environment.GetEnvironmentVariable("NAME") reads a single var.
-//   GetEnvironmentVariables() returns all as IDictionary. Common for
-//   secrets, connection strings, and deployment-specific settings.
-//
-// Benefits:
-//   - Standard — works across all platforms and deployment targets
-//   - No files to manage — values set by the runtime environment
-//   - Secure for secrets — not stored in source code
-//
-// Anti-patterns:
-//   - Hardcoding secrets in code — use env vars or secret managers
-//   - Not providing defaults — crash when env var is missing
-//
-// When to use:
-//   - Connection strings, API keys, deployment-specific config
-//
-// When NOT to use:
-//   - Complex structured config — use appsettings.json + IConfiguration
-
 // Read common env vars
 Console.WriteLine($"USERNAME:              {Environment.GetEnvironmentVariable("USERNAME")}");
 Console.WriteLine($"COMPUTERNAME:          {Environment.GetEnvironmentVariable("COMPUTERNAME")}");
@@ -1109,7 +1010,7 @@ Console.WriteLine($"PIPELINE_ENV:          {Environment.GetEnvironmentVariable("
     DATABASE_HOST (default): localhost
     PIPELINE_ENV:          staging
 
-#### List all environment variables
+#### Environment.GetEnvironmentVariables — list all env vars
 
 ```csharp
 // List all environment variables — diagnostic inspection
@@ -1168,7 +1069,7 @@ File.WriteAllText(appSettings, @"{
 }");
 ```
 
-#### Building configuration from multiple sources
+#### ConfigurationBuilder — JSON, env vars, command-line args
 
 ```csharp
 // Building configuration from multiple sources — JSON + env vars
@@ -1195,7 +1096,7 @@ Console.WriteLine($"Connection:    {config["ConnectionStrings:Warehouse"]}");
     Enabled:       True
     Connection:    Server=prod-db;Database=analytics;Trusted_Connection=true
 
-#### Reading configuration values
+#### IConfiguration GetValue, GetSection, Bind — reading config values
 
 ```csharp
 // Reading configuration values — GetValue<T>, GetSection, and binding

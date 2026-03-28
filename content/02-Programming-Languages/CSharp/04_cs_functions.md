@@ -18,7 +18,7 @@ status: complete
 
 ## Function Basics
 
-#### Basic functions
+#### Method definition — return type, parameters, static, overloading
 
 C# methods must declare a return type (`int`, `string`, `void`). Parameters are typed. Static typing catches signature mismatches at compile time. Overloading allows same name with different parameter types.
 
@@ -192,7 +192,7 @@ Dictionary<string, object> ProcessOrder(
     
     (4,19): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
-#### Production
+#### Dependency injection — production call with default DateTime.UtcNow
 
 Production call — default parameter uses real `DateTime.UtcNow`:
 
@@ -203,7 +203,7 @@ Console.WriteLine($"  Production: {order1["processed_at"]}");
 
       Production: 25-Mar-26 1:21:14
 
-#### Test — inject fake time
+#### Dependency injection — test with injected fake DateTime
 
 Test call — inject a fixed `DateTime` for deterministic, reproducible results:
 
@@ -402,7 +402,7 @@ Console.WriteLine($"add(3, 4): {add(3, 4)}");
     square(5): 25
     add(3, 4): 7
 
-#### Statement lambda — multi-line body
+#### Statement lambda — multi-line body with { }
 
 `(params) => { statements; return value; }` — braces and explicit `return` required. Supports `if`/`else`, loops, `try`/`catch`. Still captures enclosing scope. Keep under 5 lines — extract longer logic to a named method.
 
@@ -486,7 +486,7 @@ Console.WriteLine($"times(5): {times(5)}");    // 50 — sees the change!
 
 ## Closures & Scope
 
-#### Block scope
+#### Block scope — variables declared inside { } are local
 
 C# uses block-level scoping defined by `{}`. A variable is visible from its declaration to the end of its block. Closures capture the variable itself (shared reference, not a copy). Lambdas in a loop all share the same loop variable — fix by copying to a local inside the loop body.
 
@@ -598,7 +598,7 @@ Console.WriteLine($"Good: [{string.Join(", ", funcsGood.Select(f => f()))}]");  
 
 ## Delegates & Events
 
-#### Delegate types
+#### Delegate, Func&lt;T&gt;, Action&lt;T&gt; — delegate type declarations
 
 Delegates declare a function signature as a type — type-safe function pointers. Built-in: `Func<T, TResult>` (returns value), `Action<T>` (void), `Predicate<T>` (returns bool). Custom: `delegate int Op(int a, int b)`. Delegates can chain multiple methods via `+=` (multicast). Events are restricted delegates that only the owner can invoke.
 
@@ -619,7 +619,7 @@ delegate int MathOp(int a, int b);     // custom delegate type
     Add: 7
     Mul: 12
 
-#### Multicast delegates
+#### Multicast delegates — += to chain, invoke all subscribers
 
 `+=` adds a handler, `-=` removes. Invoking calls all registered handlers in order. Observer pattern — multiple subscribers notified by one invoke. Don't forget to remove handlers to avoid memory leaks.
 
@@ -690,7 +690,7 @@ Console.WriteLine();
 > - Too many overloads — use optional/named parameters or generics instead
 > - Ambiguous overloads cause compiler errors when it can't decide
 
-#### Same name, different parameters
+#### Method overloading — same name, different parameters
 
 The compiler picks the most specific overload by argument types. `Format(42)` resolves to `Format(int)`, `Format(3.14)` to `Format(double)`. Numeric promotions: `int` can promote to `double` but not vice versa. Use generics when one method can handle all types.
 

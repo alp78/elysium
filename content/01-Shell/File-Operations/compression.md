@@ -18,7 +18,7 @@ When you move data between systems (GCE VM to GCS, pipeline output to archive), 
 
 ## Linux — gzip, zstd, tar
 
-**gzip — the universal default:**
+#### gzip — the universal default
 
 ```bash
 # gzip — the universal default
@@ -30,7 +30,7 @@ gzip -d data.csv.gz               # decompress (or: gunzip data.csv.gz)
 gzip -l data.csv.gz               # show compression ratio without decompressing
 ```
 
-**zstd — modern replacement with better ratio AND faster speed:**
+#### zstd — modern replacement with better ratio and faster speed
 
 ```bash
 # zstd — modern replacement, better ratio AND faster than gzip
@@ -43,7 +43,7 @@ zstd --rm data.csv                # remove original after compressing
 # Use gzip only when compatibility requires it (some tools don't support zstd yet)
 ```
 
-**tar — archiving and compression for directories:**
+#### tar — archiving and compression for directories
 
 ```bash
 # tar — archiving + compression (directories into a single file)

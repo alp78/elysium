@@ -144,7 +144,7 @@ Console.WriteLine("  Assert class, test runner, and attributes ready.");
 
       Assert class, test runner, and attributes ready.
 
-#### Assert class
+#### Assert.Equal, Assert.True, Assert.Throws — xUnit assertion methods
 
 Lightweight reimplementation of xUnit's `Assert` class — same API, zero dependencies. Methods: `Equal`, `True`/`False`, `Null`/`NotNull`, `Contains`, `Empty`/`NotEmpty`, `InRange`, `Throws<T>`, `Single`, `Matches`. Code is directly portable to a real xUnit project — just remove this class and add the NuGet package.
 
@@ -484,20 +484,10 @@ foreach (var (ticker, valid) in tickerCases)
 ```csharp
 #nullable enable
 
-// Mocking in C# — hand-written mocks for notebooks, Moq for real projects
-//
-// KEY CONCEPTS:
-// - In production C#, you use Moq (NuGet) to auto-generate mocks from interfaces.
-//   Moq API:  new Mock<IService>()  →  mock.Setup(s => s.Method()).Returns(value)
-// - In notebooks, Moq triggers assembly version warnings on .NET 10.
-//   So we write mocks by hand — same pattern, just explicit.
-// - The core idea is identical: implement the interface with fake behavior,
-//   then verify your code called the right methods with the right arguments.
-//
-// WHY MOCK?
-// - Don't call real Bloomberg/exchange/database in tests.
-// - Tests must be fast, isolated, deterministic.
-// - Mock the boundary (interface), test the logic.
+// In production C#, use Moq (NuGet) to auto-generate mocks from interfaces:
+//   new Mock<IService>() → mock.Setup(s => s.Method()).Returns(value)
+// In notebooks, we write mocks by hand (same pattern, Moq has assembly warnings on .NET 10).
+// Core idea: implement the interface with fake behavior, verify correct method calls.
 
 void RunTest(string name, Action test)
 {
@@ -506,7 +496,7 @@ void RunTest(string name, Action test)
 }
 ```
 
-#### Interfaces
+#### Interfaces — define contracts for dependency injection
 
 ```csharp
 // In C#, you mock interfaces (not concrete classes).
@@ -516,7 +506,7 @@ Console.WriteLine("=== Mock Basics ===");
 
     === Mock Basics ===
 
-#### Type declarations (must be after top-level statements)
+#### Interface + mock classes — IMarketDataClient, IBroker for testability
 
 In C#, you mock **interfaces**, not concrete classes. An interface declares what methods exist; a mock implements them with fake behavior. Production code depends on `IMarketDataClient` (interface) — inject `MockMarketDataClient` in tests, `RealMarketDataClient` in production.
 
@@ -546,7 +536,7 @@ public class OrderResult
 }
 ```
 
-#### Hand-written mock classes
+#### Hand-written mock classes — implement interface with canned data
 
 ```csharp
 # nullable enable
@@ -727,7 +717,7 @@ void RunTest(string name, Action test)
 }
 ```
 
-#### Type declarations
+#### Domain types — IIndexDataClient, Constituent, EodPrice for pipeline testing
 
 Domain types for pipeline testing: `IIndexDataClient` (interface for fetching index constituents — production calls a real API, tests use `MockIndexDataClient` with canned data), `Constituent` (ticker + market cap), `EodPrice` (standard OHLCV fields matching yfinance/Twelve Data — `PrevClose` enables daily return calculation). The mock records inputs and returns canned outputs — exactly what Moq does behind `mock.Setup().Returns()`.
 
@@ -1127,7 +1117,7 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 
 ## DI Validation Testing
 
-#### Validate service registration
+#### IServiceCollection — validate dependency injection registration
 
 Build a `ServiceProvider` and try to resolve every root service. `GetRequiredService<T>()` throws if not registered — catches missing DI registrations at test time instead of crashing in production. The #1 startup crash in .NET is forgetting `services.AddScoped<IFoo, Foo>()`.
 

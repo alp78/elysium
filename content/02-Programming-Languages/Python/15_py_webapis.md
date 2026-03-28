@@ -45,31 +45,14 @@ from typing import Literal
 
 #### requests — sync GET and response parsing
 
-```python
-# requests — the standard sync HTTP library for Python
-#
-# Technique: requests.get/post/put/delete for HTTP methods. params= for
-#   query strings, json= for JSON body, headers= for custom headers.
-#   resp.json() parses response. resp.raise_for_status() throws on 4xx/5xx.
-#   httpbin.org is a free echo service — returns whatever you send.
-#
-# Benefits:
-#   - Simple API — one function per HTTP method
-#   - json= auto-sets Content-Type and serializes
-#   - resp.ok checks 2xx; raise_for_status() for strict checking
-#   - Widely used — most Python developers know requests
-#
-# Anti-patterns:
-#   - No timeout — requests has no default timeout; always pass timeout=
-#   - New session per request — use requests.Session() for connection reuse
-#   - Hardcoded API keys — use env vars or secret managers
-#
-# When to use:
-#   - Simple sync API calls, scripts, notebooks
-#
-# When NOT to use:
-#   - Concurrent calls — use httpx.AsyncClient instead
+One function per HTTP method: `requests.get/post/put/delete`. `params=` for query strings, `json=` for JSON body (auto-sets `Content-Type`), `headers=` for custom headers. `resp.json()` parses response; `resp.raise_for_status()` throws on 4xx/5xx. For concurrent calls, use `httpx.AsyncClient` instead.
 
+> [!warning] Anti-patterns
+> - **No timeout** — `requests` has no default timeout; always pass `timeout=`
+> - **New session per request** — use `requests.Session()` for connection reuse
+> - **Hardcoded API keys** — use env vars or secret managers
+
+```python
 resp = requests.get("https://httpbin.org/get", params={"ticker": "AAPL", "date": "2024-03-15"})
 
 print("=== GET Request ===")
@@ -168,29 +151,9 @@ except requests.HTTPError as e:
 
 #### httpx — sync usage (drop-in requests replacement)
 
-```python
-# httpx — modern HTTP client with async, HTTP/2, and default timeouts
-#
-# Technique: Same API as requests for sync usage. httpx.Client() pools
-#   connections. httpx.AsyncClient() enables concurrent calls with await.
-#   Timeouts enforced by default (requests has none!).
-#
-# Benefits:
-#   - Async support — concurrent API calls with AsyncClient
-#   - HTTP/2 — multiplexed connections, faster for many requests
-#   - Default timeout — prevents hanging requests
-#   - Connection pooling with Client() — reuse across calls
-#
-# Anti-patterns:
-#   - httpx without Client/AsyncClient — no connection reuse
-#   - requests for concurrent calls — no async support
-#
-# When to use:
-#   - Pipelines with many API calls; any async Python application
-#
-# When NOT to use:
-#   - Simple one-off scripts where requests is already imported
+Same API as `requests` for sync usage, plus async support. `httpx.Client()` pools connections; `httpx.AsyncClient()` enables concurrent calls with `await`. Timeouts are enforced by default (unlike `requests`). Supports HTTP/2 for multiplexed connections. Use for pipelines with many API calls or any async Python application.
 
+```python
 resp = httpx.get("https://httpbin.org/get", params={"source": "httpx"})
 print("=== httpx (sync) ===")
 print(f"Status: {resp.status_code}")
@@ -329,29 +292,14 @@ comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 
 #### REST API pagination — fetch data in pages with requests
 
-```python
-# REST API patterns — pagination, retry, bulk operations
-#
-# Technique: Pagination loops through pages until exhausted. Retry with
-#   exponential backoff handles transient 429/5xx errors. Bulk POST
-#   batches records into one request to reduce round trips.
-#
-# Benefits:
-#   - Pagination handles unbounded result sets without OOM
-#   - Exponential backoff prevents overwhelming failing services
-#   - Bulk POST reduces network round trips by 10-100x
-#
-# Anti-patterns:
-#   - Fetching all pages without limit — unbounded loop if API broken
-#   - Linear retry (no backoff) — hammers the failing service
-#   - One POST per record — N round trips instead of 1
-#
-# When to use:
-#   - Any API integration in data pipelines
-#
-# When NOT to use:
-#   - Streaming APIs (WebSocket, SSE) — use async streaming
+Three essential patterns for API integrations: **pagination** loops through pages until exhausted, **retry with exponential backoff** handles transient 429/5xx errors, and **bulk POST** batches records into one request to reduce round trips by 10-100x. For streaming APIs (WebSocket, SSE), use async streaming instead.
 
+> [!warning] Anti-patterns
+> - **Fetching all pages without limit** — unbounded loop if API broken
+> - **Linear retry (no backoff)** — hammers the failing service
+> - **One POST per record** — N round trips instead of 1
+
+```python
 def fetch_paginated(base_url, endpoint, page_size=100):
     all_records = []
     page = 1
@@ -438,30 +386,14 @@ print(f"  Server received: {len(data['json']['trades'])} trades")
 
 #### Pydantic models — request/response schemas
 
-```python
-# FastAPI — async-first REST framework with auto-validation and OpenAPI docs
-#
-# Technique: Define Pydantic models for request/response validation.
-#   @app.get/post/delete decorators wire handlers to routes. FastAPI
-#   auto-generates Swagger docs. uvicorn serves the ASGI app.
-#
-# Benefits:
-#   - Pydantic validates request bodies automatically — no manual checks
-#   - Auto-generated OpenAPI/Swagger docs at /docs
-#   - Async-first — native async def handlers for concurrent I/O
-#   - Type hints drive validation, serialization, and documentation
-#
-# Anti-patterns:
-#   - Business logic in route handlers — extract to service functions
-#   - In-memory storage in production — use a database
-#   - No input validation — Pydantic handles it, but add business rules too
-#
-# When to use:
-#   - Internal APIs, microservices, data pipeline endpoints
-#
-# When NOT to use:
-#   - Simple scripts that don't need an API — overkill
+Define Pydantic models for request/response validation. `@app.get`/`post`/`delete` decorators wire handlers to routes. FastAPI auto-generates Swagger docs at `/docs`. `uvicorn` serves the ASGI app. Type hints drive validation, serialization, and documentation simultaneously.
 
+> [!warning] Anti-patterns
+> - **Business logic in route handlers** — extract to service functions
+> - **In-memory storage in production** — use a database
+> - **No input validation** — Pydantic handles types, but add business rules too
+
+```python
 # Pydantic models — like C# record types
 # FastAPI auto-validates incoming requests against these.
 
@@ -834,30 +766,6 @@ Auto-coercion converts compatible types (`"25"` → `int 25`). `model_dump()` se
 Fields without defaults are required; fields with defaults are optional.
 
 ```python
-# Pydantic BaseModel — type-safe data models with automatic validation
-#
-# Technique: Inherit from BaseModel, declare fields with type annotations.
-#   Pydantic validates on construction — wrong types raise ValidationError.
-#   Automatic coercion (str "42" -> int 42), serialization, and JSON schema.
-#
-# Benefits:
-#   - Runtime validation — catches type errors at construction, not deep in logic
-#   - Automatic coercion — "42" becomes int 42, "true" becomes bool True
-#   - JSON schema generation — model_json_schema() for API docs
-#   - Serialization — model_dump() to dict, model_dump_json() to JSON string
-#
-# Anti-patterns:
-#   - Plain dicts for API data — no validation, no autocomplete, silent bugs
-#   - Manual if/isinstance checks — Pydantic handles it declaratively
-#   - Ignoring ValidationError — always catch and return proper HTTP errors
-#
-# When to use:
-#   - API request/response models, config loading, ETL schemas, message queues
-#
-# When NOT to use:
-#   - Internal data where dataclass suffices — Pydantic adds overhead
-
-
 # Basic model — fields with types, defaults, and required markers
 class User(BaseModel):
     name: str                          # required — no default
