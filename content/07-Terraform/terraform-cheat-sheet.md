@@ -188,7 +188,7 @@ echo "Exit code: $?"   # 0=no changes, 1=error, 2=changes pending
 terraform plan -generate-config-out=generated.tf
 ```
 
-**Full anatomy of a plan invocation:**
+#### terraform plan — full anatomy of a plan invocation
 
 ```
 terraform \

@@ -53,45 +53,45 @@ In plain terms, this French law told large investors: "You must publicly explain
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Biodiversity Impact Assessment Tool | ISS
-> > l amphibian species, and nearly 33% of coral reefs. SOURCE: OECD 2022 BENEFITS OF USING THE
-> > BIODIVERSITY IMPACT ASSESSMENT TOOL The Biodiversity Impact Assessment Tool can be used to
-> > support compliance with climate-related disclosure frameworks within the European Union,
-> > including Article 29 of the French Energy Transition Law, as well as the UN...
+> **Biodiversity Impact Assessment Tool | ISS**
+> l amphibian species, and nearly 33% of coral reefs. SOURCE: OECD 2022 BENEFITS OF USING THE
+> BIODIVERSITY IMPACT ASSESSMENT TOOL The Biodiversity Impact Assessment Tool can be used to support
+> compliance with climate-related disclosure frameworks within the European Union, including Article
+> 29 of the French Energy Transition Law, as well as the UN...
 >
-> — [Biodiversity Impact Assessment Tool | ISS](https://www.issgovernance.com/sustainability/biodiversity-impact-assessment-tool) — "SUSTAINABILITY SOLUTIONS"
+> — [Biodiversity Impact Assessment Tool | ISS](https://www.issgovernance.com/sustainability/biodiversity-impact-assessment-tool)
 >
-> > [!quote] Q&amp;A: CDP’s Babikian on Climate Action, Investor Duty | Blog posts | STOXX
-> > s, asset owners, insurers, banks, were to change the way they invest, then corporations would
-> > react much more quickly to the climate challenge. Because if they do not react, at some stage
-> > their cost of capital will probably increase. And what are governments doing about this? We have
-> > the example of **Article 173** in France4, where for the first tim...
+> **Q&amp;A: CDP’s Babikian on Climate Action, Investor Duty | Blog posts | STOXX**
+> s, asset owners, insurers, banks, were to change the way they invest, then corporations would
+> react much more quickly to the climate challenge. Because if they do not react, at some stage
+> their cost of capital will probably increase. And what are governments doing about this? We have
+> the example of **Article 173** in France4, where for the first tim...
 >
-> — [Q&amp;A: CDP’s Babikian on Climate Action, Investor Duty | Blog posts | STOXX](https://stoxx.com/qa-cdps-babikian-on-climate-action-investor-duty) — "WHITEPAPER"
+> — [Q&amp;A: CDP’s Babikian on Climate Action, Investor Duty | Blog posts | STOXX](https://stoxx.com/qa-cdps-babikian-on-climate-action-investor-duty)
 >
-> > [!quote] Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...
-> > g, and shows that while challenging, the data issue will eventually be surmounted. Regulation
-> > pressure will build up Regulators are also putting the focus on companies’ biodiversity
-> > footprint and may soon demand more disclosure.21 France is one step ahead: the government is
-> > extending its pioneering **Article 173** legislation to demand asset owners ...
+> **Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...**
+> g, and shows that while challenging, the data issue will eventually be surmounted. Regulation
+> pressure will build up Regulators are also putting the focus on companies’ biodiversity footprint
+> and may soon demand more disclosure.21 France is one step ahead: the government is extending its
+> pioneering **Article 173** legislation to demand asset owners ...
 >
-> — [Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...](https://stoxx.com/responsible-investing-zeroes-in-on-biodiversity) — "WHITEPAPER"
+> — [Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...](https://stoxx.com/responsible-investing-zeroes-in-on-biodiversity)
 >
-> > [!quote] World&#039;s First Climate Rating for Equity Funds Launched | ISS
-> > resenting about €2 trillion in fund investments. Climetrics arrives as both institutional and
-> > private investors are increasingly attentive to climate-related risks to assets, and at a time
-> > when global finance’s role in the low-carbon transition is in the spotlight. France recently
-> > broke ground with **Article 173** – the first law to mandate climate ...
+> **World&#039;s First Climate Rating for Equity Funds Launched | ISS**
+> resenting about €2 trillion in fund investments. Climetrics arrives as both institutional and
+> private investors are increasingly attentive to climate-related risks to assets, and at a time
+> when global finance’s role in the low-carbon transition is in the spotlight. France recently broke
+> ground with **Article 173** – the first law to mandate climate ...
 >
-> — [World&#039;s First Climate Rating for Equity Funds Launched | ISS](https://www.issgovernance.com/worlds-first-climate-rating-equity-funds-launched) — "World’s First Climate Rating for Equity Funds Launched"
+> — [World&#039;s First Climate Rating for Equity Funds Launched | ISS](https://www.issgovernance.com/worlds-first-climate-rating-equity-funds-launched)
 >
-> > [!quote] Carbon &amp; Climate Data and Advisory | ISS
-> > cope 3 emissions, transitional and physical risks and alignment with below 2° C, 4° C and 6° C
-> > climate scenarios. The report can assist investors in fulfilling requirements for internal and
-> > global external reporting initiatives such as the Task Force on Climate-related Financial
-> > Disclosures (TCFD), **Article 173** of the French Energy Transition Law...
+> **Carbon &amp; Climate Data and Advisory | ISS**
+> cope 3 emissions, transitional and physical risks and alignment with below 2° C, 4° C and 6° C
+> climate scenarios. The report can assist investors in fulfilling requirements for internal and
+> global external reporting initiatives such as the Task Force on Climate-related Financial
+> Disclosures (TCFD), **Article 173** of the French Energy Transition Law...
 >
-> — [Carbon &amp; Climate Data and Advisory | ISS](https://www.issgovernance.com/sustainability/climate-solutions/carbon-climate-data-and-advisory) — "ISS ESG/CLIMATE SOLUTIONS"
+> — [Carbon &amp; Climate Data and Advisory | ISS](https://www.issgovernance.com/sustainability/climate-solutions/carbon-climate-data-and-advisory)
 >
 
 ---
@@ -112,13 +112,13 @@ An Article 8 fund is not required to have sustainability as its core objective, 
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] Lyxor’s Scheehl: switch of Europe 600 ETF’s index will cater to growing pool ...
-> > Sustainable Finance Disclosure Regulation (SFDR) legislation? “Before the switch, the ETF’s
-> > underlying index was a conventional index and as such did not include any ESG considerations.
-> > Therefore, the fund was classified as Article 6 under the SFDR regulation. With the new index,
-> > the ETF is now an **Article 8 fund**, which makes it attractive for a ...
+> **Lyxor’s Scheehl: switch of Europe 600 ETF’s index will cater to growing pool ...**
+> Sustainable Finance Disclosure Regulation (SFDR) legislation? “Before the switch, the ETF’s
+> underlying index was a conventional index and as such did not include any ESG considerations.
+> Therefore, the fund was classified as Article 6 under the SFDR regulation. With the new index, the
+> ETF is now an **Article 8 fund**, which makes it attractive for a ...
 >
-> — [Lyxor’s Scheehl: switch of Europe 600 ETF’s index will cater to growing pool ...](https://stoxx.com/lyxors-scheehl-switch-of-europe-600-etfs-index-will-cater-to-growing-pool-of-esg-minded-investors) — "WHITEPAPER"
+> — [Lyxor’s Scheehl: switch of Europe 600 ETF’s index will cater to growing pool ...](https://stoxx.com/lyxors-scheehl-switch-of-europe-600-etfs-index-will-cater-to-growing-pool-of-esg-minded-investors)
 >
 
 ---
@@ -165,45 +165,45 @@ A benchmark administrator is the organisation that creates and maintains a finan
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] GC Pooling Deferred: Q&amp;A | Blog posts | STOXX
-> > y volatility of GC Pooling Deferred over the past five years is only slightly above that of
-> > EONIA: 5.3 basis points for the former versus 3.8 basis points for the latter. In other markets,
-> > such as the US and UK, the central bank is administering critical benchmarks. Can a private
-> > company qualify as **benchmark administrator**? When the ECB released ...
+> **GC Pooling Deferred: Q&amp;A | Blog posts | STOXX**
+> y volatility of GC Pooling Deferred over the past five years is only slightly above that of EONIA:
+> 5.3 basis points for the former versus 3.8 basis points for the latter. In other markets, such as
+> the US and UK, the central bank is administering critical benchmarks. Can a private company
+> qualify as **benchmark administrator**? When the ECB released ...
 >
-> — [GC Pooling Deferred: Q&amp;A | Blog posts | STOXX](https://stoxx.com/gc-pooling-deferred-qa) — "WHITEPAPER"
+> — [GC Pooling Deferred: Q&amp;A | Blog posts | STOXX](https://stoxx.com/gc-pooling-deferred-qa)
 >
-> > [!quote] Benchmark ESG Disclosure Dataset | ISS
-> > exes according to EU’s new disclosure requirements. Meet your regulatory reporting & disclosure
-> > obligations with the help of our Benchmark ESG Disclosure Dataset. EU Benchmark Regulations aim
-> > to improve transparency and comparability between benchmarks. Our Benchmark ESG Disclosure
-> > Dataset can help **benchmark administrator**s meet their mandatory r...
+> **Benchmark ESG Disclosure Dataset | ISS**
+> exes according to EU’s new disclosure requirements. Meet your regulatory reporting & disclosure
+> obligations with the help of our Benchmark ESG Disclosure Dataset. EU Benchmark Regulations aim to
+> improve transparency and comparability between benchmarks. Our Benchmark ESG Disclosure Dataset
+> can help **benchmark administrator**s meet their mandatory r...
 >
-> — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset)
 >
-> > [!quote] Stoxx Digital Asset Guide (PDF)
-> > sed on the feedback collected, STOXX may alter the index termination decision. For the
-> > termination of an index without financial product issued on there will be no market
-> > consultation. Changes to the original notification will be communicated in the same manner.
-> > PARTY RESPONSIBILITIES STOXX, as the **benchmark administrator**, constantly monitors th...
+> **Stoxx Digital Asset Guide (PDF)**
+> sed on the feedback collected, STOXX may alter the index termination decision. For the termination
+> of an index without financial product issued on there will be no market consultation. Changes to
+> the original notification will be communicated in the same manner. PARTY RESPONSIBILITIES STOXX,
+> as the **benchmark administrator**, constantly monitors th...
 >
 > — [Stoxx Digital Asset Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_digital_asset_guide.pdf)
 >
-> > [!quote] Climate and Nature Thought Leadership | ISS
-> > The ISS STOXX indices (“Indices”) are owned and administered by STOXX Ltd., a supervised
-> > **benchmark administrator** under the EU Benchmark Regulation, Regulation (EU) 2016/100 of the
-> > European Parliament. Environmental, social and governance ratings, scores and other analytical
-> > assessments, which may be used as an input to some Indices, are produced...
+> **Climate and Nature Thought Leadership | ISS**
+> The ISS STOXX indices (“Indices”) are owned and administered by STOXX Ltd., a supervised
+> **benchmark administrator** under the EU Benchmark Regulation, Regulation (EU) 2016/100 of the
+> European Parliament. Environmental, social and governance ratings, scores and other analytical
+> assessments, which may be used as an input to some Indices, are produced...
 >
-> — [Climate and Nature Thought Leadership | ISS](https://www.issgovernance.com/climate-and-nature/thought-leadership) — "ISS STOXX"
+> — [Climate and Nature Thought Leadership | ISS](https://www.issgovernance.com/climate-and-nature/thought-leadership)
 >
-> > [!quote] Q&amp;A with Roberto Lazzarotto: ESG Represents ‘Massive Change’ in Index Spa...
-> > eventually the fear of a systemic problem would not really be realized.” Is self-indexing an
-> > alternative to indexing outsourcing for asset managers and issuers? When thinking of
-> > self-indexing, “the cost element has to be considered. Being an index provider and being, based
-> > on European regulation, a **benchmark administrator** is costly. There is a t...
+> **Q&amp;A with Roberto Lazzarotto: ESG Represents ‘Massive Change’ in Index Spa...**
+> eventually the fear of a systemic problem would not really be realized.” Is self-indexing an
+> alternative to indexing outsourcing for asset managers and issuers? When thinking of
+> self-indexing, “the cost element has to be considered. Being an index provider and being, based on
+> European regulation, a **benchmark administrator** is costly. There is a t...
 >
-> — [Q&amp;A with Roberto Lazzarotto: ESG Represents ‘Massive Change’ in Index Spa...](https://stoxx.com/qa-with-roberto-lazzarotto-esg-represents-massive-change-in-index-space) — "WHITEPAPER"
+> — [Q&amp;A with Roberto Lazzarotto: ESG Represents ‘Massive Change’ in Index Spa...](https://stoxx.com/qa-with-roberto-lazzarotto-esg-represents-massive-change-in-index-space)
 >
 
 ---
@@ -224,45 +224,45 @@ The EU BMR was introduced after scandals like the LIBOR manipulation showed that
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News April 2021 (PDF)
-> > al index family which consists of total market, broad and blue-chip indices for the regions
-> > Americas, Europe, Asia/Pacific and sub-regions Latin America and BRIC (Brazil, Russia, India and
-> > China) as well as global markets. STOXX is the administrator of the STOXX® and DAX® indices
-> > under the European **Benchmark Regulation** and exercises control over...
+> **Monthly Index News April 2021 (PDF)**
+> al index family which consists of total market, broad and blue-chip indices for the regions
+> Americas, Europe, Asia/Pacific and sub-regions Latin America and BRIC (Brazil, Russia, India and
+> China) as well as global markets. STOXX is the administrator of the STOXX® and DAX® indices under
+> the European **Benchmark Regulation** and exercises control over...
 >
 > — [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
 >
-> > [!quote] Guide To Eurogov Bond Indices (PDF)
-> > onths October 2013 Introduction cost factor December 2014 Clarification relating to IOSCO
-> > principles October 2017 Include liquidity requirements October 2018 Change of cap level, minimum
-> > requirements for cash in the Money Market Index and cost factor formula August 2019
-> > Clarification relating to EU **Benchmark Regulation** and changes relating to th...
+> **Guide To Eurogov Bond Indices (PDF)**
+> onths October 2013 Introduction cost factor December 2014 Clarification relating to IOSCO
+> principles October 2017 Include liquidity requirements October 2018 Change of cap level, minimum
+> requirements for cash in the Money Market Index and cost factor formula August 2019 Clarification
+> relating to EU **Benchmark Regulation** and changes relating to th...
 >
 > — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
 >
-> > [!quote] Monthly Index News February 2024 (PDF)
-> > ore than 550 companies around the world for benchmarking purposes and as underlyings for ETFs,
-> > futures and options, structured products, and passively managed investment funds. STOXX Ltd.,
-> > part of the ISS STOXX group of companies, is the administrator of the STOXX and DAX indices
-> > under the European **Benchmark Regulation**. This document has not bee...
+> **Monthly Index News February 2024 (PDF)**
+> ore than 550 companies around the world for benchmarking purposes and as underlyings for ETFs,
+> futures and options, structured products, and passively managed investment funds. STOXX Ltd., part
+> of the ISS STOXX group of companies, is the administrator of the STOXX and DAX indices under the
+> European **Benchmark Regulation**. This document has not bee...
 >
 > — [Monthly Index News February 2024 (PDF)](https://stoxx.com/monthly-index-news-february-2024)
 >
-> > [!quote] Navigating Europe’s equities and sustainable investing landscape  | Blog post...
-> > is at the forefront of the sustainable investing revolution because of investor demand, and
-> > regulators have caught up in recent years to establish rules that can advance green investments.
-> > The EU sustainable finance agenda comprises several legislative frameworks that interconnect:
-> > SFDR, Taxonomy, **Benchmark regulation** and MiFID II. Yet, lack of ...
+> **Navigating Europe’s equities and sustainable investing landscape  | Blog post...**
+> is at the forefront of the sustainable investing revolution because of investor demand, and
+> regulators have caught up in recent years to establish rules that can advance green investments.
+> The EU sustainable finance agenda comprises several legislative frameworks that interconnect:
+> SFDR, Taxonomy, **Benchmark regulation** and MiFID II. Yet, lack of ...
 >
-> — [Navigating Europe’s equities and sustainable investing landscape  | Blog post...](https://stoxx.com/navigating-europes-equities-and-sustainable-investing-landscape) — "WHITEPAPER"
+> — [Navigating Europe’s equities and sustainable investing landscape  | Blog post...](https://stoxx.com/navigating-europes-equities-and-sustainable-investing-landscape)
 >
-> > [!quote] Benchmark ESG Disclosure Dataset | ISS
-> > 6 of 17 July 2020 is the most recent supplement to the EU Benchmark Regulations BENEFIT FROM OUR
-> > DEDICATED BENCHMARK ESG DISCLOSURE DATASET Regulatory Disclosures Insight into vital
-> > non-financial metrics Benchmark administrators can leverage our data to help meet the reporting
-> > obligations of the EU **Benchmark Regulation**. High coverage of benchmar...
+> **Benchmark ESG Disclosure Dataset | ISS**
+> 6 of 17 July 2020 is the most recent supplement to the EU Benchmark Regulations BENEFIT FROM OUR
+> DEDICATED BENCHMARK ESG DISCLOSURE DATASET Regulatory Disclosures Insight into vital non-financial
+> metrics Benchmark administrators can leverage our data to help meet the reporting obligations of
+> the EU **Benchmark Regulation**. High coverage of benchmar...
 >
-> — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset)
 >
 
 ---
@@ -297,45 +297,45 @@ A CTB is a stock market index specifically designed to put a portfolio on a path
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Index Guide (PDF)
-> > ogy change to STOXX ASEAN Select Dividend 30 Index January 2022 (3): Addition of STOXX PSBC
-> > China A ESG Index February 2022: Clarification in Section 5.9 that most recent ICB data as known
-> > to STOXX at the cutoff date are used in the Selection Lists February 2022 (2): Methodology
-> > change to the STOXX **Climate Transition Benchmark** and STOXX Paris-Al...
+> **Stoxx Index Guide (PDF)**
+> ogy change to STOXX ASEAN Select Dividend 30 Index January 2022 (3): Addition of STOXX PSBC China
+> A ESG Index February 2022: Clarification in Section 5.9 that most recent ICB data as known to
+> STOXX at the cutoff date are used in the Selection Lists February 2022 (2): Methodology change to
+> the STOXX **Climate Transition Benchmark** and STOXX Paris-Al...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> > [!quote] Results Of Market Consultation On Proposed Changes To The Methodology Of The ... (PDF)
-> > 15th, 2025 Results of Market Consultation on proposed changes to the methodology of the STOXX
-> > Paris-Aligned and **Climate Transition Benchmark** Indices Dear Sir and Madam, STOXX Ltd.
-> > announces the results of the market consultation on proposed changes to the methodology of the
-> > STOXX Paris-Aligned and **Climate Transition Benchmark** Indices published o...
+> **Results Of Market Consultation On Proposed Changes To The Methodology Of The ... (PDF)**
+> 15th, 2025 Results of Market Consultation on proposed changes to the methodology of the STOXX
+> Paris-Aligned and **Climate Transition Benchmark** Indices Dear Sir and Madam, STOXX Ltd.
+> announces the results of the market consultation on proposed changes to the methodology of the
+> STOXX Paris-Aligned and **Climate Transition Benchmark** Indices published o...
 >
 > — [Results Of Market Consultation On Proposed Changes To The Methodology Of The ... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results%20of%20Market%20Consultation%20on%20proposed%20changes%20to%20the%20methodology%20of%20the%20STOXX%20Paris-Aligned%20and%20Climate%20Transition%20Benchmark%20Indices.pdf)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > r are involved in Controversial Weapons are not eligible for selection. Additional exclusion
-> > filters are applied, screening companies for involvement in O Tobacco, Thermal Coal,
-> > Unconventional Oil & Gas, Fossil Fuels, Nuclear Power and Military Equipment. X The index is
-> > constructed to follow the EU **Climate Transition Benchmark** (EU CTB) requireme...
+> **Istoxx Index Guide (PDF)**
+> r are involved in Controversial Weapons are not eligible for selection. Additional exclusion
+> filters are applied, screening companies for involvement in O Tobacco, Thermal Coal,
+> Unconventional Oil & Gas, Fossil Fuels, Nuclear Power and Military Equipment. X The index is
+> constructed to follow the EU **Climate Transition Benchmark** (EU CTB) requireme...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] STOXX Europe 600 Paris-Aligned Benchmark Index Licensed To Franklin Templeton...
-> > Index. Our new climate benchmarks offer an opportunity to track the rigorous approach adopted by
-> > the European Commission and support the transition toward a low carbon economy. The STOXX PAB
-> > Index offers comparable volatility, returns, and diversification as its parent benchmark. Along
-> > with our EU **Climate Transition Benchmark** Index, the STOXX PA...
+> **STOXX Europe 600 Paris-Aligned Benchmark Index Licensed To Franklin Templeton...**
+> Index. Our new climate benchmarks offer an opportunity to track the rigorous approach adopted by
+> the European Commission and support the transition toward a low carbon economy. The STOXX PAB
+> Index offers comparable volatility, returns, and diversification as its parent benchmark. Along
+> with our EU **Climate Transition Benchmark** Index, the STOXX PA...
 >
-> — [STOXX Europe 600 Paris-Aligned Benchmark Index Licensed To Franklin Templeton...](https://stoxx.com/stoxx-europe-600-paris-aligned-benchmark-index-licensed-to-franklin-templeton) — "WHITEPAPER"
+> — [STOXX Europe 600 Paris-Aligned Benchmark Index Licensed To Franklin Templeton...](https://stoxx.com/stoxx-europe-600-paris-aligned-benchmark-index-licensed-to-franklin-templeton)
 >
-> > [!quote] New ISS STOXX whitepaper analyzes cost of portfolio “greening” | Blog posts |...
-> > shift. The authors consider the cost of moving a standard holding of European equities as
-> > defined by the STOXX® Europe 600 to two versions of the index that comply with the European
-> > Union Climate Benchmarks regulation: the STOXX® Europe 600 Paris-Aligned Benchmark (“PAB”) and
-> > the STOXX® Europe 600 **Climate Transition Benchmark** (“CTB”). CTBs and P...
+> **New ISS STOXX whitepaper analyzes cost of portfolio “greening” | Blog posts |...**
+> shift. The authors consider the cost of moving a standard holding of European equities as defined
+> by the STOXX® Europe 600 to two versions of the index that comply with the European Union Climate
+> Benchmarks regulation: the STOXX® Europe 600 Paris-Aligned Benchmark (“PAB”) and the STOXX® Europe
+> 600 **Climate Transition Benchmark** (“CTB”). CTBs and P...
 >
-> — [New ISS STOXX whitepaper analyzes cost of portfolio “greening” | Blog posts |...](https://stoxx.com/new-iss-stoxx-whitepaper-analyzes-cost-of-portfolio-greening) — "WHITEPAPER"
+> — [New ISS STOXX whitepaper analyzes cost of portfolio “greening” | Blog posts |...](https://stoxx.com/new-iss-stoxx-whitepaper-analyzes-cost-of-portfolio-greening)
 >
 
 ---
@@ -356,43 +356,43 @@ In plain terms, a corporate governance code is a country's playbook for how list
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] ISS Nordic Investor Services | ISS
-> > ting recommendations on both Annual General and Special meetings focused on the needs and views
-> > of Nordic investors. The ISS NIS team has expertise in the Nordic markets, including an
-> > understanding of the critical areas of difference between Nordic and global governance systems,
-> > of many issuers and **corporate governance code**s. Nordic Investor Ser...
+> **ISS Nordic Investor Services | ISS**
+> ting recommendations on both Annual General and Special meetings focused on the needs and views of
+> Nordic investors. The ISS NIS team has expertise in the Nordic markets, including an understanding
+> of the critical areas of difference between Nordic and global governance systems, of many issuers
+> and **corporate governance code**s. Nordic Investor Ser...
 >
-> — [ISS Nordic Investor Services | ISS](https://www.issgovernance.com/solutions/iss-nordic-investor-services) — "ISS NORDIC INVESTOR SERVICES"
+> — [ISS Nordic Investor Services | ISS](https://www.issgovernance.com/solutions/iss-nordic-investor-services)
 >
-> > [!quote] Taft Hartley International Policy Updates (PDF)
-> > n an announcement to the NZX;  The presence of a female director on the board during the
-> > preceding year; or  Research & development or similar entities which may have smaller boards of
-> > three or four directors; or  Other relevant factors. Rationale for Change: The updated policy
-> > refers to the NZX **Corporate Governance Code** and removes reference...
+> **Taft Hartley International Policy Updates (PDF)**
+> n an announcement to the NZX;  The presence of a female director on the board during the
+> preceding year; or  Research & development or similar entities which may have smaller boards of
+> three or four directors; or  Other relevant factors. Rationale for Change: The updated policy
+> refers to the NZX **Corporate Governance Code** and removes reference...
 >
 > — [Taft Hartley International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/active/specialty/Taft-Hartley-International-Policy-Updates.pdf)
 >
-> > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
-> > a ranking, as described in created, or are already traded on Xetra®. In the the DAX Equity Index
-> > Methodology Guide. In this context of compliance with the basic criteria respect, for the
-> > purposes of making the regarding the recommendations of the German required predictive decision
-> > it is irrelevant **Corporate Governance Code**x (GCGC) and the wheth...
+> **Detailed Overview Of Equity Index Calculation Changes (PDF)**
+> a ranking, as described in created, or are already traded on Xetra®. In the the DAX Equity Index
+> Methodology Guide. In this context of compliance with the basic criteria respect, for the purposes
+> of making the regarding the recommendations of the German required predictive decision it is
+> irrelevant **Corporate Governance Code**x (GCGC) and the wheth...
 >
 > — [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
 >
-> > [!quote] Gc100 (PDF)
-> > 00 or their employing companies. We very much welcome the opportunity to comment on your draft
-> > policy. We do not agree that setting a recommended maximum limit on the number of board roles a
-> > director can hold is a useful enhancement to your guidelines. As noted in your consultation
-> > document, the UK **Corporate Governance Code** (‘Code’) does not inc...
+> **Gc100 (PDF)**
+> 00 or their employing companies. We very much welcome the opportunity to comment on your draft
+> policy. We do not agree that setting a recommended maximum limit on the number of board roles a
+> director can hold is a useful enhancement to your guidelines. As noted in your consultation
+> document, the UK **Corporate Governance Code** (‘Code’) does not inc...
 >
 > — [Gc100 (PDF)](https://www.issgovernance.com/file/policy/gc100.pdf)
 >
-> > [!quote] 0279 Corporate Governance Policy And Voting Guidelines For Investment Compani... (PDF)
-> > Introduction At the NAPF we firmly believe that high standards of corporate governance make an
-> > important contribution to a company’s long-term performance. The UK Listing Authority requires
-> > all premium listed companies to describe how they have complied with the principles of the UK
-> > **Corporate Governance Code** (the “Code”) which was last updated b...
+> **0279 Corporate Governance Policy And Voting Guidelines For Investment Compani... (PDF)**
+> Introduction At the NAPF we firmly believe that high standards of corporate governance make an
+> important contribution to a company’s long-term performance. The UK Listing Authority requires all
+> premium listed companies to describe how they have complied with the principles of the UK
+> **Corporate Governance Code** (the “Code”) which was last updated b...
 >
 > — [0279 Corporate Governance Policy And Voting Guidelines For Investment Compani... (PDF)](https://www.issgovernance.com/file/2014_Policies/0279_Corporate_governance_policy_and_voting_guidelines_for_investment_companies_an_NAPF_document.pdf)
 >
@@ -415,45 +415,45 @@ CSRD dramatically increases how many companies in Europe must publish detailed s
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Antonio Celeste on how investors should urgently mitigate against biodiversit...
-> > ity indices or customize them according to their investment policies. How can investors access
-> > biodiversity forward-looking data? There is a lot happening on the regulatory front that will
-> > result in even more tangible and reliable biodiversity data. The Corporate Sustainability
-> > Reporting Directive (**CSRD**) will come into effect from January 1st 20...
+> **Antonio Celeste on how investors should urgently mitigate against biodiversit...**
+> ity indices or customize them according to their investment policies. How can investors access
+> biodiversity forward-looking data? There is a lot happening on the regulatory front that will
+> result in even more tangible and reliable biodiversity data. The Corporate Sustainability
+> Reporting Directive (**CSRD**) will come into effect from January 1st 20...
 >
-> — [Antonio Celeste on how investors should urgently mitigate against biodiversit...](https://stoxx.com/antonio-celeste-on-how-investors-should-urgently-mitigate-against-biodiversity-loss) — "Topics"
+> — [Antonio Celeste on how investors should urgently mitigate against biodiversit...](https://stoxx.com/antonio-celeste-on-how-investors-should-urgently-mitigate-against-biodiversity-loss)
 >
-> > [!quote] In Focus: 2023 Europe Proxy Season Recap | ISS
-> > round the inclusion of ESG performance metrics in pay were observed. Non-financial reporting
-> > also remained a key topic, with several European markets taking steps to improve their
-> > regulatory frameworks, particularly in anticipation of the rollout of the Corporate
-> > Sustainability Reporting Directive (**CSRD**). Additionally, some European countries ad...
+> **In Focus: 2023 Europe Proxy Season Recap | ISS**
+> round the inclusion of ESG performance metrics in pay were observed. Non-financial reporting also
+> remained a key topic, with several European markets taking steps to improve their regulatory
+> frameworks, particularly in anticipation of the rollout of the Corporate Sustainability Reporting
+> Directive (**CSRD**). Additionally, some European countries ad...
 >
-> — [In Focus: 2023 Europe Proxy Season Recap | ISS](https://www.issgovernance.com/library/in-focus-2023-europe-proxy-season-recap) — "In Focus: 2023 Europe Proxy Season Recap"
+> — [In Focus: 2023 Europe Proxy Season Recap | ISS](https://www.issgovernance.com/library/in-focus-2023-europe-proxy-season-recap)
 >
-> > [!quote] The role of indices and data analytics in sustainable investing | Blog posts ...
-> > fluence similar regulations in other parts of the world and lead to a consistent, comprehensive
-> > and competitive environment. To achieve this, European policies must be consolidated, or at
-> > least harmonized, across the various working groups and initiatives (Sustainable Finance
-> > Disclosure Regulation, **CSRD**, Markets in Financial Instruments Directiv...
+> **The role of indices and data analytics in sustainable investing | Blog posts ...**
+> fluence similar regulations in other parts of the world and lead to a consistent, comprehensive
+> and competitive environment. To achieve this, European policies must be consolidated, or at least
+> harmonized, across the various working groups and initiatives (Sustainable Finance Disclosure
+> Regulation, **CSRD**, Markets in Financial Instruments Directiv...
 >
-> — [The role of indices and data analytics in sustainable investing | Blog posts ...](https://stoxx.com/the-role-of-indices-and-data-analytics-in-sustainable-investing) — "WHITEPAPER"
+> — [The role of indices and data analytics in sustainable investing | Blog posts ...](https://stoxx.com/the-role-of-indices-and-data-analytics-in-sustainable-investing)
 >
-> > [!quote] Fifth anniversary of STOXX ESG derivatives sees broadening innovation, adopti...
-> > d cost efficiency. In a segment where customization is commonplace, listed derivatives also
-> > bring standardization in strategies, facilitating trading. In the short term, new regulation
-> > such as the Sustainable Finance Disclosure Regulation (SFDR) and the Corporate Sustainability
-> > Reporting Directive (**CSRD**) may guide flows into ESG investments. The...
+> **Fifth anniversary of STOXX ESG derivatives sees broadening innovation, adopti...**
+> d cost efficiency. In a segment where customization is commonplace, listed derivatives also bring
+> standardization in strategies, facilitating trading. In the short term, new regulation such as the
+> Sustainable Finance Disclosure Regulation (SFDR) and the Corporate Sustainability Reporting
+> Directive (**CSRD**) may guide flows into ESG investments. The...
 >
-> — [Fifth anniversary of STOXX ESG derivatives sees broadening innovation, adopti...](https://stoxx.com/fifth-anniversary-of-stoxx-esg-derivatives-sees-broadening-innovation-adoption) — "WHITEPAPER"
+> — [Fifth anniversary of STOXX ESG derivatives sees broadening innovation, adopti...](https://stoxx.com/fifth-anniversary-of-stoxx-esg-derivatives-sees-broadening-innovation-adoption)
 >
-> > [!quote] 2023 Global Climate Change Update | ISS
-> > limate Change-Related Issues Globally DECEMBER 7, 2023 The following chapters examine all these
-> > aspects of climate-related investment risks and opportunities and identify ISS ESG data and
-> > tools that can support investors in navigating these issues. - Climate Change Regulation and
-> > Standards in 2023: **CSRD**/ESRS, ISSB, and U.S. Legislation - Corpora...
+> **2023 Global Climate Change Update | ISS**
+> limate Change-Related Issues Globally DECEMBER 7, 2023 The following chapters examine all these
+> aspects of climate-related investment risks and opportunities and identify ISS ESG data and tools
+> that can support investors in navigating these issues. - Climate Change Regulation and Standards
+> in 2023: **CSRD**/ESRS, ISSB, and U.S. Legislation - Corpora...
 >
-> — [2023 Global Climate Change Update | ISS](https://www.issgovernance.com/library/2023-global-climate-change-update) — "2023 Global Climate Change Update"
+> — [2023 Global Climate Change Update | ISS](https://www.issgovernance.com/library/2023-global-climate-change-update)
 >
 
 ---
@@ -476,45 +476,45 @@ DNSH is a safeguard that prevents greenwashing through cherry-picking. A company
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
-> > I and the EU Taxonomy. 2.3 Overview of STOXX’s sustainable investment methodology STOXX used the
-> > following guiding principles when developing the sustainable investment (SI) methodology
-> > presented in this document: Consistency with the existing reference frameworks for the EU’s SI
-> > regulations: • The **DNSH** screening layer should be based as far as ...
+> **Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)**
+> I and the EU Taxonomy. 2.3 Overview of STOXX’s sustainable investment methodology STOXX used the
+> following guiding principles when developing the sustainable investment (SI) methodology presented
+> in this document: Consistency with the existing reference frameworks for the EU’s SI regulations:
+> • The **DNSH** screening layer should be based as far as ...
 >
 > — [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
 >
-> > [!quote] Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...
-> > developments in the field. Why a clear definition of SI is important SI, as defined in the SFDR,
-> > is a cornerstone of the EU’s sustainable finance regulatory agenda: - It determines the
-> > eligibility of securities to be included in SFDR Art. 9 products.[1] - It entails a concept of
-> > good governance and **DNSH** that are part of the exclusion base layer ...
+> **Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...**
+> developments in the field. Why a clear definition of SI is important SI, as defined in the SFDR,
+> is a cornerstone of the EU’s sustainable finance regulatory agenda: - It determines the
+> eligibility of securities to be included in SFDR Art. 9 products.[1] - It entails a concept of
+> good governance and **DNSH** that are part of the exclusion base layer ...
 >
-> — [Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...](https://stoxx.com/qontigo-publishes-guide-for-sfdr-aligned-sustainable-investment-methodology) — "WHITEPAPER"
+> — [Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...](https://stoxx.com/qontigo-publishes-guide-for-sfdr-aligned-sustainable-investment-methodology)
 >
-> > [!quote] Regulatory Sustainable Investment Solution | ISS
-> > g Sustainable Investments The methodology is based on four common pillars within sustainable
-> > finance regulations globally that our team of regulatory experts have identified Financially
-> > Material Sustainability Risks Contribution to Environmental or Social Objectives Adverse
-> > Sustainability Impacts & Do No Significant Harm Good Governance POWERED ...
+> **Regulatory Sustainable Investment Solution | ISS**
+> g Sustainable Investments The methodology is based on four common pillars within sustainable
+> finance regulations globally that our team of regulatory experts have identified Financially
+> Material Sustainability Risks Contribution to Environmental or Social Objectives Adverse
+> Sustainability Impacts & Do No Significant Harm Good Governance POWERED ...
 >
-> — [Regulatory Sustainable Investment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/regulatory-sustainable-investment) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [Regulatory Sustainable Investment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/regulatory-sustainable-investment)
 >
-> > [!quote] Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX
-> > Enterprises or the U.N. Guiding Principles on Business and Human Rights may meet that
-> > requirement; but this may change over time. Here, we’ll also be watching the European
-> > Commission’s initiative on sustainable corporate governance, which may be adopted later this
-> > year. - ‘Do no significant harm’ (**DNSH**) is a key SFDR mandate. Absence of ESG cont...
+> **Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX**
+> Enterprises or the U.N. Guiding Principles on Business and Human Rights may meet that requirement;
+> but this may change over time. Here, we’ll also be watching the European Commission’s initiative
+> on sustainable corporate governance, which may be adopted later this year. - ‘Do no significant
+> harm’ (**DNSH**) is a key SFDR mandate. Absence of ESG cont...
 >
-> — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting) — "WHITEPAPER"
+> — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting)
 >
-> > [!quote] Navigating Europe’s equities and sustainable investing landscape  | Blog post...
-> > should become a more practical and pragmatic task with time, she added. In building indices at
-> > Qontigo, Cady explained, the determination of whether an investment is sustainable or not relies
-> > on two steps: 1) a screening process for minimum sustainability performance, including Good
-> > Governance and ‘Do No Significant Harm;’ and 2) a measurement o...
+> **Navigating Europe’s equities and sustainable investing landscape  | Blog post...**
+> should become a more practical and pragmatic task with time, she added. In building indices at
+> Qontigo, Cady explained, the determination of whether an investment is sustainable or not relies
+> on two steps: 1) a screening process for minimum sustainability performance, including Good
+> Governance and ‘Do No Significant Harm;’ and 2) a measurement o...
 >
-> — [Navigating Europe’s equities and sustainable investing landscape  | Blog post...](https://stoxx.com/navigating-europes-equities-and-sustainable-investing-landscape) — "WHITEPAPER"
+> — [Navigating Europe’s equities and sustainable investing landscape  | Blog post...](https://stoxx.com/navigating-europes-equities-and-sustainable-investing-landscape)
 >
 
 ---
@@ -537,45 +537,45 @@ ESMA is the EU's top securities watchdog. For STOXX and ISS, ESMA matters becaus
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...
-> > uidelines **ESMA** published the guidelines’ translations in all official EU languages on August
-> > 21, meaning the rules will start applying for new funds in three months from that date. Managers
-> > of existing funds will get an additional six months for compliance. Some indices are already
-> > aligned with the **ESMA** guidelines. One example is the STOXX® Euro...
+> **New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...**
+> uidelines **ESMA** published the guidelines’ translations in all official EU languages on August
+> 21, meaning the rules will start applying for new funds in three months from that date. Managers
+> of existing funds will get an additional six months for compliance. Some indices are already
+> aligned with the **ESMA** guidelines. One example is the STOXX® Euro...
 >
-> — [New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...](https://stoxx.com/new-esma-fund-names-rules-qa-with-eurex-and-stoxx-on-changes-to-esg-index-derivatives) — "WHITEPAPER"
+> — [New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...](https://stoxx.com/new-esma-fund-names-rules-qa-with-eurex-and-stoxx-on-changes-to-esg-index-derivatives)
 >
-> > [!quote] Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...
-> > greenwashing — concern the use of specific words such as ‘ESG,’ ‘sustainable,’ ‘SRI’ or
-> > ‘impact.’ **ESMA** has provided detailed requirements for funds that want to use those terms, a
-> > summary of which appears in Figure 1. For a deeper analysis of the new regulation, see our
-> > report from June. Figure 1: **ESMA** naming guidelines These guidelines tie the ...
+> **Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...**
+> greenwashing — concern the use of specific words such as ‘ESG,’ ‘sustainable,’ ‘SRI’ or ‘impact.’
+> **ESMA** has provided detailed requirements for funds that want to use those terms, a summary of
+> which appears in Figure 1. For a deeper analysis of the new regulation, see our report from June.
+> Figure 1: **ESMA** naming guidelines These guidelines tie the ...
 >
-> — [Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...](https://stoxx.com/screening-stoxx-indices-through-esmas-new-fund-naming-guidelines) — "WHITEPAPER"
+> — [Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...](https://stoxx.com/screening-stoxx-indices-through-esmas-new-fund-naming-guidelines)
 >
-> > [!quote] Institutional Shareholder Services Comments on ESMA Principles for Proxy Advi...
-> > ess the accuracy and reliability of the proxy advisor’s services, proxy advisors are expected to
-> > be transparent on their voting policy and on the main characteristics of the methodology they
-> > apply, which form the rationale of their recommendations. This is also in line with the overall
-> > message that **ESMA** received from the market consultation for ...
+> **Institutional Shareholder Services Comments on ESMA Principles for Proxy Advi...**
+> ess the accuracy and reliability of the proxy advisor’s services, proxy advisors are expected to
+> be transparent on their voting policy and on the main characteristics of the methodology they
+> apply, which form the rationale of their recommendations. This is also in line with the overall
+> message that **ESMA** received from the market consultation for ...
 >
-> — [Institutional Shareholder Services Comments on ESMA Principles for Proxy Advi...](https://www.issgovernance.com/iss-comments-on-esma-principles-for-proxy-advisors) — "Institutional Shareholder Services Comments on ESMA Principles for Proxy Advisors"
+> — [Institutional Shareholder Services Comments on ESMA Principles for Proxy Advi...](https://www.issgovernance.com/iss-comments-on-esma-principles-for-proxy-advisors)
 >
-> > [!quote] Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)
-> > et Consultation on proposed changes to DAX & STOXX indices impacted by the **ESMA** Guidelines
-> > on funds’ names using ESG or sustainability-related terms Dear Sir and Madam, STOXX Ltd.
-> > announces the results of the market consultation on proposed changes to some of the DAX & STOXX
-> > indices impacted by the **ESMA** Guidelines on funds’ names using ESG or su...
+> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
+> et Consultation on proposed changes to DAX & STOXX indices impacted by the **ESMA** Guidelines on
+> funds’ names using ESG or sustainability-related terms Dear Sir and Madam, STOXX Ltd. announces
+> the results of the market consultation on proposed changes to some of the DAX & STOXX indices
+> impacted by the **ESMA** Guidelines on funds’ names using ESG or su...
 >
 > — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
 >
-> > [!quote] thumbnail-new-esma-fund-names-rules | ISS
-> > ns ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express
-> > Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification)
-> > Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber
-> > Risk Score thumbnail-new-**esma**-fund-names-rules Start typing and press En...
+> **thumbnail-new-esma-fund-names-rules | ISS**
+> ns ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express Securities
+> Class Action Services Governance Analytics (Corporate Issuer Data Verification) Beacon(Retirement)
+> Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score
+> thumbnail-new-**esma**-fund-names-rules Start typing and press En...
 >
-> — [thumbnail-new-esma-fund-names-rules | ISS](https://www.issgovernance.com/ri-usa-2024/thumbnail-new-esma-fund-names-rules) — "thumbnail-new-esma-fund-names-rules"
+> — [thumbnail-new-esma-fund-names-rules | ISS](https://www.issgovernance.com/ri-usa-2024/thumbnail-new-esma-fund-names-rules)
 >
 
 ---
@@ -596,37 +596,37 @@ These guidelines stop fund managers from slapping "green" or "ESG" on a fund nam
 
 > [!example]- Source excerpts (4)
 >
-> > [!quote] E.ON, Hugo Boss among companies joining DAX ESG indices | Blog posts | STOXX
-> > minimizing the tracking error to the DAX index. All details on the changes to the individual
-> > indices can be found in the consultation results documents linked above. March also brought the
-> > switch in ESG data provider from Sustainalytics to ISS ESG, with the exception of the DAX ESG
-> > Target. Table 1: **ESMA fund naming guidelines** March 2025 review A...
+> **E.ON, Hugo Boss among companies joining DAX ESG indices | Blog posts | STOXX**
+> minimizing the tracking error to the DAX index. All details on the changes to the individual
+> indices can be found in the consultation results documents linked above. March also brought the
+> switch in ESG data provider from Sustainalytics to ISS ESG, with the exception of the DAX ESG
+> Target. Table 1: **ESMA fund naming guidelines** March 2025 review A...
 >
-> — [E.ON, Hugo Boss among companies joining DAX ESG indices | Blog posts | STOXX](https://stoxx.com/e-on-hugo-boss-among-companies-joining-dax-esg-indices) — "WHITEPAPER"
+> — [E.ON, Hugo Boss among companies joining DAX ESG indices | Blog posts | STOXX](https://stoxx.com/e-on-hugo-boss-among-companies-joining-dax-esg-indices)
 >
-> > [!quote] Eurex’s Derivatives Forum discusses index evolution, customization in growing...
-> > o not disrupt markets where adoption and the trading ecosystem are well established. “We need to
-> > look at the interest of the whole ecosystem, and how our products are facilitating the trading
-> > activity, risk hedging, volatility and repo activities, etc.,” he said. “And that our products
-> > serve that.” **ESMA fund naming guidelines** A morning session a...
+> **Eurex’s Derivatives Forum discusses index evolution, customization in growing...**
+> o not disrupt markets where adoption and the trading ecosystem are well established. “We need to
+> look at the interest of the whole ecosystem, and how our products are facilitating the trading
+> activity, risk hedging, volatility and repo activities, etc.,” he said. “And that our products
+> serve that.” **ESMA fund naming guidelines** A morning session a...
 >
-> — [Eurex’s Derivatives Forum discusses index evolution, customization in growing...](https://stoxx.com/eurexs-derivatives-forum-discusses-index-evolution-customization-in-growing-investment-landscape) — "WHITEPAPER"
+> — [Eurex’s Derivatives Forum discusses index evolution, customization in growing...](https://stoxx.com/eurexs-derivatives-forum-discusses-index-evolution-customization-in-growing-investment-landscape)
 >
-> > [!quote] New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...
-> > sentially means they can no longer invest in oil and gas. STOXX as an index provider does not
-> > need to comply with the ESMA rules. However, we are looking to support our clients by offering
-> > ESMA-compliant indices.” There are, already, investment products using underlying indices that
-> > comply with the **ESMA fund naming guidelines**. Among them are an ...
+> **New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...**
+> sentially means they can no longer invest in oil and gas. STOXX as an index provider does not need
+> to comply with the ESMA rules. However, we are looking to support our clients by offering
+> ESMA-compliant indices.” There are, already, investment products using underlying indices that
+> comply with the **ESMA fund naming guidelines**. Among them are an ...
 >
-> — [New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...](https://stoxx.com/new-esma-fund-names-rules-qa-with-eurex-and-stoxx-on-changes-to-esg-index-derivatives) — "WHITEPAPER"
+> — [New ESMA fund names rules: Q&amp;A with Eurex and STOXX on changes to ESG ind...](https://stoxx.com/new-esma-fund-names-rules-qa-with-eurex-and-stoxx-on-changes-to-esg-index-derivatives)
 >
-> > [!quote] Q&amp;A with DWS’s Frederike Bauer: ‘Data evolution is fostering awareness in...
-> > ESG investing, or is there anything specific to index-based investment products? “I think
-> > climate investing is generally easier to implement in the indexing space. Index-based strategies
-> > benefit from systematic rules — such as those defined in the PAB and CTB regulations[2] and
-> > referenced under the **ESMA fund naming guidelines** — which can be embe...
+> **Q&amp;A with DWS’s Frederike Bauer: ‘Data evolution is fostering awareness in...**
+> ESG investing, or is there anything specific to index-based investment products? “I think climate
+> investing is generally easier to implement in the indexing space. Index-based strategies benefit
+> from systematic rules — such as those defined in the PAB and CTB regulations[2] and referenced
+> under the **ESMA fund naming guidelines** — which can be embe...
 >
-> — [Q&amp;A with DWS’s Frederike Bauer: ‘Data evolution is fostering awareness in...](https://stoxx.com/qa-with-dwss-frederike-bauer-data-evolution-is-fostering-awareness-in-climate-biodiversity-impact-investing) — "WHITEPAPER"
+> — [Q&amp;A with DWS’s Frederike Bauer: ‘Data evolution is fostering awareness in...](https://stoxx.com/qa-with-dwss-frederike-bauer-data-evolution-is-fostering-awareness-in-climate-biodiversity-impact-investing)
 >
 
 ---
@@ -646,45 +646,45 @@ This is an alternative name. Refer to the full entry under **Benchmark Regulatio
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Benchmark ESG Disclosure Dataset | ISS
-> > 1816 of 17 July 2020 is the most recent supplement to the **EU Benchmark Regulation**s BENEFIT
-> > FROM OUR DEDICATED BENCHMARK ESG DISCLOSURE DATASET Regulatory Disclosures Insight into vital
-> > non-financial metrics Benchmark administrators can leverage our data to help meet the reporting
-> > obligations of the **EU Benchmark Regulation**. High coverage of bench...
+> **Benchmark ESG Disclosure Dataset | ISS**
+> 1816 of 17 July 2020 is the most recent supplement to the **EU Benchmark Regulation**s BENEFIT
+> FROM OUR DEDICATED BENCHMARK ESG DISCLOSURE DATASET Regulatory Disclosures Insight into vital
+> non-financial metrics Benchmark administrators can leverage our data to help meet the reporting
+> obligations of the **EU Benchmark Regulation**. High coverage of bench...
 >
-> — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [Benchmark ESG Disclosure Dataset | ISS](https://www.issgovernance.com/sustainability/regulatory/benchmark-esg-disclosure-dataset)
 >
-> > [!quote] Guide To Eurogov Bond Indices (PDF)
-> > 6 months October 2013 Introduction cost factor December 2014 Clarification relating to IOSCO
-> > principles October 2017 Include liquidity requirements October 2018 Change of cap level, minimum
-> > requirements for cash in the Money Market Index and cost factor formula August 2019
-> > Clarification relating to **EU Benchmark Regulation** and changes relating to...
+> **Guide To Eurogov Bond Indices (PDF)**
+> 6 months October 2013 Introduction cost factor December 2014 Clarification relating to IOSCO
+> principles October 2017 Include liquidity requirements October 2018 Change of cap level, minimum
+> requirements for cash in the Money Market Index and cost factor formula August 2019 Clarification
+> relating to **EU Benchmark Regulation** and changes relating to...
 >
 > — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
 >
-> > [!quote] Climate and Nature Thought Leadership | ISS
-> > The ISS STOXX indices (“Indices”) are owned and administered by STOXX Ltd., a supervised
-> > benchmark administrator under the **EU Benchmark Regulation**, Regulation (EU) 2016/100 of the
-> > European Parliament. Environmental, social and governance ratings, scores and other analytical
-> > assessments, which may be used as an input to some Indices, are produced...
+> **Climate and Nature Thought Leadership | ISS**
+> The ISS STOXX indices (“Indices”) are owned and administered by STOXX Ltd., a supervised benchmark
+> administrator under the **EU Benchmark Regulation**, Regulation (EU) 2016/100 of the European
+> Parliament. Environmental, social and governance ratings, scores and other analytical assessments,
+> which may be used as an input to some Indices, are produced...
 >
-> — [Climate and Nature Thought Leadership | ISS](https://www.issgovernance.com/climate-and-nature/thought-leadership) — "ISS STOXX"
+> — [Climate and Nature Thought Leadership | ISS](https://www.issgovernance.com/climate-and-nature/thought-leadership)
 >
-> > [!quote] Regulatory Solutions | ISS
-> > egulatory regimes from these external resources. - - European Commission – **EU Benchmark
-> > Regulation** - European Commission – EU Taxonomy - European Commission – EU Taxonomy (Climate
-> > Change Mitigation and Climate Change Adaptation delegated acts) - European Commission –
-> > Sustainable Finance - EUR-lex – **EU Benchmark Regulation** - European Commission –...
+> **Regulatory Solutions | ISS**
+> egulatory regimes from these external resources. - - European Commission – **EU Benchmark
+> Regulation** - European Commission – EU Taxonomy - European Commission – EU Taxonomy (Climate
+> Change Mitigation and Climate Change Adaptation delegated acts) - European Commission –
+> Sustainable Finance - EUR-lex – **EU Benchmark Regulation** - European Commission –...
 >
-> — [Regulatory Solutions | ISS](https://www.issgovernance.com/sustainability/regulatory) — "REGULATORY SOLUTIONS"
+> — [Regulatory Solutions | ISS](https://www.issgovernance.com/sustainability/regulatory)
 >
-> > [!quote] STOXX Announces Recognition As Administrator Under Benchmark Regulation | Pre...
-> > Zug (July 31, 2019) – STOXX Ltd., the operator of Deutsche Boerse Group’s index business and a
-> > global provider of innovative and tradable index concepts, has been recognized as administrator
-> > under **EU Benchmark Regulation**. The EU Benchmarks Regulation has been in effect since January
-> > 1, 2018 and touches both EU and non-EU entities that administer...
+> **STOXX Announces Recognition As Administrator Under Benchmark Regulation | Pre...**
+> Zug (July 31, 2019) – STOXX Ltd., the operator of Deutsche Boerse Group’s index business and a
+> global provider of innovative and tradable index concepts, has been recognized as administrator
+> under **EU Benchmark Regulation**. The EU Benchmarks Regulation has been in effect since January
+> 1, 2018 and touches both EU and non-EU entities that administer...
 >
-> — [STOXX Announces Recognition As Administrator Under Benchmark Regulation | Pre...](https://stoxx.com/stoxx-announces-recognition-as-administrator-under-benchmark-regulation) — "WHITEPAPER"
+> — [STOXX Announces Recognition As Administrator Under Benchmark Regulation | Pre...](https://stoxx.com/stoxx-announces-recognition-as-administrator-under-benchmark-regulation)
 >
 
 ---
@@ -706,13 +706,13 @@ In plain terms, the EU Green Deal is Europe's master plan to fight climate chang
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] EU Taxonomy Alignment Solution Webinar | ISS
-> > t products inside the European Union will need to provide disclosure according to the EU
-> > Taxonomy. The regulation is the first mandatory requirement of its kind globally, aiming to
-> > redirect private capital towards sustainable investments, achieve climate neutrality and help to
-> > meet the goals of the **EU Green Deal**. It encompasses a list of economi...
+> **EU Taxonomy Alignment Solution Webinar | ISS**
+> t products inside the European Union will need to provide disclosure according to the EU Taxonomy.
+> The regulation is the first mandatory requirement of its kind globally, aiming to redirect private
+> capital towards sustainable investments, achieve climate neutrality and help to meet the goals of
+> the **EU Green Deal**. It encompasses a list of economi...
 >
-> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy) — "EU Taxonomy Alignment Solution Webinar"
+> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy)
 >
 
 ---
@@ -754,43 +754,43 @@ Taxonomy alignment is the gold standard measure of how "green" a company's activ
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] EU Taxonomy Alignment Solution Webinar | ISS
-> > **EU Taxonomy Alignment** Solution Webinar Starting in 2022, institutional investors and
-> > financial market participants (FMPs) who distribute relevant investment products inside the
-> > European Union will need to provide disclosure according to the EU Taxonomy. The regulation is
-> > the first mandatory requirem
+> **EU Taxonomy Alignment Solution Webinar | ISS**
+> **EU Taxonomy Alignment** Solution Webinar Starting in 2022, institutional investors and financial
+> market participants (FMPs) who distribute relevant investment products inside the European Union
+> will need to provide disclosure according to the EU Taxonomy. The regulation is the first
+> mandatory requirem
 >
-> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy) — "EU Taxonomy Alignment Solution Webinar"
+> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy)
 >
-> > [!quote] Icon for EU Taxonomy Alignment | ISS
-> > Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express
-> > Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification)
-> > Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber
-> > Risk Score Icon for **EU Taxonomy Alignment** Leveraging over 30 years o...
+> **Icon for EU Taxonomy Alignment | ISS**
+> Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express
+> Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification)
+> Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber
+> Risk Score Icon for **EU Taxonomy Alignment** Leveraging over 30 years o...
 >
-> — [Icon for EU Taxonomy Alignment | ISS](https://www.issgovernance.com/sustainability/regulatory/icon-for-eu-taxonomy-1) — "Icon for EU Taxonomy Alignment"
+> — [Icon for EU Taxonomy Alignment | ISS](https://www.issgovernance.com/sustainability/regulatory/icon-for-eu-taxonomy-1)
 >
-> > [!quote] EU Taxonomy Alignment Solution | ISS
-> > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS **EU Taxonomy Alignment** Solution Quantify the
-> > share of your taxonomy-aligned investments. Are you prepared? The European Union’s Taxonomy
-> > brings new mandatory reporting requirements that represent a challenge for financial markets by
-> > requiring significant action from participants. Quantify the share o
+> **EU Taxonomy Alignment Solution | ISS**
+> SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS **EU Taxonomy Alignment** Solution Quantify the
+> share of your taxonomy-aligned investments. Are you prepared? The European Union’s Taxonomy brings
+> new mandatory reporting requirements that represent a challenge for financial markets by requiring
+> significant action from participants. Quantify the share o
 >
-> — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy)
 >
-> > [!quote] Icon for EU Taxonomy Alignment Coverage | ISS
-> > Overall coverage of 8,600 issuers Icon for **EU Taxonomy Alignment**
-> > Coverage2021-01-142023-11-24/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
+> **Icon for EU Taxonomy Alignment Coverage | ISS**
+> Overall coverage of 8,600 issuers Icon for **EU Taxonomy Alignment**
+> Coverage2021-01-142023-11-24/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
 >
-> — [Icon for EU Taxonomy Alignment Coverage | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy/attachment/534221) — "Icon for EU Taxonomy Alignment Coverage"
+> — [Icon for EU Taxonomy Alignment Coverage | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy/attachment/534221)
 >
-> > [!quote] European ESG Template | ISS
-> > th ESG-related regulatory requirements covered in the SFDR, EU Taxonomy, MiFID II, and IDD. We
-> > have mapped the European ESG Template requirements to data points covered by its proprietary
-> > data to assist fund distributors and intermediaries with completing the European ESG Template.
-> > Our SFDR PAI and **EU Taxonomy Alignment** Solutions can be leverage...
+> **European ESG Template | ISS**
+> th ESG-related regulatory requirements covered in the SFDR, EU Taxonomy, MiFID II, and IDD. We
+> have mapped the European ESG Template requirements to data points covered by its proprietary data
+> to assist fund distributors and intermediaries with completing the European ESG Template. Our SFDR
+> PAI and **EU Taxonomy Alignment** Solutions can be leverage...
 >
-> — [European ESG Template | ISS](https://www.issgovernance.com/sustainability/regulatory/european-esg-template) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [European ESG Template | ISS](https://www.issgovernance.com/sustainability/regulatory/european-esg-template)
 >
 
 ---
@@ -813,45 +813,45 @@ Financial materiality asks: "Does this ESG issue affect the company's bottom lin
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] ISS EVA Webinar Series: Exploring Financial Materiality in ESG Investing | ISS
-> > ISS EVA Webinar Series Exploring **Financial Materiality** in ESG Investing ESG has been buzzing
-> > around the investing lexicon for the better part of two decades now, and for good reason,
-> > because ESG Matters. What we explore in our most recent white paper is just how important ESG is
-> > in financial analysis and what we are thrilled to hig
+> **ISS EVA Webinar Series: Exploring Financial Materiality in ESG Investing | ISS**
+> ISS EVA Webinar Series Exploring **Financial Materiality** in ESG Investing ESG has been buzzing
+> around the investing lexicon for the better part of two decades now, and for good reason, because
+> ESG Matters. What we explore in our most recent white paper is just how important ESG is in
+> financial analysis and what we are thrilled to hig
 >
-> — [ISS EVA Webinar Series: Exploring Financial Materiality in ESG Investing | ISS](https://www.issgovernance.com/iss-eva-webinar-series-exploring-financial-materiality-in-esg-investing) — "ISS EVA Webinar Series"
+> — [ISS EVA Webinar Series: Exploring Financial Materiality in ESG Investing | ISS](https://www.issgovernance.com/iss-eva-webinar-series-exploring-financial-materiality-in-esg-investing)
 >
-> > [!quote] ESG Index Solutions
-> > the ISS ESG Water Risk Rating, which considers companies’ Water Risk Exposure and Water Risk
-> > Management. The index constituents also have a medium or high ISS ESG Corporate Rating and
-> > comply with standards related to international norms and controversial weapons. EVA LEADERS
-> > INDEX ESG + F ESG + F (**financial materiality**) is here to stay, as ISS’ ...
+> **ESG Index Solutions**
+> the ISS ESG Water Risk Rating, which considers companies’ Water Risk Exposure and Water Risk
+> Management. The index constituents also have a medium or high ISS ESG Corporate Rating and comply
+> with standards related to international norms and controversial weapons. EVA LEADERS INDEX ESG + F
+> ESG + F (**financial materiality**) is here to stay, as ISS’ ...
 >
-> — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2) — "ESG INDEX SOLUTIONS"
+> — [ESG Index Solutions](https://www.issgovernance.com/sustainability/esg-index-solutions-2)
 >
-> > [!quote] ISS EVA Resource Center | ISS
-> > re Performance The Link Between TSR and EVA The EVA Measurement Formula: A Primer on Economic
-> > Value Added (EVA) Using EVA in Pay-for-Performance Analysis WEBINARS Factor Rotations: When Do
-> > Growth and Value Outperform? Manage Risk by Managing Expectations Getting Tangible About
-> > Intangibles Exploring **Financial Materiality** in ESG Investing Drivers ...
+> **ISS EVA Resource Center | ISS**
+> re Performance The Link Between TSR and EVA The EVA Measurement Formula: A Primer on Economic
+> Value Added (EVA) Using EVA in Pay-for-Performance Analysis WEBINARS Factor Rotations: When Do
+> Growth and Value Outperform? Manage Risk by Managing Expectations Getting Tangible About
+> Intangibles Exploring **Financial Materiality** in ESG Investing Drivers ...
 >
-> — [ISS EVA Resource Center | ISS](https://www.issgovernance.com/eva/iss-eva-resource-center) — "ISS EVA"
+> — [ISS EVA Resource Center | ISS](https://www.issgovernance.com/eva/iss-eva-resource-center)
 >
-> > [!quote] Us Procedures And Policies Faq (PDF)
-> > mental and social metrics can be considered long-term operational metrics, including metrics
-> > around workforce management, and those around product choice, sales practices, and/or
-> > manufacturing in line with a thriving environment and society. ISS generally adopts a long-term
-> > approach when looking at **financial materiality**. There is a proliferation...
+> **Us Procedures And Policies Faq (PDF)**
+> mental and social metrics can be considered long-term operational metrics, including metrics
+> around workforce management, and those around product choice, sales practices, and/or
+> manufacturing in line with a thriving environment and society. ISS generally adopts a long-term
+> approach when looking at **financial materiality**. There is a proliferation...
 >
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
 >
-> > [!quote] Sustainability Impact of Investments Calls for Redefined View of Asset Manage...
-> > the events of the past year, they argued, and predicted that ESG criteria will increasingly be
-> > embedded into investment practices. “Sustainable investing is a new continent that will be more
-> > widely explored,” Rodolphe said. “And to be able to navigate properly this continent, within
-> > fiduciary duty, **financial materiality** questions, ESG data and r...
+> **Sustainability Impact of Investments Calls for Redefined View of Asset Manage...**
+> the events of the past year, they argued, and predicted that ESG criteria will increasingly be
+> embedded into investment practices. “Sustainable investing is a new continent that will be more
+> widely explored,” Rodolphe said. “And to be able to navigate properly this continent, within
+> fiduciary duty, **financial materiality** questions, ESG data and r...
 >
-> — [Sustainability Impact of Investments Calls for Redefined View of Asset Manage...](https://stoxx.com/sustainability-impact-of-investments-calls-for-redefined-view-of-asset-management-says-qontigos-bocquet) — "WHITEPAPER"
+> — [Sustainability Impact of Investments Calls for Redefined View of Asset Manage...](https://stoxx.com/sustainability-impact-of-investments-calls-for-redefined-view-of-asset-management-says-qontigos-bocquet)
 >
 
 ---
@@ -904,43 +904,43 @@ MiFID II is the EU's main rulebook for how financial products are sold to invest
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Are You Ready for Sustainability Preferences Under MiFID II and IDD? | ISS
-> > Are You Ready for Sustainability Preferences Under **MiFID II** and IDD? A Hands-On Session on
-> > the Implementation of Sustainability Preferences Under **MiFID II** and IDD Taxonomy and
-> > Sustainable Finance Disclosure Regulation (SFDR) have dominated the public discussion while the
-> > upcoming amendments to MiFID II and IDD have attracted significantly less p...
+> **Are You Ready for Sustainability Preferences Under MiFID II and IDD? | ISS**
+> Are You Ready for Sustainability Preferences Under **MiFID II** and IDD? A Hands-On Session on the
+> Implementation of Sustainability Preferences Under **MiFID II** and IDD Taxonomy and Sustainable
+> Finance Disclosure Regulation (SFDR) have dominated the public discussion while the upcoming
+> amendments to MiFID II and IDD have attracted significantly less p...
 >
-> — [Are You Ready for Sustainability Preferences Under MiFID II and IDD? | ISS](https://www.issgovernance.com/are-you-ready-for-sustainability-preferences-under-mifid-ii-and-idd) — "Are You Ready for Sustainability Preferences Under MiFID II and IDD?"
+> — [Are You Ready for Sustainability Preferences Under MiFID II and IDD? | ISS](https://www.issgovernance.com/are-you-ready-for-sustainability-preferences-under-mifid-ii-and-idd)
 >
-> > [!quote] Wie nachhaltig soll es sein? Praxis-Webinar zur Umsetzung der neuen Vertriebs...
-> > Wie nachhaltig soll es sein? Praxis-Webinar zur Umsetzung der neuen Vertriebsregeln zu
-> > Nachhaltigkeitspräferenzen in **MiFID II** und IDD vor dem Hintergrund der weitreichenden
-> > Diskussion um die Taxonomie- und die Offenlegungsverordnung (SFDR) haben die Anpassungen von
-> > **MiFID II** und IDD lange Zeit vergleichsweise wenig öffentliche Aufmerksamkeit auf ...
+> **Wie nachhaltig soll es sein? Praxis-Webinar zur Umsetzung der neuen Vertriebs...**
+> Wie nachhaltig soll es sein? Praxis-Webinar zur Umsetzung der neuen Vertriebsregeln zu
+> Nachhaltigkeitspräferenzen in **MiFID II** und IDD vor dem Hintergrund der weitreichenden
+> Diskussion um die Taxonomie- und die Offenlegungsverordnung (SFDR) haben die Anpassungen von
+> **MiFID II** und IDD lange Zeit vergleichsweise wenig öffentliche Aufmerksamkeit auf ...
 >
-> — [Wie nachhaltig soll es sein? Praxis-Webinar zur Umsetzung der neuen Vertriebs...](https://www.issgovernance.com/praxis-webinar-zur-umsetzung-der-neuen-vertriebsregeln-zu-nachhaltigkeitspraferenzen-in-mifid-ii-und-idd) — "Wie nachhaltig soll es sein?"
+> — [Wie nachhaltig soll es sein? Praxis-Webinar zur Umsetzung der neuen Vertriebs...](https://www.issgovernance.com/praxis-webinar-zur-umsetzung-der-neuen-vertriebsregeln-zu-nachhaltigkeitspraferenzen-in-mifid-ii-und-idd)
 >
-> > [!quote] Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...
-> > t. 9 products.[1] - It entails a concept of good governance and DNSH that are part of the
-> > exclusion base layer for SFDR Arts. 8 and 9. - It overlaps with the EU Taxonomy[2] under
-> > development. - It represents one of three ways in which end investors can express their
-> > sustainability preferences under **MiFID II**. Figure 1: Common requirements under S...
+> **Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...**
+> t. 9 products.[1] - It entails a concept of good governance and DNSH that are part of the
+> exclusion base layer for SFDR Arts. 8 and 9. - It overlaps with the EU Taxonomy[2] under
+> development. - It represents one of three ways in which end investors can express their
+> sustainability preferences under **MiFID II**. Figure 1: Common requirements under S...
 >
-> — [Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...](https://stoxx.com/qontigo-publishes-guide-for-sfdr-aligned-sustainable-investment-methodology) — "WHITEPAPER"
+> — [Qontigo publishes guide for SFDR-aligned Sustainable Investment methodology |...](https://stoxx.com/qontigo-publishes-guide-for-sfdr-aligned-sustainable-investment-methodology)
 >
-> > [!quote] European ESG Template | ISS
-> > The European ESG Template, developed by FinDatEx, is a fund-level reporting template for asset
-> > managers that distribute funds in the European Union and need to comply with ESG-related
-> > regulatory requirements covered in the SFDR, EU Taxonomy, **MiFID II**, and IDD. We have mapped
-> > the European ESG Template requirements to data points covered by its pr...
+> **European ESG Template | ISS**
+> The European ESG Template, developed by FinDatEx, is a fund-level reporting template for asset
+> managers that distribute funds in the European Union and need to comply with ESG-related
+> regulatory requirements covered in the SFDR, EU Taxonomy, **MiFID II**, and IDD. We have mapped
+> the European ESG Template requirements to data points covered by its pr...
 >
-> — [European ESG Template | ISS](https://www.issgovernance.com/sustainability/regulatory/european-esg-template) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [European ESG Template | ISS](https://www.issgovernance.com/sustainability/regulatory/european-esg-template)
 >
-> > [!quote] Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)
-> > road Market Indices, published on January 13th, 2023. Proposed enhancements aim to help
-> > investors align their ESG objectives with the current developments in the sustainable finance
-> > space - i.e. Sustainable Finance Disclosure Regulation (SFDR)1 and the Markets in Financial
-> > Instruments Directive II (**MiFID II**)2. The new screens have the objective ...
+> **Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)**
+> road Market Indices, published on January 13th, 2023. Proposed enhancements aim to help investors
+> align their ESG objectives with the current developments in the sustainable finance space - i.e.
+> Sustainable Finance Disclosure Regulation (SFDR)1 and the Markets in Financial Instruments
+> Directive II (**MiFID II**)2. The new screens have the objective ...
 >
 > — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
 >
@@ -963,29 +963,29 @@ Minimum safeguards ensure that a "green" activity is not built on labour exploit
 
 > [!example]- Source excerpts (3)
 >
-> > [!quote] Minimum Safeguards, Maximum Impact? Assessing Alignment with Minimum Safeguar...
-> > **Minimum Safeguards**, Maximum Impact? Assessing Alignment with **Minimum Safeguards** in the
-> > EU Taxonomy AUGUST 19, 2022 KEY TAKEAWAYS - The Minimum Safeguards (MS) provision of the EU
-> > Taxonomy Regulation requires companies involved in environmentally sustainable activities to
-> > respect basic human rights a
+> **Minimum Safeguards, Maximum Impact? Assessing Alignment with Minimum Safeguar...**
+> **Minimum Safeguards**, Maximum Impact? Assessing Alignment with **Minimum Safeguards** in the EU
+> Taxonomy AUGUST 19, 2022 KEY TAKEAWAYS - The Minimum Safeguards (MS) provision of the EU Taxonomy
+> Regulation requires companies involved in environmentally sustainable activities to respect basic
+> human rights a
 >
-> — [Minimum Safeguards, Maximum Impact? Assessing Alignment with Minimum Safeguar...](https://www.issgovernance.com/library/minimum-safeguards-maximum-impact-assessing-alignment-with-minimum-safeguards-in-the-eu-taxonomy) — "Minimum Safeguards, Maximum Impact? Assessing Alignment with Minimum Safeguards in the EU Taxonomy"
+> — [Minimum Safeguards, Maximum Impact? Assessing Alignment with Minimum Safeguar...](https://www.issgovernance.com/library/minimum-safeguards-maximum-impact-assessing-alignment-with-minimum-safeguards-in-the-eu-taxonomy)
 >
-> > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
-> > ding principles when developing the sustainable investment (SI) methodology presented in this
-> > document: Consistency with the existing reference frameworks for the EU’s SI regulations: • The
-> > DNSH screening layer should be based as far as possible on the PAIs and should be aligned with
-> > the Taxonomy’s **minimum safeguards**. • The assessment of any pos...
+> **Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)**
+> ding principles when developing the sustainable investment (SI) methodology presented in this
+> document: Consistency with the existing reference frameworks for the EU’s SI regulations: • The
+> DNSH screening layer should be based as far as possible on the PAIs and should be aligned with the
+> Taxonomy’s **minimum safeguards**. • The assessment of any pos...
 >
 > — [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
 >
-> > [!quote] Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...
-> > , a summary of which appears in Figure 1. For a deeper analysis of the new regulation, see our
-> > report from June. Figure 1: ESMA naming guidelines These guidelines tie the implicit promise in
-> > a fund’s name to a minimum investment in the stated objective. One of their more contentious
-> > aspects is the ‘**minimum safeguards**’ provision, which bans inves...
+> **Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...**
+> , a summary of which appears in Figure 1. For a deeper analysis of the new regulation, see our
+> report from June. Figure 1: ESMA naming guidelines These guidelines tie the implicit promise in a
+> fund’s name to a minimum investment in the stated objective. One of their more contentious aspects
+> is the ‘**minimum safeguards**’ provision, which bans inves...
 >
-> — [Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...](https://stoxx.com/screening-stoxx-indices-through-esmas-new-fund-naming-guidelines) — "WHITEPAPER"
+> — [Screening STOXX indices through ESMA’s new fund naming guidelines | Blog post...](https://stoxx.com/screening-stoxx-indices-through-esmas-new-fund-naming-guidelines)
 >
 
 ---
@@ -1032,21 +1032,21 @@ The NFRD was Europe's first attempt at making companies report on sustainability
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] EU Taxonomy Alignment Solution | ISS
-> > ities including: - Improved forest management - Livestock production - Manufacture of renewable
-> > energy technologies - Manufacture of cement - Electricity generation from wind power -
-> > Manufacture of aluminium - Anaerobic digestion of sewage sludge - Composting of bio-waste -
-> > Freight rail transport A **NFRD** indicator flag is also included in order t...
+> **EU Taxonomy Alignment Solution | ISS**
+> ities including: - Improved forest management - Livestock production - Manufacture of renewable
+> energy technologies - Manufacture of cement - Electricity generation from wind power - Manufacture
+> of aluminium - Anaerobic digestion of sewage sludge - Composting of bio-waste - Freight rail
+> transport A **NFRD** indicator flag is also included in order t...
 >
-> — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy)
 >
-> > [!quote] Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...
-> > overnment is extending its pioneering Article 173 legislation to demand asset owners and asset
-> > managers report their biodiversity impact as of this year. Europe is taking a strong lead in
-> > seeking environmental data. The European Commission is currently reviewing a Non-Financial
-> > Reporting Directive (**NFRD**) and preparing a renewed sustainable finan...
+> **Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...**
+> overnment is extending its pioneering Article 173 legislation to demand asset owners and asset
+> managers report their biodiversity impact as of this year. Europe is taking a strong lead in
+> seeking environmental data. The European Commission is currently reviewing a Non-Financial
+> Reporting Directive (**NFRD**) and preparing a renewed sustainable finan...
 >
-> — [Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...](https://stoxx.com/responsible-investing-zeroes-in-on-biodiversity) — "WHITEPAPER"
+> — [Responsible Investing Zeroes in on Biodiversity in Momentous 2021 | Blog post...](https://stoxx.com/responsible-investing-zeroes-in-on-biodiversity)
 >
 
 ---
@@ -1069,43 +1069,43 @@ A PAB is a benchmark designed to be fully compatible with a 1.5°C warming scena
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News April 2023 (PDF)
-> > C above pre-industrial levels. We have partnered with Sustainalytics for datasets relating to
-> > their Global Standards Screening and controversial weapons, and with ISS ESG for climate-related
-> > data such as Scope 1 to Scope 3 emissions, science-based climate targets, and others. The STOXX®
-> > Global 1800 **PAB** underperformed its benchmark by 30 basis po...
+> **Monthly Index News April 2023 (PDF)**
+> C above pre-industrial levels. We have partnered with Sustainalytics for datasets relating to
+> their Global Standards Screening and controversial weapons, and with ISS ESG for climate-related
+> data such as Scope 1 to Scope 3 emissions, science-based climate targets, and others. The STOXX®
+> Global 1800 **PAB** underperformed its benchmark by 30 basis po...
 >
 > — [Monthly Index News April 2023 (PDF)](https://stoxx.com/monthly-index-news-april-2023)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > ontroversial Activities Select 30 and EURO iSTOXX Women in Management High Dividend 30 Indices »
-> > June 2020 (3): Clarification of quarterly review of number of shares and free-float for iSTOXX
-> > Global NexGen Communication Innovative Technology Index » June 2020 (4): Addition of iSTOXX
-> > Ambition Climat **PAB** Index » June 2020 (5): Change in name resul...
+> **Istoxx Index Guide (PDF)**
+> ontroversial Activities Select 30 and EURO iSTOXX Women in Management High Dividend 30 Indices »
+> June 2020 (3): Clarification of quarterly review of number of shares and free-float for iSTOXX
+> Global NexGen Communication Innovative Technology Index » June 2020 (4): Addition of iSTOXX
+> Ambition Climat **PAB** Index » June 2020 (5): Change in name resul...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)
-> > least 20% due to ESG exclusions is already fulfilled by the current methodology of these
-> > indices. • Adding additional screens for Coal (>1%), Oil fuels (>10%), Gaseous fuels (>50% /
-> > Power generation), to "Exclude investments in companies referred to in Article 12(1)(a) to (g)
-> > of CDR (EU) 2020/1818 (**PAB** exclusionary screens)" • Switch of legacy S...
+> **Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)**
+> least 20% due to ESG exclusions is already fulfilled by the current methodology of these indices.
+> • Adding additional screens for Coal (>1%), Oil fuels (>10%), Gaseous fuels (>50% / Power
+> generation), to "Exclude investments in companies referred to in Article 12(1)(a) to (g) of CDR
+> (EU) 2020/1818 (**PAB** exclusionary screens)" • Switch of legacy S...
 >
 > — [Results Of Extended Market Consultation Dax  Stoxx Indices Impacted By The Es... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_extended_Market_Consultation_DAX%20_STOXX_indices_impacted_by_the_ESMA_Guidelines.pdf)
 >
-> > [!quote] Index Files Guide 20230619 (PDF)
-> > FILES GUIDE 56 Item8b_Reference_ Standards Text "Refer to Data and Standards" and the link Text
-> > 255 This value is reported only if the benchmark is a **PAB** or Item9a_Year_on_Year_ 57 CTB
-> > index. The value is extracted from the index Number 2 Decarbonisation_Trajectory methodology
-> > document. This value is reported only if the benchmark is a **PAB** or CT...
+> **Index Files Guide 20230619 (PDF)**
+> FILES GUIDE 56 Item8b_Reference_ Standards Text "Refer to Data and Standards" and the link Text
+> 255 This value is reported only if the benchmark is a **PAB** or Item9a_Year_on_Year_ 57 CTB
+> index. The value is extracted from the index Number 2 Decarbonisation_Trajectory methodology
+> document. This value is reported only if the benchmark is a **PAB** or CT...
 >
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
 >
-> > [!quote] Monthly Index News May 2022 (PDF)
-> > s with the European Union Climate Benchmarks regulation and that will underlie structured
-> > products from Germany’s Landesbank Baden-Württemberg (LBBW). The new index is a decrement
-> > version of the iSTOXX® Global Climate Change ESG Index, itself based on the STOXX® Global 1800
-> > Paris-Aligned Benchmark (**PAB**) and supplemented by additional ESG exclusi...
+> **Monthly Index News May 2022 (PDF)**
+> s with the European Union Climate Benchmarks regulation and that will underlie structured products
+> from Germany’s Landesbank Baden-Württemberg (LBBW). The new index is a decrement version of the
+> iSTOXX® Global Climate Change ESG Index, itself based on the STOXX® Global 1800 Paris-Aligned
+> Benchmark (**PAB**) and supplemented by additional ESG exclusi...
 >
 > — [Monthly Index News May 2022 (PDF)](https://stoxx.com/monthly-index-news-may-2022)
 >
@@ -1128,45 +1128,45 @@ PAI is SFDR's way of making investors publicly account for the harm their invest
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
-> > 13 • It overlaps with the Taxonomy under development (see below; positive contribution: product
-> > and service revenues) • It represents one of the three ways in which end investors can express
-> > their sustainability preferences under MIFID 2,4 alongside the EU Taxonomy and the Principle
-> > Adverse Impact (**PAI**) indicators also provided for in the SFDR5 ...
+> **Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)**
+> 13 • It overlaps with the Taxonomy under development (see below; positive contribution: product
+> and service revenues) • It represents one of the three ways in which end investors can express
+> their sustainability preferences under MIFID 2,4 alongside the EU Taxonomy and the Principle
+> Adverse Impact (**PAI**) indicators also provided for in the SFDR5 ...
 >
 > — [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > attribute to identify companies that are facing substantial reputational risks, such as severe
-> > open incidents. APG Real Estate No Harm Flag: Data attribute to identify negative impact of the
-> > investments on Environmental and Social issues. The set of indicators used include Principal
-> > Adverse Impact (**PAI**) required by SFDR. APG Real Estate CRREM-al...
+> **Istoxx Index Guide (PDF)**
+> attribute to identify companies that are facing substantial reputational risks, such as severe
+> open incidents. APG Real Estate No Harm Flag: Data attribute to identify negative impact of the
+> investments on Environmental and Social issues. The set of indicators used include Principal
+> Adverse Impact (**PAI**) required by SFDR. APG Real Estate CRREM-al...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] SFDR Principal Adverse Impact Solution | ISS
-> > ory Technical Standards. Raw Values for Regulatory Compliance Data has also been included in
-> > tabular format to allow the relevant numbers to be easily visible. This is particularly
-> > important when aggregating data and the subsequent reporting to meet regulatory obligations.
-> > Coverage of all mandatory **PAI** indicators* for corporate and sovereign / s...
+> **SFDR Principal Adverse Impact Solution | ISS**
+> ory Technical Standards. Raw Values for Regulatory Compliance Data has also been included in
+> tabular format to allow the relevant numbers to be easily visible. This is particularly important
+> when aggregating data and the subsequent reporting to meet regulatory obligations. Coverage of all
+> mandatory **PAI** indicators* for corporate and sovereign / s...
 >
-> — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution)
 >
-> > [!quote] Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)
-> > e sustainable finance space - i.e. Sustainable Finance Disclosure Regulation (SFDR)1 and the
-> > Markets in Financial Instruments Directive II (MiFID II)2. The new screens have the objective of
-> > a stricter ESG screening criteria as well as broadening considerations of some SFDR principal
-> > adverse impact (**PAI**) indicators, at the same time keeping to a ...
+> **Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)**
+> e sustainable finance space - i.e. Sustainable Finance Disclosure Regulation (SFDR)1 and the
+> Markets in Financial Instruments Directive II (MiFID II)2. The new screens have the objective of a
+> stricter ESG screening criteria as well as broadening considerations of some SFDR principal
+> adverse impact (**PAI**) indicators, at the same time keeping to a ...
 >
 > — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
 >
-> > [!quote] Navigating the EU&#039;s ESG Regulations | ISS
-> > stment products inside the European Union, to provide disclosure according to the EU Taxonomy.
-> > The latter requires investment firms to disclose ESG and Taxonomy related analysis on their
-> > websites and in pre-contractual documents and periodic disclosures, as well as to analyze and
-> > report against the Principal Adverse Impact (PAIs) indicators whic...
+> **Navigating the EU&#039;s ESG Regulations | ISS**
+> stment products inside the European Union, to provide disclosure according to the EU Taxonomy. The
+> latter requires investment firms to disclose ESG and Taxonomy related analysis on their websites
+> and in pre-contractual documents and periodic disclosures, as well as to analyze and report
+> against the Principal Adverse Impact (PAIs) indicators whic...
 >
-> — [Navigating the EU&#039;s ESG Regulations | ISS](https://www.issgovernance.com/navigating-the-eu-esg-regulations) — "Navigating the EU’s ESG Regulations"
+> — [Navigating the EU&#039;s ESG Regulations | ISS](https://www.issgovernance.com/navigating-the-eu-esg-regulations)
 >
 
 ---
@@ -1187,13 +1187,13 @@ PAI indicators are the specific data points investors must collect and report. T
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] SFDR Principal Adverse Impact Solution | ISS
-> > ory Technical Standards. Raw Values for Regulatory Compliance Data has also been included in
-> > tabular format to allow the relevant numbers to be easily visible. This is particularly
-> > important when aggregating data and the subsequent reporting to meet regulatory obligations.
-> > Coverage of all mandatory **PAI indicators*** for corporate and sovereign / s...
+> **SFDR Principal Adverse Impact Solution | ISS**
+> ory Technical Standards. Raw Values for Regulatory Compliance Data has also been included in
+> tabular format to allow the relevant numbers to be easily visible. This is particularly important
+> when aggregating data and the subsequent reporting to meet regulatory obligations. Coverage of all
+> mandatory **PAI indicators*** for corporate and sovereign / s...
 >
-> — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution)
 >
 
 ---
@@ -1229,45 +1229,45 @@ SFDR is the EU's landmark regulation that forces the entire investment chain —
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News May 2023 (PDF)
-> > s that restore climate or biodiversity. Indices in the first category comply with current
-> > Article 8 requirements of the Sustainable Finance Disclosure Regulation (**SFDR**) and include
-> > the ISS STOXX® Developed World Biodiversity. Those in the Leaders cluster are, as per present
-> > regulation, aligned with **SFDR**’s more ambitious Art. 9. They include the ...
+> **Monthly Index News May 2023 (PDF)**
+> s that restore climate or biodiversity. Indices in the first category comply with current Article
+> 8 requirements of the Sustainable Finance Disclosure Regulation (**SFDR**) and include the ISS
+> STOXX® Developed World Biodiversity. Those in the Leaders cluster are, as per present regulation,
+> aligned with **SFDR**’s more ambitious Art. 9. They include the ...
 >
 > — [Monthly Index News May 2023 (PDF)](https://stoxx.com/monthly-index-news-may-2023)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > tify companies that are facing substantial reputational risks, such as severe open incidents.
-> > APG Real Estate No Harm Flag: Data attribute to identify negative impact of the investments on
-> > Environmental and Social issues. The set of indicators used include Principal Adverse Impact
-> > (PAI) required by **SFDR**. APG Real Estate CRREM-aligned Flag: Data ...
+> **Istoxx Index Guide (PDF)**
+> tify companies that are facing substantial reputational risks, such as severe open incidents. APG
+> Real Estate No Harm Flag: Data attribute to identify negative impact of the investments on
+> Environmental and Social issues. The set of indicators used include Principal Adverse Impact (PAI)
+> required by **SFDR**. APG Real Estate CRREM-aligned Flag: Data ...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)
-> > es of the methodology of the EURO STOXX 50 ESG and STOXX ESG Broad Market Indices, published on
-> > January 13th, 2023. Proposed enhancements aim to help investors align their ESG objectives with
-> > the current developments in the sustainable finance space - i.e. Sustainable Finance Disclosure
-> > Regulation (**SFDR**)1 and the Markets in Financial Instruments...
+> **Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)**
+> es of the methodology of the EURO STOXX 50 ESG and STOXX ESG Broad Market Indices, published on
+> January 13th, 2023. Proposed enhancements aim to help investors align their ESG objectives with
+> the current developments in the sustainable finance space - i.e. Sustainable Finance Disclosure
+> Regulation (**SFDR**)1 and the Markets in Financial Instruments...
 >
 > — [Results Of Market Consultation Euro Stoxx 50 Esg And Stoxx Broad Market Esg 2... (PDF)](https://www.stoxx.com/document/Resources/MarketConsultation/Results_of_Market_Consultation_EURO_STOXX_50_ESG_and_STOXX_Broad_Market_ESG_20230206.pdf)
 >
-> > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
-> > STOXX’S **SFDR** ARTICLE 2(17) SUSTAINABLE INVESMENT METHODOLOGY 3/13 1 Introduction This
-> > document presents STOXX’s methodology for reporting the sustainable investment percentage (“SI
-> > %”) of its indices in line with the EU’s Sustainable Finance Disclosures regulation (**SFDR**)
-> > requirements(“sustainable investment
+> **Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)**
+> STOXX’S **SFDR** ARTICLE 2(17) SUSTAINABLE INVESMENT METHODOLOGY 3/13 1 Introduction This document
+> presents STOXX’s methodology for reporting the sustainable investment percentage (“SI %”) of its
+> indices in line with the EU’s Sustainable Finance Disclosures regulation (**SFDR**)
+> requirements(“sustainable investment
 >
 > — [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
 >
-> > [!quote] Aktualisierte EU Regulatory Solutions | DACH | ISS
-> > Erweitertes Produktangebot zur EU-Regulierung Erfahren Sie mehr über die jüngsten Updates
-> > unserer EU-Regulierungsprodukte, einschließlich der EU-Taxonomie- und **SFDR**-Portfolioreports
-> > sowie der Screens für regionale ESG-Labels und Standards Vor allem in der EU sehen sich
-> > institutionelle Anleger derzeit mit zahlreichen Anforderungen hinsichtlich de...
+> **Aktualisierte EU Regulatory Solutions | DACH | ISS**
+> Erweitertes Produktangebot zur EU-Regulierung Erfahren Sie mehr über die jüngsten Updates unserer
+> EU-Regulierungsprodukte, einschließlich der EU-Taxonomie- und **SFDR**-Portfolioreports sowie der
+> Screens für regionale ESG-Labels und Standards Vor allem in der EU sehen sich institutionelle
+> Anleger derzeit mit zahlreichen Anforderungen hinsichtlich de...
 >
-> — [Aktualisierte EU Regulatory Solutions | DACH | ISS](https://www.issgovernance.com/eu-regulatory-solutions-updates-gemanic-markets) — "Erweitertes Produktangebot zur EU-Regulierung"
+> — [Aktualisierte EU Regulatory Solutions | DACH | ISS](https://www.issgovernance.com/eu-regulatory-solutions-updates-gemanic-markets)
 >
 
 ---
@@ -1288,13 +1288,13 @@ ISS built this product specifically to help fund managers comply with SFDR's PAI
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] SFDR Principal Adverse Impact Solution | ISS
-> > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS SFDR Principal Adverse Impact Solution Measure
-> > your investments against regulatory-defined Principal Adverse Impact metrics. Assess and report
-> > on the Principal Adverse Impacts of your products and portfolios Our **SFDR PAI Solution**
-> > enables Financial Market Participants to measure the performance of t...
+> **SFDR Principal Adverse Impact Solution | ISS**
+> SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS SFDR Principal Adverse Impact Solution Measure
+> your investments against regulatory-defined Principal Adverse Impact metrics. Assess and report on
+> the Principal Adverse Impacts of your products and portfolios Our **SFDR PAI Solution** enables
+> Financial Market Participants to measure the performance of t...
 >
-> — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [SFDR Principal Adverse Impact Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/sfdr-pai-solution)
 >
 
 ---
@@ -1327,85 +1327,85 @@ In plain terms, while a corporate governance code tells companies how to govern 
 
 > [!example]- Source excerpts (10)
 >
-> > [!quote] Statement on Intent to Sign Japan Stewardship Code | ISS
-> > Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible
-> > Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s
-> > Financial Services Agency (FSA) on February 27, 2014. ISS’ Head of Japanese Research, Takeyuki
-> > Ishida, participated in the Working Group that drafted the Stewardship Cod...
+> **Statement on Intent to Sign Japan Stewardship Code | ISS**
+> Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible
+> Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s
+> Financial Services Agency (FSA) on February 27, 2014. ISS’ Head of Japanese Research, Takeyuki
+> Ishida, participated in the Working Group that drafted the Stewardship Cod...
 >
-> — [Statement on Intent to Sign Japan Stewardship Code | ISS](https://www.issgovernance.com/compliance/statement-on-intent-to-sign-japan-stewardship-code) — "Statement on Intent to Sign Japan Stewardship Code"
+> — [Statement on Intent to Sign Japan Stewardship Code | ISS](https://www.issgovernance.com/compliance/statement-on-intent-to-sign-japan-stewardship-code)
 >
-> > [!quote] Statement on Intent to Sign Japan Stewardship Code | ISS
-> > Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible
-> > Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s
-> > Financial Services Agency (FSA) on February 27, 2014. ISS’ Head of Japanese Research, Takeyuki
-> > Ishida, participated in the Working Group that drafted the Stewardship Cod...
+> **Statement on Intent to Sign Japan Stewardship Code | ISS**
+> Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible
+> Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s
+> Financial Services Agency (FSA) on February 27, 2014. ISS’ Head of Japanese Research, Takeyuki
+> Ishida, participated in the Working Group that drafted the Stewardship Cod...
 >
-> — [Statement on Intent to Sign Japan Stewardship Code | ISS](https://www.issgovernance.com/compliance/statement-on-intent-to-sign-japan-stewardship-code) — "Statement on Intent to Sign Japan Stewardship Code"
+> — [Statement on Intent to Sign Japan Stewardship Code | ISS](https://www.issgovernance.com/compliance/statement-on-intent-to-sign-japan-stewardship-code)
 >
-> > [!quote] Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...
-> > Thursday, 15 December, 2016 10.00 – 11.00 AM CET 10.00 – 11.00 AM CET Please join ISS for a
-> > panel discussion on the introduction of the Danish **Stewardship Code** in the context of
-> > broader market drivers encouraging Nordic investors to exercise their active ownership
-> > responsibilities. MODERATOR - Ulrika Hasselgren Head of Responsible Investing Stra...
+> **Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...**
+> Thursday, 15 December, 2016 10.00 – 11.00 AM CET 10.00 – 11.00 AM CET Please join ISS for a panel
+> discussion on the introduction of the Danish **Stewardship Code** in the context of broader market
+> drivers encouraging Nordic investors to exercise their active ownership responsibilities.
+> MODERATOR - Ulrika Hasselgren Head of Responsible Investing Stra...
 >
-> — [Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...](https://www.issgovernance.com/looking-ahead-to-the-introduction-of-the-danish-stewardship-code) — "Looking Ahead to the Introduction of the Danish Stewardship Code and other 2017 Governance Developments"
+> — [Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...](https://www.issgovernance.com/looking-ahead-to-the-introduction-of-the-danish-stewardship-code)
 >
-> > [!quote] Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...
-> > Thursday, 15 December, 2016 10.00 – 11.00 AM CET 10.00 – 11.00 AM CET Please join ISS for a
-> > panel discussion on the introduction of the Danish **Stewardship Code** in the context of
-> > broader market drivers encouraging Nordic investors to exercise their active ownership
-> > responsibilities. MODERATOR - Ulrika Hasselgren Head of Responsible Investing Stra...
+> **Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...**
+> Thursday, 15 December, 2016 10.00 – 11.00 AM CET 10.00 – 11.00 AM CET Please join ISS for a panel
+> discussion on the introduction of the Danish **Stewardship Code** in the context of broader market
+> drivers encouraging Nordic investors to exercise their active ownership responsibilities.
+> MODERATOR - Ulrika Hasselgren Head of Responsible Investing Stra...
 >
-> — [Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...](https://www.issgovernance.com/looking-ahead-to-the-introduction-of-the-danish-stewardship-code) — "Looking Ahead to the Introduction of the Danish Stewardship Code and other 2017 Governance Developments"
+> — [Looking Ahead to the Introduction of the Danish Stewardship Code and other 20...](https://www.issgovernance.com/looking-ahead-to-the-introduction-of-the-danish-stewardship-code)
 >
-> > [!quote] ISS Proxy Voting - Vote Disclosure Services
-> > VOTE DISCLOSURE SERVICES Setting the standards for vote disclosure best practices Turnkey
-> > recordkeeping & disclosure services to help efficiently showcase active ownership and
-> > cost-effectively achieve compliance with global regulatory requirements, **stewardship code**s,
-> > and best practice guidelines. With today’s focus on ESG, asset managers, mutual...
+> **ISS Proxy Voting - Vote Disclosure Services**
+> VOTE DISCLOSURE SERVICES Setting the standards for vote disclosure best practices Turnkey
+> recordkeeping & disclosure services to help efficiently showcase active ownership and
+> cost-effectively achieve compliance with global regulatory requirements, **stewardship code**s,
+> and best practice guidelines. With today’s focus on ESG, asset managers, mutual...
 >
-> — [ISS Proxy Voting - Vote Disclosure Services](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services) — "VOTE DISCLOSURE SERVICES"
+> — [ISS Proxy Voting - Vote Disclosure Services](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services)
 >
-> > [!quote] ISS Proxy Voting - Vote Disclosure Services
-> > VOTE DISCLOSURE SERVICES Setting the standards for vote disclosure best practices Turnkey
-> > recordkeeping & disclosure services to help efficiently showcase active ownership and
-> > cost-effectively achieve compliance with global regulatory requirements, **stewardship code**s,
-> > and best practice guidelines. With today’s focus on ESG, asset managers, mutual...
+> **ISS Proxy Voting - Vote Disclosure Services**
+> VOTE DISCLOSURE SERVICES Setting the standards for vote disclosure best practices Turnkey
+> recordkeeping & disclosure services to help efficiently showcase active ownership and
+> cost-effectively achieve compliance with global regulatory requirements, **stewardship code**s,
+> and best practice guidelines. With today’s focus on ESG, asset managers, mutual...
 >
-> — [ISS Proxy Voting - Vote Disclosure Services](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services) — "VOTE DISCLOSURE SERVICES"
+> — [ISS Proxy Voting - Vote Disclosure Services](https://www.issgovernance.com/solutions/proxy-voting-services/vote-disclosure-services)
 >
-> > [!quote] RI Policy Development | ISS
-> > Responsible Investment (RI) policy and related practices designed to fortify due diligence on
-> > new and existing portfolio companies. End-to-end Governance & Responsible Investment Solutions
-> > Delivering unique, comprehensive and actionable responsible investment solutions to help
-> > investors meet global **stewardship code**s and Principles for Responsibl...
+> **RI Policy Development | ISS**
+> Responsible Investment (RI) policy and related practices designed to fortify due diligence on new
+> and existing portfolio companies. End-to-end Governance & Responsible Investment Solutions
+> Delivering unique, comprehensive and actionable responsible investment solutions to help investors
+> meet global **stewardship code**s and Principles for Responsibl...
 >
-> — [RI Policy Development | ISS](https://www.issgovernance.com/sustainability/ri-policy-development) — "RI Policy Development"
+> — [RI Policy Development | ISS](https://www.issgovernance.com/sustainability/ri-policy-development)
 >
-> > [!quote] Stewardship Engagement Solutions | ISS
-> > are under growing pressure to demonstrate sustainability transparency and accountability. Our
-> > Collaborative Engagement Services help you meet these expectations by aligning with global
-> > standards like Principles for Responsible Investment (PRI), The Sustainable Finance Disclosure
-> > Regulation (SFDR), **stewardship code**s, and the UN Sustainable Develo...
+> **Stewardship Engagement Solutions | ISS**
+> are under growing pressure to demonstrate sustainability transparency and accountability. Our
+> Collaborative Engagement Services help you meet these expectations by aligning with global
+> standards like Principles for Responsible Investment (PRI), The Sustainable Finance Disclosure
+> Regulation (SFDR), **stewardship code**s, and the UN Sustainable Develo...
 >
-> — [Stewardship Engagement Solutions | ISS](https://www.issgovernance.com/stewardship-engagement-solutions) — "ISS STOXX"
+> — [Stewardship Engagement Solutions | ISS](https://www.issgovernance.com/stewardship-engagement-solutions)
 >
-> > [!quote] RI Policy Development | ISS
-> > Responsible Investment (RI) policy and related practices designed to fortify due diligence on
-> > new and existing portfolio companies. End-to-end Governance & Responsible Investment Solutions
-> > Delivering unique, comprehensive and actionable responsible investment solutions to help
-> > investors meet global **stewardship code**s and Principles for Responsibl...
+> **RI Policy Development | ISS**
+> Responsible Investment (RI) policy and related practices designed to fortify due diligence on new
+> and existing portfolio companies. End-to-end Governance & Responsible Investment Solutions
+> Delivering unique, comprehensive and actionable responsible investment solutions to help investors
+> meet global **stewardship code**s and Principles for Responsibl...
 >
-> — [RI Policy Development | ISS](https://www.issgovernance.com/sustainability/ri-policy-development) — "RI Policy Development"
+> — [RI Policy Development | ISS](https://www.issgovernance.com/sustainability/ri-policy-development)
 >
-> > [!quote] Stewardship Engagement Solutions | ISS
-> > are under growing pressure to demonstrate sustainability transparency and accountability. Our
-> > Collaborative Engagement Services help you meet these expectations by aligning with global
-> > standards like Principles for Responsible Investment (PRI), The Sustainable Finance Disclosure
-> > Regulation (SFDR), **stewardship code**s, and the UN Sustainable Develo...
+> **Stewardship Engagement Solutions | ISS**
+> are under growing pressure to demonstrate sustainability transparency and accountability. Our
+> Collaborative Engagement Services help you meet these expectations by aligning with global
+> standards like Principles for Responsible Investment (PRI), The Sustainable Finance Disclosure
+> Regulation (SFDR), **stewardship code**s, and the UN Sustainable Develo...
 >
-> — [Stewardship Engagement Solutions | ISS](https://www.issgovernance.com/stewardship-engagement-solutions) — "ISS STOXX"
+> — [Stewardship Engagement Solutions | ISS](https://www.issgovernance.com/stewardship-engagement-solutions)
 >
 
 ---
@@ -1426,28 +1426,28 @@ Substantial contribution is the positive environmental performance test in the T
 
 > [!example]- Source excerpts (3)
 >
-> > [!quote] The diversification benefits of a multi-factor approach: the STOXX Europe 600...
-> > nd highlights the diversification benefits, as factors each took a turn to be one of the highest
-> > contributors, with the exception of low Volatility. Value was also — generally speaking — a poor
-> > contributor, making it into the top 3 list in only two of the years. In two other years, Value
-> > produced a **substantial contribution**, only overshadowed by ...
+> **The diversification benefits of a multi-factor approach: the STOXX Europe 600...**
+> nd highlights the diversification benefits, as factors each took a turn to be one of the highest
+> contributors, with the exception of low Volatility. Value was also — generally speaking — a poor
+> contributor, making it into the top 3 list in only two of the years. In two other years, Value
+> produced a **substantial contribution**, only overshadowed by ...
 >
-> — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index) — "WHITEPAPER"
+> — [The diversification benefits of a multi-factor approach: the STOXX Europe 600...](https://stoxx.com/the-diversification-benefits-of-a-multi-factor-approach-the-stoxx-europe-600-industry-neutral-ax-multi-factor-index)
 >
-> > [!quote] Navigating the Complexities of Regulation: EU Taxonomy &amp; SFDR | ISS
-> > y & SFDR The European Union’s mandatory reporting requirements for the EU Taxonomy and
-> > Sustainable Finance Disclosure Regulation (SFDR) represent a challenge for financial
-> > institutions. In June 2023, the European Commission approved a new set of EU taxonomy criteria
-> > for economic activities making a **substantial contribution** to one or more of the ...
+> **Navigating the Complexities of Regulation: EU Taxonomy &amp; SFDR | ISS**
+> y & SFDR The European Union’s mandatory reporting requirements for the EU Taxonomy and Sustainable
+> Finance Disclosure Regulation (SFDR) represent a challenge for financial institutions. In June
+> 2023, the European Commission approved a new set of EU taxonomy criteria for economic activities
+> making a **substantial contribution** to one or more of the ...
 >
-> — [Navigating the Complexities of Regulation: EU Taxonomy &amp; SFDR | ISS](https://www.issgovernance.com/navigating-the-complexities-of-regulation-eu-taxonomy-sfdr) — "Navigating the Complexities of Regulation: EU Taxonomy & SFDR"
+> — [Navigating the Complexities of Regulation: EU Taxonomy &amp; SFDR | ISS](https://www.issgovernance.com/navigating-the-complexities-of-regulation-eu-taxonomy-sfdr)
 >
-> > [!quote] Image for EU Taxonomy Alignment Company Activities | ISS
-> > For each relevant activity, the taxonomy defines specific **substantial contribution** criteria
-> > which need to be met to be considered environmentally sustainable. Start typing and press Enter
-> > to search
+> **Image for EU Taxonomy Alignment Company Activities | ISS**
+> For each relevant activity, the taxonomy defines specific **substantial contribution** criteria
+> which need to be met to be considered environmentally sustainable. Start typing and press Enter to
+> search
 >
-> — [Image for EU Taxonomy Alignment Company Activities | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy-alignment-company-activities-4) — "Image for EU Taxonomy Alignment Company Activities"
+> — [Image for EU Taxonomy Alignment Company Activities | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy-alignment-company-activities-4)
 >
 
 ---
@@ -1469,29 +1469,29 @@ In plain terms, the Sustainable Finance Action Plan is the EU's master to-do lis
 
 > [!example]- Source excerpts (3)
 >
-> > [!quote] Value of Sustainable Assets Outpaces Market Growth, Led by US Surge: GSIA Bie...
-> > 18.1%.1 Europe tightens definitions ESG’s market share of professionally managed assets grew in
-> > the two-year period in all regions except Europe (Figure 1). The cause was a tightening of
-> > sustainable investing definitions from which European data is drawn, reflecting new laws as part
-> > of the European **Sustainable Finance Action Plan**, the GSIA said....
+> **Value of Sustainable Assets Outpaces Market Growth, Led by US Surge: GSIA Bie...**
+> 18.1%.1 Europe tightens definitions ESG’s market share of professionally managed assets grew in
+> the two-year period in all regions except Europe (Figure 1). The cause was a tightening of
+> sustainable investing definitions from which European data is drawn, reflecting new laws as part
+> of the European **Sustainable Finance Action Plan**, the GSIA said....
 >
-> — [Value of Sustainable Assets Outpaces Market Growth, Led by US Surge: GSIA Bie...](https://stoxx.com/value-of-sustainable-assets-jumps-led-by-us-surge-gsia-2020-report) — "WHITEPAPER"
+> — [Value of Sustainable Assets Outpaces Market Growth, Led by US Surge: GSIA Bie...](https://stoxx.com/value-of-sustainable-assets-jumps-led-by-us-surge-gsia-2020-report)
 >
-> > [!quote] Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX
-> > embed sustainability criteria in financial markets is leading to a surge in ESG uptake both
-> > inside and outside the bloc, and rules are set to become tighter this year with the introduction
-> > of the Sustainable Finance Disclosures Regulation (SFDR). SFDR is one of three regulatory
-> > pillars in the EU’s **sustainable finance action plan** from 2018, which...
+> **Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX**
+> embed sustainability criteria in financial markets is leading to a surge in ESG uptake both inside
+> and outside the bloc, and rules are set to become tighter this year with the introduction of the
+> Sustainable Finance Disclosures Regulation (SFDR). SFDR is one of three regulatory pillars in the
+> EU’s **sustainable finance action plan** from 2018, which...
 >
-> — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting) — "WHITEPAPER"
+> — [Europe’s SFDR: A Challenge Worth Meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting)
 >
-> > [!quote] Europe’s SFDR: A challenge worth meeting | Blog posts | STOXX
-> > to embed sustainability criteria in financial markets is leading to a surge in ESG uptake both
-> > inside and outside the bloc, and rules became tighter with the introduction of the Sustainable
-> > Finance Disclosure Regulation (SFDR) almost one year ago. SFDR is one of three regulatory
-> > pillars in the EU’s **sustainable finance action plan** from 2018, whic...
+> **Europe’s SFDR: A challenge worth meeting | Blog posts | STOXX**
+> to embed sustainability criteria in financial markets is leading to a surge in ESG uptake both
+> inside and outside the bloc, and rules became tighter with the introduction of the Sustainable
+> Finance Disclosure Regulation (SFDR) almost one year ago. SFDR is one of three regulatory pillars
+> in the EU’s **sustainable finance action plan** from 2018, whic...
 >
-> — [Europe’s SFDR: A challenge worth meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting-2) — "WHITEPAPER"
+> — [Europe’s SFDR: A challenge worth meeting | Blog posts | STOXX](https://stoxx.com/europes-sfdr-a-challenge-worth-meeting-2)
 >
 
 ---
@@ -1513,41 +1513,41 @@ This is a shorthand term. See the full entry under **EU Taxonomy Alignment** for
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] EU Taxonomy Alignment Solution Webinar | ISS
-> > EU **Taxonomy Alignment** Solution Webinar Starting in 2022, institutional investors and
-> > financial market participants (FMPs) who distribute relevant investment products inside the
-> > European Union will need to provide disclosure according to the EU Taxonomy. The regulation is
-> > the first mandatory requirement
+> **EU Taxonomy Alignment Solution Webinar | ISS**
+> EU **Taxonomy Alignment** Solution Webinar Starting in 2022, institutional investors and financial
+> market participants (FMPs) who distribute relevant investment products inside the European Union
+> will need to provide disclosure according to the EU Taxonomy. The regulation is the first
+> mandatory requirement
 >
-> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy) — "EU Taxonomy Alignment Solution Webinar"
+> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy)
 >
-> > [!quote] Icon for EU Taxonomy Alignment | ISS
-> > gins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express
-> > Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification)
-> > Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber
-> > Risk Score Icon for EU **Taxonomy Alignment** Leveraging over 30 years of ...
+> **Icon for EU Taxonomy Alignment | ISS**
+> gins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor Express
+> Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification)
+> Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber
+> Risk Score Icon for EU **Taxonomy Alignment** Leveraging over 30 years of ...
 >
-> — [Icon for EU Taxonomy Alignment | ISS](https://www.issgovernance.com/sustainability/regulatory/icon-for-eu-taxonomy-1) — "Icon for EU Taxonomy Alignment"
+> — [Icon for EU Taxonomy Alignment | ISS](https://www.issgovernance.com/sustainability/regulatory/icon-for-eu-taxonomy-1)
 >
-> > [!quote] EU Taxonomy Alignment Solution | ISS
-> > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS EU **Taxonomy Alignment** Solution Quantify the
-> > share of your taxonomy-aligned investments. Are you prepared? The European Union’s Taxonomy
-> > brings new mandatory reporting requirements that represent a challenge for financial markets by
-> > requiring significant action from participants. Quantify the share ...
+> **EU Taxonomy Alignment Solution | ISS**
+> SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS EU **Taxonomy Alignment** Solution Quantify the
+> share of your taxonomy-aligned investments. Are you prepared? The European Union’s Taxonomy brings
+> new mandatory reporting requirements that represent a challenge for financial markets by requiring
+> significant action from participants. Quantify the share ...
 >
-> — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy) — "SUSTAINABILITY SOLUTIONS/REGULATORY SOLUTIONS"
+> — [EU Taxonomy Alignment Solution | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy)
 >
-> > [!quote] Icon for EU Taxonomy Alignment Coverage | ISS
-> > Overall coverage of 8,600 issuers Icon for EU **Taxonomy Alignment**
-> > Coverage2021-01-142023-11-24/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
+> **Icon for EU Taxonomy Alignment Coverage | ISS**
+> Overall coverage of 8,600 issuers Icon for EU **Taxonomy Alignment**
+> Coverage2021-01-142023-11-24/file/images/iss_logo_header-1.pngISS/file/images/iss_logo_header-1.png200px200px
 >
-> — [Icon for EU Taxonomy Alignment Coverage | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy/attachment/534221) — "Icon for EU Taxonomy Alignment Coverage"
+> — [Icon for EU Taxonomy Alignment Coverage | ISS](https://www.issgovernance.com/sustainability/regulatory/eu-taxonomy/attachment/534221)
 >
-> > [!quote] Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)
-> > STOXX uses a market value-weighted approach to aggregate the SI % (positive contribution) at
-> > portfolio level. We think this methodology is the most robust approach and properly reflects the
-> > actual aggregated positive contribution, since it is aligned with the regulatory recommendation
-> > for measuring **Taxonomy alignment** at portfolio level (see the ...
+> **Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)**
+> STOXX uses a market value-weighted approach to aggregate the SI % (positive contribution) at
+> portfolio level. We think this methodology is the most robust approach and properly reflects the
+> actual aggregated positive contribution, since it is aligned with the regulatory recommendation
+> for measuring **Taxonomy alignment** at portfolio level (see the ...
 >
 > — [Stoxx Sfdrarticle2 17 Sustainableinvestmentmethodology 202501 (PDF)](https://stoxx.com/wp-content/uploads/2025/03/STOXX_SFDRArticle2_17_SustainableInvestmentMethodology_202501.pdf)
 >
@@ -1582,21 +1582,21 @@ TSC are the detailed, science-based performance benchmarks at the heart of the T
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...
-> > istent, comparable and reliable corporate sustainability disclosures” across jurisdictions.
-> > While the ISS ESG report covers global developments, the leading steps in ESG disclosure action
-> > continues to be in Europe. In June, the European Commission (EC) approved in principle a new set
-> > of EU Taxonomy **Technical Screening Criteria** for the four remai...
+> **Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...**
+> istent, comparable and reliable corporate sustainability disclosures” across jurisdictions. While
+> the ISS ESG report covers global developments, the leading steps in ESG disclosure action
+> continues to be in Europe. In June, the European Commission (EC) approved in principle a new set
+> of EU Taxonomy **Technical Screening Criteria** for the four remai...
 >
-> — [Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg) — "WHITEPAPER"
+> — [Sustainability reporting regulation: midyear progress review by ISS ESG  | Bl...](https://stoxx.com/sustainability-reporting-regulation-midyear-progress-review-by-iss-esg)
 >
-> > [!quote] EU Taxonomy Alignment Solution Webinar | ISS
-> > equirement of its kind globally, aiming to redirect private capital towards sustainable
-> > investments, achieve climate neutrality and help to meet the goals of the EU Green Deal. It
-> > encompasses a list of economic activities that can be considered environmentally sustainable,
-> > where they meet extensive **technical screening criteria**. Join our Webinar ...
+> **EU Taxonomy Alignment Solution Webinar | ISS**
+> equirement of its kind globally, aiming to redirect private capital towards sustainable
+> investments, achieve climate neutrality and help to meet the goals of the EU Green Deal. It
+> encompasses a list of economic activities that can be considered environmentally sustainable,
+> where they meet extensive **technical screening criteria**. Join our Webinar ...
 >
-> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy) — "EU Taxonomy Alignment Solution Webinar"
+> — [EU Taxonomy Alignment Solution Webinar | ISS](https://www.issgovernance.com/eu-taxonomy)
 >
 
 ---
@@ -1619,45 +1619,45 @@ UCITS is the standard wrapper for investment funds sold to ordinary retail inves
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] STOXX and Global X ETFs Europe combine on launch of Global X’s EURO STOXX 50 ...
-> > an underlying instrument and simultaneously sells a EURO STOXX 50 ATM call option traded at
-> > Eurex. “Covered call strategies have provided a way for investors to receive an alternative
-> > income stream that is driven mainly by market volatility. The EURO STOXX 50 Covered Call is our
-> > third covered call **UCITS** product and may be attractive to investors...
+> **STOXX and Global X ETFs Europe combine on launch of Global X’s EURO STOXX 50 ...**
+> an underlying instrument and simultaneously sells a EURO STOXX 50 ATM call option traded at Eurex.
+> “Covered call strategies have provided a way for investors to receive an alternative income stream
+> that is driven mainly by market volatility. The EURO STOXX 50 Covered Call is our third covered
+> call **UCITS** product and may be attractive to investors...
 >
-> — [STOXX and Global X ETFs Europe combine on launch of Global X’s EURO STOXX 50 ...](https://stoxx.com/stoxx-and-global-x-etfs-europe-combine-on-launch-of-global-xs-euro-stoxx-50-covered-call-ucits-etf) — "WHITEPAPER"
+> — [STOXX and Global X ETFs Europe combine on launch of Global X’s EURO STOXX 50 ...](https://stoxx.com/stoxx-and-global-x-etfs-europe-combine-on-launch-of-global-xs-euro-stoxx-50-covered-call-ucits-etf)
 >
-> > [!quote] STOXX introduces DAX indices with UCITS-aligned and 10% stock weight caps | B...
-> > STOXX has introduced a family of ‘**UCITS**-capped’ DAX indices that comply with single-stock
-> > weight limits in the European Union directive[1]: “With the launch of the DAX **UCITS** series,
-> > we are reacting to market needs by providing a solution that especially buy-side clients can
-> > benefit from,“ said Serkan Batir, Global Head for Product D
+> **STOXX introduces DAX indices with UCITS-aligned and 10% stock weight caps | B...**
+> STOXX has introduced a family of ‘**UCITS**-capped’ DAX indices that comply with single-stock
+> weight limits in the European Union directive[1]: “With the launch of the DAX **UCITS** series, we
+> are reacting to market needs by providing a solution that especially buy-side clients can benefit
+> from,“ said Serkan Batir, Global Head for Product D
 >
-> — [STOXX introduces DAX indices with UCITS-aligned and 10% stock weight caps | B...](https://stoxx.com/stoxx-introduces-dax-indices-with-ucits-aligned-and-10-stock-weight-caps) — "WHITEPAPER"
+> — [STOXX introduces DAX indices with UCITS-aligned and 10% stock weight caps | B...](https://stoxx.com/stoxx-introduces-dax-indices-with-ucits-aligned-and-10-stock-weight-caps)
 >
-> > [!quote] New iShares UCITS ETF tracking STOXX index targets quantum computing leaders ...
-> > ober 2022 and the STOXX® World AC Technology index has advanced 177%. Figure 3: 3-year
-> > performance Quantum computing has the potential to revolutionize industries and accelerate the
-> > adoption of AI, robotics and other advanced technologies. The STOXX Global Quantum Computing
-> > index and linked iShares **UCITS** ETF offer investors a targeted, systemati...
+> **New iShares UCITS ETF tracking STOXX index targets quantum computing leaders ...**
+> ober 2022 and the STOXX® World AC Technology index has advanced 177%. Figure 3: 3-year performance
+> Quantum computing has the potential to revolutionize industries and accelerate the adoption of AI,
+> robotics and other advanced technologies. The STOXX Global Quantum Computing index and linked
+> iShares **UCITS** ETF offer investors a targeted, systemati...
 >
-> — [New iShares UCITS ETF tracking STOXX index targets quantum computing leaders ...](https://stoxx.com/new-ishares-ucits-etf-tracking-stoxx-index-targets-quantum-computing-leaders) — "WHITEPAPER"
+> — [New iShares UCITS ETF tracking STOXX index targets quantum computing leaders ...](https://stoxx.com/new-ishares-ucits-etf-tracking-stoxx-index-targets-quantum-computing-leaders)
 >
-> > [!quote] STOXX und Global X ETFs Europe kooperieren bei der Einführung des Global X DA...
-> > ZUG/LONDON (27. November 2025) – Mit der Einführung des Global X DAX Covered Call **UCITS** ETF
-> > (DYLD) erweitern STOXX Ltd., Teil von ISS STOXX, und Global X ETFs Europe ihre bestehende
-> > Zusammenarbeit. Der neue ETF bildet als weltweit erstes Produkt dieser Media Contact Sarah Ball
-> > Executive Director, Communications press@iss-stoxx.com Art eine At-th...
+> **STOXX und Global X ETFs Europe kooperieren bei der Einführung des Global X DA...**
+> ZUG/LONDON (27. November 2025) – Mit der Einführung des Global X DAX Covered Call **UCITS** ETF
+> (DYLD) erweitern STOXX Ltd., Teil von ISS STOXX, und Global X ETFs Europe ihre bestehende
+> Zusammenarbeit. Der neue ETF bildet als weltweit erstes Produkt dieser Media Contact Sarah Ball
+> Executive Director, Communications press@iss-stoxx.com Art eine At-th...
 >
-> — [STOXX und Global X ETFs Europe kooperieren bei der Einführung des Global X DA...](https://stoxx.com/stoxx-und-global-x-etfs-europe-kooperieren-bei-der-einfuhrung-des-global-x-dax-covered-call-ucits-etf) — "WHITEPAPER"
+> — [STOXX und Global X ETFs Europe kooperieren bei der Einführung des Global X DA...](https://stoxx.com/stoxx-und-global-x-etfs-europe-kooperieren-bei-der-einfuhrung-des-global-x-dax-covered-call-ucits-etf)
 >
-> > [!quote] BlackRock launches Europe Defence UCITS ETF tracking STOXX index | Blog posts...
-> > BlackRock has launched a **UCITS** iShares ETF[1] tracking the STOXX® Europe Targeted Defence
-> > index, meeting rising investor interest for precise exposure to European companies providing
-> > military supplies. The STOXX Europe Targeted Defence index selects constituents based on their
-> > share of revenues from providing military equip
+> **BlackRock launches Europe Defence UCITS ETF tracking STOXX index | Blog posts...**
+> BlackRock has launched a **UCITS** iShares ETF[1] tracking the STOXX® Europe Targeted Defence
+> index, meeting rising investor interest for precise exposure to European companies providing
+> military supplies. The STOXX Europe Targeted Defence index selects constituents based on their
+> share of revenues from providing military equip
 >
-> — [BlackRock launches Europe Defence UCITS ETF tracking STOXX index | Blog posts...](https://stoxx.com/blackrock-launches-european-defence-ucits-etf-tracking-stoxx-index) — "WHITEPAPER"
+> — [BlackRock launches Europe Defence UCITS ETF tracking STOXX index | Blog posts...](https://stoxx.com/blackrock-launches-european-defence-ucits-etf-tracking-stoxx-index)
 >
 
 ---
@@ -1679,13 +1679,13 @@ In plain terms, UK SDR is Britain's answer to the EU's SFDR — it creates label
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] 2024 Global Regulatory Update | ISS
-> > t to a broader degree of disclosure expectations remains to be seen. - Investment fund managers
-> > must navigate a complex regulatory landscape at the product and manager levels due to
-> > policymakers’ anti-greenwashing measures that govern the use of ESG-related terms. Reporting
-> > regimes include the U.K. Sustainability Disclosure Requirements and the ...
+> **2024 Global Regulatory Update | ISS**
+> t to a broader degree of disclosure expectations remains to be seen. - Investment fund managers
+> must navigate a complex regulatory landscape at the product and manager levels due to
+> policymakers’ anti-greenwashing measures that govern the use of ESG-related terms. Reporting
+> regimes include the U.K. Sustainability Disclosure Requirements and the ...
 >
-> — [2024 Global Regulatory Update | ISS](https://www.issgovernance.com/library/2024-global-regulatory-update) — "2024 Global Regulatory Update"
+> — [2024 Global Regulatory Update | ISS](https://www.issgovernance.com/library/2024-global-regulatory-update)
 >
 
 ---

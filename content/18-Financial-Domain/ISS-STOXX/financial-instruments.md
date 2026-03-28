@@ -42,43 +42,43 @@ In plain terms, a benchmark is the yardstick. When a fund manager says "we track
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News April 2019 (PDF)
-> > April 2019 EURO STOXX® Multi Premia® Indices Key points The EURO STOXX Multi Premia and Single
-> > Premium Indices, which integrate the academic-research-based Multi Premia methodology developed
-> > by STOXX’s partner Finreon, failed to match their **benchmark**’s returns during April. The
-> > indices track seven distinctive sources of equity risk and returns o...
+> **Monthly Index News April 2019 (PDF)**
+> April 2019 EURO STOXX® Multi Premia® Indices Key points The EURO STOXX Multi Premia and Single
+> Premium Indices, which integrate the academic-research-based Multi Premia methodology developed by
+> STOXX’s partner Finreon, failed to match their **benchmark**’s returns during April. The indices
+> track seven distinctive sources of equity risk and returns o...
 >
 > — [Monthly Index News April 2019 (PDF)](https://stoxx.com/monthly-index-news-april-2019)
 >
-> > [!quote] T. Rowe Price Associates (PDF)
-> > et, so this policy is not directly applicable to us. However, it is sensible for ISS to tighten
-> > the standards it would apply before considering any exceptions. 6) Other We offer no particular
-> > views on the other proposed policy amendments other than to say we generally believe it makes
-> > sense for ISS **benchmark** policies to reflect local governance ...
+> **T. Rowe Price Associates (PDF)**
+> et, so this policy is not directly applicable to us. However, it is sensible for ISS to tighten
+> the standards it would apply before considering any exceptions. 6) Other We offer no particular
+> views on the other proposed policy amendments other than to say we generally believe it makes
+> sense for ISS **benchmark** policies to reflect local governance ...
 >
 > — [T. Rowe Price Associates (PDF)](https://www.issgovernance.com/file/policy/t._rowe_price_associates.pdf)
 >
-> > [!quote] 2017 Canada Tsx Voting Guidelines (PDF)
-> > as noted above). All award types are valued. For omnibus plans, unless limitations are placed on
-> > the most expensive types of awards (for example, full value awards), the assumption is made that
-> > all awards to be granted will be the most expensive types. SVT is assessed relative to a
-> > company-specific **benchmark**. The **benchmark** is determined as follo...
+> **2017 Canada Tsx Voting Guidelines (PDF)**
+> as noted above). All award types are valued. For omnibus plans, unless limitations are placed on
+> the most expensive types of awards (for example, full value awards), the assumption is made that
+> all awards to be granted will be the most expensive types. SVT is assessed relative to a
+> company-specific **benchmark**. The **benchmark** is determined as follo...
 >
 > — [2017 Canada Tsx Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-canada-tsx-voting-guidelines.pdf)
 >
-> > [!quote] Dax Volatility Index Family Benchmark Statement (PDF)
-> > dex option prices least: are sourced directly from Eurex. Interest (a)a description of the
-> > circumstances in rates are sourced from LSEG Data & which the administrator would lack
-> > Analytics. The measurement of the market sufficient input data to determine the or economic
-> > reality may become unreliable **benchmark** in accordance with the if one or more...
+> **Dax Volatility Index Family Benchmark Statement (PDF)**
+> dex option prices least: are sourced directly from Eurex. Interest (a)a description of the
+> circumstances in rates are sourced from LSEG Data & which the administrator would lack Analytics.
+> The measurement of the market sufficient input data to determine the or economic reality may
+> become unreliable **benchmark** in accordance with the if one or more...
 >
 > — [Dax Volatility Index Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_Volatility_Index_Family_Benchmark_Statement.pdf)
 >
-> > [!quote] National Grid (PDF)
-> > 1-3 Strand London WC2N 5EH By email: policy@issgovernance.com 16 October 2019 Dear Sir / Madam,
-> > National Grid’s response to the ISS 2019 **Benchmark** Policy Consultation About National Grid
-> > National Grid is a regulated utility with businesses in both the UK and the US with principal
-> > operations in electricity and gas transmission and distribution. N...
+> **National Grid (PDF)**
+> 1-3 Strand London WC2N 5EH By email: policy@issgovernance.com 16 October 2019 Dear Sir / Madam,
+> National Grid’s response to the ISS 2019 **Benchmark** Policy Consultation About National Grid
+> National Grid is a regulated utility with businesses in both the UK and the US with principal
+> operations in electricity and gas transmission and distribution. N...
 >
 > — [National Grid (PDF)](https://www.issgovernance.com/file/policy/2020/comment/National_Grid.pdf)
 >
@@ -100,43 +100,43 @@ In plain terms, a bond is an IOU with a schedule. You lend money, receive regula
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Axioma Multi Asset Class Risk Monitor (PDF)
-> > middle) are shown on a different scale (on the right hand side) compared to the return
-> > volatilities of equity indices, currencies and commodities. The white bars represent
-> > volatilities from the previous 60 business day period. Figure 3. Government Zero Coupon Yield
-> > Curves US EU GB JP 3. Zero coupon **bond** curves built from vanilla bonds issued by ...
+> **Axioma Multi Asset Class Risk Monitor (PDF)**
+> middle) are shown on a different scale (on the right hand side) compared to the return
+> volatilities of equity indices, currencies and commodities. The white bars represent volatilities
+> from the previous 60 business day period. Figure 3. Government Zero Coupon Yield Curves US EU GB
+> JP 3. Zero coupon **bond** curves built from vanilla bonds issued by ...
 >
 > — [Axioma Multi Asset Class Risk Monitor (PDF)](https://stoxx.com/axioma-multi-asset-class-risk-monitor)
 >
-> > [!quote] Stoxx Index Guide (PDF)
-> > Index. Changes to be effective with March 2023 review. December 2022(3): Rule clarification of
-> > selection lists during review month. This is a correction to the November 2022(2): Rule
-> > clarification of selection lists during review month published on 25.11.2022. January 2023:
-> > Added reference of STOXX **Bond** Index guide. February 2023: Addition of th...
+> **Stoxx Index Guide (PDF)**
+> Index. Changes to be effective with March 2023 review. December 2022(3): Rule clarification of
+> selection lists during review month. This is a correction to the November 2022(2): Rule
+> clarification of selection lists during review month published on 25.11.2022. January 2023: Added
+> reference of STOXX **Bond** Index guide. February 2023: Addition of th...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> > [!quote] Us Executive Compensation Policies Faq (PDF)
-> > UNITED STATES FAQ: EXECUTIVE COMPENSATION POLICIES Variable Item Source Comments U.S. Government
-> > **Bond** Yield on the date of grant corresponding to Dept of the term of the option. For
-> > example, if the option has a 10-year R Risk Free Rate Treasury term, the risk-free rate is the
-> > 10-year U.S. Government **Bond** Yield website on the date of grant. Term/...
+> **Us Executive Compensation Policies Faq (PDF)**
+> UNITED STATES FAQ: EXECUTIVE COMPENSATION POLICIES Variable Item Source Comments U.S. Government
+> **Bond** Yield on the date of grant corresponding to Dept of the term of the option. For example,
+> if the option has a 10-year R Risk Free Rate Treasury term, the risk-free rate is the 10-year U.S.
+> Government **Bond** Yield website on the date of grant. Term/...
 >
 > — [Us Executive Compensation Policies Faq (PDF)](https://www.issgovernance.com/file/policy/latest/americas/US-Executive-Compensation-Policies-FAQ.pdf)
 >
-> > [!quote] Asia Pacific Policy Updates (PDF)
-> > posals seeking shareholder approval to adjust downward the conversion price of outstanding
-> > convertible bonds for A shares, to ensure that existing shareholders would be protected from
-> > potential excessive dilution. During the 2017 proxy season, ISS observed an increased number of
-> > A-share convertible **bond** issuance proposals in the face of tightene...
+> **Asia Pacific Policy Updates (PDF)**
+> posals seeking shareholder approval to adjust downward the conversion price of outstanding
+> convertible bonds for A shares, to ensure that existing shareholders would be protected from
+> potential excessive dilution. During the 2017 proxy season, ISS observed an increased number of
+> A-share convertible **bond** issuance proposals in the face of tightene...
 >
 > — [Asia Pacific Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/updates/Asia-Pacific-Policy-Updates.pdf)
 >
-> > [!quote] 2015 Taft Hartley Advisory Services International Guidelines (PDF)
-> > debt issuance request, Taft-Hartley Advisory Services examines the issuing company’s present
-> > financial situation. The main factor for analysis is the company’s current debt-to-equity ratio,
-> > or gearing level. A high gearing level may incline markets and financial analysts to downgrade
-> > the company’s **bond** rating, increasing its investment risk fact...
+> **2015 Taft Hartley Advisory Services International Guidelines (PDF)**
+> debt issuance request, Taft-Hartley Advisory Services examines the issuing company’s present
+> financial situation. The main factor for analysis is the company’s current debt-to-equity ratio,
+> or gearing level. A high gearing level may incline markets and financial analysts to downgrade the
+> company’s **bond** rating, increasing its investment risk fact...
 >
 > — [2015 Taft Hartley Advisory Services International Guidelines (PDF)](https://www.issgovernance.com/file/policy/2015-taft-hartley-advisory-services-international-guidelines.pdf)
 >
@@ -160,43 +160,43 @@ In everyday language, a call option is a bet that the index will go up. You pay 
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Strategy Guide (PDF)
-> > old EURO STOXX 50 **call option** at the last expiry date (EXP) 𝐸𝑋𝑃 𝐶′ = Inclusion price of the
-> > old EURO STOXX 50 **call option** on the last expiry date (EXP-1) before the 0 previous expiry
-> > date (EXP) Price version The Price version of the index combines the EURO STOXX 50 (Price) Index
-> > and a EURO STOXX 50 call option. On regular trading days the Price ...
+> **Stoxx Strategy Guide (PDF)**
+> old EURO STOXX 50 **call option** at the last expiry date (EXP) 𝐸𝑋𝑃 𝐶′ = Inclusion price of the
+> old EURO STOXX 50 **call option** on the last expiry date (EXP-1) before the 0 previous expiry
+> date (EXP) Price version The Price version of the index combines the EURO STOXX 50 (Price) Index
+> and a EURO STOXX 50 call option. On regular trading days the Price ...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> > [!quote] Dax Strategy Index Guide (PDF)
-> > th, and is replaced by a new DAX **call option** whose last trading day falls on the next expiry
-> > date. The new **call option** must have a remaining lifetime of one month and must be
-> > at-the-money (determined as the highest strike price below or equal to the DAX index value at
-> > 13:00 CET). On Roll Day t, the call option inclusion price is calculated as ∑N...
+> **Dax Strategy Index Guide (PDF)**
+> th, and is replaced by a new DAX **call option** whose last trading day falls on the next expiry
+> date. The new **call option** must have a remaining lifetime of one month and must be at-the-money
+> (determined as the highest strike price below or equal to the DAX index value at 13:00 CET). On
+> Roll Day t, the call option inclusion price is calculated as ∑N...
 >
 > — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > x dissemination day • 𝑇𝑃𝑟𝑒𝑣𝐸𝑥𝑝𝑖𝑟𝑦 is the immediately preceding expiry before or on the current
-> > index 𝑖 dissemination day 34.1.1.2. OPTION ENTRY VALUE The value of each option entering the
-> > portfolio is calculated as the settlement value of the option adjusted by transaction costs. The
-> > Entry Value of **call option**s should be lower than the option va...
+> **Istoxx Index Guide (PDF)**
+> x dissemination day • 𝑇𝑃𝑟𝑒𝑣𝐸𝑥𝑝𝑖𝑟𝑦 is the immediately preceding expiry before or on the current
+> index 𝑖 dissemination day 34.1.1.2. OPTION ENTRY VALUE The value of each option entering the
+> portfolio is calculated as the settlement value of the option adjusted by transaction costs. The
+> Entry Value of **call option**s should be lower than the option va...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Taft Hartley International Policy Updates (PDF)
-> > to no more › The duration of the options is limited in time to no more than 18 than 18 months;
-> > months; › The total number of shares covered by the authorization is disclosed; › The total
-> > number of shares covered by the authorization is disclosed; › The number of shares that would be
-> > purchased with **call option**s and/or › The number of shares that ...
+> **Taft Hartley International Policy Updates (PDF)**
+> to no more › The duration of the options is limited in time to no more than 18 than 18 months;
+> months; › The total number of shares covered by the authorization is disclosed; › The total number
+> of shares covered by the authorization is disclosed; › The number of shares that would be
+> purchased with **call option**s and/or › The number of shares that ...
 >
 > — [Taft Hartley International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Taft-Hartley-International-Policy-Updates.pdf)
 >
-> > [!quote] Monthly Index News November 2025 (PDF)
-> > ease during volatile markets, offering a potential risk management component. Figure 1: Index
-> > performance Source: STOXX. Covered call strategy is represented by the DAX Covered Call ATM
-> > index. Gross returns in EUR, normalized at 100 on December 31, 2020. 1 The long DAX index
-> > component and the short **call option** component are held in equal notiona...
+> **Monthly Index News November 2025 (PDF)**
+> ease during volatile markets, offering a potential risk management component. Figure 1: Index
+> performance Source: STOXX. Covered call strategy is represented by the DAX Covered Call ATM index.
+> Gross returns in EUR, normalized at 100 on December 31, 2020. 1 The long DAX index component and
+> the short **call option** component are held in equal notiona...
 >
 > — [Monthly Index News November 2025 (PDF)](https://stoxx.com/monthly-index-news-november-2025)
 >
@@ -218,45 +218,45 @@ Think of a certificate as a simplified way to "buy" an entire index through a si
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Strategy Guide (PDF)
-> > Total Return in EUR Base values and dates: 10,000 as of January 18, 2008 Dissemination calendar:
-> > STOXX Eurex Calendar 27.3. CALCULATION 𝐼𝑉 𝐾𝑊𝐶𝐷𝐶 𝐼𝑉 =𝐼𝑉 ∙( 𝐸𝑅,𝑡 + 𝑡−1 ∙𝑑) 𝑡 𝑡−1 𝐼𝑉 360 𝐸𝑅,𝑡−1
-> > where: 𝐼𝑉 = Value of the EURO STOXX 50 Short Strangle ER Index (SX5ESSE) on day t 𝐸𝑅.𝑡 𝐾𝑊𝐶𝐷𝐶 =
-> > Korean 3-Month **Certificate** of Deposit rate (RIC: KRCD3M=KFIA)1...
+> **Stoxx Strategy Guide (PDF)**
+> Total Return in EUR Base values and dates: 10,000 as of January 18, 2008 Dissemination calendar:
+> STOXX Eurex Calendar 27.3. CALCULATION 𝐼𝑉 𝐾𝑊𝐶𝐷𝐶 𝐼𝑉 =𝐼𝑉 ∙( 𝐸𝑅,𝑡 + 𝑡−1 ∙𝑑) 𝑡 𝑡−1 𝐼𝑉 360 𝐸𝑅,𝑡−1
+> where: 𝐼𝑉 = Value of the EURO STOXX 50 Short Strangle ER Index (SX5ESSE) on day t 𝐸𝑅.𝑡 𝐾𝑊𝐶𝐷𝐶 =
+> Korean 3-Month **Certificate** of Deposit rate (RIC: KRCD3M=KFIA)1...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> > [!quote] Western Union (PDF)
-> > l special meetings. Hence, a vote FOR this proposal is warranted as it represents an enhancement
-> > to shareholders' rights. Vote Requirement: Majority of shares outstanding (abstentions and
-> > broker non-votes count against) Discussion PROPOSAL The board seeks shareholder approval to
-> > amend the company's **certificate** of incorporation to add right permi...
+> **Western Union (PDF)**
+> l special meetings. Hence, a vote FOR this proposal is warranted as it represents an enhancement
+> to shareholders' rights. Vote Requirement: Majority of shares outstanding (abstentions and broker
+> non-votes count against) Discussion PROPOSAL The board seeks shareholder approval to amend the
+> company's **certificate** of incorporation to add right permi...
 >
 > — [Western Union (PDF)](https://www.issgovernance.com/file/2013/02/western_union.pdf)
 >
-> > [!quote] Public Fund Us Voting Guidelines (PDF)
-> > 2018 Public Fund U.S. Proxy Voting Guidelines Adjust Par Value of Common Stock Stock that has a
-> > fixed per share value that is on its **certificate** is called par value stock. The purpose of
-> > par value stock is to establish the maximum responsibility of a stockholder in the event that a
-> > corporation becomes insolvent. Proposals to reduce par value com...
+> **Public Fund Us Voting Guidelines (PDF)**
+> 2018 Public Fund U.S. Proxy Voting Guidelines Adjust Par Value of Common Stock Stock that has a
+> fixed per share value that is on its **certificate** is called par value stock. The purpose of par
+> value stock is to establish the maximum responsibility of a stockholder in the event that a
+> corporation becomes insolvent. Proposals to reduce par value com...
 >
 > — [Public Fund Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Public-Fund-US-Voting-Guidelines.pdf)
 >
-> > [!quote] Iss 2018 Sw Sustainability Certificate Nv 75 (PDF)
-> > THIS **CERTIFICATE** IS PRESENTED TO Swıtch Sustainability **Certificate** ISS, Inc is awarded
-> > this Sustainability Certificate for using 100% Renewable Energy within the Switch ecosystem.
-> > This certificate demonstrates that Switch retired 674 Solar Renewable Energy Credits in 2018 on
-> > behalf of ISS, Inc, making th
+> **Iss 2018 Sw Sustainability Certificate Nv 75 (PDF)**
+> THIS **CERTIFICATE** IS PRESENTED TO Swıtch Sustainability **Certificate** ISS, Inc is awarded
+> this Sustainability Certificate for using 100% Renewable Energy within the Switch ecosystem. This
+> certificate demonstrates that Switch retired 674 Solar Renewable Energy Credits in 2018 on behalf
+> of ISS, Inc, making th
 >
 > — [Iss 2018 Sw Sustainability Certificate Nv 75 (PDF)](https://www.issgovernance.com/file/core/ISS-2018-SW-Sustainability-Certificate_NV_75.pdf)
 >
-> > [!quote] DAX 50 ESG Index Licensed To Raiffeisen Centrobank | Press releases | STOXX
-> > ZUG, August 27, 2020 – Qontigo has licensed the DAX® 50 ESG Index to the Austrian Raiffeisen
-> > Centrobank as an underlying for a **certificate**. The DAX 50 ESG index employs two
-> > complementary approaches to incorporate ESG principles into the selection criteria: standardized
-> > negative screens for companies that are involved in controversial or unsustai...
+> **DAX 50 ESG Index Licensed To Raiffeisen Centrobank | Press releases | STOXX**
+> ZUG, August 27, 2020 – Qontigo has licensed the DAX® 50 ESG Index to the Austrian Raiffeisen
+> Centrobank as an underlying for a **certificate**. The DAX 50 ESG index employs two complementary
+> approaches to incorporate ESG principles into the selection criteria: standardized negative
+> screens for companies that are involved in controversial or unsustai...
 >
-> — [DAX 50 ESG Index Licensed To Raiffeisen Centrobank | Press releases | STOXX](https://stoxx.com/dax-50-esg-index-licensed-to-raiffeisen-centrobank) — "WHITEPAPER"
+> — [DAX 50 ESG Index Licensed To Raiffeisen Centrobank | Press releases | STOXX](https://stoxx.com/dax-50-esg-index-licensed-to-raiffeisen-centrobank)
 >
 
 ---
@@ -298,45 +298,45 @@ A convertible bond is a bond with an embedded stock option. You receive regular 
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Asia Pacific Policy Updates (PDF)
-> > licy for proposals seeking shareholder approval to adjust downward the conversion price of
-> > outstanding **convertible bond**s for A shares, to ensure that existing shareholders would be
-> > protected from potential excessive dilution. During the 2017 proxy season, ISS observed an
-> > increased number of A-share **convertible bond** issuance proposals in the face...
+> **Asia Pacific Policy Updates (PDF)**
+> licy for proposals seeking shareholder approval to adjust downward the conversion price of
+> outstanding **convertible bond**s for A shares, to ensure that existing shareholders would be
+> protected from potential excessive dilution. During the 2017 proxy season, ISS observed an
+> increased number of A-share **convertible bond** issuance proposals in the face...
 >
 > — [Asia Pacific Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/updates/Asia-Pacific-Policy-Updates.pdf)
 >
-> > [!quote] China Voting Guidelines (PDF)
-> > China Proxy Voting Guidelines Adjustments of Conversion Price of Outstanding **Convertible
-> > Bond**s Resolution Type: Special General Recommendation: Generally vote against the downward
-> > adjustment of the conversion price of A-share **convertible bond**s unless the proposed adjusted
-> > conversion price is deemed reasonable given the company's justification; a...
+> **China Voting Guidelines (PDF)**
+> China Proxy Voting Guidelines Adjustments of Conversion Price of Outstanding **Convertible Bond**s
+> Resolution Type: Special General Recommendation: Generally vote against the downward adjustment of
+> the conversion price of A-share **convertible bond**s unless the proposed adjusted conversion
+> price is deemed reasonable given the company's justification; a...
 >
 > — [China Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2019/asiapacific/China-Voting-Guidelines.pdf)
 >
-> > [!quote] 2013Isschinaguidelines (PDF)
-> > e past three years in the company's annual report. In an earlier guideline (Several Decisions
-> > over the Regulations on Cash Dividend Distribution of Listed Companies) issued by CSRC in 2008,
-> > it is required that in order for a listed company to be eligible for a securities issuance
-> > (including stocks, **convertible bond**s, and other securities authori...
+> **2013Isschinaguidelines (PDF)**
+> e past three years in the company's annual report. In an earlier guideline (Several Decisions over
+> the Regulations on Cash Dividend Distribution of Listed Companies) issued by CSRC in 2008, it is
+> required that in order for a listed company to be eligible for a securities issuance (including
+> stocks, **convertible bond**s, and other securities authori...
 >
 > — [2013Isschinaguidelines (PDF)](https://www.issgovernance.com/file/2013-policies/2013ISSChinaGuidelines.pdf)
 >
-> > [!quote] Sri Us Policy Updates (PDF)
-> > ercent of the market are often companies which have suffered serious financial or operational
-> > setbacks, which may necessitate a pivot to a new strategy or business model, which in turn may
-> > require financing. Such companies often have few options for raising funds other than issuing
-> > common stock, or **convertible bond**s or warrants linked to common ...
+> **Sri Us Policy Updates (PDF)**
+> ercent of the market are often companies which have suffered serious financial or operational
+> setbacks, which may necessitate a pivot to a new strategy or business model, which in turn may
+> require financing. Such companies often have few options for raising funds other than issuing
+> common stock, or **convertible bond**s or warrants linked to common ...
 >
 > — [Sri Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/specialty/SRI-US-Policy-Updates.pdf)
 >
-> > [!quote] Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...
-> > ow one of the oldest market-making institutions and a trusted partner of exchanges. The firm
-> > provides liquidity to financial markets using its own capital, trading a wide range of products:
-> > listed derivatives, cash equities, ETFs, bonds and foreign currencies. Paris-based Ellipsis AM
-> > specializes in **convertible bond**s, open funds and volatility ov...
+> **Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...**
+> ow one of the oldest market-making institutions and a trusted partner of exchanges. The firm
+> provides liquidity to financial markets using its own capital, trading a wide range of products:
+> listed derivatives, cash equities, ETFs, bonds and foreign currencies. Paris-based Ellipsis AM
+> specializes in **convertible bond**s, open funds and volatility ov...
 >
-> — [Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...](https://stoxx.com/dispersion-trading-in-focus-with-optiver-and-ellipsis) — "WHITEPAPER"
+> — [Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...](https://stoxx.com/dispersion-trading-in-focus-with-optiver-and-ellipsis)
 >
 
 ---
@@ -356,43 +356,43 @@ A corporate bond is a loan you make to a company. The company pays you interest 
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] 2018 Outlook I: Economic Momentum Continues | Blog posts | STOXX
-> > rate to 2.3% growth from 2.2%, the IMF has said. Analysts say the global economy has entered a
-> > self-sustaining growth cycle that can withstand a rising US federal funds rate. There is also
-> > abundant cash in financial markets ready to be deployed. In 2017, this caused multiple assets –
-> > from stocks to **corporate bond**s to private equity – to climb an...
+> **2018 Outlook I: Economic Momentum Continues | Blog posts | STOXX**
+> rate to 2.3% growth from 2.2%, the IMF has said. Analysts say the global economy has entered a
+> self-sustaining growth cycle that can withstand a rising US federal funds rate. There is also
+> abundant cash in financial markets ready to be deployed. In 2017, this caused multiple assets –
+> from stocks to **corporate bond**s to private equity – to climb an...
 >
-> — [2018 Outlook I: Economic Momentum Continues | Blog posts | STOXX](https://stoxx.com/2018-outlook-i-economic-momentum-continues) — "WHITEPAPER"
+> — [2018 Outlook I: Economic Momentum Continues | Blog posts | STOXX](https://stoxx.com/2018-outlook-i-economic-momentum-continues)
 >
-> > [!quote] Bank credit spread contagion – how bad could it get? | Blog posts | STOXX
-> > . Figure 3 depicts excess returns of USD-denominated **corporate bond**s over US Treasury
-> > securities. In order to make returns comparable across sectors and time periods, the performance
-> > numbers were normalized to an average duration of six years. Figure 3 – Simulated excess returns
-> > for USD-denominated **corporate bond**s Even though the recent excess r...
+> **Bank credit spread contagion – how bad could it get? | Blog posts | STOXX**
+> . Figure 3 depicts excess returns of USD-denominated **corporate bond**s over US Treasury
+> securities. In order to make returns comparable across sectors and time periods, the performance
+> numbers were normalized to an average duration of six years. Figure 3 – Simulated excess returns
+> for USD-denominated **corporate bond**s Even though the recent excess r...
 >
-> — [Bank credit spread contagion – how bad could it get? | Blog posts | STOXX](https://stoxx.com/bank-credit-spread-contagion-how-bad-could-it-get) — "WHITEPAPER"
+> — [Bank credit spread contagion – how bad could it get? | Blog posts | STOXX](https://stoxx.com/bank-credit-spread-contagion-how-bad-could-it-get)
 >
-> > [!quote] Screened Corporate Fixed Income Index Series Launched in Partnership with Sol...
-> > NEW YORK (June 24, 2020) — ISS ESG, the responsible investment arm of Institutional Shareholder
-> > Services Inc., today announced the expansion of the Solactive ISS ESG Screened **Corporate
-> > Bond** Index Series, a rules-based, market value-weighted investable index family engineered to
-> > mirror the performance of the USD- and EUR-denominated corporate bon...
+> **Screened Corporate Fixed Income Index Series Launched in Partnership with Sol...**
+> NEW YORK (June 24, 2020) — ISS ESG, the responsible investment arm of Institutional Shareholder
+> Services Inc., today announced the expansion of the Solactive ISS ESG Screened **Corporate Bond**
+> Index Series, a rules-based, market value-weighted investable index family engineered to mirror
+> the performance of the USD- and EUR-denominated corporate bon...
 >
-> — [Screened Corporate Fixed Income Index Series Launched in Partnership with Sol...](https://www.issgovernance.com/screened-corporate-fixed-income-index-series-launched-in-partnership-with-solactive) — "Screened Corporate Fixed Income Index Series Launched in Partnership with Solactive"
+> — [Screened Corporate Fixed Income Index Series Launched in Partnership with Sol...](https://www.issgovernance.com/screened-corporate-fixed-income-index-series-launched-in-partnership-with-solactive)
 >
-> > [!quote] Axioma Multi Asset Class Risk Monitor (PDF)
-> > Axioma Multi-Asset Class Risk Monitor Figure 4. 10Y Government Zero Coupon Yields G4 Global
-> > (non-G4) 4. 10 year points from zero-coupon sovereign yield curves Figure 5. G4 **Corporate
-> > Bond** Spreads AA Sub-IG 5. Average spreads over swap curve, weighted by outstanding amount
-> > issued. Rating groups (AA, Sub-IG) are blended composites derived from avai...
+> **Axioma Multi Asset Class Risk Monitor (PDF)**
+> Axioma Multi-Asset Class Risk Monitor Figure 4. 10Y Government Zero Coupon Yields G4 Global
+> (non-G4) 4. 10 year points from zero-coupon sovereign yield curves Figure 5. G4 **Corporate Bond**
+> Spreads AA Sub-IG 5. Average spreads over swap curve, weighted by outstanding amount issued.
+> Rating groups (AA, Sub-IG) are blended composites derived from avai...
 >
 > — [Axioma Multi Asset Class Risk Monitor (PDF)](https://stoxx.com/axioma-multi-asset-class-risk-monitor)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > assets o Plans for the phasing out of existing production and reserves. Nykredit may also invest
-> > in specific activities that contribute to the green transition in companies with the above
-> > activities. This presupposes that the investment can be limited to these activities, for example
-> > through green **corporate bond**s or a collaboration on infrastruc...
+> **Istoxx Index Guide (PDF)**
+> assets o Plans for the phasing out of existing production and reserves. Nykredit may also invest
+> in specific activities that contribute to the green transition in companies with the above
+> activities. This presupposes that the investment can be limited to these activities, for example
+> through green **corporate bond**s or a collaboration on infrastruc...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
@@ -415,45 +415,45 @@ In everyday language, you own the index and sell someone else the right to buy i
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News November 2025 (PDF)
-> > Monthly Index News / November 2025 Featured index Global X ETFs Europe last month launched the
-> > first ETF tracking an “at-the-money" (ATM) **covered call strategy** on the DAX® benchmark,
-> > offering low-cost and systematic exposure to a portfolio of German equities that also generates
-> > income from selling options. The Global X DAX Covered Call UCITS ETF...
+> **Monthly Index News November 2025 (PDF)**
+> Monthly Index News / November 2025 Featured index Global X ETFs Europe last month launched the
+> first ETF tracking an “at-the-money" (ATM) **covered call strategy** on the DAX® benchmark,
+> offering low-cost and systematic exposure to a portfolio of German equities that also generates
+> income from selling options. The Global X DAX Covered Call UCITS ETF...
 >
 > — [Monthly Index News November 2025 (PDF)](https://stoxx.com/monthly-index-news-november-2025)
 >
-> > [!quote] Stoxx Monthly Index Newsletter November 2025 (PDF)
-> > Monthly Index News / November 2025 Featured index Global X ETFs Europe last month launched the
-> > first ETF tracking an “at-the-money" (ATM) **covered call strategy** on the DAX® benchmark,
-> > offering low-cost and systematic exposure to a portfolio of German equities that also generates
-> > income from selling options. The Global X DAX Covered Call UCITS ETF...
+> **Stoxx Monthly Index Newsletter November 2025 (PDF)**
+> Monthly Index News / November 2025 Featured index Global X ETFs Europe last month launched the
+> first ETF tracking an “at-the-money" (ATM) **covered call strategy** on the DAX® benchmark,
+> offering low-cost and systematic exposure to a portfolio of German equities that also generates
+> income from selling options. The Global X DAX Covered Call UCITS ETF...
 >
 > — [Stoxx Monthly Index Newsletter November 2025 (PDF)](https://stoxx.com/wp-content/uploads/2025/12/STOXX_Monthly_Index_Newsletter_November_2025.pdf)
 >
-> > [!quote] DAX covered call ETF launched in new Global X ETFs Europe, STOXX collaboratio...
-> > Global X ETFs Europe has launched the first ETF tracking an “at-the-money” (ATM) **covered call
-> > strategy** on the DAX® benchmark, offering low-cost and systematic exposure to a portfolio of
-> > German equities that also generates income from selling options. The Global X DAX Covered Call
-> > UCITS ETF tracks the DAX Covered Call ATM index, designed to refle...
+> **DAX covered call ETF launched in new Global X ETFs Europe, STOXX collaboratio...**
+> Global X ETFs Europe has launched the first ETF tracking an “at-the-money” (ATM) **covered call
+> strategy** on the DAX® benchmark, offering low-cost and systematic exposure to a portfolio of
+> German equities that also generates income from selling options. The Global X DAX Covered Call
+> UCITS ETF tracks the DAX Covered Call ATM index, designed to refle...
 >
-> — [DAX covered call ETF launched in new Global X ETFs Europe, STOXX collaboratio...](https://stoxx.com/dax-covered-call-etf-launched-in-new-global-x-etfs-europe-stoxx-collaboration) — "WHITEPAPER"
+> — [DAX covered call ETF launched in new Global X ETFs Europe, STOXX collaboratio...](https://stoxx.com/dax-covered-call-etf-launched-in-new-global-x-etfs-europe-stoxx-collaboration)
 >
-> > [!quote] Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...
-> > Global X ETFs Europe has launched the first ETF tracking a **covered call strategy** on the EURO
-> > STOXX 50® benchmark, offering investors exposure to a portfolio of leading Eurozone equities
-> > that also generates income from selling options. The Global X EURO STOXX 50 Covered Call UCITS
-> > ETF tracks the EURO STOXX 50® Covered Call ATM (“At the Money”) in...
+> **Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...**
+> Global X ETFs Europe has launched the first ETF tracking a **covered call strategy** on the EURO
+> STOXX 50® benchmark, offering investors exposure to a portfolio of leading Eurozone equities that
+> also generates income from selling options. The Global X EURO STOXX 50 Covered Call UCITS ETF
+> tracks the EURO STOXX 50® Covered Call ATM (“At the Money”) in...
 >
-> — [Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...](https://stoxx.com/global-x-etfs-europe-stoxx-launch-first-euro-stoxx-50-covered-call-etf) — "WHITEPAPER"
+> — [Global X ETFs Europe, STOXX launch first EURO STOXX 50 covered call ETF | Blo...](https://stoxx.com/global-x-etfs-europe-stoxx-launch-first-euro-stoxx-50-covered-call-etf)
 >
-> > [!quote] STOXX and Global X ETFs Europe collaborate on launch of Global X DAX Covered ...
-> > Fs Europe, a leading provider of exchange-traded funds (ETFs), today announce their expanding
-> > collaboration with the launch of the Global X Media Contact Sarah Ball Executive Director,
-> > Communications press@iss-stoxx.com DAX Covered Call UCITS ETF (DYLD), the first ETF tracking an
-> > at-the-money (ATM) **covered call strategy** on the DAX® benchmark, of...
+> **STOXX and Global X ETFs Europe collaborate on launch of Global X DAX Covered ...**
+> Fs Europe, a leading provider of exchange-traded funds (ETFs), today announce their expanding
+> collaboration with the launch of the Global X Media Contact Sarah Ball Executive Director,
+> Communications press@iss-stoxx.com DAX Covered Call UCITS ETF (DYLD), the first ETF tracking an
+> at-the-money (ATM) **covered call strategy** on the DAX® benchmark, of...
 >
-> — [STOXX and Global X ETFs Europe collaborate on launch of Global X DAX Covered ...](https://stoxx.com/stoxx-and-global-x-etfs-europe-collaborate-on-launch-of-global-x-dax-covered-call-ucits-etf) — "WHITEPAPER"
+> — [STOXX and Global X ETFs Europe collaborate on launch of Global X DAX Covered ...](https://stoxx.com/stoxx-and-global-x-etfs-europe-collaborate-on-launch-of-global-x-dax-covered-call-ucits-etf)
 >
 
 ---
@@ -473,21 +473,21 @@ A credit default swap is essentially insurance against a borrower defaulting. Yo
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] Securities Class Action Services Announce Expansion of Offerings | ISS
-> > der Services Inc. (ISS) and a leading provider of securities class action solutions to the
-> > global financial community, today announced the expansion of its Premier Global Filing Service
-> > to include all global markets, along with filing support on settlements without security
-> > identifiers, such as the **Credit Default Swap** and Euroyen settlements. Th...
+> **Securities Class Action Services Announce Expansion of Offerings | ISS**
+> der Services Inc. (ISS) and a leading provider of securities class action solutions to the global
+> financial community, today announced the expansion of its Premier Global Filing Service to include
+> all global markets, along with filing support on settlements without security identifiers, such as
+> the **Credit Default Swap** and Euroyen settlements. Th...
 >
-> — [Securities Class Action Services Announce Expansion of Offerings | ISS](https://www.issgovernance.com/securities-class-action-services-announce-expansion-offerings) — "Securities Class Action Services Announce Expansion of Offerings"
+> — [Securities Class Action Services Announce Expansion of Offerings | ISS](https://www.issgovernance.com/securities-class-action-services-announce-expansion-offerings)
 >
-> > [!quote] Securities Class Action Services Announce Expansion of Offerings | ISS
-> > areholder Services Inc. (ISS) and a leading provider of securities class action solutions to the
-> > global financial community, announced the expansion of its Premier Global Filing Service to
-> > include all global markets, along with filing support on settlements without security
-> > identifiers, such as the **Credit Default Swap** and Euroyen settlements. Th...
+> **Securities Class Action Services Announce Expansion of Offerings | ISS**
+> areholder Services Inc. (ISS) and a leading provider of securities class action solutions to the
+> global financial community, announced the expansion of its Premier Global Filing Service to
+> include all global markets, along with filing support on settlements without security identifiers,
+> such as the **Credit Default Swap** and Euroyen settlements. Th...
 >
-> — [Securities Class Action Services Announce Expansion of Offerings | ISS](https://www.issgovernance.com/securities-class-action-services-announce-expansion-offerings-2) — "Securities Class Action Services Announce Expansion of Offerings"
+> — [Securities Class Action Services Announce Expansion of Offerings | ISS](https://www.issgovernance.com/securities-class-action-services-announce-expansion-offerings-2)
 >
 
 ---
@@ -523,43 +523,43 @@ Equity means ownership. When you buy a share of stock, you own a small piece of 
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News April 2019 (PDF)
-> > Multi Premia® Indices Key points The EURO STOXX Multi Premia and Single Premium Indices, which
-> > integrate the academic-research-based Multi Premia methodology developed by STOXX’s partner
-> > Finreon, failed to match their benchmark’s returns during April. The indices track seven
-> > distinctive sources of **equity** risk and returns on a broad and liquid un...
+> **Monthly Index News April 2019 (PDF)**
+> Multi Premia® Indices Key points The EURO STOXX Multi Premia and Single Premium Indices, which
+> integrate the academic-research-based Multi Premia methodology developed by STOXX’s partner
+> Finreon, failed to match their benchmark’s returns during April. The indices track seven
+> distinctive sources of **equity** risk and returns on a broad and liquid un...
 >
 > — [Monthly Index News April 2019 (PDF)](https://stoxx.com/monthly-index-news-april-2019)
 >
-> > [!quote] Uk And Ireland Voting Guidelines (PDF)
-> > that the maximum price paid is not more than 5 percent above the average trading price. 5
-> > http://www.pre-emptiongroup.org.uk/getmedia/655a6ec5-fecc-47e4-80a0-7aea04433421/Revised-PEG-Statement-of-
-> > Principles-2015.pdf.aspx 6 A "cash box” structure refers to a method of raising cash from the
-> > issue of **equity** securities for non-cash consideration th...
+> **Uk And Ireland Voting Guidelines (PDF)**
+> that the maximum price paid is not more than 5 percent above the average trading price. 5
+> http://www.pre-emptiongroup.org.uk/getmedia/655a6ec5-fecc-47e4-80a0-7aea04433421/Revised-PEG-Statement-of-
+> Principles-2015.pdf.aspx 6 A "cash box” structure refers to a method of raising cash from the
+> issue of **equity** securities for non-cash consideration th...
 >
 > — [Uk And Ireland Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2020/emea/UK-and-Ireland-Voting-Guidelines.pdf)
 >
-> > [!quote] 2017 Taiwan Voting Guidelines (PDF)
-> > ty is a subsidiary of the company in question. As a result, without this waiver, many directors
-> > will not be able to serve concurrently on subsidiaries’ boards, which may limit the company’s
-> > ability to monitor the conducts of these subsidiaries. Therefore, the release of restrictions is
-> > acknowledged as instrumental at large conglomerates that nee...
+> **2017 Taiwan Voting Guidelines (PDF)**
+> ty is a subsidiary of the company in question. As a result, without this waiver, many directors
+> will not be able to serve concurrently on subsidiaries’ boards, which may limit the company’s
+> ability to monitor the conducts of these subsidiaries. Therefore, the release of restrictions is
+> acknowledged as instrumental at large conglomerates that nee...
 >
 > — [2017 Taiwan Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-taiwan-voting-guidelines.pdf)
 >
-> > [!quote] Sri Us Voting Guidelines (PDF)
-> > nge in company ownership structure, and when there is a loss of employment or substantial change
-> > in job duties associated with the change in company ownership structure (“double-triggered”).
-> > Change-in-control provisions should exclude excise tax gross-up and eliminate the acceleration
-> > of vesting of **equity** awards upon a change in control unless p...
+> **Sri Us Voting Guidelines (PDF)**
+> nge in company ownership structure, and when there is a loss of employment or substantial change
+> in job duties associated with the change in company ownership structure (“double-triggered”).
+> Change-in-control provisions should exclude excise tax gross-up and eliminate the acceleration of
+> vesting of **equity** awards upon a change in control unless p...
 >
 > — [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
 >
-> > [!quote] Sri Us Policy Updates (PDF)
-> > r Incentive Plans – Three Year Burn Rate Current Social Advisory Services Policy, incorporating
-> > changes: New Social Advisory Services Policy: For meetings held prior to February 1, 2023,
-> > burn-rate benchmarks (utilized in For meetings held prior to February 1, 2023, burn-rate
-> > benchmarks (utilized in **Equity** Plan Scorecard evaluations) are calculat...
+> **Sri Us Policy Updates (PDF)**
+> r Incentive Plans – Three Year Burn Rate Current Social Advisory Services Policy, incorporating
+> changes: New Social Advisory Services Policy: For meetings held prior to February 1, 2023,
+> burn-rate benchmarks (utilized in For meetings held prior to February 1, 2023, burn-rate
+> benchmarks (utilized in **Equity** Plan Scorecard evaluations) are calculat...
 >
 > — [Sri Us Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/specialty/SRI-US-Policy-Updates.pdf)
 >
@@ -582,45 +582,45 @@ An ETF lets you buy and sell a whole index as easily as a single stock. It holds
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News April 2021 (PDF)
-> > a) as well as global markets. STOXX is the administrator of the STOXX® and DAX® indices under
-> > the European Benchmark Regulation and exercises control over all benchmark administration
-> > processes within Qontigo. STOXX indices are licensed to more than 600 companies around the world
-> > as underlyings for exchange-traded funds (ETFs), futures and optio...
+> **Monthly Index News April 2021 (PDF)**
+> a) as well as global markets. STOXX is the administrator of the STOXX® and DAX® indices under the
+> European Benchmark Regulation and exercises control over all benchmark administration processes
+> within Qontigo. STOXX indices are licensed to more than 600 companies around the world as
+> underlyings for exchange-traded funds (ETFs), futures and optio...
 >
 > — [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
 >
-> > [!quote] Stoxx Index Guide (PDF)
-> > emoval of STOXX EM Exposed Indices September 2021 (2): Addition of STOXX Europe 600 ESG Broad
-> > Market Equal Weight Index October 2021: Addition of STOXX Global Digital Entertainment and
-> > Education Index October 2021 (2): Renaming of Borsa Italiana to EURONEXT Milan January 2022:
-> > Addition of STOXX USA **ETF** Industry Index January 2022 (2): Methodolog...
+> **Stoxx Index Guide (PDF)**
+> emoval of STOXX EM Exposed Indices September 2021 (2): Addition of STOXX Europe 600 ESG Broad
+> Market Equal Weight Index October 2021: Addition of STOXX Global Digital Entertainment and
+> Education Index October 2021 (2): Renaming of Borsa Italiana to EURONEXT Milan January 2022:
+> Addition of STOXX USA **ETF** Industry Index January 2022 (2): Methodolog...
 >
 > — [Stoxx Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/stoxx_index_guide.pdf)
 >
-> > [!quote] Monthly Index News July 2025 (PDF)
-> > Monthly Index News / July 2025 Featured index Six years ago last month, UBS launched the EURO
-> > STOXX 50 ESG **ETF**, offering investors a first option to access the novel, sustainable version
-> > of the Eurozone’s flagship benchmark. The underlying EURO STOXX 50® ESG index’s methodology is
-> > simple: it excludes companies in controversial activities and up ...
+> **Monthly Index News July 2025 (PDF)**
+> Monthly Index News / July 2025 Featured index Six years ago last month, UBS launched the EURO
+> STOXX 50 ESG **ETF**, offering investors a first option to access the novel, sustainable version
+> of the Eurozone’s flagship benchmark. The underlying EURO STOXX 50® ESG index’s methodology is
+> simple: it excludes companies in controversial activities and up ...
 >
 > — [Monthly Index News July 2025 (PDF)](https://stoxx.com/monthly-index-news-july-2025)
 >
-> > [!quote] Monthly Index News May 2021 (PDF)
-> > acktested data since 2012, the DAX ESG Target has produced a higher ESG score than the DAX and
-> > has cut the portfolio’s carbon emissions by more than its objective. Interestingly, the
-> > portfolio has also outperformed the benchmark. Since May 20 this year, the index underlies (in
-> > its price version) an exchange-traded fund managed by BlackRock’s iSh...
+> **Monthly Index News May 2021 (PDF)**
+> acktested data since 2012, the DAX ESG Target has produced a higher ESG score than the DAX and has
+> cut the portfolio’s carbon emissions by more than its objective. Interestingly, the portfolio has
+> also outperformed the benchmark. Since May 20 this year, the index underlies (in its price
+> version) an exchange-traded fund managed by BlackRock’s iSh...
 >
 > — [Monthly Index News May 2021 (PDF)](https://stoxx.com/monthly-index-news-may-2021)
 >
-> > [!quote] DAX® 50 ESG Index als ETF-Basiswert an Credit Suisse Asset Management lizenzi...
-> > Medienkontakt Andreas von Brevern +49 (0) 69 211 14284 „Unser neuer **ETF** auf den DAX 50 ESG
-> > ermöglicht es Anlegern, am Wachstum der größten europäischen Volkswirtschaft zu partizipieren
-> > und dabei die in der Indexmethodologie definierten Umwelt-, Sozial- und Governance-Standards zu
-> > beachten. Der neue **ETF** ergänzt unsere Palette von 105 Index-Publik...
+> **DAX® 50 ESG Index als ETF-Basiswert an Credit Suisse Asset Management lizenzi...**
+> Medienkontakt Andreas von Brevern +49 (0) 69 211 14284 „Unser neuer **ETF** auf den DAX 50 ESG
+> ermöglicht es Anlegern, am Wachstum der größten europäischen Volkswirtschaft zu partizipieren und
+> dabei die in der Indexmethodologie definierten Umwelt-, Sozial- und Governance-Standards zu
+> beachten. Der neue **ETF** ergänzt unsere Palette von 105 Index-Publik...
 >
-> — [DAX® 50 ESG Index als ETF-Basiswert an Credit Suisse Asset Management lizenzi...](https://stoxx.com/dax-50-esg-index-als-etf-basiswert-an-credit-suisse-asset-management-lizenziert) — "WHITEPAPER"
+> — [DAX® 50 ESG Index als ETF-Basiswert an Credit Suisse Asset Management lizenzi...](https://stoxx.com/dax-50-esg-index-als-etf-basiswert-an-credit-suisse-asset-management-lizenziert)
 >
 
 ---
@@ -640,43 +640,43 @@ An ETC works like an ETF, but for commodities — gold, oil, copper, agricultura
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Sri Us Voting Guidelines (PDF)
-> > tion committee and potentially the full board if: ▪ There is a significant misalignment between
-> > CEO pay and company performance (pay-for-performance); ▪ The company maintains significant
-> > problematic pay practices including options backdating, excessive perks and overly generous
-> > employment contracts **etc**.; ▪ The board exhibits a significant level ...
+> **Sri Us Voting Guidelines (PDF)**
+> tion committee and potentially the full board if: ▪ There is a significant misalignment between
+> CEO pay and company performance (pay-for-performance); ▪ The company maintains significant
+> problematic pay practices including options backdating, excessive perks and overly generous
+> employment contracts **etc**.; ▪ The board exhibits a significant level ...
 >
 > — [Sri Us Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2021/specialty/SRI-US-Voting-Guidelines.pdf)
 >
-> > [!quote] Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)
-> > e safe to do so. This is currently looking increasingly unlikely to be the case in many
-> > countries over the coming weeks and maybe months. In the meantime, shareholders are likely to
-> > both expect and be appreciative of companies using their standard disclosure documents (proxies,
-> > reports and accounts **etc**.), press releases and websites to keep all ...
+> **Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)**
+> e safe to do so. This is currently looking increasingly unlikely to be the case in many countries
+> over the coming weeks and maybe months. In the meantime, shareholders are likely to both expect
+> and be appreciative of companies using their standard disclosure documents (proxies, reports and
+> accounts **etc**.), press releases and websites to keep all ...
 >
 > — [Iss Policy Guidance For Impacts Of The Coronavirus Pandemic (PDF)](https://www.issgovernance.com/file/policy/2020/americas/ISS-Policy-Guidance-for-Impacts-of-the-Coronavirus-Pandemic.pdf)
 >
-> > [!quote] Guide To Eurogov Bond Indices (PDF)
-> > ase of a calculation error meaning the provision of index values, use of index constituents or
-> > other elements or the application of weightings, cappings, or other aspects of the index
-> > methodology in a manner that is not line with this index methodology, e.g., due to a mistake,
-> > incorrect input data, **etc**. 3.5.4.1. RULE BASED CORRECTION STOXX Ltd. ...
+> **Guide To Eurogov Bond Indices (PDF)**
+> ase of a calculation error meaning the provision of index values, use of index constituents or
+> other elements or the application of weightings, cappings, or other aspects of the index
+> methodology in a manner that is not line with this index methodology, e.g., due to a mistake,
+> incorrect input data, **etc**. 3.5.4.1. RULE BASED CORRECTION STOXX Ltd. ...
 >
 > — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
 >
-> > [!quote] Guide To Industry Classifications Used By Stoxx Ltd (PDF)
-> > s, or optical storage media) T10908 Renewable Companies developing equipment for alternative
-> > and/or renewable energy generation, such as Energies solar technology or wind-powered turbines
-> > T21401 Internet Companies providing and developing Internet infrastructure (Internet access,
-> > portals, software, **etc**.) T21402 IT-Services Companies active in IT...
+> **Guide To Industry Classifications Used By Stoxx Ltd (PDF)**
+> s, or optical storage media) T10908 Renewable Companies developing equipment for alternative
+> and/or renewable energy generation, such as Energies solar technology or wind-powered turbines
+> T21401 Internet Companies providing and developing Internet infrastructure (Internet access,
+> portals, software, **etc**.) T21402 IT-Services Companies active in IT...
 >
 > — [Guide To Industry Classifications Used By Stoxx Ltd (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/Guide_to_Industry_Classifications_used_by_STOXX_Ltd.pdf)
 >
-> > [!quote] Emea Policy Updates (PDF)
-> > cases of group of companies, not only groups where the majority shareholder is a company. The
-> > change reflects ISS' current approach of considering companies belonging to the same group based
-> > on the stake of the majority shareholder, irrespective of its form (company, individual,
-> > financial vehicle, **etc**.), and updates language referring to board c...
+> **Emea Policy Updates (PDF)**
+> cases of group of companies, not only groups where the majority shareholder is a company. The
+> change reflects ISS' current approach of considering companies belonging to the same group based
+> on the stake of the majority shareholder, irrespective of its form (company, individual, financial
+> vehicle, **etc**.), and updates language referring to board c...
 >
 > — [Emea Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2022/updates/EMEA-Policy-Updates.pdf)
 >
@@ -698,45 +698,45 @@ An ETN is essentially a bank's IOU linked to an index. You get precise index tra
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] New index designed for MUMSS targets Japan’s best performers in the low-carbo...
-> > iSTOXX MUTB Japan Low Carbon Risk 30 Index tracks the performance of 30 Japanese securities from
-> > the iSTOXX® MUTB Japan Quality 150 Index that have the best profile in terms of carbon emissions
-> > exposure and carbon risk management, as measured by Sustainalytics. The Low Carbon index will
-> > underlie an **ETN** to be listed by Mitsubishi UFJ Morgan Stanl...
+> **New index designed for MUMSS targets Japan’s best performers in the low-carbo...**
+> iSTOXX MUTB Japan Low Carbon Risk 30 Index tracks the performance of 30 Japanese securities from
+> the iSTOXX® MUTB Japan Quality 150 Index that have the best profile in terms of carbon emissions
+> exposure and carbon risk management, as measured by Sustainalytics. The Low Carbon index will
+> underlie an **ETN** to be listed by Mitsubishi UFJ Morgan Stanl...
 >
-> — [New index designed for MUMSS targets Japan’s best performers in the low-carbo...](https://stoxx.com/new-index-designed-for-mumss-targets-japans-best-performers-in-the-low-carbon-transition) — "WHITEPAPER"
+> — [New index designed for MUMSS targets Japan’s best performers in the low-carbo...](https://stoxx.com/new-index-designed-for-mumss-targets-japans-best-performers-in-the-low-carbon-transition)
 >
-> > [!quote] Four Vietnam-focused STOXX Indices Licensed to Korea Investment &amp; Securit...
-> > d and inverse versions of the iSTOXX Vietnam Futres Roll KR index. “Retail investors in Korea
-> > have been very interested in investing in the Vietnamese capital market. Though high level of
-> > interests, the selection of investment vehicles was very limited. We are pleased to successfully
-> > launch a 4-way **ETN**, 1x/-1x, 2x/-2x tracking VN30 futures in co...
+> **Four Vietnam-focused STOXX Indices Licensed to Korea Investment &amp; Securit...**
+> d and inverse versions of the iSTOXX Vietnam Futres Roll KR index. “Retail investors in Korea have
+> been very interested in investing in the Vietnamese capital market. Though high level of
+> interests, the selection of investment vehicles was very limited. We are pleased to successfully
+> launch a 4-way **ETN**, 1x/-1x, 2x/-2x tracking VN30 futures in co...
 >
-> — [Four Vietnam-focused STOXX Indices Licensed to Korea Investment &amp; Securit...](https://stoxx.com/four-vietnam-focused-stoxx-indices-licensed-to-korea-investment-securities) — "WHITEPAPER"
+> — [Four Vietnam-focused STOXX Indices Licensed to Korea Investment &amp; Securit...](https://stoxx.com/four-vietnam-focused-stoxx-indices-licensed-to-korea-investment-securities)
 >
-> > [!quote] Celebrating Women’s Advancement and the Role of Financial Markets | Blog post...
-> > stocks from the STOXX® Global 1800 Index that have a relatively high proportion of women at
-> > board level, in addition to a high dividend yield and low volatility. This index has underlied
-> > over 15 structured products to date. Another one, the iSTOXX® MUTB Japan Empowering Women 30
-> > Index, underlies an exchange-traded note in Japan, where former Pri...
+> **Celebrating Women’s Advancement and the Role of Financial Markets | Blog post...**
+> stocks from the STOXX® Global 1800 Index that have a relatively high proportion of women at board
+> level, in addition to a high dividend yield and low volatility. This index has underlied over 15
+> structured products to date. Another one, the iSTOXX® MUTB Japan Empowering Women 30 Index,
+> underlies an exchange-traded note in Japan, where former Pri...
 >
-> — [Celebrating Women’s Advancement and the Role of Financial Markets | Blog post...](https://stoxx.com/celebrating-womens-advancement-and-the-role-of-financial-markets) — "WHITEPAPER"
+> — [Celebrating Women’s Advancement and the Role of Financial Markets | Blog post...](https://stoxx.com/celebrating-womens-advancement-and-the-role-of-financial-markets)
 >
-> > [!quote] Three Japan-Focused Notes Tracking STOXX Indices Listed by Mitsubishi Securit...
-> > Qontigo and Mitsubishi UFJ Morgan Stanley Securities Co., Ltd. (MUMSS) have joined forces with
-> > the listing of three exchange-traded notes (ETNs) in Japan, as demand for innovative index-based
-> > products grows in the Asian country. The notes track respectively the iSTOXX® MUTB Japan
-> > Empowering Women 30 Index, iSTOXX® MUTB Japan ESG 30 Index and iST...
+> **Three Japan-Focused Notes Tracking STOXX Indices Listed by Mitsubishi Securit...**
+> Qontigo and Mitsubishi UFJ Morgan Stanley Securities Co., Ltd. (MUMSS) have joined forces with the
+> listing of three exchange-traded notes (ETNs) in Japan, as demand for innovative index-based
+> products grows in the Asian country. The notes track respectively the iSTOXX® MUTB Japan
+> Empowering Women 30 Index, iSTOXX® MUTB Japan ESG 30 Index and iST...
 >
-> — [Three Japan-Focused Notes Tracking STOXX Indices Listed by Mitsubishi Securit...](https://stoxx.com/three-japan-focused-notes-tracking-stoxx-indices-listed-by-mitsubishi-securities) — "WHITEPAPER"
+> — [Three Japan-Focused Notes Tracking STOXX Indices Listed by Mitsubishi Securit...](https://stoxx.com/three-japan-focused-notes-tracking-stoxx-indices-listed-by-mitsubishi-securities)
 >
-> > [!quote] Three Japan-Focused STOXX Indices Licensed to Mitsubishi Securities | Press r...
-> > Zug (November 26, 2020) – Qontigo has licensed three indices to Mitsubishi UFJ Morgan Stanley
-> > Securities Co., Ltd., which underlie respective exchange-traded notes (ETNs) listed on the Tokyo
-> > Stock Exchange today. All three indices have a Japan focus: iSTOXX® MUTB Japan Empowering Women
-> > 30, iSTOXX® MUTB Japan ESG 30 and iSTOXX® MUTB Japan Market ...
+> **Three Japan-Focused STOXX Indices Licensed to Mitsubishi Securities | Press r...**
+> Zug (November 26, 2020) – Qontigo has licensed three indices to Mitsubishi UFJ Morgan Stanley
+> Securities Co., Ltd., which underlie respective exchange-traded notes (ETNs) listed on the Tokyo
+> Stock Exchange today. All three indices have a Japan focus: iSTOXX® MUTB Japan Empowering Women
+> 30, iSTOXX® MUTB Japan ESG 30 and iSTOXX® MUTB Japan Market ...
 >
-> — [Three Japan-Focused STOXX Indices Licensed to Mitsubishi Securities | Press r...](https://stoxx.com/three-japan-focused-stoxx-indices-licensed-to-mitsubishi-securities) — "WHITEPAPER"
+> — [Three Japan-Focused STOXX Indices Licensed to Mitsubishi Securities | Press r...](https://stoxx.com/three-japan-focused-stoxx-indices-licensed-to-mitsubishi-securities)
 >
 
 ---
@@ -756,45 +756,45 @@ ETP is the big tent. Whenever someone says "exchange-traded product," they mean 
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Q&amp;A: Leverage Shares’ Kavrak on Single-Stock Short and Leveraged ETPs | B...
-> > erence (CFDs). This provides the safety and transparency of having a central clearing
-> > counterparty that enhances risk management and collateral protection. “Secondly, losses cannot
-> > exceed the amount invested — also unlike CFDs or futures contracts. The most an investor can
-> > lose in a Leverage Shares **ETP** is the entire value of their initial invest...
+> **Q&amp;A: Leverage Shares’ Kavrak on Single-Stock Short and Leveraged ETPs | B...**
+> erence (CFDs). This provides the safety and transparency of having a central clearing counterparty
+> that enhances risk management and collateral protection. “Secondly, losses cannot exceed the
+> amount invested — also unlike CFDs or futures contracts. The most an investor can lose in a
+> Leverage Shares **ETP** is the entire value of their initial invest...
 >
-> — [Q&amp;A: Leverage Shares’ Kavrak on Single-Stock Short and Leveraged ETPs | B...](https://stoxx.com/qa-leverage-shares-kavrak-on-single-stock-short-and-leveraged-etps) — "WHITEPAPER"
+> — [Q&amp;A: Leverage Shares’ Kavrak on Single-Stock Short and Leveraged ETPs | B...](https://stoxx.com/qa-leverage-shares-kavrak-on-single-stock-short-and-leveraged-etps)
 >
-> > [!quote] Stoxx Minvar Paper (PDF)
-> > eighted index as opposed to a minimum variance index, especially as the theoretical grounding
-> > arguably is more consistent for minimum variance weighting than for market cap-weighting. A
-> > minimum variance index can be used directly as a benchmark for a passive or active mandate or as
-> > the basis for an exchange-traded product or custom notes. The in...
+> **Stoxx Minvar Paper (PDF)**
+> eighted index as opposed to a minimum variance index, especially as the theoretical grounding
+> arguably is more consistent for minimum variance weighting than for market cap-weighting. A
+> minimum variance index can be used directly as a benchmark for a passive or active mandate or as
+> the basis for an exchange-traded product or custom notes. The in...
 >
 > — [Stoxx Minvar Paper (PDF)](http://www.stoxx.com/document/Others/marketing/STOXX_MinVar_Paper.pdf)
 >
-> > [!quote] Q&amp;A with Leverage Shares: Five myths about leveraged ETPs | Blog posts | ...
-> > ue that leveraged and inverse ETPs make up a relatively small share of total ETF AuM — roughly
-> > 1% globally. But when you look at trading activity, the picture completely changes. These
-> > products can account for more than 15% of US ETF daily trading volume, according to some
-> > estimates.[1] A +3x Tesla **ETP** from Leveraged Shares, for example, is the ...
+> **Q&amp;A with Leverage Shares: Five myths about leveraged ETPs | Blog posts | ...**
+> ue that leveraged and inverse ETPs make up a relatively small share of total ETF AuM — roughly 1%
+> globally. But when you look at trading activity, the picture completely changes. These products
+> can account for more than 15% of US ETF daily trading volume, according to some estimates.[1] A
+> +3x Tesla **ETP** from Leveraged Shares, for example, is the ...
 >
-> — [Q&amp;A with Leverage Shares: Five myths about leveraged ETPs | Blog posts | ...](https://stoxx.com/qa-with-leverage-shares-five-myths-about-leveraged-etps) — "WHITEPAPER"
+> — [Q&amp;A with Leverage Shares: Five myths about leveraged ETPs | Blog posts | ...](https://stoxx.com/qa-with-leverage-shares-five-myths-about-leveraged-etps)
 >
-> > [!quote] ESG, Factor Strategies Drive Demand for ETFs | Blog posts | STOXX
-> > seems poised to continue in 2019. Almost 40% of European institutions currently investing in
-> > ETFs plan to add to allocations in the coming year, the Greenwich Associates survey found. 1
-> > Greenwich Associates, ‘In Turbulent Times, European Institutions Turn to ETFs,’ Feb. 18, 2019. 2
-> > BlackRock Global **ETP** Landscape,’ December 2018.
+> **ESG, Factor Strategies Drive Demand for ETFs | Blog posts | STOXX**
+> seems poised to continue in 2019. Almost 40% of European institutions currently investing in ETFs
+> plan to add to allocations in the coming year, the Greenwich Associates survey found. 1 Greenwich
+> Associates, ‘In Turbulent Times, European Institutions Turn to ETFs,’ Feb. 18, 2019. 2 BlackRock
+> Global **ETP** Landscape,’ December 2018.
 >
-> — [ESG, Factor Strategies Drive Demand for ETFs | Blog posts | STOXX](https://stoxx.com/esg-factor-strategies-drive-demand-for-etfs) — "WHITEPAPER"
+> — [ESG, Factor Strategies Drive Demand for ETFs | Blog posts | STOXX](https://stoxx.com/esg-factor-strategies-drive-demand-for-etfs)
 >
-> > [!quote] 2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX
-> > emerging markets seen as cheaper and as a better source of potential returns than developed
-> > markets, Rick Chau, head of Asia/Pacific at STOXX Ltd., predicts inflows across the region in
-> > 2018 will build on last year’s. Excluding Japan, investors allocated $6.5 billion of net new
-> > money into ETFs and exchange-traded products (ETPs) listed in the As...
+> **2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX**
+> emerging markets seen as cheaper and as a better source of potential returns than developed
+> markets, Rick Chau, head of Asia/Pacific at STOXX Ltd., predicts inflows across the region in 2018
+> will build on last year’s. Excluding Japan, investors allocated $6.5 billion of net new money into
+> ETFs and exchange-traded products (ETPs) listed in the As...
 >
-> — [2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX](https://stoxx.com/2018-seen-as-another-record-year-for-asia-etfs) — "WHITEPAPER"
+> — [2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX](https://stoxx.com/2018-seen-as-another-record-year-for-asia-etfs)
 >
 
 ---
@@ -815,45 +815,45 @@ Eurex futures let you make a binding agreement today to buy or sell the value of
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Strategy Guide (PDF)
-> > STOXX® STRATEGY INDEX GUIDE 40/99 12. EURO STOXX 50 DVP FUTURES » **Eurex futures** prices
-> > (first five year contracts) on the EURO STOXX 50 DVP » €STR - overnight interest rate - money
-> > market investment If one or more Eurex DVP futures included in the index is no longer listed,
-> > STOXX Ltd. may decide on the appropriate measures in consultation with t...
+> **Stoxx Strategy Guide (PDF)**
+> STOXX® STRATEGY INDEX GUIDE 40/99 12. EURO STOXX 50 DVP FUTURES » **Eurex futures** prices (first
+> five year contracts) on the EURO STOXX 50 DVP » €STR - overnight interest rate - money market
+> investment If one or more Eurex DVP futures included in the index is no longer listed, STOXX Ltd.
+> may decide on the appropriate measures in consultation with t...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > tlement date, CPre refers to the Eurex VSTOXX future which at the end of the 1t settlement date
-> > is the contract with one-month to expiration which on the the prior day had been the second
-> > month contract, C . 2 CONSEQUENCES OF AN INDEX DISRUPTION EVENT If an index disruption event in
-> > relation to the **EUREX futures** contract occurs on index dissemin...
+> **Istoxx Index Guide (PDF)**
+> tlement date, CPre refers to the Eurex VSTOXX future which at the end of the 1t settlement date is
+> the contract with one-month to expiration which on the the prior day had been the second month
+> contract, C . 2 CONSEQUENCES OF AN INDEX DISRUPTION EVENT If an index disruption event in relation
+> to the **EUREX futures** contract occurs on index dissemin...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...
-> > h futures is that the position’s notional value doesn’t change. The holder is only exposed to
-> > the profit and loss stemming from variations in the spread, but, unlike the case with cash
-> > shares, they are not liable for the increasing or decreasing market value of the position’s
-> > constituents. Finally, **Eurex futures** have on-screen prices provided by...
+> **Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...**
+> h futures is that the position’s notional value doesn’t change. The holder is only exposed to the
+> profit and loss stemming from variations in the spread, but, unlike the case with cash shares,
+> they are not liable for the increasing or decreasing market value of the position’s constituents.
+> Finally, **Eurex futures** have on-screen prices provided by...
 >
-> — [Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...](https://stoxx.com/spread-ratio-indices-help-trade-relative-value-between-related-securities) — "WHITEPAPER"
+> — [Spread Ratio Indices Help Trade Relative Value Between Related Securities | B...](https://stoxx.com/spread-ratio-indices-help-trade-relative-value-between-related-securities)
 >
-> > [!quote] Amundi ETF, Eurex launch products tracking STOXX Europe Total Market Defense ...
-> > underlying for an ETF managed by Amundi and futures listed on Eurex, offering investors targeted
-> > exposure to defense stocks amid a historic upgrade of the region’s military capabilities. The
-> > ETF has received regulatory approval and will be listed on main European stock exchanges in
-> > coming days. The **Eurex futures** started trading on May 12. The ST...
+> **Amundi ETF, Eurex launch products tracking STOXX Europe Total Market Defense ...**
+> underlying for an ETF managed by Amundi and futures listed on Eurex, offering investors targeted
+> exposure to defense stocks amid a historic upgrade of the region’s military capabilities. The ETF
+> has received regulatory approval and will be listed on main European stock exchanges in coming
+> days. The **Eurex futures** started trading on May 12. The ST...
 >
-> — [Amundi ETF, Eurex launch products tracking STOXX Europe Total Market Defense ...](https://stoxx.com/amundi-etf-eurex-launch-products-tracking-stoxx-europe-total-market-defense-capped-index) — "WHITEPAPER"
+> — [Amundi ETF, Eurex launch products tracking STOXX Europe Total Market Defense ...](https://stoxx.com/amundi-etf-eurex-launch-products-tracking-stoxx-europe-total-market-defense-capped-index)
 >
-> > [!quote] STOXX And Eurex Expand ESG Footprint To Cover US Market | Press releases | STOXX
-> > mate-related risks,” said Willem Keogh, Head of ESG and Thematic Solutions at Qontigo. “Because
-> > we were looking for tradeable benchmark indices which are compliant with our responsible
-> > investment policy, we were involved in the development of the ESG-X index family and were among
-> > the first to trade **Eurex futures** on the STOXX Europe 600 ESG-X Ind...
+> **STOXX And Eurex Expand ESG Footprint To Cover US Market | Press releases | STOXX**
+> mate-related risks,” said Willem Keogh, Head of ESG and Thematic Solutions at Qontigo. “Because we
+> were looking for tradeable benchmark indices which are compliant with our responsible investment
+> policy, we were involved in the development of the ESG-X index family and were among the first to
+> trade **Eurex futures** on the STOXX Europe 600 ESG-X Ind...
 >
-> — [STOXX And Eurex Expand ESG Footprint To Cover US Market | Press releases | STOXX](https://stoxx.com/stoxx-and-eurex-expand-esg-footprint-to-cover-us-market) — "WHITEPAPER"
+> — [STOXX And Eurex Expand ESG Footprint To Cover US Market | Press releases | STOXX](https://stoxx.com/stoxx-and-eurex-expand-esg-footprint-to-cover-us-market)
 >
 
 ---
@@ -876,45 +876,45 @@ In simpler terms, an index future is a bet on where the index will be at a speci
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Strategy Guide (PDF)
-> > FUTURES 13.3.2. INDEX FORMULAS Excess Return Calculation ∑2 w ∙F IndexER=IndexER ∙ i=1 i,t-1 i,t
-> > t t-1 ∑2 w ∙F i=1 i,t-1 i,t-1 Where: = VSTOXX Short-Term Futures Excess Return Index value on
-> > index business IndexERt day t T = index business day on which the index is computed Wi,t =
-> > Weight of the ith **futures contract** on index business day t Fi,t =...
+> **Stoxx Strategy Guide (PDF)**
+> FUTURES 13.3.2. INDEX FORMULAS Excess Return Calculation ∑2 w ∙F IndexER=IndexER ∙ i=1 i,t-1 i,t t
+> t-1 ∑2 w ∙F i=1 i,t-1 i,t-1 Where: = VSTOXX Short-Term Futures Excess Return Index value on index
+> business IndexERt day t T = index business day on which the index is computed Wi,t = Weight of the
+> ith **futures contract** on index business day t Fi,t =...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> > [!quote] Dax Strategy Index Guide (PDF)
-> > g the expiry date of the **futures contract** series the 3rd Friday in March, June, September
-> > and December. The Dax Futures Switch Index is calculated as a total return and an excess return
-> > index. The excess return index replicates the financial outcome of a portfolio switching the 1st
-> > nearby DAX index **futures contract** into the 2nd nearby contract; ...
+> **Dax Strategy Index Guide (PDF)**
+> g the expiry date of the **futures contract** series the 3rd Friday in March, June, September and
+> December. The Dax Futures Switch Index is calculated as a total return and an excess return index.
+> The excess return index replicates the financial outcome of a portfolio switching the 1st nearby
+> DAX index **futures contract** into the 2nd nearby contract; ...
 >
 > — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > iSTOXX® METHODOLOGY GUIDE 864/1024 118. iSTOXX VOLATILITY FUTURES INDICES At the close of the
-> > last index business day of any roll period (the index business day immediately preceding a Eurex
-> > VSTOXX futures settlement date) all of the weight is allocated to the second month Eurex VSTOXX
-> > **futures contract**. On the Eurex VSTOXX futures settlement dat...
+> **Istoxx Index Guide (PDF)**
+> iSTOXX® METHODOLOGY GUIDE 864/1024 118. iSTOXX VOLATILITY FUTURES INDICES At the close of the last
+> index business day of any roll period (the index business day immediately preceding a Eurex VSTOXX
+> futures settlement date) all of the weight is allocated to the second month Eurex VSTOXX **futures
+> contract**. On the Eurex VSTOXX futures settlement dat...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Eurex launches first futures on thematic indices | Press releases | STOXX
-> > s at Qontigo. The STOXX Thematics index family already underlies ETFs with more than USD 8.8
-> > billion in assets managed by BlackRock – proof that the methodology has been tested and embraced
-> > by the market. Jason Warr, Global Co-Head of ETF Markets at BlackRock said: “The launch of the
-> > first thematic index futures by Eurex complements our ETF offe...
+> **Eurex launches first futures on thematic indices | Press releases | STOXX**
+> s at Qontigo. The STOXX Thematics index family already underlies ETFs with more than USD 8.8
+> billion in assets managed by BlackRock – proof that the methodology has been tested and embraced
+> by the market. Jason Warr, Global Co-Head of ETF Markets at BlackRock said: “The launch of the
+> first thematic index futures by Eurex complements our ETF offe...
 >
-> — [Eurex launches first futures on thematic indices | Press releases | STOXX](https://stoxx.com/eurex-launches-first-futures-on-thematic-indices) — "WHITEPAPER"
+> — [Eurex launches first futures on thematic indices | Press releases | STOXX](https://stoxx.com/eurex-launches-first-futures-on-thematic-indices)
 >
-> > [!quote] STOXX ESG Derivatives Reach Record Volumes | Blog posts | STOXX
-> > volume high was set on Dec. 17, when almost 70,000 contracts traded ahead of the Dec. 20 roll.
-> > STOXX Europe 600 ESG-X Index futures are the most popular in a suite of six STOXX ESG
-> > derivatives listings on Eurex. Chart 1: Notional value of FSEG trades The number of outstanding
-> > STOXX Europe 600 ESG-X Index futures contracts reached almost 67,000 o...
+> **STOXX ESG Derivatives Reach Record Volumes | Blog posts | STOXX**
+> volume high was set on Dec. 17, when almost 70,000 contracts traded ahead of the Dec. 20 roll.
+> STOXX Europe 600 ESG-X Index futures are the most popular in a suite of six STOXX ESG derivatives
+> listings on Eurex. Chart 1: Notional value of FSEG trades The number of outstanding STOXX Europe
+> 600 ESG-X Index futures contracts reached almost 67,000 o...
 >
-> — [STOXX ESG Derivatives Reach Record Volumes | Blog posts | STOXX](https://stoxx.com/stoxx-esg-derivatives-reach-record-volumes) — "WHITEPAPER"
+> — [STOXX ESG Derivatives Reach Record Volumes | Blog posts | STOXX](https://stoxx.com/stoxx-esg-derivatives-reach-record-volumes)
 >
 
 ---
@@ -937,45 +937,45 @@ A green bond works exactly like a regular bond (fixed coupon, maturity date, cre
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] 2017 Taiwan Voting Guidelines (PDF)
-> > ty is a subsidiary of the company in question. As a result, without this waiver, many directors
-> > will not be able to serve concurrently on subsidiaries’ boards, which may limit the company’s
-> > ability to monitor the conducts of these subsidiaries. Therefore, the release of restrictions is
-> > acknowledged as instrumental at large conglomerates that nee...
+> **2017 Taiwan Voting Guidelines (PDF)**
+> ty is a subsidiary of the company in question. As a result, without this waiver, many directors
+> will not be able to serve concurrently on subsidiaries’ boards, which may limit the company’s
+> ability to monitor the conducts of these subsidiaries. Therefore, the release of restrictions is
+> acknowledged as instrumental at large conglomerates that nee...
 >
 > — [2017 Taiwan Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-taiwan-voting-guidelines.pdf)
 >
-> > [!quote] The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...
-> > nitiatives: Global Developments in 2022 OCTOBER 3, 2022 KEY TAKEAWAYS - The scope and pace of
-> > global sustainable finance regulation has accelerated in 2022 across an array of regulatory
-> > areas (taxonomies, ESG and climate risk management and disclosures, product requirements, ESG in
-> > stewardship, and **green bond** frameworks). - Regulatory efforts co...
+> **The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...**
+> nitiatives: Global Developments in 2022 OCTOBER 3, 2022 KEY TAKEAWAYS - The scope and pace of
+> global sustainable finance regulation has accelerated in 2022 across an array of regulatory areas
+> (taxonomies, ESG and climate risk management and disclosures, product requirements, ESG in
+> stewardship, and **green bond** frameworks). - Regulatory efforts co...
 >
-> — [The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...](https://www.issgovernance.com/library/the-depth-and-breadth-of-sustainable-finance-regulatory-initiatives-global-developments-in-2022) — "The Depth & Breadth of Sustainable Finance Regulatory Initiatives: Global Developments in 2022"
+> — [The Depth &amp; Breadth of Sustainable Finance Regulatory Initiatives: Global...](https://www.issgovernance.com/library/the-depth-and-breadth-of-sustainable-finance-regulatory-initiatives-global-developments-in-2022)
 >
-> > [!quote] Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehi...
-> > tive to buying technology-sector or country indices, or single stocks. Moreover, STOXX is a
-> > leader in sector and thematic strategies. The top components in the index reads like a list of
-> > industry bellwethers: TSMC, Broadcom, ASML, Nvidia, Advanced Micro Devices, Micron, Analog
-> > Devices, Qualcomm, Texas Instruments, Applied Material. So, a compreh...
+> **Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehi...**
+> tive to buying technology-sector or country indices, or single stocks. Moreover, STOXX is a leader
+> in sector and thematic strategies. The top components in the index reads like a list of industry
+> bellwethers: TSMC, Broadcom, ASML, Nvidia, Advanced Micro Devices, Micron, Analog Devices,
+> Qualcomm, Texas Instruments, Applied Material. So, a compreh...
 >
-> — [Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehi...](https://stoxx.com/qa-new-eurex-futures-on-stoxx-semiconductor-30-index-as-investment-vehicle-into-dynamic-sector) — "WHITEPAPER"
+> — [Q&amp;A: New Eurex futures on STOXX Semiconductor 30 index as investment vehi...](https://stoxx.com/qa-new-eurex-futures-on-stoxx-semiconductor-30-index-as-investment-vehicle-into-dynamic-sector)
 >
-> > [!quote] Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...
-> > through The Rockefeller Foundation’s ‘Zero Gap’ innovative finance portfolio – is one of the
-> > first methodologies to present a comparable, quantifiable metric that can be used by a variety
-> > of stakeholders, such as issuers, investors and analysts. The methodology looks at the projects
-> > financed via a **green bond** and then allocates to the bond the gr...
+> **Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...**
+> through The Rockefeller Foundation’s ‘Zero Gap’ innovative finance portfolio – is one of the first
+> methodologies to present a comparable, quantifiable metric that can be used by a variety of
+> stakeholders, such as issuers, investors and analysts. The methodology looks at the projects
+> financed via a **green bond** and then allocates to the bond the gr...
 >
-> — [Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...](https://www.issgovernance.com/carbon-yield-insights-report) — "Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield On Over 55 Green Bond Issuers To Quantify Climate Change Mitigation Impact"
+> — [Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...](https://www.issgovernance.com/carbon-yield-insights-report)
 >
-> > [!quote] Outlook 2018 IV: the Road to Wider ESG Integration | Blog posts | STOXX
-> > , 59% higher than the record total of 2016, according to the Climate Bonds Initiative. With more
-> > governments and agencies lining up to issue green bonds, the market’s growth will accelerate
-> > even further in 2018, according to AXA Investment Managers.6 In June 2015, the World Bank
-> > announced its first **green bond** linked to a STOXX benchmark, when it...
+> **Outlook 2018 IV: the Road to Wider ESG Integration | Blog posts | STOXX**
+> , 59% higher than the record total of 2016, according to the Climate Bonds Initiative. With more
+> governments and agencies lining up to issue green bonds, the market’s growth will accelerate even
+> further in 2018, according to AXA Investment Managers.6 In June 2015, the World Bank announced its
+> first **green bond** linked to a STOXX benchmark, when it...
 >
-> — [Outlook 2018 IV: the Road to Wider ESG Integration | Blog posts | STOXX](https://stoxx.com/outlook-2018-iv-the-road-to-wider-esg-integration) — "WHITEPAPER"
+> — [Outlook 2018 IV: the Road to Wider ESG Integration | Blog posts | STOXX](https://stoxx.com/outlook-2018-iv-the-road-to-wider-esg-integration)
 >
 
 ---
@@ -1008,21 +1008,21 @@ A high-yield bond pays more interest because the issuer is riskier — it has a 
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX
-> > listings covering new geographies and strategies, and more investors adopt the funds due to
-> > their versatility and low fees. Sovereign bonds, emerging-markets equities and multi-factor
-> > equity were among categories that drew record amounts of money in 2018, BlackRock said, while
-> > European equities and **high-yield bond**s suffered net outflows. The STO...
+> **ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX**
+> listings covering new geographies and strategies, and more investors adopt the funds due to their
+> versatility and low fees. Sovereign bonds, emerging-markets equities and multi-factor equity were
+> among categories that drew record amounts of money in 2018, BlackRock said, while European
+> equities and **high-yield bond**s suffered net outflows. The STO...
 >
-> — [ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX](https://stoxx.com/etf-assets-grow-to-record-high-despite-market-drop) — "WHITEPAPER"
+> — [ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX](https://stoxx.com/etf-assets-grow-to-record-high-despite-market-drop)
 >
-> > [!quote] STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX
-> > e (ICE) have launched a suite of optimized fixed income climate indices, combining their
-> > expertise in an area of increasing demand for index-based investing. The STOXX ICE Fixed Income
-> > Sustainability indices cover the investment-grade segment in US dollars, euros, sterling and
-> > other currencies, and **high-yield bond**s in dollars and euros. They are...
+> **STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX**
+> e (ICE) have launched a suite of optimized fixed income climate indices, combining their expertise
+> in an area of increasing demand for index-based investing. The STOXX ICE Fixed Income
+> Sustainability indices cover the investment-grade segment in US dollars, euros, sterling and other
+> currencies, and **high-yield bond**s in dollars and euros. They are...
 >
-> — [STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX](https://stoxx.com/stoxx-and-ice-launch-fixed-income-climate-indices) — "WHITEPAPER"
+> — [STOXX and ICE launch fixed income climate indices  | Blog posts | STOXX](https://stoxx.com/stoxx-and-ice-launch-fixed-income-climate-indices)
 >
 
 ---
@@ -1045,46 +1045,46 @@ An index fund is the original passive investment. You give money to the fund man
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Index Funds Have Skill, Outshine Active Investors | Blog posts | STOXX
-> > nds show little if any outperformance relative to the median **index fund**. “When performance
-> > is measured using before-fee model alphas and compared across the cross-sectional distribution,
-> > any active fund performance advantage is substantially less than one would conclude from
-> > benchmarking to average **index fund** performance,” Crane says. “The sprea...
+> **Index Funds Have Skill, Outshine Active Investors | Blog posts | STOXX**
+> nds show little if any outperformance relative to the median **index fund**. “When performance is
+> measured using before-fee model alphas and compared across the cross-sectional distribution, any
+> active fund performance advantage is substantially less than one would conclude from benchmarking
+> to average **index fund** performance,” Crane says. “The sprea...
 >
-> — [Index Funds Have Skill, Outshine Active Investors | Blog posts | STOXX](https://stoxx.com/index-funds-have-skill-outshine-active-investors) — "WHITEPAPER"
+> — [Index Funds Have Skill, Outshine Active Investors | Blog posts | STOXX](https://stoxx.com/index-funds-have-skill-outshine-active-investors)
 >
-> > [!quote] STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...
-> > , developed in collaboration with STOXX, has surpassed £6 billion1 in assets under management, a
-> > testament to the growing demand for differentiated, research-driven index solutions. The L&G
-> > Developed World Single Factor Designed range consists of three funds: the L&G Developed World
-> > Momentum Factor **Index Fund**, the L&G Developed World Quality Fac...
+> **STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...**
+> , developed in collaboration with STOXX, has surpassed £6 billion1 in assets under management, a
+> testament to the growing demand for differentiated, research-driven index solutions. The L&G
+> Developed World Single Factor Designed range consists of three funds: the L&G Developed World
+> Momentum Factor **Index Fund**, the L&G Developed World Quality Fac...
 >
-> — [STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...](https://stoxx.com/stoxx-and-lg-collaborate-on-launch-of-three-lg-developed-world-factor-based-index-funds) — "WHITEPAPER"
+> — [STOXX and L&amp;G collaborate on launch of three L&amp;G developed world fact...](https://stoxx.com/stoxx-and-lg-collaborate-on-launch-of-three-lg-developed-world-factor-based-index-funds)
 >
-> > [!quote] Factor Investing | STOXX
-> > se for the sixth consecutive month in September, the longest positive run in four years, on
-> > investor expectations that falling US interest rates and sustained economic growth will help
-> > corporate earnings. Factor Investing STOXX and L&G collaborate on launch of three L&G developed
-> > world factor-based **index fund**s STOXX Ltd. today announced its expa...
+> **Factor Investing | STOXX**
+> se for the sixth consecutive month in September, the longest positive run in four years, on
+> investor expectations that falling US interest rates and sustained economic growth will help
+> corporate earnings. Factor Investing STOXX and L&G collaborate on launch of three L&G developed
+> world factor-based **index fund**s STOXX Ltd. today announced its expa...
 >
-> — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing) — "WHITEPAPER"
+> — [Factor Investing | STOXX](https://stoxx.com/category/factor-investing)
 >
-> > [!quote] Index Files Guide 20230619 (PDF)
-> > MONTHLY REPORTS
-> > .......................................................................................................................
-> > 91 5.1.1. MONTHLY REPORTS
-> > ...............................................................................................................................
-> > 91 5.1.2. **INDEX FUND**AMENTALS ...............................
+> **Index Files Guide 20230619 (PDF)**
+> MONTHLY REPORTS
+> .......................................................................................................................
+> 91 5.1.1. MONTHLY REPORTS
+> ...............................................................................................................................
+> 91 5.1.2. **INDEX FUND**AMENTALS ...............................
 >
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
 >
-> > [!quote] Taking Temperature for 2021: Panel Discusses Climate Action Among Investors |...
-> > imate-aware focus. As Deborde explained, the move was planned to find and test investment
-> > methodologies that could in time be expanded to the rest of the group’s portfolio. The funds
-> > were launched last December. One of them is an active fund run by Sycomore Asset Management, and
-> > the other one is an **index fund** managed by Amundi that tracks the Eu...
+> **Taking Temperature for 2021: Panel Discusses Climate Action Among Investors |...**
+> imate-aware focus. As Deborde explained, the move was planned to find and test investment
+> methodologies that could in time be expanded to the rest of the group’s portfolio. The funds were
+> launched last December. One of them is an active fund run by Sycomore Asset Management, and the
+> other one is an **index fund** managed by Amundi that tracks the Eu...
 >
-> — [Taking Temperature for 2021: Panel Discusses Climate Action Among Investors |...](https://stoxx.com/taking-temperature-for-2021-panel-on-climate-action) — "WHITEPAPER"
+> — [Taking Temperature for 2021: Panel Discusses Climate Action Among Investors |...](https://stoxx.com/taking-temperature-for-2021-panel-on-climate-action)
 >
 
 ---
@@ -1116,45 +1116,45 @@ Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license f
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Detailed Overview Of Equity Index Calculation Changes (PDF)
-> > affected stakeholders methodology principles or minor clarifications of existing rules or
-> > corrections without altering the (“Stakeholders”) prior to take decision. Stakeholders mean (a)
-> > persons or entities who have overall concept or the nature of the index are generally considered
-> > non-material. an **index license** with STOXX regarding a benchmark ...
+> **Detailed Overview Of Equity Index Calculation Changes (PDF)**
+> affected stakeholders methodology principles or minor clarifications of existing rules or
+> corrections without altering the (“Stakeholders”) prior to take decision. Stakeholders mean (a)
+> persons or entities who have overall concept or the nature of the index are generally considered
+> non-material. an **index license** with STOXX regarding a benchmark ...
 >
 > — [Detailed Overview Of Equity Index Calculation Changes (PDF)](https://www.stoxx.com/document/News/2023/October/Detailed%20Overview%20of%20Equity%20Index%20Calculation%20changes.pdf)
 >
-> > [!quote] Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)
-> > Qontigo’s index business and a global provider of innovative and tradable index concepts,
-> > provides hereafter information related to the Simulation Phase for DAX Equity Indices scheduled
-> > from December 18th, 2023 to February 29th, 2024. The Simulation Phase for DAX Equity Indices
-> > aims at allowing DAX **Index License**es to understand the application o...
+> **Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)**
+> Qontigo’s index business and a global provider of innovative and tradable index concepts, provides
+> hereafter information related to the Simulation Phase for DAX Equity Indices scheduled from
+> December 18th, 2023 to February 29th, 2024. The Simulation Phase for DAX Equity Indices aims at
+> allowing DAX **Index License**es to understand the application o...
 >
 > — [Dax Equity Indices Simulation Phase–From Dec 18 2023 To February 29 2024 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX_Equity_Indices_Simulation_Phase–from_Dec_18_2023_to_February_29_2024.pdf)
 >
-> > [!quote] Dax Equity Index Methodology Guide 5526498614 (PDF)
-> > dex Calculation Guide). In the case of changes to methodologies as described in the STOXX
-> > Changes to Methodology Policy, STOXX consults with stakeholders that can reasonably be expected
-> > to be affected (“stakeholders”) before taking a decision. “Stakeholders” mean (a) persons or
-> > entities who have an **index license** with STOXX regarding a benchmark ...
+> **Dax Equity Index Methodology Guide 5526498614 (PDF)**
+> dex Calculation Guide). In the case of changes to methodologies as described in the STOXX Changes
+> to Methodology Policy, STOXX consults with stakeholders that can reasonably be expected to be
+> affected (“stakeholders”) before taking a decision. “Stakeholders” mean (a) persons or entities
+> who have an **index license** with STOXX regarding a benchmark ...
 >
 > — [Dax Equity Index Methodology Guide 5526498614 (PDF)](https://www.stoxx.com/document/News/2026/March/DAX%20Equity%20Index%20Methodology%20Guide_5526498614.pdf)
 >
-> > [!quote] Dax Equity Calculation Guide 20231002 (PDF)
-> > be treated as material. (Discretionary Rule, see section 2.3). In case of Changes to Methodology
-> > as described in STOXX Changes to Methodology Policy a STOXX consults with reasonably affected
-> > stakeholders (“Stakeholders”) prior to take decision. Stakeholders mean (a) persons or entities
-> > who have an **index license** with STOXX regarding a benchmark a...
+> **Dax Equity Calculation Guide 20231002 (PDF)**
+> be treated as material. (Discretionary Rule, see section 2.3). In case of Changes to Methodology
+> as described in STOXX Changes to Methodology Policy a STOXX consults with reasonably affected
+> stakeholders (“Stakeholders”) prior to take decision. Stakeholders mean (a) persons or entities
+> who have an **index license** with STOXX regarding a benchmark a...
 >
 > — [Dax Equity Calculation Guide 20231002 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX%20Equity%20Calculation%20Guide_20231002.pdf)
 >
-> > [!quote] DAX indices overhaul continues with methodology, data reporting changes | Blo...
-> > subscribers of both DAX and STOXX data, offering single-point access to reports that are aligned
-> > in structure and content. STOXX constantly upgrades its platforms to match markets’ and clients’
-> > demand for integrity, governance, surveillance and stability. To create a smooth transition and
-> > help DAX **index license**es familiarize themselves with the ...
+> **DAX indices overhaul continues with methodology, data reporting changes | Blo...**
+> subscribers of both DAX and STOXX data, offering single-point access to reports that are aligned
+> in structure and content. STOXX constantly upgrades its platforms to match markets’ and clients’
+> demand for integrity, governance, surveillance and stability. To create a smooth transition and
+> help DAX **index license**es familiarize themselves with the ...
 >
-> — [DAX indices overhaul continues with methodology, data reporting changes | Blo...](https://stoxx.com/dax-indices-overhaul-continues-with-methodology-data-reporting-changes) — "WHITEPAPER"
+> — [DAX indices overhaul continues with methodology, data reporting changes | Blo...](https://stoxx.com/dax-indices-overhaul-continues-with-methodology-data-reporting-changes)
 >
 
 ---
@@ -1174,43 +1174,43 @@ An index option is like insurance — or a lottery ticket — on the index's dir
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News April 2021 (PDF)
-> > ces Key Points European equity volatility ticked slightly higher during April, as measured by
-> > the EURO STOXX 50® Volatility (VSTOXX) Index, VDAX-New® Index and EURO STOXX 50® Volatility of
-> > Volatility Index (V-VSTOXX). The VSTOXX and VDAX measure the implied volatility of EURO STOXX 50
-> > Index and DAX **Index option**s, respectively, across their entir...
+> **Monthly Index News April 2021 (PDF)**
+> ces Key Points European equity volatility ticked slightly higher during April, as measured by the
+> EURO STOXX 50® Volatility (VSTOXX) Index, VDAX-New® Index and EURO STOXX 50® Volatility of
+> Volatility Index (V-VSTOXX). The VSTOXX and VDAX measure the implied volatility of EURO STOXX 50
+> Index and DAX **Index option**s, respectively, across their entir...
 >
 > — [Monthly Index News April 2021 (PDF)](https://stoxx.com/monthly-index-news-april-2021)
 >
-> > [!quote] VSTOXX futures see increased activity amid market pullback and ahead of Frenc...
-> > s one each of futures that expire prior and after the event to control the trade’s overall risk
-> > exposure. “The calendar fly allows the user to control for overall shifts in the term structure
-> > and at the same time have a dedicated exposure towards a specific expiry,” said Semroch.
-> > Difference between **index option**s and volatility futures VSTOXX fut...
+> **VSTOXX futures see increased activity amid market pullback and ahead of Frenc...**
+> s one each of futures that expire prior and after the event to control the trade’s overall risk
+> exposure. “The calendar fly allows the user to control for overall shifts in the term structure
+> and at the same time have a dedicated exposure towards a specific expiry,” said Semroch.
+> Difference between **index option**s and volatility futures VSTOXX fut...
 >
-> — [VSTOXX futures see increased activity amid market pullback and ahead of Frenc...](https://stoxx.com/vstoxx-futures-see-increased-activity-amid-market-pullback-and-ahead-of-french-elections) — "WHITEPAPER"
+> — [VSTOXX futures see increased activity amid market pullback and ahead of Frenc...](https://stoxx.com/vstoxx-futures-see-increased-activity-amid-market-pullback-and-ahead-of-french-elections)
 >
-> > [!quote] Stoxx Strategy Guide (PDF)
-> > tility is derived from option prices; this kind of volatility represents the estimates and
-> > assumptions of market participants involved in a trade, on the basis of a given option price.
-> > The VSTOXX index (calculated by STOXX) is a measure of current implied volatility, as measured
-> > using EURO STOXX 50 **index option**s. Because the VSTOXX index is calc...
+> **Stoxx Strategy Guide (PDF)**
+> tility is derived from option prices; this kind of volatility represents the estimates and
+> assumptions of market participants involved in a trade, on the basis of a given option price. The
+> VSTOXX index (calculated by STOXX) is a measure of current implied volatility, as measured using
+> EURO STOXX 50 **index option**s. Because the VSTOXX index is calc...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> > [!quote] Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...
-> > By trading OTC, parties know exactly what exposures they have and do not have to manage the book
-> > during the lifetime of the contract. It is practically a pure carry trade, with generally few
-> > options to easily trade out of the position. As mentioned, trading dispersion using listed
-> > single-stock and **index option**s is the other notable variant. By t...
+> **Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...**
+> By trading OTC, parties know exactly what exposures they have and do not have to manage the book
+> during the lifetime of the contract. It is practically a pure carry trade, with generally few
+> options to easily trade out of the position. As mentioned, trading dispersion using listed
+> single-stock and **index option**s is the other notable variant. By t...
 >
-> — [Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...](https://stoxx.com/dispersion-trading-in-focus-with-optiver-and-ellipsis) — "WHITEPAPER"
+> — [Dispersion Trading in Focus: Q&amp;A with Optiver and Ellipsis AM | Blog post...](https://stoxx.com/dispersion-trading-in-focus-with-optiver-and-ellipsis)
 >
-> > [!quote] Dax Volatility Index Family Benchmark Statement (PDF)
-> > and) the circumstances in The DAX Volatility Index Family uses as input which the measurement of
-> > the market or data for the underlying index portfolio economic reality may become unreliable,
-> > official equity closing prices sourced from the benchmark statement shall include at LSEG Data &
-> > Analytics. **Index option** prices least: are sourced directly ...
+> **Dax Volatility Index Family Benchmark Statement (PDF)**
+> and) the circumstances in The DAX Volatility Index Family uses as input which the measurement of
+> the market or data for the underlying index portfolio economic reality may become unreliable,
+> official equity closing prices sourced from the benchmark statement shall include at LSEG Data &
+> Analytics. **Index option** prices least: are sourced directly ...
 >
 > — [Dax Volatility Index Family Benchmark Statement (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Resources/Regulation/DAX_Volatility_Index_Family_Benchmark_Statement.pdf)
 >
@@ -1232,13 +1232,13 @@ An interest rate swap is a deal where two parties trade interest payments. One p
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] ISDAfix Settlement Exceeds $500 Million | ISS
-> > uring the Class Period PLAN OF DISTRIBUTION Pool A encompasses ISDAfix Instruments that were
-> > directly linked to one or more ISDAfix rates. Pool B will consist of all other ISDAfix
-> > Instruments. Pool B’s allocation will be further divided among four sub-groups. Pool B.1
-> > encompasses fixed-for-floating **interest rate swap**s where the floating leg refe...
+> **ISDAfix Settlement Exceeds $500 Million | ISS**
+> uring the Class Period PLAN OF DISTRIBUTION Pool A encompasses ISDAfix Instruments that were
+> directly linked to one or more ISDAfix rates. Pool B will consist of all other ISDAfix
+> Instruments. Pool B’s allocation will be further divided among four sub-groups. Pool B.1
+> encompasses fixed-for-floating **interest rate swap**s where the floating leg refe...
 >
-> — [ISDAfix Settlement Exceeds $500 Million | ISS](https://www.issgovernance.com/isdafix-settlement-exceeds-500-million) — "NOTABLE CASES"
+> — [ISDAfix Settlement Exceeds $500 Million | ISS](https://www.issgovernance.com/isdafix-settlement-exceeds-500-million)
 >
 
 ---
@@ -1282,13 +1282,13 @@ An investment grade bond is the "safe" end of the credit spectrum. These are bon
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] Sustainability Bond Rating | ISS
-> > Integrate Relevant Sustainability Assessments Into Your Fixed Income Investment Management
-> > Process Our Sustainability Bond Rating provides a relevant assessment of the ESG and climate
-> > impact and risk exposure of global **labeled debt**. It also allows investors to assess how
-> > compliant their Green, Social, Sustainability, Transition, and Sustainabili...
+> **Sustainability Bond Rating | ISS**
+> Integrate Relevant Sustainability Assessments Into Your Fixed Income Investment Management Process
+> Our Sustainability Bond Rating provides a relevant assessment of the ESG and climate impact and
+> risk exposure of global **labeled debt**. It also allows investors to assess how compliant their
+> Green, Social, Sustainability, Transition, and Sustainabili...
 >
-> — [Sustainability Bond Rating | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating) — "SUSTAINABILITY SOLUTIONS/RATINGS & RANKINGS"
+> — [Sustainability Bond Rating | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating)
 >
 
 ---
@@ -1321,11 +1321,11 @@ A money market fund is the closest thing to a savings account in the investment 
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > TOP CITYWIRE FUND MANAGERS AR INDEX OVERVIEW The iSTOXX Top Citywire Fund Managers AR Index
-> > replicates the performance of a risk control overlay applied to the iSTOXX Top Citywire Fund
-> > Managers Fixed Weights BE Index that targets a volatility of 6% by allocating to both the fund
-> > index as well as a **money market fund**. In addition, a constant divid...
+> **Istoxx Index Guide (PDF)**
+> TOP CITYWIRE FUND MANAGERS AR INDEX OVERVIEW The iSTOXX Top Citywire Fund Managers AR Index
+> replicates the performance of a risk control overlay applied to the iSTOXX Top Citywire Fund
+> Managers Fixed Weights BE Index that targets a volatility of 6% by allocating to both the fund
+> index as well as a **money market fund**. In addition, a constant divid...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
@@ -1347,21 +1347,21 @@ A municipal bond is a loan to a local government. The city or state uses the mon
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] At the ESG Frontier: Understanding the U.S. Municipal Bond Market | ISS
-> > At the ESG Frontier: Understanding the U.S. **Municipal Bond** Market JULY 22, 2021 KEY
-> > TAKEAWAYS: - As the responsible investment market matures, it is extending its reach into parts
-> > of the world of finance that have not previously been exposed to environmental, social and
-> > governance (ESG) risk analysis. - US **Municipal Bond**s are a significant el
+> **At the ESG Frontier: Understanding the U.S. Municipal Bond Market | ISS**
+> At the ESG Frontier: Understanding the U.S. **Municipal Bond** Market JULY 22, 2021 KEY TAKEAWAYS:
+> - As the responsible investment market matures, it is extending its reach into parts of the world
+> of finance that have not previously been exposed to environmental, social and governance (ESG)
+> risk analysis. - US **Municipal Bond**s are a significant el
 >
-> — [At the ESG Frontier: Understanding the U.S. Municipal Bond Market | ISS](https://www.issgovernance.com/library/at-the-esg-frontier-understanding-the-us-municipal-bond-market) — "At the ESG Frontier: Understanding the U.S. Municipal Bond Market"
+> — [At the ESG Frontier: Understanding the U.S. Municipal Bond Market | ISS](https://www.issgovernance.com/library/at-the-esg-frontier-understanding-the-us-municipal-bond-market)
 >
-> > [!quote] ESG Muni QualityScore | ISS
-> > SUSTAINABILITY SOLUTIONS / RATINGS & RANKINGS ESG MuniQuality Score Assess the performance of
-> > U.S. **municipal bond**s with a unique scoring solution. **Municipal bond**s can play a large
-> > role in shifting capital flows to investments that address societal issues and have a tangible
-> > impact on local communities. Our ESG Muni QualityScore provides scoring ...
+> **ESG Muni QualityScore | ISS**
+> SUSTAINABILITY SOLUTIONS / RATINGS & RANKINGS ESG MuniQuality Score Assess the performance of U.S.
+> **municipal bond**s with a unique scoring solution. **Municipal bond**s can play a large role in
+> shifting capital flows to investments that address societal issues and have a tangible impact on
+> local communities. Our ESG Muni QualityScore provides scoring ...
 >
-> — [ESG Muni QualityScore | ISS](https://www.issgovernance.com/sustainability/ratings/muni-qualityscore) — "SUSTAINABILITY SOLUTIONS/RATINGS & RANKINGS"
+> — [ESG Muni QualityScore | ISS](https://www.issgovernance.com/sustainability/ratings/muni-qualityscore)
 >
 
 ---
@@ -1398,45 +1398,45 @@ Passive investing means you buy the index and hold it. You do not try to pick wi
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] New paper explores investor preferences through passive investment flows | Bl...
-> > e challenges – such as the ‘returns gap’ – have been sticky. Others, such as understanding
-> > preferences prior to investment decisions, will lead to further innovation.” We invite you to
-> > download the paper and explore its methodology and results. [1] STOXX, “Understanding Investor
-> > Preferences through **Passive Investment** Flows,” February 2024.
+> **New paper explores investor preferences through passive investment flows | Bl...**
+> e challenges – such as the ‘returns gap’ – have been sticky. Others, such as understanding
+> preferences prior to investment decisions, will lead to further innovation.” We invite you to
+> download the paper and explore its methodology and results. [1] STOXX, “Understanding Investor
+> Preferences through **Passive Investment** Flows,” February 2024.
 >
-> — [New paper explores investor preferences through passive investment flows | Bl...](https://stoxx.com/new-paper-explores-investor-preferences-through-passive-investment-flows) — "WHITEPAPER"
+> — [New paper explores investor preferences through passive investment flows | Bl...](https://stoxx.com/new-paper-explores-investor-preferences-through-passive-investment-flows)
 >
-> > [!quote] LiquidMetrix | ISS
-> > actively and to re-evaluate the impact cost for the basket Explore Our Thought Leadership The
-> > Cost of Going Green(er) With the movement to climate sensitive portfolios increasing, the cost
-> > of implementing a transition to a “green” portfolio is a key consideration for both producers
-> > and consumers of **passive investment** products. Here, we analyze t...
+> **LiquidMetrix | ISS**
+> actively and to re-evaluate the impact cost for the basket Explore Our Thought Leadership The Cost
+> of Going Green(er) With the movement to climate sensitive portfolios increasing, the cost of
+> implementing a transition to a “green” portfolio is a key consideration for both producers and
+> consumers of **passive investment** products. Here, we analyze t...
 >
-> — [LiquidMetrix | ISS](https://www.issgovernance.com/liquidmetrix) — "LIQUIDMETRIX"
+> — [LiquidMetrix | ISS](https://www.issgovernance.com/liquidmetrix)
 >
-> > [!quote] DAX Turns 30 | Blog posts | STOXX
-> > measure of German equity volatility. Across the DAX family, the principles of maximum
-> > transparency, neutrality and independence are upheld. A methodology designed around
-> > replicability makes all the indices perfectly suited as underlying for derivatives, ETFs and
-> > structured products. A new world for **passive investment**s The DAX family is backed by...
+> **DAX Turns 30 | Blog posts | STOXX**
+> measure of German equity volatility. Across the DAX family, the principles of maximum
+> transparency, neutrality and independence are upheld. A methodology designed around replicability
+> makes all the indices perfectly suited as underlying for derivatives, ETFs and structured
+> products. A new world for **passive investment**s The DAX family is backed by...
 >
-> — [DAX Turns 30 | Blog posts | STOXX](https://stoxx.com/dax-turns-30) — "WHITEPAPER"
+> — [DAX Turns 30 | Blog posts | STOXX](https://stoxx.com/dax-turns-30)
 >
-> > [!quote] 2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX
-> > ion and are required to hold mainly domestic bonds, with a small exposure to equity. Or those
-> > that have a funding problem and are looking to invest in alternative risk premia, where they can
-> > use an index to draw higher returns but at a lower risk rate.” Where is STOXX positioned amid
-> > this growth in **passive investment**s? “We are innovators in the ...
+> **2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX**
+> ion and are required to hold mainly domestic bonds, with a small exposure to equity. Or those that
+> have a funding problem and are looking to invest in alternative risk premia, where they can use an
+> index to draw higher returns but at a lower risk rate.” Where is STOXX positioned amid this growth
+> in **passive investment**s? “We are innovators in the ...
 >
-> — [2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX](https://stoxx.com/2018-seen-as-another-record-year-for-asia-etfs) — "WHITEPAPER"
+> — [2018 Seen as Another Record Year for Asia ETFs | Blog posts | STOXX](https://stoxx.com/2018-seen-as-another-record-year-for-asia-etfs)
 >
-> > [!quote] The New Faces of Risk Management | Blog posts | STOXX
-> > obvious. It has been somewhat of a ‘fil rouge’ for many investment approaches, only some of
-> > which I’ve described above. The toolbox for an effective, long-term weather-proof portfolio was
-> > never as rich as it is nowadays. This is the result of the sophistication of asset management in
-> > general and of **passive investment**s in particular. And one of t...
+> **The New Faces of Risk Management | Blog posts | STOXX**
+> obvious. It has been somewhat of a ‘fil rouge’ for many investment approaches, only some of which
+> I’ve described above. The toolbox for an effective, long-term weather-proof portfolio was never as
+> rich as it is nowadays. This is the result of the sophistication of asset management in general
+> and of **passive investment**s in particular. And one of t...
 >
-> — [The New Faces of Risk Management | Blog posts | STOXX](https://stoxx.com/the-new-faces-of-risk-management) — "WHITEPAPER"
+> — [The New Faces of Risk Management | Blog posts | STOXX](https://stoxx.com/the-new-faces-of-risk-management)
 >
 
 ---
@@ -1457,13 +1457,13 @@ Replication is the mechanics behind passive investing. Full replication is the m
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] Qontigo and Eurex Launch First Collateral Indices Total Return Futures | STOXX
-> > the inclusion of only certain high-quality assets – set the framework for inclusion in the
-> > collateral basket. “After we introduced the EURO STOXX 50 Index total return futures, we were
-> > approached regarding products to assist in the diversification of swap counterparties for ETFs
-> > that use synthetic **portfolio replication**,” said Heath. “We are now ...
+> **Qontigo and Eurex Launch First Collateral Indices Total Return Futures | STOXX**
+> the inclusion of only certain high-quality assets – set the framework for inclusion in the
+> collateral basket. “After we introduced the EURO STOXX 50 Index total return futures, we were
+> approached regarding products to assist in the diversification of swap counterparties for ETFs
+> that use synthetic **portfolio replication**,” said Heath. “We are now ...
 >
-> — [Qontigo and Eurex Launch First Collateral Indices Total Return Futures | STOXX](https://stoxx.com/qontigo-and-eurex-launch-first-collateral-indices-total-return-futures) — "WHITEPAPER"
+> — [Qontigo and Eurex Launch First Collateral Indices Total Return Futures | STOXX](https://stoxx.com/qontigo-and-eurex-launch-first-collateral-indices-total-return-futures)
 >
 
 ---
@@ -1483,43 +1483,43 @@ A put option is the mirror image of a call option. You pay a premium for the rig
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Stoxx Strategy Guide (PDF)
-> > STRATEGY INDEX GUIDE 17/99 6. EURO STOXX 50 PROTECTIVE PUT 80% 18M 6/3 6.3.1. ROLLING The index
-> > requires a quarterly rollover procedure, on the pre-determined rolling date, i.e. the third
-> > Friday of March, June, September, December where the current option is sold and replaced by a
-> > new EURO STOXX 50 **put option**. If such a day is a non-trading day ...
+> **Stoxx Strategy Guide (PDF)**
+> STRATEGY INDEX GUIDE 17/99 6. EURO STOXX 50 PROTECTIVE PUT 80% 18M 6/3 6.3.1. ROLLING The index
+> requires a quarterly rollover procedure, on the pre-determined rolling date, i.e. the third Friday
+> of March, June, September, December where the current option is sold and replaced by a new EURO
+> STOXX 50 **put option**. If such a day is a non-trading day ...
 >
 > — [Stoxx Strategy Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/stoxx_strategy_guide.pdf)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > lue of each option entering the portfolio is calculated as the settlement value of the option
-> > adjusted by transaction costs. The Entry Value of call options should be lower than the option
-> > value, since they are sold, hence transaction costs should be negative. On the other hand, the
-> > Entry Value for **put option**s should be higher that the option va...
+> **Istoxx Index Guide (PDF)**
+> lue of each option entering the portfolio is calculated as the settlement value of the option
+> adjusted by transaction costs. The Entry Value of call options should be lower than the option
+> value, since they are sold, hence transaction costs should be negative. On the other hand, the
+> Entry Value for **put option**s should be higher that the option va...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Catholic Faith Based International Policy Updates (PDF)
-> > he total number of shares covered by the authorization is disclosed; › The total number of
-> > shares covered by the authorization is disclosed; › The number of shares that would be purchased
-> > with call options and/or sold › The number of shares that would be purchased with call options
-> > and/or sold with **put option**s is limited to a maximum of 5 percen...
+> **Catholic Faith Based International Policy Updates (PDF)**
+> he total number of shares covered by the authorization is disclosed; › The total number of shares
+> covered by the authorization is disclosed; › The number of shares that would be purchased with
+> call options and/or sold › The number of shares that would be purchased with call options and/or
+> sold with **put option**s is limited to a maximum of 5 percen...
 >
 > — [Catholic Faith Based International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2018/specialty/Catholic-Faith-Based-International-Policy-Updates.pdf)
 >
-> > [!quote] Index Files Guide 20230619 (PDF)
-> > eport title Text «EURO STOXX 50 Putwrite Indices» Text 30 2 Index name Text «EURO STOXX 50
-> > PutWrite» Text 22 Row 2 / 3 Column Data Attribute Description Data Format ID Type 1 Date Report
-> > date Date dd.mm.yyyy 2 SX5E3P EURO STOXX 50 PutWrite value Number 2 Regular day: Last price of
-> > the EURO STOXX 50 **put option** at time t 3 Ct Number 2 Rolling day:...
+> **Index Files Guide 20230619 (PDF)**
+> eport title Text «EURO STOXX 50 Putwrite Indices» Text 30 2 Index name Text «EURO STOXX 50
+> PutWrite» Text 22 Row 2 / 3 Column Data Attribute Description Data Format ID Type 1 Date Report
+> date Date dd.mm.yyyy 2 SX5E3P EURO STOXX 50 PutWrite value Number 2 Regular day: Last price of the
+> EURO STOXX 50 **put option** at time t 3 Ct Number 2 Rolling day:...
 >
 > — [Index Files Guide 20230619 (PDF)](https://www.stoxx.com/document/News/2023/June/Index_Files_Guide_20230619.pdf)
 >
-> > [!quote] Dax Strategy Index Guide (PDF)
-> > dex business day at 13:15 CET. 3.2. DAXPLUS PROTECTIVE PUT 3.2.1. OVERVIEW The DAXplus
-> > Protective Put index reflects the Protective Put investment strategy, which is designed to
-> > provide protection from losses. This strategy combines an index investment with an options
-> > position. It involves buying a **put option** while simultaneously purchasing the ...
+> **Dax Strategy Index Guide (PDF)**
+> dex business day at 13:15 CET. 3.2. DAXPLUS PROTECTIVE PUT 3.2.1. OVERVIEW The DAXplus Protective
+> Put index reflects the Protective Put investment strategy, which is designed to provide protection
+> from losses. This strategy combines an index investment with an options position. It involves
+> buying a **put option** while simultaneously purchasing the ...
 >
 > — [Dax Strategy Index Guide (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/DAX_Strategy_Index_Guide.pdf)
 >
@@ -1544,43 +1544,43 @@ A REIT lets you invest in real estate without buying property directly. The REIT
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Monthly Index News September 2025 (PDF)
-> > ee-float market capitalization are selected. In the past ten years, the STOXX Europe Total
-> > Market Leaders index has beaten the STOXX Europe Total Market benchmark by a cumulative 38
-> > percentage points (Figure 1). Figure 1: Index performance Source: STOXX. Net returns in EUR
-> > through Sept. 30, 2025. 1 Real Estate Investment Trusts. 2 For current co...
+> **Monthly Index News September 2025 (PDF)**
+> ee-float market capitalization are selected. In the past ten years, the STOXX Europe Total Market
+> Leaders index has beaten the STOXX Europe Total Market benchmark by a cumulative 38 percentage
+> points (Figure 1). Figure 1: Index performance Source: STOXX. Net returns in EUR through Sept. 30,
+> 2025. 1 Real Estate Investment Trusts. 2 For current co...
 >
 > — [Monthly Index News September 2025 (PDF)](https://stoxx.com/monthly-index-news-september-2025)
 >
-> > [!quote] Us Procedures And Policies Faq (PDF)
-> > st of companies with such pills being tracked by ISS as of October 2021: Company Expiration
-> > American Finance Trust, Inc. 4/12/2024 Bexil Corporation 11/21/2025 CEL-SCI Corporation
-> > 10/30/2025 Elah Holdings, Inc. 11/2/2023 Global Net Lease, Inc. 4/8/2024 Healthcare Trust, Inc.
-> > 5/18/2023 New York City **REIT**, Inc. 8/16/2022 Taylor Devices, Inc. 10/5/...
+> **Us Procedures And Policies Faq (PDF)**
+> st of companies with such pills being tracked by ISS as of October 2021: Company Expiration
+> American Finance Trust, Inc. 4/12/2024 Bexil Corporation 11/21/2025 CEL-SCI Corporation 10/30/2025
+> Elah Holdings, Inc. 11/2/2023 Global Net Lease, Inc. 4/8/2024 Healthcare Trust, Inc. 5/18/2023 New
+> York City **REIT**, Inc. 8/16/2022 Taylor Devices, Inc. 10/5/...
 >
 > — [Us Procedures And Policies Faq (PDF)](https://www.issgovernance.com/file/policy/2021/americas/US-Procedures-and-Policies-FAQ.pdf)
 >
-> > [!quote] 2016 Sri International Policy Updates (PDF)
-> > Services policy for non‐preemptive unit issuance limit of 10 percent is deemed to be too
-> > restrictive to the REITs' growth in terms of acquisition of properties. In October 2014, the
-> > Monetary Authority of Singapore issued a consultation paper Enhancements to the Regulatory
-> > Regime Governing REITs and **REIT** Managers. The initiative was meant to prov...
+> **2016 Sri International Policy Updates (PDF)**
+> Services policy for non‐preemptive unit issuance limit of 10 percent is deemed to be too
+> restrictive to the REITs' growth in terms of acquisition of properties. In October 2014, the
+> Monetary Authority of Singapore issued a consultation paper Enhancements to the Regulatory Regime
+> Governing REITs and **REIT** Managers. The initiative was meant to prov...
 >
 > — [2016 Sri International Policy Updates (PDF)](https://www.issgovernance.com/file/policy/2016-sri-international-policy-updates.pdf)
 >
-> > [!quote] Issuscompensationfaqs03282014 (PDF)
-> > ............ 25 79. How does ISS look at the practice of buying shares on the open market to
-> > fund employees' equity grants? ...... 26 80. What is the policy on stock-in-lieu-of-cash plans?
-> > .................................................................................................
-> > 26 81. A non-**REIT** company would like ISS to consider its lim...
+> **Issuscompensationfaqs03282014 (PDF)**
+> ............ 25 79. How does ISS look at the practice of buying shares on the open market to fund
+> employees' equity grants? ...... 26 80. What is the policy on stock-in-lieu-of-cash plans?
+> .................................................................................................
+> 26 81. A non-**REIT** company would like ISS to consider its lim...
 >
 > — [Issuscompensationfaqs03282014 (PDF)](https://www.issgovernance.com/file/2014_Policies/ISSUSCompensationFAQs03282014.pdf)
 >
-> > [!quote] 2016 2017 Iss Policy Survey Results Report (PDF)
-> > 31% Tenure is not a concern 11% 34% Other 15% 11% 4. Opting Out of Provisions of Maryland Law
-> > (U.S.) Real Estate Investment Trusts (REITs) play an outsized role in Maryland’s corporate
-> > landscape. With a specialized statute facilitating the formation of REITs and a state judiciary
-> > that has developed **REIT** expertise, Maryland is the legal domicile ...
+> **2016 2017 Iss Policy Survey Results Report (PDF)**
+> 31% Tenure is not a concern 11% 34% Other 15% 11% 4. Opting Out of Provisions of Maryland Law
+> (U.S.) Real Estate Investment Trusts (REITs) play an outsized role in Maryland’s corporate
+> landscape. With a specialized statute facilitating the formation of REITs and a state judiciary
+> that has developed **REIT** expertise, Maryland is the legal domicile ...
 >
 > — [2016 2017 Iss Policy Survey Results Report (PDF)](https://www.issgovernance.com/file/policy/2016-2017-iss-policy-survey-results-report.pdf)
 >
@@ -1604,21 +1604,21 @@ A social bond is the society-focused cousin of the green bond. The money raised 
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS
-> > The S Factor: Social Impact Considerations in the ESG Fixed-Income Market OCTOBER 14, 2022 - The
-> > COVID-19 pandemic has driven an explosion in the market for **Social Bond**s, as issuers around
-> > the world raced to combat related issues such as poverty, inequality, and food insecurity. - One
-> > of the key challenges for **Social Bond**s lies in measuring thei...
+> **The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS**
+> The S Factor: Social Impact Considerations in the ESG Fixed-Income Market OCTOBER 14, 2022 - The
+> COVID-19 pandemic has driven an explosion in the market for **Social Bond**s, as issuers around
+> the world raced to combat related issues such as poverty, inequality, and food insecurity. - One
+> of the key challenges for **Social Bond**s lies in measuring thei...
 >
-> — [The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS](https://www.issgovernance.com/library/the-s-factor-social-impact-considerations-in-the-esg-fixed-income-market) — "The S Factor: Social Impact Considerations in the ESG Fixed-Income Market"
+> — [The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS](https://www.issgovernance.com/library/the-s-factor-social-impact-considerations-in-the-esg-fixed-income-market)
 >
-> > [!quote] ISS ESG SBR Webinar | ISS
-> > he EU Commission’s Technical Expert Group (TEG) for Sustainable Finance. The webinar discussed
-> > the following: - Update on the latest work by the TEG on the Green Bond Standard and discussion
-> > of implications for investors; - Market-wide research results on the sustainability credentials
-> > of green and **social bond**s; - Analysis insights into potentia...
+> **ISS ESG SBR Webinar | ISS**
+> he EU Commission’s Technical Expert Group (TEG) for Sustainable Finance. The webinar discussed the
+> following: - Update on the latest work by the TEG on the Green Bond Standard and discussion of
+> implications for investors; - Market-wide research results on the sustainability credentials of
+> green and **social bond**s; - Analysis insights into potentia...
 >
-> — [ISS ESG SBR Webinar | ISS](https://www.issgovernance.com/esg-sbg-webinar) — "ISS ESG Market Study – How to analyze the sustainability credentials of green bonds?"
+> — [ISS ESG SBR Webinar | ISS](https://www.issgovernance.com/esg-sbg-webinar)
 >
 
 ---
@@ -1638,45 +1638,45 @@ A sovereign bond is a loan to a country. Germany, France, the United States, and
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...
-> > disclosure standards, he said. “It is a strategy move for the European Union to be the standard
-> > setter,” Déau said. Coincidentally, ESG ratings were also the focus of criticism in another
-> > panel of the day. The World Bank’s Katya Gratcheva said during her presentation that current
-> > such scores in the **sovereign bond** market carry inherent biases. We...
+> **Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...**
+> disclosure standards, he said. “It is a strategy move for the European Union to be the standard
+> setter,” Déau said. Coincidentally, ESG ratings were also the focus of criticism in another panel
+> of the day. The World Bank’s Katya Gratcheva said during her presentation that current such scores
+> in the **sovereign bond** market carry inherent biases. We...
 >
-> — [Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...](https://stoxx.com/qontigo-summit-europe-must-lead-in-standardization-of-esg-data) — "WHITEPAPER"
+> — [Qontigo Summit: ‘Europe Must Lead in Standardization of ESG Data’ | Blog post...](https://stoxx.com/qontigo-summit-europe-must-lead-in-standardization-of-esg-data)
 >
-> > [!quote] Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...
-> > to be cautious about the market outlook, and that is true for banks’ stocks in 2025. Among
-> > potential headwinds is a decline in interest rates in the Eurozone and the UK, which erodes the
-> > net interest margin, or profitability, of banks. An extension of the economic malaise in the
-> > region or a jump in **sovereign bond** yields (as it happened with Fren...
+> **Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...**
+> to be cautious about the market outlook, and that is true for banks’ stocks in 2025. Among
+> potential headwinds is a decline in interest rates in the Eurozone and the UK, which erodes the
+> net interest margin, or profitability, of banks. An extension of the economic malaise in the
+> region or a jump in **sovereign bond** yields (as it happened with Fren...
 >
-> — [Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...](https://stoxx.com/sector-watch-europe-bank-stocks-have-second-best-year-ever) — "WHITEPAPER"
+> — [Sector watch: Europe bank stocks lead gains in 2024, have best year since 202...](https://stoxx.com/sector-watch-europe-bank-stocks-have-second-best-year-ever)
 >
-> > [!quote] Join Us at the Qontigo Investment Intelligence Summit on Dec. 9 | Blog posts ...
-> > r Greening the Financial System (NGFS). Finally, ‘Ask the Expert’ breakout sessions augur
-> > exciting conversations with thought leaders from Amundi, PGGM and Eurex. In the US session,
-> > we’ll first hear from the World Bank’s Katya Gratcheva on how sustainability factors are
-> > permeating the portfolios of **sovereign bond**s. We are also pleased to have su...
+> **Join Us at the Qontigo Investment Intelligence Summit on Dec. 9 | Blog posts ...**
+> r Greening the Financial System (NGFS). Finally, ‘Ask the Expert’ breakout sessions augur exciting
+> conversations with thought leaders from Amundi, PGGM and Eurex. In the US session, we’ll first
+> hear from the World Bank’s Katya Gratcheva on how sustainability factors are permeating the
+> portfolios of **sovereign bond**s. We are also pleased to have su...
 >
-> — [Join Us at the Qontigo Investment Intelligence Summit on Dec. 9 | Blog posts ...](https://stoxx.com/join-us-at-the-qontigo-investment-intelligence-summit) — "WHITEPAPER"
+> — [Join Us at the Qontigo Investment Intelligence Summit on Dec. 9 | Blog posts ...](https://stoxx.com/join-us-at-the-qontigo-investment-intelligence-summit)
 >
-> > [!quote] 2019 Market Outlook II – Dollar Down, Risk Up? | Blog posts | STOXX
-> > resident Mario Draghi’s term expires in October 2019. Macroeconomic and geopolitical risks In
-> > Italy, the government challenged European Union fiscal rules before reaching a compromise to
-> > increase its budget deficit by less than earlier expected. The worsening of financial conditions
-> > including wider **sovereign bond** spreads will more than offset th...
+> **2019 Market Outlook II – Dollar Down, Risk Up? | Blog posts | STOXX**
+> resident Mario Draghi’s term expires in October 2019. Macroeconomic and geopolitical risks In
+> Italy, the government challenged European Union fiscal rules before reaching a compromise to
+> increase its budget deficit by less than earlier expected. The worsening of financial conditions
+> including wider **sovereign bond** spreads will more than offset th...
 >
-> — [2019 Market Outlook II – Dollar Down, Risk Up? | Blog posts | STOXX](https://stoxx.com/2019-market-outlook-ii-dollar-down-risk-up) — "WHITEPAPER"
+> — [2019 Market Outlook II – Dollar Down, Risk Up? | Blog posts | STOXX](https://stoxx.com/2019-market-outlook-ii-dollar-down-risk-up)
 >
-> > [!quote] ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX
-> > during the year, the second-highest annual inflow on record, failing to top the $659.3 billion
-> > attracted a year earlier. ETFs continue to gather assets as issuers come up with listings
-> > covering new geographies and strategies, and more investors adopt the funds due to their
-> > versatility and low fees. **Sovereign bond**s, emerging-markets equities and ...
+> **ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX**
+> during the year, the second-highest annual inflow on record, failing to top the $659.3 billion
+> attracted a year earlier. ETFs continue to gather assets as issuers come up with listings covering
+> new geographies and strategies, and more investors adopt the funds due to their versatility and
+> low fees. **Sovereign bond**s, emerging-markets equities and ...
 >
-> — [ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX](https://stoxx.com/etf-assets-grow-to-record-high-despite-market-drop) — "WHITEPAPER"
+> — [ETF Assets Grow to Record High Despite Market Drop | Blog posts | STOXX](https://stoxx.com/etf-assets-grow-to-record-high-despite-market-drop)
 >
 
 ---
@@ -1697,45 +1697,45 @@ A structured product is a custom-built financial instrument — usually a bond p
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Banca IMI Brings Low-Carbon Structured Products to Italy | Blog posts | STOXX
-> > STOXX has licensed the EURO iSTOXX® 50 Low Carbon NR Decrement 3.75% Index to Banca IMI to
-> > underly the first1 **structured product**s distributed in Italy tracking a low-carbon strategy.
-> > The low-carbon version of the flagship EURO STOXX 50® Index offers a tradable standardized
-> > solution to significantly decarbonize portfolios and address long-term cl...
+> **Banca IMI Brings Low-Carbon Structured Products to Italy | Blog posts | STOXX**
+> STOXX has licensed the EURO iSTOXX® 50 Low Carbon NR Decrement 3.75% Index to Banca IMI to underly
+> the first1 **structured product**s distributed in Italy tracking a low-carbon strategy. The
+> low-carbon version of the flagship EURO STOXX 50® Index offers a tradable standardized solution to
+> significantly decarbonize portfolios and address long-term cl...
 >
-> — [Banca IMI Brings Low-Carbon Structured Products to Italy | Blog posts | STOXX](https://stoxx.com/banca-imi-brings-low-carbon-structured-products-to-italy) — "WHITEPAPER"
+> — [Banca IMI Brings Low-Carbon Structured Products to Italy | Blog posts | STOXX](https://stoxx.com/banca-imi-brings-low-carbon-structured-products-to-italy)
 >
-> > [!quote] Taking a closer look at structured products in an increasingly complex world ...
-> > said. “All our clients are looking for more customization. Many of our clients are looking for a
-> > story,” he added, “and that leads to themes and thematics. A lot of what we focus on now is,
-> > what is the story that I want to tell? And what is the index that I can create to use as a
-> > reference within a **structured product**?” The trend towards tailored...
+> **Taking a closer look at structured products in an increasingly complex world ...**
+> said. “All our clients are looking for more customization. Many of our clients are looking for a
+> story,” he added, “and that leads to themes and thematics. A lot of what we focus on now is, what
+> is the story that I want to tell? And what is the index that I can create to use as a reference
+> within a **structured product**?” The trend towards tailored...
 >
-> — [Taking a closer look at structured products in an increasingly complex world ...](https://stoxx.com/taking-a-closer-look-at-structured-products-in-an-increasingly-complex-world) — "WHITEPAPER"
+> — [Taking a closer look at structured products in an increasingly complex world ...](https://stoxx.com/taking-a-closer-look-at-structured-products-in-an-increasingly-complex-world)
 >
-> > [!quote] STOXX Global 1800 Index Qualities Highlighted by Structured Products Industry...
-> > minimum liquidity thresholds that guarantee replicability. The fixed-number STOXX Global 1800
-> > Index is an aggregate of the three developed regions and includes derived sub-indices
-> > representing 19 Supersectors in the Industry Classification Benchmark (ICB) system. According to
-> > SRP, this is the first **structured product** tracking the STOXX Global 18...
+> **STOXX Global 1800 Index Qualities Highlighted by Structured Products Industry...**
+> minimum liquidity thresholds that guarantee replicability. The fixed-number STOXX Global 1800
+> Index is an aggregate of the three developed regions and includes derived sub-indices representing
+> 19 Supersectors in the Industry Classification Benchmark (ICB) system. According to SRP, this is
+> the first **structured product** tracking the STOXX Global 18...
 >
-> — [STOXX Global 1800 Index Qualities Highlighted by Structured Products Industry...](https://stoxx.com/stoxx-global-1800-index-qualities-highlighted-by-structured-products-industry) — "WHITEPAPER"
+> — [STOXX Global 1800 Index Qualities Highlighted by Structured Products Industry...](https://stoxx.com/stoxx-global-1800-index-qualities-highlighted-by-structured-products-industry)
 >
-> > [!quote] ESG Index Geared to Structured Products | Blog posts | STOXX
-> > leaders following environmental, social and governance (ESG) principles. The index’s composition
-> > methodology then filters for stocks with high dividend yield and low volatility, factors that
-> > traditionally result in better risk-adjusted returns. The strategy is particularly attractive
-> > for issuers of **structured product**s (SPs), as the high dividend...
+> **ESG Index Geared to Structured Products | Blog posts | STOXX**
+> leaders following environmental, social and governance (ESG) principles. The index’s composition
+> methodology then filters for stocks with high dividend yield and low volatility, factors that
+> traditionally result in better risk-adjusted returns. The strategy is particularly attractive for
+> issuers of **structured product**s (SPs), as the high dividend...
 >
-> — [ESG Index Geared to Structured Products | Blog posts | STOXX](https://stoxx.com/esg-index-geared-to-structured-products) — "WHITEPAPER"
+> — [ESG Index Geared to Structured Products | Blog posts | STOXX](https://stoxx.com/esg-index-geared-to-structured-products)
 >
-> > [!quote] ESG – Leaving a Mark on Structured Products | Blog posts | STOXX
-> > as light, he said. Millat of Societe Generale agreed that new rules can be “a help or also a
-> > hurdle.’ As an example of the former, she mentioned the case of the French regulator, which she
-> > said recently led a consultation that resulted in a common set of standards for ESG indices sold
-> > in the retail structured-products industry. “That was good pr...
+> **ESG – Leaving a Mark on Structured Products | Blog posts | STOXX**
+> as light, he said. Millat of Societe Generale agreed that new rules can be “a help or also a
+> hurdle.’ As an example of the former, she mentioned the case of the French regulator, which she
+> said recently led a consultation that resulted in a common set of standards for ESG indices sold
+> in the retail structured-products industry. “That was good pr...
 >
-> — [ESG – Leaving a Mark on Structured Products | Blog posts | STOXX](https://stoxx.com/esg-leaving-a-mark-on-structured-products) — "WHITEPAPER"
+> — [ESG – Leaving a Mark on Structured Products | Blog posts | STOXX](https://stoxx.com/esg-leaving-a-mark-on-structured-products)
 >
 
 ---
@@ -1755,46 +1755,46 @@ A sustainability bond is a hybrid — the money goes to projects that are both g
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Sustainability Bond Rating | ISS
-> > across several key markets (e.g., the EU Taxonomy). Compare the sustainability performance of
-> > labeled fixed income securities in your portfolio to identify key sustainability-related drivers
-> > of the sustainable bonds market and credit performance. Benefit From a Comprehensive Rating
-> > Methodology The **Sustainability Bond** Rating utilizes hundreds of ...
+> **Sustainability Bond Rating | ISS**
+> across several key markets (e.g., the EU Taxonomy). Compare the sustainability performance of
+> labeled fixed income securities in your portfolio to identify key sustainability-related drivers
+> of the sustainable bonds market and credit performance. Benefit From a Comprehensive Rating
+> Methodology The **Sustainability Bond** Rating utilizes hundreds of ...
 >
-> — [Sustainability Bond Rating | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating) — "SUSTAINABILITY SOLUTIONS/RATINGS & RANKINGS"
+> — [Sustainability Bond Rating | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating)
 >
-> > [!quote] ESG Ratings | ISS
-> > **Sustainability Bond** Rating – The New Asset Level Assessment Available Now Understand the
-> > sustainability and climate impact and risk exposure of global labelled debt. For investors to
-> > assess how compliant their Green, Social, Sustainability, Transition, and Sustainability-linked
-> > fixed income securiti
+> **ESG Ratings | ISS**
+> **Sustainability Bond** Rating – The New Asset Level Assessment Available Now Understand the
+> sustainability and climate impact and risk exposure of global labelled debt. For investors to
+> assess how compliant their Green, Social, Sustainability, Transition, and Sustainability-linked
+> fixed income securiti
 >
-> — [ESG Ratings | ISS](https://www.issgovernance.com/sustainability/ratings) — "SUSTAINABILITY SOLUTIONS"
+> — [ESG Ratings | ISS](https://www.issgovernance.com/sustainability/ratings)
 >
-> > [!quote] sustainability-bond-rating-methodology-summary | ISS
-> > rs Client Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor
-> > Express Securities Class Action Services Governance Analytics (Corporate Issuer Data
-> > Verification) Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund
-> > LiquidMetrix ISS Cyber Risk Score sustainability-bond-rating-methodology-summary ...
+> **sustainability-bond-rating-methodology-summary | ISS**
+> rs Client Logins ISS Data Desk ProxyExchange QualityScore (via Link) eSource ISS EVA Investor
+> Express Securities Class Action Services Governance Analytics (Corporate Issuer Data Verification)
+> Beacon(Retirement) Financial Clarity Flowspring Mortgage Clarity Simfund LiquidMetrix ISS Cyber
+> Risk Score sustainability-bond-rating-methodology-summary ...
 >
-> — [sustainability-bond-rating-methodology-summary | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating/sustainability-bond-rating-methodology-summary) — "sustainability-bond-rating-methodology-summary"
+> — [sustainability-bond-rating-methodology-summary | ISS](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating/sustainability-bond-rating-methodology-summary)
 >
-> > [!quote] Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...
-> > New York (September 28, 2018) – Launched in New York, on September 26, at the Sustainable
-> > Finance Forum by Affirmative Investment Management (AIM) and ISS-climate, the Carbon Yield
-> > Insights Report summarizes the experience of applying the Carbon Yield on over 55 green and
-> > **sustainability bond** issuers over two years, as part of AIM’s impact report...
+> **Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...**
+> New York (September 28, 2018) – Launched in New York, on September 26, at the Sustainable Finance
+> Forum by Affirmative Investment Management (AIM) and ISS-climate, the Carbon Yield Insights Report
+> summarizes the experience of applying the Carbon Yield on over 55 green and **sustainability
+> bond** issuers over two years, as part of AIM’s impact report...
 >
-> — [Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...](https://www.issgovernance.com/carbon-yield-insights-report) — "Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield On Over 55 Green Bond Issuers To Quantify Climate Change Mitigation Impact"
+> — [Carbon Yield Insights Report Summarizes Experience of Applying Carbon Yield O...](https://www.issgovernance.com/carbon-yield-insights-report)
 >
-> > [!quote] an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rat...
-> > ore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance
-> > Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring
-> > Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score
-> > an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rating-1 Start typing
-> > and p...
+> **an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rat...**
+> ore (via Link) eSource ISS EVA Investor Express Securities Class Action Services Governance
+> Analytics (Corporate Issuer Data Verification) Beacon(Retirement) Financial Clarity Flowspring
+> Mortgage Clarity Simfund LiquidMetrix ISS Cyber Risk Score
+> an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rating-1 Start typing
+> and p...
 >
-> — [an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rat...](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating/an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rating-1) — "an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rating-1"
+> — [an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rat...](https://www.issgovernance.com/sustainability/ratings/sustainability-bond-rating/an-innovative-solution-for-financial-markets-iss-esgs-sustainability-bond-rating-1)
 >
 
 ---
@@ -1814,21 +1814,21 @@ A sustainability-linked bond flips the model. Instead of earmarking money for sp
 
 > [!example]- Source excerpts (2)
 >
-> > [!quote] The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS
-> > mes – there is a growing appetite in the market for the development of relevant Key Performance
-> > Indicators. - While the European Union has played a leading role in developing regulation in
-> > this space, other markets around the world are catching up. - Social Bonds are not just
-> > project-related – many **Sustainability-Linked Bond**s incorporate social ...
+> **The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS**
+> mes – there is a growing appetite in the market for the development of relevant Key Performance
+> Indicators. - While the European Union has played a leading role in developing regulation in this
+> space, other markets around the world are catching up. - Social Bonds are not just project-related
+> – many **Sustainability-Linked Bond**s incorporate social ...
 >
-> — [The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS](https://www.issgovernance.com/library/the-s-factor-social-impact-considerations-in-the-esg-fixed-income-market) — "The S Factor: Social Impact Considerations in the ESG Fixed-Income Market"
+> — [The S Factor: Social Impact Considerations in the ESG Fixed-Income Market | ISS](https://www.issgovernance.com/library/the-s-factor-social-impact-considerations-in-the-esg-fixed-income-market)
 >
-> > [!quote] Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...
-> > an a decade after the first Green Bond issuance, the original model of Use-of-Proceeds deals,
-> > where proceeds are spent on specifically identified projects, appears insufficient to meet
-> > international sustainability targets. The market has seen a number of new structures in the past
-> > year alone – from **sustainability-linked bond**s dedicated to genera...
+> **Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...**
+> an a decade after the first Green Bond issuance, the original model of Use-of-Proceeds deals,
+> where proceeds are spent on specifically identified projects, appears insufficient to meet
+> international sustainability targets. The market has seen a number of new structures in the past
+> year alone – from **sustainability-linked bond**s dedicated to genera...
 >
-> — [Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...](https://www.issgovernance.com/library/going-beyond-use-of-proceeds-to-reach-international-sustainability-targets) — "Going Beyond “Use-of-Proceeds” to Reach International Sustainability Targets"
+> — [Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...](https://www.issgovernance.com/library/going-beyond-use-of-proceeds-to-reach-international-sustainability-targets)
 >
 
 ---
@@ -1848,43 +1848,43 @@ A swap is a private agreement to trade one stream of payments for another. The s
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...
-> > ore demanding, TRFs offer market participants a solution that improves the capital cost,
-> > compliance and risk management profile of the transaction. These are very important
-> > considerations that we believe will drive growth in the TRF segment as a standardized and
-> > futurized version of the popular OTC **swap**s market.” ________________________________...
+> **Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...**
+> ore demanding, TRFs offer market participants a solution that improves the capital cost,
+> compliance and risk management profile of the transaction. These are very important considerations
+> that we believe will drive growth in the TRF segment as a standardized and futurized version of
+> the popular OTC **swap**s market.” ________________________________...
 >
-> — [Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...](https://stoxx.com/qa-with-eurex-switching-otc-swaps-to-a-capital-efficient-alternative-under-uncleared-margin-rules) — "WHITEPAPER"
+> — [Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...](https://stoxx.com/qa-with-eurex-switching-otc-swaps-to-a-capital-efficient-alternative-under-uncleared-margin-rules)
 >
-> > [!quote] Istoxx Index Guide (PDF)
-> > and is the maximum leverage taken. βLVI is the beta of of the LVI portfolio calculated as per
-> > formula 9. T(t) is the rebalancing T(t) date immediately preceding t (included) EUR012M is the
-> > Euribor 12-month rate on trading day t-1, RIC code: EURIBOR= (1Y t−1 Maturity) EUSWE is the Euro
-> > 1Y Overnight **swap** rate on trading day t-1, RIC code: EUREST1Y...
+> **Istoxx Index Guide (PDF)**
+> and is the maximum leverage taken. βLVI is the beta of of the LVI portfolio calculated as per
+> formula 9. T(t) is the rebalancing T(t) date immediately preceding t (included) EUR012M is the
+> Euribor 12-month rate on trading day t-1, RIC code: EURIBOR= (1Y t−1 Maturity) EUSWE is the Euro
+> 1Y Overnight **swap** rate on trading day t-1, RIC code: EUREST1Y...
 >
 > — [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 >
-> > [!quote] Navigating the $2.3 Billion Foreign Exchange Benchmark Rate Antitrust Settlem...
-> > y settle. Claim Deadline Date March 22, 2018 Extended: May 16, 2018 Class Period January 1, 2003
-> > – December 15, 2015 Lead Counsels for Plaintiffs for Plaintiffs Scott + Scott, Hausfeld
-> > Eligibility There are no security ID’s for this settlement; “FX Instruments” means FX spot
-> > transactions, forwards, **swap**s, futures, options, and any other FX instr...
+> **Navigating the $2.3 Billion Foreign Exchange Benchmark Rate Antitrust Settlem...**
+> y settle. Claim Deadline Date March 22, 2018 Extended: May 16, 2018 Class Period January 1, 2003 –
+> December 15, 2015 Lead Counsels for Plaintiffs for Plaintiffs Scott + Scott, Hausfeld Eligibility
+> There are no security ID’s for this settlement; “FX Instruments” means FX spot transactions,
+> forwards, **swap**s, futures, options, and any other FX instr...
 >
-> — [Navigating the $2.3 Billion Foreign Exchange Benchmark Rate Antitrust Settlem...](https://www.issgovernance.com/navigating-the-2-3-billion-foreign-exchange-benchmark-rate-antitrust-settlement) — "Navigating the $2.3 Billion Foreign Exchange Benchmark Rate Antitrust Settlement"
+> — [Navigating the $2.3 Billion Foreign Exchange Benchmark Rate Antitrust Settlem...](https://www.issgovernance.com/navigating-the-2-3-billion-foreign-exchange-benchmark-rate-antitrust-settlement)
 >
-> > [!quote] 2014Isskoreaguidelines (PDF)
-> > nd Financial Investment Business Act (CMFIB), a fairness opinion is not required for companies
-> > with listed shares because the Act specifically sets out all relevant steps and the manner in
-> > which the proportion of shares should be divided between the acquirer and target. The CMFIB
-> > requires the stock **swap** ratio between listed companies to be deter...
+> **2014Isskoreaguidelines (PDF)**
+> nd Financial Investment Business Act (CMFIB), a fairness opinion is not required for companies
+> with listed shares because the Act specifically sets out all relevant steps and the manner in
+> which the proportion of shares should be divided between the acquirer and target. The CMFIB
+> requires the stock **swap** ratio between listed companies to be deter...
 >
 > — [2014Isskoreaguidelines (PDF)](https://www.issgovernance.com/file/2014_Policies/2014ISSKoreaGuidelines.pdf)
 >
-> > [!quote] Guide To Eurogov Bond Indices (PDF)
-> > dure as described in the corresponding sections in ICE Bond Index Methodologies’ Guide at
-> > www.ice.com. 5.1. INDEX ANALYTICS EUROGOV_Level_YYYYMMDD.csv EUROGOV_Level_MM_YYYYMMDD.csv
-> > Attribute Description OAS The average of the index constituents' market value weighted option-
-> > adjusted spreads. Asset **Swap** The average of the index constituents' mar...
+> **Guide To Eurogov Bond Indices (PDF)**
+> dure as described in the corresponding sections in ICE Bond Index Methodologies’ Guide at
+> www.ice.com. 5.1. INDEX ANALYTICS EUROGOV_Level_YYYYMMDD.csv EUROGOV_Level_MM_YYYYMMDD.csv
+> Attribute Description OAS The average of the index constituents' market value weighted option-
+> adjusted spreads. Asset **Swap** The average of the index constituents' mar...
 >
 > — [Guide To Eurogov Bond Indices (PDF)](https://www.stoxx.com/documents/stoxxnet/Documents/Indices/Common/Indexguide/Guide_to_EUROGOV_Bond_Indices.pdf)
 >
@@ -1909,29 +1909,29 @@ A total return swap is a private deal between two parties. One side says, "I wil
 
 > [!example]- Source excerpts (3)
 >
-> > [!quote] Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...
-> > he EDI rules also replicate the standard Eurex corporate actions methodology used for with
-> > respect to the underlying equity.” Finally, Stuart, what can we expect from the TRFs segment in
-> > the next couple of years? “As mentioned, TRFs provide a fully fungible, cost-efficient and
-> > liquid alternative to **total return swap**s. As regulatory requirements ...
+> **Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...**
+> he EDI rules also replicate the standard Eurex corporate actions methodology used for with respect
+> to the underlying equity.” Finally, Stuart, what can we expect from the TRFs segment in the next
+> couple of years? “As mentioned, TRFs provide a fully fungible, cost-efficient and liquid
+> alternative to **total return swap**s. As regulatory requirements ...
 >
-> — [Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...](https://stoxx.com/qa-with-eurex-switching-otc-swaps-to-a-capital-efficient-alternative-under-uncleared-margin-rules) — "WHITEPAPER"
+> — [Q&amp;A with Eurex: Switching OTC swaps to a capital-efficient alternative un...](https://stoxx.com/qa-with-eurex-switching-otc-swaps-to-a-capital-efficient-alternative-under-uncleared-margin-rules)
 >
-> > [!quote] Eurex, STOXX expand Equity and Basket Total Return Futures collaboration with...
-> > g OTC swaps to a capital-efficient alternative under Uncleared Margin Rules | For more details
-> > on the ETRF/BTRF offering, please visit: Trade Equity & Basket TRFs at Eurex | Improved Capital
-> > Efficiency. For additional information on Index TRFs, please visit Index Total Return Futures |
-> > Eurex Listed **Total Return Swap**s.
+> **Eurex, STOXX expand Equity and Basket Total Return Futures collaboration with...**
+> g OTC swaps to a capital-efficient alternative under Uncleared Margin Rules | For more details on
+> the ETRF/BTRF offering, please visit: Trade Equity & Basket TRFs at Eurex | Improved Capital
+> Efficiency. For additional information on Index TRFs, please visit Index Total Return Futures |
+> Eurex Listed **Total Return Swap**s.
 >
-> — [Eurex, STOXX expand Equity and Basket Total Return Futures collaboration with...](https://stoxx.com/eurex-stoxx-expand-equity-and-basket-total-return-futures-collaboration-with-new-etrfs-on-us-stocks) — "WHITEPAPER"
+> — [Eurex, STOXX expand Equity and Basket Total Return Futures collaboration with...](https://stoxx.com/eurex-stoxx-expand-equity-and-basket-total-return-futures-collaboration-with-new-etrfs-on-us-stocks)
 >
-> > [!quote] STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...
-> > inging a whole set of costs, risk and operational benefits. Beyond the EURO STOXX 50, Eurex also
-> > offers TRFs on the EURO STOXX® Banks and EURO STOXX® Select Dividend 30 indices. | Key benefits
-> > of listed TRFs Reduce balance sheet costs TRFs aim to cost-effectively replicate the payoff
-> > profile of OTC **Total Return Swap**s, creating a positive effect ...
+> **STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...**
+> inging a whole set of costs, risk and operational benefits. Beyond the EURO STOXX 50, Eurex also
+> offers TRFs on the EURO STOXX® Banks and EURO STOXX® Select Dividend 30 indices. | Key benefits of
+> listed TRFs Reduce balance sheet costs TRFs aim to cost-effectively replicate the payoff profile
+> of OTC **Total Return Swap**s, creating a positive effect ...
 >
-> — [STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...](https://stoxx.com/stoxx-europe-600-index-underlies-new-total-return-futures-on-eurex) — "WHITEPAPER"
+> — [STOXX Europe 600 index underlies new Total Return Futures on Eurex | Blog pos...](https://stoxx.com/stoxx-europe-600-index-underlies-new-total-return-futures-on-eurex)
 >
 
 ---
@@ -1951,13 +1951,13 @@ A transition bond is for companies that cannot credibly issue a green bond becau
 
 > [!example]- Source excerpts (1)
 >
-> > [!quote] Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...
-> > Use-of-Proceeds deals, where proceeds are spent on specifically identified projects, appears
-> > insufficient to meet international sustainability targets. The market has seen a number of new
-> > structures in the past year alone – from sustainability-linked bonds dedicated to general
-> > corporate purposes to **transition bond**s. As the market grows and conti...
+> **Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...**
+> Use-of-Proceeds deals, where proceeds are spent on specifically identified projects, appears
+> insufficient to meet international sustainability targets. The market has seen a number of new
+> structures in the past year alone – from sustainability-linked bonds dedicated to general
+> corporate purposes to **transition bond**s. As the market grows and conti...
 >
-> — [Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...](https://www.issgovernance.com/library/going-beyond-use-of-proceeds-to-reach-international-sustainability-targets) — "Going Beyond “Use-of-Proceeds” to Reach International Sustainability Targets"
+> — [Going Beyond &quot;Use-of-Proceeds&quot; to Reach International Sustainabilit...](https://www.issgovernance.com/library/going-beyond-use-of-proceeds-to-reach-international-sustainability-targets)
 >
 
 ---
@@ -1991,43 +1991,43 @@ A warrant is essentially a long-dated option packaged as a tradeable security. Y
 
 > [!example]- Source excerpts (5)
 >
-> > [!quote] STOXX Conditions of Use | STOXX
-> > stment products. The index data provided by STOXX contains SEDOL Masterfile® data sourced from
-> > the London Stock Exchange®. It is the obligation of the Subscribers to ensure they have the
-> > appropriate licence in place with the London Stock Exchange to receive this data. 4. Disclaimer
-> > and Exclusion of **Warrant**ies Nothing in these Conditions of Use s...
+> **STOXX Conditions of Use | STOXX**
+> stment products. The index data provided by STOXX contains SEDOL Masterfile® data sourced from the
+> London Stock Exchange®. It is the obligation of the Subscribers to ensure they have the
+> appropriate licence in place with the London Stock Exchange to receive this data. 4. Disclaimer
+> and Exclusion of **Warrant**ies Nothing in these Conditions of Use s...
 >
-> — [STOXX Conditions of Use | STOXX](https://stoxx.com/legal/stoxx-conditions-of-use) — "WHITEPAPER"
+> — [STOXX Conditions of Use | STOXX](https://stoxx.com/legal/stoxx-conditions-of-use)
 >
-> > [!quote] 2017 Canada Tsx Voting Guidelines (PDF)
-> > ote based on the preponderance of problematic elements; however, certain adverse practices may
-> > **warrant** withhold or against votes on a stand-alone basis in particularly egregious cases.
-> > The following practices, while not an exhaustive list, are examples of problematic compensation
-> > practices that may **warrant** an against or withhold vote: ----------...
+> **2017 Canada Tsx Voting Guidelines (PDF)**
+> ote based on the preponderance of problematic elements; however, certain adverse practices may
+> **warrant** withhold or against votes on a stand-alone basis in particularly egregious cases. The
+> following practices, while not an exhaustive list, are examples of problematic compensation
+> practices that may **warrant** an against or withhold vote: ----------...
 >
 > — [2017 Canada Tsx Voting Guidelines (PDF)](https://www.issgovernance.com/file/policy/2017-canada-tsx-voting-guidelines.pdf)
 >
-> > [!quote] Dd Compliance Package 01 2014 (PDF)
-> > ases or sales must at all times be completely independent of the advice rendered to any of ISS’
-> > clients. The fundamental standard to be followed in personal trading transactions is that
-> > Supervised Persons may not take inappropriate advantage of their position at ISS. 8. Supervised
-> > Persons shall not **warrant** or guarantee the present or future valu...
+> **Dd Compliance Package 01 2014 (PDF)**
+> ases or sales must at all times be completely independent of the advice rendered to any of ISS’
+> clients. The fundamental standard to be followed in personal trading transactions is that
+> Supervised Persons may not take inappropriate advantage of their position at ISS. 8. Supervised
+> Persons shall not **warrant** or guarantee the present or future valu...
 >
 > — [Dd Compliance Package 01 2014 (PDF)](https://www.issgovernance.com/file/2013/03/DD_Compliance_Package_01-2014.pdf)
 >
-> > [!quote] Western Union (PDF)
-> > at the company does not have a shareholder right to call special meetings, so the proposed
-> > right, while not unfettered, would enhance investor rights. CONCLUSION On balance, the proposed
-> > amendment represents an improvement in the company's governance structure. As such, support for
-> > this proposal is **warrant**ed. Item 8. Require Consistency with Cor...
+> **Western Union (PDF)**
+> at the company does not have a shareholder right to call special meetings, so the proposed right,
+> while not unfettered, would enhance investor rights. CONCLUSION On balance, the proposed amendment
+> represents an improvement in the company's governance structure. As such, support for this
+> proposal is **warrant**ed. Item 8. Require Consistency with Cor...
 >
 > — [Western Union (PDF)](https://www.issgovernance.com/file/2013/02/western_union.pdf)
 >
-> > [!quote] Issfranceremunerationfaq (PDF)
-> > fiscal year under review as well as, notably, reflecting a practice below French market their
-> > valuation, the vesting period, the standards. nature and the metrics of the performance
-> > conditions attached, the performance An issuer shall disclose compensation-related period, and,
-> > for stock-options and **warrant**s, elements granted by any companies of ...
+> **Issfranceremunerationfaq (PDF)**
+> fiscal year under review as well as, notably, reflecting a practice below French market their
+> valuation, the vesting period, the standards. nature and the metrics of the performance conditions
+> attached, the performance An issuer shall disclose compensation-related period, and, for
+> stock-options and **warrant**s, elements granted by any companies of ...
 >
 > — [Issfranceremunerationfaq (PDF)](https://www.issgovernance.com/file/2014_Policies/ISSFranceRemunerationFAQ.pdf)
 >
