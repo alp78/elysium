@@ -174,36 +174,36 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   const width = graph.offsetWidth
   const height = Math.max(graph.offsetHeight, 250)
 
-  // ========== PHYSICS (Obsidian-matched) ==========
+  // ========== PHYSICS (loose, organic feel) ==========
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(nodes)
     .force(
       "charge",
       forceManyBody<NodeData>()
-        .strength(-200)
-        .distanceMin(20)
-        .distanceMax(500)
+        .strength(-120)
+        .distanceMin(15)
+        .distanceMax(600)
         .theta(0.9),
     )
     .force(
       "link",
       forceLink<NodeData, LinkData>(graphLinks)
-        .distance(90)
-        .strength(0.3),
+        .distance(100)
+        .strength(0.08),
     )
-    .force("center", forceCenter(width / 2, height / 2).strength(0.015))
+    .force("center", forceCenter(width / 2, height / 2).strength(0.01))
     .force(
       "collide",
       forceCollide<NodeData>()
-        .radius((d) => getNodeRadius(d) + 25)
-        .strength(1.0)
-        .iterations(4),
+        .radius((d) => getNodeRadius(d) + 20)
+        .strength(0.4)
+        .iterations(2),
     )
     .force(
       "radial",
-      forceRadial(Math.min(width, height) * 0.35, width / 2, height / 2).strength(0.03),
+      forceRadial(Math.min(width, height) * 0.35, width / 2, height / 2).strength(0.02),
     )
-    .velocityDecay(0.35)
-    .alphaDecay(0.005)
+    .velocityDecay(0.55)
+    .alphaDecay(0.008)
     .alphaMin(0.001)
     .alpha(1)
 
@@ -355,7 +355,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         .container(() => app.canvas)
         .subject(() => nodes.find((n) => n.id === hoveredId))
         .on("start", function (event) {
-          if (!event.active) simulation.alphaTarget(0.03).restart()
+          if (!event.active) simulation.alphaTarget(0.008).restart()
           event.subject.fx = event.subject.x
           event.subject.fy = event.subject.y
           event.subject.__initDrag = { x: event.subject.x, y: event.subject.y }
