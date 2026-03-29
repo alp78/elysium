@@ -46,6 +46,12 @@ except IndexError as e:
 
     Caught: list index out of range
 
+> [!danger] Bare `except:` catches KeyboardInterrupt and SystemExit
+> A bare `except:` (no exception type) catches *everything* including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill with Ctrl+C. Always catch `Exception` at broadest, and only when you re-raise or log.
+
+> [!warning] Logging exceptions — always use `exc_info=True`
+> `logging.error(f"Failed: {e}")` loses the traceback. Use `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to capture the full stack trace in logs. Without the traceback, production debugging is nearly impossible.
+
 #### Multiple except clauses
 
 ```python
@@ -78,7 +84,7 @@ parse_row(None, 4)           # TypeError (int(None))
 #### else and finally
 
 ```python
-# else and finally — success-only code and guaranteed cleanup
+# else — runs only when try succeeds (no exception raised)
 
 def load_config(path):
     try:
@@ -88,15 +94,22 @@ def load_config(path):
         print(f"  Config not found: {path}")
         return None
     else:
-        # Only runs if open() succeeded
         print(f"  Config loaded: {len(data)} bytes")
         return data
     finally:
         print(f"  Attempt to load: {path} (always runs)")
 
 load_config("missing.json")
+```
 
-# finally — cleanup pattern
+      Config not found: missing.json
+      Attempt to load: missing.json (always runs)
+
+#### finally — guaranteed cleanup even on exception
+
+```python
+# finally — cleanup pattern that always runs
+
 def process_with_cleanup(throw_error):
     print("  Opening resource...")
     try:
@@ -114,19 +127,20 @@ print()
 process_with_cleanup(True)
 ```
 
-      Config not found: missing.json
-      Attempt to load: missing.json (always runs)
       Opening resource...
       Processing...
       Done.
       Closing resource (finally)
-    
+
       Opening resource...
       Processing...
       Error caught: Something went wrong
       Closing resource (finally)
 
-<h4><code style="font-size:0.75em">raise</code> vs <code style="font-size:0.75em">raise from</code> — exception chaining</h4>
+#### raise vs raise from — exception chaining
+
+> [!warning] Always use `raise ... from e` when wrapping exceptions
+> Plain `raise NewException("msg")` inside an `except` block sets `__context__` (implicit chaining) but not `__cause__`. Use `raise NewException("msg") from e` to explicitly link the cause. Use `raise ... from None` to deliberately suppress the chain when internal details should be hidden from callers.
 
 ```python
 # raise from — exception chaining preserving the original cause
@@ -191,7 +205,7 @@ except ValueError as e:
 #### Common exceptions in data engineering
 
 ```python
-# Common exceptions in data engineering — ValueError, KeyError, TypeError
+# ValueError, KeyError, TypeError — most common in CSV/JSON parsing
 
 csv_row = ["Alice", "not_a_number", "2024-01-15"]
 try:
@@ -200,36 +214,51 @@ except ValueError as e:
     salary = int(csv_row[1]) if csv_row[1].lstrip('-').isdigit() else 0
     print(f"  ValueError: safe fallback = {salary}")
 
-# KeyError — missing column; use .get() to avoid
 row = {"name": "Alice", "dept": "Engineering"}
-salary = row.get("salary", 0)
+salary = row.get("salary", 0)  # .get() avoids KeyError
 print(f"  KeyError avoided: salary = {salary}")
 
-# TypeError — wrong data type
 try:
     total = sum("not_a_list")  # type: ignore
 except TypeError as e:
     print(f"  TypeError: {e}")
+```
 
-# AttributeError — accessing field on None
+      ValueError: safe fallback = 0
+      KeyError avoided: salary = 0
+      TypeError: unsupported operand type(s) for +: 'int' and 'str'
+
+#### Common exceptions — AttributeError, ZeroDivisionError, FileNotFoundError
+
+```python
+# Defensive patterns for None, empty collections, missing files
+
 optional_field = None
 safe = optional_field.upper() if optional_field is not None else ""  # type: ignore
 print(f"  AttributeError avoided: '{safe}'")
 
-# ZeroDivisionError — empty group average
 def safe_avg(values):
     return sum(values) / len(values) if values else None
 print(f"  safe_avg([10,20]): {safe_avg([10, 20])}")
 print(f"  safe_avg([]):      {safe_avg([])}")
 
-# FileNotFoundError — missing input file
 try:
     with open("missing_data.csv") as f:
         data = f.read()
 except FileNotFoundError as e:
     print(f"  FileNotFoundError: {e.filename} — {e.strerror}")
+```
 
-# Catching multiple types in one clause
+      AttributeError avoided: ''
+      safe_avg([10,20]): 15.0
+      safe_avg([]):      None
+      FileNotFoundError: missing_data.csv — No such file or directory
+
+#### Catching multiple exception types in one clause
+
+```python
+# Tuple of exception types in one except clause
+
 def parse_numeric(value):
     try:
         return float(value)
@@ -240,13 +269,6 @@ for v in ["3.14", "bad", None, "42"]:
     print(f"  parse_numeric({str(v)!r:8}) = {parse_numeric(v)}")
 ```
 
-      ValueError: safe fallback = 0
-      KeyError avoided: salary = 0
-      TypeError: unsupported operand type(s) for +: 'int' and 'str'
-      AttributeError avoided: ''
-      safe_avg([10,20]): 15.0
-      safe_avg([]):      None
-      FileNotFoundError: missing_data.csv — No such file or directory
       parse_numeric('3.14'  ) = 3.14
       parse_numeric('bad'   ) = None
       parse_numeric('None'  ) = None
@@ -314,7 +336,7 @@ for i, row in enumerate(rows, start=1):
              Caused by: invalid literal for int() with base 10: 'not_a_number'
       Row 3: Charlie salary=110,000
 
-<h4>Exception chaining and <code style="font-size:0.75em">raise from None</code></h4>
+#### Exception chaining and raise from None
 
 ```python
 # Exception chaining and raise from None — control the error chain
@@ -357,7 +379,7 @@ except ConfigError as e:
 
 ## Context Managers — with statement
 
-<h4>Basic <code style="font-size:0.75em">with</code> statement</h4>
+#### Basic with statement
 
 > [!info] Context manager protocol
 > - `with open(path) as f:` — calls `__enter__` on start, `__exit__` on end (even on exception)
@@ -405,7 +427,7 @@ with open(out_tmp.name) as f:
     Alice,95000,Engineering,28500
     Bob,65000,Sales,19500
 
-<h4>Custom context manager — <code style="font-size:0.75em">@contextmanager</code></h4>
+#### Custom context manager — @contextmanager
 
 ```python
 # @contextmanager — generator-based context manager (no class needed)
@@ -526,7 +548,7 @@ for v in values:
 #### Error accumulation — ETL pattern
 
 ```python
-# Error accumulation — ETL pattern collecting all errors, not just first
+# ParseResult dataclass — structured result type for error accumulation
 
 @dataclass
 class ParseResult:
@@ -545,14 +567,16 @@ def parse_employee(csv_line: str, row_num: int) -> ParseResult:
     if salary < 0:
         return ParseResult(is_valid=False, error=f"Row {row_num}: salary cannot be negative ({salary})")
     return ParseResult(name=parts[0], salary=salary)
+```
+
+#### Error accumulation — process all rows, partition valid/invalid
+
+```python
+# Process all rows, partition into valid and rejected
 
 input_rows = [
-    "Alice, 95000",
-    "Bob, not_a_number",
-    "Charlie",
-    "Diana, 78000",
-    "Eve, -500",
-    "Frank, 72000",
+    "Alice, 95000", "Bob, not_a_number", "Charlie",
+    "Diana, 78000", "Eve, -500", "Frank, 72000",
 ]
 
 results = [parse_employee(row, i + 1) for i, row in enumerate(input_rows)]
@@ -573,6 +597,9 @@ for r in bad:  print(f"    ERROR: {r.error}")
         ERROR: Row 5: salary cannot be negative (-500)
 
 #### Retry pattern for transient errors
+
+> [!tip] Only retry transient exceptions
+> Pass a specific tuple of retryable exceptions (e.g., `ConnectionError`, `TimeoutError`) to avoid retrying permanent failures like `ValueError` or `PermissionError`. In production, use `tenacity` or `stamina` libraries instead of hand-rolling retry logic.
 
 ```python
 # Retry pattern — retry transient failures with backoff
@@ -603,7 +630,7 @@ print(f"  Result after {call_count} attempts: {result}")
       Attempt 2 failed: Connection timeout (attempt 2). Retrying...
       Result after 3 attempts: data loaded successfully
 
-<h4><code style="font-size:0.75em">ExceptionGroup</code> — parallel errors</h4>
+#### ExceptionGroup — parallel errors
 
 ```python
 # ExceptionGroup — aggregate multiple exceptions (Python 3.11+)

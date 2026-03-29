@@ -178,7 +178,7 @@ for (int i = 0; i < 3; i++)
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
 Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
 
-<h4>Run WebSocket server and client for simulated tick feed using <code style="font-size:0.75em">System.Net.WebSockets</code> over TCP</h4>
+#### Run WebSocket server and client for simulated tick feed using System.Net.WebSockets over TCP
 
 Starts a local `HttpListener` WebSocket server in a background thread that broadcasts ticks at ~100 msg/s.
 The client connects, receives ticks for 3 seconds, and collects them.
@@ -268,7 +268,7 @@ Console.WriteLine($"  p50: {wsP50:F0}µs  p99: {wsP99:F0}µs");
 One-directional server→client push over HTTP. Simpler than WebSocket — works through
 proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
 
-<h4>Run SSE server and client for simulated tick feed using <code style="font-size:0.75em">HttpListener</code> over HTTP</h4>
+#### Run SSE server and client for simulated tick feed using HttpListener over HTTP
 
 Starts a local HttpListener SSE server that streams ticks as `text/event-stream`.
 
@@ -384,7 +384,7 @@ catch { subscriber.CreateSubscription(subName, topicName, null, 10); Console.Wri
       Topic exists: projects/seclab-dev-ap-26/topics/tick-feed
       Subscription exists: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
 
-<h4>Start streaming subscriber using <code style="font-size:0.75em">Google.Cloud.PubSub.V1</code> <code style="font-size:0.75em">SubscriberClient</code> over gRPC</h4>
+#### Start streaming subscriber using Google.Cloud.PubSub.V1 SubscriberClient over gRPC
 
 Starts the subscriber before publishing so the gRPC stream is established when messages arrive.
 
@@ -450,7 +450,7 @@ Console.WriteLine($"  p50: {psP50:F0}ms  p99: {psP99:F0}ms  avg: {psAvgLatency:F
 Firestore’s `Listen()` pushes document changes to the client in real-time over gRPC.
 The same mechanism that powers live sync in Firebase mobile apps and dashboards.
 
-<h4>Register Firestore real-time listener using <code style="font-size:0.75em">Google.Cloud.Firestore</code> <code style="font-size:0.75em">Listen</code> over gRPC</h4>
+#### Register Firestore real-time listener using Google.Cloud.Firestore Listen over gRPC
 
 Registers a callback on every document change. Runs as a background gRPC stream.
 
@@ -487,7 +487,7 @@ Console.WriteLine($"  Listener registered on {FS_RT_COLLECTION}");
 
       Listener registered on realtime_ticks
 
-<h4>Write documents to Firestore using <code style="font-size:0.75em">Google.Cloud.Firestore</code> <code style="font-size:0.75em">WriteBatch</code> over gRPC</h4>
+#### Write documents to Firestore using Google.Cloud.Firestore WriteBatch over gRPC
 
 Writes 100 documents. Each carries a `write_ts` for latency measurement.
 
@@ -508,7 +508,7 @@ Console.WriteLine($"  Wrote {totalFs} documents");
 
       Wrote 550 documents
 
-<h4>Measure Firestore listener latency from <code style="font-size:0.75em">Listen</code> change events over gRPC</h4>
+#### Measure Firestore listener latency from Listen change events over gRPC
 
 Waits for the listener to receive all events, computes write-to-receive latency.
 

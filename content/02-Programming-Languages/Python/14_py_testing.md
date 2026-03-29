@@ -581,7 +581,7 @@ ipytest.run()
 <span style="color:#4ec9b0">20 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-<h4><code style="font-size:0.75em">@pytest.mark.parametrize</code></h4>
+#### @pytest.mark.parametrize
 
 The `@pytest.mark.parametrize` decorator takes a comma-separated string of parameter names and a list of tuples. pytest runs the test function once per tuple, unpacking values into the named parameters. Each row runs independently — if row 3 fails, rows 1–2 still show as PASSED.
 
@@ -682,6 +682,12 @@ ipytest.run()
 &lt;ExitCode.OK: 0&gt;</pre>
 
 ## Mocking and Patching
+
+> [!danger] `patch()` must target where the name is LOOKED UP, not where it's defined
+> `@patch("mymodule.requests.get")` is wrong if `mymodule` imports `get` directly.
+> Patch the reference in the consuming module: `@patch("mymodule.get")`. This is the #1
+> source of "my mock isn't working" — the real function still runs because you patched
+> the wrong location.
 
 > [!info] Mocking library
 > - `unittest.mock` — Python's built-in mocking library (works with pytest)
@@ -1350,7 +1356,7 @@ assert_test(f"daily returns within +/-20% ({extreme} violations)", extreme == 0)
 
 ## Data Quality with Pandera
 
-<h4><code style="font-size:0.75em">pandera</code> — DataFrame schema validation</h4>
+#### pandera — DataFrame schema validation
 
 Pandera defines a schema (column names, types, ranges, nullability) and validates a DataFrame against it — invalid data raises `SchemaError`. Validates ALL columns at once and reports ALL violations. Integrates with pytest.
 

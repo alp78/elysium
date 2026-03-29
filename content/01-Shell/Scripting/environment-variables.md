@@ -36,43 +36,55 @@ Shell (parent)
 ## Bash Environment Variables
 
 #### env, export, printenv — view, set, and export environment variables
+#### env, printenv — view environment variables
+
 ```bash
-# View all environment variables
 env
-# or: printenv (identical output)
-# Pipe to grep for specific ones: env | grep -i proxy
+env | grep -i proxy
+```
 
-# View a specific variable
-echo $HOME         # /home/airflow
-echo $PATH         # /usr/local/bin:/usr/bin:/bin:...
-echo $SHELL        # /bin/bash
+#### export — set and propagate variables to child processes
 
-# Set a variable for the current shell ONLY (not exported to children)
-MY_VAR="value"
-# This is a shell variable, not an environment variable
-# Child processes will NOT see it
+> [!warning] `MY_VAR="value"` is NOT an environment variable
+> Without `export`, the variable is a **shell variable** — visible only in the current
+> shell. Child processes (Python scripts, docker commands, cron jobs) will NOT see it.
+> This is the #1 cause of "it works in my terminal but not in my script."
 
-# Export to make it available to child processes
+```bash
 export MY_VAR="value"
-# Now every child process launched from this shell inherits MY_VAR
+```
 
-# Set for a SINGLE command only (does not persist)
+#### VAR=value command — set variable for a single command only
+
+> [!info] The variable exists only for the duration of the command. After it exits, the
+> variable is gone — not even the current shell has it. This is the cleanest way to pass
+> one-off configuration.
+
+```bash
 DB_HOST=10.132.0.2 DB_PORT=1433 python3 pipeline/run.py
-# DB_HOST and DB_PORT exist only for the duration of the python3 process
-# After it exits, they are gone — not even the current shell has them
-# This is the cleanest way to pass one-off configuration
+```
 
-# Unset a variable
+#### unset — remove a variable from the environment
+
+```bash
 unset MY_VAR
-# Completely removes it from the environment
+```
 
-# Persist across sessions (add to shell profile)
+#### ~/.bashrc vs ~/.profile — persisting variables across sessions
+
+> [!info] `~/.bashrc` is executed for every new interactive bash shell. `~/.profile` (or
+> `~/.bash_profile`) is executed for login shells only. `source` re-reads the file in the
+> current shell without opening a new one.
+
+```bash
 echo 'export GOOGLE_CLOUD_PROJECT="data-platform-prod"' >> ~/.bashrc
 source ~/.bashrc
-# ~/.bashrc = executed for every new interactive bash shell
-# ~/.profile or ~/.bash_profile = executed for login shells only
-# source = re-read the file in the current shell (alias: .)
 ```
+
+> [!warning] Variables set in `.bashrc` are NOT available to cron jobs
+> Cron runs commands in a minimal environment that does NOT source `.bashrc`. Define
+> variables directly in the crontab (`VAR=value` above the schedule line) or source the
+> profile explicitly at the start of the cron command.
 
 ## Secure Credential Handling
 
@@ -102,30 +114,36 @@ unset SA_PASSWORD
 
 ### PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars
 
+#### Get-ChildItem Env: — view all environment variables
+
+> [!info] `Env:` is a PowerShell drive mapping to the process environment — each variable
+> is a "file" you can read with `$env:NAME`.
+
 ```powershell
-# View all environment variables
 Get-ChildItem Env:
-# Env: is a PowerShell drive that maps to the process environment
-# Think of it as a virtual filesystem where each variable is a "file"
-
-# View a specific variable
-$env:HOME
 $env:PATH
-$env:GOOGLE_CLOUD_PROJECT
+```
 
-# Set for current session
+#### $env:VAR — set for current session
+
+```powershell
 $env:MY_VAR = "value"
-# Immediately available to child processes launched from this session
+```
 
-# Set permanently (persists across sessions)
+#### SetEnvironmentVariable — persist across sessions (registry)
+
+> [!info] `"User"` = per-user (HKCU registry). `"Machine"` = system-wide (requires
+> Administrator). Existing sessions do NOT pick up the change until restarted.
+
+```powershell
 [Environment]::SetEnvironmentVariable("MY_VAR", "value", "User")
-# "User" = per-user (HKCU registry) — persists for this user across all new sessions
-# "Machine" = system-wide (HKLM registry) — requires Administrator elevation
-# NOTE: Existing sessions do not pick up the change until restarted
+```
 
-# Unset
-Remove-Item Env:MY_VAR                                          # current session only
-[Environment]::SetEnvironmentVariable("MY_VAR", $null, "User")  # permanent removal
+#### Remove-Item Env: — unset variables
+
+```powershell
+Remove-Item Env:MY_VAR
+[Environment]::SetEnvironmentVariable("MY_VAR", $null, "User")
 ```
 
 > [!warning] PowerShell `$env:PATH` vs System PATH

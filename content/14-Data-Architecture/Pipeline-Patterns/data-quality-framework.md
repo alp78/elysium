@@ -45,7 +45,10 @@ The [[silver-transforms]] layer is where most quality gates live, acting as the 
 | Referential integrity | All instruments exist in dimension table | Quarantine orphans |
 | Staleness check | Data freshness within tolerance | Warn or use T-1 fallback |
 
-### Medallion Gold Quality Gate — Consumption / Publication
+> [!danger] The Gold Layer Is the Last Line of Defense Before Publication
+> If a quality gate at the gold layer fails and the pipeline continues anyway (e.g., because the check was set to `severity: warn` instead of `error`), incorrect index values reach clients and regulatory filings. Gold-layer checks that affect publication integrity must ALWAYS be `error` severity with hard halts -- never warnings. Treat the gold quality gate as a circuit breaker, not an advisory.
+
+### Medallion Gold Quality Gate -- Consumption / Publication
 
 | Check | Implementation | Action on Failure |
 |-------|---------------|-------------------|

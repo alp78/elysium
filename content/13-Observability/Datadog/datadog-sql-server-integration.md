@@ -86,6 +86,9 @@ The integration automatically collects these metric groups from SQL Server DMVs:
 
 ---
 
+> [!danger] dd_agent Login Must Have VIEW SERVER STATE -- Without It Metrics Are Silently Empty
+> If the `dd_agent` SQL login lacks `VIEW SERVER STATE` permission, the Datadog agent connects successfully but returns zero values for most metrics (connections, buffer pool, waits). The agent logs no error -- it simply reports `0` for every DMV-backed metric. Always verify with `SELECT HAS_PERMS_BY_NAME(null, null, 'VIEW SERVER STATE')` from the `dd_agent` session.
+
 ### Verifying the SQL Server Integration
 
 ```bash

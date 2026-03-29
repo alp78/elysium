@@ -99,6 +99,9 @@ print(f"Inserted {len(trades)} trades")
 
 #### SQLite — SELECT into pandas DataFrame
 
+> [!warning] `cursor.fetchall()` loads the entire result set into memory
+> For large tables (millions of rows), `fetchall()` or `pd.read_sql()` without a `WHERE`/`LIMIT` clause can exhaust RAM and crash your process. Use `fetchmany(batch_size)` for streaming, or push filtering to SQL with `WHERE`/`LIMIT`. For analytics, prefer DuckDB which streams columnar data efficiently.
+
 ```python
 # SELECT — display as pandas DataFrame
 
@@ -376,6 +379,9 @@ conn.close()
 The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [[sql-fundamentals]]. For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [[blocking-and-locking]].
 
 #### SQL Server — connect and list schemas/tables
+
+> [!danger] Connection pool exhaustion — always close connections
+> `pyodbc.connect()` without `with` or explicit `.close()` leaks connections. SQL Server defaults to a max pool of 100 connections — once exhausted, new connections block or fail with timeout errors. Always use `with conn:` or wrap in try/finally. For SQLAlchemy, `engine.dispose()` reclaims all pooled connections.
 
 > [!info] SQL Server connection pattern
 > - `pyodbc.connect()` — direct cursor for DML (fast, `rowcount` available)
@@ -1327,6 +1333,9 @@ print("DuckDB connected + table created")
     DuckDB connected + table created
 
 #### DuckDB — load data from SQL Server
+
+> [!warning] `fetchall()` on large tables loads everything into Python memory
+> The 66K rows below are fine, but `fetchall()` on a million-row table can OOM your process. For large transfers, use `fetchmany(batch_size)` in a loop, or let DuckDB read files directly (`SELECT * FROM 'data.parquet'`).
 
 ```python
 # Load from SQL Server via pyodbc into DuckDB

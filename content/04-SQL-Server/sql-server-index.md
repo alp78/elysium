@@ -16,7 +16,7 @@ status: complete
 
 SQL Server 2022 on Linux (GCP Compute Engine) — administration, performance tuning, and data pipeline patterns for the [[medallion-architecture|medallion architecture]].
 
-## Administration
+### Administration
 
 Day-to-day operations, connection management, backup strategy, and cost optimization.
 
@@ -27,7 +27,7 @@ Day-to-day operations, connection management, backup strategy, and cost optimiza
 - [[server-configuration]] — Max memory, RCSI, TempDB, recovery models
 - [[finops-cost-optimization]] — GCP disk snapshots, committed use discounts, right-sizing
 
-## T-SQL
+### T-SQL
 
 SQL Server-specific query patterns and optimization.
 
@@ -35,7 +35,7 @@ SQL Server-specific query patterns and optimization.
 - [[merge-and-upsert]] — MERGE, upsert strategies, transaction management, XACT_ABORT
 - [[date-and-time-functions]] — ISO 8601, date types, DATEADD/DATEDIFF, timezone conversion, DST pitfalls
 
-## Storage and Indexes
+### Storage and Indexes
 
 How SQL Server stores data and the index strategies that make queries fast.
 
@@ -45,7 +45,7 @@ How SQL Server stores data and the index strategies that make queries fast.
 - [[table-compression]] — PAGE vs ROW compression, sp_estimate_data_compression_savings, ONLINE rebuild
 - [[partitioning-strategies]] — Partition functions and schemes, partition elimination, SWITCH for archiving
 
-## Performance
+### Performance
 
 Diagnosing and resolving performance problems.
 
@@ -58,7 +58,7 @@ Diagnosing and resolving performance problems.
 - [[troubleshooting-flowcharts]] — "Why slow?", "Pipeline failed", index decision tree, disk space emergency
 - [[sql-server-problems]] — Common SQL Server error scenarios and solutions
 
-## Concurrency
+### Concurrency
 
 Handling concurrent access — deadlocks, race conditions, and isolation levels.
 
@@ -66,7 +66,7 @@ Handling concurrent access — deadlocks, race conditions, and isolation levels.
 - [[race-conditions]] — UPDLOCK patterns, serializable isolation, safe concurrent access, data pipeline audit
 - [[blocking-and-locking]] — Lock types (S/U/X/IS/IX), lock granularity, RCSI, blocking chain detection
 
-## Security
+### Security
 
 Encryption, authentication, and audit logging.
 
@@ -74,14 +74,14 @@ Encryption, authentication, and audit logging.
 - [[sql-server-authentication]] — Authentication modes, service accounts, TLS, firewall
 - [[audit-logging]] — SQL Server Audit, brute-force detection, GCP Cloud Logging integration
 
-## High Availability
+### High Availability
 
 Ensuring uptime and disaster recovery.
 
 - [[high-availability-overview]] — HA options comparison, RTO/RPO, read-only routing
 - [[always-on-availability-groups]] — AG setup on Linux/GCP, Pacemaker/Corosync, planned vs. forced failover
 
-## Patterns
+### Patterns
 
 Data pipeline patterns built on SQL Server.
 
@@ -92,7 +92,7 @@ Data pipeline patterns built on SQL Server.
 
 See also: [[sql-server-cheat-sheet]]
 
-## Cross-References - dbt
+### Cross-References - dbt
 
 - [[dbt-sqlserver-adapter]] — dbt SQL Server adapter configuration
 - [[dbt-performance-tuning]] — Tuning dbt models on SQL Server

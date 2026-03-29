@@ -374,7 +374,7 @@ Console.WriteLine($"  BigQuery {BQ_DATASET}.ohlcv_bench table ready");
 
 ## Local → SQL Server Ingestion
 
-<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">Microsoft.Data.SqlClient</code> <code style="font-size:0.75em">ExecuteNonQuery</code> over TLS</h4>
+#### Ingest CSV into SQL Server from local using Microsoft.Data.SqlClient ExecuteNonQuery over TLS
 
 Row-by-row parameterised INSERT. Simplest pattern but slowest — one round trip per row.
 Only practical for small datasets. Included as a baseline to show the cost of naive ingestion.
@@ -414,7 +414,7 @@ foreach (var tier in new[] { "small", "medium" })
       small        2.5K       1m5s      38 rows/s
       medium      75.0K      32m5s      39 rows/s
 
-<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">Microsoft.Data.SqlClient</code> <code style="font-size:0.75em">SqlBulkCopy</code> over TLS</h4>
+#### Ingest CSV into SQL Server from local using Microsoft.Data.SqlClient SqlBulkCopy over TLS
 
 .NET’s native bulk insert — streams rows via the TDS protocol’s bulk insert path.
 Equivalent to `pyodbc.fast_executemany` but faster (native TDS bulk protocol, not parameterised batches).
@@ -457,7 +457,7 @@ foreach (var tier in tierNames)
       medium      75.0K       2.7s   27.3K rows/s
       large      750.0K      21.5s   34.9K rows/s
 
-<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">bcp</code> (Bulk Copy Program) over TDS</h4>
+#### Ingest CSV into SQL Server from local using bcp (Bulk Copy Program) over TDS
 
 Native command-line tool. Uses the TDS bulk-insert protocol directly.
 Fastest for raw file loading — bypasses the .NET managed layer entirely.
@@ -499,7 +499,7 @@ foreach (var tier in tierNames)
       medium      75.0K       2.4s   30.9K rows/s
       large      750.0K      20.6s   36.3K rows/s
 
-<h4>Ingest JSON into SQL Server from local using <code style="font-size:0.75em">Microsoft.Data.SqlClient</code> <code style="font-size:0.75em">SqlBulkCopy</code> over TLS</h4>
+#### Ingest JSON into SQL Server from local using Microsoft.Data.SqlClient SqlBulkCopy over TLS
 
 Reads newline-delimited JSON, parses with Newtonsoft, bulk-copies via `SqlBulkCopy`.
 Same bulk-insert throughput as CSV once parsed — the JSON parsing is the overhead.
@@ -540,7 +540,7 @@ foreach (var tier in tierNames)
       medium      75.0K       2.6s   28.5K rows/s
       large      750.0K      22.7s   33.1K rows/s
 
-<h4>Ingest Parquet into SQL Server from local using <code style="font-size:0.75em">Parquet.Net</code> + <code style="font-size:0.75em">SqlBulkCopy</code> over TLS</h4>
+#### Ingest Parquet into SQL Server from local using Parquet.Net + SqlBulkCopy over TLS
 
 Reads Parquet columnar data with Parquet.Net, pivots to row-based DataTable, bulk-copies.
 Parquet files are smaller and faster to parse than CSV — columnar layout enables skip-reads.
@@ -590,7 +590,7 @@ foreach (var tier in tierNames)
 
 ## Local → BigQuery Ingestion
 
-<h4>Ingest CSV into BigQuery from local using <code style="font-size:0.75em">Google.Cloud.BigQuery.V2</code> <code style="font-size:0.75em">UploadCsv</code> over HTTPS</h4>
+#### Ingest CSV into BigQuery from local using Google.Cloud.BigQuery.V2 UploadCsv over HTTPS
 
 Uploads the CSV file directly via the BigQuery jobs API. Server-side parsing — the file is streamed as-is.
 
@@ -618,7 +618,7 @@ foreach (var tier in tierNames)
       medium      75.0K       6.8s   11.0K rows/s
       large      750.0K      24.4s   30.7K rows/s
 
-<h4>Ingest JSON into BigQuery from local using <code style="font-size:0.75em">Google.Cloud.BigQuery.V2</code> <code style="font-size:0.75em">UploadJson</code> over HTTPS</h4>
+#### Ingest JSON into BigQuery from local using Google.Cloud.BigQuery.V2 UploadJson over HTTPS
 
 Uploads newline-delimited JSON. BigQuery parses each line as a row — schema must match.
 
@@ -646,7 +646,7 @@ foreach (var tier in tierNames)
       medium      75.0K       7.7s    9.7K rows/s
       large      750.0K      31.5s   23.8K rows/s
 
-<h4>Ingest Parquet into BigQuery from local using <code style="font-size:0.75em">Google.Cloud.BigQuery.V2</code> <code style="font-size:0.75em">UploadParquet</code> over HTTPS</h4>
+#### Ingest Parquet into BigQuery from local using Google.Cloud.BigQuery.V2 UploadParquet over HTTPS
 
 Parquet carries its own schema — BigQuery reads column types from the file footer. Fastest local format.
 
@@ -674,7 +674,7 @@ foreach (var tier in tierNames)
       medium      75.0K       6.1s   12.2K rows/s
       large      750.0K       8.6s   87.4K rows/s
 
-<h4>Ingest CSV into BigQuery from local using <code style="font-size:0.75em">bq</code> CLI <code style="font-size:0.75em">load</code> over HTTPS</h4>
+#### Ingest CSV into BigQuery from local using bq CLI load over HTTPS
 
 Command-line load without writing C# code. Same underlying API as `UploadCsv`.
 
@@ -714,7 +714,7 @@ foreach (var tier in tierNames)
 
 ## Local → Firestore Ingestion
 
-<h4>Ingest CSV into Firestore from local using <code style="font-size:0.75em">Google.Cloud.Firestore</code> <code style="font-size:0.75em">WriteBatch</code> over gRPC</h4>
+#### Ingest CSV into Firestore from local using Google.Cloud.Firestore WriteBatch over gRPC
 
 Batches up to 500 documents per gRPC call. Each batch is a single atomic commit.
 
@@ -764,7 +764,7 @@ foreach (var tier in tierNames)
 
 ## GCS → BigQuery Ingestion
 
-<h4>Ingest CSV into BigQuery from GCS using <code style="font-size:0.75em">Google.Cloud.BigQuery.V2</code> <code style="font-size:0.75em">CreateLoadJob</code> over internal network</h4>
+#### Ingest CSV into BigQuery from GCS using Google.Cloud.BigQuery.V2 CreateLoadJob over internal network
 
 Server-side load — BigQuery reads directly from GCS. No data passes through local machine.
 
@@ -800,7 +800,7 @@ foreach (var tier in tierNames)
       medium      75.0K       5.5s   13.7K rows/s
       large      750.0K      10.5s   71.2K rows/s
 
-<h4>Ingest Parquet into BigQuery from GCS using <code style="font-size:0.75em">Google.Cloud.BigQuery.V2</code> <code style="font-size:0.75em">CreateLoadJob</code> over internal network</h4>
+#### Ingest Parquet into BigQuery from GCS using Google.Cloud.BigQuery.V2 CreateLoadJob over internal network
 
 Parquet is the fastest GCS→BQ path — columnar, compressed, schema embedded.
 
@@ -836,7 +836,7 @@ foreach (var tier in tierNames)
 
 ## GCS → SQL Server Ingestion
 
-<h4>Ingest CSV into SQL Server from GCS using <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> download + <code style="font-size:0.75em">SqlBulkCopy</code> over TLS</h4>
+#### Ingest CSV into SQL Server from GCS using Google.Cloud.Storage.V1 download + SqlBulkCopy over TLS
 
 Two-hop pipeline: download from GCS to memory, then bulk-insert to SQL Server.
 
@@ -879,7 +879,7 @@ foreach (var tier in tierNames)
 
 ## Cross-Service Transfers
 
-<h4>Transfer data from SQL Server to BigQuery using <code style="font-size:0.75em">SqlDataReader</code> + <code style="font-size:0.75em">UploadCsv</code> over TLS/HTTPS</h4>
+#### Transfer data from SQL Server to BigQuery using SqlDataReader + UploadCsv over TLS/HTTPS
 
 Two-hop bridge via local memory: query SQL Server, write CSV to MemoryStream, upload to BigQuery.
 
@@ -939,7 +939,7 @@ foreach (var tier in tierNames)
       medium      75.0K       4.2s   17.7K rows/s
       large      750.0K      34.0s   22.1K rows/s
 
-<h4>Transfer data from BigQuery to SQL Server using <code style="font-size:0.75em">BigQueryClient.ExecuteQuery</code> + <code style="font-size:0.75em">SqlBulkCopy</code> over HTTPS/TLS</h4>
+#### Transfer data from BigQuery to SQL Server using BigQueryClient.ExecuteQuery + SqlBulkCopy over HTTPS/TLS
 
 Two-hop bridge in reverse: query BigQuery, build DataTable, SqlBulkCopy to SQL Server.
 
@@ -988,7 +988,7 @@ foreach (var tier in tierNames)
       medium      75.0K      15.3s    4.9K rows/s
       large      750.0K      1m24s    8.9K rows/s
 
-<h4>Transfer data from SQL Server to Firestore using <code style="font-size:0.75em">SqlDataReader</code> + <code style="font-size:0.75em">WriteBatch</code> over TLS/gRPC</h4>
+#### Transfer data from SQL Server to Firestore using SqlDataReader + WriteBatch over TLS/gRPC
 
 Query SQL Server, batch-write documents to Firestore. Bridge from relational to document store.
 
@@ -1049,7 +1049,7 @@ foreach (var tier in tierNames)
 
 ## Export
 
-<h4>Export SQL Server to CSV using <code style="font-size:0.75em">SqlDataReader</code> + <code style="font-size:0.75em">StreamWriter</code> over TLS</h4>
+#### Export SQL Server to CSV using SqlDataReader + StreamWriter over TLS
 
 Query SQL Server, write rows to local CSV. Simple streaming export.
 
@@ -1091,7 +1091,7 @@ foreach (var tier in tierNames)
       medium      75.0K       1.7s   45.4K rows/s
       large      750.0K       9.4s   79.4K rows/s
 
-<h4>Export BigQuery to GCS using <code style="font-size:0.75em">BigQueryClient.CreateExtractJob</code> over internal network</h4>
+#### Export BigQuery to GCS using BigQueryClient.CreateExtractJob over internal network
 
 Server-side export — BigQuery writes directly to GCS. No local data transfer.
 

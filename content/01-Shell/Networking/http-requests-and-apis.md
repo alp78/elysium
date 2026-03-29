@@ -20,20 +20,28 @@ Data pipelines frequently interact with REST APIs (financial data providers, clo
 
 #### curl — basic GET requests
 
+> [!info] `curl` prints the response body to stdout. Add `-v` for full request/response
+> headers including TLS handshake — invaluable for debugging redirects, auth failures, and
+> certificate issues.
+
 ```bash
-# Basic GET request
 curl https://api.example.com/data
-# Prints the response body to stdout
-
-# GET with headers visible
 curl -v https://api.example.com/data
-# -v = verbose — shows request headers, TLS handshake, response headers, body
-# Invaluable for debugging: "Is the server returning a 301 redirect? A 403 forbidden?"
-
-# Only show the HTTP status code (health checks)
-curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
-# -s = silent, -o /dev/null = discard body, -w = print format string
 ```
+
+#### curl -w "%{http_code}" — health check that returns only the status code
+
+> [!info] `-s` silences progress, `-o /dev/null` discards the body, `-w` prints a format
+> string. Use in scripts and monitoring to check HTTP status without processing the body.
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
+```
+
+> [!warning] curl does NOT follow redirects by default
+> A `301` or `302` response returns the redirect HTML, not the final resource. Add `-L`
+> to follow redirects. Without `-L`, a health check against a load balancer that redirects
+> HTTP → HTTPS returns `301`, not the actual health status.
 
 #### curl -X POST — send JSON body
 
@@ -90,27 +98,42 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 
 ### PowerShell — Invoke-RestMethod, Invoke-WebRequest for HTTP requests
 
-```powershell
-# GET request
-Invoke-RestMethod -Uri "https://api.example.com/data"
-# Invoke-RestMethod = auto-parses JSON response into PowerShell objects
-# Use Invoke-WebRequest if you need access to headers and status code
+#### Invoke-RestMethod — GET request with automatic JSON parsing
 
-# GET with headers
+> [!info] `Invoke-RestMethod` auto-parses JSON into PowerShell objects — you get
+> properties directly. Use `Invoke-WebRequest` when you need access to status codes,
+> headers, or raw content.
+
+```powershell
+Invoke-RestMethod -Uri "https://api.example.com/data"
+```
+
+#### Invoke-WebRequest — GET with headers and status code access
+
+```powershell
 $response = Invoke-WebRequest -Uri "https://api.example.com/data" `
     -Headers @{Authorization = "Bearer $token"}
-$response.StatusCode    # 200
-$response.Content       # body as string
+$response.StatusCode
+$response.Content
+```
 
-# POST with JSON
+#### Invoke-RestMethod -Method Post — send JSON body
+
+> [!info] Pipe a hashtable to `ConvertTo-Json` for the body. PowerShell handles
+> serialization and content type.
+
+```powershell
 Invoke-RestMethod -Uri "https://api.example.com/webhook" -Method Post `
     -ContentType "application/json" `
     -Body (@{event="pipeline_complete"; status="success"} | ConvertTo-Json)
+```
 
-# Download file
-Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv"
+#### Invoke-WebRequest -OutFile — download with retry (PowerShell 7+)
 
-# With retry (PowerShell 7+)
+> [!warning] `-MaximumRetryCount` and `-RetryIntervalSec` are PowerShell 7+ only.
+> Windows PowerShell 5.1 has no built-in retry — wrap in a `for` loop with `try/catch`.
+
+```powershell
 Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv" `
     -MaximumRetryCount 3 -RetryIntervalSec 5
 ```

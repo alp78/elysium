@@ -111,7 +111,7 @@ print(f"Dog.species:  {Dog.species}")             # still "Canis familiaris" (cl
     dog2.species: Canis familiaris
     Dog.species:  Canis familiaris
 
-<h4><code style="font-size:0.75em">@property</code> — controlled access with validation</h4>
+#### @property — controlled access with validation
 
 ```python
 # @property — controlled access with validation and computed attributes
@@ -352,7 +352,7 @@ print(f"Total area: {total_area:.2f}")
     circ: blue Circle: area=50.27
     Total area: 65.27
 
-<h4><code style="font-size:0.75em">Protocol</code> — structural typing</h4>
+#### Protocol — structural typing
 
 ```python
 # Protocol — structural typing without inheritance (duck typing formalized)
@@ -551,7 +551,7 @@ print(f"Company:  {Employee.company}")
     Count:    2 employees
     Company:  Acme Corp
 
-<h4><code style="font-size:0.75em">@classmethod</code> inheritance — cls is the subclass</h4>
+#### @classmethod inheritance — cls is the subclass
 
 ```python
 # @classmethod inheritance — cls is the subclass, enabling polymorphic factories
@@ -685,7 +685,7 @@ print(recs)
     Shared library / team code       @dataclass (self-documenting)
     Unknown/dynamic JSON schema      dict (can't define class upfront)
 
-<h4><code style="font-size:0.75em">@dataclass</code> declarations</h4>
+#### @dataclass declarations
 
 ```python
 # @dataclass — auto-generated __init__, __repr__, __eq__ from field declarations
@@ -708,7 +708,7 @@ print(f"p1 == p3:  {p1 == p3}")
     p1 == p2:  True
     p1 == p3:  False
 
-<h4><code style="font-size:0.75em">field()</code> — customizing dataclass fields</h4>
+#### field() — customizing dataclass fields
 
 ```python
 # field() — customize individual dataclass fields
@@ -732,7 +732,7 @@ print(f"Hidden _id: {emp._id}")
     Employee: Employee(name='Alice', department='Engineering', salary=95000, tags=['senior', 'lead'])
     Hidden _id: -5760575203000102949
 
-<h4><code style="font-size:0.75em">frozen=True</code> — immutable dataclass</h4>
+#### frozen=True — immutable dataclass
 
 ```python
 # frozen=True — immutable dataclass that raises on assignment
@@ -756,7 +756,7 @@ print(f"As dict key: {configs}")
     Config: Config(host='localhost', port=5432, ssl=True)
     As dict key: {Config(host='localhost', port=5432, ssl=True): 'primary'}
 
-<h4><code style="font-size:0.75em">order=True</code> — comparable dataclass</h4>
+#### order=True — comparable dataclass
 
 ```python
 # order=True — auto-generated comparison methods for sortable dataclasses
@@ -776,7 +776,7 @@ print(f"Max:    {max(versions)}")
     Sorted: [Version(major=1, minor=9, patch=5), Version(major=2, minor=0, patch=0), Version(major=2, minor=1, patch=0)]
     Max:    Version(major=2, minor=1, patch=0)
 
-<h4><code style="font-size:0.75em">PipelineRecord</code> and boilerplate comparison</h4>
+#### PipelineRecord and boilerplate comparison
 
 ```python
 # PipelineRecord and boilerplate comparison — real-world dataclass usage

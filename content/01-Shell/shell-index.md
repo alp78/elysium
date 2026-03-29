@@ -29,6 +29,7 @@ The core toolkit for transforming, searching, and analyzing data from the comman
 | [[awk-data-processing]] | Field extraction, filtering, aggregation, group-by — awk as a column-oriented data processor |
 | [[sed-stream-editing]] | Find-and-replace, in-place editing, line manipulation — stream transformation for config files and data |
 | [[reading-file-contents]] | cat, head, tail, less — reading and tailing files, 15GB log analysis workflow |
+| [[date-and-time-handling]] | ISO 8601 formats, timezone management, date arithmetic — bash, PowerShell, SQL, Python, C# |
 
 ## File Operations
 

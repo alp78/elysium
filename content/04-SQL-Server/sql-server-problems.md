@@ -1,5 +1,5 @@
 ---
-tags: [sql]
+tags: [sql, sql-server, tsql]
 type: reference
 technology: sql-server
 status: stable
@@ -2245,7 +2245,7 @@ sudo systemctl restart mssql-server
 
 ---
 
-## Related
+### Related
 
 - [[wait-stats-analysis]] — Wait type diagnosis
 - [[memory-and-buffer-pool]] — Memory pressure diagnosis
@@ -2260,7 +2260,7 @@ sudo systemctl restart mssql-server
 
 ---
 
-## Sources
+### Sources
 
 - SQL Server Performance Tuning Checklist 2026 (SQLYARD)
 - 10 SQL Server Performance Killers (DEV Community)

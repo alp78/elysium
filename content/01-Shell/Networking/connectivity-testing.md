@@ -26,16 +26,31 @@ The first question in any network debugging session is: "Can my client reach the
 > - `-w 5` — timeout after 5 seconds (don't hang on unreachable hosts)
 
 ```bash
-# Test if a specific port is reachable
-nc -zv hostname 1433
-
-# With timeout
 nc -zv -w 5 hostname 1433
+```
 
-# Alternative: bash built-in TCP test (no netcat required)
+> [!tip] "Connection refused" vs "Connection timed out" — different diagnoses
+> - **Refused** = the host is reachable but nothing is listening on that port (service
+>   down, wrong port number)
+> - **Timed out** = packets are being dropped (firewall rule, host unreachable, wrong IP)
+>
+> "Refused" is good news — the host is alive. "Timed out" means a network-layer problem.
+
+#### bash /dev/tcp — port test without netcat installed
+
+> [!info] Bash has a built-in TCP pseudo-device. No external tools needed — works on
+> minimal containers and Docker images where netcat isn't installed.
+
+```bash
 timeout 5 bash -c "echo > /dev/tcp/hostname/1433" && echo "OPEN" || echo "CLOSED"
+```
 
-# Sweep common DE ports: 1433=SQL Server, 5432=PostgreSQL, 6379=Redis, 8080=Airflow
+#### nc port sweep — test multiple data engineering ports at once
+
+> [!info] Sweeps common data engineering ports in a loop. Useful as a first diagnostic
+> when connecting to a new VM or after firewall changes.
+
+```bash
 for port in 1433 5432 6379 8080; do
     nc -zv -w 3 hostname $port 2>&1 | grep -E "succeeded|refused|timed out"
 done
@@ -43,31 +58,56 @@ done
 
 #### dig — DNS lookup and record queries
 
+> [!info] `dig` queries DNS records. `+short` strips all metadata and returns just the
+> answer. Use `@8.8.8.8` to query Google's public DNS — useful when you suspect your
+> local DNS is stale or broken.
+
 ```bash
-dig +short hostname      # just the IP address, skip DNS metadata
-dig hostname A           # A record (IPv4 address)
-dig hostname CNAME       # CNAME record (alias)
-dig @8.8.8.8 hostname    # query specific DNS server (Google's)
+dig +short hostname
+dig hostname A
+dig @8.8.8.8 hostname
 ```
+
+> [!warning] `dig +short` may return a CNAME, not an IP
+> If the hostname is a CNAME alias, `dig +short` returns the alias target, not the IP.
+> Chain them: `dig +short hostname` → returns CNAME → `dig +short that-cname` → returns
+> IP. Or use `dig +short hostname A` to force A-record resolution.
 
 #### traceroute, mtr, ss — network path tracing and listening ports
 
+#### traceroute — trace the network path to a host
+
+> [!info] Shows each network hop between you and the destination. If the trace stops at
+> a specific hop, that's where the firewall or routing issue is. `***` lines mean the hop
+> is blocking ICMP or dropping packets.
+
 ```bash
-# Trace the network path (where is the packet getting lost?)
 traceroute hostname
-# Shows each network hop between you and the destination
-# If the trace stops at a specific hop, that's where the firewall or routing issue is
-# Timeout lines (***) = the hop is blocking ICMP or the packet is being dropped
+```
 
-# Better alternative: mtr (combines ping + traceroute)
+> [!warning] `traceroute` uses UDP by default — many firewalls block it
+> Use `traceroute -T` for TCP-based tracing (more likely to pass through firewalls).
+> On GCP, ICMP is often blocked between VPCs — TCP traceroute gives more reliable results.
+
+#### mtr — combines ping + traceroute in real time
+
+> [!info] `mtr` continuously probes each hop and shows loss percentage, latency, and
+> jitter. A sudden latency jump at a specific hop = bottleneck. Packet loss at a hop =
+> congestion or drops. Install with `apt install mtr`.
+
+```bash
 mtr -c 10 hostname
-# -c 10 = send 10 probes
-# Shows: loss%, latency per hop, jitter
-# Look for: sudden latency increase at a specific hop = bottleneck
-# Look for: packet loss at a specific hop = congestion or drops
+```
 
-# Show listening ports on the local machine
-ss -tlnp   # -t=TCP, -l=listening, -n=numeric, -p=show process
+#### ss -tlnp — show listening ports on the local machine
+
+> [!info] `ss` is the modern replacement for `netstat`. Flags: `-t` = TCP, `-l` = listening,
+> `-n` = numeric (don't resolve names), `-p` = show process. Use this to verify that the
+> service you're trying to reach is actually listening on the expected port. For deeper
+> connection state analysis, see [[socket-inspection]].
+
+```bash
+ss -tlnp
 ```
 
 ### Debugging a failed database connection — systematic network stack walkthrough
@@ -79,7 +119,7 @@ ss -tlnp   # -t=TCP, -l=listening, -n=numeric, -p=show process
 dig +short data-pipeline-sql
 # If empty: DNS problem. Check /etc/resolv.conf, VPC DNS settings
 
-# 2. Can we reach the IP?
+# 2. Can we reach the IP? (ICMP may be blocked — see warning below)
 ping -c 3 10.132.0.2
 # If timeout: routing problem, firewall, or VM is down
 
@@ -100,6 +140,11 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 # Look for a rule allowing TCP:1433 from your source IP/range
 ```
 
+> [!warning] `ping` uses ICMP — GCP blocks ICMP by default between VPCs
+> A `ping` timeout does NOT mean the host is unreachable. GCP's default firewall rules
+> block ICMP. Skip straight to `nc -zv` (TCP port test) in GCP environments. Only use
+> `ping` if you've confirmed ICMP is allowed by a firewall rule.
+
 ### The "it works from my machine" problem — user context, DNS, and connection pools
 
 > [!warning] The "It Works from My Machine" Problem
@@ -109,26 +154,48 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 > 3. **Connection pool exhaustion:** The pipeline may have used all available connections. Check: `SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE is_user_process = 1`
 > 4. **TCP keepalive:** Idle connections through a load balancer or NAT gateway are silently dropped after a timeout (often 5 minutes). The pipeline thinks the connection is alive, but the network has closed it. Fix: set connection pool idle timeout lower than the NAT timeout.
 
-### PowerShell — Test-NetConnection, Resolve-DnsName for connectivity debugging
+## PowerShell — Test-NetConnection, Resolve-DnsName
+
+#### Test-NetConnection — test port reachability
+
+> [!info] Returns a rich object with `TcpTestSucceeded`, source IP, remote IP, and
+> latency. The verbose output is helpful for debugging; the `.TcpTestSucceeded` property
+> is useful in scripts.
 
 ```powershell
-# Test port connectivity
 Test-NetConnection -ComputerName hostname -Port 1433
-# Returns: TcpTestSucceeded: True/False
-# Also shows: source IP, remote IP, latency
+```
 
-# Quick version (just success/fail)
-(Test-NetConnection -ComputerName 10.132.0.2 -Port 1433 -WarningAction SilentlyContinue).TcpTestSucceeded
+> [!warning] `Test-NetConnection` takes ~5 seconds per test
+> Each call has a built-in timeout. For sweeping multiple ports, this is painfully slow
+> compared to `nc`. Use `[System.Net.Sockets.TcpClient]` for faster programmatic checks
+> in PowerShell scripts.
 
-# DNS lookup
+```powershell
+(Test-NetConnection -ComputerName 10.132.0.2 -Port 1433 `
+    -WarningAction SilentlyContinue).TcpTestSucceeded
+```
+
+#### Resolve-DnsName — DNS lookup
+
+> [!info] Returns structured objects with `Name`, `Type`, `IPAddress`, and `TTL`.
+
+```powershell
 Resolve-DnsName hostname
-# Returns: Name, Type, IPAddress, TTL
+```
 
-# Trace route
+#### Test-NetConnection -TraceRoute — trace route to host
+
+```powershell
 Test-NetConnection -ComputerName hostname -TraceRoute
-# Shows each hop like traceroute
+```
 
-# Listening ports
+#### Get-NetTCPConnection — show listening ports with process names
+
+> [!info] PowerShell equivalent of `ss -tlnp`. Joins connection data with process names
+> using `Get-Process`.
+
+```powershell
 Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
     Select-Object LocalPort, OwningProcess,
     @{N='Process';E={(Get-Process -Id $_.OwningProcess).ProcessName}}

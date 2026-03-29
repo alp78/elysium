@@ -187,6 +187,11 @@ with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
 
 #### httpx.AsyncClient — concurrent API calls
 
+> [!warning] `asyncio.gather()` fires ALL tasks concurrently — add a semaphore for rate-limited APIs
+> For 50 tickers, `gather(*tasks)` opens 50 connections simultaneously. Most financial
+> data APIs reject bursts above 5-10 req/s. Use `asyncio.Semaphore(5)` to cap concurrency.
+> See [[13_py_advancedpipelines]] for the full rate-limited pattern.
+
 ```python
 # Async — fetch multiple tickers concurrently
 # Financial example: fetch quotes for 6 tickers in parallel

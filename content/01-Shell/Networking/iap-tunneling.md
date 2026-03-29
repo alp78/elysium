@@ -61,72 +61,145 @@ Step by step:
 
 #### gcloud compute start-iap-tunnel — port forwarding through IAP
 
-```bash
-# SSH through IAP (the most common use case)
-# For additional SSH patterns and OS Login configuration, see [[vm-ssh-and-file-transfer]]
-gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
-# Under the hood: opens IAP tunnel on an ephemeral port, then runs SSH through it
-# This is a shortcut for: IAP tunnel → SSH → interactive shell
+#### gcloud compute ssh — interactive SSH through IAP tunnel
 
-# TCP tunnel to a specific port (for databases, web UIs, etc.)
+> [!info] `gcloud compute ssh` with `--tunnel-through-iap` is the standard way to reach
+> a Compute Engine VM that has no public IP. Under the hood, it opens an IAP tunnel on
+> an ephemeral port, then runs SSH through it. This is a shortcut that combines tunnel
+> creation + SSH session into one command.
+>
+> For additional SSH patterns including OS Login and metadata-managed keys, see
+> [[vm-ssh-and-file-transfer]].
+
+```bash
+gcloud compute ssh data-pipeline-sql \
+    --zone=europe-west1-b \
+    --tunnel-through-iap
+```
+
+---
+
+#### gcloud compute start-iap-tunnel — forward a specific port through IAP
+
+> [!info] `start-iap-tunnel` creates a persistent TCP tunnel that maps a local port on
+> your machine to a remote port on a VM. Unlike `gcloud compute ssh`, this does NOT open
+> a shell — it holds the tunnel open so other applications (SSMS, pgAdmin, a browser) can
+> connect through it.
+>
+> The tunnel process stays in the foreground and must remain running. Close the terminal =
+> close the tunnel.
+
+```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
     --local-host-port=0.0.0.0:1435 \
     --zone=europe-west1-b
-# data-pipeline-sql = VM instance name
-# 1433 = REMOTE port on the VM (what you want to reach)
-# --local-host-port=0.0.0.0:1435 = LOCAL address and port to listen on
-#   0.0.0.0 = listen on all interfaces (needed if other machines connect to you)
-#   127.0.0.1 = listen on loopback only (more secure, default if omitted)
-#   1435 = local port number (use any free port — doesn't have to match remote)
-#
-# After this command, connect via: SSMS → 127.0.0.1,1435 (or just localhost,1435)
-# For sqlcmd through the tunnel, see [[sqlcmd-connection-and-usage]]
-
-# Multiple tunnels simultaneously (different terminals)
-# Terminal 1: SQL Server
-gcloud compute start-iap-tunnel data-pipeline-sql 1433 --local-host-port=127.0.0.1:1435 --zone=europe-west1-b
-# Terminal 2: Airflow webserver
-gcloud compute start-iap-tunnel data-pipeline-airflow 8080 --local-host-port=127.0.0.1:8080 --zone=europe-west1-b
-# Terminal 3: PostgreSQL (Airflow metadata)
-gcloud compute start-iap-tunnel data-pipeline-airflow 5432 --local-host-port=127.0.0.1:5432 --zone=europe-west1-b
-
-# Each tunnel is an independent process — they don't interfere with each other
 ```
+
+> [!tip] Understanding the port mapping
+> | Parameter | Meaning |
+> |---|---|
+> | `data-pipeline-sql` | VM instance name |
+> | `1433` | **Remote** port on the VM (SQL Server listens here) |
+> | `0.0.0.0` | Listen on **all interfaces** (needed if other machines connect to you) |
+> | `127.0.0.1` | Listen on **loopback only** (more secure, default if omitted) |
+> | `1435` | **Local** port on your machine (any free port — does not need to match remote) |
+>
+> After running: connect via SSMS → `127.0.0.1,1435`
+> For sqlcmd through the tunnel, see [[sqlcmd-connection-and-usage]].
+
+> [!danger] IAP tunnel idle timeout — 10 minutes
+> IAP closes tunnels after **10 minutes of inactivity**. If you open SSMS, run a query,
+> then go to lunch, your connection is dead when you return — and any in-progress
+> transaction is rolled back.
+>
+> **Mitigations:**
+> - Add `--iap-tunnel-disable-connection-check` to the tunnel command
+> - Configure your SQL client to send TCP keepalives (SSMS: Connection Properties →
+>   Connection Timeout = 0)
+> - For long-running queries: use `nohup` or `screen` on the VM instead of running them
+>   through the tunnel
+
+> [!warning] `0.0.0.0` vs `127.0.0.1` — security implication
+> Using `0.0.0.0` means **any device on your local network** can connect to your tunnel.
+> On a corporate network or shared WiFi, this exposes your database tunnel to other
+> machines. Use `127.0.0.1` unless you specifically need another machine to route through
+> your tunnel.
+
+---
+
+#### IAP tunnels — running multiple tunnels simultaneously
+
+> [!info] Each `start-iap-tunnel` command is an independent process. Run as many as you
+> need in separate terminals — they don't interfere with each other. A typical development
+> session tunnels to 2-3 services at once.
+
+```bash
+# Terminal 1: SQL Server
+gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
+    --local-host-port=127.0.0.1:1435 --zone=europe-west1-b
+
+# Terminal 2: Airflow webserver
+gcloud compute start-iap-tunnel data-pipeline-airflow 8080 \
+    --local-host-port=127.0.0.1:8080 --zone=europe-west1-b
+
+# Terminal 3: PostgreSQL (Airflow metadata)
+gcloud compute start-iap-tunnel data-pipeline-airflow 5432 \
+    --local-host-port=127.0.0.1:5432 --zone=europe-west1-b
+```
+
+> [!tip] Port collision anti-pattern
+> If you use the same local port as the remote port (e.g., `1433:1433`) and you have a
+> local SQL Server Express installed, the tunnel fails with "address already in use."
+> Always pick a non-standard local port like `1435` for tunneled services.
 
 ### Debugging IAP tunnels — API, IAM, firewall, and VM state checks
 
+#### Symptom: `start-iap-tunnel` hangs without output
+
+> [!info] Work through these causes in order — the most common is a missing firewall rule.
+
 ```bash
-# Symptom: "gcloud compute start-iap-tunnel" hangs
 # Cause 1: IAP API not enabled
 gcloud services list --enabled | grep iap
-# If empty: gcloud services enable iap.googleapis.com
+```
 
+```bash
 # Cause 2: Missing IAM permission
-gcloud projects get-iam-policy YOUR_PROJECT --format=json | grep -A 2 "tunnelResourceAccessor"
-# You need: roles/iap.tunnelResourceAccessor on the project or VM
+gcloud projects get-iam-policy YOUR_PROJECT --format=json |
+    grep -A 2 "tunnelResourceAccessor"
+```
 
-# Cause 3: Firewall blocking IAP's IP range
-gcloud compute firewall-rules list --format="table(name,sourceRanges,allowed)" | grep 35.235.240
-# IAP uses 35.235.240.0/20 — you need a firewall rule allowing this range to port 22 (SSH)
-# and to whatever port you're tunneling (1433 for SQL Server)
+```bash
+# Cause 3: Firewall blocking IAP's source IP range (35.235.240.0/20)
+gcloud compute firewall-rules list \
+    --format="table(name,sourceRanges,allowed)" | grep 35.235.240
+```
 
+```bash
 # Cause 4: VM is stopped
-gcloud compute instances describe data-pipeline-sql --zone=europe-west1-b --format="value(status)"
-# Must be RUNNING
+gcloud compute instances describe data-pipeline-sql \
+    --zone=europe-west1-b --format="value(status)"
+```
 
-# Symptom: Tunnel opens but connections fail
-# On the VM, check that the service is actually listening:
+#### Symptom: tunnel opens but connections fail
+
+> [!info] The tunnel is up but the application can't connect. SSH into the VM and verify
+> the service is actually listening on the expected port.
+
+```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="ss -tlnp | grep 1433"
-# If no output: SQL Server is not running or is listening on a different port
+```
 
-# Symptom: Tunnel drops after a few minutes of inactivity
-# IAP has a 10-minute idle timeout. Configure TCP keepalive:
+#### Symptom: tunnel drops after a few minutes of inactivity
+
+> [!info] IAP has a 10-minute idle timeout. Use `--iap-tunnel-disable-connection-check`
+> or configure TCP keepalives in your SQL client.
+
+```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
-    --local-host-port=127.0.0.1:1435 \
-    --zone=europe-west1-b \
+    --local-host-port=127.0.0.1:1435 --zone=europe-west1-b \
     --iap-tunnel-disable-connection-check
-# Or configure your SQL client to send keepalive queries
 ```
 
 ### Verifying the IAP tunnel from both ends — local listener and VM connections

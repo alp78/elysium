@@ -172,7 +172,7 @@ print(f"  Member:   ${calculate(100, member_discount):.2f}")
       20% off:  $80.00
       Member:   $70.00
 
-<h4>Pipeline — chained steps with <code style="font-size:0.75em">reduce</code></h4>
+#### Pipeline — chained steps with reduce
 
 Store steps as a list of functions. `reduce` applies them sequentially — each receives the previous step's output. Steps are composable, reorderable, and independently testable.
 
@@ -238,7 +238,7 @@ loader.load(["users", "orders", "products"])
       [2/3] Loading orders
       [3/3] Loading products
 
-<h4>Sorting with <code style="font-size:0.75em">key=</code> function</h4>
+#### Sorting with key= function
 
 > [!info] Sorting with key
 > - `sorted(iterable, key=func)` — returns a new sorted list
@@ -303,7 +303,7 @@ print(good_append(2))                 # [2]
     [1]
     [2]
 
-<h4><code style="font-size:0.75em">**kwargs</code> — variable keyword arguments</h4>
+#### **kwargs — variable keyword arguments
 
 `**kwargs` collects unmatched keyword arguments as a dict. `**dict` unpacks at the call site (`func(**config)`). Use for decorators, wrapper functions, and config builders. Prefer explicit params when names are known — they give better IDE support and type safety.
 
@@ -323,7 +323,7 @@ print(f"connect(**dict): {connect(**data)}")
     {'name': 'Alice', 'age': 30}
     connect(**dict): localhost:5432
 
-<h4>Combined <code style="font-size:0.75em">*args</code>/<code style="font-size:0.75em">**kwargs</code> and positional/keyword-only</h4>
+#### Combined *args/**kwargs and positional/keyword-only
 
 Parameter order: required, `*args`, keyword-only, `**kwargs`. Parameters after `*` are keyword-only — prevents positional misuse. Use for decorator wrappers and flexible APIs.
 
@@ -378,7 +378,7 @@ print(f"lambda add: {add(3, 4)}")
 
     lambda add: 7
 
-<h4>Lambdas with <code style="font-size:0.75em">sorted</code>, <code style="font-size:0.75em">map</code>, <code style="font-size:0.75em">filter</code></h4>
+#### Lambdas with sorted, map, filter
 
 > [!info] Lambdas with built-ins
 > - `sorted(key=lambda)`, `map(lambda, iter)`, `filter(lambda, iter)`
@@ -425,7 +425,7 @@ print(f"  global: {x}")
 
 ## Closures & Scope
 
-<h4>Closures and <code style="font-size:0.75em">nonlocal</code></h4>
+#### Closures and nonlocal
 
 `nonlocal count` allows the inner function to modify `count` from the enclosing scope. Without it, assignment creates a local shadow (`UnboundLocalError`). Each `make_counter()` call creates independent state — no class needed for basic counters.
 
@@ -450,7 +450,7 @@ print(f"counter2(): {counter2()}")  # 1
     counter(): 12
     counter2(): 1
 
-<h4><code style="font-size:0.75em">global</code> keyword</h4>
+#### global keyword
 
 A decorator takes a function and returns a modified version. `@decorator` applies at definition time. `@functools.wraps` preserves the original `__name__` and `__doc__`. Use for cross-cutting concerns: timing, logging, retry, caching, authentication.
 
@@ -571,7 +571,7 @@ print(f"add('a', 'b'): {add('a', 'b')}")   # works! Python doesn't enforce  # ty
     add(3, 4):     7
     add('a', 'b'): ab
 
-<h4>Built-in decorators — <code style="font-size:0.75em">@property</code>, <code style="font-size:0.75em">@staticmethod</code>, <code style="font-size:0.75em">@classmethod</code></h4>
+#### Built-in decorators — @property, @staticmethod, @classmethod
 
 > [!info] Built-in decorators
 > - `@property` — makes a method act like an attribute
@@ -627,7 +627,7 @@ print(f"age 150: {is_valid_age(150)}")
 
 ## Type Hints
 
-<h4>Complex type hints and <code style="font-size:0.75em">Optional</code></h4>
+#### Complex type hints and Optional
 
 Combine types: `list[int]`, `dict[str, Any]`, `str | None`. `Optional[str]` is shorthand for `str | None`. `Callable[[int], str]` declares function signatures. Hints enable IDE autocompletion and static analysis with mypy/pyright — they are not checked at runtime.
 
@@ -662,7 +662,7 @@ print(f"find_user(9): {find_user(9)}")
     find_user(1): Alice
     find_user(9): None
 
-<h4><code style="font-size:0.75em">Callable</code> type hints</h4>
+#### Callable type hints
 
 `Callable[[param_types], return_type]` declares a function parameter. `Callable[[int, int], str]` means: takes two ints, returns str. mypy checks that passed functions match the signature.
 

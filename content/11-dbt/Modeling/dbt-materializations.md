@@ -85,6 +85,9 @@ from {{ ref('stg_indices__master') }}
 
 dbt first checks whether the relation exists. If it does, it runs the model's `{% if is_incremental() %}` branch to produce only new/changed rows, then merges or appends them. If the table does not exist (or `--full-refresh` is passed), it behaves like `table`.
 
+> [!danger] Incremental Models Silently Skip Data if the is_incremental() Filter Is Wrong
+> The `is_incremental()` branch determines which rows are processed. If the filter references `max(price_date) FROM {{ this }}` but the table was loaded with a gap (e.g., a weekend backfill was skipped), data for the gap will never be loaded. Always use a lookback window (e.g., `max(price_date) - 3 days`) instead of an exact boundary to catch late-arriving data and backfill gaps.
+
 ### Basic Pattern
 
 ```sql
@@ -184,6 +187,9 @@ where price_date >= date_sub(current_date(), interval {{ var('lookback_days', 3)
 ```
 
 ---
+
+> [!warning] on_schema_change: ignore Is the Default -- New Columns Are Silently Lost
+> If you add a column to your incremental model but forget to set `on_schema_change`, dbt defaults to `ignore`. The new column appears in your dev environment (where the table is created fresh) but is silently dropped in production (where the existing table lacks the column). Set `on_schema_change: 'append_new_columns'` on all incremental models to prevent this.
 
 ### dbt on_schema_change Behaviour
 

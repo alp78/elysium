@@ -22,7 +22,7 @@ A deadlock occurs when two or more sessions each hold a lock that the other need
 
 ### What Is a Deadlock?
 
-```
+```text
 Session A: holds EXCLUSIVE lock on Table1, waiting for lock on Table2
 Session B: holds EXCLUSIVE lock on Table2, waiting for lock on Table1
 → Neither can continue → deadlock
@@ -30,7 +30,7 @@ Session B: holds EXCLUSIVE lock on Table2, waiting for lock on Table1
 
 The surviving session proceeds normally — it is not notified that a deadlock occurred. The victim receives error 1205, which must be handled with retry logic in application code. For Python retry patterns around this error, see [[08_py_errorhandling]]; for C# `SqlException` retry wrappers, see [[08_cs_errorhandling]].
 
-```
+```text
 Msg 1205, Level 13, State 51
 Transaction (Process ID XX) was deadlocked on lock resources with another
 process and has been chosen as the deadlock victim. Rerun the transaction.
@@ -61,6 +61,9 @@ WHERE counter_name = 'Number of Deadlocks/sec'
 ```
 
 ### Recent Deadlocks via system_health Session
+
+> [!warning] system_health Ring Buffer Has Limited Capacity
+> The `system_health` ring buffer holds only a few MB of events. Under heavy deadlock activity, older reports are silently evicted. If you investigate a deadlock reported hours ago, the graph may already be gone. Set up a persistent Extended Events session (below) for any database that has ever had a production deadlock.
 
 SQL Server's built-in `system_health` Extended Events session captures deadlock reports automatically:
 
@@ -201,6 +204,9 @@ public class DbConnectionFactory
 
 This ensures: transparent recovery, incremental back-off, bounded retries (no infinite loops), and fresh connection per retry.
 
+> [!warning] Retry Logic Must Re-execute the Entire Transaction
+> A deadlock rolls back the entire transaction, not just the last statement. If your retry logic only re-executes the failed statement, the preceding statements in the transaction are lost and the data ends up inconsistent. Always wrap the complete BEGIN TRAN...COMMIT sequence inside the retry loop.
+
 ## Reproducing a Deadlock for Testing
 
 #### CREATE TABLE — step 1: set up deadlock reproduction tables
@@ -235,6 +241,9 @@ SQL Server detects the circular wait within 5 seconds and kills one session.
 
 > [!warning] RCSI and Deadlock Testing
 > If RCSI is enabled, reader/writer deadlocks cannot be reproduced because readers use row-version snapshots. The writer/writer pattern above still works regardless of isolation level.
+
+> [!danger] RCSI Has a Hidden tempdb Cost
+> Enabling RCSI stores row versions in `tempdb`. Under heavy write load (bulk inserts, MERGE operations), `tempdb` can grow dramatically and become the new bottleneck. Monitor `tempdb` size and I/O after enabling RCSI -- especially during pipeline runs that INSERT/UPDATE millions of rows. If `tempdb` runs out of space, all transactions across all databases on the instance fail.
 
 #### DROP TABLE — cleanup deadlock test tables
 ```sql

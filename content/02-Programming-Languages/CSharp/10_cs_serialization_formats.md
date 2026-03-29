@@ -195,7 +195,7 @@ foreach (var e in loaded)
         evt_004: signup, user=1003, revenue=$0.00
         evt_005: purchase, user=1002, revenue=$129.99
 
-<h4>Metadata, <code style="font-size:0.75em">MemoryStream</code>, and CSV vs Parquet</h4>
+#### Metadata, MemoryStream, and CSV vs Parquet
 
 ```csharp
 // Parquet metadata — read schema and row count without loading data
@@ -216,7 +216,7 @@ using (Stream fs = File.OpenRead(parquetFile))
         revenue: Double (nullable=False)
         is_mobile: Boolean (nullable=False)
 
-<h4>Parquet in memory — <code style="font-size:0.75em">MemoryStream</code></h4>
+#### Parquet in memory — MemoryStream
 
 ```csharp
 // Parquet in memory — MemoryStream for cloud upload without temp files

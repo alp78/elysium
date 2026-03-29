@@ -110,7 +110,7 @@ if 10 < x < 20:                   # Python exclusive! Chained comparison
     Value is None
     15 is between 10 and 20
 
-<h4><code style="font-size:0.75em">match/case</code> — pattern matching</h4>
+#### match/case — pattern matching
 
 > [!info] Pattern matching (Python 3.10+)
 > - `match`/`case` — tests against patterns, not just equality
@@ -210,7 +210,7 @@ for fruit in ["apple", "banana", "cherry"]:
       banana
       cherry
 
-<h4><code style="font-size:0.75em">range()</code></h4>
+#### range()
 
 > [!info] `range()` forms
 > - `range(stop)`, `range(start, stop)`, `range(start, stop, step)`
@@ -278,7 +278,7 @@ for key, value in d.items():     # key-value pairs
       age: 30
       city: NYC
 
-<h4><code style="font-size:0.75em">enumerate</code> and <code style="font-size:0.75em">zip</code></h4>
+#### enumerate and zip
 
 > [!info] Enumerate and zip
 > - `enumerate(iterable, start=0)` — yields `(index, element)`
@@ -316,7 +316,7 @@ for name, age in zip(names, ages):
       Bob is 25
       Charlie is 35
 
-<h4><code style="font-size:0.75em">while</code> and <code style="font-size:0.75em">for/else</code></h4>
+#### while and for/else
 
 > [!info] While and for/else
 > - `while` — repeats until condition is false
@@ -392,7 +392,7 @@ print()
 
       0   1   2   3   4   Breaking at 5
 
-<h4><code style="font-size:0.75em">continue</code> and <code style="font-size:0.75em">pass</code></h4>
+#### continue and pass
 
 `continue` jumps to the next iteration, skipping the remaining body — avoids nested `if`/`else` for filtering. `pass` is a no-op placeholder for empty blocks.
 
@@ -465,7 +465,7 @@ print(f"  Found: {find_pair()}")
       Broke at (1,1)
       Found: (1, 1)
 
-<h4>Walrus operator — <code style="font-size:0.75em">:=</code></h4>
+#### Walrus operator — :=
 
 `(var := expr)` assigns and returns the value in one expression. Eliminates the "read-before-loop" duplication. Also works in comprehensions: `[y for x in data if (y := f(x)) > 0]`. Don't overuse — simple assignments are clearer with `=`.
 
@@ -520,7 +520,7 @@ print()
       Starting countdown from 5
       5   4   3   2   1   Done!
 
-<h4>Manual iteration with <code style="font-size:0.75em">next()</code></h4>
+#### Manual iteration with next()
 
 `next(gen)` returns the next yielded value. Raises `StopIteration` when exhausted — use `next(gen, default)` to return a default instead. Use for peeking at the first element or partial consumption.
 
@@ -568,7 +568,7 @@ print(f"Generator size: {sys.getsizeof(big_gen):>8} bytes")
     List size:        800984 bytes
     Generator size:      192 bytes
 
-<h4><code style="font-size:0.75em">yield from</code></h4>
+#### yield from
 
 `yield from iterable` replaces `for item in iterable: yield item` in one line. Enables recursive generators (flatten) and delegation to sub-generators. Watch out: `yield from` on strings yields each character separately, and deep recursion may hit the limit.
 
@@ -620,7 +620,7 @@ print(f"reversed:       {list(reversed([1,2,3]))}")
     filter:         [3, 4]
     reversed:       [3, 2, 1]
 
-<h4><code style="font-size:0.75em">itertools</code></h4>
+#### itertools
 
 > [!info] Key itertools functions (all lazy generators)
 > - `chain` — joins iterables end-to-end
@@ -643,7 +643,7 @@ print(f"product:        {list(product('ab', '12'))}")
     accumulate:     [1, 3, 6, 10]
     product:        [('a', '1'), ('a', '2'), ('b', '1'), ('b', '2')]
 
-<h4>Iterator protocol — <code style="font-size:0.75em">__iter__</code> and <code style="font-size:0.75em">__next__</code></h4>
+#### Iterator protocol — __iter__ and __next__
 
 Define `__iter__(self)` returning `self` and `__next__(self)` raising `StopIteration` when done. Makes any class usable in `for` loops, `list()`, and all iteration contexts. Use for complex stateful iteration — for simple sequences, generator functions are much less code.
 
@@ -816,7 +816,7 @@ print(f"Unique lengths: {unique_lengths}")
     Passed:       {'Alice': 85, 'Bob': 92, 'Diana': 95}
     Unique lengths: {2, 5, 6}
 
-<h4><code style="font-size:0.75em">map</code> and <code style="font-size:0.75em">filter</code></h4>
+#### map and filter
 
 > [!info] Map and filter
 > - `map(func, iterable)` — applies `func` to every element
@@ -841,7 +841,7 @@ print(f"Evens:   {evens}")
     Same:    [2, 4, 6, 8, 10]
     Evens:   [2, 4]
 
-<h4><code style="font-size:0.75em">reduce</code> and built-in aggregations</h4>
+#### reduce and built-in aggregations
 
 > [!info] Reduce and built-in aggregations
 > - `reduce(func, iterable, initial)` — applies `func` cumulatively, folds into one value

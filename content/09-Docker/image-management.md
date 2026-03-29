@@ -177,7 +177,7 @@ CMD ["--env", "prod"]
 The `.dockerignore` file excludes files from the **build context** — the directory Docker sends to the daemon at build time. Excluding unnecessary files speeds up builds and prevents secrets from leaking into images.
 
 #### Python project `.dockerignore`
-```
+```text
 # Version control
 .git
 .gitignore

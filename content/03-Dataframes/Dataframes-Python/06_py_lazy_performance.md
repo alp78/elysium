@@ -58,8 +58,10 @@ import time
 
 ## Eager: Immediate
 
-
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
+> [!warning] Eager execution loads ALL data into memory immediately
+> `pl.read_parquet()` and `pd.read_parquet()` load the entire file into RAM. For files
+> larger than available memory, use lazy mode (`pl.scan_parquet()`) or Pandas
+> `read_parquet(columns=[...])` to only load needed columns.
 
 ```python
 df = pl.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -72,7 +74,6 @@ print(f"Type: {type(df)}, Shape: {df.shape}")
 
 The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's ephemeral models defer computation in the same way a LazyFrame does, while `dbt run` materializes results like `.collect()` — see [[dbt-materializations]]. BigQuery's query planner applies similar predicate pushdown and projection pruning, covered in [[querying-and-cost-optimization]].
 
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
 
 ```python
 lf = pl.scan_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -85,11 +86,11 @@ print(f"Schema: {lf.collect_schema()}")
 
 ## .collect()
 
-
-- **Filter**: Keep only rows matching a condition.
-- **Select**: Choose specific columns, optionally transforming them.
-- **Sort**: Reorder rows by column values.
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
+> [!danger] Forgetting `.collect()` is the most common Polars mistake
+> A LazyFrame does nothing until `.collect()` is called. If you assign `lf.filter(...)` to
+> a variable and never collect, no computation happens. Unlike Pandas (where every
+> operation runs immediately), Polars lazy chains must end with `.collect()` to materialize
+> results.
 
 ```python
 result = (
@@ -103,15 +104,11 @@ result = (
 display(result)
 ```
 
-<div><small>shape: (10, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td></tr></tbody></table></div>
 
 ## Query Plan: explain()
 
 
-- **Filter**: Keep only rows matching a condition.
-- **Select**: Choose specific columns, optionally transforming them.
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
-- **Explain**: Print the optimized query plan without executing.
 
 ```python
 lf = (
@@ -131,10 +128,6 @@ print(lf.explain())
 ## Predicate Pushdown
 
 
-- **Filter**: Keep only rows matching a condition.
-- **Select**: Choose specific columns, optionally transforming them.
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
-- **Explain**: Print the optimized query plan without executing.
 
 ```python
 lf = (
@@ -155,10 +148,6 @@ print(lf.explain())
 ## Projection Pushdown
 
 
-- **Select**: Choose specific columns, optionally transforming them.
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
-- **Collect**: Execute the lazy query plan and return results.
-- **Explain**: Print the optimized query plan without executing.
 
 ```python
 lf = pl.scan_parquet(DATA / "eurostoxx50_ohlcv.parquet").select("symbol", "close")
@@ -176,9 +165,6 @@ print(f"Result: {lf.collect().shape}")
 ## .lazy() — Eager to Lazy
 
 
-- **Filter**: Keep only rows matching a condition.
-- **Select**: Choose specific columns, optionally transforming them.
-- **Collect**: Execute the lazy query plan and return results.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
 ```python
@@ -192,10 +178,6 @@ print(f"Result: {result.shape}")
 ## Streaming Mode
 
 
-- **Group By**: Split rows into groups by one or more columns, then apply aggregate functions to each group independently.
-- **Aggregation**: Compute summary statistics (mean, sum, count, min, max) for each group. Returns one row per group.
-- **Filter**: Keep only rows matching a condition.
-- **Sort**: Reorder rows by column values.
 
 ```python
 result = (
@@ -208,14 +190,11 @@ result = (
 display(result.head(10))
 ```
 
-<div><small>shape: (7, 2)</small><table><thead><tr><th>symbol</th><th>avg_close</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>1230.09</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>696.35</td></tr><tr><td>&quot;MC.PA&quot;</td><td>677.03</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>625.29</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>548.06</td></tr></tbody></table></div>
+<div><!-- shape: (7, 2) --><table><thead><tr><th>symbol</th><th>avg_close</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>1230.09</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>696.35</td></tr><tr><td>&quot;MC.PA&quot;</td><td>677.03</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>625.29</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>548.06</td></tr></tbody></table></div>
 
 ## profile()
 
 
-- **Group By**: Split rows into groups by one or more columns, then apply aggregate functions to each group independently.
-- **Aggregation**: Compute summary statistics (mean, sum, count, min, max) for each group. Returns one row per group.
-- **Filter**: Keep only rows matching a condition.
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 
 ```python
@@ -230,17 +209,13 @@ display(result_df)
 display(timing_df)
 ```
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>symbol</th><th>avg_ret</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>-0.0162</td></tr><tr><td>&quot;MC.PA&quot;</td><td>-0.0045</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>symbol</th><th>avg_ret</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>-0.0162</td></tr><tr><td>&quot;MC.PA&quot;</td><td>-0.0045</td></tr></tbody></table></div>
 
-<div><small>shape: (3, 3)</small><table><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>2054</td></tr><tr><td>&quot;with_column(ret)&quot;</td><td>2054</td><td>2222</td></tr><tr><td>&quot;group_by(symbol)&quot;</td><td>2227</td><td>2566</td></tr></tbody></table></div>
+<div><!-- shape: (3, 3) --><table><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>2054</td></tr><tr><td>&quot;with_column(ret)&quot;</td><td>2054</td><td>2222</td></tr><tr><td>&quot;group_by(symbol)&quot;</td><td>2227</td><td>2566</td></tr></tbody></table></div>
 
 ## Pandas vs Polars Lazy Benchmark
 
 
-- **Filter**: Keep only rows matching a condition.
-- **Query**: Filter rows using a string expression (Pandas).
-- **Select**: Choose specific columns, optionally transforming them.
-- **Sort**: Reorder rows by column values.
 
 ```python
 start = time.perf_counter()
@@ -280,9 +255,6 @@ print(f"Rows: {len(ohlcv_pd):,}")
 ## Vectorized vs Loop
 
 
-- **Benchmark**: Measure execution time.
-- **iterrows (Anti-pattern)**: Row-by-row iteration. Extremely slow. Use vectorized operations.
-- **Head**: Return the first N rows.
 
 ```python
 start=time.perf_counter()
@@ -304,9 +276,11 @@ print(f"vectorized (66K): {good:.4f}s")
 
 ## Why apply() Is Slow
 
-
-- **Benchmark**: Measure execution time.
-- **Apply**: Apply a function to each row/column. Slower than vectorized ops.
+> [!danger] `df.apply(axis=1)` is 100-1000x slower than vectorized operations
+> `apply()` with `axis=1` iterates row by row in Python — bypassing NumPy/C optimizations
+> entirely. The example below shows a **743x** speedup from vectorization. Every
+> `apply(lambda r: ...)` in production code is a performance bug. Rewrite using column
+> arithmetic, `.where()`, or `np.select()` for conditional logic.
 
 ```python
 start=time.perf_counter()
@@ -344,10 +318,6 @@ print(f"Ratio: {mem_pd/mem_pl:.1f}x")
 ## Benchmark: Common Operations
 
 
-- **Group By**: Split rows into groups by one or more columns, then apply aggregate functions to each group independently.
-- **Aggregation**: Compute summary statistics (mean, sum, count, min, max) for each group. Returns one row per group.
-- **Filter**: Keep only rows matching a condition.
-- **Sort**: Reorder rows by column values.
 
 ```python
 ops={}

@@ -20,7 +20,7 @@ status: complete
 
 ## How the Pipeline Works
 
-<small>
+<!-- 
 
 | Step | GCP Service | What Happens |
 |------|------------|--------------|
@@ -35,7 +35,7 @@ status: complete
 | **9. Secure** | **Secret Manager** | All credentials (DB passwords, API keys) retrieved at runtime — never hardcoded |
 | **10. Observe** | **Cloud Monitoring** | Structured logs + custom metrics (rows loaded, pipeline duration) — alerts and dashboards |
 
-</small>
+ -->
 
 ## Topics Covered
 - Authentication & Setup

@@ -109,7 +109,7 @@ display(s_pl)
 
     <class 'polars.series.series.Series'>
 
-<div><small>shape: (4,)</small><table><thead><tr><th>values</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>10</td></tr><tr><td>20</td></tr><tr><td>30</td></tr><tr><td>40</td></tr></tbody></table></div>
+<div><!-- shape: (4,) --><table><thead><tr><th>values</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>10</td></tr><tr><td>20</td></tr><tr><td>30</td></tr><tr><td>40</td></tr></tbody></table></div>
 
 ### Creating a Series from a NumPy array
 
@@ -161,7 +161,7 @@ display(s_pl)
 print(f"dtype: {s_pl.dtype}")  # Float64
 ```
 
-<div><small>shape: (5,)</small><table><thead><tr><th>from_numpy</th></tr><tr><td>f64</td></tr></thead><tbody><tr><td>1.1</td></tr><tr><td>2.2</td></tr><tr><td>3.3</td></tr><tr><td>NaN</td></tr><tr><td>5.5</td></tr></tbody></table></div>
+<div><!-- shape: (5,) --><table><thead><tr><th>from_numpy</th></tr><tr><td>f64</td></tr></thead><tbody><tr><td>1.1</td></tr><tr><td>2.2</td></tr><tr><td>3.3</td></tr><tr><td>NaN</td></tr><tr><td>5.5</td></tr></tbody></table></div>
 
     dtype: Float64
 
@@ -212,9 +212,9 @@ df_pl = pl.DataFrame({"label": ["a", "b", "c"], "amounts": [100, 200, 300]})
 display(df_pl)
 ```
 
-<div><small>shape: (3,)</small><table><thead><tr><th>amounts</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>100</td></tr><tr><td>200</td></tr><tr><td>300</td></tr></tbody></table></div>
+<div><!-- shape: (3,) --><table><thead><tr><th>amounts</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>100</td></tr><tr><td>200</td></tr><tr><td>300</td></tr></tbody></table></div>
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>label</th><th>amounts</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;a&quot;</td><td>100</td></tr><tr><td>&quot;b&quot;</td><td>200</td></tr><tr><td>&quot;c&quot;</td><td>300</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>label</th><th>amounts</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;a&quot;</td><td>100</td></tr><tr><td>&quot;b&quot;</td><td>200</td></tr><tr><td>&quot;c&quot;</td><td>300</td></tr></tbody></table></div>
 
 ### Data types — inference and casting
 
@@ -262,7 +262,7 @@ except Exception as e:
     print(f"Polars error: {e}")
 ```
 
-<div><small>shape: (3,)</small><table><thead><tr><th>mixed</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;1&quot;</td></tr><tr><td>&quot;two&quot;</td></tr><tr><td>&quot;3.0&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3,) --><table><thead><tr><th>mixed</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;1&quot;</td></tr><tr><td>&quot;two&quot;</td></tr><tr><td>&quot;3.0&quot;</td></tr></tbody></table></div>
 
 ```python
 # Explicit casting in Pandas
@@ -378,7 +378,7 @@ display(prices_pl.describe())
     std   : 15.735405936930892
     nunique: 5
 
-<div><small>shape: (9, 2)</small><table><thead><tr><th>statistic</th><th>value</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>5.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>30.34</td></tr><tr><td>&quot;std&quot;</td><td>15.735406</td></tr><tr><td>&quot;min&quot;</td><td>10.5</td></tr><tr><td>&quot;25%&quot;</td><td>20.3</td></tr><tr><td>&quot;50%&quot;</td><td>30.1</td></tr><tr><td>&quot;75%&quot;</td><td>40.8</td></tr><tr><td>&quot;max&quot;</td><td>50.0</td></tr></tbody></table></div>
+<div><!-- shape: (9, 2) --><table><thead><tr><th>statistic</th><th>value</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>5.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>30.34</td></tr><tr><td>&quot;std&quot;</td><td>15.735406</td></tr><tr><td>&quot;min&quot;</td><td>10.5</td></tr><tr><td>&quot;25%&quot;</td><td>20.3</td></tr><tr><td>&quot;50%&quot;</td><td>30.1</td></tr><tr><td>&quot;75%&quot;</td><td>40.8</td></tr><tr><td>&quot;max&quot;</td><td>50.0</td></tr></tbody></table></div>
 
 ### Gotcha — NaN vs null
 
@@ -431,7 +431,7 @@ display(s)
 
     dtype: Int64
 
-<div><small>shape: (3,)</small><table><thead><tr><th>x</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>1</td></tr><tr><td>null</td></tr><tr><td>3</td></tr></tbody></table></div>
+<div><!-- shape: (3,) --><table><thead><tr><th>x</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>1</td></tr><tr><td>null</td></tr><tr><td>3</td></tr></tbody></table></div>
 
 ---
 ## DataFrame
@@ -506,7 +506,7 @@ display(df_pl)
     shape : (4, 3)
     height: 4, width: 3
 
-<div><small>shape: (4, 3)</small><table><thead><tr><th>symbol</th><th>price</th><th>volume</th></tr><tr><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;AAPL&quot;</td><td>175.0</td><td>50000000</td></tr><tr><td>&quot;MSFT&quot;</td><td>340.0</td><td>30000000</td></tr><tr><td>&quot;GOOG&quot;</td><td>140.0</td><td>25000000</td></tr><tr><td>&quot;AMZN&quot;</td><td>180.0</td><td>40000000</td></tr></tbody></table></div>
+<div><!-- shape: (4, 3) --><table><thead><tr><th>symbol</th><th>price</th><th>volume</th></tr><tr><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;AAPL&quot;</td><td>175.0</td><td>50000000</td></tr><tr><td>&quot;MSFT&quot;</td><td>340.0</td><td>30000000</td></tr><tr><td>&quot;GOOG&quot;</td><td>140.0</td><td>25000000</td></tr><tr><td>&quot;AMZN&quot;</td><td>180.0</td><td>40000000</td></tr></tbody></table></div>
 
 ### Creating a DataFrame from a list of dicts (records)
 
@@ -557,7 +557,7 @@ df_pl = pl.DataFrame(records)
 display(df_pl)
 ```
 
-<div><small>shape: (3, 3)</small><table><thead><tr><th>name</th><th>age</th><th>city</th></tr><tr><td>str</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td><td>&quot;London&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td><td>&quot;Paris&quot;</td></tr><tr><td>&quot;Carol&quot;</td><td>35</td><td>&quot;Berlin&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 3) --><table><thead><tr><th>name</th><th>age</th><th>city</th></tr><tr><td>str</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td><td>&quot;London&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td><td>&quot;Paris&quot;</td></tr><tr><td>&quot;Carol&quot;</td><td>35</td><td>&quot;Berlin&quot;</td></tr></tbody></table></div>
 
 ### Creating a DataFrame from a NumPy array
 
@@ -625,7 +625,7 @@ display(df_pl)
 print(f"dtypes: {df_pl.dtypes}")
 ```
 
-<div><small>shape: (5, 3)</small><table><thead><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>0.304717</td><td>-1.039984</td><td>0.750451</td></tr><tr><td>0.940565</td><td>-1.951035</td><td>-1.30218</td></tr><tr><td>0.12784</td><td>-0.316243</td><td>-0.016801</td></tr><tr><td>-0.853044</td><td>0.879398</td><td>0.777792</td></tr><tr><td>0.066031</td><td>1.127241</td><td>0.467509</td></tr></tbody></table></div>
+<div><!-- shape: (5, 3) --><table><thead><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>0.304717</td><td>-1.039984</td><td>0.750451</td></tr><tr><td>0.940565</td><td>-1.951035</td><td>-1.30218</td></tr><tr><td>0.12784</td><td>-0.316243</td><td>-0.016801</td></tr><tr><td>-0.853044</td><td>0.879398</td><td>0.777792</td></tr><tr><td>0.066031</td><td>1.127241</td><td>0.467509</td></tr></tbody></table></div>
 
     dtypes: [Float64, Float64, Float64]
 
@@ -789,7 +789,6 @@ display(df_reset)
 ### Polars — no index, use columns instead
 
 
-- **Filter**: Keep only rows matching a condition.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
 ```python
@@ -801,9 +800,9 @@ display(df_pl)
 display(df_pl.filter(pl.col("key") == "b"))
 ```
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>key</th><th>value</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;a&quot;</td><td>10</td></tr><tr><td>&quot;b&quot;</td><td>20</td></tr><tr><td>&quot;c&quot;</td><td>30</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>key</th><th>value</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;a&quot;</td><td>10</td></tr><tr><td>&quot;b&quot;</td><td>20</td></tr><tr><td>&quot;c&quot;</td><td>30</td></tr></tbody></table></div>
 
-<div><small>shape: (1, 2)</small><table><thead><tr><th>key</th><th>value</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;b&quot;</td><td>20</td></tr></tbody></table></div>
+<div><!-- shape: (1, 2) --><table><thead><tr><th>key</th><th>value</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;b&quot;</td><td>20</td></tr></tbody></table></div>
 
 ### Gotcha — index alignment in Pandas
 
@@ -859,7 +858,7 @@ display(result)
 
     Polars addition is purely positional:
 
-<div><small>shape: (3,)</small><table><thead><tr><th>s1</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>11</td></tr><tr><td>22</td></tr><tr><td>33</td></tr></tbody></table></div>
+<div><!-- shape: (3,) --><table><thead><tr><th>s1</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>11</td></tr><tr><td>22</td></tr><tr><td>33</td></tr></tbody></table></div>
 
 ### Pandas MultiIndex vs Polars grouped columns
 
@@ -922,7 +921,7 @@ display(df_pl)
 # Grouping replaces multi-index workflows
 ```
 
-<div><small>shape: (4, 3)</small><table><thead><tr><th>first</th><th>second</th><th>val</th></tr><tr><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;bar&quot;</td><td>&quot;one&quot;</td><td>10</td></tr><tr><td>&quot;bar&quot;</td><td>&quot;two&quot;</td><td>20</td></tr><tr><td>&quot;baz&quot;</td><td>&quot;one&quot;</td><td>30</td></tr><tr><td>&quot;baz&quot;</td><td>&quot;two&quot;</td><td>40</td></tr></tbody></table></div>
+<div><!-- shape: (4, 3) --><table><thead><tr><th>first</th><th>second</th><th>val</th></tr><tr><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;bar&quot;</td><td>&quot;one&quot;</td><td>10</td></tr><tr><td>&quot;bar&quot;</td><td>&quot;two&quot;</td><td>20</td></tr><tr><td>&quot;baz&quot;</td><td>&quot;one&quot;</td><td>30</td></tr><tr><td>&quot;baz&quot;</td><td>&quot;two&quot;</td><td>40</td></tr></tbody></table></div>
 
 ---
 ## Data Types Deep Dive
@@ -985,8 +984,6 @@ for dt in [pl.Int8, pl.Int16, pl.Int32, pl.Int64,
 ### Inspecting types on real data
 
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 df_pd = pd.read_csv(DATA / "dim_country.csv")
@@ -1062,7 +1059,7 @@ print(f"Schema: {df_pl.schema}")
 
     Shape: (212, 2)
 
-<div><small>shape: (5, 2)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr><tr><td>&quot;American Samoa&quot;</td><td>&quot;AS&quot;</td></tr><tr><td>&quot;Andorra&quot;</td><td>&quot;AD&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr><tr><td>&quot;American Samoa&quot;</td><td>&quot;AS&quot;</td></tr><tr><td>&quot;Andorra&quot;</td><td>&quot;AD&quot;</td></tr></tbody></table></div>
 
     Schema: Schema({'country_name': String, 'iso_alpha2': String})
 
@@ -1071,7 +1068,6 @@ print(f"Schema: {df_pl.schema}")
 
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
 - **Astype**: Convert column to a different data type (Pandas).
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 df_pd = pd.read_csv(DATA / "eurostoxx50_ohlcv.csv", nrows=5)
@@ -1218,7 +1214,7 @@ display(df_pl)
     [Int64, String, String, Float64, Float64, Float64, Float64, Float64, Int64, Float64, Float64, Boolean]
     [Int64, String, Date, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Float64, Boolean]
 
-<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1.513937e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1.382722e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1.370204e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1.469911e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1.428681e6</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1.513937e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1.382722e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1.370204e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1.469911e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1.428681e6</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ### Gotcha — Pandas object vs string dtype
 
@@ -1250,8 +1246,6 @@ Let's compare how each library loads them.
 ### CSV
 
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 df_pd = pd.read_csv(DATA / "index_performance.csv")
@@ -1351,7 +1345,7 @@ display(df_pl.head(3))
 
     Shape: (5281, 15)
 
-<div><small>shape: (3, 15)</small><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-05&quot;</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-06&quot;</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-07&quot;</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 15) --><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-05&quot;</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-06&quot;</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-07&quot;</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr></tbody></table></div>
 
     CPU times: total: 0 ns
     Wall time: 3.5 ms
@@ -1359,8 +1353,6 @@ display(df_pl.head(3))
 ### Parquet
 
 
-- **Head**: Return the first N rows.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ```python
 df_pd = pd.read_parquet(DATA / "index_performance.parquet")
@@ -1460,7 +1452,7 @@ display(df_pl.head(3))
 
     Shape: (5281, 15)
 
-<div><small>shape: (3, 15)</small><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>datetime[ns]</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>2021-01-05</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>2021-01-06</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>2021-01-07</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr></tbody></table></div>
+<div><!-- shape: (3, 15) --><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>datetime[ns]</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>2021-01-05</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>2021-01-06</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>2021-01-07</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr></tbody></table></div>
 
     CPU times: total: 0 ns
     Wall time: 22 ms
@@ -1468,7 +1460,6 @@ display(df_pl.head(3))
 ### JSON
 
 
-- **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
 ```python
@@ -1514,7 +1505,7 @@ display(df_pl.head(3))
 
     Shape: (212, 2)
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr></tbody></table></div>
 
 ---
 ## Inspecting DataFrames
@@ -1522,10 +1513,8 @@ display(df_pl.head(3))
 ### Head, tail, sample, describe
 
 
-- **Head**: Return the first N rows.
 - **Tail**: Return the last N rows.
 - **Describe**: Summary statistics: count, mean, std, min, max, quartiles.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ```python
 df_pd = pd.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -1861,13 +1850,13 @@ display(df_pl.sample(3, seed=42))
 display(df_pl.describe())
 ```
 
-<div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-<div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>66876</td><td>&quot;WKL.AS&quot;</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66877</td><td>&quot;WKL.AS&quot;</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66929</td><td>&quot;WKL.AS&quot;</td><td>2026-03-12</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>66876</td><td>&quot;WKL.AS&quot;</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66877</td><td>&quot;WKL.AS&quot;</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66929</td><td>&quot;WKL.AS&quot;</td><td>2026-03-12</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-<div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>11531</td><td>&quot;SAN.MC&quot;</td><td>2024-09-20</td><td>4.58</td><td>4.6285</td><td>4.5585</td><td>4.5585</td><td>4.3259</td><td>70961183</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>35605</td><td>&quot;CS.PA&quot;</td><td>2025-10-15</td><td>40.54</td><td>41.0</td><td>40.17</td><td>40.17</td><td>40.17</td><td>3204582</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>63668</td><td>&quot;WKL.AS&quot;</td><td>2022-01-07</td><td>97.52</td><td>97.96</td><td>96.92</td><td>97.34</td><td>91.0808</td><td>408411</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>11531</td><td>&quot;SAN.MC&quot;</td><td>2024-09-20</td><td>4.58</td><td>4.6285</td><td>4.5585</td><td>4.5585</td><td>4.3259</td><td>70961183</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>35605</td><td>&quot;CS.PA&quot;</td><td>2025-10-15</td><td>40.54</td><td>41.0</td><td>40.17</td><td>40.17</td><td>40.17</td><td>3204582</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>63668</td><td>&quot;WKL.AS&quot;</td><td>2022-01-07</td><td>97.52</td><td>97.96</td><td>96.92</td><td>97.34</td><td>91.0808</td><td>408411</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-<div><small>shape: (9, 13)</small><table><thead><tr><th>statistic</th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>66355.0</td><td>&quot;66355&quot;</td><td>&quot;66355&quot;</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td><td>&quot;0&quot;</td><td>&quot;0&quot;</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>33179.733102</td><td>null</td><td>&quot;2023-08-05 00:56:42.354005&quot;</td><td>197.04052</td><td>199.364124</td><td>194.585782</td><td>197.0349</td><td>190.494909</td><td>5.9421e6</td><td>0.011757</td><td>0.000172</td><td>0.00009</td></tr><tr><td>&quot;std&quot;</td><td>19158.201385</td><td>null</td><td>null</td><td>363.150484</td><td>367.873829</td><td>358.011643</td><td>363.052047</td><td>359.635301</td><td>1.6156e7</td><td>0.283142</td><td>0.022716</td><td>null</td></tr><tr><td>&quot;min&quot;</td><td>1.0</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-04&quot;</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;25%&quot;</td><td>16590.0</td><td>null</td><td>&quot;2022-04-20&quot;</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991.0</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;50%&quot;</td><td>33178.0</td><td>null</td><td>&quot;2023-08-03&quot;</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1.415896e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;75%&quot;</td><td>49767.0</td><td>null</td><td>&quot;2024-11-19&quot;</td><td>186.0</td><td>188.0</td><td>184.0</td><td>186.1</td><td>175.2609</td><td>4.089463e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;max&quot;</td><td>66930.0</td><td>&quot;WKL.AS&quot;</td><td>&quot;2026-03-12&quot;</td><td>2926.0</td><td>2957.0</td><td>2813.0</td><td>2839.0</td><td>2802.9382</td><td>3.76391539e8</td><td>22.5</td><td>5.0</td><td>1.0</td></tr></tbody></table></div>
+<div><!-- shape: (9, 13) --><table><thead><tr><th>statistic</th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>66355.0</td><td>&quot;66355&quot;</td><td>&quot;66355&quot;</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td><td>&quot;0&quot;</td><td>&quot;0&quot;</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>33179.733102</td><td>null</td><td>&quot;2023-08-05 00:56:42.354005&quot;</td><td>197.04052</td><td>199.364124</td><td>194.585782</td><td>197.0349</td><td>190.494909</td><td>5.9421e6</td><td>0.011757</td><td>0.000172</td><td>0.00009</td></tr><tr><td>&quot;std&quot;</td><td>19158.201385</td><td>null</td><td>null</td><td>363.150484</td><td>367.873829</td><td>358.011643</td><td>363.052047</td><td>359.635301</td><td>1.6156e7</td><td>0.283142</td><td>0.022716</td><td>null</td></tr><tr><td>&quot;min&quot;</td><td>1.0</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-04&quot;</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;25%&quot;</td><td>16590.0</td><td>null</td><td>&quot;2022-04-20&quot;</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991.0</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;50%&quot;</td><td>33178.0</td><td>null</td><td>&quot;2023-08-03&quot;</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1.415896e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;75%&quot;</td><td>49767.0</td><td>null</td><td>&quot;2024-11-19&quot;</td><td>186.0</td><td>188.0</td><td>184.0</td><td>186.1</td><td>175.2609</td><td>4.089463e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;max&quot;</td><td>66930.0</td><td>&quot;WKL.AS&quot;</td><td>&quot;2026-03-12&quot;</td><td>2926.0</td><td>2957.0</td><td>2813.0</td><td>2839.0</td><td>2802.9382</td><td>3.76391539e8</td><td>22.5</td><td>5.0</td><td>1.0</td></tr></tbody></table></div>
 
 ### Memory usage
 
@@ -1989,7 +1978,7 @@ display(df_pl.null_count())
 
     Null counts per column:
 
-<div><small>shape: (1, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
+<div><!-- shape: (1, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
 ---
 ## Edge Cases and Gotchas
@@ -2035,7 +2024,7 @@ display(df_empty_pl)
     Shape: (0, 2)
     Schema: Schema({'a': Int64, 'b': Float64})
 
-<div><small>shape: (0, 2)</small><table><thead><tr><th>a</th><th>b</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody></tbody></table></div>
+<div><!-- shape: (0, 2) --><table><thead><tr><th>a</th><th>b</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody></tbody></table></div>
 
 ### Column name duplicates
 
@@ -2084,7 +2073,7 @@ except Exception as e:
 
     Dict deduplicates, so only one 'x':
 
-<div><small>shape: (1, 1)</small><table><thead><tr><th>x</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>2</td></tr></tbody></table></div>
+<div><!-- shape: (1, 1) --><table><thead><tr><th>x</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>2</td></tr></tbody></table></div>
 
     Polars error on duplicate columns: column with name 'x' has more than one occurrence
 
@@ -2234,7 +2223,7 @@ comparison = pl.DataFrame({
 display(comparison)
 ```
 
-<div><small>shape: (20, 3)</small><table><thead><tr><th>Feature</th><th>Pandas</th><th>Polars</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;1-D data structure&quot;</td><td>&quot;pd.Series (indexed)&quot;</td><td>&quot;pl.Series (named, no index)&quot;</td></tr><tr><td>&quot;2-D data structure&quot;</td><td>&quot;pd.DataFrame (indexed)&quot;</td><td>&quot;pl.DataFrame (no index)&quot;</td></tr><tr><td>&quot;Row index&quot;</td><td>&quot;Yes — RangeIndex, named, Multi&quot;</td><td>&quot;No — all data lives in columns&quot;</td></tr><tr><td>&quot;Missing values&quot;</td><td>&quot;NaN (float) or pd.NA&quot;</td><td>&quot;null (Arrow bitmask)&quot;</td></tr><tr><td>&quot;Default int type&quot;</td><td>&quot;int64&quot;</td><td>&quot;Int64&quot;</td></tr><tr><td>&quot;Default float type&quot;</td><td>&quot;float64&quot;</td><td>&quot;Float64&quot;</td></tr><tr><td>&quot;Default string type&quot;</td><td>&quot;object (or StringDtype)&quot;</td><td>&quot;String (Utf8)&quot;</td></tr><tr><td>&quot;Type safety&quot;</td><td>&quot;Low — object dtype is a catch-…</td><td>&quot;High — strict type checking&quot;</td></tr><tr><td>&quot;Duplicate column names&quot;</td><td>&quot;Allowed (bug-prone)&quot;</td><td>&quot;Rejected (error)&quot;</td></tr><tr><td>&quot;Memory layout&quot;</td><td>&quot;Column-major (BlockManager)&quot;</td><td>&quot;Column-major (Arrow arrays)&quot;</td></tr><tr><td>&quot;Lazy evaluation&quot;</td><td>&quot;No (eager only)&quot;</td><td>&quot;Yes — pl.LazyFrame&quot;</td></tr><tr><td>&quot;MultiIndex&quot;</td><td>&quot;Yes — pd.MultiIndex&quot;</td><td>&quot;No — use regular columns&quot;</td></tr><tr><td>&quot;Create from dict&quot;</td><td>&quot;pd.DataFrame(dict)&quot;</td><td>&quot;pl.DataFrame(dict)&quot;</td></tr><tr><td>&quot;Create from numpy&quot;</td><td>&quot;pd.DataFrame(arr, columns=…)&quot;</td><td>&quot;pl.DataFrame({&#x27;col&#x27;: arr})&quot;</td></tr><tr><td>&quot;Create from records&quot;</td><td>&quot;pd.DataFrame(list_of_dicts)&quot;</td><td>&quot;pl.DataFrame(list_of_dicts)&quot;</td></tr><tr><td>&quot;Shape attribute&quot;</td><td>&quot;.shape → (rows, cols)&quot;</td><td>&quot;.shape → (rows, cols)&quot;</td></tr><tr><td>&quot;Height / width attrs&quot;</td><td>&quot;No&quot;</td><td>&quot;Yes — .height, .width&quot;</td></tr><tr><td>&quot;Null counting&quot;</td><td>&quot;df.isnull().sum()&quot;</td><td>&quot;df.null_count()&quot;</td></tr><tr><td>&quot;Memory estimation&quot;</td><td>&quot;df.memory_usage(deep=True)&quot;</td><td>&quot;df.estimated_size()&quot;</td></tr><tr><td>&quot;Type casting&quot;</td><td>&quot;.astype() / pd.to_datetime()&quot;</td><td>&quot;.cast() / .str.to_date()&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (20, 3) --><table><thead><tr><th>Feature</th><th>Pandas</th><th>Polars</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;1-D data structure&quot;</td><td>&quot;pd.Series (indexed)&quot;</td><td>&quot;pl.Series (named, no index)&quot;</td></tr><tr><td>&quot;2-D data structure&quot;</td><td>&quot;pd.DataFrame (indexed)&quot;</td><td>&quot;pl.DataFrame (no index)&quot;</td></tr><tr><td>&quot;Row index&quot;</td><td>&quot;Yes — RangeIndex, named, Multi&quot;</td><td>&quot;No — all data lives in columns&quot;</td></tr><tr><td>&quot;Missing values&quot;</td><td>&quot;NaN (float) or pd.NA&quot;</td><td>&quot;null (Arrow bitmask)&quot;</td></tr><tr><td>&quot;Default int type&quot;</td><td>&quot;int64&quot;</td><td>&quot;Int64&quot;</td></tr><tr><td>&quot;Default float type&quot;</td><td>&quot;float64&quot;</td><td>&quot;Float64&quot;</td></tr><tr><td>&quot;Default string type&quot;</td><td>&quot;object (or StringDtype)&quot;</td><td>&quot;String (Utf8)&quot;</td></tr><tr><td>&quot;Type safety&quot;</td><td>&quot;Low — object dtype is a catch-…</td><td>&quot;High — strict type checking&quot;</td></tr><tr><td>&quot;Duplicate column names&quot;</td><td>&quot;Allowed (bug-prone)&quot;</td><td>&quot;Rejected (error)&quot;</td></tr><tr><td>&quot;Memory layout&quot;</td><td>&quot;Column-major (BlockManager)&quot;</td><td>&quot;Column-major (Arrow arrays)&quot;</td></tr><tr><td>&quot;Lazy evaluation&quot;</td><td>&quot;No (eager only)&quot;</td><td>&quot;Yes — pl.LazyFrame&quot;</td></tr><tr><td>&quot;MultiIndex&quot;</td><td>&quot;Yes — pd.MultiIndex&quot;</td><td>&quot;No — use regular columns&quot;</td></tr><tr><td>&quot;Create from dict&quot;</td><td>&quot;pd.DataFrame(dict)&quot;</td><td>&quot;pl.DataFrame(dict)&quot;</td></tr><tr><td>&quot;Create from numpy&quot;</td><td>&quot;pd.DataFrame(arr, columns=…)&quot;</td><td>&quot;pl.DataFrame({&#x27;col&#x27;: arr})&quot;</td></tr><tr><td>&quot;Create from records&quot;</td><td>&quot;pd.DataFrame(list_of_dicts)&quot;</td><td>&quot;pl.DataFrame(list_of_dicts)&quot;</td></tr><tr><td>&quot;Shape attribute&quot;</td><td>&quot;.shape → (rows, cols)&quot;</td><td>&quot;.shape → (rows, cols)&quot;</td></tr><tr><td>&quot;Height / width attrs&quot;</td><td>&quot;No&quot;</td><td>&quot;Yes — .height, .width&quot;</td></tr><tr><td>&quot;Null counting&quot;</td><td>&quot;df.isnull().sum()&quot;</td><td>&quot;df.null_count()&quot;</td></tr><tr><td>&quot;Memory estimation&quot;</td><td>&quot;df.memory_usage(deep=True)&quot;</td><td>&quot;df.estimated_size()&quot;</td></tr><tr><td>&quot;Type casting&quot;</td><td>&quot;.astype() / pd.to_datetime()&quot;</td><td>&quot;.cast() / .str.to_date()&quot;</td></tr></tbody></table></div>
 
 ---
 #### Key takeaways
@@ -2448,13 +2437,21 @@ display(size_df)
 ## Reading CSV Files
 
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ### Pandas read_csv
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
+> [!danger] `pd.read_csv()` infers dtypes from the first 100 rows by default
+> If the first 100 rows of a column contain only integers but row 101 has a float or
+> null, Pandas silently coerces the entire column. Always specify `dtype=` for critical
+> columns, or use `dtype_backend="pyarrow"` for consistent nullable types. Integer columns
+> with any null values are silently upcast to `float64` — a common source of broken join
+> keys (`1.0 != 1` in string comparisons).
+
+> [!warning] Encoding defaults differ between Pandas and Polars
+> Pandas `read_csv()` defaults to `encoding='utf-8'` but **silently falls back** on some
+> platforms. Polars only supports UTF-8 — non-UTF-8 files raise an error immediately.
+> For files from legacy systems (SQL Server BCP exports, Excel CSV), always specify
+> `encoding='utf-8-sig'` (to handle BOM) or `encoding='latin-1'`.
 
 ```python
 # Basic read - small file
@@ -2657,8 +2654,6 @@ display(df_peek)
 ### Polars read_csv (Eager)
 
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 # Basic read - small file
@@ -2671,7 +2666,7 @@ display(df_pl.head())
     Shape: (212, 2)
     Schema: Schema({'country_name': String, 'iso_alpha2': String})
 
-<div><small>shape: (5, 2)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr><tr><td>&quot;American Samoa&quot;</td><td>&quot;AS&quot;</td></tr><tr><td>&quot;Andorra&quot;</td><td>&quot;AD&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr><tr><td>&quot;American Samoa&quot;</td><td>&quot;AS&quot;</td></tr><tr><td>&quot;Andorra&quot;</td><td>&quot;AD&quot;</td></tr></tbody></table></div>
 
 ```python
 # Polars read_csv with parameters
@@ -2690,7 +2685,7 @@ display(df_pl_ohlcv.head(3))
     Shape: (66355, 12)
     Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
 
-<div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ### Polars scan_csv (Lazy)
 
@@ -2721,7 +2716,7 @@ display(result)
 
 ### Lazy scan -> filtered collect
 
-<div><small>shape: (5, 4)</small><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>&quot;ADYEN.AS&quot;</td><td>1859.5</td><td>99408</td></tr><tr><td>2021-01-05</td><td>&quot;ADYEN.AS&quot;</td><td>1829.0</td><td>86256</td></tr><tr><td>2021-01-06</td><td>&quot;ADYEN.AS&quot;</td><td>1733.0</td><td>156844</td></tr><tr><td>2021-01-07</td><td>&quot;ADYEN.AS&quot;</td><td>1714.5</td><td>90183</td></tr><tr><td>2021-01-08</td><td>&quot;ADYEN.AS&quot;</td><td>1756.5</td><td>97176</td></tr></tbody></table></div>
+<div><!-- shape: (5, 4) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>&quot;ADYEN.AS&quot;</td><td>1859.5</td><td>99408</td></tr><tr><td>2021-01-05</td><td>&quot;ADYEN.AS&quot;</td><td>1829.0</td><td>86256</td></tr><tr><td>2021-01-06</td><td>&quot;ADYEN.AS&quot;</td><td>1733.0</td><td>156844</td></tr><tr><td>2021-01-07</td><td>&quot;ADYEN.AS&quot;</td><td>1714.5</td><td>90183</td></tr><tr><td>2021-01-08</td><td>&quot;ADYEN.AS&quot;</td><td>1756.5</td><td>97176</td></tr></tbody></table></div>
 
 ```python
 # Load ALL csv files with Pandas
@@ -2778,12 +2773,10 @@ for f in csv_files:
 ## Reading JSON Files
 
 
-- **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
 ### Pandas read_json
 
-- **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
 ```python
@@ -2953,7 +2946,6 @@ display(df_pd_perf.head(3))
 
 ### Polars read_json
 
-- **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
 ```python
@@ -2966,7 +2958,7 @@ display(df_pl_json.head())
     Shape: (4, 5)
     Schema: Schema({'index_key': String, 'display_name': String, 'file_prefix': String, 'color': String, 'currency': String})
 
-<div><small>shape: (4, 5)</small><table><thead><tr><th>index_key</th><th>display_name</th><th>file_prefix</th><th>color</th><th>currency</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;euro_stoxx_50&quot;</td><td>&quot;Euro Stoxx 50&quot;</td><td>&quot;eurostoxx50&quot;</td><td>&quot;#4285F4&quot;</td><td>&quot;€&quot;</td></tr><tr><td>&quot;oil_20&quot;</td><td>&quot;Oil &amp; Gas 20&quot;</td><td>&quot;oil20&quot;</td><td>&quot;#D4A017&quot;</td><td>&quot;$&quot;</td></tr><tr><td>&quot;stoxx_asia_50&quot;</td><td>&quot;STOXX Asia/Pacific 50&quot;</td><td>&quot;stoxxasia50&quot;</td><td>&quot;#EF5350&quot;</td><td>&quot;&quot;</td></tr><tr><td>&quot;stoxx_usa_50&quot;</td><td>&quot;STOXX USA 50&quot;</td><td>&quot;stoxxusa50&quot;</td><td>&quot;#FFFFFF&quot;</td><td>&quot;$&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (4, 5) --><table><thead><tr><th>index_key</th><th>display_name</th><th>file_prefix</th><th>color</th><th>currency</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;euro_stoxx_50&quot;</td><td>&quot;Euro Stoxx 50&quot;</td><td>&quot;eurostoxx50&quot;</td><td>&quot;#4285F4&quot;</td><td>&quot;€&quot;</td></tr><tr><td>&quot;oil_20&quot;</td><td>&quot;Oil &amp; Gas 20&quot;</td><td>&quot;oil20&quot;</td><td>&quot;#D4A017&quot;</td><td>&quot;$&quot;</td></tr><tr><td>&quot;stoxx_asia_50&quot;</td><td>&quot;STOXX Asia/Pacific 50&quot;</td><td>&quot;stoxxasia50&quot;</td><td>&quot;#EF5350&quot;</td><td>&quot;&quot;</td></tr><tr><td>&quot;stoxx_usa_50&quot;</td><td>&quot;STOXX USA 50&quot;</td><td>&quot;stoxxusa50&quot;</td><td>&quot;#FFFFFF&quot;</td><td>&quot;$&quot;</td></tr></tbody></table></div>
 
 ```python
 # Setting infer_schema_length to None forces Polars to scan the whole file
@@ -2981,7 +2973,7 @@ display(df_pl_perf.head(3))
 
     Shape: (5281, 15)
 
-<div><small>shape: (3, 15)</small><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-05&quot;</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-06&quot;</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-07&quot;</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 15) --><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-05&quot;</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-06&quot;</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-07&quot;</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr></tbody></table></div>
 
 ### Polars scan_ndjson (Lazy)
 
@@ -3006,7 +2998,7 @@ ndjson_path.unlink()
     Type: <class 'polars.lazyframe.frame.LazyFrame'>
     Schema: Schema({'index_key': String, 'display_name': String, 'file_prefix': String, 'color': String, 'currency': String})
 
-<div><small>shape: (3, 5)</small><table><thead><tr><th>index_key</th><th>display_name</th><th>file_prefix</th><th>color</th><th>currency</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;euro_stoxx_50&quot;</td><td>&quot;Euro Stoxx 50&quot;</td><td>&quot;eurostoxx50&quot;</td><td>&quot;#4285F4&quot;</td><td>&quot;€&quot;</td></tr><tr><td>&quot;oil_20&quot;</td><td>&quot;Oil &amp; Gas 20&quot;</td><td>&quot;oil20&quot;</td><td>&quot;#D4A017&quot;</td><td>&quot;$&quot;</td></tr><tr><td>&quot;stoxx_asia_50&quot;</td><td>&quot;STOXX Asia/Pacific 50&quot;</td><td>&quot;stoxxasia50&quot;</td><td>&quot;#EF5350&quot;</td><td>&quot;&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 5) --><table><thead><tr><th>index_key</th><th>display_name</th><th>file_prefix</th><th>color</th><th>currency</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;euro_stoxx_50&quot;</td><td>&quot;Euro Stoxx 50&quot;</td><td>&quot;eurostoxx50&quot;</td><td>&quot;#4285F4&quot;</td><td>&quot;€&quot;</td></tr><tr><td>&quot;oil_20&quot;</td><td>&quot;Oil &amp; Gas 20&quot;</td><td>&quot;oil20&quot;</td><td>&quot;#D4A017&quot;</td><td>&quot;$&quot;</td></tr><tr><td>&quot;stoxx_asia_50&quot;</td><td>&quot;STOXX Asia/Pacific 50&quot;</td><td>&quot;stoxxasia50&quot;</td><td>&quot;#EF5350&quot;</td><td>&quot;&quot;</td></tr></tbody></table></div>
 
 ```python
 # Load ALL json files with Pandas
@@ -3067,13 +3059,9 @@ for f in json_files:
 ## Reading Parquet Files
 
 
-- **Head**: Return the first N rows.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ### Pandas read_parquet
 
-- **Head**: Return the first N rows.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ```python
 df_pd_pq = pd.read_parquet(DATA_DIR / "dim_country.parquet")
@@ -3175,8 +3163,6 @@ display(df_pd_pq_cols.head(3))
 ### Polars read_parquet (Eager)
 
 
-- **Head**: Return the first N rows.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ```python
 df_pl_pq = pl.read_parquet(DATA_DIR / "dim_country.parquet")
@@ -3188,7 +3174,7 @@ display(df_pl_pq.head())
     Shape: (212, 2)
     Schema: Schema({'country_name': String, 'iso_alpha2': String})
 
-<div><small>shape: (5, 2)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr><tr><td>&quot;American Samoa&quot;</td><td>&quot;AS&quot;</td></tr><tr><td>&quot;Andorra&quot;</td><td>&quot;AD&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Afghanistan&quot;</td><td>&quot;AF&quot;</td></tr><tr><td>&quot;Albania&quot;</td><td>&quot;AL&quot;</td></tr><tr><td>&quot;Algeria&quot;</td><td>&quot;DZ&quot;</td></tr><tr><td>&quot;American Samoa&quot;</td><td>&quot;AS&quot;</td></tr><tr><td>&quot;Andorra&quot;</td><td>&quot;AD&quot;</td></tr></tbody></table></div>
 
 ```python
 # Polars read_parquet with column selection
@@ -3202,12 +3188,11 @@ display(df_pl_pq_cols.head(3))
 
     Shape (projected): (66355, 3)
 
-<div><small>shape: (3, 3)</small><table><thead><tr><th>date</th><th>symbol</th><th>close</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>&quot;ABI.BR&quot;</td><td>57.21</td></tr><tr><td>2021-01-05</td><td>&quot;ABI.BR&quot;</td><td>57.18</td></tr><tr><td>2021-01-06</td><td>&quot;ABI.BR&quot;</td><td>58.77</td></tr></tbody></table></div>
+<div><!-- shape: (3, 3) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>&quot;ABI.BR&quot;</td><td>57.21</td></tr><tr><td>2021-01-05</td><td>&quot;ABI.BR&quot;</td><td>57.18</td></tr><tr><td>2021-01-06</td><td>&quot;ABI.BR&quot;</td><td>58.77</td></tr></tbody></table></div>
 
 ### Polars scan_parquet (Lazy)
 
 
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
 
 ```python
 lf_pq = pl.scan_parquet(DATA_DIR / "eurostoxx50_ohlcv.parquet")
@@ -3234,7 +3219,7 @@ display(result_pq)
 
 ### Lazy parquet scan -> filtered, sorted, collected
 
-<div><small>shape: (10, 2)</small><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>925.7</td></tr><tr><td>2026-03-11</td><td>926.5</td></tr><tr><td>2026-03-10</td><td>935.0</td></tr><tr><td>2026-03-09</td><td>942.7</td></tr><tr><td>2026-03-06</td><td>930.4</td></tr><tr><td>2026-03-05</td><td>931.5</td></tr><tr><td>2026-03-04</td><td>957.6</td></tr><tr><td>2026-03-03</td><td>949.1</td></tr><tr><td>2026-03-02</td><td>965.7</td></tr><tr><td>2026-02-27</td><td>994.8</td></tr></tbody></table></div>
+<div><!-- shape: (10, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>925.7</td></tr><tr><td>2026-03-11</td><td>926.5</td></tr><tr><td>2026-03-10</td><td>935.0</td></tr><tr><td>2026-03-09</td><td>942.7</td></tr><tr><td>2026-03-06</td><td>930.4</td></tr><tr><td>2026-03-05</td><td>931.5</td></tr><tr><td>2026-03-04</td><td>957.6</td></tr><tr><td>2026-03-03</td><td>949.1</td></tr><tr><td>2026-03-02</td><td>965.7</td></tr><tr><td>2026-02-27</td><td>994.8</td></tr></tbody></table></div>
 
 ```python
 # Load ALL parquet files with Pandas
@@ -3291,13 +3276,9 @@ for f in pq_files:
 ## Parameter Deep-Dives
 
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ### dtypes / schema_overrides
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 # Pandas: dtype parameter
@@ -3452,11 +3433,10 @@ display(df_dtype_pl.head(3))
     Polars schema with overrides:
     Schema({'id': Int64, '_index': String, '_ingested_at': String, 'symbol': String, 'timestamp': String, 'current_price': Float64, 'open_price': Float64, 'day_high': Float64, 'day_low': Float64, 'previous_close': Float64, 'price_change': Float64, 'price_change_pct': Float64, 'bid': Float64, 'ask': Float64, 'bid_size': Float64, 'ask_size': Float64, 'spread': Float64, 'current_volume': Int64, 'average_volume_10day': Int64, 'volume_ratio': Float64})
 
-<div><small>shape: (3, 20)</small><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>timestamp</th><th>current_price</th><th>open_price</th><th>day_high</th><th>day_low</th><th>previous_close</th><th>price_change</th><th>price_change_pct</th><th>bid</th><th>ask</th><th>bid_size</th><th>ask_size</th><th>spread</th><th>current_volume</th><th>average_volume_10day</th><th>volume_ratio</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>20192</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BMW.DE&quot;</td><td>&quot;2026-03-12 13:49:54&quot;</td><td>80.4</td><td>79.0</td><td>81.16</td><td>77.9</td><td>80.82</td><td>-0.42</td><td>-0.5197</td><td>80.38</td><td>80.52</td><td>0.0</td><td>0.0</td><td>0.14</td><td>770681</td><td>1209819</td><td>0.637</td></tr><tr><td>20193</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;RHM.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>1551.0</td><td>1536.0</td><td>1588.0</td><td>1535.0</td><td>1520.5</td><td>30.5</td><td>2.0059</td><td>1551.5</td><td>1552.0</td><td>267.0</td><td>45.0</td><td>0.5</td><td>159633</td><td>294973</td><td>0.5412</td></tr><tr><td>20194</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BAS.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>47.67</td><td>46.3</td><td>48.1</td><td>45.96</td><td>46.31</td><td>1.36</td><td>2.9367</td><td>47.68</td><td>47.71</td><td>1393.0</td><td>165.0</td><td>0.03</td><td>1512800</td><td>4089134</td><td>0.37</td></tr></tbody></table></div>
+<div><!-- shape: (3, 20) --><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>timestamp</th><th>current_price</th><th>open_price</th><th>day_high</th><th>day_low</th><th>previous_close</th><th>price_change</th><th>price_change_pct</th><th>bid</th><th>ask</th><th>bid_size</th><th>ask_size</th><th>spread</th><th>current_volume</th><th>average_volume_10day</th><th>volume_ratio</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>20192</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BMW.DE&quot;</td><td>&quot;2026-03-12 13:49:54&quot;</td><td>80.4</td><td>79.0</td><td>81.16</td><td>77.9</td><td>80.82</td><td>-0.42</td><td>-0.5197</td><td>80.38</td><td>80.52</td><td>0.0</td><td>0.0</td><td>0.14</td><td>770681</td><td>1209819</td><td>0.637</td></tr><tr><td>20193</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;RHM.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>1551.0</td><td>1536.0</td><td>1588.0</td><td>1535.0</td><td>1520.5</td><td>30.5</td><td>2.0059</td><td>1551.5</td><td>1552.0</td><td>267.0</td><td>45.0</td><td>0.5</td><td>159633</td><td>294973</td><td>0.5412</td></tr><tr><td>20194</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BAS.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>47.67</td><td>46.3</td><td>48.1</td><td>45.96</td><td>46.31</td><td>1.36</td><td>2.9367</td><td>47.68</td><td>47.71</td><td>1393.0</td><td>165.0</td><td>0.03</td><td>1512800</td><td>4089134</td><td>0.37</td></tr></tbody></table></div>
 
 ### null_values
 
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 # Pandas recognises many null sentinels by default (NA, N/A, null, etc.)
@@ -3492,12 +3472,10 @@ display(null_counts_pl)
 
     Polars null counts per column:
 
-<div><small>shape: (1, 36)</small><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>6</td><td>71</td><td>35</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
+<div><!-- shape: (1, 36) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>6</td><td>71</td><td>35</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
 ### separator
 
-- **Head**: Return the first N rows.
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ```python
 # Demonstrate reading with explicit separator
@@ -3559,13 +3537,11 @@ display(df_sep_pd.head(3))
 ## Writing Data
 
 
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 - **Write CSV**: Save DataFrame to CSV file.
 
 ### Writing CSV
 
 
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 - **Write CSV**: Save DataFrame to CSV file.
 
 ```python
@@ -3774,9 +3750,6 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
 
 For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [[serialization-formats]]. The same Parquet I/O patterns shown here apply when loading data into BigQuery via [[data-loading-and-export]].
 
-- **Benchmark**: Measure execution time.
-- **Read CSV**: Load a CSV file into a DataFrame.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
 ```python
@@ -4032,7 +4005,6 @@ display(size_pivot)
 ## Gotchas and Tips
 
 
-- **Read CSV**: Load a CSV file into a DataFrame.
 
 ### Date Parsing
 
@@ -4126,10 +4098,6 @@ print(f"Savings: {(1 - mem_cat/mem_str)*100:.1f}%")
 ## Summary Comparison Table
 
 
-- **Filter**: Keep only rows matching a condition.
-- **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
-- **Read CSV**: Load a CSV file into a DataFrame.
-- **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
 ```python
 comparison = [

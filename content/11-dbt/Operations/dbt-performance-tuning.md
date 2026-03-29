@@ -19,6 +19,9 @@ Performance problems in dbt manifest as three distinct symptoms: slow model exec
 
 ---
 
+> [!warning] The Slowest Model Sets Your Pipeline SLA, Not the Average
+> A dbt project with 50 models where 49 run in 10 seconds and 1 runs in 20 minutes has a pipeline SLA of 20+ minutes. Focus optimization on the single slowest model first -- it dominates total runtime because dbt executes models in dependency order and downstream models wait. Use `run_results.json` to identify the critical path, not just the slowest individual model.
+
 ## Identifying Slow Models from `run_results.json`
 
 ### Quick Analysis with Python

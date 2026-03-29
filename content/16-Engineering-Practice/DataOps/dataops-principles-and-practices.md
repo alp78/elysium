@@ -305,8 +305,11 @@ Continuous Integration and Continuous Delivery for data pipelines follows the sa
 | **Feature flags** | New logic behind a flag, toggle without redeploy | Experimental features |
 | **Shadow mode** | New pipeline runs in parallel; output not served | Validating new logic before cutover |
 
-> [!warning] Data Pipelines Are Stateful
-> Unlike stateless web services, data pipelines have state (the data itself). A bad deploy doesn't just affect new requests — it can corrupt historical data or create gaps. Always test in staging with production-representative data volumes before promoting to production.
+> [!danger] A Bad Data Deploy Corrupts History -- Not Just Future Runs
+> Unlike stateless web services, data pipelines have state (the data itself). A bad deploy doesn't just affect new requests -- it can corrupt historical data or create gaps that are invisible until a downstream consumer notices weeks later. Always test in staging with production-representative data volumes before promoting to production. Have a rollback plan that includes both code rollback AND data repair (re-running from the last known-good state).
+
+> [!warning] Schema Migrations in Data Pipelines Are Not Reversible
+> Adding a column is easy to roll back. Dropping or renaming a column is not -- any downstream consumers that depend on the old schema will break immediately. Always deploy schema changes as additive operations (add new columns, deprecate old ones, remove after all consumers migrate). Never drop a column and deploy new pipeline code in the same release.
 
 ---
 

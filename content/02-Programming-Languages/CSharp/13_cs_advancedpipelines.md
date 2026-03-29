@@ -83,7 +83,7 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 
 ## TPL Dataflow
 
-<h4><code style="font-size:0.75em">TransformBlock</code> and <code style="font-size:0.75em">ActionBlock</code></h4>
+#### TransformBlock and ActionBlock
 
 > [!info] TPL Dataflow blocks
 > - `TransformBlock<TIn, TOut>` — transforms items with configurable parallelism
@@ -176,7 +176,7 @@ Console.WriteLine("  Pipeline complete.");
       [result] AZN: $230.22 ▲
       Pipeline complete.
 
-<h4><code style="font-size:0.75em">BatchBlock</code> — size-bounded batching</h4>
+#### BatchBlock — size-bounded batching
 
 ```csharp
 // BatchBlock — collect individual items into fixed-size arrays
@@ -322,7 +322,7 @@ Console.WriteLine($"\n  Fetched {results.Count} quotes in {sw.ElapsedMillisecond
     
       Fetched 8 quotes in 332ms (3 concurrent max)
 
-<h4><code style="font-size:0.75em">IAsyncEnumerable</code> for paginated FRED API</h4>
+#### IAsyncEnumerable for paginated FRED API
 
 ```csharp
 // IAsyncEnumerable for paginated APIs — stream pages without buffering all
@@ -432,7 +432,7 @@ await producer; // ensure producer completed without exceptions
 
 ## Cross-Process Execution
 
-<h4><code style="font-size:0.75em">Process</code> — spawn external programs</h4>
+#### Process — spawn external programs
 
 > [!info] Process execution
 > - `Process.Start` with `RedirectStandardOutput` — captures stdout

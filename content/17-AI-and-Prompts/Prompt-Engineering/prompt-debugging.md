@@ -40,6 +40,9 @@ When a model produces poor output, the problem is almost always in the prompt, n
 
 ---
 
+> [!warning] Increasing Token Count Rarely Fixes a Broken Prompt
+> When output is poor, the instinct is to add more instructions. But a 2,000-token prompt with contradictory constraints produces worse output than a 500-token prompt with clear structure. Before adding tokens, audit the existing prompt for (1) conflicting instructions, (2) buried goals, and (3) missing format specifications. Removing noise is often more effective than adding signal.
+
 ### Intent vs. Output Misalignment
 
 The most subtle prompt failure is when the output is **technically correct but doesn't serve your goal.** This happens when you describe the task but not the purpose.

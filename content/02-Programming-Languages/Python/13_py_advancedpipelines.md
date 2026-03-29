@@ -50,7 +50,7 @@ print(f'  FINNHUB_KEY:     {"set" if FINNHUB_KEY else "MISSING"}')
 
 ## Async Generators with Real APIs
 
-<h4>Paginated FRED API with <code style="font-size:0.75em">async for</code></h4>
+#### Paginated FRED API with async for
 
 ```python
 # Async generator for paginated FRED API — stream economic data series
@@ -106,6 +106,12 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 
 ## Parallel API Ingestion
 
+> [!danger] `asyncio.gather()` without a semaphore fires ALL requests simultaneously
+> For 50 symbols, `gather(*[fetch(s) for s in symbols])` opens 50 connections at once.
+> Most financial data APIs have strict rate limits (Twelve Data: 8/min, Alpha Vantage:
+> 5/min). Without a semaphore, every request after the limit returns `429 Too Many
+> Requests` — and your pipeline processes empty/error responses as valid data.
+
 #### asyncio.Semaphore + aiohttp — parallel fetch with rate limiting
 
 ```python
@@ -159,7 +165,7 @@ print(f'\n  Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)')
     
       Fetched 8 quotes in 0.65s (3 concurrent max)
 
-<h4><code style="font-size:0.75em">asyncio.as_completed</code> with real API</h4>
+#### asyncio.as_completed with real API
 
 ```python
 # asyncio.as_completed — process results as they arrive, not in submission order
@@ -255,7 +261,7 @@ await consumer_task
 
 ## Cross-Process Execution
 
-<h4><code style="font-size:0.75em">subprocess</code> — spawn external programs</h4>
+#### subprocess — spawn external programs
 
 ```python
 # subprocess — spawn child processes with full isolation

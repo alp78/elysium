@@ -46,7 +46,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 
 ## Read, Write, Append Files
 
-<h4><code style="font-size:0.75em">File.WriteAllText</code> and <code style="font-size:0.75em">File.ReadAllText</code></h4>
+#### File.WriteAllText and File.ReadAllText
 
 > [!info] File class — one-line read/write
 > - `WriteAllText` — creates or overwrites a file
@@ -94,7 +94,7 @@ foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
       [2]: etl_002|failed|0
       [3]: etl_003|success|8200
 
-<h4><code style="font-size:0.75em">StreamReader</code> and <code style="font-size:0.75em">StreamWriter</code></h4>
+#### StreamReader and StreamWriter
 
 ```csharp
 // StreamReader — line-by-line reading for large files
@@ -280,7 +280,7 @@ foreach (var line in pipeData.Split('\n'))
       Pipe: [1, Alice, EMEA]
       Pipe: [2, Bob, APAC]
 
-<h4>In-memory CSV — <code style="font-size:0.75em">StringWriter</code></h4>
+#### In-memory CSV — StringWriter
 
 ```csharp
 // In-memory CSV — StringWriter for API payloads and cloud uploads
@@ -412,7 +412,7 @@ Console.WriteLine($"  Error:    {run2.ErrorMessage}");
       Status:   failed
       Error:    Source table not found
 
-<h4>JSON file I/O and <code style="font-size:0.75em">JsonDocument</code></h4>
+#### JSON file I/O and JsonDocument
 
 ```csharp
 // JSON file I/O and JsonDocument — file persistence and dynamic parsing
@@ -487,7 +487,7 @@ using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
       evt_002: purchase by user 1002
       evt_003: logout by user 1001
 
-<h4><code style="font-size:0.75em">Utf8JsonWriter</code> — write JSON directly to a stream</h4>
+#### Utf8JsonWriter — write JSON directly to a stream
 
 ```csharp
 // Utf8JsonWriter — write JSON directly to a byte stream
@@ -716,7 +716,7 @@ Wrappers (sit on top of a Stream):
     ├── BinaryReader / BinaryWriter  — primitive types
     └── Utf8JsonWriter               — JSON to a stream
 
-<h4><code style="font-size:0.75em">MemoryStream</code> — in-memory byte stream</h4>
+#### MemoryStream — in-memory byte stream
 
 ```csharp
 // MemoryStream — in-memory byte stream for testing and cloud uploads
@@ -765,7 +765,7 @@ using (var ms = new MemoryStream())
     evt_001,page_view,1001
     evt_002,purchase,1002
 
-<h4><code style="font-size:0.75em">StringWriter</code> / <code style="font-size:0.75em">StringReader</code></h4>
+#### StringWriter / StringReader
 
 ```csharp
 // StringWriter / StringReader — text stream in memory
@@ -799,7 +799,7 @@ while ((line = sr.ReadLine()) != null)
       StringReader line 1: etl_001|success|15000
       StringReader line 2: etl_002|failed|0
 
-<h4><code style="font-size:0.75em">BinaryReader</code> / <code style="font-size:0.75em">BinaryWriter</code></h4>
+#### BinaryReader / BinaryWriter
 
 ```csharp
 // BinaryWriter — write primitive types in compact binary format
@@ -817,7 +817,7 @@ Console.WriteLine($"  Written: {new FileInfo(binFile).Length} bytes");
 
       Written: 39 bytes
 
-<h4><code style="font-size:0.75em">BinaryReader</code> — read back in same order and types</h4>
+#### BinaryReader — read back in same order and types
 
 ```csharp
 // BinaryReader — read primitives back in exact same order and types
@@ -862,7 +862,7 @@ using (var br = new BinaryReader(fs))
 
       From memory: sensor=42, value=23.5, alert=True, region=EMEA
 
-<h4><code style="font-size:0.75em">FileStream</code> — low-level byte I/O</h4>
+#### FileStream — low-level byte I/O
 
 ```csharp
 // FileStream — low-level byte I/O with buffer and seek control
@@ -992,7 +992,7 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
     
     // Result: no reflection, no runtime codegen, AOT-compatible, 2-5x faster
 
-<h4><code style="font-size:0.75em">Utf8JsonReader</code> — forward-only zero-allocation parsing</h4>
+#### Utf8JsonReader — forward-only zero-allocation parsing
 
 ```csharp
 // Utf8JsonReader — forward-only zero-allocation JSON parsing
@@ -1032,7 +1032,7 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
 
 ## Memory-Mapped Files
 
-<h4><code style="font-size:0.75em">MemoryMappedFile</code> — OS-paged random access</h4>
+#### MemoryMappedFile — OS-paged random access
 
 Maps a file into virtual address space — OS pages data into RAM on demand. Access any offset without loading the whole file. Use for huge files (>1GB), random access, IPC shared memory. Don't use for sequential reads (StreamReader is simpler) or files <1MB.
 
@@ -1092,7 +1092,7 @@ Directory.Delete(tmpDir, recursive: true);
 
 ## System.IO.Pipelines
 
-<h4><code style="font-size:0.75em">PipeReader</code> and <code style="font-size:0.75em">PipeWriter</code></h4>
+#### PipeReader and PipeWriter
 
 `Pipe` is a producer-consumer buffer. `PipeWriter` writes bytes, `PipeReader` reads without copying (zero-allocation). Buffer manages growth and recycling automatically. Built-in backpressure. Used internally by ASP.NET Core (Kestrel) for HTTP parsing. Don't use for simple file reads.
 
@@ -1162,7 +1162,7 @@ Console.WriteLine("  Pipelines: used by ASP.NET Core Kestrel for HTTP parsing");
 
 ## High-Performance Parsing with Span
 
-<h4>Zero-allocation CSV parsing with <code style="font-size:0.75em">ReadOnlySpan&lt;char&gt;</code></h4>
+#### Zero-allocation CSV parsing with ReadOnlySpan&lt;char&gt;
 
 > [!info] Zero-allocation CSV parsing
 > - `AsSpan()` — creates a zero-allocation view

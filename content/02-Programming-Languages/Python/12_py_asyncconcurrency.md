@@ -51,6 +51,9 @@ The event loop is a single-threaded scheduler that multiplexes coroutines. While
 > - **Missing `await`** — the coroutine is created but never executed
 > - For **CPU-bound work**, use `ProcessPoolExecutor` instead (the GIL blocks threads)
 
+> [!danger] `asyncio.run()` cannot be nested inside a running event loop
+> Calling `asyncio.run()` from within an already-running loop (Jupyter, FastAPI, Airflow tasks) raises `RuntimeError: This event loop is already running`. In notebooks, use `await` directly at top level. In sync code that may run inside an existing loop, use `nest_asyncio.apply()` as a last resort, or restructure to propagate `async` up the call chain.
+
 #### async def / await — basic coroutine
 
 ```python
@@ -118,7 +121,7 @@ print(f"\nResults match: {seq_results == conc_results}")
     
     Results match: True
 
-<h4><code style="font-size:0.75em">asyncio.gather</code> and <code style="font-size:0.75em">TaskGroup</code></h4>
+#### asyncio.gather and TaskGroup
 
 ```python
 # asyncio.gather vs TaskGroup — two approaches to concurrent execution
@@ -281,16 +284,15 @@ print(f"  Success on attempt {attempt_count}: {result}")
 #### Producer-Consumer with asyncio.Queue
 
 ```python
-# Producer-Consumer with asyncio.Queue — async pipeline pattern
+# Producer and worker coroutines for asyncio.Queue pipeline
 
 async def async_producer(queue: asyncio.Queue, n: int):
     """Generate events and put them in the queue."""
     for i in range(n):
         event = {"id": f"evt_{i:03d}", "type": random.choice(["click", "view", "purchase"])}
         await queue.put(event)
-        await asyncio.sleep(0.05)  # simulate arrival rate
-    # Signal workers to stop — one sentinel per worker
-    for _ in range(3):
+        await asyncio.sleep(0.05)
+    for _ in range(3):  # one sentinel per worker
         await queue.put(None)
 
 async def async_worker(name: str, queue: asyncio.Queue, results: list):
@@ -299,12 +301,18 @@ async def async_worker(name: str, queue: asyncio.Queue, results: list):
         event = await queue.get()
         if event is None:
             break
-        await asyncio.sleep(random.uniform(0.02, 0.1))  # simulate processing
+        await asyncio.sleep(random.uniform(0.02, 0.1))
         results.append(f"{name} processed {event['id']}")
         queue.task_done()
+```
+
+#### asyncio.Queue — run producer-consumer pipeline
+
+```python
+# Bounded queue with 3 concurrent workers
 
 print("\n=== Producer-Consumer (asyncio.Queue) ===")
-q = asyncio.Queue(maxsize=5)  # bounded queue — producer blocks when full
+q = asyncio.Queue(maxsize=5)
 results = []
 start = time.perf_counter()
 
@@ -331,7 +339,7 @@ print(f"    ... ({len(results) - 4} more)")
         worker-3 processed evt_003
         ... (8 more)
 
-<h4>Async generators — <code style="font-size:0.75em">async def</code> with <code style="font-size:0.75em">yield</code></h4>
+#### Async generators — async def with yield
 
 ```python
 # Async generators — async def with yield for streaming data
@@ -375,7 +383,7 @@ async for item in fetch_pages(10, 3):
       Fetching page 1...
         page1_item1
 
-<h4><code style="font-size:0.75em">asyncio.as_completed</code> — process fastest results first</h4>
+#### asyncio.as_completed — process fastest results first
 
 ```python
 # asyncio.as_completed — process results in completion order
@@ -408,7 +416,7 @@ for coro in asyncio.as_completed(tasks):
         0.50s: slow_api (0.5s)
         0.81s: very_slow_api (0.8s)
 
-<h4><code style="font-size:0.75em">asyncio.Lock</code> and <code style="font-size:0.75em">asyncio.Event</code></h4>
+#### asyncio.Lock and asyncio.Event
 
 ```python
 # asyncio.Lock and asyncio.Event — async-safe synchronization
@@ -541,7 +549,7 @@ with ThreadPoolExecutor(max_workers=5) as pool:
       Done: logs -> 3400 bytes
       Done: products -> 3800 bytes
 
-<h4><code style="font-size:0.75em">ProcessPoolExecutor</code></h4>
+#### ProcessPoolExecutor
 
 ```python
 # ProcessPoolExecutor — CPU-bound parallelism bypassing the GIL
@@ -566,7 +574,10 @@ print(f"  {len(seq_hashes)} hashes in {seq_time:.2f}s")
     === Sequential (single core) ===
       8 hashes in 0.00s
 
-<h4><code style="font-size:0.75em">ThreadPoolExecutor</code> — GIL limits CPU-bound speedup</h4>
+#### ThreadPoolExecutor — GIL limits CPU-bound speedup
+
+> [!danger] GIL makes threads *slower* than sequential for CPU-bound work
+> The GIL forces only one thread to execute Python bytecode at a time. For CPU-bound tasks, threads add context-switching overhead with zero parallelism gain. The result below shows a speedup less than 1.0x. Use `ProcessPoolExecutor` for CPU-bound work.
 
 ```python
 # ThreadPoolExecutor for CPU-bound — demonstrates GIL limitation
@@ -586,7 +597,7 @@ print(f"  Results match: {seq_hashes == thread_hashes}")
       Speedup vs sequential: 0.6x (GIL limits CPU-bound threads)
       Results match: True
 
-<h4><code style="font-size:0.75em">ProcessPoolExecutor</code> — true multi-core speedup</h4>
+#### ProcessPoolExecutor — true multi-core speedup
 
 ```python
 # ProcessPoolExecutor — true multi-core speedup for CPU-bound work
@@ -659,7 +670,7 @@ ProcessPoolExecutor   CPU-bound work    No (separate)  Parallel.ForEach()
     ThreadPoolExecutor    I/O (sync libs)   Yes, but OK    Task.Run()
     ProcessPoolExecutor   CPU-bound work    No (separate)  Parallel.ForEach()
 
-<h4><code style="font-size:0.75em">multiprocessing.Queue</code> — inter-process communication</h4>
+#### multiprocessing.Queue — inter-process communication
 
 ```python
 # Inter-process communication — subprocess for cross-process data exchange
@@ -750,6 +761,9 @@ print(f"  Active threads: {threading.active_count()}")
 
 #### Threading Locks
 
+> [!danger] `+=` is not thread-safe in Python
+> Python's `+=` on an integer involves three operations (read, add, write) that can interleave across threads. Even though the GIL ensures atomicity of single bytecode instructions, `+=` compiles to multiple instructions. Always use `threading.Lock` or `queue.Queue` for shared mutable state between threads.
+
 #### Threading race condition demo (WITHOUT lock)
 
 ```python
@@ -810,49 +824,51 @@ print(f"  Got:      {counter_safe:,}  (correct — lock prevents race)")
 #### Thread-safe Queue — producer-consumer
 
 ```python
-# Thread-safe Queue — producer-consumer with multiple workers
+# Producer and consumer functions for thread-safe queue
 
 def thread_producer(q: queue.Queue, n: int, stop_event: threading.Event):
     """Produce events and put them in the queue."""
     for i in range(n):
         event = {"id": f"evt_{i:03d}", "type": random.choice(["click", "view", "purchase"])}
         q.put(event)
-        time.sleep(0.02)  # simulate arrival rate
+        time.sleep(0.02)
     stop_event.set()  # signal workers: no more events coming
 
 def thread_consumer(name: str, q: queue.Queue, stop_event: threading.Event, results: list):
     """Consume events from the queue until stop signal + queue empty."""
     while not (stop_event.is_set() and q.empty()):
         try:
-            event = q.get(timeout=0.1)  # wait up to 0.1s for an item
-            time.sleep(random.uniform(0.01, 0.05))  # simulate processing
+            event = q.get(timeout=0.1)
+            time.sleep(random.uniform(0.01, 0.05))
             results.append(f"{name}: {event['id']}")
             q.task_done()
         except queue.Empty:
-            continue  # no item yet, loop back and check stop_event
+            continue
+```
+
+#### queue.Queue — run threaded producer-consumer pipeline
+
+```python
+# 1 producer + 3 consumers with bounded queue
 
 print("=== Thread-safe Queue (producer-consumer) ===")
-q = queue.Queue(maxsize=5)  # bounded queue — producer blocks when full
+q = queue.Queue(maxsize=5)
 stop_event = threading.Event()
 results = []
 start = time.perf_counter()
 
-# Start 1 producer + 3 consumers
 prod_thread = threading.Thread(target=thread_producer, args=(q, 20, stop_event))
 cons_threads = [
     threading.Thread(target=thread_consumer, args=(f"worker-{i}", q, stop_event, results))
     for i in range(3)
 ]
-
 prod_thread.start()
 for t in cons_threads: t.start()
-
 prod_thread.join()
 for t in cons_threads: t.join()
 
 elapsed = time.perf_counter() - start
 print(f"  Processed {len(results)} events in {elapsed:.2f}s")
-# Count events per worker
 worker_counts = Counter(r.split(":")[0] for r in results)
 for w, c in sorted(worker_counts.items()):
     print(f"    {w}: {c} events")

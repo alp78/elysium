@@ -179,6 +179,16 @@ for name, files in [("SQL Insert", sql_insert_files), ("BigQuery", bq_files)]:
 
 ## Upload files from Local to GCS
 
+> [!warning] GCS uploads are NOT atomic — partial uploads leave incomplete objects
+> If an upload fails mid-transfer, a partial object may remain in the bucket. Use
+> resumable uploads (default for `google-cloud-storage` client) and verify with
+> checksums after upload. For critical data, upload to a staging prefix first, then
+> rename (which IS atomic in GCS).
+
+> [!tip] `google-cloud-storage` resumable uploads resume automatically on retry
+> The Python client library uses resumable uploads by default for files >8MB. If the
+> connection drops, re-running the same upload continues from where it stopped.
+
 For the CLI transfer tools (`gsutil cp`, `gcloud storage cp`, `rsync`, `bcp`) that these Python methods wrap or replace, see [[data-transfer]]. The GCS operations benchmarked below have direct CLI equivalents documented in [[gcs-object-operations]].
 
 ```python
@@ -233,7 +243,7 @@ print(f"  Loaded {len(upload_results)} existing results from {RESULTS_FILE.name}
 
       Loaded 33 existing results from upload_results.json
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.upload_from_filename</code> over HTTPS</h4>
+#### Upload CSV to GCS with google-cloud-storage - blob.upload_from_filename over HTTPS
 
 The most straightforward approach. Reads the entire file into memory and uploads in a single request (small files) or automatically switches to a resumable upload for larger files. No tuning required.
 
@@ -255,7 +265,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      27.5s       7.0 MB/s
       large       1.19 GB     2.9min       7.0 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.upload_from_filename(chunk_size)</code> over HTTPS</h4>
+#### Upload CSV to GCS with google-cloud-storage - blob.upload_from_filename(chunk_size) over HTTPS
 
 Explicitly configures the resumable upload chunk size. Each chunk is sent in a separate HTTP request, enabling recovery from mid-upload failures. Useful for unreliable networks — if a chunk fails, only that chunk is retried rather than the whole file.
 
@@ -279,7 +289,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      28.4s       6.8 MB/s
       large       1.19 GB     3.0min       6.8 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">transfer_manager.upload_chunks_concurrently</code> over HTTPS</h4>
+#### Upload CSV to GCS with google-cloud-storage - transfer_manager.upload_chunks_concurrently over HTTPS
 
 Uses `google.cloud.storage.transfer_manager` to split the file into chunks and upload them in parallel across multiple threads. GCS composes the chunks server-side into a single object. Best throughput for large files on high-bandwidth connections.
 
@@ -309,7 +319,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      27.7s       7.0 MB/s
       large       1.19 GB     2.9min       7.1 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.upload_from_file</code> over HTTPS</h4>
+#### Upload CSV to GCS with google-cloud-storage - blob.upload_from_file over HTTPS
 
 Reads the file as a binary stream rather than loading the full path. Useful when data comes from a pipeline, network socket, or in-memory buffer. Avoids materializing the full file in memory — the client library reads and sends in chunks internally.
 
@@ -336,7 +346,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      27.8s       6.9 MB/s
       large       1.19 GB     2.9min       7.0 MB/s
 
-<h4>Upload gzip to GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.upload_from_filename</code> over HTTPS</h4>
+#### Upload gzip to GCS with google-cloud-storage - blob.upload_from_filename over HTTPS
 
 Compresses the CSV to gzip locally, then uploads the smaller payload. Trades CPU time for reduced network transfer. The blob's `content_encoding` is set to `gzip` so GCS transparently decompresses on download.
 
@@ -382,7 +392,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB    63.8 MB    3.0x       6.6s       9.2s      15.8s       6.9 MB/s
       large       1.19 GB   420.3 MB    2.9x      38.7s     1.0min     1.6min       7.0 MB/s
 
-<h4>Upload Parquet to GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.upload_from_filename</code> over HTTPS</h4>
+#### Upload Parquet to GCS with google-cloud-storage - blob.upload_from_filename over HTTPS
 
 Converts CSV to Parquet (columnar, compressed) before uploading. Parquet files are typically 5-10x smaller than CSV for numeric data. Measures total time including the conversion step — useful when downstream consumers (BigQuery, Spark) prefer Parquet anyway.
 
@@ -428,7 +438,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB    53.1 MB    3.6x       2.0s       7.7s       9.7s       6.9 MB/s
       large       1.19 GB   460.9 MB    2.6x      14.2s     1.1min     1.3min       7.0 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">gsutil</code> - <code style="font-size:0.75em">cp</code> over HTTPS</h4>
+#### Upload CSV to GCS with gsutil - cp over HTTPS
 
 Shells out to `gsutil cp`, the standard CLI tool. Uses its own resumable upload logic and retries. Useful as a baseline comparison against the Python client library — also the approach used in shell scripts and CI pipelines.
 
@@ -450,7 +460,7 @@ for tier, path in upload_files.items():
     print(f"  {tier:<8s} {r['size']:>10s} {r['elapsed']:>10s} {r['throughput']:>14s}")
 ```
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">gsutil</code> - <code style="font-size:0.75em">cp -o parallel_composite</code> over HTTPS</h4>
+#### Upload CSV to GCS with gsutil - cp -o parallel_composite over HTTPS
 
 Uses `gsutil -o GSUtil:parallel_composite_upload_threshold=50M` to enable parallel composite uploads at the CLI level. For large files, gsutil splits the file and uploads chunks in parallel — similar to Method 3 but driven entirely by the CLI.
 
@@ -477,7 +487,7 @@ for tier, path in upload_files.items():
     print(f"  {tier:<8s} {r['size']:>10s} {r['elapsed']:>10s} {r['throughput']:>14s}")
 ```
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">gcloud</code> - <code style="font-size:0.75em">storage cp</code> over HTTPS</h4>
+#### Upload CSV to GCS with gcloud - storage cp over HTTPS
 
 The newer `gcloud storage cp` command replaces `gsutil` and uses the same Python client library under the hood. It automatically enables parallel uploads for large files and is the recommended CLI path going forward.
 
@@ -499,7 +509,7 @@ for tier, path in upload_files.items():
     print(f"  {tier:<8s} {r['size']:>10s} {r['elapsed']:>10s} {r['throughput']:>14s}")
 ```
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">google-auth</code> - <code style="font-size:0.75em">AuthorizedSession.put</code> over JSON API (HTTPS)</h4>
+#### Upload CSV to GCS with google-auth - AuthorizedSession.put over JSON API (HTTPS)
 
 Bypasses the client library entirely and drives the GCS JSON API directly via `AuthorizedSession`. Initiates a resumable upload session, then sends the file in 8 MB chunks with explicit `Content-Range` headers. Demonstrates the underlying protocol that all other methods build on.
 
@@ -550,7 +560,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      29.4s       6.6 MB/s
       large       1.19 GB     3.0min       6.7 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">gcloud-aio-storage</code> - <code style="font-size:0.75em">Storage.upload</code> over HTTPS (async)</h4>
+#### Upload CSV to GCS with gcloud-aio-storage - Storage.upload over HTTPS (async)
 
 Uses `gcloud-aio-storage`, an async GCS client built on `aiohttp`. Runs an `asyncio` event loop with a persistent `aiohttp.ClientSession` — a single session reuses the underlying TCP connection and benefits from HTTP keep-alive, avoiding the per-request handshake overhead of the synchronous client. Resumable upload is forced for files >5 MB.
 
@@ -784,7 +794,7 @@ print(f"  Loaded {len(copy_results)} existing results from {COPY_RESULTS_FILE.na
 
       Loaded 15 existing results from vm_transfer_results.json
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">paramiko</code> - <code style="font-size:0.75em">sftp.put</code> over SFTP/SSH</h4>
+#### Copy CSV from local to VM with paramiko - sftp.put over SFTP/SSH
 
 Standard SFTP over SSH. Single-threaded, no compression. Baseline method.
 
@@ -807,7 +817,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB     1.5min       2.1 MB/s
       large       1.19 GB     9.8min       2.1 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp</code> over SSH</h4>
+#### Copy CSV from local to VM with OpenSSH - scp over SSH
 
 Uses Windows OpenSSH `scp` via subprocess. Same SSH transport as SFTP but a simpler protocol with less per-packet overhead.
 
@@ -834,7 +844,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      28.8s       6.7 MB/s
       large       1.19 GB     2.9min       6.9 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp -C</code> over SSH (compressed)</h4>
+#### Copy CSV from local to VM with OpenSSH - scp -C over SSH (compressed)
 
 Same as Method 2 but enables SSH-level compression. Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV.
 
@@ -888,7 +898,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB    63.8 MB    3.0x       6.4s      10.4s      16.8s       6.1 MB/s
       large       1.19 GB   420.3 MB    2.9x      39.0s     1.1min     1.7min       6.6 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">gcloud</code> - <code style="font-size:0.75em">compute scp</code> over SSH</h4>
+#### Copy CSV from local to VM with gcloud - compute scp over SSH
 
 Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH.
 
@@ -915,7 +925,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB      31.7s       6.1 MB/s
       large       1.19 GB     3.0min       6.7 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">paramiko</code> - <code style="font-size:0.75em">sftp.put</code> (tuned window) over SFTP/SSH</h4>
+#### Copy CSV from local to VM with paramiko - sftp.put (tuned window) over SFTP/SSH
 
 Same as Method 1 but increases the SSH window size to 64 MB and disables mid-transfer rekeying, reducing round-trip overhead for large transfers.
 
@@ -1486,6 +1496,11 @@ fig.show()
 
 ## Parallel Transfer
 
+> [!warning] Python's GIL limits multithreading for CPU-bound work, not I/O
+> For GCS uploads (I/O-bound), `ThreadPoolExecutor` works well — the GIL is released
+> during network I/O. For CPU-bound work like compression, use `ProcessPoolExecutor`
+> instead. Mixing CPU and I/O in the same pool causes stalls.
+
 Compares three concurrency strategies for uploading 8 medium-size files to GCS using the top transfer
 method (`streamed` / `blob.upload_from_file`, ranked #1 by mean throughput): sequential, multithreaded
 (8 threads), and multiprocessing (8 processes). Measures total wall-clock time and aggregate throughput.
@@ -1567,7 +1582,7 @@ print(f"  Loaded {len(parallel_results)} existing results from {PARALLEL_RESULTS
 
       Loaded 3 existing results from parallel_transfer_results.json
 
-<h4>Upload 8 files sequentially with <code style="font-size:0.75em">blob.upload_from_file</code></h4>
+#### Upload 8 files sequentially with blob.upload_from_file
 
 Baseline — uploads each file one after the other in a single thread. Total time = sum of individual upload times. No concurrency overhead.
 
@@ -1583,7 +1598,7 @@ print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput'
 
       8 files  1.51 GB  3.7min  7.0 MB/s
 
-<h4>Upload 8 files with <code style="font-size:0.75em">ThreadPoolExecutor</code> (8 threads, semaphore-throttled)</h4>
+#### Upload 8 files with ThreadPoolExecutor (8 threads, semaphore-throttled)
 
 Concurrent uploads using 8 threads. A semaphore limits the number of simultaneous uploads to avoid SSL buffer saturation — remaining threads queue and start as earlier uploads finish.
 
@@ -1610,7 +1625,7 @@ print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput'
 
       8 files  1.51 GB  4.1min  6.3 MB/s
 
-<h4>Upload 8 files with <code style="font-size:0.75em">loky.ProcessPoolExecutor</code> (4 processes)</h4>
+#### Upload 8 files with loky.ProcessPoolExecutor (4 processes)
 
 True parallelism — each upload in a separate process with its own GCS client. 4 workers process 8 files (4 concurrent, 4 queued) to stay within the connection's bandwidth capacity.
 
@@ -1659,7 +1674,7 @@ print("  Cleanup done")
 
 ## Download Files
 
-<h4>Download CSV from GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.download_to_file</code> over HTTPS</h4>
+#### Download CSV from GCS with google-cloud-storage - blob.download_to_file over HTTPS
 
 Streams the blob content directly to a file handle. Avoids materializing the full object in memory — the client library reads and writes in chunks internally. Counterpart to `streamed` upload.
 
@@ -1693,7 +1708,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB       2.0s      95.3 MB/s
       large       1.19 GB      12.0s     101.1 MB/s
 
-<h4>Download CSV from GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">blob.download_to_filename</code> over HTTPS</h4>
+#### Download CSV from GCS with google-cloud-storage - blob.download_to_filename over HTTPS
 
 Downloads the entire blob to a local file in a single request. The client library handles resumable downloads automatically for large files. Counterpart to `resumable_chunked` upload.
 
@@ -1723,7 +1738,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB       2.0s      97.7 MB/s
       large       1.19 GB      11.7s     104.4 MB/s
 
-<h4>Download CSV from GCS with <code style="font-size:0.75em">google-cloud-storage</code> - <code style="font-size:0.75em">transfer_manager.download_chunks_concurrently</code> over HTTPS</h4>
+#### Download CSV from GCS with google-cloud-storage - transfer_manager.download_chunks_concurrently over HTTPS
 
 Uses `google.cloud.storage.transfer_manager` to download the file in parallel chunks across multiple threads. Best throughput for large files on high-bandwidth connections.
 
@@ -1756,7 +1771,7 @@ for tier, path in upload_files.items():
 
 ## Download files from VM
 
-<h4>Download CSV from VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp</code> over SSH</h4>
+#### Download CSV from VM with OpenSSH - scp over SSH
 
 Uses Windows OpenSSH `scp` via subprocess in reverse direction (VM → local). Same SSH transport as upload but pulls data from the VM.
 
@@ -1794,7 +1809,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB       4.4s      43.9 MB/s
       large       1.19 GB      19.2s      63.4 MB/s
 
-<h4>Download CSV from VM with <code style="font-size:0.75em">gcloud</code> - <code style="font-size:0.75em">compute scp</code> over SSH</h4>
+#### Download CSV from VM with gcloud - compute scp over SSH
 
 Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH.
 
@@ -1830,7 +1845,7 @@ for tier, path in upload_files.items():
       medium     193.1 MB       9.9s      19.6 MB/s
       large       1.19 GB      38.4s      31.7 MB/s
 
-<h4>Download CSV from VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp -C</code> over SSH (compressed)</h4>
+#### Download CSV from VM with OpenSSH - scp -C over SSH (compressed)
 
 Same as `scp` but enables SSH-level compression. Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV.
 
@@ -1988,7 +2003,7 @@ print(f"  Loaded {len(compress_results)} existing results from {COMPRESS_RESULTS
 
       Loaded 14 existing results from compression_results.json
 
-<h4>Compress with <code style="font-size:0.75em">gzip</code> (zlib level 6)</h4>
+#### Compress with gzip (zlib level 6)
 
 Standard gzip compression. The most widely supported format — every tool, language, and OS can decompress it. Default level 6 balances speed and ratio.
 
@@ -2020,7 +2035,7 @@ for tier, path in compress_files.items():
       large           1.19 GB     420.3 MB    2.9x      39.5s       3.2s      30.8 MB/s     384.7 MB/s
       1000_small      1.19 GB     420.4 MB    2.9x      44.1s       3.1s      27.6 MB/s     388.2 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">bz2</code> (Burrows-Wheeler)</h4>
+#### Compress with bz2 (Burrows-Wheeler)
 
 Higher compression ratio than gzip but significantly slower. Uses the Burrows-Wheeler transform. Best when storage cost matters more than CPU time.
 
@@ -2052,7 +2067,7 @@ for tier, path in compress_files.items():
       large           1.19 GB     296.7 MB    4.1x      52.2s      25.1s      23.3 MB/s      48.4 MB/s
       1000_small      1.19 GB     296.8 MB    4.1x      54.9s      24.5s      22.2 MB/s      49.6 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">lzma</code> (xz)</h4>
+#### Compress with lzma (xz)
 
 Best compression ratio of the stdlib methods. Very slow to compress but fast to decompress. Used by `.xz` and `.tar.xz` archives. Ideal for archival where you compress once and decompress many times.
 
@@ -2084,7 +2099,7 @@ for tier, path in compress_files.items():
       large           1.19 GB     321.7 MB    3.8x     8.1min      13.0s       2.5 MB/s      93.8 MB/s
       1000_small      1.19 GB     321.7 MB    3.8x     8.0min      12.8s       2.5 MB/s      94.8 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">zstandard</code> (Zstandard/zstd)</h4>
+#### Compress with zstandard (Zstandard/zstd)
 
 Modern compression algorithm by Facebook. Near-gzip ratio at LZ4-like speed. Supports dictionary compression and streaming. The default choice for new systems — used by Linux kernel, Kafka, ClickHouse.
 
@@ -2118,7 +2133,7 @@ for tier, path in compress_files.items():
       large           1.19 GB     438.8 MB    2.8x       5.7s       1.7s     215.1 MB/s     705.7 MB/s
       1000_small      1.19 GB     438.9 MB    2.8x       5.4s       1.6s     226.0 MB/s     784.7 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">lz4</code></h4>
+#### Compress with lz4
 
 Fastest compression algorithm — optimized for speed over ratio. Decompression is extremely fast (multi-GB/s). Used in real-time systems, databases (RocksDB), and in-memory caching where latency matters more than size.
 
@@ -2150,7 +2165,7 @@ for tier, path in compress_files.items():
       large           1.19 GB     749.6 MB    1.6x       2.4s       1.2s     498.5 MB/s     995.2 MB/s
       1000_small      1.19 GB     749.7 MB    1.6x       2.6s       1.1s     459.6 MB/s      1.04 GB/s
 
-<h4>Compress with <code style="font-size:0.75em">brotli</code></h4>
+#### Compress with brotli
 
 Google-developed algorithm optimized for web content. Better ratio than gzip at similar speed (level 4). Used by all modern browsers for HTTP content-encoding. Best for static assets served over CDN.
 
@@ -2180,7 +2195,7 @@ for tier, path in compress_files.items():
       large           1.19 GB     405.4 MB    3.0x      13.7s       3.2s      88.8 MB/s     383.8 MB/s
       1000_small      1.19 GB     405.4 MB    3.0x      13.9s       3.1s      87.8 MB/s     386.8 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">zipfile</code> (ZIP archive)</h4>
+#### Compress with zipfile (ZIP archive)
 
 Standard ZIP format — compresses each file individually within the archive. Unlike the stream-based methods above, ZIP preserves file boundaries and names. Universal format supported by every OS file manager.
 
@@ -2277,13 +2292,19 @@ fig.show()
 
 ## Production Pipeline — Compress, Split, Parallel Upload, Download, Verify, Merge
 
+> [!danger] Always verify checksums after transfer — silent corruption is real
+> Network transfers can produce bit-flip errors that don't trigger TCP checksum failures.
+> GCS stores CRC32C and MD5 checksums for every object — verify after download. Without
+> verification, you won't know a 1GB Parquet file is corrupt until a query fails on row
+> 800,000.
+
 End-to-end pipeline that mirrors how production systems (Kafka, ClickHouse, cloud ETL) handle
 massive file transfers: compress with zstd, split into chunks, upload in parallel, download in
 parallel, verify checksums per chunk, and merge back to the original file.
 
 Uses the large upload file (~1.19 GB) as input.
 
-<h4>Step 1 — Compress with <code style="font-size:0.75em">zstd</code> (level 3)</h4>
+#### Step 1 — Compress with zstd (level 3)
 
 Compress the full file before splitting. Zstd level 3 gives ~3x ratio at near-LZ4 speed — the production sweet spot.
 
@@ -2324,7 +2345,7 @@ print(f"  Time: {fmt_time(compress_ms)}  Throughput: {fmt_bytes(tp)}/s")
       Compressed: 438.8 MB (2.8x ratio)
       Time: 5.2s  Throughput: 234.8 MB/s
 
-<h4>Step 2 — Split into 8 chunks with per-chunk MD5</h4>
+#### Step 2 — Split into 8 chunks with per-chunk MD5
 
 Split the compressed file into 8 equal chunks. Compute MD5 for each chunk — used to verify integrity after download.
 
@@ -2369,7 +2390,7 @@ for name, md5, size in chunk_manifest:
       chunk_06.zst        54.9 MB 069ce02e0072e67f81fd6869b9992a1a
       chunk_07.zst        54.9 MB 492e94537b6ff915b07af6f5af21cc7f
 
-<h4>Step 3 — Parallel upload chunks with <code style="font-size:0.75em">transfer_manager.upload_chunks_concurrently</code></h4>
+#### Step 3 — Parallel upload chunks with transfer_manager.upload_chunks_concurrently
 
 Two levels of parallelism: outer `ThreadPoolExecutor` dispatches 8 chunks (4 concurrent via semaphore), inner `transfer_manager` further splits each chunk into 32 MB sub-chunks and uploads them concurrently. CRC32C checksum per sub-chunk.
 
@@ -2418,7 +2439,7 @@ print(f"  Uploaded {NUM_CHUNKS} chunks ({fmt_bytes(total_uploaded)}) in {fmt_tim
         ✓ uploaded chunk_05.zst
       Uploaded 8 chunks (438.8 MB) in 1.0min  (7.0 MB/s)
 
-<h4>Step 4 — Parallel download chunks from GCS</h4>
+#### Step 4 — Parallel download chunks from GCS
 
 Download all 8 chunks back in parallel. Uses `blob.download_to_file` (top download method).
 
@@ -2462,7 +2483,7 @@ print(f"  Downloaded {NUM_CHUNKS} chunks in {fmt_time(download_ms)}  ({fmt_bytes
         ✓ downloaded chunk_01.zst
       Downloaded 8 chunks in 4.7s  (92.6 MB/s)
 
-<h4>Step 5 — Verify chunk checksums</h4>
+#### Step 5 — Verify chunk checksums
 
 Compare MD5 of each downloaded chunk against the manifest computed at split time. Any mismatch means corruption during transfer.
 
@@ -2493,7 +2514,7 @@ print(f"  {'All chunks verified OK' if all_ok else 'CHECKSUM FAILURE — transfe
       chunk_07.zst       492e94537b6ff915b07af6f5af21cc7f   492e94537b6ff915b07af6f5af21cc7f ✓
       All chunks verified OK
 
-<h4>Step 6 — Merge chunks and decompress</h4>
+#### Step 6 — Merge chunks and decompress
 
 Concatenate the downloaded chunks back into the compressed file, then decompress with zstd. Verify the final file matches the original via MD5.
 

@@ -41,6 +41,15 @@ using System.Runtime.CompilerServices;
 > - **`await` in a loop** when `Task.WhenAll` works — sequential instead of concurrent
 > - For **CPU-bound work**, use `Task.Run` or `Parallel` instead
 
+> [!danger] `.Result` and `.Wait()` cause deadlocks in synchronization contexts
+> Calling `.Result` or `.Wait()` on a `Task` from a thread with a `SynchronizationContext` (ASP.NET, WinForms, WPF) blocks the thread that the `await` continuation needs to resume on, causing a permanent deadlock. Always use `await` instead. In rare cases where sync-over-async is unavoidable, use `Task.Run(() => AsyncMethod()).Result` to escape the context.
+
+> [!danger] `async void` — exceptions are unobservable and crash the process
+> Exceptions in `async void` methods propagate to the `SynchronizationContext` and terminate the process. The caller has no `Task` to `await` or catch. Always use `async Task`. The only valid use of `async void` is UI event handlers (`async void Button_Click`).
+
+> [!tip] `ConfigureAwait(false)` in library code
+> In library code (not UI or ASP.NET controllers), add `.ConfigureAwait(false)` after every `await` to avoid capturing the synchronization context. This prevents deadlocks when callers use `.Result` and improves performance by skipping context marshaling.
+
 #### async/await Task — basic async method
 
 ```csharp
@@ -109,7 +118,7 @@ Console.WriteLine($"  Results: {results.Length} dictionaries");
       Total: 1.01s (max of all delays)
       Results: 3 dictionaries
 
-<h4><code style="font-size:0.75em">Task.WhenAll</code> and <code style="font-size:0.75em">Task.WhenAny</code></h4>
+#### Task.WhenAll and Task.WhenAny
 
 ```csharp
 // Task.WhenAll vs Task.WhenAny — waiting strategies
@@ -172,7 +181,7 @@ Console.WriteLine($"  First to finish: {await fastest}");
     === Task.WhenAny (first wins) ===
       First to finish: replica-eu: 300 rows
 
-<h4><code style="font-size:0.75em">CancellationToken</code></h4>
+#### CancellationToken
 
 ```csharp
 // CancellationToken — cooperative cancellation for async operations
@@ -346,40 +355,40 @@ Console.WriteLine($"  Success on attempt {attemptCount}: {apiResult}");
 #### Channel<T> — async producer-consumer
 
 ```csharp
-// Channel<T> — async producer-consumer pipeline
+// Channel producer — writes events then completes the channel
 
 Console.WriteLine("\n=== Channel<T> (async producer-consumer) ===");
-var channel = Channel.CreateBounded<Dictionary<string, string>>(5);  // max 5 items buffered
+var channel = Channel.CreateBounded<Dictionary<string, string>>(5);
 var processedCount = 0;
 
-// Producer: write events to channel
 var producerTask = Task.Run(async () =>
 {
     var types = new[] { "click", "view", "purchase" };
     for (int i = 0; i < 12; i++)
     {
         var evt = new Dictionary<string, string>
-        {
-            ["id"] = $"evt_{i:D3}",
-            ["type"] = types[Random.Shared.Next(types.Length)]
-        };
+            { ["id"] = $"evt_{i:D3}", ["type"] = types[Random.Shared.Next(types.Length)] };
         await channel.Writer.WriteAsync(evt);
-        await Task.Delay(50);  // simulate arrival rate
+        await Task.Delay(50);
     }
-    channel.Writer.Complete();  // signal: no more items
+    channel.Writer.Complete();
 });
+```
 
-// Consumer: read events from channel
+#### Channel&lt;T&gt; — consumer and pipeline execution
+
+```csharp
+// Consumer reads until channel completes, then run 3 workers
+
 async Task ConsumeAsync(string workerName, ChannelReader<Dictionary<string, string>> reader)
 {
-    await foreach (var evt in reader.ReadAllAsync())  // async iteration!
+    await foreach (var evt in reader.ReadAllAsync())
     {
-        await Task.Delay(Random.Shared.Next(20, 100));  // simulate processing
+        await Task.Delay(Random.Shared.Next(20, 100));
         Interlocked.Increment(ref processedCount);
     }
 }
 
-// Start 3 consumers
 sw.Restart();
 await Task.WhenAll(
     producerTask,
@@ -395,7 +404,7 @@ Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeco
     === Channel<T> (async producer-consumer) ===
       Processed 12 events in 0.78s with 3 workers
 
-<h4><code style="font-size:0.75em">IAsyncEnumerable&lt;T&gt;</code> — async streaming with yield</h4>
+#### IAsyncEnumerable&lt;T&gt; — async streaming with yield
 
 ```csharp
 // IAsyncEnumerable<T> — async streaming with yield return
@@ -433,10 +442,10 @@ Console.WriteLine($"  Total: {count} items in {sw.ElapsedMilliseconds}ms");
         Received: page3_item2
       Total: 6 items in 326ms
 
-<h4><code style="font-size:0.75em">IAsyncEnumerable</code> with cancellation and LINQ</h4>
+#### IAsyncEnumerable with cancellation and LINQ
 
 ```csharp
-// IAsyncEnumerable with cancellation and LINQ — graceful stream termination
+// IAsyncEnumerable with CancellationToken — graceful stream termination
 
 async IAsyncEnumerable<int> GenerateNumbersAsync(
     [EnumeratorCancellation] CancellationToken ct = default)
@@ -444,12 +453,11 @@ async IAsyncEnumerable<int> GenerateNumbersAsync(
     int n = 0;
     while (!ct.IsCancellationRequested)
     {
-        await Task.Delay(50, ct); // throws OperationCanceledException when cancelled
+        await Task.Delay(50, ct);
         yield return n++;
     }
 }
 
-// Cancel after 200ms — consumer catches the cancellation cleanly
 var cts = new CancellationTokenSource(200);
 var collected = new List<int>();
 try
@@ -457,22 +465,27 @@ try
     await foreach (var n in GenerateNumbersAsync().WithCancellation(cts.Token))
         collected.Add(n);
 }
-catch (OperationCanceledException) { } // expected — not an error
+catch (OperationCanceledException) { }
 Console.WriteLine($"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]");
+```
 
-// Early exit with break — stops fetching further pages
+      Collected 3 items before cancellation: [0, 1, 2]
+
+#### IAsyncEnumerable with break — early exit disposes the enumerator
+
+```csharp
+// break disposes the enumerator — producer stops cleanly
+
 Console.WriteLine("\n  First 5 from paginated source:");
 count = 0;
 await foreach (var item in FetchPagesAsync(10, 3))
 {
     Console.WriteLine($"    {item}");
     count++;
-    if (count >= 5) break; // break disposes the enumerator — producer stops cleanly
+    if (count >= 5) break;
 }
 ```
 
-      Collected 3 items before cancellation: [0, 1, 2]
-    
       First 5 from paginated source:
       Fetching page 1...
         page1_item1
@@ -596,41 +609,34 @@ foreach (var t in fetchedTables.Take(3))
 #### PLINQ (Parallel LINQ)
 
 ```csharp
-// PLINQ — parallel LINQ for CPU-bound data processing
+// PLINQ — parallel LINQ with AsParallel()
 
 Console.WriteLine("\n=== PLINQ (.AsParallel()) ===");
-
-// Data Engineering scenario: parse and validate a large batch of records.
 var rawRecords = Enumerable.Range(0, 1_000_000)
     .Select(i => $"evt_{i:D7},user_{i % 100:D3},{i * 0.01:F2}")
     .ToArray();
 
 sw.Restart();
 var parsed = rawRecords
-    .AsParallel()                    // enable parallel execution
-    .WithDegreeOfParallelism(4)      // use 4 cores
-    .Where(r => !r.Contains("user_000"))  // filter out user_000
-    .Select(r =>
-    {
-        var parts = r.Split(',');
-        return new { EventId = parts[0], User = parts[1], Value = double.Parse(parts[2]) };
-    })
-    .Where(r => r.Value > 50.0)      // predicate pushdown
+    .AsParallel()
+    .WithDegreeOfParallelism(4)
+    .Where(r => !r.Contains("user_000"))
+    .Select(r => { var p = r.Split(','); return new { EventId = p[0], User = p[1], Value = double.Parse(p[2]) }; })
+    .Where(r => r.Value > 50.0)
     .ToArray();
 sw.Stop();
+Console.WriteLine($"  Parsed {rawRecords.Length:N0} -> {parsed.Length:N0} filtered in {sw.Elapsed.TotalSeconds:F2}s");
+```
 
-Console.WriteLine($"  Parsed {rawRecords.Length:N0} records -> {parsed.Length:N0} filtered in {sw.Elapsed.TotalSeconds:F2}s");
-Console.WriteLine($"  Sample: {parsed[0]}");
+#### PLINQ vs sequential — speedup comparison
 
-// Sequential comparison
+```csharp
+// Sequential comparison to show PLINQ speedup on large data
+
 sw.Restart();
 var seqParsed = rawRecords
     .Where(r => !r.Contains("user_000"))
-    .Select(r =>
-    {
-        var parts = r.Split(',');
-        return new { EventId = parts[0], User = parts[1], Value = double.Parse(parts[2]) };
-    })
+    .Select(r => { var p = r.Split(','); return new { EventId = p[0], User = p[1], Value = double.Parse(p[2]) }; })
     .Where(r => r.Value > 50.0)
     .ToArray();
 sw.Stop();
@@ -701,6 +707,9 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
       [104] fetch_users finished
       [102] fetch_events finished
       Results: [fetch_events done, fetch_users done, fetch_products done]
+
+> [!danger] `++` and `+=` are not atomic — they cause race conditions without synchronization
+> `counter++` in C# compiles to read-increment-write which can interleave across threads. Use `lock`, `Interlocked.Increment`, or `ConcurrentDictionary` for thread-safe mutation. Unlike Python's GIL, C# has true parallelism, making races more frequent and harder to reproduce.
 
 #### Threading race condition demo (WITHOUT lock)
 
@@ -883,7 +892,7 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 
 ## Advanced Synchronization
 
-<h4><code style="font-size:0.75em">ReaderWriterLockSlim</code></h4>
+#### ReaderWriterLockSlim
 
 > [!info] ReaderWriterLockSlim
 > - `EnterReadLock` — allows multiple concurrent readers
@@ -955,7 +964,7 @@ Console.WriteLine($"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.K
       Reader 1: ETL_001 = success
       Final cache: ETL_001=success, ETL_002=completed
 
-<h4><code style="font-size:0.75em">ManualResetEventSlim</code> and <code style="font-size:0.75em">CountdownEvent</code></h4>
+#### ManualResetEventSlim and CountdownEvent
 
 ```csharp
 // ManualResetEventSlim and CountdownEvent — thread signaling
@@ -1012,7 +1021,7 @@ Console.WriteLine("  Main: all 3 workers finished setup, proceeding");
       Worker 2: setup done
       Main: all 3 workers finished setup, proceeding
 
-<h4><code style="font-size:0.75em">Barrier</code> — phased synchronization</h4>
+#### Barrier — phased synchronization
 
 ```csharp
 // Barrier — phased synchronization where all participants reach a checkpoint
@@ -1052,7 +1061,7 @@ await Task.WhenAll(phasedWorkers);
       Worker 0: load done
       Worker 1: load done
 
-<h4><code style="font-size:0.75em">PeriodicTimer</code> — modern scheduled polling</h4>
+#### PeriodicTimer — modern scheduled polling
 
 ```csharp
 // PeriodicTimer — modern .NET 6+ async-friendly scheduled polling

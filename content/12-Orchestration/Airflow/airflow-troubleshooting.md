@@ -73,6 +73,9 @@ A reference for diagnosing and fixing the most common Apache Airflow problems en
 
 ---
 
+> [!danger] DAG Import Errors Are Silent in the Scheduler Logs
+> When a DAG file has a Python syntax error or missing import, the Scheduler logs a warning but continues processing other DAGs. The broken DAG simply vanishes from the UI with no alert. If you rely on DAG-level failure callbacks for alerting, they will NOT fire for import errors because the DAG never loads. Monitor the `airflow.dag_processing.import_errors` metric in Datadog and alert when it exceeds 0.
+
 ## Issue 1: DAG Import Errors
 
 **Symptom:** The Airflow UI shows a red banner: `DAG Import Errors` on the DAGs list page, or a specific DAG has an "Import Error" badge. The DAG does not appear as runnable.

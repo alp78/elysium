@@ -533,6 +533,9 @@ When a constituent is removed from an index, the source row disappears. By defau
 > [!note] `invalidate_hard_deletes` overhead
 > When enabled, dbt runs an additional query to find keys present in the snapshot but absent from the source. For very large snapshot tables this adds meaningful query time. Consider partitioning the snapshot table by a date column and filtering accordingly.
 
+> [!danger] Snapshot Timestamps Record Pipeline Time, Not Business Time
+> This is the single most misunderstood aspect of dbt snapshots. `dbt_valid_from` does NOT contain the business effective date -- it contains when the pipeline last ran. If your pipeline runs Monday through Friday but misses Saturday/Sunday, weekend changes all get stamped with Monday's timestamp. PIT queries using `dbt_valid_from` will show incorrect results for weekend dates. Always store and query on the source `effective_date` for business-logic PIT joins.
+
 ### Snapshot Timestamps Use `current_timestamp`
 
 The `dbt_valid_from` and `dbt_valid_to` are set to `current_timestamp` at the time `dbt snapshot` runs — not the `effective_date` or `provider_updated_at` from the source. This means:

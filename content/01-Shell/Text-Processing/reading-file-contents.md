@@ -20,31 +20,42 @@ A senior data engineer reads files differently depending on context. Checking a 
 
 #### cat, head, tail, less — basic file reading
 
+> [!info] `cat` concatenates and prints. Fine for files under a few hundred lines.
+> For larger files, use `less` (pager with search) or `head`/`tail`.
+
 ```bash
-# Read a small file (config, script, schema)
 cat filename
-# cat = concatenate and print. Fine for files under a few hundred lines.
-# For larger files, use less (pager with search) or head/tail
+```
 
-# First and last N lines (boundary checking)
-head -n 20 data.csv     # first 20 lines (check headers, column structure)
-tail -n 20 data.csv     # last 20 lines (check for truncation, footer junk)
-head -n 1 data.csv      # header row only (see column names)
+#### head, tail — check file boundaries
 
-# Follow a log file in real-time (the most-used command during incidents)
+> [!info] `head` shows the top, `tail` shows the bottom. `head -n 1` extracts the
+> header row from a CSV — use this to check column names before loading.
+
+```bash
+head -n 20 data.csv
+tail -n 20 data.csv
+head -n 1 data.csv
+```
+
+#### tail -f — follow a log file in real-time
+
+> [!info] `-f` (follow) keeps the terminal open, printing new lines as they're appended.
+> The most-used command during incidents. `Ctrl+C` to stop.
+
+```bash
 tail -f /var/log/pipeline/run.log
-# -f = follow — keeps the terminal open, printing new lines as they're appended
-# Ctrl+C to stop
-
-# Follow multiple log files simultaneously
 tail -f /var/log/pipeline/*.log
-# Shows filename headers as each file gets new content
-# Use case: monitoring scheduler, worker, and database logs at the same time
+```
 
-# Follow with grep (filter noise in real-time)
-tail -f /var/log/pipeline/run.log | grep --line-buffered "ERROR|WARN|DEADLOCK"
-# --line-buffered = flush output on every line (without this, grep buffers and you see nothing)
-# | = OR in basic regex (or use grep -E "ERROR|WARN|DEADLOCK" for extended regex)
+#### tail -f | grep — filter noise from a live log stream
+
+> [!warning] `--line-buffered` is required when piping grep after `tail -f`
+> Without it, grep buffers output and you see nothing for minutes. `--line-buffered`
+> forces grep to flush on every matching line.
+
+```bash
+tail -f /var/log/pipeline/run.log | grep --line-buffered -E "ERROR|WARN|DEADLOCK"
 ```
 
 ### Analyzing a large log file during an incident — grep, awk, sort workflow
@@ -94,31 +105,32 @@ grep "ERROR" /tmp/outage_window.log | awk '{print $NF}' | sort | uniq -c | sort 
 
 ### PowerShell — Get-Content -Wait, Select-String for log analysis
 
-```powershell
-# Read entire file
-Get-Content filename         # aliases: cat, type, gc
+#### Get-Content — read entire file or head/tail
 
-# First/last N lines
+> [!info] Aliases: `cat`, `type`, `gc`. `-Head` and `-Tail` work like `head -n` and
+> `tail -n`.
+
+```powershell
+Get-Content filename
 Get-Content filename -Head 20
 Get-Content filename -Tail 20
+```
 
-# Follow a log file in real-time
+#### Get-Content -Wait — follow a log file in real-time (like tail -f)
+
+```powershell
 Get-Content filename -Wait -Tail 10
-# -Wait = keep reading as new lines appear (like tail -f)
-# -Tail 10 = start from the last 10 lines
+```
 
-# Search inside files (PowerShell's grep)
+#### Select-String — search inside files (PowerShell grep)
+
+> [!info] Returns `MatchInfo` objects with `LineNumber`, `Line`, and `Filename` properties.
+> `-Context 3` shows 3 lines before and after each match. For the full `Select-String`
+> reference, see [[grep-and-pattern-matching]].
+
+```powershell
 Select-String -Path "C:\logs\*.log" -Pattern "ERROR" -Context 3
-# -Path = file glob pattern
-# -Pattern = regex (or use -SimpleMatch for literal string matching)
-# -Context 3 = show 3 lines before and after each match
-# Returns MatchInfo objects with LineNumber, Line, Filename properties
-
-# Count matches
 (Select-String -Path pipeline.log -Pattern "ERROR").Count
-
-# Search recursively
-Select-String -Path "C:\pipeline\**\*.log" -Pattern "DEADLOCK" -Recurse
 ```
 
 ## Related

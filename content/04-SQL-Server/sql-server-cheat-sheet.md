@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server cheat sheet, T-SQL quick reference, sqlcmd cheat sheet]
 keywords: [sql server, cheat sheet, quick reference, sqlcmd, bcp, backup, restore, performance, blocking, deadlock, index, wait stats, memory, security, concurrency, dbcc]
 description: "Exhaustive SQL Server CLI and T-SQL reference — sqlcmd, bcp, server info, space/size, active sessions, wait stats, memory, indexes, backup/restore, configuration, security, concurrency, and DBCC commands."
@@ -1663,7 +1663,7 @@ DBCC TRACEOFF (3604);
 
 ---
 
-## Quick-Reference: Key DMVs
+### Quick-Reference: Key DMVs
 
 | DMV | Purpose |
 |-----|---------|
@@ -1690,7 +1690,7 @@ DBCC TRACEOFF (3604);
 
 ---
 
-## Related
+### Related
 
 - [[sqlcmd-connection-and-usage]]
 - [[essential-dba-queries]]

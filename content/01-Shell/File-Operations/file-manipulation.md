@@ -18,45 +18,88 @@ Copying, moving, and deleting files seems trivial until you accidentally overwri
 
 ## Linux — cp, mv, rm, rsync
 
-#### cp, cp -a, rsync — copying files and directories
+#### cp — copy files and directories
+
+> [!info] `cp` copies files. Without flags it copies a single file. Add `-r` for
+> directories (required — `cp` refuses to copy a directory without it).
 
 ```bash
-# Copy a file
 cp source.txt dest.txt
-
-# Copy a directory recursively
 cp -r source_dir/ dest_dir/
-# -r = recursive (required for directories)
-
-# Copy preserving metadata (timestamps, permissions, ownership)
-cp -a source_dir/ dest_dir/
-# -a = archive mode (-r + preserve all attributes)
-# Use this when copying pipeline data directories — preserves modification times
-# that downstream processes may depend on for change detection
-
-# Copy with progress bar (for large files)
-rsync -ah --progress source.tar.gz dest/
-# rsync = the Swiss Army knife of file copying
-# -a = archive mode (recursive, preserve everything)
-# -h = human-readable sizes
-# --progress = show transfer progress per file
-# rsync also supports resume: if interrupted, re-run the same command and it continues
 ```
 
-#### mv — moving and renaming files and directories
+#### cp -a — archive copy preserving all metadata
+
+> [!info] `-a` (archive) combines `-r` with full metadata preservation: timestamps,
+> permissions, ownership, and symlinks. Use this when copying pipeline data directories —
+> downstream processes often rely on modification times for change detection.
 
 ```bash
-# Move/rename
+cp -a source_dir/ dest_dir/
+```
+
+> [!warning] `cp -r` does NOT preserve timestamps
+> Plain `cp -r` copies files but resets `mtime` to the current time. If a downstream
+> process uses `find -newer` or `stat` to detect changes, every file appears "new" after
+> a `cp -r` copy. Always use `cp -a` for data directories.
+
+#### rsync — copy with progress, resume, and selective sync
+
+> [!info] `rsync` is the standard tool for large or resumable file copies. If interrupted,
+> re-run the same command — it picks up where it left off by comparing checksums. The `-a`
+> flag enables archive mode (recursive + preserve all attributes).
+
+```bash
+rsync -ah --progress source.tar.gz dest/
+```
+
+> [!danger] rsync trailing slash changes what gets copied
+> A trailing `/` on the source means "copy the **contents** of this directory." No
+> trailing `/` means "copy the **directory itself**."
+>
+> | Command | Result |
+> |---|---|
+> | `rsync -a src/ dest/` | Files land directly in `dest/` |
+> | `rsync -a src dest/` | Creates `dest/src/` containing the files |
+>
+> Combined with `--delete`, a wrong trailing slash can **wipe the destination directory**.
+> Always dry-run first: `rsync -ah --delete --dry-run src/ dest/`
+
+> [!tip] `--dry-run` (`-n`) — preview before you destroy
+> `rsync -avn --delete src/ dest/` shows exactly what would be transferred and deleted
+> without touching any files. Make this a habit before any `rsync --delete` operation.
+
+#### mv — move and rename files
+
+> [!info] `mv` renames files on the same filesystem using a single `rename()` syscall —
+> instantaneous regardless of file size. When source and destination are on different
+> filesystems, `mv` falls back to copy + delete (equivalent to `cp -a` then `rm`).
+
+```bash
 mv old.txt new.txt
 mv file.txt /other/dir/
-# mv is atomic on the same filesystem (instant rename, no copy)
-# mv across filesystems = copy + delete (slow for large files)
-
-# Rename multiple files (batch rename)
-rename 's/\.csv$/.csv.bak/' *.csv
-# rename = Perl-based rename utility (install: apt install rename)
-# Renames all .csv files to .csv.bak in one command
 ```
+
+> [!warning] `mv` across filesystems is NOT atomic
+> Same-filesystem `mv` is a single syscall — it either succeeds or fails, nothing in
+> between. Cross-filesystem `mv` is copy-then-delete. If the copy fails (disk full,
+> permission error), you end up with a partial file at the destination and the original
+> still at the source. For critical files, use `rsync` + verify + `rm` instead.
+
+#### rename — batch rename files with Perl regex
+
+> [!info] The Perl-based `rename` utility applies a regex substitution to every matching
+> filename. Install with `apt install rename` (Debian/Ubuntu). Not installed by default.
+
+```bash
+rename 's/\.csv$/.csv.bak/' *.csv
+```
+
+> [!warning] Two different `rename` utilities exist on Linux
+> Debian/Ubuntu ship the **Perl rename** (`rename 's/old/new/' files`). RHEL/CentOS ship
+> the **util-linux rename** (`rename old new files`) — completely different syntax. Check
+> which you have with `rename --version`. If you need portability, use a `for` loop with
+> `mv` instead.
 
 ### rm — safe delete pattern with trash directory
 
@@ -83,19 +126,34 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 > ```
 > This gives you a recovery window. In production, the cost of a 30-second delay to verify is infinitely less than the cost of accidentally deleting a database backup directory.
 
-### mkdir, chmod, chown — directory creation and file permissions
+#### mkdir -p — create directory trees with brace expansion
+
+> [!info] `-p` creates parent directories as needed and suppresses "already exists"
+> errors — making it idempotent (safe to run repeatedly). Combined with
+> [[brace-expansion-and-globbing|brace expansion]], a single command creates an entire
+> [[medallion-architecture]] directory tree.
 
 ```bash
-# Create directory with parents
 mkdir -p /data/pipeline/{bronze,silver,gold}/staging
-# -p = create parent directories as needed, no error if already exists
-# Combined with brace expansion: creates the full [[medallion-architecture]] directory tree
-
-# File permissions — the numeric system
-chmod 755 script.sh
-chmod +x script.sh    # add execute permission for all
-chmod u+w,g-w file    # add write for user, remove write for group
 ```
+
+#### chmod — set file permissions with octal or symbolic notation
+
+> [!info] `chmod` sets read/write/execute permissions. Octal notation (e.g., `755`) sets
+> all three permission groups at once. Symbolic notation (e.g., `u+x`) modifies specific
+> bits without affecting the rest.
+
+```bash
+chmod 755 script.sh
+chmod +x script.sh
+chmod u+w,g-w file
+```
+
+> [!warning] `chmod` follows symlinks by default
+> `chmod 600 my_link` changes permissions on the **target file**, not the symlink itself.
+> On most Linux filesystems, symlink permissions are ignored entirely — the target's
+> permissions govern access. This surprises people who expect the symlink to act as a
+> permission barrier.
 
 > [!info] Octal permission patterns (Owner/Group/Others)
 > - `755` — scripts and executables (owner can write, everyone can read/execute)
@@ -104,10 +162,14 @@ chmod u+w,g-w file    # add write for user, remove write for group
 > - `700` — private directories (only owner can enter)
 > - Each digit = read (4) + write (2) + execute (1)
 
+#### chown — change file ownership for Docker and multi-user environments
+
+> [!info] `chown` changes the owner and group of a file. The `user:group` syntax sets
+> both at once. `-R` applies recursively to all files in a directory tree.
+
 ```bash
-# File ownership — critical for Docker and multi-user environments
 chown user:group file.txt
-chown -R 50000:0 /home/airflow/dags/   # Airflow default UID 50000
+chown -R 50000:0 /home/airflow/dags/
 ```
 
 > [!tip] Docker Bind Mount Permission Fix
@@ -117,51 +179,74 @@ chown -R 50000:0 /home/airflow/dags/   # Airflow default UID 50000
 > ```
 > The UID 50000 is Airflow's default container user. Verify with `docker inspect` if using a custom image. For the full [[container-lifecycle]] including bind mounts and volume management, see the Docker section.
 
-### du, df — disk usage and free space analysis
+#### du -sh — check directory size before copying or deleting
+
+> [!info] Always check the size of what you're about to copy or delete. `-s` gives a
+> summary total, `-h` makes it human-readable. For a full disk investigation workflow
+> including `du` vs `df` discrepancies and inode exhaustion, see
+> [[navigation-and-listing]].
 
 ```bash
-# Disk usage analysis
 du -sh /var/opt/mssql/data/
-# -s = summary (total only, not per-file)
-# -h = human-readable
-
 du -h --max-depth=1 /var/opt/mssql/ | sort -rh
-# --max-depth=1 = immediate children only
-# sort -rh = reverse, human-numeric sort (largest first)
-
-df -h
-# Disk free space for all mounted filesystems
-# CHECK THIS REGULARLY on database servers — SQL Server crashes when disk is full
-# For the full disk-full investigation workflow, see the [[sql-server-disk-full]] runbook
 ```
 
-### PowerShell — Copy-Item, Move-Item, Remove-Item, New-Item file operations
+#### df -h — check free space before writing
+
+> [!warning] SQL Server **stops** when the disk is full. Always verify free space before
+> large copies or data imports. For the full disk-full runbook, see
+> [[sql-server-disk-full]].
+
+```bash
+df -h
+```
+
+## PowerShell — Copy-Item, Move-Item, Remove-Item, New-Item
+
+#### Copy-Item — copy files and directories
+
+> [!info] `Copy-Item` copies files. Add `-Recurse` for directories. Unlike `cp -a`, it
+> does NOT preserve timestamps by default — the copy gets the current timestamp.
 
 ```powershell
-# Copy
 Copy-Item source.txt dest.txt
 Copy-Item -Path source_dir -Destination dest_dir -Recurse
+```
 
-# Move/rename
+#### Move-Item, Rename-Item — move and rename files
+
+> [!info] `Move-Item` moves files between paths. `Rename-Item` renames within the same
+> directory. Like Linux `mv`, same-drive moves are instant renames; cross-drive moves
+> are copy + delete.
+
+```powershell
 Move-Item old.txt new.txt
 Rename-Item old.txt new.txt
+```
 
-# Delete (with the same warning as Linux)
-Remove-Item file.txt
+#### Remove-Item — delete files and directories
+
+> [!warning] Always verify contents before removing. `Remove-Item -Recurse -Force`
+> is the PowerShell equivalent of `rm -rf` — no confirmation, no recovery.
+
+```powershell
+Get-ChildItem directory | Format-Table Name
 Remove-Item directory -Recurse -Force
-# ALWAYS verify: Get-ChildItem directory | Format-Table Name BEFORE removing
+```
 
-# Create directory
+> [!danger] `Remove-Item -Recurse` has a known intermittent bug
+> On Windows, `Remove-Item -Recurse` occasionally fails with "directory is not empty"
+> when files are still being released by antivirus or indexing processes. The workaround
+> is `Remove-Item -Recurse -Force -ErrorAction SilentlyContinue` in a retry loop, or
+> use `[System.IO.Directory]::Delete($path, $true)` for reliable recursive deletion.
+
+#### New-Item — create directories with parent creation
+
+> [!info] `-Force` creates parent directories as needed (like `mkdir -p`). Returns the
+> created item object.
+
+```powershell
 New-Item -ItemType Directory -Path "C:\data\pipeline\bronze" -Force
-# -Force = create parent directories as needed
-
-# Disk usage for a directory
-"{0:N2} GB" -f ((Get-ChildItem -Path "C:\data" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1GB)
-
-# Disk free space
-Get-PSDrive -PSProvider FileSystem | Format-Table Name,
-    @{N='Used(GB)';E={[math]::Round($_.Used/1GB,1)}},
-    @{N='Free(GB)';E={[math]::Round($_.Free/1GB,1)}}
 ```
 
 ## Related

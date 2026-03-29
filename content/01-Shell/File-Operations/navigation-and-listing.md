@@ -28,11 +28,52 @@ The `ls` command is your window into the file system. The flags you choose deter
 > - Combined: most recently modified file appears **last** (at the bottom of your terminal, right next to your cursor)
 
 ```bash
-ls -lhrt              # most recent at the bottom
-ls -la                # show hidden files (.env, .git, .dockerignore)
-ls -d */              # show only directories
-tree -L 2 --dirsfirst # visual tree (apt install tree)
+ls -lhrt
 ```
+
+#### ls -la — show hidden files (dotfiles)
+
+> [!info] `-a` includes entries starting with `.` — the convention Unix uses to hide
+> files. In data engineering directories, critical files like `.env`, `.git/`,
+> `.dockerignore`, and `.dbt/` are all hidden by default. If a pipeline can't find its
+> config, check hidden files first.
+
+```bash
+ls -la
+```
+
+#### ls -d */ — list only directories
+
+> [!info] `-d` tells `ls` to list the directory entry itself rather than its contents.
+> Combined with the `*/` glob, this shows only directories in the current path — useful
+> for surveying project structure without file noise.
+
+```bash
+ls -d */
+```
+
+#### tree — visual directory tree
+
+> [!info] `tree` prints a recursive directory structure as an indented tree. Not installed
+> by default on minimal Linux images (Debian slim, Alpine, Docker base images). Install
+> with `apt install tree` (Debian/Ubuntu) or `yum install tree` (RHEL/CentOS).
+
+```bash
+tree -L 2 --dirsfirst
+```
+
+> [!tip] `-L 2` limits depth to 2 levels — essential for large repos. Without `-L`,
+> `tree` recurses the entire subtree. On a data directory with millions of partitioned
+> Parquet files this produces unusable output and can take minutes.
+
+> [!danger] Never parse `ls` output in scripts
+> `ls` output is designed for humans, not programs. Filenames containing spaces, newlines,
+> or glob characters break any script that parses `ls`. Instead:
+> - **Loop over files:** `for f in *.csv; do ...` (shell glob — safe)
+> - **Find files programmatically:** `find . -name "*.csv" -print0 | xargs -0 ...`
+> - **Get file metadata in scripts:** `stat --format='%s %n' *` instead of parsing `ls -l`
+>
+> See [[defensive-scripting]] for robust file-handling patterns.
 
 ### du, ls, df — investigating disk space on a database server
 
@@ -66,31 +107,89 @@ df -h /var/opt/mssql/
 > # Fix: restart the process, or more precisely, identify which log rotation is broken
 > ```
 
-### PowerShell — Get-ChildItem, Get-PSDrive for listing and disk usage
+#### df -i — check inode usage when disk is "full" but df shows free space
+
+> [!danger] Running out of inodes produces the same "No space left on device" error as
+> running out of disk blocks — but `df -h` shows plenty of free space. This happens on
+> systems with millions of small files (e.g., a `/tmp` full of tiny lock files, or a
+> logging directory with one file per request). Check inodes with:
+
+```bash
+df -i /var/opt/mssql/
+```
+
+> [!tip] `ncdu` — interactive disk usage explorer
+> `ncdu` (NCurses Disk Usage) provides an interactive, navigable view of disk consumption
+> sorted by size. Far more efficient than running `du` repeatedly. Install with
+> `apt install ncdu`, then run `ncdu /var/opt/mssql/`. Press `d` to delete directly from
+> the interface (with confirmation).
+
+## PowerShell — Get-ChildItem, Get-PSDrive
+
+#### Get-ChildItem — list files sorted by modification time
+
+> [!info] `Get-ChildItem` (aliases: `ls`, `dir`, `gci`) returns rich objects with
+> properties like `Name`, `Length`, `LastWriteTime`, and `Mode`. Unlike Unix `ls`, the
+> output is typed — you pipe objects, not text. This makes PowerShell immune to the
+> filename-parsing pitfalls that plague bash `ls`.
 
 ```powershell
-# List files sorted by modification time (newest last)
 Get-ChildItem -Path . | Sort-Object LastWriteTime
-# Get-ChildItem aliases: ls, dir, gci
-# Returns objects with properties: Name, Length, LastWriteTime, Mode
+```
 
-# Human-readable sizes (PowerShell doesn't have -h, so calculate)
+#### Get-ChildItem — human-readable file sizes
+
+> [!info] PowerShell has no `-h` flag for human-readable sizes. Build a calculated
+> property with `Select-Object` and a format expression. This pattern is reusable
+> anywhere you need to display byte counts cleanly.
+
+```powershell
 Get-ChildItem -Path . | Sort-Object Length -Descending |
     Select-Object Name, @{N='Size';E={
         if ($_.Length -ge 1GB) { "{0:N1} GB" -f ($_.Length/1GB) }
         elseif ($_.Length -ge 1MB) { "{0:N1} MB" -f ($_.Length/1MB) }
         else { "{0:N1} KB" -f ($_.Length/1KB) }
     }}, LastWriteTime
+```
 
-# Show hidden files
+#### Get-ChildItem -Force — show hidden and system files
+
+> [!info] By default `Get-ChildItem` skips hidden and system files entirely — unlike
+> `ls` which only hides dotfiles. Use `-Force` to include everything, or `-Hidden` to
+> return hidden items only.
+
+```powershell
 Get-ChildItem -Force
-# -Force = include hidden and system files
+```
 
-# Recursive directory size (equivalent of du -sh)
-(Get-ChildItem -Path "C:\data\pipeline" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1GB
-# Returns size in GB as a decimal — pipe to [math]::Round() for clean output
+> [!warning] `-Force` required even for literal paths to hidden files
+> `Get-ChildItem -Path ".env"` returns nothing if `.env` is hidden — no error, no
+> output. You must use `Get-ChildItem -Force -Path ".env"`. This catches many people
+> when debugging "file not found" issues on Windows.
 
-# Disk free space
+#### Get-ChildItem -Recurse — recursive directory size (equivalent of du -sh)
+
+> [!info] Pipe recursive file objects into `Measure-Object -Sum` to total the `Length`
+> property. The `-File` switch excludes directories (which have no meaningful `Length`).
+
+```powershell
+$bytes = (Get-ChildItem -Path "C:\data\pipeline" -Recurse -File |
+    Measure-Object -Property Length -Sum).Sum
+[math]::Round($bytes / 1GB, 2)
+```
+
+> [!warning] `-Filter` vs `-Include` — performance trap
+> `-Filter` is applied by the filesystem provider during retrieval (fast). `-Include`
+> retrieves everything first, then filters in PowerShell (slow). On directories with
+> millions of files, `-Include "*.parquet"` can take 10x longer than
+> `-Filter "*.parquet"`. Always prefer `-Filter` for single-pattern matching.
+
+#### Get-PSDrive — check free disk space across all drives
+
+> [!info] `Get-PSDrive` returns PS drive objects including `Used` and `Free` byte counts.
+> Filter to `FileSystem` provider to exclude registry and certificate drives.
+
+```powershell
 Get-PSDrive -PSProvider FileSystem | Format-Table Name,
     @{N='Used(GB)';E={[math]::Round($_.Used/1GB,1)}},
     @{N='Free(GB)';E={[math]::Round($_.Free/1GB,1)}}

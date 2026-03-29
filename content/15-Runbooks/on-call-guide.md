@@ -18,7 +18,10 @@ updated: 2026-03-23
 | **Sev2** | Data quality degraded. Publication possible but may contain stale or incomplete data. | 1 hr acknowledge, 4 hr resolve | Slack #incidents | After 2 hrs to Engineering Lead |
 | **Sev3** | Non-urgent operational issue. No client impact. | Next business day | Slack #ops-alerts | Weekly review |
 
-### First 5 minutes checklist — initial incident triage
+> [!danger] Clock Starts at Alert Time, Not When You See It
+> Sev1 SLA is 15 minutes from alert trigger to acknowledgment. If PagerDuty/Slack notifications are delayed due to phone DND mode or routing issues, the clock still starts when the monitor fired. Configure PagerDuty to override DND settings for Sev1 alerts. Test the escalation path during every on-call handoff.
+
+### First 5 minutes checklist -- initial incident triage
 
 1. **Acknowledge** the alert in PagerDuty/Slack
 2. **Check Datadog dashboard** — is the issue isolated or systemic? See [[datadog-alerting]] for how alerts are configured and which monitors map to which runbooks.

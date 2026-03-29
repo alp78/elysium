@@ -87,9 +87,12 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 
 ## Layer Responsibilities
 
+> [!warning] Bronze Must Be Immutable -- Never UPDATE or DELETE Bronze Rows
+> The entire medallion architecture depends on bronze being a faithful record of what arrived from the source. If you apply corrections or deduplication in bronze, you lose the ability to reprocess silver/gold from scratch. All cleaning, deduplication, and type casting belongs in silver. If source data is genuinely wrong, append a correction row with a later `_ingested_at` timestamp -- do not overwrite the original.
+
 ### Bronze (Raw)
 - 1:1 mapping with source data
-- No transformations — data lands exactly as received
+- No transformations -- data lands exactly as received
 - Enables reprocessing from source if transforms change
 - See [[bronze-layer-loading]]
 
@@ -101,8 +104,11 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 
 ### Gold (Analytics)
 - Pre-computed scores, rankings, aggregations
-- Dashboard-ready format — no further computation needed
+- Dashboard-ready format -- no further computation needed
 - See [[gold-transforms]]
+
+> [!danger] Gold Layer Must Be Fully Reproducible from Silver
+> If you cannot rebuild gold entirely from silver (and silver from bronze), your medallion architecture is broken. Test this regularly by running a full-refresh of gold in a dev environment. Any gold table that depends on external state (API calls, cached files) outside the silver layer is a hidden dependency that will cause silent failures during reprocessing.
 
 ### Why Medallion Architecture Matters
 

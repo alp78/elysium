@@ -69,6 +69,19 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 
 ## Null Representations
 
+> [!danger] Pandas integer columns with nulls silently upcast to float64
+> A column of `[1, 2, None, 4]` becomes `[1.0, 2.0, NaN, 4.0]` — the integers are now
+> floats. This breaks join keys (`1.0 != 1` in string comparisons) and produces
+> unexpected results in groupby. Fix: use `pd.Int64Dtype()` (nullable integer) or
+> `dtype_backend="pyarrow"` when reading data.
+>
+> Polars uses a single `null` representation for all types — no silent type coercion.
+
+> [!warning] `NaN != NaN` in Pandas — equality comparisons on missing values
+> `np.nan == np.nan` returns `False`. This means `df[df["col"] == np.nan]` matches
+> **nothing**. Always use `df["col"].isna()` or `df["col"].isnull()` to detect missing
+> values. Polars `null == null` also returns `null` (not True), requiring `.is_null()`.
+
 - Pandas: NaN (float), None (object), pd.NA (nullable)
 - Polars: null (universal, all dtypes)
 
@@ -89,11 +102,6 @@ print(f"Polars: {pl_s.to_list()}, dtype: {pl_s.dtype}")
     Polars: [1.0, None, 3.0, None, 5.0], dtype: Float64
 
 ## Detection
-
-
-- **Sort**: Reorder rows by column values (Pandas).
-- **Null Detection**: Check which values are missing (Pandas).
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas: count nulls per column
@@ -162,14 +170,14 @@ display(signals_pl.null_count())
 
     === Polars nulls ===
 
-<div><small>shape: (1, 19)</small><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>signal_date</th><th>current_price</th><th>forward_pe</th><th>price_to_book</th><th>ev_to_ebitda</th><th>dividend_yield</th><th>market_cap</th><th>beta</th><th>fifty_two_week_change</th><th>sandp_52_week_change</th><th>fifty_day_average</th><th>two_hundred_day_average</th><th>dist_from_52_week_high</th><th>target_median_price</th><th>recommendation_mean</th><th>upside_potential</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>71</td><td>35</td><td>0</td><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td></tr></tbody></table></div>
+<div><!-- shape: (1, 19) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>signal_date</th><th>current_price</th><th>forward_pe</th><th>price_to_book</th><th>ev_to_ebitda</th><th>dividend_yield</th><th>market_cap</th><th>beta</th><th>fifty_two_week_change</th><th>sandp_52_week_change</th><th>fifty_day_average</th><th>two_hundred_day_average</th><th>dist_from_52_week_high</th><th>target_median_price</th><th>recommendation_mean</th><th>upside_potential</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>71</td><td>35</td><td>0</td><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td></tr></tbody></table></div>
 
 ```python
 # Polars: rows with nulls
 signals_pl.filter(pl.col("forward_pe").is_null()).select("symbol", "signal_date", "forward_pe").head(5)
 ```
 
-<div><small>shape: (0, 3)</small><table><thead><tr><th>symbol</th><th>signal_date</th><th>forward_pe</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody></tbody></table></div>
+<div><!-- shape: (0, 3) --><table><thead><tr><th>symbol</th><th>signal_date</th><th>forward_pe</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody></tbody></table></div>
 
 ## Dropping Nulls
 
@@ -200,7 +208,6 @@ print(f"After: {cleaned_pl.height}")
 
 
 - **Fill Nulls**: Replace missing values (Pandas).
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas
@@ -249,12 +256,11 @@ display(signals_pd[["symbol", "forward_pe"]].fillna({"forward_pe": 0.0}).head(5)
 display(signals_pl.select("symbol", pl.col("forward_pe").fill_null(0.0)).head(5))
 ```
 
-<div><small>shape: (5, 2)</small><table><thead><tr><th>symbol</th><th>forward_pe</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>32.141113</td></tr><tr><td>&quot;MC.PA&quot;</td><td>18.85428</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>36.034904</td></tr><tr><td>&quot;OR.PA&quot;</td><td>25.504032</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>19.631992</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>forward_pe</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>32.141113</td></tr><tr><td>&quot;MC.PA&quot;</td><td>18.85428</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>36.034904</td></tr><tr><td>&quot;OR.PA&quot;</td><td>25.504032</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>19.631992</td></tr></tbody></table></div>
 
 ### Forward / Backward Fill
 
 
-- **Sort**: Reorder rows by column values (Pandas).
 - **Forward Fill**: Fill missing values with the last known value.
 - **Tail**: Return the last N rows.
 
@@ -347,14 +353,13 @@ display(asml_pl.select(
 ))
 ```
 
-<div><small>shape: (10, 5)</small><table><thead><tr><th>date</th><th>close</th><th>dividends</th><th>div_ffill</th><th>div_bfill</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
+<div><!-- shape: (10, 5) --><table><thead><tr><th>date</th><th>close</th><th>dividends</th><th>div_ffill</th><th>div_bfill</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>0.0</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
 
 ### Mean / Median Imputation
 
 
 - **Fill Nulls**: Replace missing values (Pandas).
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas
@@ -417,7 +422,7 @@ display(signals_pl.select(
 ).head(5))
 ```
 
-<div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>forward_pe</th><th>pe_mean_filled</th><th>pe_median_filled</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>32.141113</td><td>32.141113</td><td>32.141113</td></tr><tr><td>&quot;MC.PA&quot;</td><td>18.85428</td><td>18.85428</td><td>18.85428</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>36.034904</td><td>36.034904</td><td>36.034904</td></tr><tr><td>&quot;OR.PA&quot;</td><td>25.504032</td><td>25.504032</td><td>25.504032</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>19.631992</td><td>19.631992</td><td>19.631992</td></tr></tbody></table></div>
+<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>forward_pe</th><th>pe_mean_filled</th><th>pe_median_filled</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>32.141113</td><td>32.141113</td><td>32.141113</td></tr><tr><td>&quot;MC.PA&quot;</td><td>18.85428</td><td>18.85428</td><td>18.85428</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>36.034904</td><td>36.034904</td><td>36.034904</td></tr><tr><td>&quot;OR.PA&quot;</td><td>25.504032</td><td>25.504032</td><td>25.504032</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>19.631992</td><td>19.631992</td><td>19.631992</td></tr></tbody></table></div>
 
 ### fill_nan vs fill_null (Polars)
 
@@ -450,15 +455,13 @@ df = pl.DataFrame({"primary": [100.0, None, 300.0, None], "secondary": [None, 20
 display(df.with_columns(pl.coalesce("primary", "secondary", "fallback").alias("best")))
 ```
 
-<div><small>shape: (4, 4)</small><table><thead><tr><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>100.0</td><td>null</td><td>50.0</td><td>100.0</td></tr><tr><td>null</td><td>200.0</td><td>50.0</td><td>200.0</td></tr><tr><td>300.0</td><td>null</td><td>50.0</td><td>300.0</td></tr><tr><td>null</td><td>400.0</td><td>50.0</td><td>400.0</td></tr></tbody></table></div>
+<div><!-- shape: (4, 4) --><table><thead><tr><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>100.0</td><td>null</td><td>50.0</td><td>100.0</td></tr><tr><td>null</td><td>200.0</td><td>50.0</td><td>200.0</td></tr><tr><td>300.0</td><td>null</td><td>50.0</td><td>300.0</td></tr><tr><td>null</td><td>400.0</td><td>50.0</td><td>400.0</td></tr></tbody></table></div>
 
 ### Interpolation
 
 
-- **Sort**: Reorder rows by column values (Pandas).
 - **Interpolate**: Estimate missing values by linear interpolation.
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas
@@ -549,7 +552,7 @@ asml_null = asml_pl2.with_columns(pl.Series("close", vals))
 display(asml_null.select("date", "close", pl.col("close").interpolate().alias("interpolated")).head(10))
 ```
 
-<div><small>shape: (10, 3)</small><table><thead><tr><th>date</th><th>close</th><th>interpolated</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-13</td><td>1190.4</td><td>1190.4</td></tr><tr><td>2026-02-16</td><td>1195.0</td><td>1195.0</td></tr><tr><td>2026-02-17</td><td>1199.2</td><td>1199.2</td></tr><tr><td>2026-02-18</td><td>1244.8</td><td>1244.8</td></tr><tr><td>2026-02-19</td><td>1238.2</td><td>1238.2</td></tr><tr><td>2026-02-20</td><td>null</td><td>1250.75</td></tr><tr><td>2026-02-23</td><td>null</td><td>1263.3</td></tr><tr><td>2026-02-24</td><td>null</td><td>1275.85</td></tr><tr><td>2026-02-25</td><td>1288.4</td><td>1288.4</td></tr><tr><td>2026-02-26</td><td>1232.4</td><td>1232.4</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>date</th><th>close</th><th>interpolated</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-13</td><td>1190.4</td><td>1190.4</td></tr><tr><td>2026-02-16</td><td>1195.0</td><td>1195.0</td></tr><tr><td>2026-02-17</td><td>1199.2</td><td>1199.2</td></tr><tr><td>2026-02-18</td><td>1244.8</td><td>1244.8</td></tr><tr><td>2026-02-19</td><td>1238.2</td><td>1238.2</td></tr><tr><td>2026-02-20</td><td>null</td><td>1250.75</td></tr><tr><td>2026-02-23</td><td>null</td><td>1263.3</td></tr><tr><td>2026-02-24</td><td>null</td><td>1275.85</td></tr><tr><td>2026-02-25</td><td>1288.4</td><td>1288.4</td></tr><tr><td>2026-02-26</td><td>1232.4</td><td>1232.4</td></tr></tbody></table></div>
 
 ## Summary
 
@@ -578,7 +581,6 @@ dim_pl = pl.read_parquet(DATA / "index_dim.parquet")
 
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas
@@ -646,7 +648,7 @@ display(dim_pl.select(
 ).head(5))
 ```
 
-<div><small>shape: (5, 4)</small><table><thead><tr><th>short_name</th><th>sector</th><th>name_upper</th><th>sector_lower</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING&quot;</td><td>&quot;Technology&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;technology&quot;</td></tr><tr><td>&quot;LVMH&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;LVMH&quot;</td><td>&quot;consumer cyclical&quot;</td></tr><tr><td>&quot;HERMES INTL&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;HERMES INTL&quot;</td><td>&quot;consumer cyclical&quot;</td></tr><tr><td>&quot;L&#x27;OREAL&quot;</td><td>&quot;Consumer Defensive&quot;</td><td>&quot;L&#x27;OREAL&quot;</td><td>&quot;consumer defensive&quot;</td></tr><tr><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;technology&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 4) --><table><thead><tr><th>short_name</th><th>sector</th><th>name_upper</th><th>sector_lower</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING&quot;</td><td>&quot;Technology&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;technology&quot;</td></tr><tr><td>&quot;LVMH&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;LVMH&quot;</td><td>&quot;consumer cyclical&quot;</td></tr><tr><td>&quot;HERMES INTL&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;HERMES INTL&quot;</td><td>&quot;consumer cyclical&quot;</td></tr><tr><td>&quot;L&#x27;OREAL&quot;</td><td>&quot;Consumer Defensive&quot;</td><td>&quot;L&#x27;OREAL&quot;</td><td>&quot;consumer defensive&quot;</td></tr><tr><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;technology&quot;</td></tr></tbody></table></div>
 
 ## Contains / Starts With / Ends With
 
@@ -832,21 +834,20 @@ display(dim_pd[dim_pd["sector"].str.contains("Tech", na=False)][["symbol", "shor
 display(dim_pl.filter(pl.col("sector").str.contains("Tech")).select("symbol", "short_name", "sector"))
 ```
 
-<div><small>shape: (26, 3)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>&quot;INFINEON TECHNOLOGIES AG&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>&quot;ADYEN&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6758.T&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6861.T&quot;</td><td>&quot;KEYENCE CORP&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;8035.T&quot;</td><td>&quot;TOKYO ELECTRON&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6702.T&quot;</td><td>&quot;FUJITSU&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;1810.HK&quot;</td><td>&quot;XIAOMI-W&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;NVDA&quot;</td><td>&quot;NVIDIA Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AAPL&quot;</td><td>&quot;Apple Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MSFT&quot;</td><td>&quot;Microsoft Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AVGO&quot;</td><td>&quot;Broadcom Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;ORCL&quot;</td><td>&quot;Oracle Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;PLTR&quot;</td><td>&quot;Palantir Technologies Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AMD&quot;</td><td>&quot;Advanced Micro Devices, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;CSCO&quot;</td><td>&quot;Cisco Systems, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AMAT&quot;</td><td>&quot;Applied Materials, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;LRCX&quot;</td><td>&quot;Lam Research Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;INTC&quot;</td><td>&quot;Intel Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;IBM&quot;</td><td>&quot;International Business Machine…</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;DSY.PA&quot;</td><td>&quot;DASSAULT SYSTEMES&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;CRM&quot;</td><td>&quot;Salesforce, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;UBER&quot;</td><td>&quot;Uber Technologies, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (26, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>&quot;INFINEON TECHNOLOGIES AG&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>&quot;ADYEN&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6758.T&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6861.T&quot;</td><td>&quot;KEYENCE CORP&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;8035.T&quot;</td><td>&quot;TOKYO ELECTRON&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6702.T&quot;</td><td>&quot;FUJITSU&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;1810.HK&quot;</td><td>&quot;XIAOMI-W&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;NVDA&quot;</td><td>&quot;NVIDIA Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AAPL&quot;</td><td>&quot;Apple Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MSFT&quot;</td><td>&quot;Microsoft Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AVGO&quot;</td><td>&quot;Broadcom Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;ORCL&quot;</td><td>&quot;Oracle Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;PLTR&quot;</td><td>&quot;Palantir Technologies Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AMD&quot;</td><td>&quot;Advanced Micro Devices, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;CSCO&quot;</td><td>&quot;Cisco Systems, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AMAT&quot;</td><td>&quot;Applied Materials, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;LRCX&quot;</td><td>&quot;Lam Research Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;INTC&quot;</td><td>&quot;Intel Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;IBM&quot;</td><td>&quot;International Business Machine…</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;DSY.PA&quot;</td><td>&quot;DASSAULT SYSTEMES&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;CRM&quot;</td><td>&quot;Salesforce, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;UBER&quot;</td><td>&quot;Uber Technologies, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr></tbody></table></div>
 
 ```python
 # Ends with
 display(dim_pl.filter(pl.col("symbol").str.ends_with(".AS")).select("symbol", "short_name", "country"))
 ```
 
-<div><small>shape: (6, 3)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>country</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>&quot;PROSUS&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>&quot;ING GROEP N.V.&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;AD.AS&quot;</td><td>&quot;KONINKLIJKE AHOLD DELHAIZE N.V…</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>&quot;ADYEN&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;WKL.AS&quot;</td><td>&quot;WOLTERS KLUWER&quot;</td><td>&quot;Netherlands&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (6, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>country</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>&quot;PROSUS&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>&quot;ING GROEP N.V.&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;AD.AS&quot;</td><td>&quot;KONINKLIJKE AHOLD DELHAIZE N.V…</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>&quot;ADYEN&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;WKL.AS&quot;</td><td>&quot;WOLTERS KLUWER&quot;</td><td>&quot;Netherlands&quot;</td></tr></tbody></table></div>
 
 ## Extract and Split
 
 
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas
@@ -938,15 +939,13 @@ display(dim_pl.select(
 ).head(10))
 ```
 
-<div><small>shape: (10, 3)</small><table><thead><tr><th>symbol</th><th>exchange_code</th><th>ticker_only</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;AS&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;MC&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;RMS&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;OR&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot;SIE.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;SIE&quot;</td></tr><tr><td>&quot;ITX.MC&quot;</td><td>&quot;MC&quot;</td><td>&quot;ITX&quot;</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;DTE&quot;</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>&quot;MC&quot;</td><td>&quot;SAN&quot;</td></tr><tr><td>&quot;SU.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;SU&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>exchange_code</th><th>ticker_only</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;AS&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;MC&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;RMS&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;OR&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot;SIE.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;SIE&quot;</td></tr><tr><td>&quot;ITX.MC&quot;</td><td>&quot;MC&quot;</td><td>&quot;ITX&quot;</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;DTE&quot;</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>&quot;MC&quot;</td><td>&quot;SAN&quot;</td></tr><tr><td>&quot;SU.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;SU&quot;</td></tr></tbody></table></div>
 
 ## Replace
 
 
-- **Select**: Choose specific columns, optionally transforming them.
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
-- **Head**: Return the first N rows.
 
 ```python
 # Polars: remove exchange suffix
@@ -956,15 +955,13 @@ display(dim_pl.select(
 ).head(5))
 ```
 
-<div><small>shape: (5, 2)</small><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;MC&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;RMS&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;OR&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;MC&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;RMS&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;OR&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP&quot;</td></tr></tbody></table></div>
 
 ## String Length and Slicing
 
 
-- **Select**: Choose specific columns, optionally transforming them.
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
-- **Head**: Return the first N rows.
 
 ```python
 dim_pl.select(
@@ -974,13 +971,12 @@ dim_pl.select(
 ).head(10)
 ```
 
-<div><small>shape: (10, 3)</small><table><thead><tr><th>short_name</th><th>length</th><th>first_5</th></tr><tr><td>str</td><td>u32</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING&quot;</td><td>12</td><td>&quot;ASML &quot;</td></tr><tr><td>&quot;LVMH&quot;</td><td>4</td><td>&quot;LVMH&quot;</td></tr><tr><td>&quot;HERMES INTL&quot;</td><td>11</td><td>&quot;HERME&quot;</td></tr><tr><td>&quot;L&#x27;OREAL&quot;</td><td>7</td><td>&quot;L&#x27;ORE&quot;</td></tr><tr><td>&quot;SAP SE&quot;</td><td>6</td><td>&quot;SAP S&quot;</td></tr><tr><td>&quot;SIEMENS AG&quot;</td><td>10</td><td>&quot;SIEME&quot;</td></tr><tr><td>&quot;INDUSTRIA DE DISE...O TEXTIL S…</td><td>31</td><td>&quot;INDUS&quot;</td></tr><tr><td>&quot;DEUTSCHE TELEKOM AG&quot;</td><td>19</td><td>&quot;DEUTS&quot;</td></tr><tr><td>&quot;BANCO SANTANDER S.A.&quot;</td><td>20</td><td>&quot;BANCO&quot;</td></tr><tr><td>&quot;SCHNEIDER ELECTRIC SE&quot;</td><td>21</td><td>&quot;SCHNE&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>short_name</th><th>length</th><th>first_5</th></tr><tr><td>str</td><td>u32</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING&quot;</td><td>12</td><td>&quot;ASML &quot;</td></tr><tr><td>&quot;LVMH&quot;</td><td>4</td><td>&quot;LVMH&quot;</td></tr><tr><td>&quot;HERMES INTL&quot;</td><td>11</td><td>&quot;HERME&quot;</td></tr><tr><td>&quot;L&#x27;OREAL&quot;</td><td>7</td><td>&quot;L&#x27;ORE&quot;</td></tr><tr><td>&quot;SAP SE&quot;</td><td>6</td><td>&quot;SAP S&quot;</td></tr><tr><td>&quot;SIEMENS AG&quot;</td><td>10</td><td>&quot;SIEME&quot;</td></tr><tr><td>&quot;INDUSTRIA DE DISE...O TEXTIL S…</td><td>31</td><td>&quot;INDUS&quot;</td></tr><tr><td>&quot;DEUTSCHE TELEKOM AG&quot;</td><td>19</td><td>&quot;DEUTS&quot;</td></tr><tr><td>&quot;BANCO SANTANDER S.A.&quot;</td><td>20</td><td>&quot;BANCO&quot;</td></tr><tr><td>&quot;SCHNEIDER ELECTRIC SE&quot;</td><td>21</td><td>&quot;SCHNE&quot;</td></tr></tbody></table></div>
 
 ## Concatenating Strings
 
 
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas: + operator
@@ -1039,7 +1035,7 @@ display(dim_pl.select(
 ).head(5))
 ```
 
-<div><small>shape: (5, 1)</small><table><thead><tr><th>display_name</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING (Netherlands)&quot;</td></tr><tr><td>&quot;LVMH (France)&quot;</td></tr><tr><td>&quot;HERMES INTL (France)&quot;</td></tr><tr><td>&quot;L&#x27;OREAL (France)&quot;</td></tr><tr><td>&quot;SAP SE (Germany)&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 1) --><table><thead><tr><th>display_name</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING (Netherlands)&quot;</td></tr><tr><td>&quot;LVMH (France)&quot;</td></tr><tr><td>&quot;HERMES INTL (France)&quot;</td></tr><tr><td>&quot;L&#x27;OREAL (France)&quot;</td></tr><tr><td>&quot;SAP SE (Germany)&quot;</td></tr></tbody></table></div>
 
 ## Stripping and Padding
 
@@ -1056,7 +1052,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>name</th><th>stripped</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;&nbsp;&nbsp;ASML&nbsp;&nbsp;&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;&nbsp;&nbsp;SAP &quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot; MC&quot;</td><td>&quot;MC&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>stripped</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;&nbsp;&nbsp;ASML&nbsp;&nbsp;&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;&nbsp;&nbsp;SAP &quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot; MC&quot;</td><td>&quot;MC&quot;</td></tr></tbody></table></div>
 
 ```python
 df = pl.DataFrame({"code": ["A", "AB", "ABC", "ABCD"]})
@@ -1065,7 +1061,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><small>shape: (4, 2)</small><table><thead><tr><th>code</th><th>padded</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>&quot;00000A&quot;</td></tr><tr><td>&quot;AB&quot;</td><td>&quot;0000AB&quot;</td></tr><tr><td>&quot;ABC&quot;</td><td>&quot;000ABC&quot;</td></tr><tr><td>&quot;ABCD&quot;</td><td>&quot;00ABCD&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (4, 2) --><table><thead><tr><th>code</th><th>padded</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>&quot;00000A&quot;</td></tr><tr><td>&quot;AB&quot;</td><td>&quot;0000AB&quot;</td></tr><tr><td>&quot;ABC&quot;</td><td>&quot;000ABC&quot;</td></tr><tr><td>&quot;ABCD&quot;</td><td>&quot;00ABCD&quot;</td></tr></tbody></table></div>
 
 ## Regex: Extract All
 
@@ -1083,7 +1079,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><small>shape: (3, 3)</small><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr><tr><td>str</td><td>list[str]</td><td>u32</td></tr></thead><tbody><tr><td>&quot;ASML closed at 900.5 up from 8…</td><td>[&quot;900.5&quot;, &quot;895.2&quot;]</td><td>4</td></tr><tr><td>&quot;No numbers&quot;</td><td>[]</td><td>0</td></tr><tr><td>&quot;PE: 45.3, PB: 12.1&quot;</td><td>[&quot;45.3&quot;, &quot;12.1&quot;]</td><td>4</td></tr></tbody></table></div>
+<div><!-- shape: (3, 3) --><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr><tr><td>str</td><td>list[str]</td><td>u32</td></tr></thead><tbody><tr><td>&quot;ASML closed at 900.5 up from 8…</td><td>[&quot;900.5&quot;, &quot;895.2&quot;]</td><td>4</td></tr><tr><td>&quot;No numbers&quot;</td><td>[]</td><td>0</td></tr><tr><td>&quot;PE: 45.3, PB: 12.1&quot;</td><td>[&quot;45.3&quot;, &quot;12.1&quot;]</td><td>4</td></tr></tbody></table></div>
 
 ## Summary
 
@@ -1153,7 +1149,7 @@ date_strs_pl = pl.Series(["2026-03-15", "2026-03-16", "2026-03-17"])
 display(date_strs_pl.str.to_date("%Y-%m-%d"))
 ```
 
-<div><small>shape: (3,)</small><table><thead><tr><th></th></tr><tr><td>date</td></tr></thead><tbody><tr><td>2026-03-15</td></tr><tr><td>2026-03-16</td></tr><tr><td>2026-03-17</td></tr></tbody></table></div>
+<div><!-- shape: (3,) --><table><thead><tr><th></th></tr><tr><td>date</td></tr></thead><tbody><tr><td>2026-03-15</td></tr><tr><td>2026-03-16</td></tr><tr><td>2026-03-17</td></tr></tbody></table></div>
 
 ## .dt Accessor
 
@@ -1161,7 +1157,6 @@ display(date_strs_pl.str.to_date("%Y-%m-%d"))
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
-- **Head**: Return the first N rows.
 
 ```python
 # Pandas
@@ -1234,7 +1229,7 @@ display(asml_pl.select(
 ).head(5))
 ```
 
-<div><small>shape: (5, 4)</small><table><thead><tr><th>date</th><th>year</th><th>month</th><th>weekday</th></tr><tr><td>date</td><td>i32</td><td>i8</td><td>i8</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>2021-01-05</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>2021-01-06</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>2021-01-07</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>2021-01-08</td><td>2021</td><td>1</td><td>5</td></tr></tbody></table></div>
+<div><!-- shape: (5, 4) --><table><thead><tr><th>date</th><th>year</th><th>month</th><th>weekday</th></tr><tr><td>date</td><td>i32</td><td>i8</td><td>i8</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>2021-01-05</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>2021-01-06</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>2021-01-07</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>2021-01-08</td><td>2021</td><td>1</td><td>5</td></tr></tbody></table></div>
 
 ## date_range
 
@@ -1255,13 +1250,12 @@ dr_pl = pl.date_range(pl.date(2026, 1, 1), pl.date(2026, 1, 10), eager=True)
 display(dr_pl)
 ```
 
-<div><small>shape: (10,)</small><table><thead><tr><th>date</th></tr><tr><td>date</td></tr></thead><tbody><tr><td>2026-01-01</td></tr><tr><td>2026-01-02</td></tr><tr><td>2026-01-03</td></tr><tr><td>2026-01-04</td></tr><tr><td>2026-01-05</td></tr><tr><td>2026-01-06</td></tr><tr><td>2026-01-07</td></tr><tr><td>2026-01-08</td></tr><tr><td>2026-01-09</td></tr><tr><td>2026-01-10</td></tr></tbody></table></div>
+<div><!-- shape: (10,) --><table><thead><tr><th>date</th></tr><tr><td>date</td></tr></thead><tbody><tr><td>2026-01-01</td></tr><tr><td>2026-01-02</td></tr><tr><td>2026-01-03</td></tr><tr><td>2026-01-04</td></tr><tr><td>2026-01-05</td></tr><tr><td>2026-01-06</td></tr><tr><td>2026-01-07</td></tr><tr><td>2026-01-08</td></tr><tr><td>2026-01-09</td></tr><tr><td>2026-01-10</td></tr></tbody></table></div>
 
 ## Rolling Windows
 
 
 - **Rolling Window**: Compute statistics over a sliding window of N consecutive rows.
-- **Sort**: Reorder rows by column values (Pandas).
 - **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
 - **Tail**: Return the last N rows.
 
@@ -1367,7 +1361,7 @@ display(asml_pl_sorted.with_columns(
 ).select("date", "close", "sma_7", "sma_30").tail(10))
 ```
 
-<div><small>shape: (10, 4)</small><table><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td><td>1201.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td><td>1204.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td><td>1205.126667</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td><td>1206.626667</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td><td>1206.946667</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td><td>1205.906667</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td><td>1204.893333</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td><td>1204.306667</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td><td>1204.453333</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td><td>1204.413333</td></tr></tbody></table></div>
+<div><!-- shape: (10, 4) --><table><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td><td>1201.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td><td>1204.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td><td>1205.126667</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td><td>1206.626667</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td><td>1206.946667</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td><td>1205.906667</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td><td>1204.893333</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td><td>1204.306667</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td><td>1204.453333</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td><td>1204.413333</td></tr></tbody></table></div>
 
 ## Shifting / Lagging
 
@@ -1476,12 +1470,11 @@ display(asml_pl_sorted.with_columns(
 ).select("date", "close", "prev_close", "daily_return").tail(10))
 ```
 
-<div><small>shape: (10, 4)</small><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>daily_return</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1232.4</td><td>0.08</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1233.4</td><td>-1.86</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1210.4</td><td>-4.02</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1161.8</td><td>3.27</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1199.8</td><td>-1.15</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>0.05</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>4.57</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.67</td></tr></tbody></table></div>
+<div><!-- shape: (10, 4) --><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>daily_return</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1232.4</td><td>0.08</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1233.4</td><td>-1.86</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1210.4</td><td>-4.02</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1161.8</td><td>3.27</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1199.8</td><td>-1.15</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>0.05</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>4.57</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.67</td></tr></tbody></table></div>
 
 ## Resampling
 
 
-- **Aggregation**: Compute summary statistics (mean, sum, count, min, max) for each group. Returns one row per group.
 - **Resample**: Change time frequency: daily to monthly. Groups by time buckets (Pandas).
 - **Set Index**: Make a column the DataFrame index (Pandas only). Polars has no index.
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
@@ -1572,7 +1565,6 @@ display(asml_monthly)
 ### Polars: group_by_dynamic
 
 
-- **Aggregation**: Compute summary statistics (mean, sum, count, min, max) for each group. Returns one row per group.
 - **Dynamic Groupby**: Time-based grouping (Polars). Equivalent to Pandas resample().
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **Tail**: Return the last N rows.
@@ -1593,14 +1585,13 @@ display(
 )
 ```
 
-<div><small>shape: (6, 6)</small><table><thead><tr><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2025-10-01</td><td>818.0</td><td>938.6</td><td>812.1</td><td>918.1</td><td>16383868</td></tr><tr><td>2025-11-01</td><td>917.0</td><td>930.9</td><td>822.2</td><td>903.4</td><td>12064891</td></tr><tr><td>2025-12-01</td><td>910.0</td><td>977.1</td><td>866.4</td><td>921.4</td><td>10360738</td></tr><tr><td>2026-01-01</td><td>919.4</td><td>1309.0</td><td>919.2</td><td>1215.6</td><td>16549130</td></tr><tr><td>2026-02-01</td><td>1178.6</td><td>1312.8</td><td>1117.6</td><td>1233.4</td><td>11528098</td></tr><tr><td>2026-03-01</td><td>1192.8</td><td>1231.4</td><td>1060.2</td><td>1190.8</td><td>6344179</td></tr></tbody></table></div>
+<div><!-- shape: (6, 6) --><table><thead><tr><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2025-10-01</td><td>818.0</td><td>938.6</td><td>812.1</td><td>918.1</td><td>16383868</td></tr><tr><td>2025-11-01</td><td>917.0</td><td>930.9</td><td>822.2</td><td>903.4</td><td>12064891</td></tr><tr><td>2025-12-01</td><td>910.0</td><td>977.1</td><td>866.4</td><td>921.4</td><td>10360738</td></tr><tr><td>2026-01-01</td><td>919.4</td><td>1309.0</td><td>919.2</td><td>1215.6</td><td>16549130</td></tr><tr><td>2026-02-01</td><td>1178.6</td><td>1312.8</td><td>1117.6</td><td>1233.4</td><td>11528098</td></tr><tr><td>2026-03-01</td><td>1192.8</td><td>1231.4</td><td>1060.2</td><td>1190.8</td><td>6344179</td></tr></tbody></table></div>
 
 ## Cumulative Operations
 
 
 - **Cumulative Sum**: Running total from the first row to the current row.
 - **Cumulative Max**: Running maximum from the first row to the current row.
-- **Select**: Choose specific columns, optionally transforming them.
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 
 ```python
@@ -1612,7 +1603,7 @@ display(asml_pl_sorted.with_columns(
 ).select("date", "close", "volume", "cum_volume", "running_high", "running_low").tail(10))
 ```
 
-<div><small>shape: (10, 6)</small><table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr><tr><td>date</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>778081</td><td>942032421</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>857271</td><td>942889692</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>689086</td><td>943578778</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>800815</td><td>944379593</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>562904</td><td>944942497</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>128223</td><td>945070720</td><td>1288.4</td><td>397.45</td></tr></tbody></table></div>
+<div><!-- shape: (10, 6) --><table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr><tr><td>date</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>778081</td><td>942032421</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>857271</td><td>942889692</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>689086</td><td>943578778</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>800815</td><td>944379593</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>562904</td><td>944942497</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>128223</td><td>945070720</td><td>1288.4</td><td>397.45</td></tr></tbody></table></div>
 
 ## Summary
 

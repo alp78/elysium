@@ -777,7 +777,7 @@ docker build --target production -t myapp:prod .  # Production image
 
 ### .dockerignore
 
-```
+```text
 # Dependencies (rebuilt inside image)
 node_modules/
 vendor/

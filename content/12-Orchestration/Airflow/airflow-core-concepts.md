@@ -364,6 +364,9 @@ run_container = DockerOperator(
 
 Runs a Kubernetes Pod. The preferred operator for GCP Cloud Composer and self-managed K8s Airflow.
 
+> [!warning] KubernetesPodOperator Image Tag :latest Causes Silent Stale Deploys
+> Using `:latest` as the image tag means Kubernetes may use a cached image from the node instead of pulling the newest version. Pin image tags to a specific version or SHA digest (e.g., `etl:1.2.3` or `etl@sha256:abc...`). Set `image_pull_policy="Always"` if you must use `:latest` during development.
+
 ```python
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from kubernetes.client import models as k8s
@@ -675,6 +678,9 @@ branching_taskflow()
 
 ## Variables and Connections
 
+> [!warning] Variable.get() at Module Level Runs on Every DAG Parse (Every 30s)
+> Code at module level runs during DAG parsing, not during task execution. A `Variable.get()` at module level hits the Metadata DB every 30 seconds per DAG file. With 50 DAG files, that is 100 DB queries per minute just for variable resolution. Always call `Variable.get()` inside task callables, never at the top of the DAG file.
+
 ### Variables
 
 Key-value pairs stored in the Metadata DB. Used for configuration that needs to change without modifying DAG code.
@@ -682,7 +688,7 @@ Key-value pairs stored in the Metadata DB. Used for configuration that needs to 
 ```python
 from airflow.models import Variable
 
-# In a task callable — fetches from DB on each call
+# In a task callable -- fetches from DB on each call
 def use_variable(**context):
     # Get a variable (raises KeyError if missing)
     env = Variable.get("environment")
@@ -692,7 +698,6 @@ def use_variable(**context):
 
     # Get JSON variable (deserialize automatically)
     config = Variable.get("pipeline_config", deserialize_json=True)
-    # pipeline_config stored as: {"batch_size": 1000, "timeout": 300}
     batch_size = config["batch_size"]
 ```
 

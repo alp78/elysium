@@ -20,49 +20,35 @@ status: complete
 
 ---
 
-### SARGable vs Non-SARGable Patterns
+### SARGable vs Non-SARGable — Functions on Columns
 
 ```sql
--- ╔══════════════════════════════════════════════════════════════════╗
--- ║  NON-SARGABLE (BAD)              SARGABLE (GOOD)               ║
--- ╠══════════════════════════════════════════════════════════════════╣
--- ║                                                                  ║
--- ║  Functions on columns:                                           ║
--- ║                                                                  ║
--- ║  WHERE YEAR(trade_date) = 2025    WHERE trade_date >= '2025-01-01║
--- ║                                     AND trade_date < '2026-01-01║
--- ║                                                                  ║
--- ║  WHERE CONVERT(DATE, created)     WHERE created >= '2025-03-10'  ║
--- ║        = '2025-03-10'               AND created < '2025-03-11'  ║
--- ║                                                                  ║
--- ║  WHERE LEFT(symbol, 2) = 'AS'     WHERE symbol LIKE 'AS%'       ║
--- ║                                                                  ║
--- ║  WHERE UPPER(sector) = 'TECH'     WHERE sector = 'TECH'         ║
--- ║  (if using case-insensitive          (CI collation matches       ║
--- ║   collation, UPPER is redundant)      regardless of case)        ║
--- ║                                                                  ║
--- ║  Calculations on columns:                                        ║
--- ║                                                                  ║
--- ║  WHERE price * quantity > 1000    WHERE price > 1000 / quantity  ║
--- ║                                   (or use a computed column)     ║
--- ║                                                                  ║
--- ║  WHERE score + 10 > 50            WHERE score > 40               ║
--- ║                                                                  ║
--- ║  WHERE DATEDIFF(DAY,              WHERE trade_date >=            ║
--- ║    trade_date, GETDATE()) < 30      DATEADD(DAY, -30, GETDATE())║
--- ║                                                                  ║
--- ║  Implicit conversions:                                           ║
--- ║                                                                  ║
--- ║  WHERE varchar_col = N'text'      WHERE varchar_col = 'text'     ║
--- ║  (nvarchar vs varchar mismatch)   (matching types)               ║
--- ║                                                                  ║
--- ║  LIKE with leading wildcard:                                     ║
--- ║                                                                  ║
--- ║  WHERE symbol LIKE '%ML'          WHERE symbol LIKE 'AS%'       ║
--- ║  (can't seek — must scan)         (seekable — known prefix)     ║
--- ║                                                                  ║
--- ╚══════════════════════════════════════════════════════════════════╝
+-- NON-SARGABLE (BAD)                    SARGABLE (GOOD)
+-- WHERE YEAR(trade_date) = 2025         WHERE trade_date >= '2025-01-01'
+--                                         AND trade_date < '2026-01-01'
+-- WHERE CONVERT(DATE, created)          WHERE created >= '2025-03-10'
+--       = '2025-03-10'                    AND created < '2025-03-11'
+-- WHERE LEFT(symbol, 2) = 'AS'          WHERE symbol LIKE 'AS%'
+-- WHERE UPPER(sector) = 'TECH'          WHERE sector = 'TECH'
+--   (CI collation matches regardless)
 ```
+
+### SARGable vs Non-SARGable — Calculations and Implicit Conversions
+
+```sql
+-- NON-SARGABLE (BAD)                    SARGABLE (GOOD)
+-- WHERE price * quantity > 1000         WHERE price > 1000 / quantity
+-- WHERE score + 10 > 50                 WHERE score > 40
+-- WHERE DATEDIFF(DAY,                   WHERE trade_date >=
+--   trade_date, GETDATE()) < 30           DATEADD(DAY, -30, GETDATE())
+-- WHERE varchar_col = N'text'           WHERE varchar_col = 'text'
+--   (nvarchar vs varchar mismatch)        (matching types)
+-- WHERE symbol LIKE '%ML'               WHERE symbol LIKE 'AS%'
+--   (can't seek — must scan)              (seekable — known prefix)
+```
+
+> [!danger] SARGability Is Not Flagged by SQL Server
+> SQL Server silently falls back to a full index scan when you wrap a column in a function. There is no warning, no error, and no plan hint. The query returns correct results -- just 100x slower. The only way to detect this is reading the execution plan and looking for Scan operators with a Predicate (not a Seek Predicate).
 
 ---
 
@@ -70,7 +56,7 @@ status: complete
 
 The page-level view of what happens:
 
-```
+```text
 SARGable: WHERE trade_date >= '2025-01-01' AND trade_date < '2026-01-01'
 
   B-tree on trade_date:
@@ -165,6 +151,9 @@ WHERE YEAR(signal_date) = 2025;
 ---
 
 ## Implicit Conversions — The Silent Killer
+
+> [!danger] Implicit Conversions Cause Full Table Scans with Zero Warnings
+> When `pyodbc` sends an `NVARCHAR` parameter against a `VARCHAR` column, SQL Server silently converts every row in the table to `NVARCHAR` for comparison. This means: correct results, zero errors, but a full clustered index scan on every query. A table with 50M rows that used to seek in 2ms now scans for 8 seconds. The execution plan shows a `PlanAffectingConvert` warning, but only if you look for it.
 
 The most common silent performance killer in Python-to-SQL pipelines. Python's `pyodbc` sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents index seeks.
 

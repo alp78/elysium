@@ -37,6 +37,9 @@ bq load --source_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/exp
 # No --skip_leading_rows — Parquet is binary, not text
 ```
 
+> [!warning] `--autodetect` Infers Schema from a Sample and Can Be Wrong
+> `--autodetect` reads the first 500 rows of a CSV to infer types. If row 501 has a longer string or a different date format, the load fails or silently truncates data. For production loads, always define an explicit schema with `--schema` or a JSON schema file. Parquet avoids this entirely because the schema is embedded in the file.
+
 > [!tip] Always Use Parquet for Production Loads
 > Parquet is the superior format for BigQuery loads because:
 > - Schema is embedded in the file (no `--autodetect` ambiguity)
@@ -95,6 +98,9 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 
 > [!tip] Time Travel Is Your First Recovery Option
 > Before considering a backup restore or re-running a pipeline, check if time travel can recover the data. It is instantaneous, free, and requires no infrastructure. Only if the corruption occurred more than 7 days ago do you need an alternative recovery strategy.
+
+> [!danger] Time Travel Has a 7-Day Hard Limit
+> If a table was dropped or corrupted more than 7 days ago, time travel data is permanently gone. For critical tables, extend the time travel window to the maximum (7 days is the default, configurable up to 7 days for Standard edition). For longer retention, set up scheduled table snapshots or export to GCS on a regular cadence. Once a table is deleted and 7 days pass, there is no recovery path.
 
 > [!tip] Related pattern
 > The `bq load` workflow mirrors the [[bronze-layer-loading]] pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [[bq-engineering]] covers the advanced query patterns that transform and consume it.

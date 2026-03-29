@@ -38,67 +38,82 @@ Copying a file on a single machine is trivial. Copying 50 GB of pipeline output 
 > - `rsync source_dir dest_dir/` → copies `source_dir` **itself** into `dest_dir` (creates `dest_dir/source_dir/`)
 
 ```bash
-rsync -av source_dir/ dest_dir/
-
-# With compression and progress bar (standard for large transfers)
-rsync -avz --progress source_dir/ dest_dir/
-
-# Human-readable progress (better for large transfers)
 rsync -avzh --progress source_dir/ dest_dir/
-# -h = human-readable numbers (1.2G instead of 1289748480)
+```
 
-# Transfer with overall progress (not per-file)
+> [!tip] `--info=progress2` — single progress bar for the entire transfer
+> `--progress` prints per-file progress (noisy with thousands of small files).
+> `--info=progress2` shows one aggregated progress bar with total bytes, percentage,
+> speed, and ETA — much cleaner for large directory syncs.
+
+```bash
 rsync -avzh --info=progress2 source_dir/ dest_dir/
-# --info=progress2 = single progress bar for the entire transfer
-#   Shows: total bytes transferred, percentage, speed, ETA
-#   Much cleaner than --progress when copying thousands of small files
+```
 
-# Resume an interrupted transfer (rsync does this automatically)
+#### rsync -P — resume interrupted transfers
+
+> [!info] `-P` combines `--partial` + `--progress`. Without `--partial`, a partially
+> transferred file is **deleted** on interruption — you start over. With `--partial`,
+> the incomplete file is kept and rsync resumes from where it stopped. Essential for
+> files over 1 GB on unreliable connections.
+
+```bash
 rsync -avzP source_dir/ dest_dir/
-# -P = --partial + --progress combined
-# --partial = keep partially transferred files (don't delete on interruption)
-#   Without --partial: if the transfer is interrupted, the partial file is DELETED
-#   With --partial: the partial file is kept, and rsync resumes from where it left off
-#   This is essential for large files over unreliable connections
+```
 
-# Dry run — preview what would happen without doing anything
+#### rsync -n — dry-run preview before destructive operations
+
+> [!info] `-n` (or `--dry-run`) shows every file that **would** be transferred or
+> deleted without actually doing anything. Always dry-run before `--delete` operations.
+
+```bash
 rsync -avzn source_dir/ dest_dir/
-# -n = dry run (also: --dry-run)
-# Shows every file that WOULD be transferred, without actually transferring
-# ALWAYS do a dry run before large or destructive syncs
+```
 
-# Delete files in destination that don't exist in source (mirror mode)
-rsync -avz --delete source_dir/ dest_dir/
-# --delete = remove files from dest that no longer exist in source
-# WARNING: This is destructive. A wrong source path = empty directory = deletes everything in dest.
-# ALWAYS use -n (dry run) first:
+#### rsync --delete — mirror mode (destructive sync)
+
+> [!danger] `--delete` removes files from the destination that no longer exist in the
+> source. If your source path is wrong (e.g., an empty directory), `--delete` wipes
+> **everything** in the destination. Always dry-run first.
+
+```bash
 rsync -avzn --delete source_dir/ dest_dir/
-# Verify the list of "deleting X" lines before running without -n
+rsync -avz --delete source_dir/ dest_dir/
+```
 
-# Exclude files or patterns
+#### rsync --exclude — filter files and patterns
+
+> [!info] `--exclude` accepts glob patterns. For many exclusions, use `--exclude-from`
+> with a file listing one pattern per line. For include-only workflows, combine
+> `--include` + `--exclude='*'` — **order matters**: includes are evaluated before excludes.
+
+```bash
 rsync -avz --exclude='*.log' --exclude='__pycache__/' source_dir/ dest_dir/
-# Common excludes: '*.log', '__pycache__/', '.git/', 'node_modules/', '*.tmp'
-
-# Exclude from a file (cleaner for many excludes)
 rsync -avz --exclude-from='rsync-excludes.txt' source_dir/ dest_dir/
-# rsync-excludes.txt:
-# *.log
-# __pycache__/
-# .git/
-# *.tmp
+```
 
-# Include only specific file types
+```bash
+# Include only Parquet files (must include dirs for recursion)
 rsync -avz --include='*.parquet' --include='*/' --exclude='*' source_dir/ dest_dir/
-# --include='*.parquet' = include parquet files
-# --include='*/' = include directories (so rsync descends into them)
-# --exclude='*' = exclude everything else
-# ORDER MATTERS: includes are checked before excludes
+```
 
-# Bandwidth limit (don't saturate the network during business hours)
-rsync -avz --bwlimit=50000 source_dir/ dest_dir/   # 50,000 KB/s ≈ 50 MB/s
+#### rsync --bwlimit — throttle bandwidth during business hours
 
-# Checksum-based comparison (slower but catches bit-rot and silent corruption)
-rsync -avc source_dir/ dest_dir/   # -c = checksum instead of mtime+size
+> [!info] `--bwlimit` caps transfer speed in KB/s. Prevents saturating a shared network
+> link during working hours.
+
+```bash
+rsync -avz --bwlimit=50000 source_dir/ dest_dir/
+```
+
+#### rsync -c — checksum comparison for detecting bit-rot
+
+> [!info] By default rsync compares mtime + file size to decide what to transfer. `-c`
+> forces full checksum comparison — slower but catches silent corruption where the file
+> size didn't change. Use for critical data like database backups.
+
+```bash
+rsync -avc source_dir/ dest_dir/
 ```
 
 ### rsync trailing slash — source path determines copy behavior
@@ -117,33 +132,38 @@ rsync -avc source_dir/ dest_dir/   # -c = checksum instead of mtime+size
 
 #### rsync -avzP over SSH — local to remote and back
 
+> [!info] rsync uses SSH by default for remote transfers. The remote path syntax is
+> `user@host:/path`. Use `-e` to customize the SSH command (specific key, non-standard
+> port).
+
 ```bash
-# Push: local → remote server
+# Push: local → remote
 rsync -avzP /data/exports/ user@remote-server:/data/imports/
-# rsync uses SSH by default for remote transfers
-# The remote path is specified as user@host:/path
 
-# Pull: remote server → local
+# Pull: remote → local
 rsync -avzP user@remote-server:/data/exports/ /local/data/
+```
 
-# With a specific SSH key
+#### rsync -e — custom SSH key or non-standard port
+
+> [!info] `-e` specifies the remote shell command. Wrap SSH options in quotes.
+
+```bash
 rsync -avzP -e "ssh -i ~/.ssh/gcp_key" /data/exports/ user@10.132.0.2:/data/imports/
-# -e = specify the remote shell command
-# "ssh -i ~/.ssh/gcp_key" = use this specific identity file for SSH authentication
-
-# With a non-standard SSH port
 rsync -avzP -e "ssh -p 2222" /data/ user@server:/data/
-# -e "ssh -p 2222" = connect to SSH port 2222 instead of the default 22
+```
 
-# Through an IAP tunnel (GCE VMs with no public IP)
-# Step 1: Open the IAP tunnel
-gcloud compute start-iap-tunnel data-pipeline-sql 22 --local-host-port=127.0.0.1:2222 --zone=europe-west1-b &
-# Step 2: rsync through the tunnel
+#### rsync through IAP tunnel — transferring to GCE VMs with no public IP
+
+> [!info] Open an IAP tunnel to port 22 (SSH) on the VM, then point rsync at the
+> local tunnel endpoint. The tunnel runs in the background (`&`). For simpler
+> one-off transfers, use `gcloud compute scp` instead. For IAP tunnel details, see
+> [[iap-tunneling]].
+
+```bash
+gcloud compute start-iap-tunnel data-pipeline-sql 22 \
+    --local-host-port=127.0.0.1:2222 --zone=europe-west1-b &
 rsync -avzP -e "ssh -p 2222" /data/exports/ user@127.0.0.1:/data/imports/
-# The tunnel maps local port 2222 → VM port 22 (SSH)
-# rsync connects to localhost:2222, which goes through IAP to the VM
-
-# Alternative: use gcloud compute scp for simpler transfers (see below)
 ```
 
 ### rsync vs cp — when to use which
@@ -164,59 +184,75 @@ rsync -avzP -e "ssh -p 2222" /data/exports/ user@127.0.0.1:/data/imports/
 
 #### scp — push, pull, recursive copy over SSH
 
+> [!info] `scp` copies files through SSH. Same authentication as `ssh` (keys, agent,
+> passwords). Use for quick one-off file transfers. For anything large or repeated,
+> prefer `rsync`.
+
 ```bash
-# Push a single file: local → remote
 scp local_file.py user@remote-server:/tmp/
-# Copies through SSH. Same authentication as ssh (keys, passwords).
-
-# Pull a single file: remote → local
 scp user@remote-server:/tmp/output.csv ./local/
-
-# Recursive directory copy
-scp -r local_dir/ user@remote-server:/tmp/
-# -r = recursive (required for directories)
-# WARNING: scp -r does NOT preserve symlinks, hardlinks, or special files
-# WARNING: scp -r does NOT resume on interruption — starts from scratch
-# For directories, prefer rsync -avzP
-
-# With a specific SSH port
-scp -P 2222 file.txt user@server:/tmp/
-# -P (uppercase!) = port number
-# Note: ssh uses lowercase -p, scp uses uppercase -P — a common gotcha
-
-# With a specific SSH key
-scp -i ~/.ssh/gcp_key file.txt user@10.132.0.2:/tmp/
-
-# Preserve timestamps and permissions
-scp -rp local_dir/ user@server:/tmp/
-# -p (lowercase!) = preserve modification times, access times, and permissions
-# Note: scp -p is NOT the same as scp -P (port). Case matters.
-
-# Bandwidth limit
-scp -l 50000 large_file.tar.gz user@server:/tmp/
-# -l = limit bandwidth in Kbit/s (not KB/s!)
-# 50000 Kbit/s ≈ 6.1 MB/s
-# Note: rsync uses KB/s, scp uses Kbit/s — different units, same concept
-
-# Copy between two remote hosts (through your local machine)
-scp user@server1:/data/file.csv user@server2:/data/file.csv
-# Your machine acts as the relay — data flows: server1 → you → server2
-# For server-to-server copy without relay, SSH into server1 and scp from there
 ```
 
-#### PowerShell scp / gcloud compute scp — remote file transfer
+> [!warning] `scp -r` does NOT preserve symlinks, hardlinks, or special files
+> It also does NOT resume on interruption — starts from byte 0. For directories,
+> always prefer `rsync -avzP`.
+
+```bash
+scp -r local_dir/ user@remote-server:/tmp/
+```
+
+#### scp -P, -p, -i — port, preserve, and identity key
+
+> [!warning] `-P` (uppercase) = port number. `-p` (lowercase) = preserve timestamps.
+> This is the opposite of `ssh` which uses lowercase `-p` for port. Mixing them up is
+> one of the most common scp mistakes.
+
+```bash
+scp -P 2222 file.txt user@server:/tmp/
+scp -rp local_dir/ user@server:/tmp/
+scp -i ~/.ssh/gcp_key file.txt user@10.132.0.2:/tmp/
+```
+
+#### scp -l — bandwidth limit (in Kbit/s, not KB/s)
+
+> [!warning] `scp -l` uses **Kbit/s**, not KB/s. 50000 Kbit/s = ~6.1 MB/s. `rsync
+> --bwlimit` uses KB/s. Confusing the units produces transfers 8x faster or slower
+> than intended.
+
+```bash
+scp -l 50000 large_file.tar.gz user@server:/tmp/
+```
+
+#### scp remote-to-remote — relay through your machine
+
+> [!info] Copying between two remote hosts relays data through your local machine
+> (server1 → you → server2). For direct server-to-server transfer, SSH into server1
+> and `scp` from there.
+
+```bash
+scp user@server1:/data/file.csv user@server2:/data/file.csv
+```
+
+#### PowerShell scp — remote file transfer (Windows 10+ includes OpenSSH)
+
+> [!info] Windows 10+ ships with OpenSSH — `scp` works natively from PowerShell. Same
+> syntax as Linux with backslash paths or forward slashes.
 
 ```powershell
-# Windows 10+ includes OpenSSH — scp works natively
 scp .\local_file.py user@remote-server:/tmp/
-scp user@remote-server:/tmp/output.csv .\local\
-
-# Recursive with specific key
 scp -r -i ~/.ssh/gcp_key ./local_dir/ user@10.132.0.2:/tmp/
+```
 
-# Or use gcloud compute scp (handles IAP automatically)
-gcloud compute scp .\file.py data-pipeline-sql:/tmp/ --zone=europe-west1-b --tunnel-through-iap
-gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ --zone=europe-west1-b --tunnel-through-iap
+#### gcloud compute scp (PowerShell) — GCE VM transfer with automatic IAP
+
+> [!info] Same as the Linux version. gcloud handles IAP tunneling and SSH key management
+> automatically.
+
+```powershell
+gcloud compute scp .\file.py data-pipeline-sql:/tmp/ `
+    --zone=europe-west1-b --tunnel-through-iap
+gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ `
+    --zone=europe-west1-b --tunnel-through-iap
 ```
 
 ## gcloud compute scp — GCE-Native File Transfer
@@ -225,34 +261,28 @@ gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ --zone=europe-
 
 #### gcloud compute scp — push and pull files to/from GCE VMs
 
+> [!info] Uses VM **instance name** (not IP). `--tunnel-through-iap` routes through
+> Identity-Aware Proxy — no public IP required. gcloud handles SSH key management
+> automatically.
+
 ```bash
 # Push: local → VM
 gcloud compute scp local_file.py data-pipeline-sql:/tmp/ \
     --zone=europe-west1-b --tunnel-through-iap
-# data-pipeline-sql = VM instance name (not IP address)
-# :/tmp/ = destination path on the VM
-# --tunnel-through-iap = route through IAP (no public IP required)
 
 # Pull: VM → local
 gcloud compute scp data-pipeline-sql:/var/opt/mssql/backups/data-pipeline.bak ./backups/ \
     --zone=europe-west1-b --tunnel-through-iap
+```
 
-# Multiple files
-gcloud compute scp file1.py file2.py data-pipeline-sql:/tmp/ \
-    --zone=europe-west1-b --tunnel-through-iap
+#### gcloud compute scp --recurse — copy directories to/from GCE VMs
 
-# Recursive directory copy
+> [!info] `--recurse` copies directories recursively (like `scp -r`). Add `--compress`
+> for text/CSV files — SSH-level compression that helps on slow connections but wastes
+> CPU on already-compressed formats (Parquet, gzip).
+
+```bash
 gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ \
-    --zone=europe-west1-b --tunnel-through-iap
-# --recurse = copy directory recursively (like scp -r)
-
-# With compression
-gcloud compute scp --compress large_file.csv data-pipeline-sql:/tmp/ \
-    --zone=europe-west1-b --tunnel-through-iap
-# --compress = enable SSH compression (useful for text/CSV, not for already-compressed files)
-
-# Specify SSH key explicitly (rare — gcloud handles keys automatically)
-gcloud compute scp --ssh-key-file=~/.ssh/custom_key file.txt data-pipeline-sql:/tmp/ \
     --zone=europe-west1-b --tunnel-through-iap
 ```
 
@@ -275,54 +305,69 @@ Google Cloud Storage (GCS) is the backbone for data lake storage, pipeline stagi
 
 #### gsutil cp, gsutil rsync — upload and sync to Cloud Storage
 
+#### gsutil cp — upload and download single files
+
+> [!info] `gsutil cp` follows Unix `cp` semantics. `gs://bucket/path` is the GCS URI.
+> Add `-m` for multithreaded parallel transfers (significantly faster for many files).
+
 ```bash
-# Upload a single file
 gsutil cp local_file.csv gs://data-pipeline-data-lake/bronze/
-# cp = copy (same semantics as Unix cp)
-# gs://bucket/path = GCS URI
-
-# Upload with parallel composite upload (for files >150 MB)
-gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp large_file.parquet gs://data-pipeline-data-lake/silver/
-# Splits the file into chunks, uploads in parallel, reassembles in GCS
-# 5-10x faster for large files on high-bandwidth connections
-
-# Download a file
 gsutil cp gs://data-pipeline-data-lake/gold/scores.parquet ./local/
+```
 
-# Recursive directory upload
+#### gsutil -m cp -r — parallel recursive directory upload
+
+> [!info] `-m` enables multithreaded transfers. `-r` recurses into subdirectories. For
+> files over 150 MB, enable parallel composite uploads to split the file into chunks
+> and upload them simultaneously — 5-10x faster on high-bandwidth connections.
+
+```bash
 gsutil -m cp -r ./output/ gs://data-pipeline-data-lake/bronze/pipeline_run/
-# -m = multithreaded (parallel transfers — significantly faster for many files)
-# -r = recursive
+```
 
-# Sync a local directory to GCS (like rsync for the cloud)
+```bash
+# Parallel composite upload for large files
+gsutil -o GSUtil:parallel_composite_upload_threshold=150M \
+    cp large_file.parquet gs://data-pipeline-data-lake/silver/
+```
+
+#### gsutil rsync — delta sync to Cloud Storage
+
+> [!info] `gsutil rsync` transfers only new or changed files (like `rsync` for the cloud).
+> Without `-d`, it never deletes remote files — safe by default.
+
+```bash
 gsutil -m rsync -r ./local_data/ gs://data-pipeline-data-lake/bronze/
-# rsync = only transfer files that are new or changed (delta sync)
-# -r = recursive
-# DOES NOT delete remote files by default (safe)
+```
 
-# Sync with delete (mirror mode — use with caution)
-gsutil -m rsync -r -d ./local_data/ gs://data-pipeline-data-lake/bronze/
-# -d = delete remote files not present locally
-# WARNING: same risk as rsync --delete — wrong source = deleted data
-# ALWAYS do a dry run first:
+> [!danger] `gsutil rsync -d` deletes remote files not present locally
+> Same risk as `rsync --delete` — a wrong source path or empty directory wipes the
+> destination. Always dry-run first with `-n`:
+
+```bash
 gsutil -m rsync -r -d -n ./local_data/ gs://data-pipeline-data-lake/bronze/
-# -n = dry run (shows what would be transferred/deleted)
+```
 
-# Copy between GCS buckets (server-side — no data flows through your machine)
+#### gsutil cp gs:// gs:// — server-side copy between GCS buckets
+
+> [!info] Copying between GCS buckets happens entirely inside Google's network — no data
+> flows through your machine. No egress charges for same-region copies. Extremely fast
+> regardless of file size.
+
+```bash
 gsutil -m cp -r gs://source-bucket/data/ gs://dest-bucket/data/
-# This happens entirely inside Google's network — extremely fast
-# No egress charges (same region), no bandwidth usage on your machine
-
-# Move (rename) within GCS
 gsutil mv gs://bucket/old_path/ gs://bucket/new_path/
-# Server-side rename — instant for same-bucket operations
+```
 
-# New syntax: gcloud storage (faster, eventually replaces gsutil)
+#### gcloud storage — modern replacement for gsutil (20-94% faster)
+
+> [!info] `gcloud storage` is the Go-based replacement for Python-based `gsutil`. Same
+> semantics, faster execution, resumable uploads by default. Prefer for new scripts.
+
+```bash
 gcloud storage cp local_file.csv gs://data-pipeline-data-lake/bronze/
 gcloud storage cp -r ./output/ gs://data-pipeline-data-lake/bronze/
 gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recursive
-# gcloud storage uses the same flags but is 20-94% faster than gsutil for large transfers
-# (uses the JSON API with resumable uploads by default)
 ```
 
 ### gsutil vs gcloud storage — choosing between legacy and modern CLI
@@ -353,62 +398,106 @@ gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recurs
 > - `-b 10000` — batch size (small = less log space, large = faster)
 > - `-e errors.log` — log rejected rows (invaluable for debugging bad data)
 
+#### bcp queryout — export a query result to CSV
+
 ```bash
-# Export table to CSV
 bcp "SELECT * FROM gold.scores_daily" queryout scores.csv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
     -c -t "," -r "\n"
+```
 
-# Export as TSV (safer for data with commas)
+#### bcp out — export a full table (faster than queryout)
+
+> [!tip] Use TSV (`-t "\t"`) instead of CSV when data contains commas. `out` exports
+> the entire table without query parsing — faster than `queryout` for full-table exports.
+
+```bash
 bcp data-pipeline.gold.scores_daily out scores.tsv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
     -c -t "\t" -r "\n"
+```
 
-# Import CSV into a table
+#### bcp in — import CSV into a SQL Server table
+
+> [!info] `-F 2` skips the header row (starts from row 2). `-b 10000` sets the batch
+> size — smaller batches use less transaction log space. `-e errors.log` captures rejected
+> rows with their line numbers and error details.
+
+```bash
 bcp data-pipeline.bronze.staging_data in data.csv \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
     -c -t "," -r "\n" -F 2 -b 10000 -e errors.log
+```
 
-# Native format (fastest — binary, not human-readable)
+> [!danger] bcp silently truncates data that exceeds column width
+> If a CSV field contains 500 characters but the target column is `VARCHAR(255)`, bcp
+> **truncates the data without error or warning**. The import reports success, row counts
+> match, but data is silently damaged. Always verify max field lengths before import:
+> ```sql
+> SELECT MAX(LEN(column_name)) FROM staging_table
+> ```
+
+> [!warning] bcp exit code 0 does NOT mean all rows loaded
+> bcp returns exit code 0 even when rows are rejected. Always check the `-e` error log
+> file AND compare row counts: `wc -l data.csv` vs `SELECT COUNT(*) FROM table`.
+
+#### bcp -n — native binary format (fastest for SQL-to-SQL transfers)
+
+> [!info] `-n` uses binary format — preserves exact data types with no text conversion.
+> 2-5x faster than character mode. Cannot be opened in text editors. Use for SQL Server →
+> SQL Server transfers only.
+
+```bash
 bcp data-pipeline.gold.scores_daily out scores.bcp \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
-    -n
-# -n = native mode (binary format — preserves exact data types)
-# Use for: SQL Server → SQL Server transfers (fastest possible)
-# Cannot be opened in Excel or text editors
+    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -n
+```
 
-# With format file (for complex column mappings)
+#### bcp format — generate column mapping files
+
+> [!info] `format nul` generates a format file without transferring data. Edit the `.fmt`
+> file to skip columns, reorder mappings, or handle schema differences. Then use
+> `-f staging_format.fmt` on the actual import.
+
+```bash
 bcp data-pipeline.bronze.staging_data format nul \
     -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
     -c -t "," -f staging_format.fmt
-# format nul = generate a format file WITHOUT transferring data
-# -f staging_format.fmt = output format file
-# Edit the .fmt file to map CSV columns to table columns (skip columns, reorder, etc.)
-# Then use: bcp ... in data.csv -f staging_format.fmt
+```
 
-# Parallel bcp (for very large tables — split and load simultaneously)
-# Split the source into chunks and run multiple bcp processes:
-bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_europe'" queryout chunk1.csv ... &
-bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_usa'" queryout chunk2.csv ... &
-bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_asia'" queryout chunk3.csv ... &
+#### bcp parallel — split and load simultaneously for large tables
+
+> [!info] Split the source by a partition key and run multiple `bcp` processes in
+> background (`&`). Each process loads independently — 3x throughput on multi-core
+> systems. Use `wait` to block until all complete.
+
+```bash
+bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_europe'" queryout chunk1.csv \
+    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "\n" &
+bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_usa'" queryout chunk2.csv \
+    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "\n" &
 wait
-# Each process runs in parallel — 3x throughput on multi-core systems
 ```
 
 #### bcp — bulk copy export and import (PowerShell)
 
+> [!info] `bcp.exe` is a native Windows binary — same flags as Linux. Use `$env:SA_PASSWORD`
+> for environment variables in PowerShell and backtick (`` ` ``) for line continuation.
+
 ```powershell
-# Same bcp.exe commands — bcp is a native Windows binary
 bcp "SELECT * FROM gold.scores_daily" queryout scores.csv `
     -S "127.0.0.1,1435" -U sa -P $env:SA_PASSWORD -d data-pipeline `
     -c -t "," -r "\n"
+```
 
-# Import with error logging
+```powershell
 bcp data-pipeline.bronze.staging_data in .\data.csv `
     -S "127.0.0.1,1435" -U sa -P $env:SA_PASSWORD `
     -c -t "," -F 2 -b 10000 -e .\errors.log
+```
 
-# Check row count after import
+> [!tip] Always verify row count after bcp import — never trust the exit code alone.
+
+```powershell
 Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
     -Username "sa" -Password $env:SA_PASSWORD -TrustServerCertificate `
     -Query "SELECT COUNT(*) AS loaded_rows FROM bronze.staging_data"
@@ -420,24 +509,23 @@ For smaller exports or custom query results, `sqlcmd` outputs directly to file.
 
 #### sqlcmd -Q -o — query-based CSV export (Linux)
 
+> [!info] `-Q` executes the query and exits. `SET NOCOUNT ON` suppresses the
+> "(N rows affected)" message that pollutes CSV output. `-s ","` sets the column
+> separator. `-W` removes trailing spaces from columns. `-o` writes to file.
+
 ```bash
-# Export query result to CSV
 sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
     -Q "SET NOCOUNT ON; SELECT * FROM gold.scores_daily" \
     -s "," -W -o scores.csv
-# -Q = execute query and exit
-# SET NOCOUNT ON = suppress "(N rows affected)" message in output
-# -s "," = column separator (comma)
-# -W = remove trailing spaces from columns
-# -o scores.csv = output to file (instead of stdout)
+```
 
-# Export to CSV with headers only (no dashes separator line)
-sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
-    -Q "SET NOCOUNT ON; SELECT * FROM gold.scores_daily" \
-    -s "," -W -o scores.csv -k1
-# -k1 = remove control characters (cleans up the output)
-# Note: sqlcmd always adds a dash separator line under headers. To remove it:
-# sed -i '2d' scores.csv   (delete line 2 — the dashes)
+> [!warning] sqlcmd adds a dashes separator line under column headers
+> Every sqlcmd CSV export contains a line of `---` dashes on row 2. This breaks CSV
+> parsers. Remove it with `sed -i '2d' scores.csv` after export. Adding `-k1` removes
+> control characters but does NOT remove the dashes line.
+
+```bash
+sed -i '2d' scores.csv
 ```
 
 #### Invoke-Sqlcmd + Export-Csv — query-based CSV export (PowerShell)

@@ -527,37 +527,47 @@ incremental_load = PythonOperator(
 > [!warning] `depends_on_past` Pitfalls
 > `depends_on_past=True` is powerful but creates a chain-of-dependency that must be manually broken if the first historical run fails. Never use it without a plan for recovery (use `airflow tasks clear` to reset the chain). Prefer idempotent `MERGE`/`UPSERT` logic in the task itself over `depends_on_past`.
 
+> [!danger] The DELETE + INSERT Without a Transaction Is Not Idempotent -- It Can Lose Data
+> If the pipeline crashes between DELETE and INSERT, the partition is empty. Always wrap delete-then-insert in a single transaction. In BigQuery, use scripted transactions (`BEGIN TRANSACTION ... COMMIT`). In SQL Server, use explicit `BEGIN TRAN ... COMMIT`. The MERGE pattern below is inherently atomic and preferred.
+
 ### Idempotent Task Design
 
 ```python
 def idempotent_load(**context):
     """
-    This task is idempotent: running it twice for the same date produces
-    the same result as running it once.
+    This task is idempotent: running it twice for the same date
+    produces the same result as running it once.
     """
     ds = context["ds"]  # "2024-01-15"
-
-    # PATTERN 1: Delete-then-insert (partition overwrite)
-    # Delete any existing data for this partition before inserting
     bq_hook = BigQueryHook()
+```
+
+```python
+    # PATTERN 1: Delete-then-insert (partition overwrite)
     bq_hook.run_query(f"""
         DELETE FROM `project.dataset.table`
         WHERE DATE(created_at) = '{ds}'
     """, use_legacy_sql=False)
 
-    # Now insert — even if this task runs twice, result is the same
     bq_hook.run_query(f"""
         INSERT INTO `project.dataset.table`
         SELECT * FROM `project.dataset.staging_{ds.replace('-', '')}`
     """, use_legacy_sql=False)
+```
 
-    # PATTERN 2: MERGE/UPSERT (safer for fact tables)
+```python
+    # PATTERN 2: MERGE/UPSERT (safer for fact tables -- atomic)
     bq_hook.run_query(f"""
         MERGE `project.dataset.target` T
-        USING (SELECT * FROM `project.dataset.staging` WHERE date = '{ds}') S
+        USING (SELECT * FROM `project.dataset.staging`
+               WHERE date = '{ds}') S
         ON T.id = S.id AND T.date = S.date
-        WHEN MATCHED THEN UPDATE SET T.value = S.value, T.updated_at = CURRENT_TIMESTAMP()
-        WHEN NOT MATCHED THEN INSERT (id, date, value, updated_at) VALUES (S.id, S.date, S.value, CURRENT_TIMESTAMP())
+        WHEN MATCHED THEN
+          UPDATE SET T.value = S.value,
+                     T.updated_at = CURRENT_TIMESTAMP()
+        WHEN NOT MATCHED THEN
+          INSERT (id, date, value, updated_at)
+          VALUES (S.id, S.date, S.value, CURRENT_TIMESTAMP())
     """, use_legacy_sql=False)
 ```
 

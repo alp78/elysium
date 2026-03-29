@@ -166,6 +166,9 @@ For each issue found:
 
 **When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [[model-specific-prompting#Claude Anthropic|Claude-specific guidance]]).
 
+> [!warning] JSON Output from LLMs Frequently Contains Syntax Errors
+> Models occasionally produce invalid JSON -- trailing commas, unescaped quotes, missing brackets, or markdown code fence wrappers around the JSON. Always wrap `json.loads()` in a try/except and implement a retry-with-repair strategy. Adding "Return ONLY valid JSON, no markdown formatting" to the prompt reduces but does not eliminate this issue. For production pipelines, use the model's structured output mode (Anthropic's tool_use, OpenAI's JSON mode) instead of parsing free-text JSON.
+
 ### JSON Schema: Machine-Readable Structured Output
 
 JSON is ideal when you need the model to produce **machine-readable structured output** that will be parsed by code.

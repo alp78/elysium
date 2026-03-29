@@ -38,19 +38,38 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 > **Only use `-9` when SIGTERM doesn't work after waiting.**
 
 ```bash
-kill <PID>              # SIGTERM — graceful shutdown
-kill -9 <PID>           # SIGKILL — force kill (last resort)
+kill <PID>
+kill -9 <PID>
+```
 
-# Kill by name
-pkill -f "python run_pipeline"   # -f = match full command line, not just process name
-# Without -f: pkill python would kill ALL python processes (dangerous!)
+#### pkill -f — kill by command line pattern
 
-killall python3         # SIGTERM to every process named exactly "python3"
-# DANGER: kills ALL python3 processes for ALL users — prefer pkill -f
+> [!danger] `pkill` without `-f` matches **process name only** (first 15 characters)
+> `pkill python` kills every Python process on the system. Always use `-f` to match
+> the full command line: `pkill -f "python run_pipeline"` targets only that specific
+> script.
 
-# Kill a process group (parent and all children)
-kill -- -<PGID>         # negative PID signals the entire process group
-# Find PGID: ps -o pid,pgid,cmd -p <PID>
+```bash
+pkill -f "python run_pipeline"
+```
+
+> [!warning] `killall` is dangerous on macOS — it kills ALL processes
+> On Linux, `killall python3` kills all processes named `python3`. On macOS/BSD,
+> `killall` with no arguments kills **every process you own**. Prefer `pkill -f` for
+> portability.
+
+```bash
+killall python3
+```
+
+#### kill -- -PGID — kill a process group (parent and all children)
+
+> [!info] A negative PID signals the entire process group. Use this to kill a parent
+> process and all its children at once (e.g., a bash script that spawned multiple
+> subprocesses). Find the PGID with `ps -o pid,pgid,cmd -p <PID>`.
+
+```bash
+kill -- -<PGID>
 ```
 
 ### SIGTERM → strace → SIGKILL — the correct kill escalation sequence
@@ -78,22 +97,30 @@ kill -- -<PGID>         # negative PID signals the entire process group
 
 ### PowerShell — Stop-Process for graceful and forced termination
 
+#### Stop-Process — graceful and forced termination
+
+> [!info] Without `-Force`, `Stop-Process` sends a close request (equivalent to SIGTERM).
+> With `-Force`, it terminates immediately (equivalent to SIGKILL).
+
 ```powershell
-# Graceful stop
 Stop-Process -Id <PID>
-
-# Force kill
 Stop-Process -Id <PID> -Force
+```
 
-# Kill by name
-Stop-Process -Name "python" -Force
+#### Stop-Process -Name — kill by process name
 
-# Kill by pattern (matching command line)
-Get-Process | Where-Object { $_.CommandLine -like "*run_pipeline*" } | Stop-Process -Force
+> [!warning] `Stop-Process -Name "python"` kills ALL Python processes, same as `killall`.
+> Use `Where-Object` on `CommandLine` to target a specific script.
 
-# Kill with confirmation
+```powershell
+Get-Process | Where-Object { $_.CommandLine -like "*run_pipeline*" } |
+    Stop-Process -Force
+```
+
+#### Stop-Process -Confirm — kill with safety prompt
+
+```powershell
 Get-Process -Name "python" | Stop-Process -Confirm
-# -Confirm = prompt before each kill (safety net)
 ```
 
 ## Related

@@ -573,6 +573,9 @@ END;
 
 ## User-Defined Functions
 
+> [!danger] Scalar UDFs Force Row-by-Row Execution
+> T-SQL scalar UDFs (non-inlineable) disable parallelism and force SQL Server to call the function once per row. A simple scalar UDF on a 10M-row table can turn a 2-second query into a 2-minute query. Always use inline table-valued functions (iTVFs) instead -- the optimizer can fold them into the outer query plan. SQL Server 2019+ has "scalar UDF inlining," but many patterns are still not eligible.
+
 ### User-Defined Functions — Inline Table-Valued Function
 
 An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
@@ -1196,6 +1199,9 @@ SELECT
 
 **Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
 
+> [!warning] READ UNCOMMITTED (NOLOCK) Can Return Wrong Data
+> `NOLOCK` / `READ UNCOMMITTED` can read rows that are being moved by a page split, causing the same row to appear twice or not at all in the result. It can also read uncommitted data that is later rolled back. Never use NOLOCK for counts, sums, or any calculation where accuracy matters -- even for "approximate" dashboards, the error can be larger than expected.
+
 ## Bulk Loading Patterns
 
 ### Bulk Loading Strategies
@@ -1281,7 +1287,7 @@ Partition large tables (millions of rows) by a date column for:
 
 The OHLCV tables (~65K rows each) are too small to benefit. In production with 100M+ rows, partition by year or month.
 
-<small>
+<!-- 
 
 ```sql
 -- Example: partition by year (conceptual — don't run)
@@ -1296,7 +1302,7 @@ CREATE TABLE silver.ohlcv_partitioned (
 ) ON ps_yearly(date);
 ```
 
-</small>
+ -->
 
 ## Cleanup
 

@@ -283,7 +283,7 @@ print(f"merged: {merged}")                             # {'x': 1, 'y': 3, 'z': 4
 
     merged: {'x': 1, 'y': 3, 'z': 4}
 
-<h4><code style="font-size:0.75em">defaultdict</code> and <code style="font-size:0.75em">Counter</code></h4>
+#### defaultdict and Counter
 
 ```python
 # defaultdict — auto-create missing keys with a factory function
@@ -420,7 +420,7 @@ print(f"All unique:        {prod_ids | warehouse_ids}")
     In both:           {'P003', 'P002'}
     All unique:        {'P005', 'P001', 'P003', 'P002', 'P004'}
 
-<h4><code style="font-size:0.75em">frozenset</code></h4>
+#### frozenset
 
 ```python
 # frozenset — immutable set for use as dict keys or set elements
@@ -485,7 +485,7 @@ print(f"first={first}, last={last}")
     Swapped:  a=2, b=1
     first=1, last=5
 
-<h4><code style="font-size:0.75em">namedtuple</code> and <code style="font-size:0.75em">NamedTuple</code></h4>
+#### namedtuple and NamedTuple
 
 ```python
 # namedtuple and NamedTuple — tuples with named field access
@@ -525,7 +525,7 @@ print(f"  name: {emp.name}, salary: ${emp.salary:,.0f}")
     Employee: Employee(name='Alice', department='Engineering', salary=95000)
       name: Alice, salary: $95,000
 
-<h4><code style="font-size:0.75em">Enum</code></h4>
+#### Enum
 
 ```python
 # Enum — named constants with type safety and iteration
@@ -579,7 +579,7 @@ print(f"RED == 1:   {Color.RED == 1}")          # False! Enum != int
     RED == RED: True
     RED == 1:   False
 
-<h4><code style="font-size:0.75em">IntEnum</code> and pipeline status</h4>
+#### IntEnum and pipeline status
 
 ```python
 # IntEnum — integer-compatible enum for arithmetic and comparison
@@ -659,7 +659,7 @@ print(f"Peek:     {queue[0]}")          # look at front without removing
     Dequeue:  second
     Peek:     third
 
-<h4><code style="font-size:0.75em">deque</code> — double-ended queue</h4>
+#### deque — double-ended queue
 
 ```python
 # deque — double-ended queue with O(1) operations on both ends
@@ -683,7 +683,7 @@ print(f"Rotate(-2):{list(d)}")
     Rotate(2): [4, 5, 1, 2, 3]
     Rotate(-2):[1, 2, 3, 4, 5]
 
-<h4><code style="font-size:0.75em">deque</code> with <code style="font-size:0.75em">maxlen</code></h4>
+#### deque with maxlen
 
 ```python
 # deque with maxlen — fixed-size circular buffer
@@ -696,7 +696,7 @@ print(f"maxlen=3:  {list(d)}")
 
     maxlen=3:  [2, 3, 4]
 
-<h4>Priority queue — <code style="font-size:0.75em">heapq</code></h4>
+#### Priority queue — heapq
 
 ```python
 # heapq — priority queue using a min-heap on a regular list

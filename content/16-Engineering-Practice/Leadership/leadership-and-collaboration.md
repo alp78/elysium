@@ -37,6 +37,9 @@ Code reviews are not quality gates — they are the primary mechanism through wh
                └───────────────────────┘
 ```
 
+> [!warning] The Most Expensive Code Review Mistake: Approving Without Running the Query
+> In data engineering, the most dangerous PRs look correct in review but produce wrong results at scale. A SQL query that works on 1,000 rows may produce duplicates or incorrect aggregations on 10M rows. For any PR that modifies a gold-layer query or calculation, request that the author include a diff of before/after query results on a representative dataset -- not just "tests pass."
+
 #### What senior reviewers look for in data pipeline PRs
 
 | Check | Good | Bad |
@@ -44,11 +47,11 @@ Code reviews are not quality gates — they are the primary mechanism through wh
 | Idempotency | `MERGE` or delete-insert pattern | Raw `INSERT` that creates duplicates on retry |
 | Error handling | Specific exceptions caught, meaningful logging | Bare `except: pass` |
 | Transaction scope | One logical unit per transaction | 50 tables updated in a single transaction (lock escalation) |
-| Data validation | Row counts, NULL checks, range checks after load | No validation — assumes data is correct |
+| Data validation | Row counts, NULL checks, range checks after load | No validation -- assumes data is correct |
 | Rollback plan | PR description explains how to undo | No rollback mentioned |
 | Naming | `compute_momentum_z_scores()` | `process_data()` |
 | SQL safety | Parameterized queries, explicit column lists | `SELECT *`, string-concatenated SQL |
-| Test coverage | Unit tests for business logic, integration test for pipeline | No tests — "I tested manually" |
+| Test coverage | Unit tests for business logic, integration test for pipeline | No tests -- "I tested manually" |
 
 #### How to give good review feedback
 

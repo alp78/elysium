@@ -222,7 +222,7 @@ print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
         event_type=signup\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1255 bytes)
     Read back: 5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
 
-<h4>Parquet in memory — <code style="font-size:0.75em">BytesIO</code></h4>
+#### Parquet in memory — BytesIO
 
 ```python
 # Parquet in memory — BytesIO for cloud upload without temp files

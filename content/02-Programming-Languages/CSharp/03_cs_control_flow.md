@@ -56,7 +56,7 @@ Console.WriteLine($"age={age} → {status}");
     10 is positive
     age=20 → adult
 
-<h4>Nested ternary — <code style="font-size:0.75em">? :</code> chains</h4>
+#### Nested ternary — ? : chains
 
 `condition ? trueVal : falseVal` chains right-to-left. Compact for simple 2-3 tier classification. Don't nest more than 2 levels — use switch expression for complex cases.
 
@@ -122,7 +122,7 @@ switch (command)
 
     Stopping...
 
-<h4>Switch expression — compact value-returning form with <code style="font-size:0.75em">or</code> pattern and <code style="font-size:0.75em">_</code> wildcard</h4>
+#### Switch expression — compact value-returning form with or pattern and _ wildcard
 
 > [!info] Switch expression syntax
 > - `variable switch { pattern => result, _ => default }` — returns a value directly
@@ -144,7 +144,7 @@ Console.WriteLine(result);
 
     Stopping...
 
-<h4>Switch expression — relational patterns (<code style="font-size:0.75em">&gt;=</code>, <code style="font-size:0.75em">&lt;</code>, etc.)</h4>
+#### Switch expression — relational patterns (&gt;=, &lt;, etc.)
 
 Switch arms with relational operators: `>= 90 => "A"`. First match wins — order from most restrictive to least. `>= 70` before `>= 90` would match 95 as "C".
 
@@ -162,7 +162,7 @@ Console.WriteLine($"Score {score} → Grade {grade}");
 
     Score 85 → Grade B
 
-<h4>Switch expression — type patterns and <code style="font-size:0.75em">when</code> guard</h4>
+#### Switch expression — type patterns and when guard
 
 > [!info] Type patterns
 > - `int n => ...` — matches integers and binds to `n`
@@ -191,7 +191,7 @@ foreach (var v in values)
       System.Int32[] → array starting with 1, 2 more
       3.14         → other: Double
 
-<h4>Switch expression — property patterns (<code style="font-size:0.75em">{ Property: value }</code>)</h4>
+#### Switch expression — property patterns ({ Property: value })
 
 > [!info] Property patterns
 > - `{ PropertyName: value }` — matches when the property equals the value
@@ -212,7 +212,7 @@ Console.WriteLine($"{date:yyyy-MM-dd} → {holiday}");
 
     2024-12-25 → Christmas
 
-<h4>Null-coalescing (<code style="font-size:0.75em">??</code>, <code style="font-size:0.75em">??=</code>) and <code style="font-size:0.75em">is</code> pattern matching</h4>
+#### Null-coalescing (??, ??=) and is pattern matching
 
 > [!info] Null-handling operators
 > - `??` — returns left if non-null, else right (replaces `x != null ? x : default`)
@@ -272,7 +272,7 @@ Console.WriteLine();
       0  1  2  3  4
     Step 3:   0  3  6  9  12  15  18
 
-<h4>Count down with <code style="font-size:0.75em">for</code></h4>
+#### Count down with for
 
 Decrement: `for (int i = 10; i > 0; i -= 2)`. Step can be any integer — negative for counting down, >1 for skipping. Watch condition direction: `i > 0` not `i < 10` for counting down.
 
@@ -289,7 +289,7 @@ Console.WriteLine();
 
 ## Loop Control
 
-<h4><code style="font-size:0.75em">break</code>, <code style="font-size:0.75em">continue</code>, <code style="font-size:0.75em">goto</code></h4>
+#### break, continue, goto
 
 > [!info] Loop control
 > - `break` — exits the innermost loop immediately
@@ -324,7 +324,7 @@ Console.WriteLine();
     
       1  3  5  7  9
 
-<h4>Breaking outer loops with <code style="font-size:0.75em">goto</code> and <code style="font-size:0.75em">return</code></h4>
+#### Breaking outer loops with goto and return
 
 C# has no labeled `break`. Two patterns: (1) `goto` to a label after the outer loop — the accepted idiom for nested loop breaking. (2) Extract to a method and use `return`. Don't use `goto` for general flow control.
 
@@ -362,7 +362,7 @@ Console.WriteLine(FindFirst(m, 3));
 
 ## Iterators & Generators
 
-<h4><code style="font-size:0.75em">yield return</code> — lazy iterator method</h4>
+#### yield return — lazy iterator method
 
 A method returning `IEnumerable<T>` with `yield return` pauses execution, returns a value, and resumes on the next `MoveNext()`. The compiler transforms it into a state machine. Values are computed lazily — only when requested. Composable with LINQ.
 
@@ -388,7 +388,7 @@ Console.WriteLine();
       Starting countdown from 5
       5  4  3  2  1  Done!
 
-<h4>Manual iteration with <code style="font-size:0.75em">GetEnumerator()</code></h4>
+#### Manual iteration with GetEnumerator()
 
 `GetEnumerator()` returns an `IEnumerator` with `MoveNext()` (advance + bool) and `Current` (value). `foreach` is syntactic sugar for this protocol. Use manual iteration for peeking ahead or interleaving enumerators.
 
@@ -408,7 +408,7 @@ enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");  // 1
       next: 2
       next: 1
 
-<h4><code style="font-size:0.75em">SelectMany</code> — flattens one level of nesting</h4>
+#### SelectMany — flattens one level of nesting
 
 `SelectMany` projects each element to a sequence and flattens into one. One-line flatten: `nested.SelectMany(x => x)`. Only one level — not recursive.
 
@@ -420,7 +420,7 @@ Console.WriteLine($"SelectMany (1 level): [{string.Join(", ", oneLevel.SelectMan
 
     SelectMany (1 level): [1, 2, 3, 4, 5, 6]
 
-<h4>Iterative flatten with <code style="font-size:0.75em">Stack&lt;T&gt;</code></h4>
+#### Iterative flatten with Stack&lt;T&gt;
 
 Stack-based iterative flatten — no recursion, handles arbitrary depth in constant stack space. Avoids `StackOverflowException`. Watch out for strings (they're `IEnumerable` — causes infinite recursion if not checked).
 
@@ -454,7 +454,7 @@ Console.WriteLine($"LINQ recursive:       [{string.Join(", ", FlatLinq(nested))}
     Iterative flatten:    [1, 2, 3, 4, 5, 6, 7]
     LINQ recursive:       [1, 2, 3, 4, 5, 6, 7]
 
-<h4>Eager vs lazy evaluation — <code style="font-size:0.75em">ToList()</code> vs deferred</h4>
+#### Eager vs lazy evaluation — ToList() vs deferred
 
 LINQ queries are lazy — nothing executes until enumerated (`foreach`, `ToList`, `ToArray`). Without `ToList()`, the query re-executes on each enumeration. Use `ToList()` when enumerating multiple times or caching results. Never `ToList()` on infinite sequences.
 
@@ -472,7 +472,7 @@ Console.WriteLine($"As list:    [{string.Join(", ", squaresLazy)}]");
     Lazy type:  RangeSelectIterator`2
     As list:    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 
-<h4><code style="font-size:0.75em">yield break</code> — early termination</h4>
+#### yield break — early termination
 
 `yield break` terminates the iterator immediately — no more values produced. Equivalent to `return` in a regular method. Use for custom take-while logic or error boundaries. For simple filtering, `.TakeWhile()` is shorter.
 
@@ -490,7 +490,7 @@ Console.WriteLine($"TakeWhile: [{string.Join(", ", TakeWhilePositive(new[] { 3, 
 
     TakeWhile: [3, 7]
 
-<h4>Recursive iterator — flatten a deeply nested structure with <code style="font-size:0.75em">yield return</code></h4>
+#### Recursive iterator — flatten a deeply nested structure with yield return
 
 Recursive iterator — calls itself for nested collections, `yield return` for leaves. Natural for tree/graph traversal. For untrusted/deep nesting, use the Stack approach to avoid `StackOverflowException`.
 
@@ -572,7 +572,7 @@ Console.WriteLine($"Method:   [{string.Join(", ", methodResult)}]");
     Query:    [HELLO, WORLD, GREAT, CSHARP]
     Method:   [HELLO, WORLD, GREAT, CSHARP]
 
-<h4><code style="font-size:0.75em">ToDictionary</code> and <code style="font-size:0.75em">ToHashSet</code></h4>
+#### ToDictionary and ToHashSet
 
 > [!info] Materialization
 > - `ToDictionary(keySelector, valueSelector)` — builds a `Dictionary` (O(1) lookup)
@@ -600,7 +600,7 @@ Console.WriteLine($"Unique lengths: [{string.Join(", ", uniqueLengths)}]");
     Passed:       Alice:85, Bob:92, Diana:95
     Unique lengths: [5, 6, 2]
 
-<h4>Aggregate and built-in aggregations (<code style="font-size:0.75em">Sum</code>, <code style="font-size:0.75em">Max</code>, <code style="font-size:0.75em">Any</code>, <code style="font-size:0.75em">All</code>)</h4>
+#### Aggregate and built-in aggregations (Sum, Max, Any, All)
 
 > [!info] Aggregation
 > - `Aggregate(seed, (acc, x) => ...)` — the general fold
@@ -635,7 +635,7 @@ Console.WriteLine($"Average:{nums.Average()}");
     Count(): 3
     Average:3
 
-<h4>Ordering — <code style="font-size:0.75em">OrderBy</code>, <code style="font-size:0.75em">OrderByDescending</code> with a key selector</h4>
+#### Ordering — OrderBy, OrderByDescending with a key selector
 
 > [!info] Ordering
 > - `OrderBy(x => x.Property)` — sorts ascending
@@ -658,7 +658,7 @@ Console.WriteLine($"By last char:  [{string.Join(", ", names.OrderBy(n => n[^1])
     Descending:    [Diana, Charlie, Bob, Alice]
     By last char:  [Diana, Bob, Charlie, Alice]
 
-<h4>Deferred execution — chained LINQ pipeline materialized by <code style="font-size:0.75em">ToList()</code></h4>
+#### Deferred execution — chained LINQ pipeline materialized by ToList()
 
 > [!info] Deferred execution
 > - Each LINQ method returns a lazy `IEnumerable`

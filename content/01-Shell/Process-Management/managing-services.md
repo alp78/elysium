@@ -18,42 +18,60 @@ Every long-running process in your infrastructure -- SQL Server, Airflow, Datado
 
 ### systemctl, journalctl — managing systemd services and reading logs
 
+#### systemctl start, stop, restart — control service lifecycle
+
+> [!warning] `restart` drops all active connections
+> `systemctl restart mssql-server` stops then starts the service — all database
+> connections are terminated. In-flight queries are killed, uncommitted transactions are
+> rolled back. Use `reload` when possible to avoid downtime.
+
 ```bash
-# Start / stop / restart a service
 sudo systemctl start mssql-server
 sudo systemctl stop mssql-server
 sudo systemctl restart mssql-server
-# systemctl = systemd service manager
-# restart = stop + start (brief downtime — connections are dropped)
+```
 
-# Reload configuration without restarting (not all services support this)
+#### systemctl reload — re-read config without restarting
+
+> [!info] Sends SIGHUP to re-read configuration without stopping the service. Not all
+> services support reload — check with `systemctl cat <service>` to see if the unit
+> file defines `ExecReload`.
+
+```bash
 sudo systemctl reload datadog-agent
-# reload = send SIGHUP to re-read config without stopping the service
-# Not all services support reload — check with: systemctl cat <service>
+```
 
-# Check service status
+#### systemctl status — check if a service is running or failed
+
+```bash
 sudo systemctl status mssql-server
-# Shows: active/inactive/failed, PID, memory, CPU, recent log lines
-# "active (running)" = healthy
-# "failed" = crashed — check the log lines at the bottom for the error
+```
 
-# Enable/disable service on boot
-sudo systemctl enable mssql-server     # start automatically on boot
-sudo systemctl disable mssql-server    # don't start on boot
+#### systemctl enable — start service automatically on boot
 
-# Service logs (via journald)
+> [!warning] `enable` does NOT start the service now
+> `systemctl enable` only creates the symlink for boot startup. To start immediately AND
+> enable on boot: `sudo systemctl enable --now mssql-server`.
+
+```bash
+sudo systemctl enable mssql-server
+sudo systemctl disable mssql-server
+```
+
+#### journalctl -u — read service logs
+
+> [!info] `-u` filters by unit (service name). `--since` accepts human-readable times.
+> `-f` follows in real-time (like `tail -f`). `-n 50` shows last 50 lines.
+
+```bash
 sudo journalctl -u mssql-server --since "1 hour ago" --no-pager
-# -u = unit (service name), --since = time filter, --no-pager = print all
+sudo journalctl -u mssql-server -f
+```
 
-# Follow service logs in real-time
-sudo journalctl -u mssql-server -f   # -f = follow (like tail -f)
+#### systemctl list-units — show all running services
 
-# All services and their status
+```bash
 systemctl list-units --type=service --state=running
-
-# Why did a service fail?
-sudo systemctl status mssql-server                  # recent error lines
-sudo journalctl -u mssql-server -n 50 --no-pager    # last 50 log lines
 ```
 
 ### Diagnosing OOM kills — when services crash with no error in their own logs
@@ -75,22 +93,26 @@ sudo journalctl -u mssql-server -n 50 --no-pager    # last 50 log lines
 
 ### PowerShell — Start-Service, Stop-Service, Set-Service for Windows services
 
+#### Start-Service, Stop-Service, Restart-Service — control service lifecycle
+
 ```powershell
-# Start / stop / restart
 Start-Service -Name "MSSQLSERVER"
 Stop-Service -Name "MSSQLSERVER"
 Restart-Service -Name "MSSQLSERVER"
+```
 
-# Status
-Get-Service -Name "MSSQLSERVER"
+#### Set-Service -StartupType — enable on boot
 
-# Enable on boot
+```powershell
 Set-Service -Name "MSSQLSERVER" -StartupType Automatic
+```
 
-# List running services
-Get-Service | Where-Object Status -eq "Running" | Sort-Object DisplayName
+#### Get-Service -DependentServices — check what else stops
 
-# Service dependencies (what else stops if I stop this?)
+> [!info] Shows services that depend on this one. Stopping SQL Server may also stop
+> SQL Server Agent, SSIS, or other dependent services.
+
+```powershell
 Get-Service -Name "MSSQLSERVER" -DependentServices
 ```
 

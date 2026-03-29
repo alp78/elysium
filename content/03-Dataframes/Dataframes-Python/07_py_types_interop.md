@@ -80,7 +80,6 @@ print(f"Memory: str={dim_pd["sector"].memory_usage()}, cat={dim_pd["sector_cat"]
 ### Polars
 
 
-- **Select**: Choose specific columns, optionally transforming them.
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 - **Categorical**: Store repeated strings as integer codes. Saves memory, speeds up groupby.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
@@ -93,13 +92,12 @@ display(dim_cat.select("symbol", "sector", "sector_cat").head(5))
 
     dtype: Categorical
 
-<div><small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>sector</th><th>sector_cat</th></tr><tr><td>str</td><td>str</td><td>cat</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;Technology&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;Consumer Cyclical&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;Consumer Cyclical&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;Consumer Defensive&quot;</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;Technology&quot;</td><td>&quot;Technology&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>sector</th><th>sector_cat</th></tr><tr><td>str</td><td>str</td><td>cat</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;Technology&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;Consumer Cyclical&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;Consumer Cyclical&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;Consumer Defensive&quot;</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;Technology&quot;</td><td>&quot;Technology&quot;</td></tr></tbody></table></div>
 
 ## Polars Enum
 
 
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
-- **Sort**: Reorder rows by column values.
 - **Enum**: Categorical with fixed, ordered values. Sorting respects the defined order.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
@@ -109,7 +107,7 @@ df=pl.DataFrame({"alert":["HIGH","LOW","MEDIUM"]}).with_columns(pl.col("alert").
 display(df.sort("risk_enum"))
 ```
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>alert</th><th>risk_enum</th></tr><tr><td>str</td><td>enum</td></tr></thead><tbody><tr><td>&quot;LOW&quot;</td><td>&quot;LOW&quot;</td></tr><tr><td>&quot;MEDIUM&quot;</td><td>&quot;MEDIUM&quot;</td></tr><tr><td>&quot;HIGH&quot;</td><td>&quot;HIGH&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>alert</th><th>risk_enum</th></tr><tr><td>str</td><td>enum</td></tr></thead><tbody><tr><td>&quot;LOW&quot;</td><td>&quot;LOW&quot;</td></tr><tr><td>&quot;MEDIUM&quot;</td><td>&quot;MEDIUM&quot;</td></tr><tr><td>&quot;HIGH&quot;</td><td>&quot;HIGH&quot;</td></tr></tbody></table></div>
 
 ## List Type (Polars)
 
@@ -127,7 +125,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><small>shape: (2, 4)</small><table><thead><tr><th>symbol</th><th>tags</th><th>count</th><th>first</th></tr><tr><td>str</td><td>list[str]</td><td>u32</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>[&quot;tech&quot;, &quot;nl&quot;]</td><td>2</td><td>&quot;tech&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>[&quot;luxury&quot;, &quot;fr&quot;]</td><td>2</td><td>&quot;luxury&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (2, 4) --><table><thead><tr><th>symbol</th><th>tags</th><th>count</th><th>first</th></tr><tr><td>str</td><td>list[str]</td><td>u32</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>[&quot;tech&quot;, &quot;nl&quot;]</td><td>2</td><td>&quot;tech&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>[&quot;luxury&quot;, &quot;fr&quot;]</td><td>2</td><td>&quot;luxury&quot;</td></tr></tbody></table></div>
 
 ## Struct Type (Polars)
 
@@ -139,7 +137,7 @@ df=pl.DataFrame({"symbol":["ASML.AS"],"scores":[{"momentum":0.8,"value":0.5}]})
 display(df.unnest("scores"))
 ```
 
-<div><small>shape: (1, 3)</small><table><thead><tr><th>symbol</th><th>momentum</th><th>value</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>0.8</td><td>0.5</td></tr></tbody></table></div>
+<div><!-- shape: (1, 3) --><table><thead><tr><th>symbol</th><th>momentum</th><th>value</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>0.8</td><td>0.5</td></tr></tbody></table></div>
 
 ## Arrow-Backed Dtypes (Pandas 2.x)
 
@@ -172,7 +170,6 @@ scores_pl=pl.read_parquet(DATA/"scores_daily.parquet")
 
 
 - **To Pandas**: Convert Polars DataFrame to Pandas. May copy data.
-- **Head**: Return the first N rows.
 
 ```python
 pdf=ohlcv_pl.head(5).to_pandas()
@@ -292,13 +289,12 @@ display(plf)
 
     Type: <class 'polars.dataframe.frame.DataFrame'>
 
-<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>datetime[ms]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04 00:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05 00:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06 00:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07 00:00:00</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08 00:00:00</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>datetime[ms]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04 00:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05 00:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06 00:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07 00:00:00</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08 00:00:00</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ## Polars to NumPy
 
 
 - **To NumPy**: Extract column as NumPy array.
-- **Head**: Return the first N rows.
 
 ```python
 arr=ohlcv_pl["close"].head(5).to_numpy()
@@ -311,7 +307,6 @@ print(f"Type: {type(arr)}, dtype: {arr.dtype}, values: {arr}")
 
 
 - **To Arrow**: Convert to Apache Arrow table. Zero-copy (Polars uses Arrow internally).
-- **Head**: Return the first N rows.
 
 ```python
 arrow_table=ohlcv_pl.head(5).to_arrow()
@@ -340,13 +335,11 @@ back=pl.from_arrow(arrow_table)
 display(back)
 ```
 
-<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ## Polars to Dict
 
 
-- **Select**: Choose specific columns, optionally transforming them.
-- **Head**: Return the first N rows.
 
 ```python
 d=scores_pl.head(3).select("symbol","composite_score").to_dicts()
@@ -527,11 +520,11 @@ pipe = "name|city\nAlice|New York\nBob|London"
 display(pl.read_csv(io.StringIO(pipe), separator="|"))
 ```
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>score</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>3.14</td></tr><tr><td>&quot;Bob&quot;</td><td>2.72</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>score</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>3.14</td></tr><tr><td>&quot;Bob&quot;</td><td>2.72</td></tr></tbody></table></div>
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>city</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;New York&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>city</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;New York&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td></tr></tbody></table></div>
 
 ### Column Names & Headers
 
@@ -666,11 +659,11 @@ raw = "name,age\nskip_this,0\nAlice,30\nBob,25"
 display(pl.read_csv(io.StringIO(raw), skip_rows_after_header=1))
 ```
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
 ### Type Control & Parsing
 
@@ -848,7 +841,7 @@ df = pl.read_csv(io.StringIO(raw3), null_values={"score": "N/A"})
 display(df)
 ```
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>name</th><th>score</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>3.14</td></tr><tr><td>&quot;Bob&quot;</td><td>null</td></tr><tr><td>&quot;Carol&quot;</td><td>-999.0</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>score</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>3.14</td></tr><tr><td>&quot;Bob&quot;</td><td>null</td></tr><tr><td>&quot;Carol&quot;</td><td>-999.0</td></tr></tbody></table></div>
 
 ### Quoting & Escaping
 
@@ -921,7 +914,7 @@ print("--- always ---")
 print(df.write_csv(quote_style="always"))
 ```
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>bio</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;Likes cats, dogs&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;Said &quot;hello&quot;&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>bio</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;Likes cats, dogs&quot;</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;Said &quot;hello&quot;&quot;</td></tr></tbody></table></div>
 
     --- auto (default) ---
     name,bio
@@ -1048,11 +1041,11 @@ raw = "name,age\n# comment\nAlice,30\nBob,25"
 display(pl.read_csv(io.StringIO(raw), comment_prefix="#"))
 ```
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr><tr><td>&quot;Carol&quot;</td><td>28</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr><tr><td>&quot;Carol&quot;</td><td>28</td></tr></tbody></table></div>
 
-<div><small>shape: (5, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Person0&quot;</td><td>0</td></tr><tr><td>&quot;Person1&quot;</td><td>1</td></tr><tr><td>&quot;Person2&quot;</td><td>2</td></tr><tr><td>&quot;Person3&quot;</td><td>3</td></tr><tr><td>&quot;Person4&quot;</td><td>4</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Person0&quot;</td><td>0</td></tr><tr><td>&quot;Person1&quot;</td><td>1</td></tr><tr><td>&quot;Person2&quot;</td><td>2</td></tr><tr><td>&quot;Person3&quot;</td><td>3</td></tr><tr><td>&quot;Person4&quot;</td><td>4</td></tr></tbody></table></div>
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr></tbody></table></div>
 
 ### CSV Compression (read & write)
 
@@ -1160,7 +1153,7 @@ with gzip.open(TMP / "ohlcv_pl.csv.gz", "wb") as f:
 print(f"Compressed: {(TMP / 'ohlcv_pl.csv.gz').stat().st_size:,} bytes")
 ```
 
-<div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-04&quot;</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-05&quot;</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-06&quot;</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-04&quot;</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-05&quot;</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-06&quot;</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
     Compressed: 2,384 bytes
 
@@ -1335,7 +1328,7 @@ print(f"Batched read: {total:,} rows")
     Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
     Filtered: (1331, 2)
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr></tbody></table></div>
 
     Batched read: 66,355 rows
 
@@ -1669,17 +1662,17 @@ display(df_exploded)
     Schema with nested types:
     Schema({'name': String, 'address': Struct({'city': String, 'zip': String}), 'scores': List(Int64)})
 
-<div><small>shape: (2, 3)</small><table><thead><tr><th>name</th><th>address</th><th>scores</th></tr><tr><td>str</td><td>struct[2]</td><td>list[i64]</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>{&quot;NYC&quot;,&quot;10001&quot;}</td><td>[90, 85, 92]</td></tr><tr><td>&quot;Bob&quot;</td><td>{&quot;London&quot;,&quot;EC1A&quot;}</td><td>[78, 88, 95]</td></tr></tbody></table></div>
+<div><!-- shape: (2, 3) --><table><thead><tr><th>name</th><th>address</th><th>scores</th></tr><tr><td>str</td><td>struct[2]</td><td>list[i64]</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>{&quot;NYC&quot;,&quot;10001&quot;}</td><td>[90, 85, 92]</td></tr><tr><td>&quot;Bob&quot;</td><td>{&quot;London&quot;,&quot;EC1A&quot;}</td><td>[78, 88, 95]</td></tr></tbody></table></div>
 
     
     Unnested:
 
-<div><small>shape: (2, 4)</small><table><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>list[i64]</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>[90, 85, 92]</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>[78, 88, 95]</td></tr></tbody></table></div>
+<div><!-- shape: (2, 4) --><table><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>list[i64]</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>[90, 85, 92]</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>[78, 88, 95]</td></tr></tbody></table></div>
 
     
     Unnested + exploded:
 
-<div><small>shape: (6, 4)</small><table><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>90</td></tr><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>85</td></tr><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>92</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>78</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>88</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>95</td></tr></tbody></table></div>
+<div><!-- shape: (6, 4) --><table><thead><tr><th>name</th><th>city</th><th>zip</th><th>scores</th></tr><tr><td>str</td><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>90</td></tr><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>85</td></tr><tr><td>&quot;Alice&quot;</td><td>&quot;NYC&quot;</td><td>&quot;10001&quot;</td><td>92</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>78</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>88</td></tr><tr><td>&quot;Bob&quot;</td><td>&quot;London&quot;</td><td>&quot;EC1A&quot;</td><td>95</td></tr></tbody></table></div>
 
 ### NDJSON (Newline-Delimited JSON)
 
@@ -1741,7 +1734,7 @@ print(f"\nLazy schema: {lf.collect_schema()}")
 
 #### Polars
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr><tr><td>&quot;Carol&quot;</td><td>35</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>age</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Alice&quot;</td><td>30</td></tr><tr><td>&quot;Bob&quot;</td><td>25</td></tr><tr><td>&quot;Carol&quot;</td><td>35</td></tr></tbody></table></div>
 
     --- Pandas NDJSON output ---
     {"name":"Alice","age":30}
@@ -1912,11 +1905,11 @@ display(df)
 
 #### Polars with schema_overrides (keep as String, cast after)
 
-<div><small>shape: (2, 2)</small><table><thead><tr><th>id</th><th>val</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>1</td><td>3.14</td></tr><tr><td>2</td><td>2.72</td></tr></tbody></table></div>
+<div><!-- shape: (2, 2) --><table><thead><tr><th>id</th><th>val</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>1</td><td>3.14</td></tr><tr><td>2</td><td>2.72</td></tr></tbody></table></div>
 
 #### Polars infer_schema_length=None
 
-<div><small>shape: (3, 1)</small><table><thead><tr><th>x</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;1&quot;</td></tr><tr><td>&quot;two&quot;</td></tr><tr><td>&quot;3&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 1) --><table><thead><tr><th>x</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;1&quot;</td></tr><tr><td>&quot;two&quot;</td></tr><tr><td>&quot;3&quot;</td></tr></tbody></table></div>
 
 ## Parquet
 
@@ -2140,7 +2133,7 @@ df.write_parquet(TMP / "pl_pyarrow.parquet", use_pyarrow=True)
 print("PyArrow engine:", pq.read_schema(TMP / "pl_pyarrow.parquet"))
 ```
 
-<div><small>shape: (3, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr></tbody></table></div>
+<div><!-- shape: (3, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr></tbody></table></div>
 
     Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
     
@@ -2222,7 +2215,7 @@ display(result.head(3))
 
 #### Polars lazy — filtered scan
 
-<div><small>shape: (0, 2)</small><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody></tbody></table></div>
+<div><!-- shape: (0, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody></tbody></table></div>
 
 ### Custom Metadata
 
@@ -2427,7 +2420,7 @@ print(df_csv.write_csv())
 
 #### Polars with Binary dtype
 
-<div><small>shape: (3, 2)</small><table><thead><tr><th>id</th><th>blob</th></tr><tr><td>i64</td><td>binary</td></tr></thead><tbody><tr><td>1</td><td>b&quot;\x20\x09\x1d\xf3\xbbUd\xf3B\x93\x88&lt;\x10O\xfa\x84\x17\x97\x89\xfe_;\x13\x0b\x9a?\x84\xa3\xaf\x90\x19\xab&quot;</td></tr><tr><td>2</td><td>b&quot;\xf5\\x0f0\x20\xb7\x89\x08\x99\xbec8\xf9_{\xd487\x92\x91\xc7\x1a\xa6`\xab\x82\xcc\xe1\xe7\xd7Q\x9c&quot;</td></tr><tr><td>3</td><td>b&quot;%\x16&#x27;\xdf\xa2\xfb\xb178\xb4\x1d\xb3q\xab\xa1\x09\xe19b\xbb\xd4\x1e\xcex\xea\xa1\x901Q\x1a`\x11&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>id</th><th>blob</th></tr><tr><td>i64</td><td>binary</td></tr></thead><tbody><tr><td>1</td><td>b&quot;\x20\x09\x1d\xf3\xbbUd\xf3B\x93\x88&lt;\x10O\xfa\x84\x17\x97\x89\xfe_;\x13\x0b\x9a?\x84\xa3\xaf\x90\x19\xab&quot;</td></tr><tr><td>2</td><td>b&quot;\xf5\\x0f0\x20\xb7\x89\x08\x99\xbec8\xf9_{\xd487\x92\x91\xc7\x1a\xa6`\xab\x82\xcc\xe1\xe7\xd7Q\x9c&quot;</td></tr><tr><td>3</td><td>b&quot;%\x16&#x27;\xdf\xa2\xfb\xb178\xb4\x1d\xb3q\xab\xa1\x09\xe19b\xbb\xd4\x1e\xcex\xea\xa1\x901Q\x1a`\x11&quot;</td></tr></tbody></table></div>
 
     dtype: Binary
     Binary Parquet round-trip OK

@@ -73,6 +73,12 @@ To verify the full pipeline (deadlock → metric → monitor → email):
 
 ---
 
+> [!danger] Monitor Evaluation Delay Can Miss Short-Lived Incidents
+> Datadog evaluates monitors on a fixed interval (typically 60 seconds). A deadlock that occurs and resolves within one evaluation cycle may never trigger the alert. For critical monitors, set the evaluation window to the smallest supported interval and consider enabling `require_full_window: false` so partial data triggers the alert rather than waiting for a full window.
+
+> [!warning] Monitor Notification Flood on Recovery
+> When a monitor recovers, Datadog sends a recovery notification to all channels. If a flapping metric (e.g., scheduler heartbeat on a slow VM) triggers and recovers repeatedly, the on-call engineer receives dozens of notifications. Use `notify_no_data: true` with `no_data_timeframe: 10` (minutes) instead of a tight threshold to reduce noise for heartbeat-style monitors.
+
 ## Airflow Orchestration Monitors
 
 Create these in **Monitors → New Monitor → Metric**:

@@ -79,7 +79,7 @@ Console.WriteLine($"As tuple: {Divide(17, 5)}");
     17 / 5 = 3 remainder 2
     As tuple: (3, 2)
 
-<h4><code style="font-size:0.75em">Func&lt;T, TResult&gt;</code> — function with return value</h4>
+#### Func&lt;T, TResult&gt; — function with return value
 
 > [!info] Delegate types
 > - `Func<T, TResult>` — holds a method that returns a value
@@ -136,7 +136,7 @@ FetchData("api/users",
 
       Got: data from api/users
 
-<h4>Strategy pattern — swap behavior via <code style="font-size:0.75em">Func</code></h4>
+#### Strategy pattern — swap behavior via Func
 
 Define interchangeable `Func<T, TResult>` for each strategy. Pass the desired one to the consumer — change behavior without modifying code (open/closed principle). Use for pricing rules, validation, sorting, formatters.
 
@@ -156,7 +156,7 @@ Console.WriteLine($"  Member:   ${Calculate(100, memberDiscount):F2}");
       20% off:  $80.00
       Member:   $70.00
 
-<h4>Pipeline — chained <code style="font-size:0.75em">Func</code> steps with <code style="font-size:0.75em">Aggregate</code></h4>
+#### Pipeline — chained Func steps with Aggregate
 
 Store steps as `List<Func<string, string>>`. `Aggregate` folds the input through each step sequentially. Steps are composable — add, remove, reorder independently, each testable in isolation.
 
@@ -181,7 +181,7 @@ Console.WriteLine($"  '{raw}' -> '{result}'");
 
       '  Hello   World  ' -> 'hello world'
 
-<h4>Dependency injection — inject fake time via <code style="font-size:0.75em">Func</code></h4>
+#### Dependency injection — inject fake time via Func
 
 Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses the default; tests inject a fixed `DateTime` for deterministic results. No interface needed — `Func<DateTime>` is lightweight DI.
 
@@ -255,7 +255,7 @@ LoadData(new[] { "users", "orders", "products" },
     
     (5,55): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
-<h4>Sorting with <code style="font-size:0.75em">Func</code> as key</h4>
+#### Sorting with Func as key
 
 > [!info] LINQ with Func
 > - `OrderBy(x => x.Property)` — extracts the sort key
@@ -312,7 +312,7 @@ Console.WriteLine(Connect("db.example.com", ssl: false));  // named, skip port
     db.example.com:3306 ssl=True
     db.example.com:5432 ssl=False
 
-<h4><code style="font-size:0.75em">ref</code> — pass by reference</h4>
+#### ref — pass by reference
 
 > [!info] Pass by reference
 > - `ref int x` — passes the variable itself; changes are visible to the caller
@@ -332,7 +332,7 @@ Console.WriteLine($"  ref: {val}");
 
       ref: 10
 
-<h4><code style="font-size:0.75em">out</code> — must-assign output</h4>
+#### out — must-assign output
 
 `out int result` requires the method to assign a value before returning — compiler enforces it. The `TryParse` pattern combines check + extraction in one line: `if (int.TryParse(s, out int n))`.
 
@@ -349,7 +349,7 @@ if (TryDivide(10, 3, out int answer))
 
       out: 3
 
-<h4><code style="font-size:0.75em">in</code> — read-only reference</h4>
+#### in — read-only reference
 
 `in` passes by reference but prevents modification — compiler enforces read-only. Avoids copy overhead for large structs (Matrix, Vector3D). Don't use for small types (`int`, `double`) — copy is just as fast.
 
@@ -361,7 +361,7 @@ Console.WriteLine($"  in: {Distance((3, 4))}");
 
       in: 5
 
-<h4><code style="font-size:0.75em">params</code> — variable arguments</h4>
+#### params — variable arguments
 
 `params int[] numbers` accepts variable arguments — compiler creates the array. Must be the last parameter. `Total(1, 2, 3)` and `Total(myArray)` both work.
 
@@ -382,7 +382,7 @@ Console.WriteLine($"Total(array):   {Total(nums)}");
     Total(10,20):   30
     Total(array):   15
 
-<h4>No <code style="font-size:0.75em">**kwargs</code> — alternatives</h4>
+#### No **kwargs — alternatives
 
 > [!info] C# has no `**kwargs` — alternatives
 > - Anonymous object: `new { key = value }` (common in ASP.NET)
@@ -469,7 +469,7 @@ Console.WriteLine($"Youngest: {youngest}");
     Evens:   [2, 4]
     Youngest: (Bob, 25)
 
-<h4><code style="font-size:0.75em">Action</code>, <code style="font-size:0.75em">Predicate</code>, and closure capture</h4>
+#### Action, Predicate, and closure capture
 
 > [!info] Delegate types and closures
 > - `Action<T>` — side-effect lambdas (void)

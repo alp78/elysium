@@ -225,8 +225,8 @@ depends_on:
     condition: service_completed_successfully  # wait for a one-shot container to exit 0
 ```
 
-> [!warning] `depends_on` Does Not Wait for Application Readiness
-> `service_started` only waits for the container to start, not for the process inside to be ready. Always use `service_healthy` with a properly configured `healthcheck` for databases and message brokers.
+> [!danger] `depends_on` Without `service_healthy` Causes Silent Startup Failures
+> `service_started` only waits for the container process to start, not for the application inside to be ready. If Airflow starts before PostgreSQL finishes initialization, the scheduler crashes with a connection error, enters a restart loop, and the logs fill with misleading "database does not exist" errors. Always use `condition: service_healthy` with a `healthcheck` that verifies the service is actually accepting connections.
 
 **Network configuration**
 
@@ -278,8 +278,8 @@ LOG_LEVEL=DEBUG
 WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
 ```
 
-> [!warning] `.env` Security
-> The `.env` file is automatically read by `docker compose` (not `docker` itself). Add `.env` to `.gitignore`. For production secrets use a secrets manager — never hard-code credentials in a committed compose file.
+> [!danger] `.env` Files Are Loaded Automatically and Often Leaked
+> `docker compose` silently loads `.env` from the compose file's directory -- even if you did not specify `env_file`. If this file contains production secrets and gets committed to git, the credentials are exposed in git history permanently. Add `.env` to `.gitignore` on day one. For production, use a secrets manager (GCP Secret Manager, Vault) and inject values via CI/CD -- never store production credentials in `.env` files on disk.
 
 > [!tip] Related pattern
 > The `env_file` and `environment` directives here mirror the [[environment-variables|shell environment variable]] conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.

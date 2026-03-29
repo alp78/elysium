@@ -44,7 +44,7 @@ YYYY-DDD                        2026-069                         Ordinal date (d
 > 4. **Use `DATETIMEOFFSET` in SQL Server for timestamps that cross timezones.** `DATETIME2` loses the timezone — you can't tell if `2026-03-10 15:30:00` is Paris time or New York time.
 > 5. **`trade_date` columns should be `DATE`, not `DATETIME`.** A trade date is a calendar date, not a moment in time. Adding time precision to a date-only concept invites bugs (midnight vs 23:59:59, off-by-one errors at day boundaries).
 
-**Which format for which context?**
+### Date format selection — which format for which context
 
 | Context | Format | Example | Why |
 |---------|--------|---------|-----|

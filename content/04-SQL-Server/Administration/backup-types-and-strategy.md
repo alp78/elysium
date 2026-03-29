@@ -39,39 +39,57 @@ Backups are the single most critical responsibility of anyone operating a databa
 
 ### T-SQL Backup Commands
 
+#### BACKUP DATABASE — full backup (the foundation of all restores)
+
 ```sql
--- Full backup (the foundation)
+-- Full backup — baseline for all other backups
 BACKUP DATABASE analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_full.bak'
 WITH COMPRESSION, STATS = 10, CHECKSUM;
--- COMPRESSION = compress the backup (3-5x smaller, slightly more CPU)
+-- COMPRESSION = 3-5x smaller, slightly more CPU
 -- STATS = 10 = print progress every 10%
 -- CHECKSUM = verify integrity during backup (catches corruption early)
+```
 
--- Differential (only changes since last full)
+#### BACKUP DATABASE WITH DIFFERENTIAL — only changes since last full
+
+```sql
+-- Differential — only pages changed since last full
 BACKUP DATABASE analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_diff.bak'
 WITH DIFFERENTIAL, COMPRESSION, CHECKSUM;
 -- 10-50x faster than full backup (only changed pages)
+```
 
+#### BACKUP LOG — transaction log backup for point-in-time recovery
+
+```sql
 -- Transaction log (required for FULL recovery model)
 BACKUP LOG analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_log.trn'
 WITH COMPRESSION;
 -- Captures every transaction since the last log backup
 -- Enables point-in-time recovery: "restore to 14:23:45 yesterday"
+```
 
--- Copy-only (doesn't affect the backup chain)
+#### BACKUP DATABASE WITH COPY_ONLY — ad-hoc backup that preserves the chain
+
+```sql
+-- Copy-only — does not affect the backup chain
 BACKUP DATABASE analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_adhoc.bak'
 WITH COPY_ONLY, COMPRESSION;
--- COPY_ONLY = doesn't reset the differential baseline
+-- COPY_ONLY = does not reset the differential baseline
 -- Use before: schema changes, risky deployments, data migrations
+```
 
--- Verify a backup (without restoring)
-RESTORE VERIFYONLY FROM DISK = '/var/opt/mssql/backup/mydb_full.bak' WITH CHECKSUM;
--- Reads the entire backup file and verifies it's intact
--- ALWAYS verify after backup — an unverified backup is not a backup
+#### RESTORE VERIFYONLY — validate a backup file without restoring
+
+```sql
+-- Verify a backup file is readable and intact
+RESTORE VERIFYONLY FROM DISK = '/var/opt/mssql/backup/mydb_full.bak'
+WITH CHECKSUM;
+-- Reads the entire backup file and verifies checksums
 ```
 
 > [!warning] Always Verify
@@ -103,6 +121,9 @@ gcloud storage cp "${BACKUP_PATH}" gs://analytics-db-backups/daily/
 rm "${BACKUP_PATH}"  # remove local copy after upload
 ```
 
+> [!danger] Test Your Restores, Not Just Your Backups
+> A backup that cannot be restored is worse than no backup -- it gives false confidence. Schedule quarterly restore drills to a separate database. Common failures that only surface during restore: corrupt `.bak` files from disk errors, missing log chain gaps (skipped a log backup), and cross-version incompatibilities when restoring to a different SQL Server edition.
+
 ---
 
 ## Recovery Model Decision Matrix
@@ -118,8 +139,8 @@ The recovery model determines how transaction logs are managed and what kind of 
 | **Use when** | User-generated data, financial records, compliance | Reproducible data, idempotent pipelines, dev/test |
 | **Risk if misconfigured** | Unbounded log growth fills disk | Cannot recover recent transactions |
 
-> [!warning] FULL Recovery Without Log Backups
-> Never leave a database in FULL recovery model without regular log backups. The transaction log will grow without bound until it fills the disk, at which point all writes fail.
+> [!danger] FULL Recovery Without Log Backups Fills Your Disk
+> Never leave a database in FULL recovery model without regular log backups. The transaction log will grow without bound until it fills the disk, at which point **all writes fail across all databases on the instance**. This is the single most common production outage for SQL Server. If you see the log file growing past 10 GB, check `SELECT log_reuse_wait_desc FROM sys.databases` -- if it says `LOG_BACKUP`, no log backups are running.
 
 ### Switching Recovery Models
 
@@ -132,7 +153,7 @@ ALTER DATABASE [analytics_db] SET RECOVERY SIMPLE;
 
 -- Switch to FULL (production, point-in-time recovery needed)
 ALTER DATABASE [analytics_db] SET RECOVERY FULL;
--- IMPORTANT: After switching to FULL, immediately take a full backup
+-- IMPORTANT: take a full backup IMMEDIATELY after switching to FULL
 -- to start the log chain. PITR is impossible without it.
 ```
 
@@ -153,13 +174,16 @@ FROM sys.database_files WHERE type = 1;
 DBCC SHRINKFILE(N'mydb_log', 64);
 ```
 
+> [!warning] Never Shrink Data Files as Routine Maintenance
+> `DBCC SHRINKFILE` on data files (`.mdf`) causes massive index fragmentation, forcing expensive rebuilds afterward. Shrinking the log file (`.ldf`) after switching to SIMPLE recovery is fine -- shrinking data files as a regular practice is almost always counterproductive.
+
 ---
 
 ### Point-in-Time Recovery Sequence
 
 To restore to a specific second in time, replay backups in this order:
 
-```
+```text
 Full → Differential (optional, speeds up restore) → Log backups in sequence → STOPAT target timestamp
 ```
 

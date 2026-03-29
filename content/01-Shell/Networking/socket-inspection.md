@@ -110,33 +110,49 @@ ss -tnp
 
 ### ss filtering — counting connections, TIME-WAIT, and per-client breakdown
 
+#### ss -tn | grep :1433 — count active database connections
+
 ```bash
-# Count connections to SQL Server
 ss -tn | grep :1433 | wc -l
-# Quick check: "How many clients are connected to the database right now?"
+```
 
-# Count by remote IP (who's using the most connections?)
+#### ss + awk — count connections per remote IP
+
+> [!info] Shows which clients are consuming the most connections. Useful for identifying
+> connection pool leaks or runaway pipeline processes.
+
+```bash
 ss -tn | grep :1433 | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -rn
-# Output:
-# 15  10.0.0.24     ← IAP tunnel connections
-#  3  10.132.0.5    ← Pipeline VM
-#  1  10.132.0.8    ← Airflow scheduler
+```
 
-# Show connections in TIME-WAIT state (connections closing)
+#### ss state time-wait — detect rapid connect/disconnect patterns
+
+> [!warning] Excessive TIME-WAIT connections (>1000) can exhaust ephemeral ports
+> TIME-WAIT is normal for short-lived queries, but if a pipeline opens and closes
+> connections rapidly without pooling, ephemeral ports (32768-60999) fill up. Fix: use
+> connection pooling in your application, or tune `net.ipv4.tcp_tw_reuse=1` in sysctl.
+
+```bash
 ss -tn state time-wait | grep :1433
-# Many TIME-WAIT connections = rapid connect/disconnect pattern
-# This is normal for short-lived pipeline queries, but excessive numbers
-# (>1000) can exhaust ephemeral ports. Fix: use connection pooling.
+```
 
-# Show connection states summary
+#### ss -s — connection states summary
+
+> [!info] A quick health check: how many connections are established, closing, or waiting?
+> Use during incidents to see if connection counts are abnormal.
+
+```bash
 ss -s
-# Output:
-# TCP:   42 (estab 18, closed 8, orphaned 0, timewait 8)
-# Quick health check: are connection counts reasonable?
+```
 
-# Watch connections in real-time
+#### watch + ss — real-time connection monitoring
+
+> [!info] Updates every second — useful during load testing, deployment, or incident
+> response. Watch for connection count climbing steadily (pool leak) or dropping to zero
+> (service crash).
+
+```bash
 watch -n 1 'ss -tn | grep :1433 | wc -l'
-# Updates every second — useful during load testing or deployment
 ```
 
 ### Connection refused vs connection timed out — diagnosing the root cause
@@ -151,42 +167,39 @@ watch -n 1 'ss -tn | grep :1433 | wc -l'
 
 ### PowerShell — Get-NetTCPConnection for socket inspection and connection counts
 
+#### Get-NetTCPConnection -State Listen — list listening ports with process names
+
 ```powershell
-# List all listening TCP ports with process names
 Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
     Select-Object LocalAddress, LocalPort, OwningProcess,
     @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
     Format-Table -AutoSize
+```
 
-# Output:
-# LocalAddress  LocalPort  OwningProcess  Process
-# 0.0.0.0       22         1234           sshd
-# 0.0.0.0       1433       5678           sqlservr
-# 127.0.0.1     1434       5678           sqlservr
-# 127.0.0.1     5000       9012           agent
+#### Get-NetTCPConnection -State Established — show active SQL Server connections
 
-# Show established connections to SQL Server
+```powershell
 Get-NetTCPConnection -LocalPort 1433 -State Established |
-    Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess |
+    Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort |
     Format-Table -AutoSize
+```
 
-# Count connections per remote address
+#### Get-NetTCPConnection | Group-Object — count connections per remote address
+
+```powershell
 Get-NetTCPConnection -LocalPort 1433 -State Established |
     Group-Object RemoteAddress | Sort-Object Count -Descending |
     Select-Object Count, Name
+```
 
-# Quick check: is the port open?
-Test-NetConnection -ComputerName localhost -Port 1433 -InformationLevel Quiet
-# Returns: True or False — the simplest connectivity test
+#### Get-NetTCPConnection | Group-Object State — connection state breakdown
 
-# Show all connection states for port 1433
+> [!info] Shows how many connections are in each TCP state (Listen, Established, TimeWait).
+> A quick health check equivalent to `ss -s` on Linux.
+
+```powershell
 Get-NetTCPConnection -LocalPort 1433 | Group-Object State |
     Select-Object Count, Name
-# Output:
-# Count  Name
-#     1  Listen
-#     5  Established
-#     2  TimeWait
 ```
 
 ## Related

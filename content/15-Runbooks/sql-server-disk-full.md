@@ -198,9 +198,12 @@ gcloud storage cp "${BACKUP_FILE}" gs://your-backup-bucket/sql-server/log-emerge
 rm -f "${BACKUP_FILE}"
 ```
 
-### RC-2: Data Disk Full — Identify and reclaim space
+> [!danger] Do Not Shrink Database Files as a First Response
+> `DBCC SHRINKDATABASE` and `DBCC SHRINKFILE` are tempting but cause severe index fragmentation (often >90%). After shrinking, every query touching the affected tables scans more pages, worsening I/O pressure and potentially triggering the disk-full condition again sooner. Preferred approaches in order: (1) log backup to truncate the log, (2) archive old partitions, (3) enable PAGE compression, (4) resize the GCE disk. Only use SHRINKFILE as an absolute last resort, and always rebuild indexes immediately after.
 
-#### sp_spaceused, du -h — find largest tables consuming disk space
+### RC-2: Data Disk Full -- Identify and reclaim space
+
+#### sp_spaceused, du -h -- find largest tables consuming disk space
 
 ```bash
 sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -Q "
@@ -396,7 +399,10 @@ airflow dags trigger index_constituent_load --conf '{"backfill": false}'
 
 ---
 
-### Long-term prevention — SQL Server disk capacity
+> [!warning] Automated Log Backups Are the Single Most Important Prevention
+> The most common cause of SQL Server disk-full incidents is an uncontrolled transaction log. In FULL recovery mode, the log grows until a log backup is taken. Without a scheduled log backup, the log file will eventually consume the entire disk. A SQL Agent job that runs `BACKUP LOG` every 1-2 hours is more important than any other prevention measure on this list.
+
+### Long-term prevention -- SQL Server disk capacity
 
 | Action | Owner | Priority |
 |--------|-------|----------|

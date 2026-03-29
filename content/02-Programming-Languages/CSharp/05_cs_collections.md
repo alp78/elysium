@@ -18,7 +18,7 @@ status: complete
 
 ## Arrays and Lists
 
-<h4>Array — <code style="font-size:0.75em">T[]</code> (fixed size)</h4>
+#### Array — T[] (fixed size)
 
 Arrays are fixed-size, contiguous memory with O(1) index access — the fastest collection type due to cache locality. Size is set at creation and cannot be changed. Use arrays for fixed data, buffers, interop, and performance-critical indexed access. For dynamic sizing (add/remove), use `List<T>` instead.
 
@@ -53,7 +53,7 @@ Console.WriteLine($"[1..4]:  [{string.Join(", ", nums[1..4])}]");  // slice
     nums[^1]:5
     [1..4]:  [2, 3, 4]
 
-<h4><code style="font-size:0.75em">List&lt;T&gt;</code> — adding and removing</h4>
+#### List&lt;T&gt; — adding and removing
 
 ```csharp
 // List<T> — dynamic array with Add, Insert, Remove operations
@@ -167,7 +167,7 @@ int[] nums = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
 //              0   1   2   3   4   5   6   7   8   9
 ```
 
-<h4>Index operator <code style="font-size:0.75em">^</code> — from end</h4>
+#### Index operator ^ — from end
 
 ```csharp
 // Index (^) and Range (..) operators in detail
@@ -214,7 +214,7 @@ Console.WriteLine($"Range 2..^2: [{string.Join(", ", nums[middle])}]"); // 30, 4
     Index ^1:  100
     Range 2..^2: [30, 40, 50, 60, 70, 80]
 
-<h4><code style="font-size:0.75em">Span&lt;T&gt;</code> — zero-allocation slicing</h4>
+#### Span&lt;T&gt; — zero-allocation slicing
 
 ```csharp
 // Span<T> — zero-allocation view into contiguous memory
@@ -268,7 +268,7 @@ Console.WriteLine($"Range 2..^2: [{string.Join(", ", nums[middle])}]"); // 30, 4
     Fill(0):       [0, 0, 0, 0, 0]
     CopyTo:        [1, 2, 3]
 
-<h4><code style="font-size:0.75em">ReadOnlySpan&lt;char&gt;</code> for strings</h4>
+#### ReadOnlySpan&lt;char&gt; for strings
 
 ```csharp
 // ReadOnlySpan<char> for strings — zero-allocation substring
@@ -523,7 +523,7 @@ Console.WriteLine($"Unknown: {{{string.Join(", ", unknown)}}}");
     Unsold:  {P001, P003}
     Unknown: {P005}
 
-<h4><code style="font-size:0.75em">SortedSet</code></h4>
+#### SortedSet
 
 ```csharp
 // SortedSet — elements maintained in sorted order automatically
@@ -539,7 +539,7 @@ Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
 
 ## Tuples and Enums
 
-<h4><code style="font-size:0.75em">ValueTuple</code> basics</h4>
+#### ValueTuple basics
 
 > [!info] ValueTuple
 > - Lightweight value type with named fields — lives on the stack, compared by value, no heap allocation
@@ -619,7 +619,7 @@ Console.WriteLine($"All values:      [{string.Join(", ", Enum.GetValues<Color>()
 
 ## Stacks, Queues, and Linked Lists
 
-<h4>Stack — <code style="font-size:0.75em">Stack&lt;T&gt;</code> (LIFO)</h4>
+#### Stack — Stack&lt;T&gt; (LIFO)
 
 > [!info] Stack operations (all O(1))
 > - `Push` — adds to top
@@ -647,7 +647,7 @@ Console.WriteLine($"Count: {stack.Count}");
     Peek:  first
     Count: 1
 
-<h4>Queue — <code style="font-size:0.75em">Queue&lt;T&gt;</code> (FIFO)</h4>
+#### Queue — Queue&lt;T&gt; (FIFO)
 
 ```csharp
 // Queue<T> — First In, First Out (FIFO) collection
@@ -665,7 +665,7 @@ Console.WriteLine($"Peek:    {queue.Peek()}");
     Dequeue: first
     Peek:    second
 
-<h4><code style="font-size:0.75em">LinkedList&lt;T&gt;</code></h4>
+#### LinkedList&lt;T&gt;
 
 ```csharp
 // LinkedList<T> — doubly-linked list with O(1) insert/remove at any node
@@ -684,7 +684,7 @@ Console.WriteLine($"After removes: [{string.Join(", ", ll)}]");
     LinkedList: [A, B, C, D]
     After removes: [B, D]
 
-<h4><code style="font-size:0.75em">PriorityQueue&lt;T, TPriority&gt;</code></h4>
+#### PriorityQueue&lt;T, TPriority&gt;
 
 ```csharp
 // PriorityQueue<T, TPriority> — dequeue by lowest priority first (.NET 6+)

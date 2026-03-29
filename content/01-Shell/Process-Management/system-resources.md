@@ -20,36 +20,31 @@ Resource monitoring tells you whether performance problems are CPU-bound, memory
 
 #### free -h — memory usage and available RAM
 
+> [!warning] "available" is the number that matters, NOT "free"
+> Linux uses free memory as disk cache (`buff/cache`). This is **good** — it speeds up
+> reads. `available` = free + reclaimable cache = how much memory apps can actually use.
+> If `available` < 500MB on a database server, you're in danger of OOM kills.
+> If swap `used` > 0, the server is already under memory pressure.
+
 ```bash
-# Memory — the command you'll run most often on database servers
 free -h
-# Output:
-#                total    used    free    shared  buff/cache   available
-# Mem:           3.8Gi    2.4Gi   1.2Gi   22Mi    534Mi        1.4Gi
-# Swap:          0B       0B      0B
-#
-# KEY INSIGHT: "available" is the number that matters, NOT "free"
-# Linux uses free memory as disk cache (buff/cache). This is GOOD — it speeds up reads.
-# "available" = free + reclaimable cache = how much memory your apps can actually use
-# If "available" < 500MB on a database server, you're in danger of OOM kills
-# If swap is being used (used > 0), your server is already under memory pressure
 ```
 
 #### lscpu, uptime — CPU info and load average
 
-```bash
-# CPU info
-lscpu
-# Shows: architecture, cores, threads, model, MHz, cache sizes
-# Critical check: cores × threads = total parallel capacity
-# If load average (from uptime) > this number, the CPU is oversubscribed
+> [!info] `lscpu` shows cores × threads = total parallel capacity. If `uptime` load
+> average exceeds this number, the CPU is oversubscribed.
 
-# Uptime and load average
+```bash
+lscpu
+```
+
+> [!info] Load average = runnable processes averaged over 1, 5, and 15 minutes. Compare
+> to CPU count: on a 2-core machine, load 2.0 = 100% utilized, load 4.0 = overloaded.
+> If 1-min > 15-min, load is increasing (getting worse).
+
+```bash
 uptime
-#  14:23:01 up 45 days, load average: 1.82, 2.15, 1.96
-# Load average = number of runnable processes averaged over 1, 5, and 15 minutes
-# Compare to CPU count: on a 2-core machine, load 2.0 = 100% utilized, load 4.0 = overloaded
-# Trend: if 1-min > 15-min, load is increasing (getting worse)
 ```
 
 #### vmstat — combined CPU/memory/IO snapshot

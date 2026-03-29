@@ -87,7 +87,13 @@ gcloud auth revoke
 > [!tip] Best Practice
 > Use `GOOGLE_APPLICATION_CREDENTIALS` locally for development, and rely on the metadata server in production. Never commit key files to source control.
 
+> [!danger] Service Account Key Files Are Permanent Credentials
+> Unlike OAuth tokens, SA key files never expire. A leaked key file in a git repo, a Docker image layer, or a log file grants permanent access until the key is explicitly revoked in the GCP console. Attackers actively scan public repos for GCP key patterns. If you suspect a key was leaked, immediately delete the key in IAM, then rotate all secrets the SA had access to. See [[service-accounts-and-iam]] for key rotation procedures.
+
 ### GCP Authentication Gotchas and Edge Cases
+
+> [!warning] ADC Token Caching Can Cause Stale Permissions
+> `gcloud auth application-default login` caches the token in `~/.config/gcloud/application_default_credentials.json`. If your IAM roles change after login, the cached token still carries the old scopes until it refreshes (up to 1 hour). Force a refresh with `gcloud auth application-default login` again. This is a frequent source of "works on my machine but fails in CI" issues.
 
 - `gcloud auth login` and `gcloud auth application-default login` are **different credentials** for different purposes. You often need both for local development.
 - Service account key files (`key.json`) do not expire. If leaked, attackers have permanent access until the key is explicitly deleted. See [[service-accounts-and-iam]] for key rotation.

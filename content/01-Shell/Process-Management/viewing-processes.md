@@ -35,20 +35,31 @@ When an Airflow VM is slow, a query is hanging, or a runaway process is pinning 
 
 ```bash
 ps aux
+```
 
-# Find a specific process
-ps aux | grep "mssql"
-# Shows all processes with "mssql" in their command line
-# WARNING: grep itself matches too — you'll see "grep mssql" in the output
-# Fix: ps aux | grep "[m]ssql"  — the bracket trick prevents self-matching
+#### ps aux | grep — find a specific process
 
-# Process tree (parent-child relationships)
+> [!warning] `grep` matches itself in `ps` output
+> `ps aux | grep mssql` always shows the `grep mssql` process too. Use the bracket
+> trick: `ps aux | grep "[m]ssql"` — the regex `[m]ssql` matches `mssql` but not the
+> literal string `[m]ssql` in grep's own command line.
+
+```bash
+ps aux | grep "[m]ssql"
+```
+
+#### pstree -p — show parent-child process relationships
+
+> [!info] Shows which process spawned which — critical for understanding if a Python
+> process is a child of Airflow (scheduled) or a manual run (someone's SSH session).
+
+```bash
 pstree -p
-# -p = show PIDs
-# Shows the hierarchy: which process spawned which
-# Critical for understanding: "Is this Python process a child of Airflow or a manual run?"
+```
 
-# Top — real-time resource monitoring
+#### top — real-time resource monitoring
+
+```bash
 top
 ```
 
@@ -109,31 +120,39 @@ iostat -xz 2 3    # -x = extended stats, -z = suppress zero-activity, 2 3 = ever
 
 ### PowerShell — Get-Process, Get-CimInstance for process and system monitoring
 
+#### Get-Process — top processes by CPU or memory
+
 ```powershell
-# All processes sorted by CPU
 Get-Process | Sort-Object CPU -Descending | Select-Object -First 20 Name, Id, CPU,
     @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}}
+```
 
-# Find a specific process
+#### Get-Process -Name — find a specific process
+
+```powershell
 Get-Process -Name "sqlservr" -ErrorAction SilentlyContinue
+```
 
-# Processes using more than 500MB
+#### Get-Process | Where-Object — find memory-hungry processes
+
+```powershell
 Get-Process | Where-Object { $_.WorkingSet64 -gt 500MB } |
     Format-Table Name, Id, @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} -AutoSize
+```
 
-# CPU info
+#### Get-CimInstance — CPU, memory, and uptime overview
+
+```powershell
 Get-CimInstance -ClassName Win32_Processor |
     Select-Object Name, NumberOfCores, NumberOfLogicalProcessors
+```
 
-# Memory overview
+```powershell
 $os = Get-CimInstance Win32_OperatingSystem
 "Total: {0:N1} GB | Free: {1:N1} GB | Used: {2:N0}%" -f
     ($os.TotalVisibleMemorySize/1MB),
     ($os.FreePhysicalMemory/1MB),
     ((1 - $os.FreePhysicalMemory/$os.TotalVisibleMemorySize) * 100)
-
-# System uptime
-(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
 ```
 
 ## Related

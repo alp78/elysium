@@ -36,27 +36,47 @@ history | grep "sqlcmd"
 > 4. Press `Enter` to execute, or `→` (right arrow) to edit before executing
 > 5. Press `Ctrl+G` or `Ctrl+C` to cancel
 
+#### !! — re-run the last command
+
+> [!info] The most common use: `sudo !!` — re-runs the last command with `sudo` prepended
+> after a "permission denied" error.
+
 ```bash
-# Re-run the last command
 !!
-# Use case: "permission denied" → sudo !!  (re-runs with sudo prepended)
+sudo !!
+```
 
-# Re-run the last command that started with a string
-!git      # re-runs the most recent command starting with "git"
-!docker   # re-runs the most recent docker command
+#### !string — re-run the most recent command starting with a string
 
-# Use the last argument of the previous command
-echo "new file.txt"
-vim $_    # $_ = "new file.txt" (last argument of previous command)
-# Also: Alt+. (press repeatedly to cycle through older last-arguments)
+```bash
+!git
+!docker
+```
 
-# History expansion — modify and re-run
-^typo^fix          # Re-run last command with "typo" replaced by "fix"
-!!:s/old/new       # Same thing, more explicit syntax
-!-2                # Run the command from 2 commands ago
+> [!warning] `!string` runs the matched command **immediately** without confirmation
+> `!rm` re-runs your most recent `rm` command with no chance to review it. Use
+> `!rm:p` to **print** the match without executing, then `!!` to run it after review.
 
-# Prevent a command from being saved to history
- command_with_secret  # leading space (requires HISTCONTROL=ignorespace in .bashrc)
+#### $_ and Alt+. — recall the last argument of the previous command
+
+```bash
+mkdir /data/pipeline/new_output
+cd $_
+```
+
+#### ^old^new — quick substitution in last command
+
+```bash
+^typo^fix
+```
+
+#### Leading space — prevent a command from being saved to history
+
+> [!info] Requires `HISTCONTROL=ignorespace` in `.bashrc`. Use for commands containing
+> temporary credentials or sensitive parameters.
+
+```bash
+ command_with_secret
 ```
 
 ## Building Complex Commands Incrementally
@@ -87,26 +107,28 @@ sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT TOP 10 *
 
 ### PowerShell — Get-History, PSReadLine predictive IntelliSense
 
+#### Get-History — search PowerShell history
+
 ```powershell
-# Search history
 Get-History | Where-Object CommandLine -like "*sqlcmd*"
-# or: h | ? CommandLine -like "*sql*"  (using aliases)
+```
 
-# Reverse search (same as bash — provided by PSReadLine)
-# Ctrl+R, then type — works identically
+#### Invoke-History — re-run a previous command
 
-# Re-run a specific history entry
+```powershell
 Invoke-History -Id 42
-
-# Re-run last command
 Invoke-History
+```
 
-# PSReadLine predictive IntelliSense (PowerShell 7+)
+#### Set-PSReadLineOption — predictive IntelliSense (PowerShell 7+)
+
+> [!tip] PSReadLine's predictive IntelliSense shows matching commands from history as you
+> type. Arrow keys to select, Right arrow to accept. This alone is worth upgrading to
+> PowerShell 7.
+
+```powershell
 Set-PSReadLineOption -PredictionSource History
 Set-PSReadLineOption -PredictionViewStyle ListView
-# As you type, PowerShell shows matching commands from history
-# Arrow keys to select, Right arrow to accept
-# This alone is worth upgrading to PowerShell 7
 ```
 
 ## Related

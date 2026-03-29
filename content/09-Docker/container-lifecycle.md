@@ -61,6 +61,9 @@ docker run -d --name postgres-db2 -p 5433:5432 postgres:16
 docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 ```
 
+> [!danger] `-p 5432:5432` Binds to All Interfaces by Default
+> Without specifying a bind address, `-p 5432:5432` exposes the port on `0.0.0.0` -- every network interface, including the public IP. On a cloud VM, this means your database is accessible from the internet. Always use `-p 127.0.0.1:PORT:PORT` for services that should only be reachable locally, or rely on firewall rules to block external access.
+
 #### docker run -v host:container — volume mounts for data persistence
 
 When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [[airflow-deployment|Airflow containers]], the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [[file-manipulation|file permission patterns]] used in shell administration.
@@ -111,6 +114,9 @@ docker run -d --name my-pipeline \
 
 > [!tip] .env File Security
 > Never commit `.env` files to git. Add `.env` to `.gitignore`. For CI/CD, inject secrets via the pipeline platform's secret store (GitHub Actions secrets, GitLab CI variables, etc.) and pass them with `--env-file` or `-e` at runtime.
+
+> [!danger] `-e` Flags Expose Secrets in Process Lists
+> Environment variables passed with `-e VAR=value` are visible in `docker inspect` output and in `/proc/<pid>/environ` on the host. Anyone with Docker access can read them. For sensitive values (database passwords, API keys), prefer `--env-file` with a file that has restricted permissions (chmod 600), or mount secrets from a secrets manager at runtime.
 
 #### docker run --rm — auto-remove container on exit
 ```bash

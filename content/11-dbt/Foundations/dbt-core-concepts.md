@@ -136,6 +136,9 @@ WHERE price_date > (SELECT MAX(price_date) FROM {{ this }})
 
 See [[dbt-materializations]] for the deep dive with decision matrices.
 
+> [!warning] env_var() in profiles.yml Fails Silently with Empty String
+> If `SQL_PASSWORD` is not set, `{{ env_var('SQL_PASSWORD') }}` resolves to an empty string -- dbt will not raise an error at parse time. The connection will then fail at runtime with a misleading authentication error. Always use `{{ env_var('SQL_PASSWORD', 'MISSING') }}` with a sentinel default, or validate environment variables in your CI startup script.
+
 ### dbt Profiles and Targets
 
 `profiles.yml` defines where dbt connects. Each profile has multiple targets (environments):
@@ -228,6 +231,12 @@ models:
       +materialized: table
       +schema: gold
 ```
+
+> [!danger] dbt run --full-refresh on Incremental Models Silently Drops and Rebuilds the Table
+> Running `dbt run --full-refresh` on an incremental model drops the existing table and rebuilds from scratch. If your incremental model filters on `is_incremental()`, the full-refresh path must produce the correct full dataset -- otherwise you lose historical data. Always test `--full-refresh` in a dev target before running it in production. For snapshot tables, `--full-refresh` destroys all SCD2 history permanently (see [[dbt-snapshots-and-scd]]).
+
+> [!warning] dbt build vs dbt run -- Use build in CI/CD
+> `dbt run` executes models but does NOT run tests. `dbt build` runs models AND their downstream tests in dependency order. In CI/CD, always use `dbt build` -- otherwise bad data can propagate to the gold layer before tests catch it.
 
 ### dbt Anti-Patterns
 

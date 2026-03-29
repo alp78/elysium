@@ -21,7 +21,7 @@ The `.gitignore` file tells Git which files to never track. Critical for keeping
 
 ### Example .gitignore for a Python Data Engineering Project
 
-```
+```gitignore
 .env
 *.pyc
 __pycache__/

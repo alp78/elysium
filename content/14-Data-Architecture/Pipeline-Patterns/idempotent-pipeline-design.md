@@ -63,6 +63,9 @@ WHEN MATCHED THEN UPDATE SET target.display_name = source.display_name
 WHEN NOT MATCHED THEN INSERT (index_code, display_name) VALUES (source.index_code, source.display_name);
 ```
 
+> [!danger] MERGE Without a Partition Filter Can Full-Scan the Target Table
+> A `MERGE INTO silver.index_dim` without a `WHERE` clause on the source CTE scans every row in both the source and target. On a 100M-row table, this turns a 2-second incremental load into a 30-minute full scan. Always scope the MERGE source to the current partition (e.g., `WHERE trade_date = @trade_date`) and ensure the target has a matching index on the join key.
+
 ### Staging Table Pattern
 
 Load into a staging table first, then atomic swap into the target:
@@ -75,6 +78,9 @@ Load into a staging table first, then atomic swap into the target:
 6. COMMIT
 
 This isolates the slow I/O (bulk load) from the fast atomic swap.
+
+> [!warning] TRUNCATE Cannot Be Rolled Back Inside a Transaction in SQL Server
+> `TRUNCATE TABLE` is minimally logged and cannot be wrapped in an explicit transaction for rollback purposes in all isolation levels. If the INSERT after TRUNCATE fails, the staging table is empty with no recovery path. Use `DELETE FROM staging` (which is transactional) instead of TRUNCATE when the staging table participates in a multi-statement transaction, or accept that TRUNCATE on the staging table is safe because staging is always repopulated.
 
 ### Idempotency Anti-Patterns
 

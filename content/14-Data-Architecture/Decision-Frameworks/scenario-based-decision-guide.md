@@ -86,7 +86,7 @@ This is the most common data engineering pattern. A source produces data on a sc
 | **Infrastructure** | Terraform | Reproducible, auditable, peer-reviewed infra changes |
 | **Monitoring** | GCP Cloud Monitoring + custom freshness metrics | Free tier covers most needs; freshness alerts catch silent failures |
 
-### Architecture
+### Architecture — Daily Batch Pipeline
 
 ```mermaid
 graph LR
@@ -156,7 +156,7 @@ This scenario applies when batch processing is too slow. Examples include real-t
 | **Real-Time Serving** | Firestore → Dashboard or REST API | Real-time listeners push updates to clients |
 | **Monitoring** | Cloud Monitoring + custom latency metrics | Track end-to-end latency, backlog depth, error rates |
 
-### Architecture
+### Architecture — Real-Time Streaming Pipeline
 
 ```mermaid
 graph LR
@@ -228,7 +228,7 @@ The analytics team does not want to manage infrastructure. They want a SQL inter
 | **Data Catalog** | Dataplex + Data Catalog tags | Self-service discovery for analysts |
 | **CI/CD** | GitHub Actions → dbt Cloud or dbt Core in Cloud Run | Automated testing and deployment of transform logic |
 
-### Architecture
+### Architecture — Data Warehouse for Analytics Team
 
 ```mermaid
 graph TB
@@ -342,7 +342,7 @@ This is the integration challenge. Each source has different formats, schemas, d
 | **Orchestration** | Airflow | Complex DAG with per-source schedules and cross-source dependencies |
 | **Data Quality** | dbt tests + Great Expectations | Schema validation, freshness checks, cross-source reconciliation |
 
-### Architecture
+### Architecture — Multi-Source Data Integration
 
 ```mermaid
 graph TB
@@ -477,7 +477,7 @@ The goal is maximum simplicity. Every tool you add is a tool you have to learn, 
 > - **Kubernetes**: You do not need container orchestration for batch jobs. Cloud Run handles this.
 > - **Data catalog**: At this scale, a well-organized dbt `schema.yml` with column descriptions is your catalog.
 
-### Architecture
+### Architecture — Small Team Platform (2-3 Engineers)
 
 ```mermaid
 graph LR
@@ -548,7 +548,7 @@ At this scale, the problem is not technology — it is coordination. Multiple te
 | **Monitoring** | Cloud Monitoring + Datadog (APM) | Cloud Monitoring for infra, Datadog for application traces |
 | **Data Contracts** | Protobuf schemas + dbt contracts | Schema enforcement at API and warehouse boundaries |
 
-### Architecture
+### Architecture — Large Team Platform (10+ Engineers)
 
 ```mermaid
 graph TB
@@ -665,7 +665,7 @@ This is the domain-specific reference architecture that brings together financia
 | **Orchestration** | Airflow with strict SLA monitoring | Market-driven deadlines (publish by 18:00 UTC) |
 | **Monitoring** | Cloud Monitoring + custom SLA dashboards | SLA breaches trigger PagerDuty escalation |
 
-### Architecture
+### Architecture — Financial Index Calculation Platform
 
 ```mermaid
 graph TB
@@ -783,7 +783,7 @@ ML models need features — derived values computed from raw data. The challenge
 | **Model Serving** | Vertex AI Endpoints or Cloud Run | Reads features from online store at prediction time |
 | **Orchestration** | Airflow | Coordinates feature computation with model retraining |
 
-### Architecture
+### Architecture — ML Feature Pipeline
 
 ```mermaid
 graph TB
@@ -880,7 +880,7 @@ Migration is not a one-time event — it is a multi-phase process that can take 
 | **Orchestration** | Airflow | Manages the multi-step migration DAG |
 | **Infrastructure** | Terraform | Provision BigQuery datasets, IAM, networking |
 
-### Architecture
+### Architecture — On-Prem to Cloud Migration
 
 ```mermaid
 graph TB

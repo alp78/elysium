@@ -72,6 +72,12 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 > - `'w'` mode truncates existing files immediately — no undo
 > - Omitting `encoding=` causes platform-dependent behavior
 
+> [!danger] Omitting `encoding=` causes platform-dependent behavior
+> On Windows, `open()` defaults to `cp1252` (not UTF-8). A file written on Linux (UTF-8) and read on Windows (cp1252) silently corrupts non-ASCII characters like accented names, currency symbols, and emoji. Always pass `encoding='utf-8'` explicitly.
+
+> [!warning] Windows newline translation silently corrupts binary-like text
+> Python's text mode translates `\n` to `\r\n` on Windows. For CSV files, this causes double-newlines (blank rows) unless you pass `newline=""` to `open()`. For binary formats (Parquet, Avro, images), always use `'rb'`/`'wb'` mode.
+
 #### tempfile.mkdtemp — create isolated temp directory
 
 ```python
@@ -648,32 +654,35 @@ print(f"  Source: {loaded['source']['dataset']}.{loaded['source']['table']}")
 
 #### json.dumps default parameter — serialize datetime, Decimal, custom objects
 
+> [!warning] `json.dumps()` raises `TypeError` on datetime, Decimal, set, bytes, and dataclasses
+> The built-in JSON encoder only handles `dict`, `list`, `str`, `int`, `float`, `bool`, and `None`. Any other type raises `TypeError: Object of type X is not JSON serializable`. Always provide a `default=` handler or use `orjson` which handles these natively.
+
 ```python
-# Custom JSON serialization — handling datetime, Decimal, custom objects
-
-print("\n=== Custom JSON serialization (datetime, Decimal) ===")
-# json.dumps() fails on datetime, Decimal, set, etc. by default.
-# Fix: provide a 'default' function that converts unsupported types.
-
-
-pipeline_run = {
-    "pipeline_id": "etl_events_daily",
-    "started_at": datetime(2024, 1, 15, 3, 0, 0),  # not JSON-serializable
-    "cost_usd": Decimal("0.45"),                     # not JSON-serializable
-    "unique_users": {1001, 1002, 1003},              # set — not JSON-serializable
-}
+# Custom serializer for types json can't handle natively
 
 def json_serializer(obj):
-    """Custom serializer for types json can't handle natively."""
     if isinstance(obj, datetime):
-        return obj.isoformat()      # '2024-01-15T03:00:00' — ISO 8601 standard
+        return obj.isoformat()      # '2024-01-15T03:00:00'
     if isinstance(obj, Decimal):
         return float(obj)           # or str(obj) to preserve precision
     if isinstance(obj, set):
-        return sorted(list(obj))    # convert set → sorted list
+        return sorted(list(obj))    # set → sorted list
     raise TypeError(f"Type {type(obj).__name__} not serializable")
+```
 
+#### json.dumps with default= — apply custom serializer
+
+```python
 # default= is called for any object json can't serialize natively
+
+pipeline_run = {
+    "pipeline_id": "etl_events_daily",
+    "started_at": datetime(2024, 1, 15, 3, 0, 0),
+    "cost_usd": Decimal("0.45"),
+    "unique_users": {1001, 1002, 1003},
+}
+
+print("\n=== Custom JSON serialization (datetime, Decimal) ===")
 json_str = json.dumps(pipeline_run, indent=2, default=json_serializer)
 print(json_str)
 ```
@@ -1375,7 +1384,7 @@ print(f"  Full URL: https://api.example.com/quote?{qs}")
 
 ## Async File I/O
 
-<h4><code style="font-size:0.75em">aiofiles</code> — non-blocking file operations</h4>
+#### aiofiles — non-blocking file operations
 
 > [!info] aiofiles
 > - Wraps standard `open()` with `async`/`await` — releases the event loop during disk I/O
@@ -1414,7 +1423,7 @@ shutil.rmtree(tmp)
 
 ## High-Performance JSON
 
-<h4><code style="font-size:0.75em">orjson</code> — fast JSON serialization</h4>
+#### orjson — fast JSON serialization
 
 > [!info] orjson
 > - Rust-based JSON, 3-10x faster than stdlib
@@ -1461,7 +1470,7 @@ print(f"  Speedup: {std_time/orj_time:.1f}x")
 
 ## Schema Validation with Pydantic
 
-<h4><code style="font-size:0.75em">pydantic</code> — typed models with validation</h4>
+#### pydantic — typed models with validation
 
 > [!info] Pydantic
 > - `class Model(BaseModel)` — validates types on construction, auto-coerces (`"42"` → `42`)
@@ -1500,7 +1509,7 @@ except ValidationError as e:
 
 ## High-Performance CSV Parsing
 
-<h4><code style="font-size:0.75em">polars</code> and <code style="font-size:0.75em">DuckDB</code> — vectorized CSV</h4>
+#### polars and DuckDB — vectorized CSV
 
 Polars (Rust) and DuckDB (C++) parse CSV with multi-threading and SIMD — 10–100x faster than the `csv` module. Automatic type inference. Use for any CSV >100MB. For small files, stdlib `csv` is sufficient.
 
@@ -1556,7 +1565,7 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
 
 ## Cloud and Object Storage
 
-<h4><code style="font-size:0.75em">fsspec</code> — unified filesystem interface</h4>
+#### fsspec — unified filesystem interface
 
 `fsspec` provides a single `open()` API for local, S3, GCS, Azure Blob, HDFS, HTTP. Change the URI, not the code: `open("s3://bucket/data.csv")`. Supports streaming. Works with pandas, Polars, PyArrow, Dask.
 

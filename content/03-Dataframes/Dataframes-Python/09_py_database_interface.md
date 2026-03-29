@@ -67,7 +67,6 @@ import sqlalchemy as sa
 ## Polars SQLContext
 
 
-- **Collect**: Execute the lazy query plan and return results.
 - **SQL Context**: Register Polars DataFrames as SQL tables, query with standard SQL.
 
 ```python
@@ -75,7 +74,7 @@ ctx=pl.SQLContext(ohlcv=ohlcv_pl, dim=dim_pl, scores=scores_pl)
 display(ctx.execute("SELECT * FROM ohlcv LIMIT 5").collect())
 ```
 
-<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ```python
 display(ctx.execute("""
@@ -87,7 +86,7 @@ display(ctx.execute("""
 """).collect())
 ```
 
-<div><small>shape: (10, 3)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>1324</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.691961</td><td>1331</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.544365</td><td>1331</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.659932</td><td>1324</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.753823</td><td>1321</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.193731</td><td>1324</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>1324</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.691961</td><td>1331</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.544365</td><td>1331</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.659932</td><td>1324</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.753823</td><td>1321</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.193731</td><td>1324</td></tr></tbody></table></div>
 
 ```python
 display(ctx.execute("""
@@ -100,15 +99,13 @@ display(ctx.execute("""
 """).collect())
 ```
 
-<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>close</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1986.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1960.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1951.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1950.0</td></tr></tbody></table></div>
+<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>close</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1986.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1960.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1951.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1950.0</td></tr></tbody></table></div>
 
 ## Window Functions in SQL
 
 The SQL syntax used in Polars SQLContext follows the same patterns as [[sql-fundamentals]] for SQL Server and [[bq-fundamentals]] for BigQuery. For direct Python database access with pyodbc and SQLAlchemy outside of DataFrames, see [[16_py_database]].
 
 - **Rolling Window**: Compute statistics over a sliding window of N consecutive rows (e.g., 7-day moving average).
-- **Filter**: Keep only rows matching a condition.
-- **Select**: Choose specific columns, optionally transforming them.
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 
 ```python
@@ -139,9 +136,9 @@ sma_result = (
 display(sma_result)
 ```
 
-<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
+<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
 
-<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sma_7</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td></tr></tbody></table></div>
+<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sma_7</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td></tr></tbody></table></div>
 
 ## DuckDB — Embedded Analytical Database
 
@@ -3000,6 +2997,15 @@ Connect Pandas and Polars directly to SQL Server tables for reading, writing, an
 
 ## Connection Setup
 
+> [!danger] Never hardcode credentials in connection strings
+> Use environment variables (`os.environ.get()`) or a secret manager. The `.env` file
+> should be in `.gitignore` and never committed. See [[environment-variables]] for secure
+> credential handling patterns.
+
+> [!warning] `TrustServerCertificate=yes` disables certificate validation
+> Acceptable for local development. In production, use a valid TLS certificate and
+> remove this flag — otherwise connections are vulnerable to man-in-the-middle attacks.
+
 ```python
 load_dotenv(dotenv_path="../.env")
 
@@ -3040,6 +3046,17 @@ print("Connection OK")
     Connection OK
 
 ## Reading Tables
+
+> [!danger] `pd.read_sql()` loads the entire result set into memory
+> `SELECT * FROM table` on a 10M row table allocates the full DataFrame in RAM. For large
+> tables, use `chunksize=` to iterate in batches, or add a `WHERE` clause to limit rows.
+> Polars `pl.read_database()` has the same issue — neither library supports server-side
+> cursors by default.
+
+> [!warning] SQL injection risk with string formatting in queries
+> Never use f-strings for user input: `f"WHERE symbol = '{user_input}'"` is injectable.
+> Use parameterized queries: `pd.read_sql("SELECT * FROM t WHERE symbol = ?", engine,
+> params=["ASML"])`.
 
 ### Pandas — pd.read_sql()
 
@@ -3217,7 +3234,7 @@ display(df)
 print(f"Schema: {df.schema}")
 ```
 
-<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>_ingested_at</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr><tr><td>i64</td><td>datetime[μs]</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>66728</td><td>2026-03-12 12:45:00.017366</td><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1194.8</td><td>1202.2</td><td>1187.8</td><td>1190.8</td><td>1190.8</td><td>128223</td><td>0.0</td><td>0.0</td></tr><tr><td>66732</td><td>2026-03-12 12:45:00.017366</td><td>&quot;MC.PA&quot;</td><td>2026-03-12</td><td>495.3</td><td>497.4</td><td>491.6</td><td>494.35</td><td>494.35</td><td>171997</td><td>0.0</td><td>0.0</td></tr><tr><td>66736</td><td>2026-03-12 12:45:00.017366</td><td>&quot;RMS.PA&quot;</td><td>2026-03-12</td><td>1900.0</td><td>1918.5</td><td>1894.0</td><td>1906.0</td><td>1906.0</td><td>18681</td><td>0.0</td><td>0.0</td></tr><tr><td>66740</td><td>2026-03-12 12:45:00.017366</td><td>&quot;OR.PA&quot;</td><td>2026-03-12</td><td>361.1</td><td>362.3</td><td>357.8</td><td>360.8</td><td>360.8</td><td>82621</td><td>0.0</td><td>0.0</td></tr><tr><td>66744</td><td>2026-03-12 12:45:00.017366</td><td>&quot;SAP.DE&quot;</td><td>2026-03-12</td><td>163.0</td><td>166.74</td><td>162.8</td><td>166.52</td><td>166.52</td><td>806722</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
+<div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>_ingested_at</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr><tr><td>i64</td><td>datetime[μs]</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>66728</td><td>2026-03-12 12:45:00.017366</td><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1194.8</td><td>1202.2</td><td>1187.8</td><td>1190.8</td><td>1190.8</td><td>128223</td><td>0.0</td><td>0.0</td></tr><tr><td>66732</td><td>2026-03-12 12:45:00.017366</td><td>&quot;MC.PA&quot;</td><td>2026-03-12</td><td>495.3</td><td>497.4</td><td>491.6</td><td>494.35</td><td>494.35</td><td>171997</td><td>0.0</td><td>0.0</td></tr><tr><td>66736</td><td>2026-03-12 12:45:00.017366</td><td>&quot;RMS.PA&quot;</td><td>2026-03-12</td><td>1900.0</td><td>1918.5</td><td>1894.0</td><td>1906.0</td><td>1906.0</td><td>18681</td><td>0.0</td><td>0.0</td></tr><tr><td>66740</td><td>2026-03-12 12:45:00.017366</td><td>&quot;OR.PA&quot;</td><td>2026-03-12</td><td>361.1</td><td>362.3</td><td>357.8</td><td>360.8</td><td>360.8</td><td>82621</td><td>0.0</td><td>0.0</td></tr><tr><td>66744</td><td>2026-03-12 12:45:00.017366</td><td>&quot;SAP.DE&quot;</td><td>2026-03-12</td><td>163.0</td><td>166.74</td><td>162.8</td><td>166.52</td><td>166.52</td><td>806722</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
 
     Schema: Schema({'id': Int64, '_ingested_at': Datetime(time_unit='us', time_zone=None), 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64})
 
@@ -3231,7 +3248,7 @@ display(df.head(10))
 print(f"Shape: {df.shape}")
 ```
 
-<div><small>shape: (1, 4)</small><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>&quot;ASML.AS&quot;</td><td>1190.8</td><td>128223</td></tr></tbody></table></div>
+<div><!-- shape: (1, 4) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>&quot;ASML.AS&quot;</td><td>1190.8</td><td>128223</td></tr></tbody></table></div>
 
     Shape: (1, 4)
 
@@ -3241,7 +3258,7 @@ df = pl.read_database("SELECT TOP 5 * FROM bronze.index_dim", connection=ENGINE)
 display(df)
 ```
 
-<div><small>shape: (5, 24)</small><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>long_business_summary</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th></tr><tr><td>i64</td><td>str</td><td>datetime[μs]</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>198</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;7203.T&quot;</td><td>&quot;Toyota Motor Corporation&quot;</td><td>&quot;TOYOTA MOTOR CORP&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;consumer-cyclical&quot;</td><td>&quot;Auto Manufacturers&quot;</td><td>&quot;auto-manufacturers&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Toyota&quot;</td><td>&quot;https://global.toyota/en&quot;</td><td>&quot;Toyota Motor Corporation desig…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>1999-05-06</td><td>2021-01-01</td></tr><tr><td>199</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;BHP.AX&quot;</td><td>&quot;BHP Group Limited&quot;</td><td>&quot;BHP GROUP FPO [BHP]&quot;</td><td>&quot;Basic Materials&quot;</td><td>&quot;basic-materials&quot;</td><td>&quot;Other Industrial Metals &amp; Mini…</td><td>&quot;other-industrial-metals-mining&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Melbourne&quot;</td><td>&quot;https://www.bhp.com&quot;</td><td>&quot;BHP Group Limited operates as …</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1988-01-28</td><td>2021-01-01</td></tr><tr><td>200</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;6758.T&quot;</td><td>&quot;Sony Group Corporation&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td><td>&quot;technology&quot;</td><td>&quot;Consumer Electronics&quot;</td><td>&quot;consumer-electronics&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;https://www.sony.com&quot;</td><td>&quot;Sony Group Corporation designs…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>2000-01-04</td><td>2021-01-01</td></tr><tr><td>201</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;1299.HK&quot;</td><td>&quot;AIA Group Limited&quot;</td><td>&quot;AIA&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Insurance - Life&quot;</td><td>&quot;insurance-life&quot;</td><td>&quot;Hong Kong&quot;</td><td>&quot;Central&quot;</td><td>&quot;https://www.aia.com&quot;</td><td>&quot;AIA Group Limited, together wi…</td><td>&quot;HKG&quot;</td><td>&quot;HKSE&quot;</td><td>&quot;Asia/Hong_Kong&quot;</td><td>&quot;HKT&quot;</td><td>&quot;HKD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;hk_market&quot;</td><td>2010-10-29</td><td>2021-01-01</td></tr><tr><td>202</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;CBA.AX&quot;</td><td>&quot;Commonwealth Bank of Australia&quot;</td><td>&quot;CWLTH BANK FPO [CBA]&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Banks - Diversified&quot;</td><td>&quot;banks-diversified&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Sydney&quot;</td><td>&quot;https://www.commbank.com.au&quot;</td><td>&quot;Commonwealth Bank of Australia…</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;AUD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1991-09-30</td><td>2021-01-01</td></tr></tbody></table></div>
+<div><!-- shape: (5, 24) --><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>long_business_summary</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th></tr><tr><td>i64</td><td>str</td><td>datetime[μs]</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>198</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;7203.T&quot;</td><td>&quot;Toyota Motor Corporation&quot;</td><td>&quot;TOYOTA MOTOR CORP&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;consumer-cyclical&quot;</td><td>&quot;Auto Manufacturers&quot;</td><td>&quot;auto-manufacturers&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Toyota&quot;</td><td>&quot;https://global.toyota/en&quot;</td><td>&quot;Toyota Motor Corporation desig…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>1999-05-06</td><td>2021-01-01</td></tr><tr><td>199</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;BHP.AX&quot;</td><td>&quot;BHP Group Limited&quot;</td><td>&quot;BHP GROUP FPO [BHP]&quot;</td><td>&quot;Basic Materials&quot;</td><td>&quot;basic-materials&quot;</td><td>&quot;Other Industrial Metals &amp; Mini…</td><td>&quot;other-industrial-metals-mining&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Melbourne&quot;</td><td>&quot;https://www.bhp.com&quot;</td><td>&quot;BHP Group Limited operates as …</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1988-01-28</td><td>2021-01-01</td></tr><tr><td>200</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;6758.T&quot;</td><td>&quot;Sony Group Corporation&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td><td>&quot;technology&quot;</td><td>&quot;Consumer Electronics&quot;</td><td>&quot;consumer-electronics&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;https://www.sony.com&quot;</td><td>&quot;Sony Group Corporation designs…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>2000-01-04</td><td>2021-01-01</td></tr><tr><td>201</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;1299.HK&quot;</td><td>&quot;AIA Group Limited&quot;</td><td>&quot;AIA&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Insurance - Life&quot;</td><td>&quot;insurance-life&quot;</td><td>&quot;Hong Kong&quot;</td><td>&quot;Central&quot;</td><td>&quot;https://www.aia.com&quot;</td><td>&quot;AIA Group Limited, together wi…</td><td>&quot;HKG&quot;</td><td>&quot;HKSE&quot;</td><td>&quot;Asia/Hong_Kong&quot;</td><td>&quot;HKT&quot;</td><td>&quot;HKD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;hk_market&quot;</td><td>2010-10-29</td><td>2021-01-01</td></tr><tr><td>202</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;CBA.AX&quot;</td><td>&quot;Commonwealth Bank of Australia&quot;</td><td>&quot;CWLTH BANK FPO [CBA]&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Banks - Diversified&quot;</td><td>&quot;banks-diversified&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Sydney&quot;</td><td>&quot;https://www.commbank.com.au&quot;</td><td>&quot;Commonwealth Bank of Australia…</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;AUD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1991-09-30</td><td>2021-01-01</td></tr></tbody></table></div>
 
 ## Chunked Reading (Large Tables)
 
@@ -3272,6 +3289,21 @@ print(f"First batch: {df.shape}")
     First batch: (50, 12)
 
 ## Writing to SQL Server
+
+> [!warning] `df.to_sql()` is extremely slow by default — ~100 rows/second
+> Pandas inserts rows one at a time through SQLAlchemy. For bulk loading, use
+> `method="multi"` (batches inserts) or `fast_executemany=True` on the engine:
+> ```python
+> engine = sa.create_engine(url, fast_executemany=True)
+> df.to_sql("table", engine, if_exists="append", index=False, method="multi")
+> ```
+> For tables >100K rows, use `bcp` instead — it's 10-50x faster than any ORM approach.
+> See [[data-transfer]] for bcp patterns.
+
+> [!danger] `if_exists="replace"` drops and recreates the table
+> This destroys indexes, constraints, permissions, and foreign keys. Use
+> `if_exists="append"` with a preceding `DELETE` for controlled replacement, or use
+> `MERGE`/upsert patterns from [[merge-and-upsert]].
 
 ### Pandas — df.to_sql()
 
@@ -3412,7 +3444,7 @@ display(pl.read_database("SELECT * FROM dbo._test_polars", connection=ENGINE))
 
     Polars → Pandas → SQL Server
 
-<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>score</th><th>date</th></tr><tr><td>str</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>&quot;2024-01-01&quot;</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>&quot;2024-01-02&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (2, 3) --><table><thead><tr><th>symbol</th><th>score</th><th>date</th></tr><tr><td>str</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>&quot;2024-01-01&quot;</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>&quot;2024-01-02&quot;</td></tr></tbody></table></div>
 
 ```python
 # For bulk inserts: use pyodbc executemany with fast_executemany
@@ -3436,7 +3468,7 @@ display(pl.read_database("SELECT * FROM dbo._test_bulk", connection=ENGINE))
 
     Bulk inserted 2 rows
 
-<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>score</th><th>dt</th></tr><tr><td>str</td><td>f64</td><td>date</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
+<div><!-- shape: (2, 3) --><table><thead><tr><th>symbol</th><th>score</th><th>dt</th></tr><tr><td>str</td><td>f64</td><td>date</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
 
 ## Executing SQL Statements
 

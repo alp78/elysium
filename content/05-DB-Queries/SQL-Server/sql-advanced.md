@@ -1455,6 +1455,9 @@ ORDER BY symbol, score_type
 
 ## MERGE (Upsert)
 
+> [!warning] MERGE Has Known Bugs in SQL Server
+> Microsoft has documented multiple concurrency bugs with MERGE that can cause missing rows, duplicate key violations, and incorrect results under concurrent access -- even with proper locking hints. For high-concurrency pipelines, consider using separate INSERT/UPDATE statements wrapped in a transaction instead. If using MERGE, always add `WITH (HOLDLOCK)` on the target table to prevent race conditions between the MATCHED check and the subsequent DML.
+
 ### MERGE (Upsert) — Syntax and Patterns
 
 The `MERGE` statement does INSERT, UPDATE, and DELETE in one atomic operation.
@@ -2433,3 +2436,6 @@ ORDER BY trading_days DESC
 | Performance | Re-runs each ref | One-time compute | Fast for small sets |
 
 **Rule of thumb**: start with CTE. If the query is slow and the CTE is referenced multiple times, materialize into \#temp.
+
+> [!warning] CTEs Are Not Materialized -- They Re-execute on Every Reference
+> A CTE referenced three times in one query runs three times. If the CTE itself contains expensive joins or aggregations, this silently triples execution time. Check the execution plan -- if you see the same subtree repeated, switch to a `#temp` table. Table variables (`@t`) avoid this but have limited statistics, which can cause bad plans on more than ~100 rows.

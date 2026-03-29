@@ -268,7 +268,7 @@ Console.WriteLine($"Auto-parsed: {auto}");
 
     Auto-parsed: 15-Mar-24 14:30:45
 
-<h4>Formatting — <code style="font-size:0.75em">ToString</code></h4>
+#### Formatting — ToString
 
 ```csharp
 // Standard format strings — single-letter shortcuts for common patterns
@@ -406,7 +406,7 @@ Console.WriteLine($"From ISO (+5:30):{fromIso3} Offset={fromIso3.Offset}");
     From ISO (Z):    15-Mar-24 15:30:45 Kind=Local
     From ISO (+5:30):15-Mar-24 14:30:45 +05:30 Offset=05:30:00
 
-<h4><code style="font-size:0.75em">DateTimeOffset</code> preserves timezone</h4>
+#### DateTimeOffset preserves timezone
 
 ```csharp
 // DateTimeOffset — preserves timezone offset as part of the value
@@ -468,7 +468,7 @@ Console.WriteLine($"-> India:    {TimeZoneInfo.ConvertTimeFromUtc(utcNow, india)
     -> Sydney:   25-Mar-26 15:30:20
     -> India:    25-Mar-26 10:00:20
 
-<h4><code style="font-size:0.75em">DateTimeOffset</code> — carries the offset with it</h4>
+#### DateTimeOffset — carries the offset with it
 
 ```csharp
 // DateTimeOffset — carries offset as part of the value
@@ -498,7 +498,7 @@ foreach (var tz in TimeZoneInfo.GetSystemTimeZones().Take(5))
       Hawaiian Standard Time ((UTC-10:00) Hawaii)
       Marquesas Standard Time ((UTC-09:30) Marquesas Islands)
 
-<h4>Arithmetic with <code style="font-size:0.75em">TimeSpan</code></h4>
+#### Arithmetic with TimeSpan
 
 ```csharp
 // TimeSpan arithmetic — adding and subtracting time intervals
@@ -695,7 +695,7 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 
 ## Math and Random
 
-<h4><code style="font-size:0.75em">Math</code> class</h4>
+#### Math class
 
 > [!info] Math class
 > - `Math.Abs` — absolute value
@@ -1058,7 +1058,7 @@ Environment.SetEnvironmentVariable("PIPELINE_ENV", null);
       CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_6836_LBXSBGYJGPFYPULP
       ... (75 total)
 
-<h4><code style="font-size:0.75em">IConfiguration</code> — structured settings</h4>
+#### IConfiguration — structured settings
 
 ```csharp
 // IConfiguration — structured settings from JSON, env vars, and more

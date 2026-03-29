@@ -35,7 +35,7 @@ SQL Server execution plans are the primary diagnostic tool for query performance
 
 SQL Server execution plans are read **right-to-left, bottom-to-top**. The rightmost operators are the data sources (table/index scans and seeks). Data flows left through transformations (joins, sorts, aggregations) until it reaches the leftmost operator — the final `SELECT`, `INSERT`, or `UPDATE` result.
 
-```
+```text
   SSMS Graphical Plan — read RIGHT to LEFT:
 
   ┌─────────────────────────────────────────────────────────────────────────┐
@@ -312,7 +312,7 @@ SQL Server 2016+ embeds **query-level wait statistics** directly into the actual
 3. Click **Properties** (or press F4)
 4. Expand **WaitStats** node in the Properties panel
 
-```
+```text
   SSMS Properties panel for the root operator:
 
   ┌────────────────────────────────────────────┐

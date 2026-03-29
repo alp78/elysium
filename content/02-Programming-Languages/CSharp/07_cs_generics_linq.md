@@ -89,7 +89,7 @@ Console.WriteLine($"explicit: {First<string>(new[] { "x", "y" })}");
     double: 1.1
     explicit: x
 
-<h4>Generic constraints — `where T : ...`</h4>
+#### Generic constraints — `where T : ...`
 
 ```csharp
 // Generic constraints — where T : IComparable restricts valid types
@@ -120,7 +120,7 @@ Console.WriteLine("where T : notnull         — T can't be null");
     where T : BaseClass       — T must inherit from a specific class
     where T : notnull         — T can't be null
 
-<h4>Generic class and multiple type parameters</h4>
+#### Generic class and multiple type parameters
 
 ```csharp
 // Generic class and multiple type parameters — List<T>, Dictionary<K,V>
@@ -169,7 +169,7 @@ var departments = new[]
 };
 ```
 
-<h4>`GroupBy` and aggregations</h4>
+#### `GroupBy` and aggregations
 
 ```csharp
 // GroupBy and aggregations — split-apply-combine pattern
@@ -220,7 +220,7 @@ foreach (var s in deptStats)
       Sales           count=2 avg=$71'500 range=[$65'000-$78'000] total=$143'000
       Marketing       count=1 avg=$72'000 range=[$72'000-$72'000] total=$72'000
 
-<h4>`Join` and `GroupJoin`</h4>
+#### `Join` and `GroupJoin`
 
 ```csharp
 // Join and GroupJoin — combine collections by matching keys
@@ -258,7 +258,7 @@ foreach (var r in leftJoin)
       Marketing       head=CMO        employees=1
       HR              head=CHRO       employees=0
 
-<h4>Chained pipeline, `Lookup`, and `Zip`</h4>
+#### Chained pipeline, `Lookup`, and `Zip`
 
 ```csharp
 // Chained pipeline, Lookup, and Zip — advanced LINQ composition
@@ -305,7 +305,7 @@ foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
       Eve        $  88'000 + $  8'800 raise
       Frank      $  72'000 + $  7'200 raise
 
-<h4>`SelectMany` — flatten nested collections</h4>
+#### `SelectMany` — flatten nested collections
 
 ```csharp
 // SelectMany — flatten nested collections into a single sequence
@@ -423,7 +423,7 @@ Console.WriteLine($"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.
       Scores: 466 rows
       Date range: 2021-01-04 to 2026-03-12
 
-<h4>LINQ — `GroupBy` with Aggregates</h4>
+#### LINQ — `GroupBy` with Aggregates
 
 Splits a collection into groups by key and applies multiple aggregate functions (Average, Sum, Min, Max, Count) to each group.
 
@@ -456,9 +456,9 @@ new DataFrame(
     Series.From("Days", results.Select(s => s.Days).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 6 columns)</small><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>TotalVolume</th><th>MinLow</th><th>MaxHigh</th><th>Days</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>81633862</td><td>839.4</td><td>2957</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>110400463</td><td>602.8</td><td>2835</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>945070720</td><td>375.75</td><td>1312.8</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.4</td><td>557855567</td><td>436.55</td><td>904.6</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>308359744</td><td>76.28</td><td>2008</td><td>1324</td></tr><tr><td>ARGX.BR</td><td>413.69</td><td>94592244</td><td>201.4</td><td>810</td><td>1331</td></tr><tr><td>OR.PA</td><td>377.54</td><td>484115375</td><td>290.1</td><td>461.85</td><td>1331</td></tr><tr><td>MUV2.DE</td><td>374.66</td><td>398802950</td><td>205.15</td><td>615.8</td><td>1324</td></tr><tr><td>RACE.MI</td><td>289.75</td><td>476686026</td><td>154.4</td><td>492.8</td><td>1321</td></tr><tr><td>ALV.DE</td><td>252.19</td><td>1101960308</td><td>156.22</td><td>396</td><td>1324</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 6 columns) --><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>TotalVolume</th><th>MinLow</th><th>MaxHigh</th><th>Days</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>81633862</td><td>839.4</td><td>2957</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>110400463</td><td>602.8</td><td>2835</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>945070720</td><td>375.75</td><td>1312.8</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.4</td><td>557855567</td><td>436.55</td><td>904.6</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>308359744</td><td>76.28</td><td>2008</td><td>1324</td></tr><tr><td>ARGX.BR</td><td>413.69</td><td>94592244</td><td>201.4</td><td>810</td><td>1331</td></tr><tr><td>OR.PA</td><td>377.54</td><td>484115375</td><td>290.1</td><td>461.85</td><td>1331</td></tr><tr><td>MUV2.DE</td><td>374.66</td><td>398802950</td><td>205.15</td><td>615.8</td><td>1324</td></tr><tr><td>RACE.MI</td><td>289.75</td><td>476686026</td><td>154.4</td><td>492.8</td><td>1321</td></tr><tr><td>ALV.DE</td><td>252.19</td><td>1101960308</td><td>156.22</td><td>396</td><td>1324</td></tr></tbody></table>
 
-<h4>LINQ — Window Function `ROW_NUMBER()`</h4>
+#### LINQ — Window Function `ROW_NUMBER()`
 
 Assigns a sequential rank to each row within a partition, ordered by a column. Equivalent to SQL ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...).
 
@@ -482,9 +482,9 @@ new DataFrame(
     Series.From("Volume", results.Select(r => r.Volume).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 4 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.34</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>BBVA.MC</td><td>2021-09-17</td><td>5.67</td><td>228528294</td></tr><tr><td>NDA-FI.HE</td><td>2022-09-16</td><td>9.14</td><td>140675854</td></tr><tr><td>PRX.AS</td><td>2021-08-17</td><td>32.43</td><td>114772834</td></tr><tr><td>ENEL.MI</td><td>2021-10-15</td><td>6.92</td><td>101413521</td></tr><tr><td>UCG.MI</td><td>2021-12-09</td><td>12.8</td><td>82881371</td></tr><tr><td>IBE.MC</td><td>2022-10-21</td><td>9.53</td><td>82592287</td></tr><tr><td>INGA.AS</td><td>2024-02-01</td><td>12.34</td><td>55872649</td></tr><tr><td>ENI.MI</td><td>2025-04-07</td><td>12.04</td><td>48554374</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.34</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>BBVA.MC</td><td>2021-09-17</td><td>5.67</td><td>228528294</td></tr><tr><td>NDA-FI.HE</td><td>2022-09-16</td><td>9.14</td><td>140675854</td></tr><tr><td>PRX.AS</td><td>2021-08-17</td><td>32.43</td><td>114772834</td></tr><tr><td>ENEL.MI</td><td>2021-10-15</td><td>6.92</td><td>101413521</td></tr><tr><td>UCG.MI</td><td>2021-12-09</td><td>12.8</td><td>82881371</td></tr><tr><td>IBE.MC</td><td>2022-10-21</td><td>9.53</td><td>82592287</td></tr><tr><td>INGA.AS</td><td>2024-02-01</td><td>12.34</td><td>55872649</td></tr><tr><td>ENI.MI</td><td>2025-04-07</td><td>12.04</td><td>48554374</td></tr></tbody></table>
 
-<h4>LINQ — Window Function `LAG()`</h4>
+#### LINQ — Window Function `LAG()`
 
 Accesses the value from the previous row in a sorted sequence. Implemented via Zip with a shifted copy of the list.
 
@@ -515,9 +515,9 @@ new DataFrame(
     Series.From("Return%", results.Select(r => Math.Round(r.DailyReturn, 2)).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 5 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>PrevClose</th><th>Return%</th></tr></thead><tbody><tr><td>ADYEN.AS</td><td>2023-11-09</td><td>958.8</td><td>695.7</td><td>37.82</td></tr><tr><td>ARGX.BR</td><td>2023-07-17</td><td>437.6</td><td>334</td><td>31.02</td></tr><tr><td>RHM.DE</td><td>2022-02-28</td><td>133.6</td><td>107.05</td><td>24.8</td></tr><tr><td>PRX.AS</td><td>2022-03-16</td><td>24.1</td><td>19.45</td><td>23.88</td></tr><tr><td>ADS.DE</td><td>2022-11-04</td><td>114.04</td><td>93.95</td><td>21.38</td></tr><tr><td>ADYEN.AS</td><td>2024-02-08</td><td>1436.2</td><td>1183.6</td><td>21.34</td></tr><tr><td>ENR.DE</td><td>2024-11-13</td><td>46.33</td><td>38.95</td><td>18.95</td></tr><tr><td>RHM.DE</td><td>2022-03-01</td><td>156.6</td><td>133.6</td><td>17.22</td></tr><tr><td>VOW.DE</td><td>2021-03-17</td><td>308.8</td><td>266.6</td><td>15.83</td></tr><tr><td>PRX.AS</td><td>2022-06-27</td><td>28.17</td><td>24.35</td><td>15.72</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 5 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>PrevClose</th><th>Return%</th></tr></thead><tbody><tr><td>ADYEN.AS</td><td>2023-11-09</td><td>958.8</td><td>695.7</td><td>37.82</td></tr><tr><td>ARGX.BR</td><td>2023-07-17</td><td>437.6</td><td>334</td><td>31.02</td></tr><tr><td>RHM.DE</td><td>2022-02-28</td><td>133.6</td><td>107.05</td><td>24.8</td></tr><tr><td>PRX.AS</td><td>2022-03-16</td><td>24.1</td><td>19.45</td><td>23.88</td></tr><tr><td>ADS.DE</td><td>2022-11-04</td><td>114.04</td><td>93.95</td><td>21.38</td></tr><tr><td>ADYEN.AS</td><td>2024-02-08</td><td>1436.2</td><td>1183.6</td><td>21.34</td></tr><tr><td>ENR.DE</td><td>2024-11-13</td><td>46.33</td><td>38.95</td><td>18.95</td></tr><tr><td>RHM.DE</td><td>2022-03-01</td><td>156.6</td><td>133.6</td><td>17.22</td></tr><tr><td>VOW.DE</td><td>2021-03-17</td><td>308.8</td><td>266.6</td><td>15.83</td></tr><tr><td>PRX.AS</td><td>2022-06-27</td><td>28.17</td><td>24.35</td><td>15.72</td></tr></tbody></table>
 
-<h4>LINQ — Window Function Cumulative `SUM()`</h4>
+#### LINQ — Window Function Cumulative `SUM()`
 
 Computes a running total where each row includes the sum of all preceding rows. Implemented via Aggregate with an accumulator.
 
@@ -537,9 +537,9 @@ new DataFrame(
     Series.From("CumVolume", cumVol.TakeLast(10).Select(r => r.CumVol).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>Date</th><th>Volume</th><th>CumVolume</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1010698</td><td>938726541</td></tr><tr><td>2026-03-02</td><td>871267</td><td>939597808</td></tr><tr><td>2026-03-03</td><td>941945</td><td>940539753</td></tr><tr><td>2026-03-04</td><td>714587</td><td>941254340</td></tr><tr><td>2026-03-05</td><td>778081</td><td>942032421</td></tr><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>Date</th><th>Volume</th><th>CumVolume</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1010698</td><td>938726541</td></tr><tr><td>2026-03-02</td><td>871267</td><td>939597808</td></tr><tr><td>2026-03-03</td><td>941945</td><td>940539753</td></tr><tr><td>2026-03-04</td><td>714587</td><td>941254340</td></tr><tr><td>2026-03-05</td><td>778081</td><td>942032421</td></tr><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table>
 
-<h4>LINQ — Window Function `AVG()` Moving Average</h4>
+#### LINQ — Window Function `AVG()` Moving Average
 
 Computes the average of a sliding window of N rows. Implemented via Skip/Take on a sorted list for each position.
 
@@ -560,9 +560,9 @@ new DataFrame(
     Series.From("SMA20", results.Select(r => Math.Round(r.SMA20, 2)).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>Date</th><th>Close</th><th>SMA20</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1213.73</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1213.01</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1211.58</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1214.54</td></tr><tr><td>2026-03-05</td><td>1186</td><td>1216.36</td></tr><tr><td>2026-03-06</td><td>1147</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>Date</th><th>Close</th><th>SMA20</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1213.73</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1213.01</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1211.58</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1214.54</td></tr><tr><td>2026-03-05</td><td>1186</td><td>1216.36</td></tr><tr><td>2026-03-06</td><td>1147</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table>
 
-<h4>LINQ — Window Function `NTILE()`</h4>
+#### LINQ — Window Function `NTILE()`
 
 Distributes rows into N equal-sized buckets based on a sort order. Implemented via index arithmetic after OrderBy.
 
@@ -584,9 +584,9 @@ new DataFrame(
     Series.From("Quartile", results.Select(s => s.Quartile).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>Quartile</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>4</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>4</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>4</td></tr><tr><td>MC.PA</td><td>662.4</td><td>4</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>4</td></tr><tr><td>ARGX.BR</td><td>413.69</td><td>4</td></tr><tr><td>OR.PA</td><td>377.54</td><td>4</td></tr><tr><td>MUV2.DE</td><td>374.66</td><td>4</td></tr><tr><td>RACE.MI</td><td>289.75</td><td>4</td></tr><tr><td>ALV.DE</td><td>252.19</td><td>4</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>Quartile</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>4</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>4</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>4</td></tr><tr><td>MC.PA</td><td>662.4</td><td>4</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>4</td></tr><tr><td>ARGX.BR</td><td>413.69</td><td>4</td></tr><tr><td>OR.PA</td><td>377.54</td><td>4</td></tr><tr><td>MUV2.DE</td><td>374.66</td><td>4</td></tr><tr><td>RACE.MI</td><td>289.75</td><td>4</td></tr><tr><td>ALV.DE</td><td>252.19</td><td>4</td></tr></tbody></table>
 
-<h4>LINQ — `HAVING`</h4>
+#### LINQ — `HAVING`
 
 Filters groups after aggregation. A Where clause applied after GroupBy + Select acts as the SQL HAVING clause.
 
@@ -605,9 +605,9 @@ new DataFrame(
     Series.From("AvgVolume", results.Select(s => (long)s.AvgVol).ToArray()))
 ```
 
-<small>Polars DataFrame: (11 rows, 2 columns)</small><table><thead><tr><th>Symbol</th><th>AvgVolume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
+<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AvgVolume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
 
-<h4>LINQ — `STDEV()`</h4>
+#### LINQ — `STDEV()`
 
 Standard deviation of daily returns, annualized by multiplying by sqrt(252). No built-in LINQ StdDev — computed manually.
 
@@ -633,9 +633,9 @@ new DataFrame(
     Series.From("AnnualVol%", results.Select(s => Math.Round(s.AnnVol, 2)).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 2 columns)</small><table><thead><tr><th>Symbol</th><th>AnnualVol%</th></tr></thead><tbody><tr><td>ADYEN.AS</td><td>50.3</td></tr><tr><td>ENR.DE</td><td>50.05</td></tr><tr><td>RHM.DE</td><td>40.85</td></tr><tr><td>PRX.AS</td><td>39.72</td></tr><tr><td>ARGX.BR</td><td>39.31</td></tr><tr><td>ASML.AS</td><td>37.62</td></tr><tr><td>IFX.DE</td><td>37.25</td></tr><tr><td>UCG.MI</td><td>35.55</td></tr><tr><td>VOW.DE</td><td>35.51</td></tr><tr><td>ADS.DE</td><td>34.37</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AnnualVol%</th></tr></thead><tbody><tr><td>ADYEN.AS</td><td>50.3</td></tr><tr><td>ENR.DE</td><td>50.05</td></tr><tr><td>RHM.DE</td><td>40.85</td></tr><tr><td>PRX.AS</td><td>39.72</td></tr><tr><td>ARGX.BR</td><td>39.31</td></tr><tr><td>ASML.AS</td><td>37.62</td></tr><tr><td>IFX.DE</td><td>37.25</td></tr><tr><td>UCG.MI</td><td>35.55</td></tr><tr><td>VOW.DE</td><td>35.51</td></tr><tr><td>ADS.DE</td><td>34.37</td></tr></tbody></table>
 
-<h4>LINQ — `JOIN`</h4>
+#### LINQ — `JOIN`
 
 Combines two collections on a matching key. Each OHLCV aggregate row is paired with its corresponding score row by symbol.
 
@@ -660,9 +660,9 @@ new DataFrame(
     Series.From("AvgVol", results.Select(r => (long)r.AvgVol).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 6 columns)</small><table><thead><tr><th>Symbol</th><th>Sector</th><th>Rank</th><th>Score</th><th>YTD%</th><th>AvgVol</th></tr></thead><tbody><tr><td>BNP.PA</td><td>Financial Services</td><td>1</td><td>0.68</td><td>0.1</td><td>3096879</td></tr><tr><td>BNP.PA</td><td>Financial Services</td><td>1</td><td>0.66</td><td>0.1</td><td>3096879</td></tr><tr><td>BNP.PA</td><td>Financial Services</td><td>1</td><td>0.68</td><td>0.1</td><td>3096879</td></tr><tr><td>DTE.DE</td><td>Communication Services</td><td>2</td><td>0.52</td><td>0.2</td><td>7575084</td></tr><tr><td>DTE.DE</td><td>Communication Services</td><td>2</td><td>0.52</td><td>0.2</td><td>7575084</td></tr><tr><td>VOW.DE</td><td>Consumer Cyclical</td><td>2</td><td>0.58</td><td>-0.1</td><td>62021</td></tr><tr><td>DTE.DE</td><td>Communication Services</td><td>3</td><td>0.49</td><td>0.2</td><td>7575084</td></tr><tr><td>IFX.DE</td><td>Technology</td><td>3</td><td>0.51</td><td>0.2</td><td>4186778</td></tr><tr><td>VOW.DE</td><td>Consumer Cyclical</td><td>3</td><td>0.46</td><td>-0.1</td><td>62021</td></tr><tr><td>TTE.PA</td><td>Energy</td><td>4</td><td>0.39</td><td>0.3</td><td>5138099</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 6 columns) --><table><thead><tr><th>Symbol</th><th>Sector</th><th>Rank</th><th>Score</th><th>YTD%</th><th>AvgVol</th></tr></thead><tbody><tr><td>BNP.PA</td><td>Financial Services</td><td>1</td><td>0.68</td><td>0.1</td><td>3096879</td></tr><tr><td>BNP.PA</td><td>Financial Services</td><td>1</td><td>0.66</td><td>0.1</td><td>3096879</td></tr><tr><td>BNP.PA</td><td>Financial Services</td><td>1</td><td>0.68</td><td>0.1</td><td>3096879</td></tr><tr><td>DTE.DE</td><td>Communication Services</td><td>2</td><td>0.52</td><td>0.2</td><td>7575084</td></tr><tr><td>DTE.DE</td><td>Communication Services</td><td>2</td><td>0.52</td><td>0.2</td><td>7575084</td></tr><tr><td>VOW.DE</td><td>Consumer Cyclical</td><td>2</td><td>0.58</td><td>-0.1</td><td>62021</td></tr><tr><td>DTE.DE</td><td>Communication Services</td><td>3</td><td>0.49</td><td>0.2</td><td>7575084</td></tr><tr><td>IFX.DE</td><td>Technology</td><td>3</td><td>0.51</td><td>0.2</td><td>4186778</td></tr><tr><td>VOW.DE</td><td>Consumer Cyclical</td><td>3</td><td>0.46</td><td>-0.1</td><td>62021</td></tr><tr><td>TTE.PA</td><td>Energy</td><td>4</td><td>0.39</td><td>0.3</td><td>5138099</td></tr></tbody></table>
 
-<h4>LINQ — Window Function `LEAD()`</h4>
+#### LINQ — Window Function `LEAD()`
 
 Accesses the value from the next row in a sorted sequence. Implemented via Zip with a Skip(1) shifted copy. Used here to detect date gaps.
 
@@ -685,9 +685,9 @@ new DataFrame(
     Series.From("GapDays", results.Select(g => g.GapDays).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>From</th><th>To</th><th>GapDays</th></tr></thead><tbody><tr><td>2021-04-01</td><td>2021-04-06</td><td>5</td></tr><tr><td>2022-04-14</td><td>2022-04-19</td><td>5</td></tr><tr><td>2023-04-06</td><td>2023-04-11</td><td>5</td></tr><tr><td>2023-12-22</td><td>2023-12-27</td><td>5</td></tr><tr><td>2024-03-28</td><td>2024-04-02</td><td>5</td></tr><tr><td>2025-04-17</td><td>2025-04-22</td><td>5</td></tr><tr><td>2025-12-24</td><td>2025-12-29</td><td>5</td></tr><tr><td>2022-12-23</td><td>2022-12-27</td><td>4</td></tr><tr><td>2023-04-28</td><td>2023-05-02</td><td>4</td></tr><tr><td>2023-12-29</td><td>2024-01-02</td><td>4</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>From</th><th>To</th><th>GapDays</th></tr></thead><tbody><tr><td>2021-04-01</td><td>2021-04-06</td><td>5</td></tr><tr><td>2022-04-14</td><td>2022-04-19</td><td>5</td></tr><tr><td>2023-04-06</td><td>2023-04-11</td><td>5</td></tr><tr><td>2023-12-22</td><td>2023-12-27</td><td>5</td></tr><tr><td>2024-03-28</td><td>2024-04-02</td><td>5</td></tr><tr><td>2025-04-17</td><td>2025-04-22</td><td>5</td></tr><tr><td>2025-12-24</td><td>2025-12-29</td><td>5</td></tr><tr><td>2022-12-23</td><td>2022-12-27</td><td>4</td></tr><tr><td>2023-04-28</td><td>2023-05-02</td><td>4</td></tr><tr><td>2023-12-29</td><td>2024-01-02</td><td>4</td></tr></tbody></table>
 
-<h4>LINQ — Nested `GroupBy`</h4>
+#### LINQ — Nested `GroupBy`
 
 Groups by a key and computes nested aggregates including the best element per group via OrderBy + First().
 
@@ -715,7 +715,7 @@ new DataFrame(
     Series.From("Count", results.Select(s => s.Count).ToArray()))
 ```
 
-<small>Polars DataFrame: (10 rows, 5 columns)</small><table><thead><tr><th>Sector</th><th>AvgScore</th><th>BestStock</th><th>BestRank</th><th>Count</th></tr></thead><tbody><tr><td>Technology</td><td>0.15</td><td>MU</td><td>1</td><td>75</td></tr><tr><td>Energy</td><td>0.11</td><td>DVN</td><td>1</td><td>34</td></tr><tr><td>Industrials</td><td>0.09</td><td>8001.T</td><td>1</td><td>66</td></tr><tr><td>Communication Services</td><td>0.05</td><td>DTE.DE</td><td>2</td><td>36</td></tr><tr><td>Basic Materials</td><td>0.04</td><td>4063.T</td><td>7</td><td>18</td></tr><tr><td>Healthcare</td><td>0.02</td><td>2269.HK</td><td>5</td><td>45</td></tr><tr><td>Consumer Defensive</td><td>-0.08</td><td>ABI.BR</td><td>4</td><td>36</td></tr><tr><td>Financial Services</td><td>-0.09</td><td>BNP.PA</td><td>1</td><td>96</td></tr><tr><td>Utilities</td><td>-0.1</td><td>ENEL.MI</td><td>25</td><td>6</td></tr><tr><td>Consumer Cyclical</td><td>-0.14</td><td>VOW.DE</td><td>2</td><td>54</td></tr></tbody></table>
+<!-- Polars DataFrame: (10 rows, 5 columns) --><table><thead><tr><th>Sector</th><th>AvgScore</th><th>BestStock</th><th>BestRank</th><th>Count</th></tr></thead><tbody><tr><td>Technology</td><td>0.15</td><td>MU</td><td>1</td><td>75</td></tr><tr><td>Energy</td><td>0.11</td><td>DVN</td><td>1</td><td>34</td></tr><tr><td>Industrials</td><td>0.09</td><td>8001.T</td><td>1</td><td>66</td></tr><tr><td>Communication Services</td><td>0.05</td><td>DTE.DE</td><td>2</td><td>36</td></tr><tr><td>Basic Materials</td><td>0.04</td><td>4063.T</td><td>7</td><td>18</td></tr><tr><td>Healthcare</td><td>0.02</td><td>2269.HK</td><td>5</td><td>45</td></tr><tr><td>Consumer Defensive</td><td>-0.08</td><td>ABI.BR</td><td>4</td><td>36</td></tr><tr><td>Financial Services</td><td>-0.09</td><td>BNP.PA</td><td>1</td><td>96</td></tr><tr><td>Utilities</td><td>-0.1</td><td>ENEL.MI</td><td>25</td><td>6</td></tr><tr><td>Consumer Cyclical</td><td>-0.14</td><td>VOW.DE</td><td>2</td><td>54</td></tr></tbody></table>
 
 ## LINQ vs Polars.NET — Side-by-Side
 
@@ -733,11 +733,11 @@ df.Head(3)
 
       Polars: 66355 rows x 12 columns
 
-<small>Polars DataFrame: (3 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
+<!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
 ### Basic Operations
 
-<h4>LINQ — Select columns</h4>
+#### LINQ — Select columns
 
 ```csharp
 // LINQ: select specific properties
@@ -748,18 +748,18 @@ new DataFrame(
     Series.From("Close", linqSelect.Select(r => r.Close).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Select columns</h4>
+#### Polars DataFrame — Select columns
 
 ```csharp
 // Polars: select columns by name
 df.Select("symbol", "date", "close").Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table>
 
-<h4>LINQ — Filter rows</h4>
+#### LINQ — Filter rows
 
 ```csharp
 // LINQ: Where clause
@@ -770,9 +770,9 @@ new DataFrame(
     Series.From("Close", linqFilter.Select(r => r.Close).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-07-14</td><td>609.1</td></tr><tr><td>ASML.AS</td><td>2021-07-22</td><td>620.8</td></tr><tr><td>ASML.AS</td><td>2021-07-23</td><td>638.8</td></tr><tr><td>ASML.AS</td><td>2021-07-26</td><td>638</td></tr><tr><td>ASML.AS</td><td>2021-07-27</td><td>623</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-07-14</td><td>609.1</td></tr><tr><td>ASML.AS</td><td>2021-07-22</td><td>620.8</td></tr><tr><td>ASML.AS</td><td>2021-07-23</td><td>638.8</td></tr><tr><td>ASML.AS</td><td>2021-07-26</td><td>638</td></tr><tr><td>ASML.AS</td><td>2021-07-27</td><td>623</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Filter rows</h4>
+#### Polars DataFrame — Filter rows
 
 ```csharp
 // Polars: Filter expression
@@ -780,9 +780,9 @@ df.Filter((Col("symbol") == Lit("ASML.AS")) & (Col("close") > Lit(600.0)))
   .Select("symbol", "date", "close").Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>136</td><td>ASML.AS</td><td>2021-07-14</td><td>599.5</td><td>611.8</td><td>597.2</td><td>609.1</td><td>582.9708</td><td>641585</td><td>0</td><td>0</td><td>false</td></tr><tr><td>142</td><td>ASML.AS</td><td>2021-07-22</td><td>610</td><td>625.9</td><td>608.2</td><td>620.8</td><td>594.169</td><td>788099</td><td>0</td><td>0</td><td>false</td></tr><tr><td>143</td><td>ASML.AS</td><td>2021-07-23</td><td>622.9</td><td>639</td><td>617.5</td><td>638.8</td><td>611.3967</td><td>833737</td><td>0</td><td>0</td><td>false</td></tr><tr><td>144</td><td>ASML.AS</td><td>2021-07-26</td><td>635.2</td><td>647</td><td>631.5</td><td>638</td><td>610.631</td><td>640691</td><td>0</td><td>0</td><td>false</td></tr><tr><td>145</td><td>ASML.AS</td><td>2021-07-27</td><td>634.2</td><td>641.1</td><td>622.3</td><td>623</td><td>596.2745</td><td>705560</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>136</td><td>ASML.AS</td><td>2021-07-14</td><td>599.5</td><td>611.8</td><td>597.2</td><td>609.1</td><td>582.9708</td><td>641585</td><td>0</td><td>0</td><td>false</td></tr><tr><td>142</td><td>ASML.AS</td><td>2021-07-22</td><td>610</td><td>625.9</td><td>608.2</td><td>620.8</td><td>594.169</td><td>788099</td><td>0</td><td>0</td><td>false</td></tr><tr><td>143</td><td>ASML.AS</td><td>2021-07-23</td><td>622.9</td><td>639</td><td>617.5</td><td>638.8</td><td>611.3967</td><td>833737</td><td>0</td><td>0</td><td>false</td></tr><tr><td>144</td><td>ASML.AS</td><td>2021-07-26</td><td>635.2</td><td>647</td><td>631.5</td><td>638</td><td>610.631</td><td>640691</td><td>0</td><td>0</td><td>false</td></tr><tr><td>145</td><td>ASML.AS</td><td>2021-07-27</td><td>634.2</td><td>641.1</td><td>622.3</td><td>623</td><td>596.2745</td><td>705560</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
-<h4>LINQ — Sort</h4>
+#### LINQ — Sort
 
 ```csharp
 // LINQ: OrderByDescending
@@ -793,18 +793,18 @@ new DataFrame(
     Series.From("Volume", linqSort.Select(r => r.Volume).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>306973344</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>306973344</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Sort</h4>
+#### Polars DataFrame — Sort
 
 ```csharp
 // Polars: Sort descending
 df.Sort("volume", descending: true).Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>31078</td><td>ISP.MI</td><td>2023-08-08</td><td>2.4</td><td>2.4165</td><td>2.3285</td><td>2.338</td><td>1.8961</td><td>376391539</td><td>0</td><td>0</td><td>false</td></tr><tr><td>10783</td><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>3.376</td><td>3.322</td><td>3.36</td><td>2.8379</td><td>367211467</td><td>0</td><td>0</td><td>false</td></tr><tr><td>31029</td><td>ISP.MI</td><td>2023-05-31</td><td>2.1925</td><td>2.2255</td><td>2.133</td><td>2.1555</td><td>1.7481</td><td>317362978</td><td>0</td><td>0</td><td>false</td></tr><tr><td>30975</td><td>ISP.MI</td><td>2023-03-13</td><td>2.4705</td><td>2.478</td><td>2.279</td><td>2.3305</td><td>1.8196</td><td>311886033</td><td>0</td><td>0</td><td>false</td></tr><tr><td>10793</td><td>SAN.MC</td><td>2021-11-03</td><td>3.275</td><td>3.31</td><td>3.236</td><td>3.31</td><td>2.8377</td><td>306973344</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>31078</td><td>ISP.MI</td><td>2023-08-08</td><td>2.4</td><td>2.4165</td><td>2.3285</td><td>2.338</td><td>1.8961</td><td>376391539</td><td>0</td><td>0</td><td>false</td></tr><tr><td>10783</td><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>3.376</td><td>3.322</td><td>3.36</td><td>2.8379</td><td>367211467</td><td>0</td><td>0</td><td>false</td></tr><tr><td>31029</td><td>ISP.MI</td><td>2023-05-31</td><td>2.1925</td><td>2.2255</td><td>2.133</td><td>2.1555</td><td>1.7481</td><td>317362978</td><td>0</td><td>0</td><td>false</td></tr><tr><td>30975</td><td>ISP.MI</td><td>2023-03-13</td><td>2.4705</td><td>2.478</td><td>2.279</td><td>2.3305</td><td>1.8196</td><td>311886033</td><td>0</td><td>0</td><td>false</td></tr><tr><td>10793</td><td>SAN.MC</td><td>2021-11-03</td><td>3.275</td><td>3.31</td><td>3.236</td><td>3.31</td><td>2.8377</td><td>306973344</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
-<h4>LINQ — Add computed column</h4>
+#### LINQ — Add computed column
 
 ```csharp
 // LINQ: Select with new property
@@ -815,20 +815,20 @@ new DataFrame(
     Series.From("Range", linqComputed.Select(r => Math.Round(r.Range, 2)).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>Close</th><th>Range</th></tr></thead><tbody><tr><td>ASML.AS</td><td>406.25</td><td>8.75</td></tr><tr><td>ASML.AS</td><td>406.9</td><td>10.9</td></tr><tr><td>ASML.AS</td><td>402.85</td><td>8</td></tr><tr><td>ASML.AS</td><td>403.9</td><td>7.45</td></tr><tr><td>ASML.AS</td><td>416.05</td><td>5.7</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Close</th><th>Range</th></tr></thead><tbody><tr><td>ASML.AS</td><td>406.25</td><td>8.75</td></tr><tr><td>ASML.AS</td><td>406.9</td><td>10.9</td></tr><tr><td>ASML.AS</td><td>402.85</td><td>8</td></tr><tr><td>ASML.AS</td><td>403.9</td><td>7.45</td></tr><tr><td>ASML.AS</td><td>416.05</td><td>5.7</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Add computed column</h4>
+#### Polars DataFrame — Add computed column
 
 ```csharp
 // Polars: WithColumn expression
 df.WithColumns((Col("high") - Col("low")).Alias("range")).Select("symbol", "close", "range").Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>close</th><th>range</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>57.86</td><td>0.97</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>close</th><th>range</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>57.86</td><td>0.97</td></tr></tbody></table>
 
 ### Aggregations
 
-<h4>LINQ — GroupBy with aggregates</h4>
+#### LINQ — GroupBy with aggregates
 
 ```csharp
 // LINQ: GroupBy + multiple aggregates
@@ -841,9 +841,9 @@ new DataFrame(
     Series.From("Count", linqAgg.Select(s => s.Count).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>Count</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.4</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>1324</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>Count</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.4</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>1324</td></tr></tbody></table>
 
-<h4>Polars DataFrame — GroupBy with aggregates</h4>
+#### Polars DataFrame — GroupBy with aggregates
 
 ```csharp
 // Polars: GroupBy + Agg
@@ -853,9 +853,9 @@ df.GroupBy("symbol").Agg(
 ).Sort("avg_close", descending: true).Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>count</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.555748</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.976409</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.3489106</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.4045079</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.6615332</td><td>1324</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>count</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.555748</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.976409</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.3489106</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.4045079</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.6615332</td><td>1324</td></tr></tbody></table>
 
-<h4>LINQ — HAVING</h4>
+#### LINQ — HAVING
 
 ```csharp
 // LINQ: Where after GroupBy+Select = HAVING
@@ -868,9 +868,9 @@ new DataFrame(
     Series.From("AvgVol", linqHaving.Select(s => (long)s.AvgVol).ToArray()))
 ```
 
-<small>Polars DataFrame: (11 rows, 2 columns)</small><table><thead><tr><th>Symbol</th><th>AvgVol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
+<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AvgVol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
 
-<h4>Polars DataFrame — HAVING</h4>
+#### Polars DataFrame — HAVING
 
 ```csharp
 // Polars: GroupBy + Agg + Filter
@@ -879,11 +879,11 @@ df.GroupBy("symbol").Agg(
 ).Filter(Col("avg_vol") > Lit(5_000_000.0)).Sort("avg_vol", descending: true)
 ```
 
-<small>Polars DataFrame: (11 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>avg_vol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601.04</td></tr><tr><td>SAN.MC</td><td>41770987.15</td></tr><tr><td>ENEL.MI</td><td>24678699.42</td></tr><tr><td>BBVA.MC</td><td>16654456.88</td></tr><tr><td>UCG.MI</td><td>13903710.14</td></tr><tr><td>ENI.MI</td><td>12976208.15</td></tr><tr><td>INGA.AS</td><td>12803589.45</td></tr><tr><td>IBE.MC</td><td>12034835.18</td></tr><tr><td>DTE.DE</td><td>7575084.131</td></tr><tr><td>NDA-FI.HE</td><td>5375454.051</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
+<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>avg_vol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601.04</td></tr><tr><td>SAN.MC</td><td>41770987.15</td></tr><tr><td>ENEL.MI</td><td>24678699.42</td></tr><tr><td>BBVA.MC</td><td>16654456.88</td></tr><tr><td>UCG.MI</td><td>13903710.14</td></tr><tr><td>ENI.MI</td><td>12976208.15</td></tr><tr><td>INGA.AS</td><td>12803589.45</td></tr><tr><td>IBE.MC</td><td>12034835.18</td></tr><tr><td>DTE.DE</td><td>7575084.131</td></tr><tr><td>NDA-FI.HE</td><td>5375454.051</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
 
 ### Window Functions
 
-<h4>LINQ — LAG</h4>
+#### LINQ — LAG
 
 ```csharp
 // LINQ: Zip with shifted list
@@ -899,9 +899,9 @@ new DataFrame(
     Series.From("Return%", linqLag.Select(r => r.Return).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>Date</th><th>Close</th><th>PrevClose</th><th>Return%</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1186</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147</td><td>0.05</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1147.6</td><td>4.57</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.67</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>Date</th><th>Close</th><th>PrevClose</th><th>Return%</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1186</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147</td><td>0.05</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1147.6</td><td>4.57</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.67</td></tr></tbody></table>
 
-<h4>Polars DataFrame — LAG</h4>
+#### Polars DataFrame — LAG
 
 ```csharp
 // Polars: Shift(1) over partition
@@ -913,9 +913,9 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Tail(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>return_pct</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1186</td><td>-3.28836425</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147</td><td>0.05231037489</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1147.6</td><td>4.566050889</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.6673340007</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>return_pct</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1186</td><td>-3.28836425</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147</td><td>0.05231037489</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1147.6</td><td>4.566050889</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.6673340007</td></tr></tbody></table>
 
-<h4>LINQ — Cumulative SUM</h4>
+#### LINQ — Cumulative SUM
 
 ```csharp
 // LINQ: Aggregate with running total
@@ -930,9 +930,9 @@ new DataFrame(
     Series.From("CumVol", linqCum.Select(r => r.C).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Date</th><th>Volume</th><th>CumVol</th></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Date</th><th>Volume</th><th>CumVol</th></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Cumulative SUM</h4>
+#### Polars DataFrame — Cumulative SUM
 
 ```csharp
 // Polars: CumSum over partition
@@ -943,9 +943,9 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Tail(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>date</th><th>volume</th><th>cum_vol</th></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>date</th><th>volume</th><th>cum_vol</th></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table>
 
-<h4>LINQ — Rolling average</h4>
+#### LINQ — Rolling average
 
 ```csharp
 // LINQ: Skip/Take sliding window
@@ -961,9 +961,9 @@ new DataFrame(
     Series.From("SMA20", linqSma.Select(r => r.SMA).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Date</th><th>Close</th><th>SMA20</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Date</th><th>Close</th><th>SMA20</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Rolling average</h4>
+#### Polars DataFrame — Rolling average
 
 ```csharp
 // Polars: RollingMean
@@ -974,9 +974,9 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Tail(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>date</th><th>close</th><th>sma_20</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>date</th><th>close</th><th>sma_20</th></tr></thead><tbody><tr><td>2026-03-06</td><td>1147</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table>
 
-<h4>LINQ — ROW_NUMBER / Rank</h4>
+#### LINQ — ROW_NUMBER / Rank
 
 ```csharp
 // LINQ: GroupBy + OrderBy + index
@@ -991,9 +991,9 @@ new DataFrame(
     Series.From("Volume", linqRank.Select(r => r.Volume).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>BBVA.MC</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>NDA-FI.HE</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>PRX.AS</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>BBVA.MC</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>NDA-FI.HE</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>PRX.AS</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table>
 
-<h4>Polars DataFrame — ROW_NUMBER / Rank</h4>
+#### Polars DataFrame — ROW_NUMBER / Rank
 
 ```csharp
 // Polars: Rank over partition
@@ -1004,11 +1004,11 @@ df.WithColumns(Col("volume").Rank(descending: true).Over("symbol").Alias("vol_ra
   .Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>BBVA.MC</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>NDA-FI.HE</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>PRX.AS</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>BBVA.MC</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>NDA-FI.HE</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>PRX.AS</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table>
 
 ### Joins
 
-<h4>LINQ — Inner Join</h4>
+#### LINQ — Inner Join
 
 ```csharp
 // LINQ: Join on symbol
@@ -1024,9 +1024,9 @@ new DataFrame(
     Series.From("Rank", linqJoin.Select(r => r.Rank).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>Sector</th><th>Rank</th></tr></thead><tbody><tr><td>BNP.PA</td><td>60.94</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.94</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.94</td><td>Financial Services</td><td>1</td></tr><tr><td>DTE.DE</td><td>22.43</td><td>Communication Services</td><td>2</td></tr><tr><td>DTE.DE</td><td>22.43</td><td>Communication Services</td><td>2</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>Symbol</th><th>AvgClose</th><th>Sector</th><th>Rank</th></tr></thead><tbody><tr><td>BNP.PA</td><td>60.94</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.94</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.94</td><td>Financial Services</td><td>1</td></tr><tr><td>DTE.DE</td><td>22.43</td><td>Communication Services</td><td>2</td></tr><tr><td>DTE.DE</td><td>22.43</td><td>Communication Services</td><td>2</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Inner Join</h4>
+#### Polars DataFrame — Inner Join
 
 ```csharp
 // Polars: Join — same query as LINQ (avg close per symbol joined with scores)
@@ -1044,11 +1044,11 @@ dfAvg.Join(dfScores, new[] { Col("symbol") }, new[] { Col("symbol") })
     .Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>sector</th><th>composite_rank</th></tr></thead><tbody><tr><td>BNP.PA</td><td>60.93771225</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.93771225</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.93771225</td><td>Financial Services</td><td>1</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>Communication Services</td><td>2</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>Communication Services</td><td>2</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>sector</th><th>composite_rank</th></tr></thead><tbody><tr><td>BNP.PA</td><td>60.93771225</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.93771225</td><td>Financial Services</td><td>1</td></tr><tr><td>BNP.PA</td><td>60.93771225</td><td>Financial Services</td><td>1</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>Communication Services</td><td>2</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>Communication Services</td><td>2</td></tr></tbody></table>
 
 ### CRUD-like Operations
 
-<h4>LINQ — Add rows with Concat()</h4>
+#### LINQ — Add rows with Concat()
 
 ```csharp
 // LINQ: Concat — appends one IEnumerable to another (lazy, no copy).
@@ -1065,9 +1065,9 @@ new DataFrame(
 
       LINQ: 66355 + 1 = 66356 rows (Concat)
 
-<small>Polars DataFrame: (3 rows, 4 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>WKL.AS</td><td>2026-03-12</td><td>67.32</td><td>210379</td></tr><tr><td>DSY.PA</td><td>2026-03-12</td><td>18.37</td><td>434417</td></tr><tr><td>TEST.XX</td><td>2026-03-28</td><td>102</td><td>50000</td></tr></tbody></table>
+<!-- Polars DataFrame: (3 rows, 4 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>WKL.AS</td><td>2026-03-12</td><td>67.32</td><td>210379</td></tr><tr><td>DSY.PA</td><td>2026-03-12</td><td>18.37</td><td>434417</td></tr><tr><td>TEST.XX</td><td>2026-03-28</td><td>102</td><td>50000</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Add rows weith VStack()</h4>
+#### Polars DataFrame — Add rows weith VStack()
 
 ```csharp
 // Polars: VStack — vertically stacks two DataFrames (appends rows).
@@ -1094,9 +1094,9 @@ dfInserted.Tail(3)
 
       Polars: 66355 + 1 = 66356 rows (VStack)
 
-<small>Polars DataFrame: (3 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr><tr><td>0</td><td>TEST.XX</td><td>2026-03-28</td><td>100</td><td>105</td><td>95</td><td>102</td><td>102</td><td>50000</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
+<!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr><tr><td>0</td><td>TEST.XX</td><td>2026-03-28</td><td>100</td><td>105</td><td>95</td><td>102</td><td>102</td><td>50000</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
-<h4>LINQ — Update column</h4>
+#### LINQ — Update column
 
 ```csharp
 // LINQ: Select with conditional
@@ -1108,9 +1108,9 @@ new DataFrame(
     Series.From("AdjClose", linqUpdate.Select(r => Math.Round(r.AdjClose, 2)).ToArray()))
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>AdjClose</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>426.56</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>427.24</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>422.99</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>424.1</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>436.85</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>AdjClose</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>426.56</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>427.24</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>422.99</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>424.1</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>436.85</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Update column</h4>
+#### Polars DataFrame — Update column
 
 ```csharp
 // Polars: WithColumns — replaces or creates a column by expression
@@ -1120,9 +1120,9 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Head(5)
 ```
 
-<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>adj_close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>426.5625</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>427.245</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>422.9925</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>424.095</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>436.8525</td></tr></tbody></table>
+<!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>adj_close</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>426.5625</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>427.245</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>422.9925</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>424.095</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>436.8525</td></tr></tbody></table>
 
-<h4>LINQ — Delete rows</h4>
+#### LINQ — Delete rows
 
 ```csharp
 // LINQ: Where to keep, inverse of delete
@@ -1132,7 +1132,7 @@ Console.WriteLine($"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} rem
 
       LINQ: 66355 - ASML rows = 65024 remaining
 
-<h4>Polars DataFrame — Delete rows</h4>
+#### Polars DataFrame — Delete rows
 
 ```csharp
 // Polars: Filter (keep non-matching)
@@ -1142,7 +1142,7 @@ Console.WriteLine($"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} rema
 
       Polars: 66355 - ASML rows = 65024 remaining
 
-<h4>LINQ — Drop column</h4>
+#### LINQ — Drop column
 
 ```csharp
 // LINQ: Select without the column (no native Drop — project only the columns you want)
@@ -1159,9 +1159,9 @@ new DataFrame(
     Series.From("Volume", linqDrop.Select(r => r.Volume).ToArray()))
 ```
 
-<small>Polars DataFrame: (3 rows, 8 columns)</small><table><thead><tr><th>Symbol</th><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>AdjClose</th><th>Volume</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td></tr></tbody></table>
+<!-- Polars DataFrame: (3 rows, 8 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>AdjClose</th><th>Volume</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td></tr></tbody></table>
 
-<h4>Polars DataFrame — Drop column</h4>
+#### Polars DataFrame — Drop column
 
 ```csharp
 // Polars: Drop columns — select all except the ones to remove
@@ -1170,4 +1170,4 @@ var keepCols = df.Columns.Where(n => !dropCols.Contains(n)).ToArray();
 df.Select(keepCols).Head(3)
 ```
 
-<small>Polars DataFrame: (3 rows, 9 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table>
+<!-- Polars DataFrame: (3 rows, 9 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table>

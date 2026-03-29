@@ -838,6 +838,9 @@ LIMIT 15
 
 ## Slowly Changing Dimensions (SCD)
 
+> [!danger] SCD Type 1 Destroys History Permanently
+> SCD Type 1 overwrites in place -- once the old value is gone, it is unrecoverable unless you have a backup or the source system retains history. In financial pipelines, always default to SCD Type 2 for dimension attributes that affect calculations (sector, index membership, weighting). A sector change can retroactively alter historical portfolio returns if the dimension is Type 1.
+
 ### Slowly Changing Dimensions — SCD Type 1 Overwrite
 
 Simply UPDATE the row. History is lost. Use when you don't care about old values.
@@ -1257,6 +1260,9 @@ LIMIT 10
 
 ## Execution Plans & Query Optimization
 
+> [!warning] BigQuery SELECT * Scans All Columns and Bills Accordingly
+> BigQuery is columnar -- you pay per column scanned, not per row. `SELECT *` on a 1 TB table costs the full 1 TB price even if you only need two columns. Always select specific columns. Use the query validator in the BigQuery console (top-right of the editor) to preview bytes scanned before running.
+
 For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [[querying-and-cost-optimization]].
 
 ### Execution Plans & Query Optimization — Common Anti-Patterns
@@ -1313,6 +1319,9 @@ SELECT
 | SNAPSHOT | No | No | No | Analytics reads (no blocking, uses tempdb) |
 
 **Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
+
+> [!warning] SERIALIZABLE Kills Concurrency at Scale
+> SERIALIZABLE takes range locks that block all other transactions touching overlapping key ranges. In a pipeline with concurrent writers (e.g., two Airflow tasks writing to overlapping date ranges), SERIALIZABLE causes cascading blocking and potential deadlocks. Only use it for single-row critical writes where correctness is non-negotiable.
 
 ## Bulk Loading Patterns
 
@@ -1401,7 +1410,7 @@ Partition large tables (millions of rows) by a date column for:
 
 The OHLCV tables (~65K rows each) are too small to benefit. In production with 100M+ rows, partition by year or month.
 
-<small>
+<!-- 
 
 ```sql
 -- Example: partition by year (conceptual — don't run)
@@ -1416,7 +1425,7 @@ CREATE TABLE silver.ohlcv_partitioned (
 ) ON ps_yearly(date);
 ```
 
-</small>
+ -->
 
 ## Cleanup
 

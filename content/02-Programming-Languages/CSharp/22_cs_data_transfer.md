@@ -234,7 +234,7 @@ Console.WriteLine($"  Loaded {uploadResults.Count} existing results from {Path.G
 
       Loaded 24 existing results from upload_results_cs.json
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> - <code style="font-size:0.75em">StorageClient.UploadObject</code> over HTTPS</h4>
+#### Upload CSV to GCS with Google.Cloud.Storage.V1 - StorageClient.UploadObject over HTTPS
 
 The most straightforward approach. Opens a `FileStream` and uploads via the client library, which automatically switches to a resumable upload for files over 5 MB. No tuning required.
 
@@ -260,7 +260,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      29.2s       6.6 MB/s
       large       1.19 GB     3.1min       6.6 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> - <code style="font-size:0.75em">UploadObjectOptions(ChunkSize)</code> over HTTPS</h4>
+#### Upload CSV to GCS with Google.Cloud.Storage.V1 - UploadObjectOptions(ChunkSize) over HTTPS
 
 Explicitly configures the resumable upload chunk size. Each chunk is sent in a separate HTTP request, enabling recovery from mid-upload failures. Useful for unreliable networks — if a chunk fails, only that chunk is retried rather than the whole file.
 
@@ -289,7 +289,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      29.2s       6.6 MB/s
       large       1.19 GB     3.1min       6.6 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> - parallel chunk upload + <code style="font-size:0.75em">ComposeObject</code> over HTTPS</h4>
+#### Upload CSV to GCS with Google.Cloud.Storage.V1 - parallel chunk upload + ComposeObject over HTTPS
 
 Splits the file into 32 MB chunks and uploads them in parallel via `Task.WhenAll`. Once all chunks are in GCS, `ComposeObject` merges them server-side into a single object. Best throughput for large files on high-bandwidth connections. Equivalent to Python's `transfer_manager.upload_chunks_concurrently`.
 
@@ -402,7 +402,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      28.3s       6.8 MB/s
       large       1.19 GB     2.9min       6.9 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> - <code style="font-size:0.75em">StorageClient.UploadObject(Stream)</code> with <code style="font-size:0.75em">BufferedStream</code> over HTTPS</h4>
+#### Upload CSV to GCS with Google.Cloud.Storage.V1 - StorageClient.UploadObject(Stream) with BufferedStream over HTTPS
 
 Wraps the `FileStream` in a `BufferedStream` with a large buffer. Useful when data comes from a pipeline, network socket, or in-memory buffer. The client library reads and sends in chunks internally — the buffer reduces the number of I/O syscalls on the read side.
 
@@ -429,7 +429,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      29.4s       6.6 MB/s
       large       1.19 GB     3.1min       6.6 MB/s
 
-<h4>Upload gzip to GCS with <code style="font-size:0.75em">System.IO.Compression</code> + <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> over HTTPS</h4>
+#### Upload gzip to GCS with System.IO.Compression + Google.Cloud.Storage.V1 over HTTPS
 
 Compresses the CSV to gzip locally via `GZipStream`, then uploads the smaller payload. Trades CPU time for reduced network transfer. The blob's `ContentEncoding` is set to `gzip` so GCS transparently decompresses on download.
 
@@ -489,7 +489,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB    63.7 MB    3.0x       1.9s       9.9s      11.8s       6.4 MB/s
       large       1.19 GB   421.7 MB    2.9x      12.5s     1.1min     1.3min       6.5 MB/s
 
-<h4>Upload Parquet to GCS with <code style="font-size:0.75em">Parquet.Net</code> + <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> over HTTPS</h4>
+#### Upload Parquet to GCS with Parquet.Net + Google.Cloud.Storage.V1 over HTTPS
 
 Converts CSV to Parquet (columnar, Snappy-compressed) via `Parquet.Net` before uploading. Parquet files are typically 5–10x smaller than CSV for numeric data. Measures total time including the conversion step — useful when downstream consumers (BigQuery, Spark) prefer Parquet anyway.
 
@@ -579,7 +579,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB    75.9 MB    2.5x       4.9s      12.4s      17.3s       6.1 MB/s
       large       1.19 GB   556.4 MB    2.2x      34.3s     1.4min     2.0min       6.6 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">gcloud</code> - <code style="font-size:0.75em">storage cp</code> over HTTPS</h4>
+#### Upload CSV to GCS with gcloud - storage cp over HTTPS
 
 The `gcloud storage cp` command replaces `gsutil` and uses the same Python client library under the hood. It automatically enables parallel uploads for large files and is the recommended CLI path going forward.
 
@@ -622,7 +622,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      32.2s       6.0 MB/s
       large       1.19 GB     3.0min       6.9 MB/s
 
-<h4>Upload CSV to GCS with <code style="font-size:0.75em">HttpClient</code> + <code style="font-size:0.75em">GoogleCredential</code> - resumable upload over JSON API (HTTPS)</h4>
+#### Upload CSV to GCS with HttpClient + GoogleCredential - resumable upload over JSON API (HTTPS)
 
 Bypasses the client library entirely and drives the GCS JSON API directly via `HttpClient` with a `GoogleCredential` bearer token. Initiates a resumable upload session, then sends the file in 8 MB chunks with explicit `Content-Range` headers. Demonstrates the underlying protocol that all other methods build on.
 
@@ -910,7 +910,7 @@ Console.WriteLine($"  Loaded {copyResults.Count} existing results from {Path.Get
 
       Loaded 15 existing results from vm_transfer_results_cs.json
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">Renci.SshNet</code> - <code style="font-size:0.75em">SftpClient.UploadFile</code> over SFTP/SSH</h4>
+#### Copy CSV from local to VM with Renci.SshNet - SftpClient.UploadFile over SFTP/SSH
 
 Standard SFTP over SSH. Single-threaded, no compression. Baseline method.
 
@@ -937,7 +937,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      29.7s       6.5 MB/s
       large       1.19 GB     3.0min       6.9 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp</code> over SSH</h4>
+#### Copy CSV from local to VM with OpenSSH - scp over SSH
 
 Uses Windows OpenSSH `scp` via subprocess. Same SSH transport as SFTP but a simpler protocol with less per-packet overhead.
 
@@ -978,7 +978,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      28.6s       6.7 MB/s
       large       1.19 GB     2.9min       6.9 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp -C</code> over SSH (compressed)</h4>
+#### Copy CSV from local to VM with OpenSSH - scp -C over SSH (compressed)
 
 Same as Method 2 but enables SSH-level compression. Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV.
 
@@ -1047,7 +1047,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB    63.7 MB    3.0x       1.9s      10.4s      12.3s       6.1 MB/s
       large       1.19 GB   421.7 MB    2.9x      12.6s     1.0min     1.2min       6.8 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">gcloud</code> - <code style="font-size:0.75em">compute scp</code> over SSH</h4>
+#### Copy CSV from local to VM with gcloud - compute scp over SSH
 
 Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH.
 
@@ -1089,7 +1089,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB      31.7s       6.1 MB/s
       large       1.19 GB     3.0min       6.7 MB/s
 
-<h4>Copy CSV from local to VM with <code style="font-size:0.75em">Renci.SshNet</code> - <code style="font-size:0.75em">SftpClient.UploadFile</code> (tuned buffer) over SFTP/SSH</h4>
+#### Copy CSV from local to VM with Renci.SshNet - SftpClient.UploadFile (tuned buffer) over SFTP/SSH
 
 Same as Method 1 but increases the SFTP `BufferSize` to 64 KB and extends `OperationTimeout`, reducing round-trip overhead for large transfers.
 
@@ -1723,7 +1723,7 @@ class ParallelResult
 
       Loaded 0 existing results from parallel_transfer_results_cs.json
 
-<h4>Upload 8 files sequentially with <code style="font-size:0.75em">StorageClient.UploadObject</code></h4>
+#### Upload 8 files sequentially with StorageClient.UploadObject
 
 Baseline — uploads each file one after the other in a single thread. Total time = sum of individual upload times. No concurrency overhead.
 
@@ -1741,7 +1741,7 @@ Console.WriteLine($"  {r.files} files  {r.total_size}  {r.elapsed}  {r.throughpu
 
       8 files  1.51 GB  3.9min  6.6 MB/s
 
-<h4>Upload 8 files with <code style="font-size:0.75em">ThreadPool</code> + <code style="font-size:0.75em">SemaphoreSlim</code> (8 threads, 4 concurrent)</h4>
+#### Upload 8 files with ThreadPool + SemaphoreSlim (8 threads, 4 concurrent)
 
 Concurrent uploads using 8 threads. A `SemaphoreSlim(4)` limits simultaneous uploads to avoid SSL buffer saturation — remaining threads queue and start as earlier uploads finish.
 
@@ -1768,7 +1768,7 @@ Console.WriteLine($"  {r2.files} files  {r2.total_size}  {r2.elapsed}  {r2.throu
 
       8 files  1.51 GB  3.6min  7.1 MB/s
 
-<h4>Upload 8 files with <code style="font-size:0.75em">Task.WhenAll</code> + <code style="font-size:0.75em">SemaphoreSlim</code> (async, 4 concurrent)</h4>
+#### Upload 8 files with Task.WhenAll + SemaphoreSlim (async, 4 concurrent)
 
 Async task-based parallelism using `Task.WhenAll`. Same semaphore throttle as the threaded version but uses `async/await` — the idiomatic .NET pattern for I/O-bound concurrency.
 
@@ -1836,7 +1836,7 @@ var DL_DIR = Path.Combine(DATA_DIR, "downloads");
 Directory.CreateDirectory(DL_DIR);
 ```
 
-<h4>Download CSV from GCS with <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> - <code style="font-size:0.75em">StorageClient.DownloadObject</code> over HTTPS</h4>
+#### Download CSV from GCS with Google.Cloud.Storage.V1 - StorageClient.DownloadObject over HTTPS
 
 Downloads the entire blob to a local file via `FileStream`. The client library handles resumable downloads automatically for large files. Counterpart to `resumable_chunked` upload (#1 by mean throughput).
 
@@ -1864,7 +1864,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB       2.0s      97.5 MB/s
       large       1.19 GB      11.6s     104.6 MB/s
 
-<h4>Download CSV from GCS with <code style="font-size:0.75em">Google.Cloud.Storage.V1</code> - <code style="font-size:0.75em">StorageClient.DownloadObject</code> with <code style="font-size:0.75em">BufferedStream</code> over HTTPS</h4>
+#### Download CSV from GCS with Google.Cloud.Storage.V1 - StorageClient.DownloadObject with BufferedStream over HTTPS
 
 Wraps the output `FileStream` in a `BufferedStream` with a 32 MB buffer, reducing I/O syscalls on the write side. Counterpart to `streamed_buffered` upload (#3 by mean throughput).
 
@@ -1893,7 +1893,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB       2.0s      97.4 MB/s
       large       1.19 GB      11.6s     104.8 MB/s
 
-<h4>Download CSV from GCS with <code style="font-size:0.75em">gcloud</code> - <code style="font-size:0.75em">storage cp</code> over HTTPS</h4>
+#### Download CSV from GCS with gcloud - storage cp over HTTPS
 
 The `gcloud storage cp` command in reverse direction (GCS → local). Automatically enables parallel downloads for large files. Counterpart to `parallel_composite` upload (#2 by mean throughput).
 
@@ -1937,7 +1937,7 @@ foreach (var (tier, path) in uploadFiles)
 
 ## Download files from VM
 
-<h4>Download CSV from VM with <code style="font-size:0.75em">OpenSSH</code> - <code style="font-size:0.75em">scp</code> over SSH</h4>
+#### Download CSV from VM with OpenSSH - scp over SSH
 
 Uses Windows OpenSSH `scp` in reverse direction (VM → local). Counterpart to `scp` upload (#1 by mean throughput).
 
@@ -1978,7 +1978,7 @@ foreach (var (tier, path) in uploadFiles)
       medium     193.1 MB       4.3s      45.3 MB/s
       large       1.19 GB      20.1s      60.6 MB/s
 
-<h4>Download CSV from VM with <code style="font-size:0.75em">Renci.SshNet</code> - <code style="font-size:0.75em">SftpClient.DownloadFile</code> over SFTP/SSH</h4>
+#### Download CSV from VM with Renci.SshNet - SftpClient.DownloadFile over SFTP/SSH
 
 Standard SFTP download over SSH. Single-threaded, no compression. Counterpart to `sftp_upload` upload (#2 by mean throughput).
 
@@ -2002,7 +2002,7 @@ foreach (var (tier, path) in uploadFiles)
 }
 ```
 
-<h4>Download CSV from VM with <code style="font-size:0.75em">Renci.SshNet</code> - <code style="font-size:0.75em">SftpClient.DownloadFile</code> (tuned buffer) over SFTP/SSH</h4>
+#### Download CSV from VM with Renci.SshNet - SftpClient.DownloadFile (tuned buffer) over SFTP/SSH
 
 Same as baseline but with `BufferSize = 64 KB` and extended `OperationTimeout`. Counterpart to `sftp_tuned` upload (#3 by mean throughput).
 
@@ -2174,7 +2174,7 @@ class CompressResult
 
       Loaded 0 existing results from compression_results_cs.json
 
-<h4>Compress with <code style="font-size:0.75em">System.IO.Compression.GZipStream</code> (level Optimal)</h4>
+#### Compress with System.IO.Compression.GZipStream (level Optimal)
 
 Standard gzip compression built into .NET. The most widely supported format — every tool, language, and OS can decompress it.
 
@@ -2225,7 +2225,7 @@ foreach (var (tier, path) in compressFiles)
           large           1.19 GB     421.7 MB    2.9x      13.8s       2.0s      88.1 MB/s     613.0 MB/s
           1000_small      1.18 GB     421.3 MB    2.9x      13.8s       1.6s      87.2 MB/s     743.1 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">ZstdSharp</code> (Zstandard/zstd, level 3)</h4>
+#### Compress with ZstdSharp (Zstandard/zstd, level 3)
 
 Modern compression algorithm by Facebook. Near-gzip ratio at LZ4-like speed. Managed .NET port via ZstdSharp — no native binaries needed.
 
@@ -2261,7 +2261,7 @@ foreach (var (tier, path) in compressFiles)
           large           1.19 GB     436.8 MB    2.8x       5.4s       2.1s     225.0 MB/s     574.0 MB/s
           1000_small      1.18 GB     435.6 MB    2.8x       5.6s       2.0s     213.5 MB/s     604.6 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">K4os.Compression.LZ4</code></h4>
+#### Compress with K4os.Compression.LZ4
 
 Fastest compression algorithm — optimized for speed over ratio. Decompression is extremely fast (multi-GB/s). Used in real-time systems and databases where latency matters more than size.
 
@@ -2297,7 +2297,7 @@ foreach (var (tier, path) in compressFiles)
           large           1.19 GB     749.6 MB    1.6x       3.3s      888ms     369.2 MB/s      1.34 GB/s
           1000_small      1.18 GB     750.0 MB    1.6x       3.7s      822ms     327.5 MB/s      1.43 GB/s
 
-<h4>Compress with <code style="font-size:0.75em">System.IO.Compression.BrotliStream</code> (level 4)</h4>
+#### Compress with System.IO.Compression.BrotliStream (level 4)
 
 Google-developed algorithm optimized for web content. Built into .NET 6+. Better ratio than gzip at similar speed. Used by all modern browsers for HTTP content-encoding.
 
@@ -2332,7 +2332,7 @@ foreach (var (tier, path) in compressFiles)
           large           1.19 GB     405.4 MB    3.0x      13.8s       2.5s      88.3 MB/s     490.2 MB/s
           1000_small      1.18 GB     404.4 MB    3.0x      14.1s       2.5s      85.4 MB/s     489.3 MB/s
 
-<h4>Compress with <code style="font-size:0.75em">System.IO.Compression.ZipFile</code> (ZIP archive)</h4>
+#### Compress with System.IO.Compression.ZipFile (ZIP archive)
 
 Standard ZIP format — compresses each file individually within the archive. Unlike the stream-based methods above, ZIP preserves file boundaries and names. Universal format supported by every OS.
 
@@ -2449,7 +2449,7 @@ checksums per chunk, and merge back to the original file.
 
 Uses the large upload file (~1.19 GB) as input.
 
-<h4>Step 1 — Compress with <code style="font-size:0.75em">ZstdSharp</code> (level 3)</h4>
+#### Step 1 — Compress with ZstdSharp (level 3)
 
 Compress the full file before splitting. Zstd level 3 gives ~3x ratio at near-LZ4 speed — the production sweet spot.
 
@@ -2494,7 +2494,7 @@ Console.WriteLine($"  Time: {FmtTime(swCompress.Elapsed.TotalMilliseconds)}  Thr
       Compressed: 436.8 MB (2.8x ratio)
       Time: 5.0s  Throughput: 242.3 MB/s
 
-<h4>Step 2 — Split into 8 chunks with per-chunk MD5</h4>
+#### Step 2 — Split into 8 chunks with per-chunk MD5
 
 Split the compressed file into 8 equal chunks. Compute MD5 for each chunk — used to verify integrity after download.
 
@@ -2540,7 +2540,7 @@ foreach (var (name, md5, size) in chunkManifest)
       chunk_06.zst        54.6 MB 168ce3f6e9580bb7d5d0844991dc368a
       chunk_07.zst        54.6 MB f1483ee3df2be4a0019cd95399fbe9a7
 
-<h4>Step 3 — Parallel upload chunks with <code style="font-size:0.75em">Task.WhenAll</code> + <code style="font-size:0.75em">SemaphoreSlim</code></h4>
+#### Step 3 — Parallel upload chunks with Task.WhenAll + SemaphoreSlim
 
 Two levels of parallelism: outer `Task.WhenAll` dispatches 8 chunks (4 concurrent via semaphore), each chunk uploaded with `StorageClient.UploadObject`. CRC32C integrity check on the server side.
 
@@ -2581,7 +2581,7 @@ Console.WriteLine($"  Uploaded {NUM_CHUNKS} chunks ({FmtBytes(totalUploaded)}) i
         ✓ uploaded chunk_07.zst (54.6 MB)
       Uploaded 8 chunks (436.8 MB) in 1.1min  (6.4 MB/s)
 
-<h4>Step 4 — Parallel download chunks from GCS</h4>
+#### Step 4 — Parallel download chunks from GCS
 
 Download all 8 chunks back in parallel using `StorageClient.DownloadObject`.
 
@@ -2624,7 +2624,7 @@ Console.WriteLine($"  Downloaded {NUM_CHUNKS} chunks in {FmtTime(swDownload.Elap
         ✓ downloaded chunk_07.zst
       Downloaded 8 chunks in 4.8s  (90.5 MB/s)
 
-<h4>Step 5 — Verify chunk checksums</h4>
+#### Step 5 — Verify chunk checksums
 
 Compare MD5 of each downloaded chunk against the manifest computed at split time. Any mismatch means corruption during transfer.
 
@@ -2657,7 +2657,7 @@ Console.WriteLine(allOk ? "  All chunks verified OK" : "  CHECKSUM FAILURE \u201
       chunk_07.zst       f1483ee3df2be4a0019cd95399fbe9a7   f1483ee3df2be4a0019cd95399fbe9a7 ✓
       All chunks verified OK
 
-<h4>Step 6 — Merge chunks and decompress</h4>
+#### Step 6 — Merge chunks and decompress
 
 Concatenate the downloaded chunks back into the compressed file, then decompress with zstd. Verify the final file matches the original via MD5.
 

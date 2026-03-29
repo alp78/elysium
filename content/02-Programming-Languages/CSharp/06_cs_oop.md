@@ -212,7 +212,7 @@ AnimalRollCall(animals);
       Cat(Whiskers): Whiskers says Meow... when it feels like it.
       Dog(Buddy): Buddy says Woof!
 
-<h4>Type checking with <code style="font-size:0.75em">is</code> and <code style="font-size:0.75em">as</code></h4>
+#### Type checking with is and as
 
 ```csharp
 #nullable enable
@@ -676,7 +676,7 @@ Console.WriteLine($"Deconstructed: x={x}, y={y}");
     p1 == p3:  False
     Deconstructed: x=3, y=4
 
-<h4>Non-destructive mutation — <code style="font-size:0.75em">with</code> expression</h4>
+#### Non-destructive mutation — with expression
 
 ```csharp
 // Non-destructive mutation — with expression creates modified copies
@@ -698,7 +698,7 @@ Console.WriteLine($"ConnStr: {config.ConnectionString}");
     Config: Config { Host = localhost, Port = 5432, Ssl = True, ConnectionString = https://localhost:5432 }
     ConnStr: https://localhost:5432
 
-<h4>Record struct and <code style="font-size:0.75em">PipelineRecord</code></h4>
+#### Record struct and PipelineRecord
 
 ```csharp
 // Record struct and domain records — value-type records for lightweight data

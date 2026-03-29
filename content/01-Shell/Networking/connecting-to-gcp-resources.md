@@ -22,28 +22,27 @@ The VM is your most direct resource — you SSH into it, run commands, and trans
 
 #### gcloud compute ssh — connect to GCE VM (Linux)
 
-```bash
-# Interactive SSH (through IAP — no public IP needed)
-gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
-# Expected: drops you into a bash prompt on the VM
-# If slow (>10s): first-time key propagation, or IAP handshake delay
+> [!info] Drops you into a bash prompt on the VM. First connection may take 10-30s
+> while gcloud propagates your SSH key to VM metadata.
 
-# Run a command remotely without interactive session
+```bash
+gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
+```
+
+#### gcloud compute ssh --command — run a remote command without interactive session
+
+> [!info] `--command` executes the command on the VM and returns output to your terminal.
+> Useful for quick health checks without opening an interactive shell.
+
+```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="free -h && df -h && ss -tlnp"
-# Expected output:
-#               total        used        free      shared  buff/cache   available
-# Mem:          7.7Gi       4.2Gi       1.1Gi       0.0Ki       2.4Gi       3.2Gi
-# Filesystem      Size  Used Avail Use% Mounted on
-# /dev/sda1        97G   32G   61G  35% /
-# State   Recv-Q  Send-Q   Local Address:Port   Peer Address:Port  Process
-# LISTEN  0       128      0.0.0.0:1433          0.0.0.0:*          users:(("sqlservr"...))
-
-# If connection fails:
-# "Permission denied" → your SSH key isn't propagated: gcloud compute os-login ssh-keys add
-# "Connection timed out" → VM is stopped, or firewall blocks 35.235.240.0/20 on port 22
-# "Could not fetch resource" → wrong zone, wrong instance name, or VM deleted
 ```
+
+> [!tip] Common SSH connection errors and their causes
+> - **"Permission denied"** → SSH key not propagated. Run `gcloud compute os-login ssh-keys add`
+> - **"Connection timed out"** → VM is stopped, or firewall blocks `35.235.240.0/20` on port 22
+> - **"Could not fetch resource"** → wrong zone, wrong instance name, or VM deleted
 
 #### gcloud compute ssh — connect to GCE VM (PowerShell)
 
@@ -64,32 +63,36 @@ SQL Server on a private GCE VM requires a two-step connection: open the IAP tunn
 
 #### gcloud start-iap-tunnel + sqlcmd — SQL Server via IAP (Linux)
 
+> [!info] Step 1: Open the IAP tunnel in a dedicated terminal (or background with `&`).
+> Step 2: Connect through the tunnel using sqlcmd, SSMS, or Python.
+
 ```bash
-# Step 1: Open tunnel (in a dedicated terminal or background)
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
-    --local-host-port=127.0.0.1:1435 \
-    --zone=europe-west1-b &
-# Expected output:
-# Testing if tunnel connection works.
-# Listening on port [1435].
-# The & puts it in background — the tunnel stays open
+    --local-host-port=127.0.0.1:1435 --zone=europe-west1-b &
+```
 
-# Step 2: Connect with sqlcmd through the tunnel
+> [!warning] SQL Server uses COMMA for port, not colon
+> `sqlcmd -S 127.0.0.1,1435` — note the **comma** between host and port. This is
+> SQL Server's convention. A colon (`127.0.0.1:1435`) won't work.
+
+```bash
 sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db
-# -S 127.0.0.1,1435 = server,port (note: COMMA not colon for SQL Server)
-# Expected: 1> prompt (T-SQL interactive mode)
+```
 
+```bash
 # Quick test query
-sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT @@VERSION" -W
-# Expected: Microsoft SQL Server 2022 (RTM-CU...) - 16.0.4...
+sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db \
+    -Q "SELECT @@VERSION" -W
+```
 
-# Debug from the VM side (SSH in and check)
+#### Debug from the VM side — verify SQL Server is listening
+
+> [!info] If the tunnel is up but connections fail, SSH in and check that `sqlservr` is
+> listening on port 1433.
+
+```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
-    --command="ss -tlnp | grep 1433 && echo '---' && ss -tnp | grep 1433"
-# Expected:
-# LISTEN  0  128  0.0.0.0:1433  0.0.0.0:*  users:(("sqlservr",pid=1234,fd=5))
-# ---
-# ESTAB  0  0  10.0.0.3:1433  10.0.0.24:56434
+    --command="ss -tlnp | grep 1433"
 ```
 
 #### pymssql — SQL Server through IAP tunnel (Python)
@@ -142,34 +145,37 @@ BigQuery is a serverless service — there is no server to connect to. You authe
 
 #### bq query — BigQuery interactive queries (Linux)
 
+> [!info] `--use_legacy_sql=false` is required — without it, `bq` defaults to legacy SQL
+> which has different syntax and limitations. Backticks around the fully-qualified table
+> name must be escaped as `\`` in bash.
+
 ```bash
-# Interactive query
 bq query --use_legacy_sql=false \
     "SELECT COUNT(*) AS row_count FROM \`data-platform-prod.data-pipeline.signals_daily\`"
-# Expected:
-# +----------+
-# | row_count|
-# +----------+
-# |     1135 |
-# +----------+
+```
 
-# Query to JSON (for scripting)
+#### bq query --format=json — query output for scripting
+
+```bash
 bq query --use_legacy_sql=false --format=json \
     "SELECT symbol, trade_date FROM \`data-platform-prod.data-pipeline.signals_daily\` LIMIT 3"
+```
 
-# List datasets
+#### bq ls — list datasets and tables
+
+```bash
 bq ls data-platform-prod:
-# Expected:
-#   datasetId
-# -----------
-#   data-pipeline
-
-# List tables in a dataset
 bq ls data-platform-prod:data-pipeline
+```
 
-# Debug: check authentication
+#### gcloud auth list — debug BigQuery authentication
+
+> [!info] The active account must have `bigquery.jobs.create` permission (typically via
+> BigQuery User or BigQuery Data Viewer role). If queries fail with "Access Denied,"
+> check which account is active.
+
+```bash
 gcloud auth list
-# The active account must have BigQuery Data Viewer or BigQuery User role
 ```
 
 #### google-cloud-bigquery Client — BigQuery queries (Python)

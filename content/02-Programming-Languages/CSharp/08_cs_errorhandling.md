@@ -44,6 +44,12 @@ catch (IndexOutOfRangeException ex)
 
     Caught: Index was outside the bounds of the array.
 
+> [!danger] `catch (Exception)` with empty body silently hides bugs
+> An empty `catch (Exception) { }` swallows *all* errors including `NullReferenceException`, `StackOverflowException` side effects, and data corruption. At minimum, log the exception. In production, prefer `catch (SpecificException)` and let unexpected errors propagate to global handlers.
+
+> [!warning] `async void` methods — exceptions crash the process
+> Exceptions thrown in `async void` methods cannot be caught by the caller — they propagate to the `SynchronizationContext` and crash the process. Always use `async Task` for async methods. The only acceptable use of `async void` is for event handlers in UI frameworks.
+
 #### Multiple catch blocks
 
 ```csharp
@@ -106,7 +112,7 @@ LoadFile("C:\\Windows\\System32");
       File not found: missing.csv
       Permission denied: C:\Windows\System32
 
-<h4><code style="font-size:0.75em">catch when</code> — conditional catch</h4>
+#### catch when — conditional catch
 
 ```csharp
 // catch when — conditional catch with boolean guard
@@ -174,7 +180,10 @@ ProcessWithCleanup(true);
       Error caught: Something went wrong
       Closing resource (finally)
 
-<h4><code style="font-size:0.75em">throw</code> vs <code style="font-size:0.75em">throw ex</code> — preserving the stack trace</h4>
+#### throw vs throw ex — preserving the stack trace
+
+> [!danger] `throw ex` resets the stack trace — use `throw` to preserve it
+> `throw ex;` replaces the original stack trace with the current location, destroying the information needed to find the actual error source. Use bare `throw;` to re-throw with the original trace intact, or `throw new WrapperException("msg", ex)` to wrap with `InnerException`.
 
 ```csharp
 // throw vs throw ex — preserving the original stack trace
@@ -252,17 +261,12 @@ catch (ArgumentException ex)
 #### Common exceptions in data engineering
 
 ```csharp
-// Common exceptions in data engineering — parse, key, overflow, null
+// FormatException, KeyNotFoundException, OverflowException
 
-# nullable enable
-// Common DE exceptions — FormatException, KeyNotFoundException, OverflowException, NullReferenceException
-
-// FormatException — bad CSV values, invalid date strings
 string[] csvRow = { "Alice", "not_a_number", "2024-01-15" };
 try { int salary = int.Parse(csvRow[1]); }
 catch (FormatException ex) { Console.WriteLine($"  Can't parse salary '{csvRow[1]}': {ex.Message}"); }
 
-// KeyNotFoundException — missing column in a dictionary
 var row = new Dictionary<string, string> { ["name"] = "Alice", ["dept"] = "Eng" };
 try { var salary = row["salary"]; }
 catch (KeyNotFoundException)
@@ -271,20 +275,24 @@ catch (KeyNotFoundException)
     Console.WriteLine($"  Column 'salary' missing, defaulting to: {salary}");
 }
 
-// OverflowException — numeric overflow during aggregation
-try
-{
-    int big = int.MaxValue;
-    int total = checked(big + 1);
-}
+try { int total = checked(int.MaxValue + 1); }
 catch (OverflowException ex) { Console.WriteLine($"  Overflow: {ex.Message}"); }
+```
 
-// NullReferenceException — null field; use ?. and ?? instead
+      Can't parse salary 'not_a_number': The input string 'not_a_number' was not in a correct format.
+      Column 'salary' missing, defaulting to: 0
+      Overflow: Arithmetic operation resulted in an overflow.
+
+#### Common exceptions — NullReferenceException, ArgumentNullException, InvalidOperationException
+
+```csharp
+// Null safety, guard clauses, and empty collections
+#nullable enable
+
 string? optionalField = null;
 int len = optionalField?.Length ?? 0;
 Console.WriteLine($"  Safe null handling: length = {len}");
 
-// ArgumentNullException — guard clause pattern
 void ProcessRecord(string record)
 {
     ArgumentNullException.ThrowIfNull(record);
@@ -293,20 +301,16 @@ void ProcessRecord(string record)
 try { ProcessRecord(null!); }
 catch (ArgumentNullException ex) { Console.WriteLine($"  {ex.Message}"); }
 
-// InvalidOperationException — bad state (empty sequence)
 var emptyList = new List<int>();
 int safe = emptyList.FirstOrDefault();
 Console.WriteLine($"  FirstOrDefault on empty: {safe}");
 ```
 
-      Can't parse salary 'not_a_number': The input string 'not_a_number' was not in a correct format.
-      Column 'salary' missing, defaulting to: 0
-      Overflow: Arithmetic operation resulted in an overflow.
       Safe null handling: length = 0
       Value cannot be null. (Parameter 'record')
       FirstOrDefault on empty: 0
 
-<h4><code style="font-size:0.75em">Exception.Data</code> — attaching context</h4>
+#### Exception.Data — attaching context
 
 ```csharp
 // Exception.Data — attach key-value diagnostic context before re-throwing
@@ -453,9 +457,9 @@ catch (PipelineException ex)
       Message:  [sales_etl/transform] Parse error in input file
       Root:     row 42, col 'amount', value '$$$'
 
-<h2>Resource Cleanup — <code style="font-size:0.85em">using</code> and <code style="font-size:0.85em">IDisposable</code></h2>
+## Resource Cleanup — using and IDisposable
 
-<h4><code style="font-size:0.75em">using</code> statement and declaration</h4>
+#### using statement and declaration
 
 ```csharp
 // using statement — automatic Dispose() for IDisposable resources
@@ -494,23 +498,11 @@ Console.WriteLine("  using(var r = ...) { body }  ≡  try { body } finally { r.
       First row: 1,2,3
       using(var r = ...) { body }  ≡  try { body } finally { r.Dispose(); }
 
-<h4>Custom <code style="font-size:0.75em">IDisposable</code></h4>
+#### Custom IDisposable
 
 ```csharp
-// Custom IDisposable — CsvWriter with guaranteed file cleanup
-
-var outFile = Path.GetTempFileName();
-using (var csv = new CsvWriter(outFile))
-{
-    csv.WriteRow("Alice", 95000, "Engineering");
-    csv.WriteRow("Bob", 65000, "Sales");
-}
-Console.WriteLine($"  Output: {File.ReadAllText(outFile).Trim()}");
-
-File.Delete(tempFile);
-File.Delete(outFile);
-
 // CsvWriter — custom IDisposable that flushes and closes on Dispose
+
 public class CsvWriter : IDisposable
 {
     private readonly StreamWriter _writer;
@@ -541,6 +533,23 @@ public class CsvWriter : IDisposable
 }
 ```
 
+#### Using custom IDisposable — CsvWriter with `using`
+
+```csharp
+// using block calls Dispose() automatically at closing brace
+
+var outFile = Path.GetTempFileName();
+using (var csv = new CsvWriter(outFile))
+{
+    csv.WriteRow("Alice", 95000, "Engineering");
+    csv.WriteRow("Bob", 65000, "Sales");
+}
+Console.WriteLine($"  Output: {File.ReadAllText(outFile).Trim()}");
+
+File.Delete(tempFile);
+File.Delete(outFile);
+```
+
       CsvWriter disposed (file flushed and closed)
       Output: name,salary,dept
     Alice,95000,Engineering
@@ -558,7 +567,7 @@ public class CsvWriter : IDisposable
 record ParseResult(string Name, int Salary, bool IsValid, string? Error);
 ```
 
-<h4><code style="font-size:0.75em">TryParse</code> pattern</h4>
+#### TryParse pattern
 
 ```csharp
 // TryParse pattern — return false instead of throwing on invalid input
@@ -627,7 +636,7 @@ foreach (var r in bad)  Console.WriteLine($"    ERROR: {r.Error}");
         ERROR: Row 3: expected 2 columns, got 1
         ERROR: Row 5: salary cannot be negative (-500)
 
-<h4><code style="font-size:0.75em">AggregateException</code> — parallel errors</h4>
+#### AggregateException — parallel errors
 
 ```csharp
 // AggregateException — collect all errors from parallel/async operations

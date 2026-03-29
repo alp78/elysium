@@ -363,7 +363,7 @@ print(f"-> São Paulo:    {utc_now.astimezone(ZoneInfo('America/Sao_Paulo'))}")
     -> Dubai:        2026-03-25 08:48:19.547681+04:00
     -> São Paulo:    2026-03-25 01:48:19.547681-03:00
 
-<h4><code style="font-size:0.75em">DateTimeOffset</code> equivalent — localize naive datetime</h4>
+#### DateTimeOffset equivalent — localize naive datetime
 
 ```python
 # Make naive datetime timezone-aware — replace(tzinfo=) or localize
@@ -986,7 +986,7 @@ print(f"  ... ({len(os.environ)} total)")
 
 #### configparser — INI-style configuration files
 
-<h4><code style="font-size:0.75em">configparser</code> — INI-style config</h4>
+#### configparser — INI-style config
 
 ```python
 # configparser — INI-style configuration (built-in, no dependencies)
@@ -1091,7 +1091,7 @@ print(f"DB port:  {toml_config['database']['port']}")   # native int!
     Tags:     ['production', 'clickstream']
     DB port:  5432
 
-<h4><code style="font-size:0.75em">.env</code> files</h4>
+#### .env files
 
 ```python
 # .env files — local secrets with python-dotenv

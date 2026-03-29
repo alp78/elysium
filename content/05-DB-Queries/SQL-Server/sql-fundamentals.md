@@ -827,6 +827,17 @@ ORDER BY yr, mo
 
 ## JOINs Across Medallion Layers
 
+> [!danger] JOINs silently multiply rows when keys have duplicates
+> A `JOIN` on a non-unique key produces a Cartesian product for those keys. If
+> `silver.index_dim` has 2 rows for `ASML.AS` and OHLCV has 1,331 rows, the result has
+> 2,662 rows for ASML — silently doubling your data with no error. Always verify row
+> counts after a JOIN: `SELECT COUNT(*) FROM result` vs expected.
+
+> [!warning] LEFT JOIN with NULL keys — rows disappear silently
+> `NULL = NULL` returns `FALSE` in SQL, not `TRUE`. If join keys contain NULLs, those
+> rows never match. Use `COALESCE(key, 'UNKNOWN')` or `IS NOT DISTINCT FROM` (SQL Server
+> doesn't support this — use `WHERE key1 = key2 OR (key1 IS NULL AND key2 IS NULL)`).
+
 ### JOIN Across Medallion Layers — OHLCV + Dimension (Silver)
 
 `JOIN` combines rows from two tables on a matching key. Here we join price data (silver OHLCV) with company metadata (silver dimension) to get the latest price + sector + country for each stock.
@@ -1236,6 +1247,12 @@ ORDER BY s.composite_rank
 
 
 ## Window Functions
+
+> [!warning] Window functions do NOT reduce row count — unlike GROUP BY
+> `AVG(close) OVER (PARTITION BY symbol)` adds a column to every row without collapsing.
+> Forgetting this and expecting aggregated output is the most common window function
+> mistake. If you want one row per group, use GROUP BY. If you want the aggregate on
+> every row alongside the detail, use OVER().
 
 ### Window Functions — Moving Averages (SMA)
 

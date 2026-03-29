@@ -33,9 +33,12 @@ updated: 2026-03-23
 
 ---
 
+> [!danger] Restatements Are Regulatory Events Under EU BMR
+> Under EU Benchmark Regulation Article 13, a material restatement of published index values requires formal notification to clients and potentially to ESMA. A "quick fix" pushed to production without the audit trail, client notification, and compliance sign-off constitutes a regulatory violation. Always follow every step in this runbook -- even if the fix itself takes 5 minutes.
+
 ## Diagnosis
 
-### Step 1 — Confirm the discrepancy exists and scope it
+### Step 1 -- Confirm the discrepancy exists and scope it
 
 Run the reproducibility check against the suspect date range. Compare the stored published value against a fresh recalculation.
 

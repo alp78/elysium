@@ -374,7 +374,7 @@ table = bq_client.create_table(table, exists_ok=True)
 #### Insert data from local CSV files into Cloud SQL for SQL Server.
 Small tier: `executemany` (baseline). Medium + large: `fast_executemany` vs `bcp`.
 
-<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">pymssql</code> <code style="font-size:0.75em">executemany</code> over TDS</h4>
+#### Ingest CSV into SQL Server from local using pymssql executemany over TDS
 
 Parameterised INSERT, one row per network round-trip. Simple but slow — included as baseline for the small tier only.
 
@@ -400,7 +400,7 @@ print(f'  small    {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
 
       small        2.5K      59.5s      42 rows/s
 
-<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over ODBC Driver 18 (TLS)</h4>
+#### Ingest CSV into SQL Server from local using pyodbc fast_executemany over ODBC Driver 18 (TLS)
 
 Packs all rows into a single TDS packet. ODBC Driver 18 with TLS encryption. 5-10x faster than plain `executemany`.
 
@@ -435,7 +435,7 @@ for tier in tiers:
       medium      75.0K       5.7s   13.0K rows/s
       large      750.0K      54.4s   13.8K rows/s
 
-<h4>Ingest CSV into SQL Server from local using <code style="font-size:0.75em">bcp</code> (Bulk Copy Program) over TDS</h4>
+#### Ingest CSV into SQL Server from local using bcp (Bulk Copy Program) over TDS
 
 The `bcp` CLI is the fastest bulk loader for SQL Server. Native TDS bulk-insert protocol — bypasses the SQL parser entirely. Production standard for ETL pipelines.
 
@@ -472,7 +472,7 @@ for tier in tiers:
       medium      75.0K       2.7s   28.1K rows/s
       large      750.0K      21.0s   35.7K rows/s
 
-<h4>Ingest JSON into SQL Server from local using <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over ODBC Driver 18 (TLS)</h4>
+#### Ingest JSON into SQL Server from local using pyodbc fast_executemany over ODBC Driver 18 (TLS)
 
 Reads newline-delimited JSON with pandas, then inserts via `fast_executemany`. Same TLS-encrypted ODBC path as CSV.
 
@@ -506,7 +506,7 @@ for tier in tiers:
       medium      75.0K       6.2s   12.2K rows/s
       large      750.0K      59.0s   12.7K rows/s
 
-<h4>Ingest Parquet into SQL Server from local using <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over ODBC Driver 18 (TLS)</h4>
+#### Ingest Parquet into SQL Server from local using pyodbc fast_executemany over ODBC Driver 18 (TLS)
 
 Reads Parquet with pyarrow (fastest local parse), then inserts via `fast_executemany`. Parquet’s columnar format makes the read near-instant.
 
@@ -540,7 +540,7 @@ for tier in tiers:
       medium      75.0K       5.8s   12.9K rows/s
       large      750.0K      55.2s   13.6K rows/s
 
-<h4>Ingest CSV into SQL Server using <code style="font-size:0.75em">BULK INSERT</code> (T-SQL) and SSMS Import Wizard (reference)</h4>
+#### Ingest CSV into SQL Server using BULK INSERT (T-SQL) and SSMS Import Wizard (reference)
 
 **BULK INSERT**: Native T-SQL command. Requires the file to be accessible from the server filesystem — not supported on Cloud SQL (server can't read client-side files). Use `bcp` instead.
 
@@ -551,7 +551,7 @@ for tier in tiers:
 Load data from local files into BigQuery. Three formats (CSV, JSON, Parquet),
 plus `bq` CLI and Storage Write API.
 
-<h4>Ingest CSV into BigQuery from local using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_file</code> over HTTPS</h4>
+#### Ingest CSV into BigQuery from local using google-cloud-bigquery load_table_from_file over HTTPS
 
 Server parses CSV rows. `skip_leading_rows=1` for header. `WRITE_TRUNCATE` clears before load.
 
@@ -582,7 +582,7 @@ for tier in tiers:
       medium      75.0K       6.8s   11.1K rows/s
       large      750.0K      22.7s   33.1K rows/s
 
-<h4>Ingest JSON into BigQuery from local using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_file</code> over HTTPS</h4>
+#### Ingest JSON into BigQuery from local using google-cloud-bigquery load_table_from_file over HTTPS
 
 Server parses newline-delimited JSON. Auto-detects schema from keys.
 
@@ -612,7 +612,7 @@ for tier in tiers:
       medium      75.0K       7.3s   10.3K rows/s
       large      750.0K      27.7s   27.1K rows/s
 
-<h4>Ingest Parquet into BigQuery from local using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_file</code> over HTTPS</h4>
+#### Ingest Parquet into BigQuery from local using google-cloud-bigquery load_table_from_file over HTTPS
 
 Fastest format — columnar, compressed, schema embedded. No parsing overhead.
 
@@ -642,7 +642,7 @@ for tier in tiers:
       medium      75.0K       3.6s   20.8K rows/s
       large      750.0K       8.3s   90.2K rows/s
 
-<h4>Ingest CSV into BigQuery from local using <code style="font-size:0.75em">bq</code> CLI <code style="font-size:0.75em">bq load</code> over HTTPS</h4>
+#### Ingest CSV into BigQuery from local using bq CLI bq load over HTTPS
 
 Command-line tool — same load job API but no Python code needed.
 
@@ -674,7 +674,7 @@ for tier in tiers:
       medium      75.0K       7.9s    9.5K rows/s
       large      750.0K      19.7s   38.0K rows/s
 
-<h4>Ingest data into BigQuery using <code style="font-size:0.75em">pandas-gbq</code> Storage Write API over gRPC</h4>
+#### Ingest data into BigQuery using pandas-gbq Storage Write API over gRPC
 
 Highest throughput for streaming ingestion. `pandas_gbq.to_gbq()` uses the Storage Write API when available.
 
@@ -697,7 +697,7 @@ for tier in tiers:
       medium      75.0K       4.0s   18.8K rows/s
       large      750.0K      11.8s   63.6K rows/s
 
-<h4>Query data from GCS without loading using BigQuery External Tables over internal network</h4>
+#### Query data from GCS without loading using BigQuery External Tables over internal network
 
 Query CSV/JSON/Parquet in GCS directly via SQL. Zero ingestion time — slower queries but no storage cost.
 
@@ -728,7 +728,7 @@ for tier in tiers:
       medium      75.0K       1.2s   64.1K rows/s
       large      750.0K       9.7s   77.6K rows/s
 
-<h4>Ingest data into BigQuery using Google Cloud Console Web UI (reference)</h4>
+#### Ingest data into BigQuery using Google Cloud Console Web UI (reference)
 
 Console → BigQuery → Dataset → Create Table → Upload (up to 10 MB) or Google Cloud Storage.
 Not benchmarkable from a notebook.
@@ -737,7 +737,7 @@ Not benchmarkable from a notebook.
 
 Write OHLCV data into Firestore. Each row becomes a document in the `ohlcv_bench` collection.
 
-<h4>Ingest CSV into Firestore from local using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">batch.set</code> over gRPC</h4>
+#### Ingest CSV into Firestore from local using google-cloud-firestore batch.set over gRPC
 
 500-doc batches (Firestore limit). Each batch is a single gRPC call.
 
@@ -775,7 +775,7 @@ for tier in tiers:
       medium      75.0K      3m21s     372 rows/s
       large      750.0K     31m13s     400 rows/s
 
-<h4>Ingest CSV into Firestore from local using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">BulkWriter</code> over gRPC</h4>
+#### Ingest CSV into Firestore from local using google-cloud-firestore BulkWriter over gRPC
 
 `BulkWriter` manages batching, retries, and throttling automatically. Parallel writes — the recommended method for bulk ingestion.
 
@@ -807,7 +807,7 @@ for tier in tiers:
       medium      75.0K      2m31s     497 rows/s
       large      750.0K     25m11s     496 rows/s
 
-<h4>Import data into Firestore from GCS using <code style="font-size:0.75em">gcloud</code> <code style="font-size:0.75em">firestore import</code> and Console UI (reference)</h4>
+#### Import data into Firestore from GCS using gcloud firestore import and Console UI (reference)
 
 **gcloud firestore export/import**: Managed backup/restore from GCS. Server-side, fastest for large restores.
 
@@ -819,7 +819,7 @@ Both require managed export format (not raw CSV/JSON).
 
 Server-side operation — no data passes through the local machine.
 
-<h4>Ingest CSV into BigQuery from GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_uri</code> over internal network</h4>
+#### Ingest CSV into BigQuery from GCS using google-cloud-bigquery load_table_from_uri over internal network
 
 Server-side CSV parse. Data flows GCS → BigQuery within Google’s network.
 
@@ -849,7 +849,7 @@ for tier in tiers:
       medium      75.0K       4.8s   15.7K rows/s
       large      750.0K      13.0s   57.9K rows/s
 
-<h4>Ingest JSON into BigQuery from GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_uri</code> over internal network</h4>
+#### Ingest JSON into BigQuery from GCS using google-cloud-bigquery load_table_from_uri over internal network
 
 Server-side JSON parse. Same internal network path.
 
@@ -877,7 +877,7 @@ for tier in tiers:
       medium      75.0K       6.6s   11.3K rows/s
       large      750.0K      17.6s   42.6K rows/s
 
-<h4>Ingest Parquet into BigQuery from GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">load_table_from_uri</code> over internal network</h4>
+#### Ingest Parquet into BigQuery from GCS using google-cloud-bigquery load_table_from_uri over internal network
 
 Fastest — columnar, compressed, schema embedded.
 
@@ -909,7 +909,7 @@ for tier in tiers:
 
 Two-hop: download from GCS to memory, then insert into SQL Server.
 
-<h4>Ingest CSV into SQL Server from GCS using <code style="font-size:0.75em">google-cloud-storage</code> download + <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over HTTPS + TLS</h4>
+#### Ingest CSV into SQL Server from GCS using google-cloud-storage download + pyodbc fast_executemany over HTTPS + TLS
 
 Download CSV → pandas → fast_executemany. Combined pipeline.
 
@@ -948,7 +948,7 @@ for tier in tiers:
 
 Move data between SQL Server, BigQuery, and Firestore.
 
-<h4>Transfer data from SQL Server to BigQuery using <code style="font-size:0.75em">pymssql</code> query + <code style="font-size:0.75em">load_table_from_dataframe</code> over TDS + HTTPS</h4>
+#### Transfer data from SQL Server to BigQuery using pymssql query + load_table_from_dataframe over TDS + HTTPS
 
 Query SQL Server → DataFrame → BigQuery. Two-hop via local memory.
 
@@ -986,7 +986,7 @@ for tier in tiers:
       medium      75.0K      51.8s    1.4K rows/s
       large      750.0K      8m19s    1.5K rows/s
 
-<h4>Transfer data from BigQuery to SQL Server using <code style="font-size:0.75em">google-cloud-bigquery</code> query + <code style="font-size:0.75em">pyodbc</code> <code style="font-size:0.75em">fast_executemany</code> over HTTPS + TLS</h4>
+#### Transfer data from BigQuery to SQL Server using google-cloud-bigquery query + pyodbc fast_executemany over HTTPS + TLS
 
 Query BigQuery → DataFrame → SQL Server.
 
@@ -1022,7 +1022,7 @@ for tier in tiers:
       medium      75.0K      57.4s    1.3K rows/s
       large      750.0K      8m34s    1.5K rows/s
 
-<h4>Transfer data from BigQuery to Firestore using <code style="font-size:0.75em">google-cloud-bigquery</code> query + <code style="font-size:0.75em">BulkWriter</code> over HTTPS + gRPC</h4>
+#### Transfer data from BigQuery to Firestore using google-cloud-bigquery query + BulkWriter over HTTPS + gRPC
 
 Query BigQuery → iterate results → Firestore BulkWriter. For real-time serving of scored data.
 
@@ -1061,7 +1061,7 @@ for tier in tiers:
       medium      75.0K      2m41s     466 rows/s
       large      750.0K     25m52s     483 rows/s
 
-<h4>Transfer data from SQL Server to Firestore using <code style="font-size:0.75em">pymssql</code> query + <code style="font-size:0.75em">BulkWriter</code> over TDS + gRPC</h4>
+#### Transfer data from SQL Server to Firestore using pymssql query + BulkWriter over TDS + gRPC
 
 Direct SQL Server → Firestore bridge.
 
@@ -1098,7 +1098,7 @@ for tier in tiers:
       medium      75.0K      3m16s     383 rows/s
       large      750.0K     32m51s     381 rows/s
 
-<h4>Transfer data from SQL Server to BigQuery via GCS staging using <code style="font-size:0.75em">pandas</code> + <code style="font-size:0.75em">GCS</code> + <code style="font-size:0.75em">load_table_from_uri</code></h4>
+#### Transfer data from SQL Server to BigQuery via GCS staging using pandas + GCS + load_table_from_uri
 
 Production pattern: SQL → Parquet → GCS → BigQuery. Avoids local memory bottleneck for large datasets.
 
@@ -1144,7 +1144,7 @@ for tier in tiers:
 
 Export data from SQL Server, BigQuery, and Firestore.
 
-<h4>Export SQL Server to CSV using <code style="font-size:0.75em">pandas</code> <code style="font-size:0.75em">read_sql</code> + <code style="font-size:0.75em">to_csv</code> over TDS</h4>
+#### Export SQL Server to CSV using pandas read_sql + to_csv over TDS
 
 Query into DataFrame, write to local CSV.
 
@@ -1169,7 +1169,7 @@ for tier in tiers:
       medium      75.0K      800ms   93.7K rows/s
       large      750.0K       6.5s  114.7K rows/s
 
-<h4>Export BigQuery to GCS using <code style="font-size:0.75em">google-cloud-bigquery</code> <code style="font-size:0.75em">extract_table</code> over internal network</h4>
+#### Export BigQuery to GCS using google-cloud-bigquery extract_table over internal network
 
 Server-side export — BigQuery writes directly to GCS.
 
@@ -1199,7 +1199,7 @@ for tier in tiers:
       medium      75.0K       5.2s   14.3K rows/s
       large      750.0K      15.8s   47.4K rows/s
 
-<h4>Export Firestore to JSON using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">collection.stream</code> over gRPC</h4>
+#### Export Firestore to JSON using google-cloud-firestore collection.stream over gRPC
 
 Stream documents, write as NDJSON.
 

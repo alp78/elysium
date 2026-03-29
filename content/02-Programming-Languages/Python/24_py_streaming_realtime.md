@@ -231,7 +231,7 @@ display(pd.DataFrame(sample))
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
 Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
 
-<h4>Run WebSocket server and client for simulated tick feed using <code style="font-size:0.75em">websockets</code> over TCP</h4>
+#### Run WebSocket server and client for simulated tick feed using websockets over TCP
 
 Starts a local WebSocket server in a background thread that broadcasts ticks at ~100 msg/s.
 The client connects, receives ticks for 3 seconds, and collects them into a DataFrame.
@@ -306,7 +306,7 @@ print(f'  p50: {ws_p50:.0f}µs  p99: {ws_p99:.0f}µs  p99.9: {ws_p999:.0f}µs')
 One-directional server→client push over HTTP. Simpler than WebSocket — works through
 proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
 
-<h4>Run SSE server and client for simulated tick feed using <code style="font-size:0.75em">aiohttp</code> over HTTP</h4>
+#### Run SSE server and client for simulated tick feed using aiohttp over HTTP
 
 Starts a local aiohttp server that streams ticks as `text/event-stream`. The client reads
 events using `httpx` async streaming.
@@ -499,7 +499,7 @@ except Exception:
       Topic exists: projects/seclab-dev-ap-26/topics/tick-feed
       Subscription exists: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
 
-<h4>Publish and subscribe to tick feed using <code style="font-size:0.75em">google-cloud-pubsub</code> over gRPC</h4>
+#### Publish and subscribe to tick feed using google-cloud-pubsub over gRPC
 
 Publishes 1000 ticks to the topic, then pulls them back via the subscription.
 Measures end-to-end latency (publish → receive) and throughput.
@@ -507,7 +507,7 @@ Measures end-to-end latency (publish → receive) and throughput.
 **Scenario:** Event-driven pipelines, microservice communication, IoT telemetry.
 **When NOT to use:** Sub-millisecond latency requirements — use direct TCP/WebSocket.
 
-<h4>Start streaming subscriber using <code style="font-size:0.75em">google-cloud-pubsub</code> <code style="font-size:0.75em">subscriber.subscribe</code> over gRPC</h4>
+#### Start streaming subscriber using google-cloud-pubsub subscriber.subscribe over gRPC
 
 Starts the subscriber before publishing so the gRPC stream is established when messages arrive. Measures true transport latency, not queue wait time.
 
@@ -532,7 +532,7 @@ print(f'  Streaming subscriber connected on {sub_path}')
 
       Streaming subscriber connected on projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
 
-<h4>Publish 1000 ticks using <code style="font-size:0.75em">google-cloud-pubsub</code> <code style="font-size:0.75em">publisher.publish</code> over gRPC</h4>
+#### Publish 1000 ticks using google-cloud-pubsub publisher.publish over gRPC
 
 Publishes 1000 ticks with wall-clock timestamps. The subscriber callback receives them in real-time.
 
@@ -553,7 +553,7 @@ print(f'  Published {NUM_TICKS} ticks in {fmt_time(pub_ms)} ({fmt_rate(NUM_TICKS
 
       Published 1000 ticks in 737ms (1.4K msg/s)
 
-<h4>Measure end-to-end Pub/Sub latency from <code style="font-size:0.75em">publish</code> to <code style="font-size:0.75em">callback</code> over gRPC</h4>
+#### Measure end-to-end Pub/Sub latency from publish to callback over gRPC
 
 Waits for all messages to arrive, then computes publish-to-receive latency per message (avg and P99).
 
@@ -621,7 +621,7 @@ else:
 Firestore’s `on_snapshot` pushes document changes to the client in real-time over gRPC.
 The same mechanism that powers live sync in Firebase mobile apps and dashboards.
 
-<h4>Register Firestore real-time listener using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">on_snapshot</code> over gRPC</h4>
+#### Register Firestore real-time listener using google-cloud-firestore on_snapshot over gRPC
 
 Registers a callback that fires on every document change (ADDED, MODIFIED, REMOVED). Runs in a background thread.
 
@@ -661,7 +661,7 @@ print(f'  Listener registered on {FS_RT_COLLECTION}')
 
       Listener registered on realtime_ticks
 
-<h4>Write documents to Firestore using <code style="font-size:0.75em">google-cloud-firestore</code> <code style="font-size:0.75em">batch.commit</code> over gRPC</h4>
+#### Write documents to Firestore using google-cloud-firestore batch.commit over gRPC
 
 Writes 100 documents via Firestore batch API. Each document carries a `write_ts` timestamp for latency measurement.
 
@@ -682,7 +682,7 @@ print(f'  Wrote {total_fs} documents in {fmt_time(write_ms)}')
 
       Wrote 550 documents in 30.5s
 
-<h4>Measure Firestore listener latency from <code style="font-size:0.75em">on_snapshot</code> change events over gRPC</h4>
+#### Measure Firestore listener latency from on_snapshot change events over gRPC
 
 Waits for the background listener to receive all change events, then computes write-to-receive latency per document.
 

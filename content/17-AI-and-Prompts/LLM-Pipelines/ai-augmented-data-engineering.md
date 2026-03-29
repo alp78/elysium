@@ -101,17 +101,22 @@ collection.add(
 
 ## Using LLMs in Data Pipelines
 
+> [!warning] Always Validate LLM-Extracted Corporate Actions Against a Second Source
+> An LLM may extract the wrong split ratio (e.g., 1:4 instead of 4:1), invent an effective date, or misclassify a rights issue as a dividend. For index calculation pipelines, a wrong corporate action adjustment factor silently corrupts the entire price history. Treat LLM extraction as a first pass that must be confirmed against the vendor's structured data feed or a human review queue before it enters the pipeline.
+
 #### Corporate actions extraction from press releases
 
 ```python
 from anthropic import Anthropic
 
 client = Anthropic()
+```
 
+```python
 def extract_corporate_action(press_release_text: str) -> dict:
     """
     Extract structured corporate action data from a press release.
-    This replaces hours of manual data entry with seconds of LLM processing.
+    Replaces hours of manual data entry with seconds of LLM processing.
     """
     response = client.messages.create(
         model="claude-sonnet-4-6",
@@ -197,6 +202,9 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
 
 > [!tip] GCP Vector Database Recommendation
 > For a financial data platform on GCP: Start with pgvector (if you already run PostgreSQL for Airflow metadata) or AlloyDB AI (managed, GCP-native). Move to Pinecone or Weaviate when you need >10M vectors or sub-10ms latency.
+
+> [!danger] LLM API Calls in a Loop Can Generate Thousands of Dollars in Charges in Minutes
+> A pipeline processing 10,000 documents with no rate limiting or cost cap can burn through $500+ before anyone notices. Always implement a hard daily budget ceiling with an immediate circuit breaker (raise an exception, not just log a warning). Monitor cumulative spend in real-time via the `response.usage` fields, not via the billing dashboard (which has multi-hour delay).
 
 ## Cost Management and Token Budgeting
 
