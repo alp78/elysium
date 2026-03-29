@@ -22,25 +22,42 @@ Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb
 
 Topics covered:
-- Views (regular, indexed)
-- Stored Procedures (parameters, error handling, transactions)
-- User-Defined Functions (scalar, table-valued)
-- Indexes (clustered, non-clustered, columnstore, filtered)
-- Constraints (PK, FK, CHECK, UNIQUE, DEFAULT)
-- Slowly Changing Dimensions (SCD Type 1 & 2)
+- Views (regular, materialized)
+- Stored Procedures (parameters, error handling, transactions via BigQuery scripting)
+- User-Defined Functions (scalar SQL UDFs, JavaScript UDFs)
+- Partitioning (time-unit, ingestion-time, range)
+- Clustering (sort-based query optimization)
+- INFORMATION_SCHEMA queries (job history, table metadata, cost analysis)
+- DML quotas and limits
 - MERGE for Incremental Loads
 - Gap Detection & Gap Filling
 - Deduplication Strategies
-- Execution Plans & Query Optimization
-- Transaction Isolation Levels
-- Bulk Loading Patterns
 - Data Lineage & Audit Columns
-- Partitioning Strategies
+- Scripting (DECLARE, SET, IF, LOOP, BEGIN...EXCEPTION...END)
 
 To practice these patterns against realistic scenarios, work through [[bigquery-problems]].
 
-> **Note**: Some sections CREATE database objects. All objects are created in a `demo` schema
-> or use temp tables to avoid modifying the production stoxx schema.
+> [!info] INFORMATION_SCHEMA Is BigQuery's Primary Introspection
+>
+> Unlike SQL Server's `sys.*` DMVs, BigQuery exposes all metadata through `INFORMATION_SCHEMA` views:
+>
+> - `INFORMATION_SCHEMA.TABLES` — table metadata, row count, size
+> - `INFORMATION_SCHEMA.COLUMNS` — column names, types, nullable
+> - `INFORMATION_SCHEMA.JOBS` — query history, bytes scanned, cost
+> - `INFORMATION_SCHEMA.TABLE_STORAGE` — storage bytes per table
+> - `INFORMATION_SCHEMA.PARTITIONS` — partition metadata
+
+> [!danger] BigQuery DML Has Strict Quotas
+>
+> Each table allows a maximum of **1,500 DML statements per day** (INSERT, UPDATE, DELETE, MERGE combined). A pipeline running MERGE every 5 minutes = 288/day — fine. Every 1 minute = 1,440/day — dangerously close. Streaming inserts (`insertAll` API) have a separate quota and are not subject to the DML limit.
+
+> [!tip] Always Dry-Run Before Expensive Queries
+>
+> In bq CLI: `bq query --dry_run "SELECT ..."` — returns estimated bytes without executing. In Python: `job_config.dry_run = True`. At $6.25/TB, a `SELECT *` on a 1 TB table costs $6.25. Check before you run. See [[gcp-billing-and-pricing#BigQuery]].
+
+> [!info] Lab Environment Note
+>
+> Some sections CREATE database objects. All objects are created in a `demo` schema or use temp tables to avoid modifying the production stoxx schema.
 
 ```python
 %load_ext sql
@@ -54,7 +71,9 @@ To practice these patterns against realistic scenarios, work through [[bigquery-
 
 Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
-
+> [!info] BigQuery Uses ADC — No Password
+>
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. See [[gcloud-authentication#The ADC Credential Search Order]].
 
 ```sql
 -- Create a demo dataset for our objects (idempotent)

@@ -48,6 +48,9 @@ Topics covered:
 
 Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
 
+> [!danger] Lab-Only Credentials
+>
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [[secrets-management#Access from Python]].
 
 ## Advanced Window Functions
 
@@ -192,6 +195,10 @@ ORDER BY composite_rank
 
 - `FIRST_VALUE(col)`: first value in the window frame
 - `LAST_VALUE(col)`: last value — **requires explicit frame** or it only sees up to current row
+
+> [!danger] LAST_VALUE default frame trap
+>
+> Without an explicit frame, `LAST_VALUE()` uses `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — it only sees rows up to the current row, making it identical to the current row's value. Always specify `ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING` when using `LAST_VALUE()`.
 
 Use case: compare every day's close to the first close of the year (YTD return).
 
@@ -344,6 +351,9 @@ The frame clause controls which rows the function sees:
 
 **Default** (no frame): `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — beware, this groups ties!
 
+> [!warning] RANGE groups ties, ROWS counts physical rows
+>
+> If two rows have the same `ORDER BY` value, `RANGE` treats them as one logical position. `ROWS` counts them as separate physical rows. For moving averages (SMA-30, SMA-90), ALWAYS use `ROWS` — `RANGE` produces incorrect averages when dates have duplicates (multiple symbols on the same date).
 
 ```sql
 -- ROWS vs RANGE: ROWS counts physical rows, RANGE groups by value
@@ -430,6 +440,9 @@ ORDER BY date DESC
 A **recursive CTE** has an anchor (starting row) and a recursive member that references itself.
 Classic use: generate a continuous date sequence to detect missing trading days.
 
+> [!warning] SQL Server limits recursion to 100
+>
+> A recursive CTE exceeding 100 iterations fails with error 530. Override with `OPTION (MAXRECURSION N)` or `OPTION (MAXRECURSION 0)` for unlimited. A date series generating 365 rows needs `MAXRECURSION 366`. BigQuery caps at 500 iterations by default.
 
 ```sql
 -- Generate all dates in March 2026, then check which are missing from OHLCV

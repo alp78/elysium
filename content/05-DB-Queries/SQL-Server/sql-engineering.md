@@ -52,7 +52,9 @@ Topics covered:
 
 Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
 
-
+> [!danger] Lab-Only Credentials
+>
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [[secrets-management#Access from Python]].
 
 ```sql
 -- Create a demo schema for our objects (idempotent)
@@ -434,6 +436,9 @@ ORDER BY [rank]
 A stored procedure is precompiled SQL that lives in the database.
 Use case: pipeline steps as SPs — each step has consistent parameters and error handling.
 
+> [!danger] Dynamic SQL is an injection vector
+>
+> `EXEC('SELECT * FROM ' + @tableName)` is vulnerable to SQL injection if `@tableName` comes from user input. Always use `sp_executesql` with parameterized queries for values. For dynamic object names, validate against `sys.tables` / `sys.columns` before building the string.
 
 ```sql
 -- SP: get top N stocks by composite score for a given index

@@ -43,6 +43,9 @@ Topics covered:
 
 Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
+> [!info] BigQuery Uses ADC — No Password
+>
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [[gcloud-authentication#The ADC Credential Search Order]].
 
 ## Schema Exploration
 
@@ -178,10 +181,29 @@ ORDER BY ordinal_position
 
 ## SELECT, Filtering & Sorting
 
+> [!tip]- BigQuery vs SQL Server — Key Differences
+>
+> | Behavior | BigQuery | SQL Server |
+> |---|---|---|
+> | Cost model | Per bytes scanned | Fixed (VM cost) |
+> | `LIMIT` effect on cost | No cost reduction | N/A (no per-query cost) |
+> | `SELECT *` risk | Scans all columns = expensive | No cost impact |
+> | Division by zero | Returns `ERROR` (use `SAFE_DIVIDE`) | Returns `NULL` or `ERROR` |
+> | QUALIFY clause | ✅ Supported | ❌ Not available |
+> | Recursive CTEs | ✅ (500 iteration default) | ✅ (100 iteration default) |
+> | Transactions | ✅ (scripting `BEGIN...END`) | ✅ (`BEGIN TRAN...COMMIT`) |
+
 ### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
 The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits output (BigQuery). PostgreSQL uses `LIMIT N`.
 
+> [!danger] LIMIT does NOT reduce bytes scanned
+>
+> `SELECT * FROM table LIMIT 10` still scans the ENTIRE table — BigQuery reads all matching data, then truncates the result. You pay for the full scan regardless of LIMIT. To reduce cost, select only the columns you need and filter on partitioned/clustered columns. See [[querying-and-cost-optimization]].
+
+> [!tip] Backtick escaping for table references
+>
+> BigQuery requires backticks around `project.dataset.table` when the project ID contains hyphens: `` `my-project.dataset.table` ``. Without backticks, the parser interprets the hyphen as minus. Column names that are reserved words (`close`, `open`) also need backticks, whereas SQL Server uses `[brackets]`.
 
 ```sql
 -- Latest 10 trading days for ASML
@@ -430,6 +452,19 @@ LIMIT 10
 
 Group by `EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)` to build time-series summaries. Shows monthly high/low/average price and total volume — the basis for monthly performance reports.
 
+> [!warning] BigQuery has three date/time types
+>
+> | Type | Timezone | Use When |
+> |---|---|---|
+> | `DATE` | None | Trade dates, report dates |
+> | `DATETIME` | None (civil time) | Local event times |
+> | `TIMESTAMP` | UTC (absolute) | Pipeline timestamps, audit logs |
+>
+> `CURRENT_TIMESTAMP()` returns UTC. `CURRENT_DATE()` returns date in UTC. For a specific timezone: `DATE(CURRENT_TIMESTAMP(), 'Europe/Prague')`. Mixing types in JOIN/WHERE causes implicit coercion.
+
+> [!tip] BigQuery NULL handling differences
+>
+> BigQuery uses `IFNULL(expr, default)` where SQL Server uses `ISNULL(expr, default)`. `COALESCE()` works identically in both. BigQuery also has `SAFE_DIVIDE(a, b)` which returns `NULL` instead of error on division by zero — SQL Server has no equivalent.
 
 ```sql
 -- Monthly performance summary for ASML

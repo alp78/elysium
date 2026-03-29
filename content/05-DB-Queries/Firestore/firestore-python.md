@@ -56,6 +56,10 @@ This cell:
 
 **Python SDK**: `google-cloud-firestore` — same auth pattern as BigQuery.
 
+> [!warning] Key File for Local Dev Only
+>
+> Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [[gcp-identity-and-connection-patterns#Metadata Server (GCE VMs, Cloud Run) — the production standard]].
+
 ```python
 import os
 os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", r"C:\Users\aperi\DEV\LANG\gcp-bq-key.json")
@@ -417,6 +421,10 @@ for doc in docs:
 ## Filtering & Ordering
 
 ### Simple Equality Filter
+
+> [!warning] Reads Billed per Document Returned
+>
+> A query returning 10,000 documents costs 10,000 read operations regardless of field projections. There is no "column-level" cost savings like BigQuery. Use `where()` filters aggressively and always apply `limit()` for list operations.
 
 This cell:
 
@@ -850,6 +858,14 @@ for doc in prices:
 ## Write Operations
 
 ### Set — Create or Overwrite
+
+> [!danger] Document Size Limit — 1 MiB
+>
+> A single Firestore document cannot exceed 1,048,576 bytes including all field names, values, and nested data. If you store arrays that grow over time (e.g., pipeline run history), they WILL eventually hit this limit. Move growing arrays to a subcollection instead.
+
+> [!warning] Document Write Hotspot — 1 write/sec
+>
+> A single document can sustain ~1 write per second. Higher rates cause contention and increased latency. If multiple pipeline runs update the same status document simultaneously, writes queue and slow down. Use sharded counters or separate documents for high-write scenarios.
 
 This cell:
 

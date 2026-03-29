@@ -43,6 +43,9 @@ Topics covered:
 
 Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
 
+> [!danger] Lab-Only Credentials
+>
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [[secrets-management#Access from Python]].
 
 ## Schema Exploration
 
@@ -166,10 +169,28 @@ ORDER BY ORDINAL_POSITION
 
 ## SELECT, Filtering & Sorting
 
+> [!tip]- SQL Server vs BigQuery Syntax
+>
+> | Concept | SQL Server | BigQuery |
+> |---|---|---|
+> | Row limit | `TOP N` (before columns) | `LIMIT N` (end of query) |
+> | Reserved words | `[close]`, `[open]` | `` `close` ``, `` `open` `` |
+> | Current timestamp | `GETDATE()` / `SYSUTCDATETIME()` | `CURRENT_TIMESTAMP()` |
+> | String concatenation | `+` or `CONCAT()` | `CONCAT()` or `\|\|` |
+> | Null replacement | `ISNULL(expr, default)` | `IFNULL(expr, default)` |
+> | Auto-increment | `IDENTITY(1,1)` | No equivalent — use `GENERATE_UUID()` |
+> | Temp tables | `#temp` (session-scoped) | `CREATE TEMP TABLE` (script-scoped) |
+> | Table path | `schema.table` | `` `project.dataset.table` `` |
+>
+> For the full cross-platform comparison including Python and C#, see [[sql-python-csharp-transforms]].
+
 ### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
 The fundamental query: pick columns, filter rows, sort results. `TOP N` limits output (SQL Server). PostgreSQL uses `LIMIT N`.
 
+> [!warning] TOP without ORDER BY is non-deterministic
+>
+> `SELECT TOP 10 * FROM table` returns an ARBITRARY 10 rows — not the first 10, not the newest 10. The engine picks whichever rows it finds first based on the execution plan. Always pair `TOP` with `ORDER BY` unless you genuinely don't care which rows you get.
 
 ```sql
 -- Latest 10 trading days for ASML
@@ -253,6 +274,9 @@ ORDER BY date DESC
 
 Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
 
+> [!warning] FLOAT is approximate — ROUND() can surprise
+>
+> `FLOAT` stores binary approximations. `ROUND(3.145, 2)` on a `FLOAT` column may return `3.14` instead of `3.15`. For financial calculations or exact comparisons, use `DECIMAL(18, 4)`. OHLCV prices stored as `FLOAT` are acceptable for analytics but not for accounting.
 
 ```sql
 -- Filter with multiple conditions
@@ -396,11 +420,17 @@ ORDER BY avg_volume DESC
         </tr>
 </table>
 
-
+> [!tip] WHERE vs HAVING Filter Placement
+>
+> `WHERE volume > 1000000` removes rows BEFORE grouping — fewer rows to aggregate, faster query. `HAVING AVG(volume) > 1000000` computes the average for every group, then discards groups that don't qualify. Put filters in `WHERE` whenever possible; use `HAVING` only for conditions on aggregate results.
 
 ### Aggregation GROUP BY — Aggregate by Time Period
 
 Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly high/low/average price and total volume — the basis for monthly performance reports.
+
+> [!warning] Functions on columns kill SARGability
+>
+> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [[sargable-queries]].
 
 
 ```sql

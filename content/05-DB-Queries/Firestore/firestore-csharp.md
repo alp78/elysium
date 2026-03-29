@@ -16,6 +16,10 @@ status: complete
 
 # Firestore for Data Engineering — C#
 
+> [!danger] .NET 10 Breaks Firestore SDK Reads
+>
+> On .NET 10, the `Google.Cloud.Firestore` SDK fails on document reads, real-time listeners, and aggregation queries due to a missing `AsyncInterfaces` assembly. Writes work normally. This page uses the Firestore REST API as a workaround for reads. Check for SDK updates before upgrading to .NET 10 in production.
+
 Comprehensive reference for querying, writing, and managing Firestore collections
 using the `Google.Cloud.Firestore` C# SDK and REST API.
 
@@ -89,9 +93,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-// ── Credentials ──
-// Same GOOGLE_APPLICATION_CREDENTIALS env var as Python.
-// Points to the service account JSON key file.
+// ── Credentials (local dev only — use metadata server in production) ──
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",
     @"C:\Users\aperi\DEV\LANG\gcp-bq-key.json");
 
@@ -548,6 +550,10 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
 ## Filtering & Ordering
 
 ### Equality Filter
+
+> [!warning] Reads Billed per Document Returned
+>
+> A query returning 10,000 documents costs 10,000 read operations regardless of field projections. Use filters aggressively and apply limits for list operations.
 
 This cell:
 
@@ -1036,6 +1042,14 @@ foreach (var item in subResults.RootElement.EnumerateArray())
 ## Write Operations
 
 ### Set, Update & Delete
+
+> [!danger] Document Size Limit — 1 MiB
+>
+> A single Firestore document cannot exceed 1,048,576 bytes. If you store arrays that grow over time, they WILL eventually hit this limit. Move growing arrays to a subcollection.
+
+> [!warning] Document Write Hotspot — 1 write/sec
+>
+> A single document can sustain ~1 write per second. Higher rates cause contention. Use sharded counters or separate documents for high-write scenarios.
 
 This cell:
 

@@ -48,6 +48,9 @@ Topics covered:
 
 Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
+> [!info] BigQuery Uses ADC — No Password
+>
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [[gcloud-authentication#The ADC Credential Search Order]].
 
 ## Advanced Window Functions
 
@@ -57,6 +60,11 @@ The window functions in this section appear throughout production pipelines. The
 
 Assign a unique sequential number within each partition. The classic pattern for picking one row per key (e.g., latest price per stock, or deduplicating loads).
 
+> [!tip] QUALIFY — BigQuery-exclusive window filter
+>
+> BigQuery supports `QUALIFY` to filter on window function results without a subquery:
+> `SELECT symbol, date, close FROM table QUALIFY ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC) = 1`
+> This eliminates the subquery-plus-filter pattern. `QUALIFY` is not ANSI SQL and does not exist in SQL Server.
 
 ```sql
 -- Pick the latest price per stock using ROW_NUMBER
