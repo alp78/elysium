@@ -18,6 +18,10 @@ status: complete
 
 # 21. Security Operations — Encryption, Certificates & Identity
 
+> [!tip] Prerequisite Reading
+>
+> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [[gcp-identity-and-connection-patterns]].
+
 ## Environment Setup
 
 #### Import all libraries and verify versions

@@ -268,6 +268,7 @@ ss -tnp | grep :1433
 > For a small team accessing a few VMs, **IAP is always the right choice**. Zero infrastructure to maintain, zero cost, and per-user audit logging via Cloud Audit Logs.
 
 ## Related
+- [[gcp-identity-and-connection-patterns]] — Where IAP tunnels fit in the overall connection pattern framework
 - [[firewalls]] — IAP firewall rule for `35.235.240.0/20` on port 22
 - [[connectivity-testing]] — diagnose IAP tunnel failures step by step
 - [[socket-inspection]] — verify IAP connections visible on the VM side

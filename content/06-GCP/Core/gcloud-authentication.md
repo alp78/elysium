@@ -107,6 +107,7 @@ gcloud auth revoke
 
 ## Related
 
+- [[gcp-identity-and-connection-patterns]] — Complete identity model, OAuth2 flows, credential types, and connection patterns
 - [[gcloud-configurations]] — Manage multiple project contexts
 - [[service-accounts-and-iam]] — Create and manage service accounts, IAM bindings and roles
 - [[gcp-projects-and-apis]] — Set the active project for authentication context

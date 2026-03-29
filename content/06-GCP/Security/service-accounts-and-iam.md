@@ -130,6 +130,7 @@ On GCE VMs and Cloud Run, credentials are provided automatically by the GCP meta
 
 ## Related
 
+- [[gcp-identity-and-connection-patterns]] — Complete identity model, credential types, connection patterns by scenario
 - [[gcloud-authentication]] — ADC credential search order; when key files vs metadata server applies
 - [[vpc-service-controls]] — VPC-SC restricts what IAM-permitted identities can do with data
 - [[cloud-run-jobs-vs-services]] — Attach the pipeline service account to Cloud Run jobs

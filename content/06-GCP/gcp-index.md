@@ -66,8 +66,9 @@ GCS is the connective tissue of every GCP data pipeline: raw data landing zone, 
 
 ### Security — IAM and Service Accounts
 
-IAM controls who can do what in GCP. These notes cover service account management, role bindings, and data exfiltration prevention.
+IAM controls who can do what in GCP. These notes cover the identity model, service account management, role bindings, and data exfiltration prevention.
 
+- [[gcp-identity-and-connection-patterns]] — Identity model, OAuth2 flows, credential types, connection patterns by scenario, certificate landscape
 - [[service-accounts-and-iam]] — Creating service accounts, key management, IAM bindings, roles, Workload Identity
 - [[vpc-service-controls]] — Data exfiltration prevention, perimeter setup, ingress/egress policies, debugging denials
 - [[secrets-management]] — GCP Secret Manager, Airflow integration, rotation procedures, Workload Identity Federation
@@ -96,9 +97,10 @@ Start with these if you are new to GCP data engineering:
 
 1. [[gcloud-authentication]] — Understand the two types of credentials before anything else
 2. [[gcloud-configurations]] — Set up named configs for each project environment
-3. [[service-accounts-and-iam]] — Every pipeline needs a properly scoped service account
-4. [[querying-and-cost-optimization]] — The single most impactful cost control in GCP
-5. [[vpc-service-controls]] — Non-negotiable for financial or sensitive data
+3. [[gcp-identity-and-connection-patterns]] — Understand identity, credentials, and connection patterns before building pipelines
+4. [[service-accounts-and-iam]] — Every pipeline needs a properly scoped service account
+5. [[querying-and-cost-optimization]] — The single most impactful cost control in GCP
+6. [[vpc-service-controls]] — Non-negotiable for financial or sensitive data
 
 ## Cross-References
 

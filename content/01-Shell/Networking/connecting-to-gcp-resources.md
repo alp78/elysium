@@ -332,6 +332,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 > Anything running on a VM with no public IP requires an IAP tunnel (or SSH). Anything that's a Google-managed service (BigQuery, Cloud Run, GCS) uses HTTPS APIs directly — no tunnel, no port management, just IAM.
 
 ## Related
+- [[gcp-identity-and-connection-patterns]] — Security model behind these connections: trust chains, credential types, IAM requirements
 - [[iap-tunneling]] — deep dive into how IAP tunnels work and how to debug them
 - [[firewalls]] — firewall rules required for IAP (`35.235.240.0/20`)
 - [[socket-inspection]] — verify what's listening on the VM before connecting
