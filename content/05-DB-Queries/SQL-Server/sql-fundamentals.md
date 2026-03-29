@@ -98,17 +98,6 @@ ORDER BY s.name, t.name
             <td>oil20_ohlcv</td>
             <td>19</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -171,14 +160,6 @@ ORDER BY ORDINAL_POSITION
             <td>None</td>
             <td>YES</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -264,12 +245,6 @@ ORDER BY date DESC
             <td>1147.0</td>
             <td>857271</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -341,17 +316,6 @@ ORDER BY ABS(([close] - [open]) / [open]) DESC
             <td>7671987</td>
             <td>-10.81</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -430,12 +394,6 @@ ORDER BY avg_volume DESC
             <td>2021-01-04</td>
             <td>2026-03-12</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -520,17 +478,6 @@ ORDER BY yr, mo
             <td>650.18</td>
             <td>13112045</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -639,17 +586,6 @@ ORDER BY p.[close] DESC
             <td>2026-03-12</td>
             <td>14083</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -755,17 +691,6 @@ ORDER BY s.composite_rank
             <td>62.76</td>
             <td>2.43</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -857,17 +782,6 @@ ORDER BY date DESC
             <td>1205.91</td>
             <td>1041.08</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -957,17 +871,6 @@ ORDER BY date DESC
             <td>-3.29</td>
             <td>1</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1056,12 +959,6 @@ ORDER BY rank_best
             <td>46</td>
             <td>1</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1161,12 +1058,6 @@ ORDER BY avg_score DESC
             <td>8</td>
             <td>43</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1259,7 +1150,6 @@ ORDER BY ytd_pct DESC
             <td>14.0</td>
             <td>2.9</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1337,7 +1227,6 @@ FROM silver.eurostoxx50_ohlcv
             <td>days_since_update</td>
             <td>10</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1416,12 +1305,6 @@ ORDER BY date DESC
             <td>-0.0329</td>
             <td>False</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1491,12 +1374,6 @@ ORDER BY [rank]
             <td>1.16</td>
             <td>5</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 

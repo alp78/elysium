@@ -114,12 +114,6 @@ LIMIT 10
             <td>626.6</td>
             <td>14083</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -195,17 +189,6 @@ LIMIT 15
             <td>0.082</td>
             <td>0.1</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -289,17 +272,6 @@ LIMIT 15
             <td>986.3</td>
             <td>16.29</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -366,17 +338,6 @@ LIMIT 15
             <td>258272</td>
             <td>181668064</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -472,12 +433,6 @@ LIMIT 10
             <td>671.35</td>
             <td>34.79</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -552,17 +507,6 @@ LIMIT 15
             <td>1186.0</td>
             <td>OK</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -633,17 +577,6 @@ LIMIT 15
             <td>2026-03-06</td>
             <td>OK</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -718,17 +651,6 @@ LIMIT 15
             <td>10565045</td>
             <td>23.5</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -810,17 +732,6 @@ LIMIT 15
             <td>5</td>
             <td>2026-03-12</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -865,7 +776,6 @@ PIVOT (AVG(`close`) FOR mo IN (1 AS Jan, 2 AS Feb, 3 AS Mar, 4 AS Apr, 5 AS May)
             <td>581.0</td>
             <td>650.1809523809522</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -915,7 +825,6 @@ GROUP BY symbol
             <td>732.09</td>
             <td>924.72</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -976,17 +885,6 @@ LIMIT 15
             <td>relative_value_score</td>
             <td>0.6959</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1048,7 +946,6 @@ SELECT 'DEMO.XX', DATE '2026-03-21', 102.5, 1200000
             <td>102.5</td>
             <td>1200000</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1110,17 +1007,6 @@ LIMIT 15
             <td>AIR LIQUIDE</td>
             <td>Basic Materials</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1180,17 +1066,6 @@ LIMIT 15
             <td>AIR LIQUIDE</td>
             <td>Basic Materials</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1265,17 +1140,6 @@ LIMIT 15
             <td>10</td>
             <td>0.0504</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1344,13 +1208,6 @@ LIMIT 15
             <td>112568697</td>
             <td>1389737.0</td>
         </tr>
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1412,12 +1269,6 @@ LIMIT 10
             <td>4</td>
             <td>ABI.BR, AD.AS, BN.PA, OR.PA</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1482,12 +1333,6 @@ LIMIT 10
             <td>PA</td>
             <td>Air liquide</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1579,12 +1424,6 @@ LIMIT 10
             <td>149</td>
             <td>149</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1635,17 +1474,6 @@ LIMIT 15
         <tr>
             <td>AI.PA</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1714,12 +1542,6 @@ LIMIT 10
             <td>90</td>
             <td>70.0</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 

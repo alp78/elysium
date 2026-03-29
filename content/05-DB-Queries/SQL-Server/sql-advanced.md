@@ -112,12 +112,6 @@ ORDER BY [close] DESC
             <td>626.6</td>
             <td>14083</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -190,17 +184,6 @@ ORDER BY composite_rank
             <td>0.082</td>
             <td>0.1</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -281,17 +264,6 @@ ORDER BY date DESC
             <td>986.3</td>
             <td>16.29</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -355,17 +327,6 @@ ORDER BY date DESC
             <td>258272</td>
             <td>181668064</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -458,12 +419,6 @@ ORDER BY date DESC
             <td>671.35</td>
             <td>34.79</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -535,17 +490,6 @@ ORDER BY d.dt
             <td>1186.0</td>
             <td>OK</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -613,17 +557,6 @@ ORDER BY s.symbol, c.date
             <td>2026-03-06</td>
             <td>OK</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -697,17 +630,6 @@ ORDER BY d.symbol, t.volume DESC
             <td>10565045</td>
             <td>23.5</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -786,17 +708,6 @@ ORDER BY s.composite_rank
             <td>5</td>
             <td>2026-03-12</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -841,7 +752,6 @@ PIVOT (
             <td>581.0000000000001</td>
             <td>650.1809523809522</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -889,7 +799,6 @@ GROUP BY symbol
             <td>732.09</td>
             <td>924.72</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -948,17 +857,6 @@ ORDER BY symbol, score_type
             <td>relative_value_score</td>
             <td>0.6959</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1029,7 +927,6 @@ DROP TABLE #target
             <td>102.5</td>
             <td>1200000</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1088,17 +985,6 @@ ORDER BY d.symbol
             <td>AIR LIQUIDE</td>
             <td>Basic Materials</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1155,17 +1041,6 @@ ORDER BY d.symbol
             <td>AIR LIQUIDE</td>
             <td>Basic Materials</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1237,17 +1112,6 @@ ORDER BY GROUPING(d.sector), GROUPING(d.country), avg_score DESC
             <td>10</td>
             <td>0.0504</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1313,13 +1177,6 @@ ORDER BY GROUPING(d.sector), total_volume DESC
             <td>112568697</td>
             <td>1389737.0</td>
         </tr>
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1378,12 +1235,6 @@ ORDER BY stocks DESC
             <td>4</td>
             <td>ABI.BR, AD.AS, BN.PA, OR.PA</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1445,12 +1296,6 @@ ORDER BY symbol
             <td>PA</td>
             <td>Air liquide</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1539,12 +1384,6 @@ ORDER BY forward_pe
             <td>149</td>
             <td>149</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -1592,7 +1431,6 @@ ORDER BY symbol
         <tr>
             <td>AI.PA</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1658,12 +1496,6 @@ ORDER BY trading_days DESC
             <td>90</td>
             <td>70.000000000000</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 

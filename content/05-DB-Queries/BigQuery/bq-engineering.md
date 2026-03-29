@@ -69,7 +69,6 @@ OPTIONS(location="europe-west1")
         </tr>
     </thead>
     <tbody>
-    </tbody>
 </table>
 
 
@@ -105,7 +104,6 @@ WHERE rn = 1;
         </tr>
     </thead>
     <tbody>
-    </tbody>
 </table>
 
 ```sql
@@ -174,12 +172,6 @@ LIMIT 10
             <td>626.6</td>
             <td>14083</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -227,7 +219,6 @@ JOIN `bq-wh-nb.stoxx_silver.index_dim` d ON s.symbol = d.symbol AND d._index = s
         </tr>
     </thead>
     <tbody>
-    </tbody>
 </table>
 
 
@@ -332,12 +323,6 @@ LIMIT 10
             <td>euro_stoxx_50</td>
             <td>2026-03-12</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -422,7 +407,6 @@ LIMIT 5
             <td>5</td>
             <td>62.76</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -469,7 +453,6 @@ END
         <tr>
             <td>Undeclared variable: rows_loaded</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -503,7 +486,6 @@ AS (
         </tr>
     </thead>
     <tbody>
-    </tbody>
 </table>
 
 
@@ -576,11 +558,6 @@ LIMIT 15
             <td>1147.0</td>
             <td>857271</td>
         </tr>
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -648,14 +625,6 @@ LIMIT 15
             <td>None</td>
             <td>high</td>
         </tr>
-        
-        
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -747,12 +716,6 @@ LIMIT 10
             <td>Basic Materials</td>
             <td>unchanged</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -831,12 +794,6 @@ LIMIT 10
             <td>2026-03-04</td>
             <td>None</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -912,12 +869,6 @@ LIMIT 10
             <td>1</td>
             <td>normal</td>
         </tr>
-        
-        
-        
-        
-        
-    </tbody>
 </table>
 
 
@@ -991,7 +942,6 @@ LIMIT 10
             <td>2</td>
             <td>2</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1041,7 +991,6 @@ SELECT
             <td>12698</td>
             <td>12698</td>
         </tr>
-    </tbody>
 </table>
 
 
@@ -1136,7 +1085,6 @@ ORDER BY last_update DESC
             <td>`bq-wh-nb.stoxx_gold.index_performance`</td>
             <td>2026-03-12 00:00:00</td>
         </tr>
-    </tbody>
 </table>
 
 
