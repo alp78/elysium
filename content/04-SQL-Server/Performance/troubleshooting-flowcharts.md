@@ -2,7 +2,7 @@
 type: reference
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server troubleshooting, why is it slow, pipeline failed, disk space emergency, should I add an index, decision tree, troubleshooting guide]
 keywords: [troubleshooting, flowchart, PAGEIOLATCH, WRITELOG, LCK_M, blocking, deadlock, disk full, slow query, pipeline failed, index decision, CXPACKET, SOS_SCHEDULER_YIELD, MEMORY_ALLOCATION_EXT, buffer pool, pd-standard, pd-ssd, mdf full, ldf full, SHRINKFILE, BACKUP LOG, connection refused, login failed, constraint violation, wait stats, dm_os_wait_stats]
 description: "Visual troubleshooting flowcharts for SQL Server: diagnosing slowness via wait stats, pipeline failure root cause analysis, the index decision tree, and disk space emergency recovery steps."
@@ -423,7 +423,7 @@ sudo resize2fs /dev/sda1       # ext4
 
 ---
 
-## Related
+### Related
 
 - [[wait-stats-analysis]] — full wait type reference with diagnostic queries
 - [[performance-audit-playbook]] — systematic 11-phase audit covering all dimensions of performance

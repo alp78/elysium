@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [terraform]
-tags: [infrastructure, terraform]
+tags: [infrastructure, terraform, iac]
 aliases: [Terraform cheat sheet, tf cheat sheet, Terraform quick reference]
 keywords: [terraform, cheat sheet, quick reference, init, plan, apply, destroy, state, import, workspace, hcl]
 description: "Exhaustive CLI reference for Terraform — every command, flag, HCL function, and common pattern in one place."
@@ -22,7 +22,7 @@ Exhaustive CLI reference for Terraform. Every command, flag, HCL built-in functi
 
 ---
 
-## CLI Anatomy
+### CLI Anatomy
 
 ```
 terraform [GLOBAL_OPTIONS] COMMAND [ARGS] [OPTIONS]
@@ -35,7 +35,7 @@ terraform [GLOBAL_OPTIONS] COMMAND [ARGS] [OPTIONS]
 
 ---
 
-## Global Options
+### Global Options
 
 These flags are accepted by every Terraform subcommand and must appear **before** the subcommand name.
 
@@ -627,7 +627,7 @@ After the first successful apply, remove the `import` blocks — they are no lon
 
 ---
 
-## Workspace Commands
+### Workspace Commands
 
 Workspaces allow multiple state files in the same configuration. Useful for lightweight environment separation (though module-per-environment is often preferred for production).
 
@@ -1368,7 +1368,7 @@ locals {
 
 ---
 
-## Quick Reference: Exit Codes
+### Quick Reference: Exit Codes
 
 | Code | Meaning |
 |------|---------|
@@ -1378,7 +1378,7 @@ locals {
 
 ---
 
-## Quick Reference: Environment Variables
+### Quick Reference: Environment Variables
 
 | Variable | Description |
 |----------|-------------|
@@ -1411,7 +1411,7 @@ TF_IN_AUTOMATION=1 TF_INPUT=0 terraform apply -auto-approve
 
 ---
 
-## File Organization Reference
+### File Organization Reference
 
 | File | Purpose |
 |------|---------|

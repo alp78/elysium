@@ -2,7 +2,7 @@
 type: concept
 category: ai-and-prompts
 technology: [python, bigquery, gcp]
-tags: [ai, python, bigquery, gcp]
+tags: [ai, prompt-engineering, python, bigquery, gcp]
 aliases: [LLM data pipelines, RAG architecture, retrieval augmented generation, vector database, embeddings, AI-assisted development, Claude Code, GitHub Copilot, AI data engineering, LLM pipeline, corporate actions parsing with LLM, ESG extraction LLM, anomaly explanation LLM, Apache Iceberg AI, pgvector, ChromaDB, Pinecone, token budgeting]
 keywords: [LLM, RAG, retrieval augmented generation, embeddings, vector database, pgvector, ChromaDB, Pinecone, Weaviate, Qdrant, AlloyDB AI, langchain, VertexAI, text-embedding, Claude, Anthropic, GitHub Copilot, AI-assisted, corporate actions, press release parsing, anomaly explanation, data quality, schema documentation, SQL generation, token cost, daily budget, Iceberg, Apache Iceberg, structured unstructured, semantic search, AI productivity, hallucination, code review AI]
 description: "AI-augmented data engineering: practical LLM use cases (corporate actions parsing, anomaly explanation, schema documentation), RAG architecture for financial document retrieval, vector database comparison (pgvector, ChromaDB, Pinecone, Weaviate, Qdrant, AlloyDB AI), cost management and token budgeting, Apache Iceberg + AI hybrid architecture, and AI-assisted development workflow with Claude Code and GitHub Copilot. Includes all code examples."
@@ -184,7 +184,7 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
     return response.content[0].text
 ```
 
-## Vector Databases for Financial Data
+### Vector Database Comparison for Financial Data
 
 | Database | Type | Best For | Deployment |
 |---|---|---|---|
@@ -250,7 +250,7 @@ def call_llm_with_budget(text: str) -> str:
 | Generating natural language summaries | **Yes** | LLM excels here |
 | Understanding press releases | **Yes** | LLM excels here |
 
-## Apache Iceberg + AI: The Emerging Pattern
+### Apache Iceberg + AI Hybrid Architecture
 
 The combination of Iceberg (structured data) and vector databases (unstructured data) is the emerging architecture for AI-augmented data platforms:
 

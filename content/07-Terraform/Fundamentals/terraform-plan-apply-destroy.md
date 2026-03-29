@@ -2,7 +2,7 @@
 type: how-to
 category: infrastructure
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform workflow, terraform apply, terraform plan, terraform destroy, terraform init, terraform import]
 keywords: [terraform init, terraform plan, terraform apply, terraform destroy, terraform import, terraform state, tfplan, plan output, apply workflow, infrastructure deployment, terraform -chdir]
 description: "The core Terraform workflow: init, plan, apply, destroy, and importing existing resources into state. Includes the -chdir flag, targeted applies, and state inspection commands."
@@ -120,7 +120,7 @@ terraform destroy -target=google_compute_instance.airflow
 
 ---
 
-## State Inspection Commands
+### State Inspection Commands
 
 ```bash
 # View current state
@@ -174,7 +174,7 @@ terraform -chdir=infra import google_cloud_run_v2_service.dashboard \
 
 ---
 
-## Common Issues and Fixes
+### Common Issues and Fixes
 
 | Error | Cause | Fix |
 |-------|-------|-----|
@@ -186,7 +186,7 @@ terraform -chdir=infra import google_cloud_run_v2_service.dashboard \
 
 ---
 
-## Multi-Environment Patterns — Modules
+### Multi-Environment Patterns — Modules
 
 For managing dev, staging, and prod environments, extract common patterns into modules:
 

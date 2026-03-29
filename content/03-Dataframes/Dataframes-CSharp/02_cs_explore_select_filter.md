@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - head, tail, describe, filter, where, isin
 keywords: [head, tail, describe, select, filter, where, isin, column selection, row filtering, boolean indexing]

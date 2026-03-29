@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge PR, squash merge]
 keywords: [pull request, PR, code review, gh pr create, gh pr merge, squash merge, rebase merge, draft PR, branch protection, auto-merge, force-with-lease, merge conflict, PR workflow, github cli, gh pr checkout]
 description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, and resolving 'not mergeable' errors."
@@ -20,7 +20,7 @@ status: complete
 
 Pull requests (PRs) are GitHub's mechanism for proposing changes. They let teammates review your code, discuss it, and approve it before merging. This note covers the complete PR lifecycle from creation to merge, including recovery from common failure modes.
 
-## Creating a PR
+### Creating a PR
 
 ```bash
 # Create a PR from the current branch to main
@@ -39,7 +39,7 @@ gh pr create --draft --title "WIP: new feature"
 # --draft — mark as draft: cannot be merged until marked ready
 ```
 
-## Reviewing and Merging PRs
+### Reviewing and Merging PRs
 
 ```bash
 # List all open pull requests
@@ -73,7 +73,7 @@ gh pr merge --rebase
 # --rebase — replay PR commits onto the base branch
 ```
 
-## Merge Strategy Comparison
+### Merge Strategy Comparison
 
 | Strategy | History | When to Use |
 |----------|---------|------------|
@@ -84,7 +84,7 @@ gh pr merge --rebase
 > [!tip] After Squash Merge
 > After `gh pr merge --squash`, `git branch -d` may warn the branch isn't merged (different SHA). This is normal — squash creates a new combined commit with a different SHA. The changes ARE on main, just as a different commit. Safe to use `git branch -d` anyway (the warning is cosmetic).
 
-## Preventing "PR is not mergeable" Errors
+### Preventing "PR is not mergeable" Errors
 
 When another PR is merged into `main` while yours is open, GitHub may block your squash merge with: *"the merge commit cannot be cleanly created."* This happens because your branch has diverged from `main`.
 
@@ -268,7 +268,7 @@ gh pr merge 7 --squash
 
 ---
 
-## Feature Branch Team Workflow
+### Feature Branch Team Workflow
 
 ```
 1. git checkout main && git pull
@@ -281,7 +281,7 @@ gh pr merge 7 --squash
 8. git checkout main && git pull && git branch -d feat/my-feature
 ```
 
-## Team Rules
+### Team Rules
 
 - Never push directly to main — always use PRs
 - Never force-push to shared branches

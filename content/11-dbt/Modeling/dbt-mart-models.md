@@ -18,7 +18,7 @@ Mart models are the [[gold-transforms|gold layer]] — consumption-ready tables 
 
 ---
 
-## Core Principles
+### Mart Model Core Principles
 
 | Rule | Rationale |
 |---|---|
@@ -31,7 +31,7 @@ Mart models are the [[gold-transforms|gold layer]] — consumption-ready tables 
 
 ---
 
-## Grain Definition
+### Mart Grain Definition
 
 Every mart model must have a clearly stated grain — the combination of columns that uniquely identifies one row.
 
@@ -46,7 +46,7 @@ Every mart model must have a clearly stated grain — the combination of columns
 
 ---
 
-## fct_index_performance
+### fct_index_performance
 
 ```sql
 -- models/marts/performance/fct_index_performance.sql
@@ -178,7 +178,7 @@ select * from rolling
 
 ---
 
-## fct_composite_scores
+### fct_composite_scores
 
 Combines ESG, momentum, and value signals into a single composite factor score per security per date. Consumed by portfolio construction tooling.
 
@@ -279,7 +279,7 @@ select * from combined
 
 ---
 
-## dim_constituents
+### dim_constituents
 
 Slowly-changing reference dimension for securities that have ever been index constituents.
 
@@ -362,7 +362,7 @@ left join sectors s
 
 ---
 
-## dim_indices
+### dim_indices
 
 Reference dimension for all indices tracked by the platform.
 
@@ -396,7 +396,7 @@ left join {{ ref('stg_indices__methodology') }} m using (index_id)
 
 ---
 
-## _performance.yml — Mart Documentation and Tests
+### _performance.yml — Mart Documentation and Tests
 
 ```yaml
 # models/marts/performance/_performance.yml
@@ -462,7 +462,7 @@ models:
 
 ---
 
-## _exposures.yml
+### _exposures.yml
 
 Exposures declare which external systems consume mart models, enabling impact analysis.
 

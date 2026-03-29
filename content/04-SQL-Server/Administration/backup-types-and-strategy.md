@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server backup, full backup, differential backup, transaction log backup, copy-only backup, 3-2-1 rule, backup strategy]
 keywords: [backup, full backup, differential backup, transaction log backup, copy-only backup, BACKUP DATABASE, BACKUP LOG, RESTORE VERIFYONLY, 3-2-1 rule, GCS backup, recovery model, RPO, RTO, .bak, .trn, compression, checksum, PITR, point-in-time recovery]
 description: "SQL Server backup types (full, differential, transaction log, copy-only), the 3-2-1 backup rule, recovery model selection, and an automated GCS backup script."
@@ -37,7 +37,7 @@ Backups are the single most critical responsibility of anyone operating a databa
 
 ---
 
-## T-SQL Backup Commands
+### T-SQL Backup Commands
 
 ```sql
 -- Full backup (the foundation)
@@ -79,7 +79,7 @@ RESTORE VERIFYONLY FROM DISK = '/var/opt/mssql/backup/mydb_full.bak' WITH CHECKS
 
 ---
 
-## The 3-2-1 Backup Rule
+### The 3-2-1 Backup Rule
 
 > [!info] The 3-2-1 Rule
 > - **3** copies of your data (production + 2 backups)
@@ -90,7 +90,7 @@ RESTORE VERIFYONLY FROM DISK = '/var/opt/mssql/backup/mydb_full.bak' WITH CHECKS
 
 ---
 
-## Automated Backup-to-GCS Script
+### Automated Backup-to-GCS Script
 
 ```bash
 # Automated backup-to-GCS script (run via cron)
@@ -155,7 +155,7 @@ DBCC SHRINKFILE(N'mydb_log', 64);
 
 ---
 
-## Point-in-Time Recovery Sequence
+### Point-in-Time Recovery Sequence
 
 To restore to a specific second in time, replay backups in this order:
 
@@ -167,7 +167,7 @@ See [[restore-and-recovery]] for the complete RESTORE commands, and [[backup-res
 
 ---
 
-## Production HA Backup Schedule
+### Production HA Backup Schedule
 
 | Backup Type | Frequency | Storage | Purpose |
 |---|---|---|---|
@@ -177,7 +177,7 @@ See [[restore-and-recovery]] for the complete RESTORE commands, and [[backup-res
 
 ---
 
-## Related
+### Related
 
 - [[restore-and-recovery]] — full restore, PITR, restore to new database
 - [[server-configuration]] — recovery model configuration with `mssql-conf`

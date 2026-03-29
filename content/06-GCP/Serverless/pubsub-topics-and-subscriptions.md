@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, pubsub]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, pubsub]
 aliases: [Pub/Sub topics, Pub/Sub subscriptions, gcloud pubsub, dead letter queue, push subscription, pull subscription]
 keywords: [pubsub, pub/sub, topic, subscription, pull subscription, push subscription, dead letter, ack deadline, message retention, at-least-once delivery, acknowledgement, gcloud pubsub topics create, gcloud pubsub subscriptions create, decoupling, asynchronous messaging]
 description: "How to create Pub/Sub topics and subscriptions — including pull vs push models, acknowledgement deadlines, message retention, and dead letter queues for failed message handling."
@@ -16,7 +16,7 @@ status: complete
 
 Pub/Sub decouples producers from consumers. Instead of pipeline stages calling each other directly (tight coupling), they publish events to topics and subscribe independently. This pattern enables retry logic, dead letter queues, and horizontal scaling without changing the producer code. A topic is the named channel; subscriptions are the delivery mechanisms. Multiple subscriptions on the same topic each receive all messages independently.
 
-## Why Pub/Sub for Data Pipelines
+### Why Pub/Sub for Data Pipelines
 
 ```
 Without Pub/Sub (tight coupling):
@@ -27,7 +27,7 @@ With Pub/Sub (loose coupling):
   Stage B can retry, scale, or be replaced without touching Stage A
 ```
 
-## Creating Topics
+### Creating Pub/Sub Topics
 
 ```bash
 # Create a topic
@@ -36,7 +36,7 @@ gcloud pubsub topics create pipeline-events
 # Multiple subscriptions can receive messages from the same topic
 ```
 
-## Creating Pull Subscriptions
+### Creating Pub/Sub Pull Subscriptions
 
 Pull subscriptions require the consumer to actively fetch messages. The consumer controls the rate of processing.
 
@@ -54,7 +54,7 @@ gcloud pubsub subscriptions create pipeline-sub \
 > [!info] At-Least-Once Delivery
 > Pub/Sub guarantees **at-least-once delivery**: every message will be delivered at least once, but may be delivered more than once. The `--ack-deadline` determines how long the consumer has to process and acknowledge a message before Pub/Sub considers it unacknowledged and redelivers it. Set the deadline to exceed your maximum expected processing time plus margin.
 
-## Creating Push Subscriptions
+### Creating Pub/Sub Push Subscriptions
 
 Push subscriptions have Pub/Sub deliver messages to an HTTP endpoint. Used for event-driven triggers to Cloud Run or Cloud Functions.
 
@@ -67,7 +67,7 @@ gcloud pubsub subscriptions create pipeline-push \
 # Use for: event-driven triggers (pipeline step completed → trigger next step)
 ```
 
-## Dead Letter Topics
+### Pub/Sub Dead Letter Topics
 
 Dead letter topics capture messages that repeatedly fail processing. After a configurable number of delivery attempts, Pub/Sub stops trying to deliver the message to the main subscription and routes it to the dead letter topic instead.
 
@@ -84,7 +84,7 @@ gcloud pubsub subscriptions update pipeline-sub \
 > [!tip] Always Configure Dead Letter Topics in Production
 > Without a dead letter topic, a single unprocessable message (due to a malformed payload or a persistent consumer bug) will be retried indefinitely and can block all subsequent message processing. Dead letter topics isolate these "poison pill" messages so the rest of the queue can continue flowing.
 
-## Pull vs Push Comparison
+### Pub/Sub Pull vs Push Comparison
 
 | Feature | Pull | Push |
 |---|---|---|

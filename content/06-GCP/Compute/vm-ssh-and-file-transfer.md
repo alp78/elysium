@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, compute-engine]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, compute-engine]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
 keywords: [gcloud compute ssh, IAP, Identity-Aware Proxy, tunnel-through-iap, scp, file transfer, remote command, secure copy, no public IP, pscp, permission denied, sudo cp, SSH into VM]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."
@@ -16,7 +16,7 @@ status: complete
 
 `gcloud compute ssh` and `gcloud compute scp` provide secure, certificate-based access to Compute Engine VMs through Google's Identity-Aware Proxy (IAP) tunnel. The IAP tunnel routes traffic through Google's internal network, meaning VMs do not need a public IP address — a significant security improvement over traditional public SSH. This is the production-standard access method for GCE VMs.
 
-## SSH into a VM
+### SSH into a Compute Engine VM via IAP
 
 ```bash
 # SSH into a VM (through IAP tunnel — no public IP needed)
@@ -29,7 +29,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 > [!tip] No Public IP Required
 > Using `--tunnel-through-iap` means your VM can have no external IP address at all. This eliminates an entire attack surface — the VM is completely unreachable from the public internet, yet you can still SSH into it using your gcloud credentials.
 
-## Running Remote Commands Non-Interactively
+### Running Remote Commands Non-Interactively on a VM
 
 ```bash
 # Run a command without interactive session
@@ -40,7 +40,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 # Use case: quick health check without opening an interactive session
 ```
 
-## Copying Files To and From VMs
+### Copying Files To and From VMs with gcloud compute scp
 
 The `scp` and `rsync` patterns here mirror the general [[data-transfer]] commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [[terraform-compute]].
 
@@ -58,7 +58,7 @@ gcloud compute scp file1.py file2.py data-pipeline-airflow:/tmp/ --zone=europe-w
 gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=europe-west1-b --tunnel-through-iap
 ```
 
-## Handling Permission Errors on SCP
+### Handling Permission Errors on SCP
 
 > [!warning] Permission Errors on SCP
 > `gcloud compute scp` logs in as your username, which may not have write access to the target directory (e.g., `/opt/airflow/dags/` owned by UID 50000). Fix:
@@ -71,7 +71,7 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 > ```
 > On Windows with `pscp`, remember: it doesn't expand `~` — always use absolute paths.
 
-## IAP Tunnel Architecture
+### IAP Tunnel Architecture for VM Access
 
 ```
 Your machine ──► Google IAP Proxy ──► GCP Internal Network ──► VM (private IP only)
@@ -79,7 +79,7 @@ Your machine ──► Google IAP Proxy ──► GCP Internal Network ──►
 
 IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy. For the full tunnel mechanics including port forwarding and troubleshooting, see [[iap-tunneling]].
 
-## Prerequisites for IAP Access
+### Prerequisites for IAP Access
 
 - `roles/iap.tunnelResourceAccessor` IAM role on the project or VM resource
 - `compute.googleapis.com` API enabled (see [[gcp-projects-and-apis]])

@@ -19,7 +19,7 @@ A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents reg
 
 ---
 
-## CI Goals
+### dbt CI Goals
 
 | Goal | Mechanism |
 |------|-----------|
@@ -31,7 +31,7 @@ A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents reg
 
 ---
 
-## Slim Build: State-Based Selection
+### dbt Slim Build: State-Based Selection
 
 dbt compares the current project against a previously compiled manifest (`manifest.json`) and selects only the nodes that changed or depend on changed nodes.
 
@@ -133,7 +133,7 @@ No secrets stored in GitHub. The OIDC token is short-lived and repo-scoped.
 
 ---
 
-## Pre-Commit Hooks
+### dbt Pre-Commit Hooks
 
 Install hooks that run locally before a commit reaches CI, catching issues at the cheapest possible moment.
 
@@ -168,7 +168,7 @@ pre-commit install
 
 ---
 
-## Full CI Workflow: `.github/workflows/dbt-ci.yml`
+### Full dbt CI Workflow: dbt-ci.yml
 
 ```yaml
 name: dbt CI
@@ -261,7 +261,7 @@ jobs:
 
 ---
 
-## Full CD Workflow: `.github/workflows/dbt-cd.yml`
+### Full dbt CD Workflow: dbt-cd.yml
 
 ```yaml
 name: dbt CD

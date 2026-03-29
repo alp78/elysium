@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server locking, lock manager, isolation level, lock escalation, shared lock, exclusive lock, blocking chain, intent lock]
 keywords: [blocking, locking, shared lock, exclusive lock, update lock, intent lock, IX, IS, SIX, lock escalation, lock granularity, row lock, page lock, table lock, isolation level, READ COMMITTED, REPEATABLE READ, SERIALIZABLE, READ UNCOMMITTED, RCSI, Read Committed Snapshot Isolation, version store, blocking chain, head blocker, XACT_ABORT, HOLDLOCK, NOLOCK, WITH UPDLOCK, deadlock, LCK_M, sys.dm_tran_locks, lock compatibility matrix]
 description: "SQL Server lock types, lock granularity hierarchy, lock compatibility matrix, isolation levels, and RCSI. Includes blocking chain detection, lock escalation prevention, and how each CRUD operation interacts with the lock manager."
@@ -108,7 +108,7 @@ ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE);
 
 ---
 
-## How Each CRUD Operation Acquires Locks
+### How Each CRUD Operation Acquires Locks
 
 | Operation | Lock sequence |
 |---|---|
@@ -229,7 +229,7 @@ WHERE s.session_id = <blocker_session_id>;
 
 ---
 
-## Locking Hints (Use Sparingly)
+### Locking Hints (Use Sparingly)
 
 SQL Server allows explicit lock hints in queries. Use these only when you know exactly what you're doing — they override the optimizer's lock choice.
 
@@ -247,7 +247,7 @@ SQL Server allows explicit lock hints in queries. Use these only when you know e
 
 ---
 
-## Preventing Blocking with XACT_ABORT
+### Preventing Blocking with XACT_ABORT
 
 Setting `XACT_ABORT ON` ensures that if any statement in a transaction fails (including a lock timeout), the entire transaction is automatically rolled back. Without this, a failed statement within a transaction leaves the transaction open and its locks held indefinitely.
 
@@ -313,7 +313,7 @@ High `LCK_M_*` waits in [[wait-stats-analysis|sys.dm_os_wait_stats]] indicate sy
 
 ---
 
-## Related
+### Related
 
 - [[deadlock-detection-and-prevention]] — circular waits, Extended Events capture, retry logic
 - [[race-conditions]] — silent data corruption from concurrent reads + writes

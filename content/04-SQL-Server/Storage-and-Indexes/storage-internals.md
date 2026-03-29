@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server pages, extents, buffer pool, WAL, write-ahead logging, checkpoint, LSN, log sequence number, heap, dirty page, ghost record, page split, tempdb internals, VLF, virtual log files, IAM, GAM, SGAM, PFS, B-tree, row offset array, forwarding pointer]
 keywords: [page, extent, data file, mdf, ldf, log file, buffer pool, dirty page, checkpoint, WAL, write-ahead logging, LSN, log sequence number, heap, clustered index, B-tree, row offset array, slot array, page split, IAM, GAM, SGAM, PFS, forwarding pointer, ghost record, tempdb, version store, RCSI, VLF, virtual log files, system databases, master msdb model tempdb, lock manager, lock escalation, CRUD internals, bulk insert, minimal logging, crash recovery, redo roll forward, undo roll back]
 description: "SQL Server storage internals: the 8 KB page and 64 KB extent model, the file architecture (.mdf and .ldf), page anatomy (96-byte header, row offset array), how WAL and checkpoints work, CRUD mechanics at the page level, B-tree structures, page splits, tempdb consumers, the buffer pool, and the lock manager's compatibility matrix."
@@ -18,7 +18,7 @@ SQL Server reads and writes in fixed 8 KB pages — every I/O operation moves ex
 
 ---
 
-## Glossary — Key Terms
+### Glossary — Key Terms
 
 | Term | Definition |
 |---|---|
@@ -1226,7 +1226,7 @@ ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE);
 
 ---
 
-## Full Subsystem Interaction — Write Path (Pipeline INSERT)
+### Full Subsystem Interaction — Write Path (Pipeline INSERT)
 
 ```
 Python pipeline: pymssql executemany() → 50 rows for market_index, 2026-03-10
@@ -1333,7 +1333,7 @@ Python pipeline: pymssql executemany() → 50 rows for market_index, 2026-03-10
 
 ---
 
-## Related
+### Related
 
 - [[index-types-and-strategy]] — how clustered, nonclustered, covering, filtered, and columnstore indexes use these structures
 - [[index-maintenance]] — fragmentation, REORGANIZE vs REBUILD, fill factor

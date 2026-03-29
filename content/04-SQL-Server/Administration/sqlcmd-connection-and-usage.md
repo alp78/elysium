@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [sqlcmd, go-sqlcmd, mssql-tools, Invoke-Sqlcmd, sql server command line]
 keywords: [sqlcmd, sql server command line, mssql-tools18, connection flags, -S -U -P -d -C, execute query, script file, CSV export, PowerShell Invoke-Sqlcmd, go-sqlcmd, IAP tunnel, TDS, ODBC]
 description: "How to connect to SQL Server from the command line using sqlcmd, including all common flags, inline queries, script execution, and CSV export in both Linux and PowerShell."
@@ -16,7 +16,7 @@ status: complete
 
 `sqlcmd` is the primary command-line interface for SQL Server, used for connecting, executing ad-hoc queries, running script files, and exporting results. Understanding every flag and output option is essential for scripting production operations and incident response.
 
-## go-sqlcmd vs Classic sqlcmd
+### go-sqlcmd vs Classic sqlcmd
 
 Microsoft ships two versions of `sqlcmd`:
 
@@ -131,7 +131,7 @@ sqlcmd -S 127.0.0.1,1435 -U sa -P 'YourPassword' -C -d analytics_db
 
 ---
 
-## Scripted Connection Testing
+### Scripted Connection Testing
 
 The try/catch pattern using `&&` and `||`:
 
@@ -144,7 +144,7 @@ sqlcmd -S 10.132.0.2 -U sa -P "$DB_PASS" -d analytics_db -Q "SELECT 1" > /dev/nu
 
 ---
 
-## Automated Backup Script Using sqlcmd
+### Automated Backup Script Using sqlcmd
 
 ```bash
 # Automated backup-to-GCS script (run via cron)
@@ -159,7 +159,7 @@ rm "${BACKUP_PATH}"  # remove local copy after upload
 
 ---
 
-## Flag Quick Reference
+### Flag Quick Reference
 
 | Flag | Purpose | Example |
 |------|---------|---------|
@@ -183,7 +183,7 @@ rm "${BACKUP_PATH}"  # remove local copy after upload
 
 ---
 
-## Dedicated Admin Connection (DAC)
+### Dedicated Admin Connection (DAC)
 
 Port 1431 is the Dedicated Admin Connection — an emergency-only connection that bypasses normal resource limits. Used when the server is so overloaded that normal connections are rejected.
 
@@ -192,7 +192,7 @@ Port 1431 is the Dedicated Admin Connection — an emergency-only connection tha
 sqlcmd -S admin:localhost -U sa
 ```
 
-## Related
+### Related
 
 - [[essential-dba-queries]] — queries to run after connecting
 - [[server-configuration]] — configuring max memory, RCSI, recovery models

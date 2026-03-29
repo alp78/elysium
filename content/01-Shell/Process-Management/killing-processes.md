@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate process]
 keywords: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate, signal, graceful shutdown, force kill, process group, PGID, strace, lock file cleanup, Stop-Process]
 description: "Graceful and forceful process termination in Linux and PowerShell. Covers the correct kill escalation sequence (SIGTERM → strace → SIGKILL), pkill -f for pattern matching, process groups, and cleanup after force kills."
@@ -53,7 +53,7 @@ kill -- -<PGID>         # negative PID signals the entire process group
 # Find PGID: ps -o pid,pgid,cmd -p <PID>
 ```
 
-## The Correct Kill Escalation
+### SIGTERM → strace → SIGKILL — the correct kill escalation sequence
 
 > [!tip] The Correct Kill Escalation
 > ```
@@ -76,7 +76,7 @@ kill -- -<PGID>         # negative PID signals the entire process group
 > - Incomplete writes: check file sizes and checksums
 > - Database transaction state: look for open transactions in `sys.dm_exec_sessions` -- if a SQL Server process is the victim, check [[deadlock-detection-and-prevention]] for proper KILL session handling
 
-## PowerShell
+### PowerShell — Stop-Process for graceful and forced termination
 
 ```powershell
 # Graceful stop

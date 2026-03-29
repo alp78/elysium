@@ -71,7 +71,7 @@ top
 htop
 ```
 
-## Production Scenario — Airflow VM Is Slow
+### Diagnosing a slow Airflow VM — ps, docker stats, iostat workflow
 
 ```bash
 # Step 1: Quick overview
@@ -96,9 +96,8 @@ iostat -xz 2 3    # -x = extended stats, -z = suppress zero-activity, 2 3 = ever
 > - **await** — average I/O wait time in ms (>20ms = slow disk)
 > - **%util** — percentage of time the device is busy (>80% = saturated)
 > - If `%util` is 100%, your pipeline is I/O bound — no amount of CPU optimization will help
-```
 
-## The D State — Uninterruptible Sleep
+### The D state — uninterruptible sleep processes that cannot be killed
 
 > [!warning] D State Processes Cannot Be Killed — Not Even with `kill -9`
 > If you see processes in state `D` in `ps aux`, they are waiting for I/O and **cannot be killed** — not even with `kill -9`. They will stay until the I/O completes or the kernel gives up. Common causes:
@@ -108,7 +107,7 @@ iostat -xz 2 3    # -x = extended stats, -z = suppress zero-activity, 2 3 = ever
 >
 > If you have many `D` state processes, check `dmesg | tail -50` for kernel-level errors. This is a system-level problem, not something you can fix from userspace.
 
-## PowerShell
+### PowerShell — Get-Process, Get-CimInstance for process and system monitoring
 
 ```powershell
 # All processes sorted by CPU

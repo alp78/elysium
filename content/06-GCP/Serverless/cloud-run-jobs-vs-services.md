@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-run]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, cloud-run]
 aliases: [Cloud Run Jobs, Cloud Run Services, gcloud run jobs, serverless containers, Cloud Run ETL, cold start]
 keywords: [cloud run, cloud run jobs, cloud run services, serverless, containers, docker, execute job, cold start, ETL batch job, pipeline stage, gcloud run jobs execute, gcloud run jobs update, memory, CPU, timeout, retries, image size, multi-stage build, min instances]
 description: "How to manage Cloud Run Jobs vs Services for data pipeline workloads — executing jobs, viewing logs, updating configuration, and mitigating cold start latency for ETL containers."
@@ -16,7 +16,7 @@ status: complete
 
 Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. For infrastructure-as-code deployment, [[terraform-cloud-run]] provides the Terraform resource definitions. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running.
 
-## Jobs vs Services Comparison
+### Cloud Run Jobs vs Services Comparison
 
 | Feature | Cloud Run Service | Cloud Run Job |
 |---|---|---|
@@ -26,7 +26,7 @@ Cloud Run runs Docker containers without managing servers. For data engineering,
 | Timeout | 60 min max | 24 hours max |
 | Use case | APIs, webhooks, dashboards | ETL stages, data processing, batch jobs |
 
-## Listing and Executing Jobs
+### Listing and Executing Cloud Run Jobs
 
 ```bash
 # List jobs
@@ -43,7 +43,7 @@ gcloud run jobs execute data-pipeline-pipeline --region=europe-west1 \
 # Use case: run a specific stage for a specific index (instead of the full pipeline)
 ```
 
-## Monitoring Executions
+### Monitoring Cloud Run Job Executions
 
 ```bash
 # View recent executions
@@ -54,7 +54,7 @@ gcloud run jobs executions list --job=data-pipeline-pipeline --region=europe-wes
 gcloud run jobs executions logs <execution-name> --region=europe-west1
 ```
 
-## Updating Job Configuration
+### Updating Cloud Run Job Configuration
 
 ```bash
 # Update a job (change image, resources, environment)
@@ -70,7 +70,7 @@ gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
 # --max-retries = automatic retry on failure (0 = no retry)
 ```
 
-## Cold Starts
+### Cloud Run Cold Start Mitigation
 
 The first execution after a period of inactivity takes longer because Cloud Run needs to pull and start the container image. For data pipelines triggered 3x/day, cold starts are a minor annoyance. Mitigation strategies:
 
@@ -80,7 +80,7 @@ The first execution after a period of inactivity takes longer because Cloud Run 
 > - **Min instances = 1** (for services): keeps one instance warm. Not applicable to Jobs (they always cold start).
 > - **CPU allocation = always** (for services): keeps CPU allocated even between requests, reducing startup latency.
 
-## Pipeline Architecture Pattern
+### Cloud Run Pipeline Architecture Pattern
 
 ```
 Airflow DAG
@@ -97,7 +97,7 @@ Airflow DAG
 
 Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [[github-actions-workflows]].
 
-## Environment Variables and Secrets
+### Cloud Run Environment Variables and Secrets
 
 Pass configuration via environment variables. For sensitive values (database passwords, API keys), reference Secret Manager instead of hardcoding in `--set-env-vars`:
 

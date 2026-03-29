@@ -2,7 +2,7 @@
 type: reference
 category: sql-server
 technology: [sql-server, t-sql, bigquery]
-tags: [performance, sql, bigquery]
+tags: [performance, sql, bigquery, sql-server, tsql]
 aliases: [PIT, point-in-time, effective-dated, bi-temporal, as-of query, weight normalization, constituent list, rebalancing, index reconstitution, SCD Type 2, temporal join]
 keywords: [point-in-time, PIT query, effective date, expiry date, bi-temporal, valid time, transaction time, system versioning, temporal table, weight normalization, residual distribution, rounding error, constituent membership, rebalancing, reconstitution, free float, capping factor, index divisor, covering index, columnstore, LAST_VALUE IGNORE NULLS, forward fill, ESG temporal alignment, reconciliation, audit, EU BMR]
 description: "Point-in-Time data integrity patterns for stock index calculation and ESG scoring — covers effective-dated constituent lists, weight normalization to exactly 1.00000000, bi-temporal modeling, and performance tuning for large-scale price/ESG joins."
@@ -497,7 +497,7 @@ print(f"Reconciliation PASSED: max diff = {max_diff:.10f}")
 
 ---
 
-## See Also
+### See Also
 
 - [[dimensional-modeling]] — Star schema design for index data warehouses
 - [[data-warehouse-architecture]] — SCD types and temporal modeling patterns

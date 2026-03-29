@@ -480,7 +480,7 @@ on-run-end:
 
 ---
 
-## Anti-Patterns
+### Jinja and Macro Anti-Patterns
 
 > [!danger] Anti-patterns to avoid
 

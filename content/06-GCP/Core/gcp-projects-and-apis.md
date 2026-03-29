@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [infrastructure, api, gcp]
+tags: [infrastructure, api, gcp, gcloud]
 aliases: [GCP projects, GCP APIs, gcloud services, enable API, project listing]
 keywords: [gcp projects, project list, gcloud projects list, enable API, gcloud services enable, bigquery API, cloud run API, pubsub API, compute API, service activation, API enablement, data engineering APIs]
 description: "How to list GCP projects, inspect project metadata, and enable or verify the APIs required for data engineering workloads including BigQuery, Cloud Run, Pub/Sub, and Compute Engine."
@@ -16,11 +16,11 @@ status: complete
 
 GCP projects are the fundamental organizational unit for resources, billing, and access control. Every resource — VMs, BigQuery datasets, Cloud Run jobs, GCS buckets — lives inside a project. APIs must be explicitly enabled per project before the corresponding services can be used; an `API not enabled` error is always the result of a missing `gcloud services enable` call.
 
-## Why It Matters
+### Why GCP Projects and APIs Matter
 
 A common failure mode when setting up a new GCP project is running `gcloud run jobs execute` or `bq query` only to receive an error that the API is disabled. Knowing which APIs to enable upfront — and how to verify what is currently enabled — eliminates this class of errors. Projects also serve as the billing boundary and the IAM scope for [[service-accounts-and-iam|service account]] permissions.
 
-## Listing and Describing Projects
+### Listing and Describing GCP Projects
 
 ```bash
 # List all projects you have access to
@@ -31,7 +31,7 @@ gcloud projects list
 gcloud projects describe data-platform-prod
 ```
 
-## Listing and Enabling APIs
+### Listing and Enabling GCP APIs
 
 ```bash
 # List enabled APIs (what services are activated?)
@@ -49,7 +49,7 @@ gcloud services enable compute.googleapis.com
 gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googleapis.com
 ```
 
-## Common APIs for Data Engineering
+### Common GCP APIs for Data Engineering
 
 ```bash
 # Common APIs for data engineering:
@@ -82,7 +82,7 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 > [!warning] APIs Are Per-Project
 > Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [[terraform-index|Terraform]].
 
-## API Lifecycle States
+### GCP API Lifecycle States
 
 A project's `lifecycleState` field (visible in `gcloud projects describe`) indicates whether the project is `ACTIVE`, `DELETE_REQUESTED`, or `DELETE_IN_PROGRESS`. Deleting a project is a 30-day soft delete — resources are retained but inaccessible, and the project can be restored within that window.
 

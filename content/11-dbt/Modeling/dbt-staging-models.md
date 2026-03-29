@@ -18,7 +18,7 @@ Staging models form the first transformation layer. They sit directly on top of 
 
 ---
 
-## Core Principles
+### Staging Model Core Principles
 
 | Rule | Rationale |
 |---|---|
@@ -37,7 +37,7 @@ Staging models form the first transformation layer. They sit directly on top of 
 
 ---
 
-## _sources.yml — Full Declaration with Freshness
+### dbt _sources.yml — Full Declaration with Freshness
 
 ```yaml
 # models/staging/market_data/_sources.yml
@@ -162,7 +162,7 @@ sources:
 
 ---
 
-## stg_market_data__daily_prices
+### stg_market_data__daily_prices
 
 ```sql
 -- models/staging/market_data/stg_market_data__daily_prices.sql
@@ -208,7 +208,7 @@ select * from renamed
 
 ---
 
-## stg_esg__scores
+### stg_esg__scores
 
 ```sql
 -- models/staging/esg/stg_esg__scores.sql
@@ -251,7 +251,7 @@ select * from renamed
 
 ---
 
-## stg_market_data__corporate_actions
+### stg_market_data__corporate_actions
 
 ```sql
 -- models/staging/market_data/stg_market_data__corporate_actions.sql
@@ -303,7 +303,7 @@ select * from renamed
 
 ---
 
-## stg_market_data__index_constituents
+### stg_market_data__index_constituents
 
 ```sql
 -- models/staging/market_data/stg_market_data__index_constituents.sql
@@ -347,7 +347,7 @@ select * from renamed
 
 ---
 
-## _staging_market_data.yml — Column-Level Documentation
+### _staging_market_data.yml — Column-Level Documentation
 
 ```yaml
 # models/staging/market_data/_staging_market_data.yml
@@ -412,7 +412,7 @@ models:
 
 ---
 
-## Source Freshness in Practice
+### dbt Source Freshness in Practice
 
 ```bash
 # Run freshness checks for all sources
@@ -432,7 +432,7 @@ Wire freshness failures into your orchestration layer to block downstream runs w
 
 ---
 
-## Anti-Patterns
+### Staging Model Anti-Patterns
 
 > [!WARNING] Anti-patterns to avoid in staging
 

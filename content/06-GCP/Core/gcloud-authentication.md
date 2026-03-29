@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud auth, GCP authentication, Application Default Credentials, ADC, gcloud login]
 keywords: [gcloud auth login, application-default, ADC, OAuth2, service account authentication, key file, workload identity, GOOGLE_APPLICATION_CREDENTIALS, metadata server, gcloud auth list, access token, credential search order]
 description: "How GCP authentication works with gcloud CLI: interactive login, Application Default Credentials (ADC), service account key files, and the credential search order that client libraries follow."
@@ -16,7 +16,7 @@ status: complete
 
 GCP uses OAuth 2.0 tokens for authentication. Every gcloud command sends a token that identifies who you are and what you are authorized to do. Understanding the two types of credentials — user credentials and Application Default Credentials (ADC) — prevents the most common "permission denied" errors in pipeline development.
 
-## How It Works
+### How GCP Authentication Works
 
 There are three authentication flows: interactive login for humans, Application Default Credentials for code/SDKs, and service account activation for CI/CD and production environments. The gcloud CLI commands are identical on Linux and Windows.
 
@@ -73,7 +73,7 @@ gcloud auth revoke
 # Removes stored credentials for the active account
 ```
 
-## The ADC Credential Search Order
+### The ADC Credential Search Order
 
 > [!info] The ADC Search Order
 > When your Python code does `google.auth.default()` (covered in [[17_py_gcp]]), it searches for credentials in this exact order:
@@ -87,7 +87,7 @@ gcloud auth revoke
 > [!tip] Best Practice
 > Use `GOOGLE_APPLICATION_CREDENTIALS` locally for development, and rely on the metadata server in production. Never commit key files to source control.
 
-## Gotchas and Edge Cases
+### GCP Authentication Gotchas and Edge Cases
 
 - `gcloud auth login` and `gcloud auth application-default login` are **different credentials** for different purposes. You often need both for local development.
 - Service account key files (`key.json`) do not expire. If leaked, attackers have permanent access until the key is explicitly deleted. See [[service-accounts-and-iam]] for key rotation.

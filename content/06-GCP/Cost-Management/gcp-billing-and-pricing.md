@@ -10,7 +10,7 @@ technology:
   - firestore
   - compute-engine
   - dataflow
-tags: [cost, infrastructure, bigquery, gcp, firestore]
+tags: [cost, infrastructure, bigquery, gcp, firestore, billing]
 aliases:
   - GCP billing
   - GCP pricing
@@ -1134,7 +1134,7 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 
 ---
 
-## Master Pricing Summary Table
+### GCP Master Pricing Summary Table
 
 | Service | Billing unit | Price | Free tier | Biggest cost trap |
 |---------|-------------|-------|-----------|------------------|
@@ -1160,7 +1160,7 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 
 ---
 
-## Discount Mechanisms Summary
+### GCP Discount Mechanisms Summary
 
 | Discount type | Services | Discount | Requirement |
 |--------------|----------|----------|-------------|
@@ -1367,7 +1367,7 @@ ORDER BY ts.size_bytes DESC
 
 ---
 
-## Quick Reference: Free Tiers
+### GCP Free Tiers Quick Reference
 
 | Service | Free tier | Notes |
 |---------|-----------|-------|

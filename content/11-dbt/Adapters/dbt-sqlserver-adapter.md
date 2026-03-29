@@ -18,7 +18,7 @@ The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server 
 
 ---
 
-## Installation
+### SQL Server Adapter Installation
 
 ```bash
 # Pin both packages together — mismatches cause silent runtime errors
@@ -111,7 +111,7 @@ financial_index:
 
 ---
 
-## Connection Parameters Reference
+### SQL Server Connection Parameters Reference
 
 | Parameter | Type | Notes |
 |---|---|---|
@@ -252,7 +252,7 @@ SELECT value FROM STRING_SPLIT(tag_list, ',')
 
 ---
 
-## Post-Hook Indexes
+### SQL Server Post-Hook Indexes
 
 SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [[index-types-and-strategy]]. For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
 
@@ -288,7 +288,7 @@ SQL Server does not auto-create indexes on dbt-managed tables. For guidance on c
 
 ---
 
-## Statistics Update After Incremental Loads
+### Statistics Update After Incremental Loads
 
 SQL Server's query optimizer relies on column statistics. After large incremental appends, stale statistics cause poor query plans. Add an `UPDATE STATISTICS` post-hook on high-churn incremental models.
 
@@ -307,7 +307,7 @@ For very large tables, `WITH SAMPLE 30 PERCENT` is faster at the cost of some ac
 
 ---
 
-## TempDB Impact During dbt Runs
+### TempDB Impact During dbt Runs
 
 SQL Server uses TempDB for intermediate spools, sort operations, and hash joins. Multi-threaded dbt runs generate concurrent TempDB activity.
 
@@ -328,7 +328,7 @@ WHERE database_id = 2;  -- TempDB is always DB 2
 
 ---
 
-## Column Type Inference Limitation
+### SQL Server Column Type Inference Limitation
 
 `dbt-sqlserver` does not infer column data types from Python type annotations or schema YAML `data_type` fields in the same way as the Snowflake adapter. Explicit casting is required in model SQL.
 
@@ -346,7 +346,7 @@ When using `contracts` with `dbt-sqlserver`, all columns must have explicit `dat
 
 ---
 
-## Connection Pooling and Threads
+### SQL Server Connection Pooling and Threads
 
 `dbt-sqlserver` does not use a persistent connection pool — each thread opens a new ODBC connection at the start of the run and holds it for the duration. Implications:
 
@@ -362,7 +362,7 @@ connect_timeout: 60
 
 ---
 
-## Known Limitations Summary
+### SQL Server Adapter Known Limitations Summary
 
 | Feature | Status | Notes |
 |---|---|---|

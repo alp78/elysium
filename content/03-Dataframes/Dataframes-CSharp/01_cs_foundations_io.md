@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - Series, DataFrames, types, CSV, Parquet
 keywords: [Series, DataFrame, Index, dtypes, read_csv, read_parquet, to_csv, to_parquet, Polars.NET, Microsoft.Data.Analysis]
@@ -108,8 +108,7 @@ Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 - Polars.NET uses Arrow-backed memory with native null bitmaps.
 - Deedle uses .NET generics with `OptionalValue<T>` for missing data.
 
-#### Polars.NET – Create series from arrays with <code style="font-size:0.75em">Series.From&lt;T&gt;</code>
-
+#### Polars.NET – Create series from arrays with Series.From&lt;T&gt;
 ```csharp
 // Polars.NET – create a Series from an array
 var prices = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
@@ -135,8 +134,7 @@ display($"ints: {ints.DataTypeName}  |  strings: {strings.DataTypeName}  |  date
 
     ints: i32  |  strings: str  |  dates: date
 
-#### Deedle – Create series with <code style="font-size:0.75em">SeriesBuilder</code> and <code style="font-size:0.75em">ToOrdinalSeries</code>
-
+#### Deedle – Create series with SeriesBuilder and ToOrdinalSeries
 ```csharp
 // Deedle – quickest way: .ToOrdinalSeries() (keys = 0, 1, 2, ...)
 var prices = new[] { 100.0, 102.5, 101.8, 103.2, 104.1 }.ToOrdinalSeries();
@@ -204,8 +202,7 @@ s
 
 <small>Polars DataFrame: (5 rows, 1 columns)</small><table><thead><tr><th>with_nulls</th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>5</td></tr></tbody></table></div>
 
-#### Deedle – Represent missing values with <code style="font-size:0.75em">OptionalValue&lt;T&gt;</code>
-
+#### Deedle – Represent missing values with OptionalValue&lt;T&gt;
 ```csharp
 // Deedle – missing values arise when keys are absent after alignment
 var sparse = new SeriesBuilder<int, double>
@@ -361,8 +358,7 @@ fb.Frame
 </div>
 
 ---
-#### Polars.NET – Summarise a Series with <code style="font-size:0.75em">Describe</code>
-
+#### Polars.NET – Summarise a Series with Describe
 ```csharp
 // Polars.NET – built-in describe (returns a DataFrame)
 var s = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
@@ -418,8 +414,7 @@ fb.Frame
 - Polars.NET: column-oriented, Arrow-backed, no row index.
 - Deedle: `Frame<TRowKey, TColKey>` with a typed row index.
 
-#### Polars.NET – Build DataFrames from columns with <code style="font-size:0.75em">DataFrame.FromColumns</code>
-
+#### Polars.NET – Build DataFrames from columns with DataFrame.FromColumns
 ```csharp
 // Polars.NET – from an anonymous object (each property = column)
 var df = DataFrame.FromColumns(new
@@ -449,8 +444,7 @@ df2
 
 <small>Polars DataFrame: (3 rows, 3 columns)</small><table><thead><tr><th>Name</th><th>Age</th><th>Score</th></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td>Bob</td><td>25</td><td>88</td></tr><tr><td>Carol</td><td>35</td><td>92.3</td></tr></tbody></table></div>
 
-#### Deedle – Build DataFrames from records with <code style="font-size:0.75em">Frame.FromRecords</code> and <code style="font-size:0.75em">FrameBuilder</code>
-
+#### Deedle – Build DataFrames from records with Frame.FromRecords and FrameBuilder
 ```csharp
 // Deedle – from anonymous records (row-oriented, like a list of dicts)
 var df = Frame.FromRecords(new[]
@@ -495,8 +489,7 @@ df2
 </div>
 
 ---
-#### Polars.NET – Build DataFrames from record objects with <code style="font-size:0.75em">DataFrame.From&lt;T&gt;</code>
-
+#### Polars.NET – Build DataFrames from record objects with DataFrame.From&lt;T&gt;
 ```csharp
 // Polars.NET – from IEnumerable of records (anonymous types or POCOs)
 var records = new[]
@@ -512,8 +505,7 @@ df
 <small>Polars DataFrame: (3 rows, 5 columns)</small><table><thead><tr><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody><tr><td>2024-01-02</td><td>100</td><td>105</td><td>99</td><td>103.5</td></tr><tr><td>2024-01-03</td><td>103.5</td><td>106</td><td>102</td><td>104.8</td></tr><tr><td>2024-01-04</td><td>104.8</td><td>107.5</td><td>103</td><td>106.2</td></tr></tbody></table></div>
 
 ---
-#### Polars.NET – Build DataFrames from existing Series with <code style="font-size:0.75em">DataFrame.FromSeries</code>
-
+#### Polars.NET – Build DataFrames from existing Series with DataFrame.FromSeries
 ```csharp
 // Polars.NET – from existing Series
 var names  = Polars.CSharp.Series.From("name", new[] { "Alice", "Bob" });
@@ -1115,8 +1107,7 @@ foreach (var f in files)
 ---
 ## Reading CSV
 
-#### Polars.NET – Read CSV files with <code style="font-size:0.75em">DataFrame.ReadCsv</code>
-
+#### Polars.NET – Read CSV files with DataFrame.ReadCsv
 ```csharp
 // Polars.NET – basic CSV read
 var df = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
@@ -1157,8 +1148,7 @@ df.PrintSchema();
      |-- stock_splits: Float64
      |-- is_filled: Boolean
 
-#### Polars.NET – Lazy scan CSV with <code style="font-size:0.75em">LazyFrame.ScanCsv</code>
-
+#### Polars.NET – Lazy scan CSV with LazyFrame.ScanCsv
 ```csharp
 // Polars.NET – lazy scan CSV (reads schema only, data loaded on Collect)
 var lf = LazyFrame.ScanCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
@@ -1183,8 +1173,7 @@ result
 
 <small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0</td><td>0</td><td>false</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0</td><td>0</td><td>false</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle – Read CSV files with <code style="font-size:0.75em">Frame.ReadCsv</code>
-
+#### Deedle – Read CSV files with Frame.ReadCsv
 ```csharp
 // Deedle – basic CSV read
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -1218,8 +1207,7 @@ display($"Shape: {df.RowCount} x {df.ColumnCount}");
 ---
 ## Reading JSON
 
-#### Polars.NET – Read JSON files with <code style="font-size:0.75em">DataFrame.ReadJson</code>
-
+#### Polars.NET – Read JSON files with DataFrame.ReadJson
 ```csharp
 // Polars.NET – read JSON
 var df = DataFrame.ReadJson(Path.Combine(DATA, "eurostoxx50_ohlcv.json"));
@@ -1260,8 +1248,7 @@ Console.WriteLine("Use Frame.FromRecords() with a typed class to create a Deedle
 ---
 ## Reading Parquet
 
-#### Polars.NET – Read Parquet files with <code style="font-size:0.75em">DataFrame.ReadParquet</code>
-
+#### Polars.NET – Read Parquet files with DataFrame.ReadParquet
 ```csharp
 // Polars.NET – eager read Parquet
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
@@ -1442,8 +1429,7 @@ dfSsv.Head(3)
 
 <small>Polars DataFrame: (3 rows, 2 columns)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr></tbody></table></div>
 
-#### Deedle – Use custom separators with <code style="font-size:0.75em">Frame.ReadCsv</code>
-
+#### Deedle – Use custom separators with Frame.ReadCsv
 ```csharp
 // Deedle — custom separator
 var dfTsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.tsv"), separators: "\t");
@@ -1491,8 +1477,7 @@ foreach (var f in Directory.GetFiles(outDir))
       dim_country_out.json                     9.6 KB
       dim_country_out.parquet                  3.4 KB
 
-#### Deedle – Write DataFrames to CSV with <code style="font-size:0.75em">SaveCsv</code>
-
+#### Deedle – Write DataFrames to CSV with SaveCsv
 ```csharp
 // Deedle – write CSV
 var df = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));

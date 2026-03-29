@@ -2,7 +2,7 @@
 type: concept
 category: data-engineering
 technology: [python, sql-server, csharp, bash, powershell]
-tags: [shell, python, csharp, bash, sql]
+tags: [shell, python, csharp, bash, linux, powershell, sql-server]
 aliases: [datetime handling, ISO 8601, timezone management, date arithmetic, DST pitfalls, naive vs aware datetime, DATETIMEOFFSET, DateTimeOffset, UTC storage, date parsing, date formatting]
 keywords: [iso 8601, datetime, date, timezone, utc, dst, daylight saving, GETUTCDATE, SYSUTCDATETIME, DATETIMEOFFSET, DATETIME2, DateTimeOffset, DateOnly, zoneinfo, pytz, timedelta, relativedelta, dateutil, strptime, strftime, fromisoformat, date arithmetic, date parsing, date formatting, unix epoch, unix timestamp, pandas date_range, timedatectl, Get-Date, DATEADD, DATEDIFF, DATETRUNC, EOMONTH, AT TIME ZONE]
 description: "Comprehensive reference for date and time handling across all pipeline contexts — ISO 8601 formats, timezone management, UTC storage, DST pitfalls, and date arithmetic in Bash, PowerShell, SQL Server T-SQL, Python, and C#."
@@ -18,7 +18,7 @@ Dates look simple until you realize that "March 10, 2026 at 3 PM" means a differ
 
 This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then [[sql-python-csharp-transforms|SQL Server, Python, and C#]]. For the Python and C# datetime libraries in more depth, see [[11_py_datetimemathutils]] and [[11_cs_datetimemathutils]].
 
-## ISO 8601 — The Only Date Format You Should Use
+### ISO 8601 — the only date format you should use in pipelines
 
 ISO 8601 is the international standard for date/time representation. It is unambiguous, sortable as text, and understood by every language and database. If you use any other format in your pipeline, you are creating technical debt.
 

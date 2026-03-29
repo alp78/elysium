@@ -1,5 +1,5 @@
 ---
-tags: [git]
+tags: [git, github]
 type: reference
 technology: git
 status: stable
@@ -1541,7 +1541,7 @@ Git LFS is an extension — `git lfs install` must be run once per machine befor
 1. **Document LFS setup in onboarding checklist** (CONTRIBUTING.md):
 
 ```markdown
-## Prerequisites
+### Prerequisites
 Before cloning this repository:
 1. Install Git LFS: `brew install git-lfs` (macOS) or `choco install git-lfs` (Windows)
 2. Enable LFS: `git lfs install`

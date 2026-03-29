@@ -1,5 +1,5 @@
 ---
-tags: []
+tags: [runbook, incident]
 type: runbook
 severity: sev3
 technology: gcp, airflow, sql-server
@@ -16,7 +16,7 @@ updated: 2026-03-23
 
 ---
 
-## Staleness Thresholds
+### Staleness thresholds — vendor delivery SLA windows
 
 These thresholds are derived from the [[data-sources-and-refresh|data source refresh schedule]]. Confirm the current SLAs match your vendor contracts before escalating.
 
@@ -33,7 +33,7 @@ These thresholds are derived from the [[data-sources-and-refresh|data source ref
 
 ---
 
-## Symptoms
+### Symptoms — vendor file late or missing indicators
 
 - GCS landing zone has no file for today's expected delivery slot
 - Airflow sensor task timed out (default: 6 hours) waiting for the file
@@ -377,7 +377,7 @@ Regards,
 
 ---
 
-## Post-Incident Checklist
+### Post-incident checklist — vendor file resolution
 
 - [ ] Root cause confirmed (vendor-side delay, wrong file name, network issue, etc.)
 - [ ] `dbo.pipeline_lineage` updated with final status and notes

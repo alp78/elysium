@@ -2,7 +2,7 @@
 type: reference
 category: git
 technology: [git]
-tags: [git]
+tags: [git, github]
 aliases: [.gitignore, gitignore, git ignore, exclude files, git rm --cached]
 keywords: [.gitignore, gitignore, patterns, exclude, secrets, .env, credentials, pyc, pycache, venv, node_modules, git rm --cached, BFG, filter-branch, stop tracking, git secrets, accidentally committed]
 description: "How to use .gitignore to exclude files from version control, patterns for Python data engineering projects, how to stop tracking already-committed files, and what to do if secrets were accidentally committed."
@@ -19,7 +19,7 @@ status: complete
 
 The `.gitignore` file tells Git which files to never track. Critical for keeping secrets, build artifacts, and large files out of your repo. Once a file is committed, `.gitignore` alone does not remove it from history — you must also stop tracking it.
 
-## Example .gitignore for a Python Data Engineering Project
+### Example .gitignore for a Python Data Engineering Project
 
 ```
 .env
@@ -42,7 +42,7 @@ service-account-key.json
 
 Each line is a pattern. Git will ignore matching files.
 
-## Pattern Syntax
+### Pattern Syntax
 
 The glob-style pattern syntax used in `.gitignore` is shared with shell expansion. For a deeper look at how `*`, `**`, and `?` work, see [[brace-expansion-and-globbing]].
 
@@ -59,7 +59,7 @@ The glob-style pattern syntax used in `.gitignore` is shared with shell expansio
 
 ---
 
-## Stop Tracking a File That's Already Committed
+### Stop Tracking a File That's Already Committed
 
 Adding a file to `.gitignore` only prevents **new** files from being tracked. Files already committed are still tracked even after adding them to `.gitignore`.
 
@@ -173,7 +173,7 @@ Use BFG or `filter-branch` as above. Even after removing the trailer from all co
 
 ---
 
-## terraform.tfvars — Critical to Gitignore
+### terraform.tfvars — Critical to Gitignore
 
 Files like `.env` contain [[environment-variables]] that configure local development and CI/CD -- they should always be gitignored because they often hold secrets or machine-specific paths.
 
@@ -217,7 +217,7 @@ desktop.ini
 
 ---
 
-## Checking What's Ignored
+### Checking What's Ignored
 
 ```bash
 # Check if a specific file is being ignored (and why)

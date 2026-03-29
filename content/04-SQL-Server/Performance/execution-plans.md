@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [query execution plan, estimated plan, actual plan, graphical plan, showplan, query plan]
 keywords: [execution plan, estimated plan, actual plan, SHOWPLAN_XML, STATISTICS XML, right-to-left, bottom-to-top, Index Seek, Index Scan, Key Lookup, Hash Match, Nested Loops, Sort, cardinality estimation, row count estimate, statistics, parameter sniffing, implicit conversion, batch mode, OPTION RECOMPILE, OPTIMIZE FOR UNKNOWN, wait stats in plan, WaitStats, plan cache, Query Store, cost percentage, operator cost, spill, memory grant, CXPACKET, PAGEIOLATCH, PhysicalOp]
 description: "How to read SQL Server execution plans in SSMS: right-to-left data flow, estimated vs actual plans, cost analysis, cardinality estimation errors, per-query wait stats, implicit conversions, parameter sniffing, and batch mode. Includes all programmatic XML queries."
@@ -18,7 +18,7 @@ SQL Server execution plans are the primary diagnostic tool for query performance
 
 ---
 
-## Estimated vs. Actual Plans
+### Estimated vs. Actual Plans
 
 | Plan type | How to get it | What it shows |
 |---|---|---|
@@ -380,7 +380,7 @@ Per-query waits tell you "this specific query waited on X." Server-wide waits (f
 
 ---
 
-## Critical Plan Operators for Batch Workloads
+### Critical Plan Operators for Batch Workloads
 
 | Operator | Expected in Pipeline | Red Flag |
 |----------|---------------------|----------|
@@ -513,7 +513,7 @@ OPTION (USE HINT('ENABLE_BATCH_MODE_ON_ROWSTORE'));
 
 ---
 
-## Missing Indexes for Pipeline Queries
+### Missing Indexes for Pipeline Queries
 
 SQL Server surfaces missing index recommendations directly in the execution plan (yellow warning icon) and stores them in DMVs. Typical clustered indexes needed for a bronze→silver→gold MERGE pipeline:
 
@@ -611,7 +611,7 @@ UPDATE STATISTICS gold.index_performance WITH FULLSCAN, PERSIST_SAMPLE_PERCENT =
 
 ---
 
-## Related
+### Related
 
 - [[sargable-queries]] — predicate patterns that enable vs. prevent index seeks
 - [[wait-stats-analysis]] — server-wide wait stats to correlate with per-query plan waits

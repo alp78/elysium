@@ -2,7 +2,7 @@
 type: reference
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [DBA queries, SQL Server diagnostics, DMV queries, sys.dm_exec_sessions, sys.dm_exec_requests]
 keywords: [DBA queries, DMV, dynamic management views, server version, database size, active connections, running queries, blocking chains, kill session, wait stats, page life expectancy, sys.dm_exec_sessions, sys.dm_exec_requests, sys.dm_os_wait_stats]
 description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, and wait statistics."
@@ -18,7 +18,7 @@ These T-SQL queries are the diagnostic toolkit for operating SQL Server in produ
 
 ---
 
-## Server Version and Edition
+### Server Version and Edition
 
 ```sql
 -- Server version and edition
@@ -28,7 +28,7 @@ SELECT @@VERSION;
 
 ---
 
-## Database Sizes
+### Database Sizes
 
 ```sql
 -- All database sizes
@@ -41,7 +41,7 @@ ORDER BY size DESC;
 
 ---
 
-## Active Connections
+### Active Connections
 
 ```sql
 -- Active connections (who's connected right now?)
@@ -56,7 +56,7 @@ ORDER BY connections DESC;
 
 ---
 
-## Currently Running Queries
+### Currently Running Queries
 
 ```sql
 -- Currently running queries (what's consuming CPU right now?)
@@ -78,7 +78,7 @@ ORDER BY r.total_elapsed_time DESC;
 
 ---
 
-## Kill a Stuck Session
+### Kill a Stuck Session
 
 ```sql
 -- Kill a stuck session (last resort)
@@ -166,7 +166,7 @@ WHERE counter_name = 'Number of Deadlocks/sec' AND instance_name = '_Total';
 
 ---
 
-## System Health Dashboard (Single Query)
+### System Health Dashboard (Single Query)
 
 ```sql
 -- Quick health check: CPU, memory, IO, connections
@@ -189,7 +189,7 @@ SELECT
 
 ---
 
-## Check for Heaps (Tables Without Clustered Indexes)
+### Check for Heaps (Tables Without Clustered Indexes)
 
 ```sql
 -- Check for heaps (tables without clustered indexes)
@@ -206,7 +206,7 @@ ORDER BY p.rows DESC;
 
 ---
 
-## Check Backup History
+### Check Backup History
 
 ```sql
 -- Show all backups ever taken, most recent first
@@ -243,7 +243,7 @@ LEFT JOIN (
 
 ---
 
-## Related
+### Related
 
 - [[sqlcmd-connection-and-usage]] — running these queries from the command line
 - [[wait-stats-analysis]] — deep dive into wait type interpretation

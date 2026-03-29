@@ -228,9 +228,9 @@ tier_summary = pd.DataFrame([
 display(tier_summary)
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>rows</th>
       <th>CSV</th>
@@ -1268,9 +1268,9 @@ df_bq = df_bq.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
 display(df_bq[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>method</th>
       <th>tier</th>
@@ -1540,9 +1540,9 @@ df_sql = df_sql.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
 display(df_sql[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>method</th>
       <th>tier</th>
@@ -1722,9 +1722,9 @@ df_fs = df_fs.sort_values(['tier_rank', 'rate_raw'], ascending=[True, False])
 display(df_fs[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>method</th>
       <th>tier</th>
@@ -1824,9 +1824,9 @@ df_transfer = df_transfer.sort_values(['tier_rank', 'rate_raw'], ascending=[True
 display(df_transfer[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>method</th>
       <th>tier</th>
@@ -1996,9 +1996,9 @@ df_export = df_export.sort_values(['tier_rank', 'rate_raw'], ascending=[True, Fa
 display(df_export[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(drop=True))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>method</th>
       <th>tier</th>

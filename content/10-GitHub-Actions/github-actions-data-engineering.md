@@ -310,7 +310,7 @@ sys.exit(len(errors))
 
 ---
 
-## CD for Cloud Run
+### CD for Cloud Run Deployment
 
 ```yaml
 # .github/workflows/deploy-cloud-run.yml
@@ -851,7 +851,7 @@ sys.exit(len(failures))
 
 ---
 
-## Airflow DAG Validation
+### Airflow DAG Validation in CI
 
 Validating [[airflow-dag-patterns|DAG structure]] in CI catches import errors and dependency cycles before they reach the scheduler. The workflow below installs Airflow with version constraints, imports every DAG file, and runs structural assertions.
 
@@ -1019,7 +1019,7 @@ gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
 
 ---
 
-## Secret Rotation Workflow
+### Secret Rotation Workflow
 
 ```yaml
 # .github/workflows/rotate-secrets.yml
@@ -1080,7 +1080,7 @@ jobs:
 
 ---
 
-## Cost Monitoring: BigQuery Billing Query → Slack
+### Cost Monitoring: BigQuery Billing Query to Slack
 
 ```yaml
 # .github/workflows/cost-monitor.yml
@@ -1165,7 +1165,7 @@ print(f"Cost report sent. Total: ${total:.2f}")
 
 ---
 
-## End-to-End: PR → Lint → Test → Build → Deploy → Verify
+### End-to-End Pipeline: PR to Lint to Test to Build to Deploy to Verify
 
 ```yaml
 # .github/workflows/e2e-pipeline.yml
@@ -1389,7 +1389,7 @@ steps:
 
 ---
 
-## Quick Reference: Data Engineering Checklist
+### Quick Reference: Data Engineering CI/CD Checklist
 
 ```yaml
 # Minimal data pipeline CI template
@@ -1417,7 +1417,7 @@ jobs:
 
 ---
 
-## See Also
+### See Also
 
 - [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, GITHUB_TOKEN
 - [[github-actions-patterns]] — matrix builds, reusable workflows, deployment patterns

@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux]
 aliases: [brace expansion, globbing, extglob, globstar, failglob, shopt]
 keywords: [brace expansion, globbing, extglob, globstar, failglob, shopt, wildcard, pattern matching, bash expansion, file patterns, recursive glob, exclude patterns]
 description: "Brace expansion and globbing in Bash for generating multiple arguments from patterns, recursive file matching, and excluding file types. Includes shopt settings for production shells."
@@ -71,7 +71,7 @@ rm *.csv                  # ERROR if no .csv files exist (instead of passing lit
 > [!warning] The `failglob` Safety Net
 > Without `failglob`, running `rm *.csv` in a directory with no CSV files passes the literal string `*.csv` to `rm`, which tries to delete a file named `*.csv`. With `failglob` enabled, the shell raises an error instead — a critical safety guard in scripts.
 
-## Recommended `shopt` Settings for `.bashrc`
+### shopt settings for .bashrc — extglob, globstar, failglob
 
 > [!tip] `shopt` Settings for Your `.bashrc`
 > ```bash
@@ -83,7 +83,7 @@ rm *.csv                  # ERROR if no .csv files exist (instead of passing lit
 > ```
 > These are all safe to enable permanently. `failglob` is the most important — without it, `rm *.csv` in a directory with no CSV files passes the literal string `*.csv` to `rm`, which tries to delete a file named `*.csv`.
 
-## PowerShell Equivalents
+### PowerShell — ForEach-Object loops and Get-ChildItem -Recurse for globbing
 
 PowerShell has no brace expansion — use loops or arrays instead. Recursive globbing is built in.
 

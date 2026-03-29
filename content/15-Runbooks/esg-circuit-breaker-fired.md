@@ -1,5 +1,5 @@
 ---
-tags: [data-quality, airflow, esg]
+tags: [data-quality, airflow, esg, runbook, incident]
 type: runbook
 severity: sev2
 technology: airflow
@@ -13,14 +13,14 @@ updated: 2026-03-23
 > **Severity**: Sev2 | **SLA**: 1 hr acknowledge, 4 hr resolve
 > **Owner**: On-call data engineer + ESG data analyst
 
-## Symptoms
+### Symptoms — ESG circuit breaker alert indicators
 
 - Airflow DAG `esg_score_normalization` task `circuit_breaker` returned `alert_and_halt` — this is one of the [[data-quality-framework|quality gates]] built into the pipeline
 - Slack alert: "ESG Circuit Breaker — publication halted"
 - No new rows in `dbo.esg_scores_normalized` for today's score_date
 - Datadog metric `esg.circuit_breaker.fired` incremented
 
-## Diagnosis
+### Diagnosis — ESG score deviation root cause
 
 1. **Read the breaker reasons from Airflow XCom**
    ```bash
@@ -125,13 +125,13 @@ WHERE score_date = (SELECT MAX(score_date) FROM dbo.esg_scores_normalized
 
 Document in audit trail with reason "T-1 fallback due to circuit breaker".
 
-## Escalation
+### Escalation — ESG circuit breaker incident
 
 - If vendor confirms methodology change: escalate to ESG Product Manager for normalization parameter update
 - If override is needed: requires approval from Index Operations or ESG Data Analyst (not on-call alone)
 - If unresolved after 2 hours: escalate to Engineering Lead
 
-## Post-Incident
+### Post-incident — ESG circuit breaker follow-up
 
 - [ ] Document the circuit breaker reason and resolution in audit trail (EU BMR requirement) — refer to [[sfdr-data-requirements]] if the affected scores feed SFDR disclosures
 - [ ] If override was used: file the override decision with Compliance

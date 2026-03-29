@@ -2,7 +2,7 @@
 type: how-to
 category: security
 technology: [sql-server, gcp]
-tags: [sql, gcp]
+tags: [sql, gcp, sql-server, tsql]
 aliases: [SQL Server authentication, service account hardening, SQL Server Audit, login hardening, sa disable, dedicated logins, GCP service account, IAM least privilege, TLS SQL Server, network encryption, firewall rules, SQL Server security, LGIF, LGIS, failed login, brute force detection]
 keywords: [SQL Server authentication, sa disable, CREATE LOGIN, CREATE USER, GRANT, DENY, schema permissions, GCP service account, IAM roles, roles/storage.objectAdmin, roles/monitoring.metricWriter, SQL Server Audit, server audit, audit specification, sys.fn_get_audit_file, LGIF, LGIS, failed login detection, brute force, TLS 1.2, forceencryption, mssql-conf, GCP firewall rules, allow-sql-internal, IAP tunnel, sys.dm_exec_connections, encrypt_option, quarterly security review, orphaned users, sysadmin members]
 description: "How to harden SQL Server 2022 on GCP: creating a dedicated GCP service account with minimal IAM roles, setting up application-specific SQL logins with least-privilege permissions, enabling TLS 1.2 encryption, configuring GCP firewall rules, setting up SQL Server Audit for login and data access events, and running a quarterly security review."
@@ -16,7 +16,7 @@ status: complete
 
 SQL Server security has three distinct identity layers that must each be hardened independently. Vulnerabilities at any layer can expose data even when the other layers are correct.
 
-## Identity Architecture
+### Identity Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -345,7 +345,7 @@ GROUP BY encrypt_option;
 -- Expected: only TRUE
 ```
 
-## Part 4: GCP Firewall Rules
+### Part 4: GCP Firewall Rules
 
 ```bash
 # Rule 1: Allow SQL Server access from VPC internal networks only
@@ -743,14 +743,14 @@ ORDER BY event_time DESC;
 | Unencrypted connections found | Verify `forceencryption = 1` in mssql.conf, restart |
 | Failed logins from unknown IPs | Update firewall rules, investigate source |
 
-## Related
+### Related
 
 - [[tde-encryption]] — Encryption at rest for database files
 - [[server-configuration]] — OS-level and SQL Server configuration settings
 - [[high-availability-overview]] — Certificate-based authentication for AG endpoints
 - [[essential-dba-queries]] — DMV queries for monitoring connections and sessions
 
-## References
+### References
 
 - [SQL Server Security Best Practices (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/security/security-center-for-sql-server-database-engine-and-azure-sql-database)
 - [SQL Server Audit (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/security/auditing/sql-server-audit-database-engine)

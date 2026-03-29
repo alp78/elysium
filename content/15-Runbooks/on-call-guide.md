@@ -1,5 +1,5 @@
 ---
-tags: []
+tags: [runbook, incident]
 type: runbook
 technology: []
 status: stable
@@ -10,7 +10,7 @@ updated: 2026-03-23
 
 > This guide is for anyone on the data platform on-call rotation. Read this before your first shift.
 
-## Severity Definitions
+### Severity definitions — Sev1 Sev2 Sev3 classification
 
 | Severity | Definition | Response SLA | Notification | Escalation |
 |----------|-----------|-------------|-------------|------------|
@@ -18,7 +18,7 @@ updated: 2026-03-23
 | **Sev2** | Data quality degraded. Publication possible but may contain stale or incomplete data. | 1 hr acknowledge, 4 hr resolve | Slack #incidents | After 2 hrs to Engineering Lead |
 | **Sev3** | Non-urgent operational issue. No client impact. | Next business day | Slack #ops-alerts | Weekly review |
 
-## First 5 Minutes Checklist
+### First 5 minutes checklist — initial incident triage
 
 1. **Acknowledge** the alert in PagerDuty/Slack
 2. **Check Datadog dashboard** — is the issue isolated or systemic? See [[datadog-alerting]] for how alerts are configured and which monitors map to which runbooks.
@@ -37,7 +37,7 @@ updated: 2026-03-23
    ```
 5. **Identify the runbook** — match symptoms to the table below and follow the procedure
 
-## Symptom → Runbook Routing
+### Symptom to runbook routing table
 
 | Symptom | Likely Runbook |
 |---------|---------------|
@@ -51,7 +51,7 @@ updated: 2026-03-23
 | Missing corporate action in index composition | [[corporate-action-missed]] |
 | Vendor data file not arrived | [[vendor-file-late-or-missing]] |
 
-## Escalation Matrix
+### Escalation matrix — on-call contacts
 
 | Role | Contact | When to Engage |
 |------|---------|----------------|
@@ -94,7 +94,7 @@ Runbook: the relevant runbook
 Thread for updates below ↓
 ```
 
-## Post-Incident Review (PIR) Template
+### Post-incident review (PIR) template — blameless postmortem
 
 The PIR process follows the blameless postmortem principles described in [[leadership-and-collaboration]]. Focus on systemic improvements, not individual blame.
 

@@ -4,7 +4,7 @@ category: terraform
 technology:
   - terraform
   - gcp
-tags: [security, infrastructure, terraform, gcp]
+tags: [security, infrastructure, terraform, iac, gcp]
 aliases:
   - terraform iam blocks
   - terraform gcp iam
@@ -1408,7 +1408,7 @@ resource "google_artifact_registry_repository" "docker" {
 
 ---
 
-## Variables Reference
+### Variables Reference
 
 These variables are referenced across the blocks above. Adapt types and defaults to your project.
 
@@ -1506,7 +1506,7 @@ variable "git_sha" {
 
 ---
 
-## Data Sources
+### Data Sources
 
 ```hcl
 # fetches the current project metadata — used to get the project number for Pub/Sub service agent SA

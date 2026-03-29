@@ -18,7 +18,7 @@ dbt's testing system is the primary mechanism for asserting data quality, implem
 
 ---
 
-## Test Categories
+### dbt Test Categories
 
 | Category | Defined in | Examples |
 |---|---|---|
@@ -30,7 +30,7 @@ dbt's testing system is the primary mechanism for asserting data quality, implem
 
 ---
 
-## Built-in Generic Tests
+### dbt Built-in Generic Tests
 
 Declared directly in `.yml` files alongside model or source definitions.
 
@@ -432,7 +432,7 @@ where parent.{{ parent_column }} is null
 
 ---
 
-## --store-failures
+### dbt --store-failures
 
 When `--store-failures` is active, dbt writes the failing rows from every failed test into a dedicated schema instead of just reporting a count.
 
@@ -461,7 +461,7 @@ select * from dbt_dev.test_failures.assert_no_negative_prices
 
 ---
 
-## severity: warn vs error
+### dbt Test severity: warn vs error
 
 ```yaml
 columns:

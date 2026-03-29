@@ -1,5 +1,5 @@
 ---
-tags: [infrastructure, terraform]
+tags: [infrastructure, terraform, iac]
 type: reference
 technology: terraform
 status: stable

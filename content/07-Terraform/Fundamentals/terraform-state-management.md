@@ -2,7 +2,7 @@
 type: concept
 category: infrastructure
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform state, terraform.tfstate, remote state, state locking, terraform backend, GCS backend]
 keywords: [terraform state, tfstate, remote state, state file, GCS backend, state locking, terraform state commands, terraform state list, terraform state show, terraform state mv, terraform state rm, force-unlock, backend gcs, state bucket]
 description: "How Terraform state works, why remote state in GCS is essential, how state locking prevents concurrent applies, and the terraform state subcommands for safe state manipulation."
@@ -19,7 +19,7 @@ status: complete
 
 Terraform state is the source of truth that maps your `.tf` configuration to real GCP resources. Understanding how state works, how to protect it, and how to safely manipulate it is critical for production infrastructure management.
 
-## What Is the State File?
+### What Is the State File?
 
 The state file (`terraform.tfstate`) is a JSON document that maps every resource in your `.tf` files to its real GCP counterpart (resource IDs, IPs, URIs, etc.). When you run `terraform plan`, Terraform:
 
@@ -196,7 +196,7 @@ After importing:
 
 ---
 
-## gcloud Verification After Apply
+### gcloud Verification After Apply
 
 After `terraform apply`, verify the state reflects reality:
 
@@ -219,7 +219,7 @@ terraform -chdir=infra validate
 
 ---
 
-## State Security
+### State Security
 
 The state file contains sensitive values (passwords, connection strings, secret versions). Secure the GCS bucket:
 
@@ -239,7 +239,7 @@ gcloud storage cp "gs://data-pipeline-tf-state/terraform/state/default.tfstate#<
 
 ---
 
-## Terraform State Verification Commands
+### Terraform State Verification Commands
 
 ```bash
 # View all outputs

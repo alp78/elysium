@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, python, gcp, docker]
-tags: [observability, python, docker, datadog, gcp]
+tags: [monitoring, observability, python, docker, datadog, gcp]
 aliases: [Datadog APM, ddtrace, Pipeline Traces, APM Instrumentation]
 keywords: [ddtrace, ddtrace-run, APM traces, auto-instrumentation, monkey-patch, pyodbc, requests, flame graph, pipeline.step, tracer.trace, DD_TRACE_AGENT_URL, DD_SERVICE, data-pipeline-pipeline, log-to-trace correlation, dd.trace_id, dd.span_id, JSON logger, import error guard, local development, no impact SQL Server]
 description: "How ddtrace APM instrumentation works in the data pipeline — auto-instruments pyodbc and requests, creates per-step flame graphs, and injects trace IDs into logs for correlation."
@@ -18,7 +18,7 @@ The `data-pipeline-pipeline` Cloud Run job uses `ddtrace` for APM instrumentatio
 
 ---
 
-## How ddtrace Works (APM Auto-Instrumentation)
+### How ddtrace Works (APM Auto-Instrumentation)
 
 1. The pipeline runs Python with `ddtrace-run` (or imports `ddtrace.auto`). That's the only setup needed.
 2. `ddtrace` **monkey-patches Python libraries at import time** — it wraps functions in `pyodbc`, `requests`, `urllib3`, etc. with instrumentation.
@@ -39,7 +39,7 @@ The `data-pipeline-pipeline` Cloud Run job uses `ddtrace` for APM instrumentatio
 
 ---
 
-## Dockerfile Entrypoint
+### Dockerfile Entrypoint for ddtrace-run
 
 ```dockerfile
 # docker/pipeline.Dockerfile
@@ -48,7 +48,7 @@ ENTRYPOINT ["ddtrace-run", "python", "utils/run_pipeline.py"]
 
 ---
 
-## Cloud Run Environment Variables
+### Cloud Run APM Environment Variables
 
 Set in `infra/run.tf`:
 
@@ -62,7 +62,7 @@ env { name = "LOG_FORMAT";         value = "json" }
 
 ---
 
-## Trace Flow
+### APM Trace Flow from Pipeline to Datadog
 
 ```
 Cloud Run Job             Airflow VM              Datadog
@@ -80,7 +80,7 @@ Requirements:
 
 ---
 
-## What a Trace Looks Like
+### What a Datadog APM Trace Looks Like
 
 Each pipeline step is a root span, with auto-instrumented SQL queries as child spans:
 
@@ -97,7 +97,7 @@ This flame graph shows exactly which SQL queries are slow and where time is spen
 
 ---
 
-## Manual Spans per Pipeline Step
+### Manual Spans per Pipeline Step
 
 Each pipeline step is wrapped in a trace span in `utils/run_pipeline.py`:
 
@@ -122,7 +122,7 @@ This creates a flame graph in APM showing each step's duration, plus auto-instru
 
 ---
 
-## Log-to-Trace Correlation
+### Log-to-Trace Correlation with dd.trace_id
 
 The JSON log formatter (`utils/logger.py`) injects trace IDs into every log line:
 
@@ -141,7 +141,7 @@ In Datadog, this enables clicking from a log line directly to the corresponding 
 
 ---
 
-## Local Development Behavior
+### Local Development Behavior without Datadog Agent
 
 The `try/except ImportError` guard in the tracer setup means:
 
@@ -152,7 +152,7 @@ This means you don't need to install `ddtrace` locally unless you want to test t
 
 ---
 
-## APM Trace Search Queries
+### APM Trace Search Queries in Datadog
 
 In **APM > Traces** (or **APM > Trace Search**):
 
@@ -164,7 +164,7 @@ service:data-pipeline-pipeline resource_name:transform_index_performance  # Spec
 
 ---
 
-## Disabling APM
+### Disabling APM Tracing in the Pipeline
 
 If you want to remove Datadog/ddtrace:
 

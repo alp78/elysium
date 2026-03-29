@@ -4,7 +4,7 @@ category: data-modeling
 technology:
   - sql-server
   - bigquery
-tags: [architecture, data-modeling, sql, bigquery]
+tags: [data-architecture, architecture, data-modeling, sql, bigquery]
 aliases:
   - dimensional modeling
   - Kimball methodology
@@ -3270,7 +3270,7 @@ ORDER BY dd.full_date, asw.total_weight_pct DESC;
 
 ---
 
-## Common Pitfalls and Anti-Patterns
+### Common Dimensional Modeling Pitfalls and Anti-Patterns
 
 > [!danger] Anti-patterns to avoid
 >

@@ -496,7 +496,7 @@ gcloud composer environments update my-airflow-env \
 
 ---
 
-## Option 4: AWS MWAA (Brief Comparison)
+### AWS MWAA — Managed Airflow on AWS
 
 Amazon Managed Workflows for Apache Airflow (MWAA) is AWS's equivalent to Cloud Composer.
 
@@ -514,7 +514,7 @@ MWAA DAGs are deployed by uploading to an S3 bucket (configured at environment c
 
 ---
 
-## Option 5: Astronomer / Astro
+### Astronomer Astro — SaaS Airflow Platform
 
 Astronomer provides a SaaS Airflow platform (Astro) with:
 - Managed Airflow clusters in any cloud (GCP, AWS, Azure)
@@ -542,7 +542,7 @@ astro deploy
 
 ---
 
-## Key `airflow.cfg` Configuration Settings
+### Key airflow.cfg Configuration Settings
 
 The most important settings for performance and reliability. All can be set via environment variables using the pattern `AIRFLOW__SECTION__KEY`.
 
@@ -906,7 +906,7 @@ Metadata DB:
 
 ---
 
-## Cost Comparison
+### Airflow Hosting Cost Comparison
 
 Approximate monthly costs for running Airflow at small/medium scale (us-central1, March 2024 pricing):
 

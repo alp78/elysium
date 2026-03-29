@@ -16,7 +16,7 @@ status: complete
 
 Every BigQuery operation — query, load, export, copy — creates a job. Jobs are the unit of work in BigQuery. Understanding how to list jobs, inspect their details (including errors and bytes processed), and cancel runaway jobs is essential for incident response and cost governance. The job history is also your primary audit trail for understanding what ran, who ran it, and how much it cost.
 
-## Listing Recent Jobs
+### Listing Recent BigQuery Jobs
 
 ```bash
 # List recent jobs
@@ -24,7 +24,7 @@ bq ls -j --max_results=10
 # -j = list jobs (not datasets)
 ```
 
-## Inspecting Job Details
+### Inspecting BigQuery Job Details
 
 ```bash
 # Show job details (query text, bytes processed, errors)
@@ -38,7 +38,7 @@ The job detail output includes:
 - **`status.errors`** — error messages if the job failed
 - **`statistics.creationTime`** / **`statistics.endTime`** — timing information
 
-## Canceling a Running Query
+### Canceling a Running BigQuery Query
 
 ```bash
 # Cancel a running query
@@ -49,7 +49,7 @@ bq cancel <job_id>
 > [!tip] Cancel Before the Bill Arrives
 > BigQuery charges are based on bytes *scanned*, which accumulates as a query runs. Canceling a query mid-execution stops the scan and limits the charge to bytes processed up to that point. If you catch an accidental large scan quickly, you can significantly reduce the cost.
 
-## Finding the Job ID
+### Finding the BigQuery Job ID
 
 Job IDs appear in:
 - The output of `bq query` (printed when the query starts)
@@ -57,7 +57,7 @@ Job IDs appear in:
 - The BigQuery console (job history tab)
 - [[cloud-logging|Cloud Logging]] entries for BigQuery audit logs (resource type `bigquery_resource`)
 
-## Job States
+### BigQuery Job States Reference
 
 | State | Meaning |
 |---|---|
@@ -65,7 +65,7 @@ Job IDs appear in:
 | `RUNNING` | Currently executing |
 | `DONE` | Completed (check `status.errors` for failures) |
 
-## Cost Recovery: Querying Job History with SQL
+### Cost Recovery by Querying BigQuery Job History with SQL
 
 For a more powerful view of job history and cost, use `INFORMATION_SCHEMA.JOBS` directly in BigQuery SQL (see [[querying-and-cost-optimization]] for the full query). The `bq ls -j` command is useful for quick command-line checks, but SQL against `INFORMATION_SCHEMA` gives you full analytical power over the job history.
 

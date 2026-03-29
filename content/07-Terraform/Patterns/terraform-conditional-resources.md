@@ -2,7 +2,7 @@
 type: concept
 category: infrastructure
 technology: [terraform]
-tags: [infrastructure, terraform]
+tags: [infrastructure, terraform, iac]
 aliases: [terraform conditional, terraform count, terraform for_each, optional resources terraform, terraform ternary]
 keywords: [count, for_each, conditional resource creation, ternary operator, optional resources, "count = 0", "count = 1", conditional index notation, "resource[0]", compact, concat, terraform functions, dynamic blocks]
 description: "How Terraform uses count and for_each to conditionally create resources or create multiple instances, enabling optional integrations (like Datadog) and parameterized infrastructure."
@@ -141,7 +141,7 @@ output "dataset_ids" {
 
 ---
 
-## count vs for_each Comparison
+### count vs for_each Comparison
 
 | | `count` | `for_each` |
 |--|---------|------------|
@@ -155,7 +155,7 @@ output "dataset_ids" {
 
 ---
 
-## Dynamic Blocks
+### Dynamic Blocks
 
 For nested blocks that vary in count, use `dynamic`:
 
@@ -204,7 +204,7 @@ machine_type = var.environment == "prod" ? "e2-standard-4" : (var.environment ==
 
 ---
 
-## Referencing Conditional Resources
+### Referencing Conditional Resources
 
 When using `count`, always guard references with conditional expressions:
 
@@ -222,7 +222,7 @@ resource "google_project_iam_member" "datadog_monitoring" {
 
 ---
 
-## Summary: When to Use Each
+### Summary: When to Use Each
 
 | Scenario | Pattern |
 |----------|---------|

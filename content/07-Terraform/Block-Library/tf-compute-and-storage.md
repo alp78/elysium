@@ -4,7 +4,7 @@ category: terraform
 technology:
   - terraform
   - gcp
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases:
   - terraform-compute-storage
   - gcp-terraform-blocks
@@ -1084,7 +1084,7 @@ resource "google_pubsub_subscription" "landing_events_sub" {
 
 ---
 
-## Variables Reference
+### Variables Reference
 
 The blocks above assume the following input variables. Define them in your `variables.tf`:
 
@@ -1202,7 +1202,7 @@ variable "analytics_group" {
 
 ---
 
-## Quick-Reference — Resource Cheat Sheet
+### Quick-Reference — Resource Cheat Sheet
 
 | Resource                                | Use Case                             | Key Arguments                                                  |
 | --------------------------------------- | ------------------------------------ | -------------------------------------------------------------- |
@@ -1222,7 +1222,7 @@ variable "analytics_group" {
 
 ---
 
-## Storage Class Decision Guide
+### Storage Class Decision Guide
 
 | Class | Min Storage | Retrieval Cost | Use When |
 |---|---|---|---|

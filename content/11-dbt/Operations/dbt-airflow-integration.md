@@ -19,7 +19,7 @@ Orchestrating dbt inside Airflow determines how granularly you can observe, retr
 
 ---
 
-## Option 1: BashOperator Wrapping `dbt run`
+### Airflow BashOperator Wrapping dbt run
 
 The simplest approach: invoke the dbt CLI as a shell command from within an Airflow task. The entire dbt project runs as a single Airflow task.
 
@@ -116,7 +116,7 @@ esg_dbt_dag = DbtDag(
 
 ---
 
-## Option 3: CloudRunJobOperator (Isolated Container)
+### Airflow CloudRunJobOperator (Isolated Container)
 
 Run dbt inside a Cloud Run Job, treating the entire dbt invocation as a containerised ephemeral workload. Airflow submits the job and polls for completion.
 
@@ -155,7 +155,7 @@ dbt_cloud_run = CloudRunExecuteJobOperator(
 
 ---
 
-## Comparison Table
+### Airflow dbt Operator Comparison Table
 
 | Dimension         | BashOperator        | astronomer-cosmos          | CloudRunJobOperator      |
 |-------------------|---------------------|----------------------------|--------------------------|
@@ -169,7 +169,7 @@ dbt_cloud_run = CloudRunExecuteJobOperator(
 
 ---
 
-## Full DAG: Extract → dbt (Cosmos) → dbt test → Publish
+### Full DAG: Extract to dbt Cosmos to dbt test to Publish
 
 This pattern represents a complete ESG data pipeline: raw provider data lands in GCS, dbt transforms it, tests validate quality, and a downstream publish step refreshes the index calculation API.
 

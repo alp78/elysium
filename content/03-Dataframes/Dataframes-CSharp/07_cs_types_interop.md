@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion
 keywords: [categorical, Enum, Arrow, zero-copy, interop, type casting, schema, nested types, struct]

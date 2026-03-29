@@ -75,7 +75,7 @@ status: complete
 
 # Firestore — Data Model and Operations
 
-## Why Firestore
+### Why Firestore for Data Engineering
 
 Firestore's unbeatable value comes down to one thing no other GCP service does: **real-time push to clients with zero infrastructure.**
 

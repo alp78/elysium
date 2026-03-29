@@ -4,7 +4,7 @@ category: data-architecture
 technology:
   - python
   - graphql
-tags: [architecture, api, python]
+tags: [data-architecture, architecture, api, python]
 aliases:
   - GraphQL
   - GQL
@@ -98,7 +98,7 @@ GraphQL is a query language for APIs and a runtime for executing those queries, 
 
 ---
 
-## What GraphQL Is
+### What GraphQL Is
 
 GraphQL is three things simultaneously:
 
@@ -138,7 +138,7 @@ The single query above fetches data from three different storage systems in one 
 
 ---
 
-## When Data Engineers Use GraphQL
+### When Data Engineers Use GraphQL
 
 **1. Flexible data access layers**
 A financial analytics platform serves both a trading dashboard (needs real-time prices, risk metrics) and a regulatory reporting pipeline (needs positions, trades, reference data). Rather than building separate REST endpoints for each consumer, one GraphQL API serves both — each client requests only what it needs.
@@ -488,7 +488,7 @@ query SearchSecurities {
 
 ---
 
-## Mutations
+### GraphQL Mutations
 
 ```graphql
 # Create a portfolio
@@ -537,7 +537,7 @@ mutation TriggerRebalance {
 
 ---
 
-## Subscriptions
+### GraphQL Subscriptions
 
 GraphQL subscriptions push real-time data over WebSocket (or SSE).
 
@@ -714,7 +714,7 @@ async def resolve_performance(
 
 ---
 
-## Python GraphQL Server with Strawberry
+### Python GraphQL Server with Strawberry
 
 Strawberry is a code-first GraphQL library for Python. You define types as Python dataclasses decorated with `@strawberry.type`.
 
@@ -945,7 +945,7 @@ app.include_router(graphql_app, prefix="/graphql")
 
 ---
 
-## Python GraphQL Server with Ariadne
+### Python GraphQL Server with Ariadne
 
 Ariadne is a schema-first (SDL-first) alternative. You write the SDL, then bind resolvers.
 
@@ -1459,7 +1459,7 @@ async def resolve_portfolios(_, info) -> list[dict]:
 
 ---
 
-## Introspection
+### GraphQL Introspection
 
 GraphQL schemas are self-documenting. Clients can query the schema itself.
 
@@ -1535,7 +1535,7 @@ async def get_schema_types(base_url: str) -> list[dict]:
 
 ---
 
-## GraphQL vs REST Comparison
+### GraphQL vs REST Comparison
 
 | Dimension | GraphQL | REST |
 |---|---|---|
@@ -1872,7 +1872,7 @@ async def wait_for_ci(owner: str, repo: str, branch: str, timeout: int = 600) ->
 
 ---
 
-## When NOT to Use GraphQL
+### When NOT to Use GraphQL
 
 > [!warning] Avoid GraphQL in These Scenarios
 >

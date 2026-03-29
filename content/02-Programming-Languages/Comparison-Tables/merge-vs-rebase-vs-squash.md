@@ -19,7 +19,7 @@ status: complete
 
 Three strategies for integrating changes from one branch into another. Each produces a different commit history shape.
 
-## Comparison
+### Merge vs rebase vs squash — comparison table
 
 | Strategy | History Shape | Preserves Individual Commits? | Creates Merge Commit? | Best For |
 |----------|--------------|------|------|----------|
@@ -27,7 +27,7 @@ Three strategies for integrating changes from one branch into another. Each prod
 | **Rebase** | Linear | Yes (replayed) | No | Keeping a clean, linear main branch |
 | **Squash** | Linear (single commit) | No (collapsed into one) | No | Small features or fixups where individual commits add noise |
 
-## Standard Merge
+### git merge — standard merge with merge commit
 
 ```bash
 git checkout main
@@ -38,7 +38,7 @@ Creates a merge commit that preserves the full branch topology. Both parent hist
 
 **Use when:** The branch has meaningful intermediate commits that reviewers or future debuggers will want to see.
 
-## Rebase
+### git rebase — replay commits for linear history
 
 ```bash
 git checkout feat/new-feature
@@ -54,7 +54,7 @@ Replays your commits on top of main's latest commit. Creates a linear history wi
 
 **Use when:** You want a linear history and the branch is private to you.
 
-## Squash Merge
+### git merge --squash — collapse branch into single commit
 
 ```bash
 git checkout main
@@ -66,7 +66,7 @@ Collapses all branch commits into a single commit on main. The branch history is
 
 **Use when:** The branch has many small "wip" or "fix typo" commits that add noise to main's history.
 
-## Decision Guide
+### Decision guide — which merge strategy by scenario
 
 | Scenario | Recommended |
 |----------|-------------|

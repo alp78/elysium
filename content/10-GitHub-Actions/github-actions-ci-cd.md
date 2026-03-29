@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github, gcp]
-tags: [ci-cd, gcp, git]
+tags: [ci-cd, gcp, git, github-actions]
 aliases: [GitHub Actions, CI/CD, workflow, gh run, workflow_dispatch, matrix testing, secrets management]
 keywords: [GitHub Actions, workflow, YAML, trigger, push, pull_request, schedule, workflow_dispatch, matrix, secrets, GCP_SA_KEY, gh run, gh workflow run, deploy, Cloud Run, Artifact Registry, google-github-actions/auth]
 description: "GitHub Actions CI/CD workflows for data engineering teams — triggers, matrix testing, secrets management, GCP authentication, and monitoring workflow runs with the GitHub CLI."
@@ -20,7 +20,7 @@ status: complete
 
 GitHub Actions automates workflows (build, test, deploy) triggered by events like pushes, PRs, schedules, or manual triggers. Workflows are defined in YAML files in `.github/workflows/`.
 
-## How It Connects to Git
+### How GitHub Actions Connects to Git
 
 Common trigger events:
 
@@ -31,7 +31,7 @@ Common trigger events:
 
 ---
 
-## Monitoring Workflows
+### Monitoring Workflows with GitHub CLI
 
 ```bash
 # List recent workflow runs with status
@@ -60,7 +60,7 @@ gh workflow run deploy.yml
 
 ---
 
-## Common CI/CD Patterns for Data Teams
+### Common CI/CD Patterns for Data Teams
 
 - On push to main: deploy pipeline container and dashboard to Cloud Run
 - On PR: run unit tests, linting, SQL validation (for dbt-specific checks, see [[dbt-ci-cd]])
@@ -125,7 +125,7 @@ The `credentials_json` field receives the full JSON content of the service accou
 
 ---
 
-## Example: Build and Deploy to Cloud Run
+### Example: Build and Deploy to Cloud Run
 
 This workflow builds a Docker image, pushes it to Artifact Registry, and deploys to Cloud Run on every push to main:
 
@@ -166,7 +166,7 @@ jobs:
             --region europe-west1
 ```
 
-## Example: Quartz Static Site Deployment to GitHub Pages
+### Example: Quartz Static Site Deployment to GitHub Pages
 
 From the vault's Quartz publishing guide:
 
@@ -222,7 +222,7 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-## Example: Matrix Testing Across Python Versions
+### Example: Matrix Testing Across Python Versions
 
 ```yaml
 name: Test
@@ -275,7 +275,7 @@ gh run rerun <RUN_ID>
 
 ---
 
-## Re-running Failed Workflows
+### Re-running Failed Workflows
 
 ```bash
 # Re-run a specific workflow run

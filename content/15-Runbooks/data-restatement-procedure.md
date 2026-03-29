@@ -1,6 +1,8 @@
 ---
 tags:
   - sql
+  - runbook
+  - incident
 type: runbook
 severity: sev1
 technology: sql-server, bigquery
@@ -17,7 +19,7 @@ updated: 2026-03-23
 
 ---
 
-## Symptoms
+### Symptoms — data restatement triggers
 
 - Client reports index level does not match their independent calculation
 - Internal reconciliation job shows SQL Server gold table diverges from BigQuery published dataset
@@ -445,7 +447,7 @@ File the following with the Benchmark Oversight Committee:
 
 ---
 
-## Escalation
+### Escalation — restatement incident
 
 | Condition | Escalate to | SLA |
 |---|---|---|
@@ -457,7 +459,7 @@ File the following with the Benchmark Oversight Committee:
 
 ---
 
-## Post-Incident Checklist
+### Post-incident checklist — restatement completion
 
 - [ ] COMMIT transaction confirmed on SQL Server and BigQuery MERGE succeeded
 - [ ] `dbo.restatement_log` row inserted with all timestamps filled in

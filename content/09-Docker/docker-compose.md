@@ -252,7 +252,7 @@ networks:
 
 ---
 
-## Environment Variable Substitution
+### Environment Variable Substitution
 
 Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [[environment-variables|environment variable patterns]] used throughout shell scripting and CI):
 
@@ -374,7 +374,7 @@ docker compose pause airflow-worker
 
 ---
 
-## Scaling and Individual Service Management
+### Scaling and Individual Service Management
 
 ```bash
 # Scale a service to N replicas at startup
@@ -399,7 +399,7 @@ docker compose pull postgres && docker compose up -d --force-recreate postgres
 
 ---
 
-## Logs and Monitoring
+### Logs and Monitoring
 
 ```bash
 # Stream logs from all services (most recent 50 lines, then follow)
@@ -470,7 +470,7 @@ docker compose up -d --force-recreate airflow-webserver airflow-scheduler
 
 ---
 
-## Exec and Debug
+### Exec and Debug
 
 ```bash
 # Open an interactive shell inside a running container
@@ -571,7 +571,7 @@ COMPOSE_PROJECT_NAME=myproject docker compose up -d
 
 ---
 
-## Cleanup and Disk Management
+### Cleanup and Disk Management
 
 ```bash
 # Remove stopped containers, dangling images, unused networks, and build cache
@@ -612,7 +612,7 @@ docker system df -v
 
 ---
 
-## Quick Reference Summary
+### Quick Reference Summary
 
 | Task | Command |
 |---|---|

@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases: [git workflow, git status, git add, git commit, git push, git pull, conventional commits, git diff, git fetch, feature branch workflow, daily git]
 keywords: [git, status, add, commit, push, pull, rebase, diff, stage, conventional commits, feat, fix, refactor, daily workflow, version control, git add -p, interactive staging, git push -u, upstream tracking, git fetch, git pull --rebase, amend commit, unstage, git status -s, short status, git diff --staged, feature branch, squash merge, gh pr create, GitHub CLI]
 description: "The complete daily Git workflow for data engineering teams — from checking status through staging, committing, pushing, and pulling, plus the full feature branch workflow, conventional commit conventions, team rules, and a decision tree for when things go wrong."
@@ -208,7 +208,7 @@ git fetch
 > [!tip] Fetch Is Always Safe
 > `git fetch` is always safe — it never modifies your files. `git pull` might cause [[git-merge-conflicts|merge conflicts]]. When in doubt, fetch first and inspect with `git log origin/main --oneline`.
 
-## The Feature Branch Workflow (Complete Cycle)
+### The Feature Branch Workflow (Complete Cycle)
 
 This is the standard workflow used by data engineering teams:
 
@@ -226,7 +226,7 @@ This is the standard workflow used by data engineering teams:
 
 Pushing a branch or opening a PR typically triggers [[github-actions-fundamentals|GitHub Actions]] CI workflows -- linting, tests, and builds that validate the change before review. For dbt projects specifically, [[dbt-ci-cd]] runs model compilation and test checks on every PR.
 
-## Rules for Distributed Data Teams
+### Rules for Distributed Data Teams
 
 - **Never push directly to main** — always use PRs
 - **Never force-push to shared branches** — use `--force-with-lease` on personal branches only
@@ -239,7 +239,7 @@ Pushing a branch or opening a PR typically triggers [[github-actions-fundamental
 - **Keep `.gitignore` comprehensive from day one** (see [[gitignore-patterns]])
 - **Never commit secrets** — use environment variables and secret managers
 
-## When Things Go Wrong: Decision Tree
+### When Things Go Wrong: Git Decision Tree
 
 | Situation | Solution |
 |-----------|----------|
@@ -251,7 +251,7 @@ Pushing a branch or opening a PR typically triggers [[github-actions-fundamental
 
 See [[git-recovery-and-undo]] for detailed recovery procedures and [[git-common-errors]] for specific error messages.
 
-## Best Practices for Data Pipeline Teams
+### Best Practices for Data Pipeline Teams
 
 > [!tip] Best Practices
 > 1. **Never commit credentials.** Add to [[gitignore-patterns|.gitignore]]: `*.env`, `*.json` (service account keys), `secrets/`. Use `git-secrets` to scan for AWS/GCP keys before each commit.
@@ -259,7 +259,7 @@ See [[git-recovery-and-undo]] for detailed recovery procedures and [[git-common-
 > 3. **DAG files in git.** Airflow reads DAGs from a directory — changes are deployed by updating the files. Version them in git, deploy via [[github-actions-ci-cd|CI/CD]] or SCP.
 > 4. **Large data files.** If you must track data files, use Git LFS: `git lfs track "*.parquet"`. Otherwise, keep data in GCS and reference it by URI.
 
-## Quick Reference
+### Quick Reference
 
 | Action | Command |
 |--------|---------|

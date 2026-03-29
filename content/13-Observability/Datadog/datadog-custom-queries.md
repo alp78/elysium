@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, sql-server, t-sql]
-tags: [observability, sql, datadog]
+tags: [monitoring, observability, sql, datadog]
 aliases: [Custom SQL Metrics, Datadog custom_queries, DMV metrics]
 keywords: [datadog custom queries, custom_queries, sqlserver, DMV, dm_exec_sessions, dm_os_performance_counters, connections by login, deadlock count, monotonic_count, gauge, tag column, metric prefix, sqlserver prefix]
 description: "How to configure custom SQL Server DMV queries in the Datadog SQL Server integration to track connections by login and deadlock counts as custom metrics."
@@ -62,7 +62,7 @@ Higher `sa` counts during active SSMS sessions are normal. Persistent high count
 
 ---
 
-## Query 2: Deadlock Count
+### Query 2: SQL Server Deadlock Count Metric
 
 Reads the cumulative deadlock counter from SQL Server's performance counters DMV. Uses `monotonic_count` type so Datadog reports the **rate of change** (deadlocks per collection interval) rather than the ever-increasing total.
 
@@ -86,7 +86,7 @@ Reads the cumulative deadlock counter from SQL Server's performance counters DMV
 
 ---
 
-## Full Config Reference
+### Full custom_queries Config Reference
 
 Complete `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` with both custom queries:
 
@@ -132,7 +132,7 @@ instances:
 
 ---
 
-## Applying Changes
+### Applying Custom Query Config Changes
 
 ```bash
 # Restart the agent to pick up config changes
@@ -154,7 +154,7 @@ sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 
 ---
 
-## Column Type Reference
+### Datadog Column Type Reference for custom_queries
 
 | Type | Use for | Datadog behavior |
 |------|---------|-----------------|

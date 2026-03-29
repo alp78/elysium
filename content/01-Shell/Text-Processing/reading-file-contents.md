@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [cat, head, tail, tail -f, grep large files, log analysis, less, reading files]
 keywords: [cat, head, tail, tail -f, grep, awk, less, log file, incident response, reading files, follow log, large file, line count, wc -l, extract time window, ripgrep, rg, Select-String]
 description: "Commands for reading file contents from quick config checks to deep log file analysis during incidents. Covers tail -f for real-time log following, grep performance flags, and PowerShell Select-String."
@@ -47,7 +47,7 @@ tail -f /var/log/pipeline/run.log | grep --line-buffered "ERROR|WARN|DEADLOCK"
 # | = OR in basic regex (or use grep -E "ERROR|WARN|DEADLOCK" for extended regex)
 ```
 
-## Production Scenario — Analyzing a Large Log File During an Incident
+### Analyzing a large log file during an incident — grep, awk, sort workflow
 
 The file is 15GB. Do not `cat` it. Do not open it in vim.
 
@@ -84,7 +84,7 @@ grep "ERROR" /tmp/outage_window.log | awk '{print $NF}' | sort | uniq -c | sort 
 # sort -rn = sort by count descending
 ```
 
-## grep Performance on Large Files
+### grep performance on large files — -F, -m, ripgrep, LC_ALL=C
 
 > [!tip] `grep` Performance on Large Files
 > - `grep -F "literal string"` is 3-5x faster than `grep "regex"` for literal matches. The `-F` flag uses a fast string-matching algorithm instead of the regex engine. Always use it when you don't need regex.
@@ -92,7 +92,7 @@ grep "ERROR" /tmp/outage_window.log | awk '{print $NF}' | sort | uniq -c | sort 
 > - For recursive searches across thousands of files, use `ripgrep` (`rg`): `rg "pattern" /path/` — it respects `.gitignore`, uses multiple threads, and is 5-10x faster than `grep -r`.
 > - `LC_ALL=C grep "pattern"` forces the C locale, which skips Unicode handling and can be 4x faster for ASCII-only data.
 
-## PowerShell — Get-Content, Select-String
+### PowerShell — Get-Content -Wait, Select-String for log analysis
 
 ```powershell
 # Read entire file

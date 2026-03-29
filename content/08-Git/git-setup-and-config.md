@@ -2,7 +2,7 @@
 type: concept
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases:
   - git config
   - git init

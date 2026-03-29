@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [gcp, python, bigquery]
-tags: [architecture, python, bigquery, gcp]
+tags: [data-architecture, architecture, python, bigquery, gcp]
 aliases: [data lake, data swamp, landing zone, raw zone, curated zone, GCS data lake, S3 data lake, ADLS data lake, bronze zone, silver zone, gold zone, schema-on-read, Hive-style partitioning, object storage lake, cloud data lake]
 keywords: [data lake, data swamp, schema-on-read, schema-on-write, object storage, landing zone, raw zone, cleansed zone, curated zone, zones, GCS, S3, ADLS, Azure Data Lake Storage, cloud storage, Hive partitioning, Hive-style, partition discovery, Parquet, Avro, ORC, CSV, JSON, file format, data catalog, data lineage, data governance, PII, access control, lifecycle policy, storage class, BigQuery external tables, Dataproc, ETL, ELT, medallion architecture, data lakehouse, Apache Iceberg, Delta Lake, open table formats, cost optimization, retention policy, naming convention, file organization, compaction, small files problem]
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."
@@ -34,7 +34,7 @@ The term was coined by James Dixon (Pentaho) in 2010 as a contrast to the "data 
 
 ---
 
-## Schema-on-Write vs Schema-on-Read
+### Schema-on-Write vs Schema-on-Read
 
 Understanding this distinction is the architectural foundation of the data lake concept.
 
@@ -479,7 +479,7 @@ gcs_client.move_blobs(temp_path, final_path)
 
 ---
 
-## Cloud Data Lake Implementations Comparison
+### Cloud Data Lake Implementations Comparison
 
 | Dimension | GCS (Google Cloud Storage) | S3 (AWS) | ADLS Gen2 (Azure) |
 |---|---|---|---|
@@ -500,7 +500,7 @@ gcs_client.move_blobs(temp_path, final_path)
 
 ---
 
-## Data Lake vs Data Warehouse Comparison
+### Data Lake vs Data Warehouse Comparison
 
 | Dimension | Data Lake | Data Warehouse |
 |---|---|---|
@@ -714,7 +714,7 @@ WHERE year = 2026 AND month = 3 AND day = 22
 
 ---
 
-## Data Lake Governance Checklist
+### Data Lake Governance Checklist
 
 Before treating a data lake zone as production-ready:
 

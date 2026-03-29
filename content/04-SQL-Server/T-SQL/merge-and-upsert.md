@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD Type 2, truncate and reload, delete and insert, fast_executemany]
 keywords: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD, SCD2, Slowly Changing Dimension, truncate reload, delete insert, fast_executemany, pyodbc, NORECOVERY, XACT_ABORT, "@@ROWCOUNT", "@@ERROR", "@@TRANCOUNT", XACT_STATE, TRY CATCH, savepoint, SAVE TRAN, RCSI, version store, U lock, X lock, phantom insert, race condition, atomic, idempotent, bronze silver gold, medallion]
 description: "MERGE statement patterns and upsert strategies for the bronze→silver→gold medallion pipeline: truncate-reload for snapshots, merge for OHLCV corrections, SCD Type 2 close-and-insert for dimensions, and delete-and-insert for gold. Includes transaction management, @@ROWCOUNT guards, and XACT_ABORT best practices."
@@ -18,7 +18,7 @@ SQL Server offers several strategies for loading data where rows may already exi
 
 ---
 
-## The Four Load Patterns at a Glance
+### The Four Load Patterns at a Glance
 
 | Pattern | Used In | Source Behavior | History Preserved |
 |---------|---------|-----------------|-------------------|
@@ -599,7 +599,7 @@ DECLARE @log_id BIGINT = SCOPE_IDENTITY();
 
 ---
 
-## MERGE Internals — What Happens Under RCSI
+### MERGE Internals — What Happens Under RCSI
 
 Understanding what happens inside SQL Server when a MERGE executes against an RCSI-enabled database prevents surprises in production:
 
@@ -659,7 +659,7 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 
 ---
 
-## Pipeline Load Pattern Summary
+### Pipeline Load Pattern Summary
 
 | Loader | Table | Pattern | Transaction? |
 |--------|-------|---------|-------------|
@@ -676,7 +676,7 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 
 ---
 
-## Related
+### Related
 
 - [[sargable-queries]] — ensure WHERE clauses on MERGE join keys are SARGable for index seeks
 - [[blocking-and-locking]] — U lock → X lock promotion and RCSI's effect on reader/writer conflicts

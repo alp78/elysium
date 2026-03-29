@@ -17,7 +17,7 @@ When a dbt project targets more than one database — or when the same codebase 
 
 ---
 
-## The Problem
+### The Cross-Adapter Problem
 
 Standard SQL diverges across adapters in predictable ways:
 
@@ -195,7 +195,7 @@ from {{ ref('int_index_constituents_enriched') }}
 
 ---
 
-## Example: Date Add
+### Cross-Adapter Example: Date Add
 
 ```sql
 -- macros/cross_db/date_add.sql

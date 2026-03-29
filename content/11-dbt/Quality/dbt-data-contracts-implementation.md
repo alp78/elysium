@@ -17,7 +17,7 @@ Data contracts in dbt make model schemas enforceable at build time rather than d
 
 ---
 
-## What Is a dbt Data Contract?
+### What Is a dbt Data Contract?
 
 A **data contract** is a schema declaration on a model that dbt enforces during `dbt run`. When `contract.enforced: true` is set, dbt will:
 
@@ -32,7 +32,7 @@ This transforms YAML schema files from documentation into active guardrails.
 
 ---
 
-## Enabling a Contract
+### Enabling a dbt Data Contract
 
 Add the `contract` block to the model's config in YAML. The model must also declare every column with its `data_type`.
 
@@ -360,7 +360,7 @@ dbt source freshness --select source:index_provider_raw
 
 ---
 
-## Full Annotated Contract: `fct_index_performance`
+### Full Annotated Contract: fct_index_performance
 
 This consolidates all concepts: contract enforcement, public access, versioning, and column-level constraints.
 
@@ -453,7 +453,7 @@ models:
 
 ---
 
-## Deprecating a Version
+### Deprecating a dbt Model Version
 
 Once consumers have migrated away from v1, mark it deprecated before removing:
 

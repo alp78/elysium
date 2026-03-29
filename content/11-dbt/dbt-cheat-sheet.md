@@ -8,7 +8,7 @@ updated: 2026-03-23
 
 # dbt Cheat Sheet
 
-## CLI Anatomy
+### dbt CLI Anatomy
 
 ```
 dbt [GLOBAL_FLAGS] COMMAND [COMMAND_FLAGS]
@@ -18,7 +18,7 @@ Global flags apply to every command and must appear before the command name. Com
 
 ---
 
-## Global Flags
+### dbt Global Flags
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
@@ -1522,7 +1522,7 @@ my_finance_project:
 
 ---
 
-## `dbt_project.yml` Key Fields
+### dbt_project.yml Key Fields
 
 ```yaml
 name: my_finance_project
@@ -1643,7 +1643,7 @@ FROM {{ source('security_master', 'securities') }}
 
 ---
 
-## Run Artifacts
+### dbt Run Artifacts
 
 | File | Contents |
 |------|----------|
@@ -1657,7 +1657,7 @@ FROM {{ source('security_master', 'securities') }}
 
 ---
 
-## `packages.yml` Reference
+### packages.yml Reference
 
 ```yaml
 packages:

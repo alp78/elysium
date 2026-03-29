@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, airflow, docker]
-tags: [orchestration, observability, docker, airflow, datadog]
+tags: [monitoring, orchestration, observability, docker, airflow, datadog]
 aliases: [Airflow Observability, Airflow StatsD Metrics, Airflow Datadog Dashboard]
 keywords: [StatsD, DogStatsD, STATSD_ON, STATSD_HOST, STATSD_PORT, STATSD_PREFIX, airflow.scheduler_heartbeat, dagrun.duration, ti.finish, dagrun.schedule_delay, dag_processing.import_errors, dagbag_size, executor.open_slots, pool.starving_tasks, triggerer_heartbeat, microseconds, airflow_dashboard.json, import dashboard JSON, recommended monitors]
 description: "Airflow-specific observability for the project — how to enable StatsD metrics from Airflow containers, key metrics for scheduler health and DAG run tracking, the Airflow Orchestration dashboard, and recommended Datadog monitors."
@@ -18,7 +18,7 @@ The [[datadog-agent-airflow-vm|Airflow VM Datadog agent]] covers the infrastruct
 
 ---
 
-## How StatsD Metrics Flow
+### How StatsD Metrics Flow from Airflow to Datadog
 
 Airflow emits internal metrics via **StatsD** — a lightweight protocol that sends UDP packets with metric names and values. The Datadog agent receives these on port 8125 and forwards them to the Datadog platform.
 
@@ -33,7 +33,7 @@ Airflow emits internal metrics via **StatsD** — a lightweight protocol that se
 
 ---
 
-## Enabling StatsD in Airflow
+### Enabling StatsD in Airflow Docker Compose
 
 Add these environment variables to the shared `AIRFLOW_ENV` array in `infra/scripts/airflow-startup.sh`:
 
@@ -58,7 +58,7 @@ The Datadog agent must have `DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true` (already set i
 
 ---
 
-## Deploying the Change
+### Deploying the StatsD Configuration Change
 
 After modifying the startup script locally:
 
@@ -175,7 +175,7 @@ airflow.<category>.<dag_id>.<task_id>.<metric>.<aggregation>
 
 ---
 
-## Airflow Orchestration Dashboard
+### Airflow Orchestration Dashboard in Datadog
 
 A custom dashboard definition is stored at `infra/datadog/airflow_dashboard.json`. To import it:
 
@@ -204,7 +204,7 @@ The dashboard contains 11 widgets:
 
 ---
 
-## Recommended Monitors
+### Recommended Airflow Monitors in Datadog
 
 Create these in **Monitors → New Monitor → Metric**:
 
@@ -220,7 +220,7 @@ Create these in **Monitors → New Monitor → Metric**:
 
 ---
 
-## Limitations of Self-Hosted Airflow Observability
+### Limitations of Self-Hosted Airflow Observability
 
 > [!tip] Related pattern
 > When Datadog metrics reveal task failures or scheduler anomalies, the [[airflow-troubleshooting]] guide provides targeted diagnostic steps for common failure modes like import errors, pool exhaustion, and zombie task recovery.

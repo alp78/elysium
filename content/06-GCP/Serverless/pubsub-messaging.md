@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, pubsub]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, pubsub]
 aliases: [Pub/Sub publish, Pub/Sub consume, Pub/Sub pull, gcloud pubsub publish, message attributes, Pub/Sub backlog, ordering keys, exactly-once, idempotent]
 keywords: [pubsub, publish, consume, pull, auto-ack, attributes, message ordering, ordering keys, exactly-once delivery, at-least-once, idempotent, backlog, num_undelivered_messages, pipeline lag, MERGE upsert]
 description: "How to publish messages to Pub/Sub topics and consume them from subscriptions — including attributes, ordering keys, backlog monitoring, and the idempotency requirements of at-least-once delivery."
@@ -50,7 +50,7 @@ gcloud pubsub subscriptions pull pipeline-sub --limit=10 --auto-ack
 > [!warning] `--auto-ack` is for Testing Only
 > In production consumer code, never auto-acknowledge. Acknowledge only after successfully processing the message. If you auto-ack and your processing fails, the message is lost — no retry, no dead letter. Ack only on success.
 
-## Monitoring the Subscription Backlog
+### Monitoring the Pub/Sub Subscription Backlog
 
 ```bash
 # Check subscription backlog (how many unprocessed messages?)
@@ -62,7 +62,7 @@ gcloud pubsub subscriptions describe pipeline-sub \
 
 A growing backlog is the primary indicator of pipeline lag. If messages arrive faster than they are consumed, the backlog grows, increasing end-to-end latency. The backlog metric is also available in [[cloud-monitoring-metrics|Cloud Monitoring]] at `pubsub.googleapis.com/subscription/num_undelivered_messages`.
 
-## Ordering and Exactly-Once Delivery
+### Pub/Sub Ordering Keys and Exactly-Once Delivery
 
 > [!warning] Pub/Sub Ordering and Exactly-Once Delivery
 > By default, Pub/Sub does **NOT** guarantee message ordering. Messages may arrive out of order, and may be delivered more than once (at-least-once delivery). For data pipelines, this means:
@@ -73,7 +73,7 @@ A growing backlog is the primary indicator of pipeline lag. If messages arrive f
 >
 > 3. **Exactly-once delivery** is available but requires enabling it on the subscription and adds latency.
 
-## Idempotency Requirement
+### Pub/Sub Idempotency Requirement for At-Least-Once
 
 Because Pub/Sub can redeliver messages, any pipeline stage consuming from Pub/Sub must be idempotent — processing the same message twice must be safe. The standard pattern:
 
@@ -81,7 +81,7 @@ Because Pub/Sub can redeliver messages, any pipeline stage consuming from Pub/Su
 - Include a **unique message ID** (Pub/Sub provides one in `messageId`) in your idempotency key
 - Write to a **staging table first**, then merge to production — the merge is idempotent even if repeated
 
-## Message Format Best Practices
+### Pub/Sub Message Format Best Practices
 
 Structure messages as JSON with a consistent schema:
 ```json

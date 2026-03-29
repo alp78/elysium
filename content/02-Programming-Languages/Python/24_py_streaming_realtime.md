@@ -162,9 +162,9 @@ sample = [generate_tick() for _ in range(5)]
 display(pd.DataFrame(sample))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>timestamp</th>

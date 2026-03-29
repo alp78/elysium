@@ -2,7 +2,7 @@
 type: concept
 category: infrastructure
 technology: [terraform]
-tags: [infrastructure, terraform]
+tags: [infrastructure, terraform, iac]
 aliases: [terraform modules, terraform module composition, multi-environment terraform, terraform workspaces, DRY terraform]
 keywords: [terraform modules, module composition, multi-environment, dev staging prod, module source, module variables, module outputs, terraform workspaces, DRY infrastructure, environment promotion, reusable modules]
 description: "How to use Terraform modules to create reusable, composable infrastructure for multiple environments (dev, staging, prod), avoiding copy-paste between configurations."
@@ -20,7 +20,7 @@ status: complete
 
 Terraform modules are the primary mechanism for creating reusable, composable infrastructure. When you manage multiple environments (dev, staging, prod), modules prevent copy-paste between configurations and enable environment promotion.
 
-## The Core Principle
+### The Core Principle
 
 > Never copy-paste `.tf` files between environments. Extract common patterns into modules. Promote from dev → staging → prod by applying the same module with different variables.
 
@@ -189,7 +189,7 @@ output "dev_dataset_id" {
 
 ---
 
-## Environment Promotion Pattern
+### Environment Promotion Pattern
 
 With modules, promoting infrastructure from dev to prod is a variable change:
 
@@ -219,7 +219,7 @@ Each environment has its own state file, providing complete isolation.
 
 ---
 
-## Terraform Registry Modules
+### Terraform Registry Modules
 
 Terraform modules can also be sourced from the public registry:
 
@@ -239,7 +239,7 @@ module "gcs_buckets" {
 
 ---
 
-## When to Extract a Module
+### When to Extract a Module
 
 Extract code into a module when:
 1. The same pattern appears in 2+ configurations
@@ -256,7 +256,7 @@ Do NOT extract when:
 
 ---
 
-## Gotchas and Edge Cases
+### Gotchas and Edge Cases
 
 **Module refactoring destroys resources:** If you move resources into or out of a module, Terraform sees them as new resources (different addresses). Use `terraform state mv` to move them in state before running `apply`:
 

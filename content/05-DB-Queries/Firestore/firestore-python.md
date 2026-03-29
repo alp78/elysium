@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [firestore, python, gcp]
-tags: [python, sql, gcp, firestore]
+tags: [python, nosql, gcp, firestore]
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
 keywords: [firestore, python, google-cloud-firestore, document, collection, query, where, order_by, limit, batch, transaction, real-time, on_snapshot, subcollection, array_contains, composite index]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
@@ -32,7 +32,7 @@ using the `google-cloud-firestore` Python SDK.
 | `watchlists` | User watchlists | Ownership, public/private |
 | `config` | App configuration | Singleton documents |
 
-## Topics Covered
+### Topics Covered — Firestore Python Operations
 1. Setup & Connection
 2. Read Operations (get, list, query)
 3. Filtering & Ordering
@@ -1037,7 +1037,7 @@ alert_ref.update({"acknowledged": False})
       nanos: 570562000
     }
 
-## Real-Time Listeners
+### Real-Time Listeners — Firestore Python on_snapshot Push Notifications
 
 This cell:
 
@@ -1298,7 +1298,7 @@ for attempt in range(12):
       SAF.PA       close=    315.40  volume=     160,065
     
 
-## Pagination & Cursors
+### Pagination & Cursors — Firestore Python start_after Cursor-Based Paging
 
 This cell:
 

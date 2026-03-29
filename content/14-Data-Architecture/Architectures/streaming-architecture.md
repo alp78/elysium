@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [gcp, python]
-tags: [architecture, python, gcp]
+tags: [data-architecture, architecture, streaming, python, gcp]
 aliases: [streaming architecture, Lambda architecture, Kappa architecture, event-driven architecture, real-time pipeline, stream processing, CDC, change data capture, event streaming, micro-batch, continuous processing, stream-first architecture]
 keywords: [streaming, batch, micro-batch, Lambda architecture, Kappa architecture, event-driven, Kafka, Pub/Sub, Kinesis, Event Hubs, Spark Structured Streaming, Apache Flink, Apache Beam, Dataflow, ksqlDB, Debezium, SQL Server CDC, GCP Datastream, event sourcing, CQRS, exactly-once, at-least-once, tumbling window, sliding window, session window, watermark, late data, reprocessing, replay, real-time analytics, stream processing, CDC, change data capture, producer, consumer, broker, topic, partition, consumer group, offset, backpressure, checkpointing, state store, windowing]
 description: "Streaming architecture patterns — Lambda, Kappa, and event-driven — covering batch vs streaming trade-offs, message broker comparisons (Kafka, Pub/Sub, Kinesis), stream processing engines (Flink, Beam/Dataflow, Spark Structured Streaming), CDC tools (Debezium, GCP Datastream), and the GCP canonical streaming stack."
@@ -31,7 +31,7 @@ The canonical GCP streaming stack — [[pubsub-messaging|Pub/Sub]] → Dataflow 
 
 ---
 
-## Batch vs Streaming vs Micro-Batch
+### Batch vs Streaming vs Micro-Batch
 
 These three processing models represent fundamentally different trade-offs between latency, throughput, cost, and operational complexity:
 
@@ -195,7 +195,7 @@ Event-driven architecture (EDA) is a broader pattern — not just for data pipel
 
 ---
 
-## Message Broker Comparison
+### Message Broker Comparison
 
 | Dimension | Apache Kafka | GCP Pub/Sub | AWS Kinesis | Azure Event Hubs |
 |---|---|---|---|---|
@@ -687,7 +687,7 @@ if __name__ == "__main__":
 
 ---
 
-## Streaming vs Batch Decision Matrix
+### Streaming vs Batch Decision Matrix
 
 Use this matrix to decide whether a use case requires streaming, micro-batch, or batch processing:
 
@@ -707,7 +707,7 @@ Use this matrix to decide whether a use case requires streaming, micro-batch, or
 
 ---
 
-## Connection to Lakehouse Architecture
+### Connection to Lakehouse Architecture
 
 Streaming and the [[lakehouse-architecture|lakehouse]] are complementary:
 - Streaming provides the real-time ingestion layer.

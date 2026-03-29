@@ -2,7 +2,7 @@
 type: index
 category: observability
 technology: [datadog, sql-server, gcp]
-tags: [observability, sql, datadog, gcp]
+tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [Observability Index, Monitoring Index]
 keywords: [observability, monitoring, datadog, gcp, cloud-monitoring, cloud-logging, cloud-trace, APM, traces, metrics, logs, dashboards, alerting, SLA, pipeline-health, MQL, custom-metrics, log-analytics, distributed-tracing]
 description: "Index for the Observability section — Datadog setup, GCP-native monitoring (Cloud Monitoring, Cloud Logging, Cloud Trace), pipeline health, SLA tracking, dashboards, alerting, and troubleshooting."
@@ -18,7 +18,7 @@ status: complete
 
 You cannot fix what you cannot see. Every system needs metrics (how much), logs (what happened), and traces (where did time go). See [[five-pillars-of-data-engineering|Pillar 2: Observability]].
 
-## Datadog
+### Datadog Notes
 
 | Note | Description |
 |------|-------------|
@@ -38,7 +38,7 @@ You cannot fix what you cannot see. Every system needs metrics (how much), logs 
 | [[datadog-cost-optimization]] | Optimizing Datadog usage and spend |
 | [[datadog-cost-reference]] | Datadog pricing tiers and feature costs |
 
-## Monitoring Patterns
+### Monitoring Patterns and Deep Dives
 
 | Note | Description |
 |------|-------------|

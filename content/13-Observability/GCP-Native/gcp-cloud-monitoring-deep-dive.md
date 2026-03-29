@@ -5,7 +5,7 @@ technology:
   - gcp
   - cloud-monitoring
   - python
-tags: [observability, python, gcp]
+tags: [monitoring, observability, python, gcp]
 aliases:
   - Cloud Monitoring
   - Stackdriver
@@ -79,7 +79,7 @@ status: complete
 
 ---
 
-## Table of Contents
+### Table of Contents
 
 1. [[#Cloud Monitoring Architecture]]
 2. [[#Monitoring Every GCP Component Used in Data Engineering]]
@@ -1849,7 +1849,7 @@ gcloud run jobs executions describe EXECUTION_NAME --region=REGION \
 
 ---
 
-## Quick Reference: gcloud Monitoring Commands
+### Quick Reference: gcloud Monitoring Commands
 
 ```bash
 # --- Metric Descriptors ---

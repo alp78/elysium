@@ -1,5 +1,5 @@
 ---
-tags: []
+tags: [runbook, incident]
 type: index
 technology: []
 status: stable
@@ -10,7 +10,7 @@ updated: 2026-03-23
 
 Operational runbooks for the data platform. Each runbook is a step-by-step procedure for diagnosing and resolving a specific incident type, calibrated to the financial index and ESG data provider domain.
 
-## Severity Definitions
+### Severity definitions — incident classification
 
 | Severity | Definition | Response SLA | Example |
 |----------|-----------|-------------|---------|
@@ -18,7 +18,7 @@ Operational runbooks for the data platform. Each runbook is a step-by-step proce
 | **Sev2** | Data quality degraded but publication possible | 1 hour | ESG circuit breaker, BigQuery quota, missed corporate action |
 | **Sev3** | Non-urgent operational issue | Next business day | Vendor file late, scheduled drill |
 
-## Runbooks
+### Runbooks — operational procedure catalog
 
 | Runbook | Severity | Trigger |
 |---------|----------|---------|
@@ -33,7 +33,7 @@ Operational runbooks for the data platform. Each runbook is a step-by-step proce
 | [[vendor-file-late-or-missing]] | Sev3 | Data vendor has not delivered by SLA |
 | [[backup-restore-drill]] | Sev3 | Periodic backup validation (scheduled) |
 
-## Getting Started
+### Getting started — on-call orientation
 
 Start with [[on-call-guide]] for severity definitions, the first-5-minutes checklist, escalation matrix, and communication templates.
 

@@ -2,7 +2,7 @@
 type: troubleshooting
 category: prompt-engineering
 technology: [claude, gpt-4, gemini, grok, llm]
-tags: [ai]
+tags: [ai, prompt-engineering]
 aliases: [prompt debugging, prompt optimization, weak output diagnosis, intent misalignment, prompt system design, multi-agent prompting, prompt library, prompt mastery, feedback loop prompting, iterative refinement, memory layering, prompt workflows, prompt anti-patterns]
 keywords: [prompt debugging, diagnosing weak outputs, intent misalignment, rebuilding prompts, contextual reinforcement, phrasing rephrasing, logic steps, cross-model testing, consistency, workflows chains loops, multi-agent systems, planner researcher executor reviewer, memory layering, iterative refinement, feedback integration, prompt library, meta-analysis, mastery checklist, anti-patterns, universal modifiers, 4-layer template, quick reference, CLAUDE.md, memory file]
 description: "Complete guide to debugging weak AI prompts, diagnosing output failures, rebuilding prompts with three techniques (rephrasing, logic steps, contextual reinforcement), and designing prompt systems including workflows, loops, multi-agent architectures, memory layering, and feedback loops. Includes the full mastery checklist and prompt library structure."

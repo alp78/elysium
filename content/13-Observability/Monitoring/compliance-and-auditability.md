@@ -7,7 +7,7 @@ technology:
   - python
   - csharp
   - sql-server
-tags: [observability, python, csharp, sql, bigquery, datadog]
+tags: [monitoring, observability, python, csharp, sql, bigquery, datadog]
 aliases:
   - compliance
   - audit trail
@@ -76,7 +76,7 @@ This reference covers the full compliance and auditability surface for a product
 
 ---
 
-## Table of Contents
+### Table of Contents
 
 1. [[#1. End-to-End Data Lineage]]
 2. [[#2. Corporate Action Processing]]
@@ -2270,7 +2270,7 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 
 ---
 
-## Appendix A: Schema Quick Reference
+### Appendix A: Compliance Schema Quick Reference
 
 | Table | Purpose | Retention |
 |---|---|---|
@@ -2285,7 +2285,7 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 | `dbo.constituent_shares` | Historical constituent share counts | Indefinite |
 | `dbo.security_prices` | Historical adjusted prices | Indefinite |
 
-## Appendix B: Key Regulatory References
+### Appendix B: Key Regulatory References
 
 | Regulation | Article | Topic |
 |---|---|---|

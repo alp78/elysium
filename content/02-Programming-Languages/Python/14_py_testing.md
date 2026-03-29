@@ -101,7 +101,7 @@ def test_price_calculation():
 
 ipytest.run()
 ```
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.</span><span style="color:#e5c07b">                                                                                            [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.</span><span style="color:#e5c07b">                                                                                            [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -120,7 +120,7 @@ def test_ticker_normalization():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..</span><span style="color:#e5c07b">                                                                                           [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">..</span><span style="color:#e5c07b">                                                                                           [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -139,7 +139,7 @@ def test_portfolio_weights_sum():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...</span><span style="color:#e5c07b">                                                                                          [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">...</span><span style="color:#e5c07b">                                                                                          [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -166,7 +166,7 @@ def test_trade_record_fields():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">....</span><span style="color:#e5c07b">                                                                                         [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">....</span><span style="color:#e5c07b">                                                                                         [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -190,7 +190,7 @@ def test_invalid_quantity_raises():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.....</span><span style="color:#e5c07b">                                                                                        [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.....</span><span style="color:#e5c07b">                                                                                        [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -210,7 +210,7 @@ def test_missing_ticker_raises():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">......</span><span style="color:#e5c07b">                                                                                       [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">......</span><span style="color:#e5c07b">                                                                                       [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -246,7 +246,7 @@ def test_pnl_calculation():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.......</span><span style="color:#e5c07b">                                                                                      [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.......</span><span style="color:#e5c07b">                                                                                      [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -266,7 +266,7 @@ def test_basis_points():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">........</span><span style="color:#e5c07b">                                                                                     [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">........</span><span style="color:#e5c07b">                                                                                     [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -290,7 +290,7 @@ def test_sharpe_ratio_positive():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.........</span><span style="color:#e5c07b">                                                                                    [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.........</span><span style="color:#e5c07b">                                                                                    [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -312,7 +312,7 @@ def test_index_constituents():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..........</span><span style="color:#e5c07b">                                                                                   [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">..........</span><span style="color:#e5c07b">                                                                                   [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -333,7 +333,7 @@ def test_ohlcv_bar():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...........</span><span style="color:#e5c07b">                                                                                  [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">...........</span><span style="color:#e5c07b">                                                                                  [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -356,7 +356,7 @@ def test_isin_format():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">............</span><span style="color:#e5c07b">                                                                                 [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">............</span><span style="color:#e5c07b">                                                                                 [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -375,7 +375,7 @@ def test_trade_log_format():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.............</span><span style="color:#e5c07b">                                                                                [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.............</span><span style="color:#e5c07b">                                                                                [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -397,7 +397,7 @@ def test_market_data_types():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..............</span><span style="color:#e5c07b">                                                                               [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">..............</span><span style="color:#e5c07b">                                                                               [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -416,7 +416,7 @@ def test_optional_field():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...............</span><span style="color:#e5c07b">                                                                              [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">...............</span><span style="color:#e5c07b">                                                                              [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -459,7 +459,7 @@ def test_trade_count(sample_trades):
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">................</span><span style="color:#e5c07b">                                                                             [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">................</span><span style="color:#e5c07b">                                                                             [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -479,7 +479,7 @@ def test_all_trades_have_ticker(sample_trades):
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.................</span><span style="color:#e5c07b">                                                                            [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.................</span><span style="color:#e5c07b">                                                                            [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -503,7 +503,7 @@ def test_net_aapl_position(sample_trades):
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..................</span><span style="color:#e5c07b">                                                                           [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">..................</span><span style="color:#e5c07b">                                                                           [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -549,7 +549,7 @@ def test_load_positions(temp_positions_file):
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...................</span><span style="color:#e5c07b">                                                                          [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">...................</span><span style="color:#e5c07b">                                                                          [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -572,7 +572,7 @@ def test_total_market_value(temp_positions_file):
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">....................</span><span style="color:#e5c07b">                                                                         [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">....................</span><span style="color:#e5c07b">                                                                         [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -672,7 +672,7 @@ def test_currency_conversion(amount_usd, rate, expected):
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...................................</span><span style="color:#e5c07b">                                                          [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">...................................</span><span style="color:#e5c07b">                                                          [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -715,7 +715,7 @@ def test_mock_market_data():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">....................................</span><span style="color:#e5c07b">                                                         [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">....................................</span><span style="color:#e5c07b">                                                         [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -744,7 +744,7 @@ def test_mock_order_submission():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.....................................</span><span style="color:#e5c07b">                                                        [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.....................................</span><span style="color:#e5c07b">                                                        [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -780,7 +780,7 @@ def test_mock_side_effect_retries():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">......................................</span><span style="color:#e5c07b">                                                       [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">......................................</span><span style="color:#e5c07b">                                                       [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -822,7 +822,7 @@ def test_market_open_during_hours():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.......................................</span><span style="color:#e5c07b">                                                      [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.......................................</span><span style="color:#e5c07b">                                                      [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -840,7 +840,7 @@ def test_market_closed_weekend():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">........................................</span><span style="color:#e5c07b">                                                     [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">........................................</span><span style="color:#e5c07b">                                                     [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -858,7 +858,7 @@ def test_market_closed_after_hours():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.........................................</span><span style="color:#e5c07b">                                                    [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.........................................</span><span style="color:#e5c07b">                                                    [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -900,7 +900,7 @@ def test_production_exchange_config():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..........................................</span><span style="color:#e5c07b">                                                   [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">..........................................</span><span style="color:#e5c07b">                                                   [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -921,7 +921,7 @@ def test_default_exchange_config():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">...........................................</span><span style="color:#e5c07b">                                                  [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">...........................................</span><span style="color:#e5c07b">                                                  [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -991,7 +991,7 @@ def test_normalize_trades_basic():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">............................................</span><span style="color:#e5c07b">                                                 [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">............................................</span><span style="color:#e5c07b">                                                 [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -1020,7 +1020,7 @@ def test_normalize_trades_drops_missing_id():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.............................................</span><span style="color:#e5c07b">                                                [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.............................................</span><span style="color:#e5c07b">                                                [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -1038,7 +1038,7 @@ def test_normalize_trades_empty():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">..............................................</span><span style="color:#e5c07b">                                               [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">..............................................</span><span style="color:#e5c07b">                                               [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -1135,7 +1135,7 @@ def test_valid_eod_data():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">................................................</span><span style="color:#e5c07b">                                             [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">................................................</span><span style="color:#e5c07b">                                             [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard
@@ -1162,7 +1162,7 @@ def test_catches_invalid_prices():
 ipytest.run()
 ```
 
-<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px; overflow-x:auto"><span style="color:#4ec9b0">.................................................</span><span style="color:#e5c07b">                                            [100%]</span>
+<pre style="font-size:0.85em; background:transparent; color:#ccc; padding:8px 12px; border-radius:6px"><span style="color:#4ec9b0">.................................................</span><span style="color:#e5c07b">                                            [100%]</span>
 <span style="color:#e5c07b">======================================== warnings summary =========================================</span>
 .lang\Lib\site-packages\_pytest\config\__init__.py:1303
   c:\Users\aperi\DEV\LANG\.lang\Lib\site-packages\_pytest\config\__init__.py:1303: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; typeguard

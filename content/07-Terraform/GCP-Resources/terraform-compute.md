@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform GCE, terraform VM, google_compute_instance, Container-Optimized OS, COS, startup script terraform]
 keywords: [google_compute_instance, GCE, virtual machine, startup script, machine type, e2-medium, pd-ssd, pd-balanced, Container-Optimized OS, COS, Ubuntu, OS Login, Shielded VM, boot disk, network interface, service account, ephemeral IP, no public IP]
 description: "Terraform configuration for GCE virtual machine instances: the Airflow VM (Container-Optimized OS, ephemeral public IP) and the SQL Server VM (Ubuntu, SSD, no public IP), with startup scripts, shielded instance config, and OS Login."
@@ -20,7 +20,7 @@ status: complete
 
 This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestrator VM and the SQL Server database VM. These are the two compute instances in the example infrastructure.
 
-## Architecture Context
+### Architecture Context
 
 Two GCE instances share the same subnet (`10.0.0.0/24`) but differ significantly in their OS, disk, public IP assignment, and purpose. For the full [[vm-lifecycle]] of these instances -- starting, stopping, resizing, and live migration -- see the GCP Compute Engine notes.
 
@@ -254,7 +254,7 @@ The script (`sql-startup.sh`) runs once on first boot, using a marker file (`/va
 
 ---
 
-## gcloud Verification Commands
+### gcloud Verification Commands
 
 ```bash
 # List all VMs

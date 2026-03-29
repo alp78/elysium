@@ -2,7 +2,7 @@
 type: concept
 category: terraform
 technology: [terraform, gcp, gcs]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform provider, terraform backend, GCS backend, terraform GCS, google provider, remote state backend]
 keywords: [terraform provider, hashicorp google, backend gcs, remote state, state file, tfstate, gcs bucket, pessimistic constraint, version constraint, provider configuration, terraform init]
 description: "How to configure the Terraform Google provider and GCS remote state backend — version constraints, project defaults, and why remote state matters."
@@ -42,7 +42,7 @@ provider "google" {
 }
 ```
 
-## The `terraform` Block
+### The `terraform` Block
 
 The top-level configuration block. Not a resource — it tells Terraform about itself.
 
@@ -50,7 +50,7 @@ The top-level configuration block. Not a resource — it tells Terraform about i
 |-------|-------|---------|
 | `required_version` | `>= 1.5` | Minimum Terraform CLI version. Prevents running with an older binary that might not support the syntax used here. |
 
-## The `required_providers` Block
+### The `required_providers` Block
 
 Declares external provider plugins that Terraform must download before it can manage resources.
 
@@ -117,7 +117,7 @@ variable "region" {
 }
 ```
 
-## The `provider "google"` Block
+### The `provider "google"` Block
 
 Configures the Google provider with default values applied to all resources.
 

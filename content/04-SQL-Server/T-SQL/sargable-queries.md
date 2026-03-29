@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SARGable, search argument, index seek, non-sargable, predicate]
 keywords: [SARGable, search argument, index seek, index scan, predicate, WHERE clause, YEAR function, CAST, CONVERT, LEFT, LIKE, functions on columns, implicit conversion, computed column, query optimization, execution plan, scan vs seek]
 description: "SARGable query patterns that enable SQL Server index seeks vs non-SARGable patterns that force full scans. Includes a complete reference table and fix strategies."
@@ -20,7 +20,7 @@ status: complete
 
 ---
 
-## SARGable vs Non-SARGable Patterns
+### SARGable vs Non-SARGable Patterns
 
 ```sql
 -- ╔══════════════════════════════════════════════════════════════════╗
@@ -66,7 +66,7 @@ status: complete
 
 ---
 
-## Why Non-SARGable Predicates Are Slow
+### Why Non-SARGable Predicates Are Slow
 
 The page-level view of what happens:
 
@@ -91,7 +91,7 @@ Non-SARGable: WHERE YEAR(trade_date) = 2025
 
 ---
 
-## The Golden Rule Table
+### The Golden Rule Table
 
 | Never do this | Do this instead |
 |---|---|
@@ -135,7 +135,7 @@ ORDER BY qs.total_logical_reads DESC;
 
 ---
 
-## Fixing Non-SARGable Predicates When You Can't Change the Query
+### Fixing Non-SARGable Predicates When You Can't Change the Query
 
 If you cannot modify the query (e.g., it comes from a third-party tool), there are two workarounds:
 
@@ -200,7 +200,7 @@ cursor.executemany("INSERT INTO ...", rows)
 
 ---
 
-## SARGability Quick Reference for the Pipeline
+### SARGability Quick Reference for the Pipeline
 
 | Common pipeline pattern | SARGable? | Fix |
 |---|---|---|
@@ -214,7 +214,7 @@ cursor.executemany("INSERT INTO ...", rows)
 
 ---
 
-## Related
+### Related
 
 - [[index-types-and-strategy]] — index types that SARGable queries exploit
 - [[execution-plans]] — how to read execution plans to spot scans

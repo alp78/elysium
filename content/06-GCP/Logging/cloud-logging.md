@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-logging, observability]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, monitoring]
 aliases: [Cloud Logging, gcloud logging read, GCP logs, log filter, log severity, gcloud logging tail, structured logging, audit logs]
 keywords: [cloud logging, gcloud logging read, gcloud logging tail, log filter, severity, ERROR, WARNING, INFO, timestamp, textPayload, resource.type, cloud_run_job, gce_instance, full-text search, real-time logs, audit logs, write log entry, log filter language, structured logs]
 description: "How to query, filter, and tail GCP Cloud Logging using the gcloud CLI — filtering by severity, time range, resource type, and full-text content to diagnose pipeline failures and infrastructure issues in real-time."
@@ -16,7 +16,7 @@ status: complete
 
 When your Cloud Run job fails at 3 AM, Cloud Logging is the first place you look. As one of the three pillars covered in [[observability-deep-dive]], logging complements metrics and tracing to give you full incident visibility. The `gcloud logging read` command supports a powerful filter language that lets you narrow from millions of log entries to the specific failure in seconds. The filter language uses field paths, comparison operators, and logical connectives — it is not grep, it is a structured query language applied to structured log records.
 
-## Reading Recent Logs
+### Reading Recent Cloud Logs
 
 ```bash
 # Read recent logs (most recent first)
@@ -24,7 +24,7 @@ gcloud logging read 'resource.type="cloud_run_job"' --limit=50 --format=json
 # The filter language is powerful — learn it well
 ```
 
-## Filtering by Severity
+### Filtering Cloud Logs by Severity
 
 ```bash
 # Filter by severity
@@ -32,7 +32,7 @@ gcloud logging read 'severity>=ERROR' --limit=20
 # Severity levels: DEFAULT, DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY
 ```
 
-## Filtering by Time Range
+### Filtering Cloud Logs by Time Range
 
 ```bash
 # Filter by time range
@@ -40,7 +40,7 @@ gcloud logging read 'timestamp>="2026-03-09T14:00:00Z" AND timestamp<="2026-03-0
 # ISO 8601 timestamps in UTC
 ```
 
-## Full-Text Search in Log Messages
+### Full-Text Search in Cloud Log Messages
 
 ```bash
 # Full-text search in log messages
@@ -48,14 +48,14 @@ gcloud logging read 'textPayload:"deadlock"' --limit=10
 # textPayload:"search_term" = substring search in the message body
 ```
 
-## Filtering by Specific Resource
+### Filtering Cloud Logs by Resource Type
 
 ```bash
 # Filter by specific resource
 gcloud logging read 'resource.type="gce_instance" AND resource.labels.instance_id="data-pipeline-sql"' --limit=30
 ```
 
-## Combining Filters for Incident Response
+### Combining Log Filters for Incident Response
 
 ```bash
 # Combine filters (the pipeline failed — what happened?)
@@ -67,7 +67,7 @@ gcloud logging read '
 ' --limit=100 --format="table(timestamp,severity,textPayload)"
 ```
 
-## Tailing Logs in Real-Time
+### Tailing Cloud Logs in Real-Time
 
 ```bash
 # Tail logs in real-time (live stream)
@@ -80,7 +80,7 @@ gcloud logging tail 'resource.type="cloud_run_job" AND severity>=ERROR'
 > [!tip] Use `gcloud logging tail` During Active Incidents
 > `gcloud logging tail` is your live monitoring window during an incident or deployment. Combine it with a severity filter and resource type to see only what matters. Unlike polling `gcloud logging read` repeatedly, `tail` opens a streaming connection — entries appear in near-real-time with sub-second latency.
 
-## Writing Test Log Entries
+### Writing Test Log Entries
 
 ```bash
 # Write a test log entry
@@ -88,7 +88,7 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 # Use case: verify log routing and alerting
 ```
 
-## Log Filter Language Reference
+### Cloud Logging Filter Language Reference
 
 | Filter | What it matches |
 |---|---|
@@ -103,7 +103,7 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 | `timestamp>="2026-03-22T00:00:00Z"` | Logs after this UTC timestamp |
 | `protoPayload.status.code=7` | Permission denied errors (VPC-SC violations use code 7) |
 
-## Common Resource Types for Data Engineering
+### Common Cloud Logging Resource Types for Data Engineering
 
 | Resource type | What it covers |
 |---|---|
@@ -117,7 +117,7 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 > [!tip] Related pattern
 > SQL Server [[audit-logging]] can forward its audit events to Cloud Logging via the Datadog agent or custom log sinks, unifying database and infrastructure logs in one place. For teams using Datadog as an alternative log destination, [[datadog-log-management]] provides the routing configuration.
 
-## Querying VPC-SC Violations
+### Querying VPC-SC Violations in Cloud Logging
 
 Cloud Audit Logs (a special log type in Cloud Logging) record all VPC Service Controls denials. See [[vpc-service-controls]] for the specific filter pattern.
 

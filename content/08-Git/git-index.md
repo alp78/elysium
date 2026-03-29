@@ -2,7 +2,7 @@
 type: index
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases: [Git Index, Git Section, Version Control Index, GitHub Index]
 keywords: [git, github, version control, branching, merging, pull requests, code review, ci/cd, github actions, gitignore, tagging, remote, merge conflicts, troubleshooting]
 description: "Index for all Git and GitHub notes covering setup, daily workflow, branching, merging, pull requests, CI/CD, conflict resolution, error troubleshooting, and release management."
@@ -18,27 +18,27 @@ status: complete
 
 Git is the version control system; GitHub is the collaboration platform. Together they form the coordination layer for every data engineering team — code review, schema migrations, automated deployments, and cross-timezone handoffs all flow through Git. This section covers everything from initial setup to advanced troubleshooting.
 
-## Setup and Concepts
+### Setup and Concepts
 
 | Note | Description |
 |------|-------------|
 | [[git-setup-and-config]] | Core Git concepts (repository, commit, branch, HEAD, SHA), initial configuration, creating and cloning repos |
 
-## Daily Workflow
+### Daily Workflow
 
 | Note | Description |
 |------|-------------|
 | [[git-daily-workflow]] | Status, diff, staging, committing, pushing, pulling — the commands you run every day |
 | [[gitignore-patterns]] | Pattern syntax, common templates, stop tracking files, remove accidentally committed secrets |
 
-## Branching and Merging
+### Branching and Merging
 
 | Note | Description |
 |------|-------------|
 | [[git-branching-and-merging]] | Branch creation, switching, deletion, merge strategies, stashing |
 | [[git-merge-conflicts]] | Conflict markers, step-by-step resolution, merge abort, VS Code mergetool, rebase conflicts, prevention |
 
-## Collaboration
+### Collaboration
 
 | Note | Description |
 |------|-------------|
@@ -46,13 +46,13 @@ Git is the version control system; GitHub is the collaboration platform. Togethe
 | [[git-remote-management]] | Remotes, upstream forks, fetch vs pull, fetch --prune, force-with-lease safe push |
 | [[git-tagging-and-releases]] | Lightweight vs annotated tags, semantic versioning, pushing tags, tag-driven CI/CD |
 
-## History and Inspection
+### History and Inspection
 
 | Note | Description |
 |------|-------------|
 | [[git-history-and-inspection]] | Log formatting, blame, show, diff, bisect, pickaxe search |
 
-## Recovery and Troubleshooting
+### Recovery and Troubleshooting
 
 | Note | Description |
 |------|-------------|
@@ -60,7 +60,7 @@ Git is the version control system; GitHub is the collaboration platform. Togethe
 | [[git-common-errors]] | 25+ error scenarios with exact error messages, causes, and fixes |
 | [[git-problems]] | Additional Git problem scenarios and solutions |
 
-## CI/CD
+### CI/CD
 
 | Note | Description |
 |------|-------------|
@@ -68,14 +68,14 @@ Git is the version control system; GitHub is the collaboration platform. Togethe
 
 See also: [[git-cheat-sheet]]
 
-## Key Concepts
+### Key Concepts
 
 - **[[git-setup-and-config]]** — Start here if you are new to Git
 - **[[git-daily-workflow]]** — The 5-command cycle you repeat dozens of times per day
 - **[[pull-requests-and-code-review]]** — How distributed data teams coordinate safely
 - **[[git-common-errors]]** — When something goes wrong, this is your first stop
 
-## Cross-References
+### Cross-References
 
 - **Engineering Practice** — [[github-actions-workflows]] covers workflow patterns in more depth
 - **CI/CD** — [[github-actions-ci-cd]] shows real CI/CD for data pipelines

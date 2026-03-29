@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server, python, airflow]
-tags: [python, sql, airflow]
+tags: [python, sql, airflow, sql-server, tsql]
 aliases: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption]
 keywords: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption, serialization, atomic operation, MERGE, isolation level, READ COMMITTED, SERIALIZABLE, RCSI, Airflow max_active_runs, transaction, unique constraint, check-then-insert, read-then-write, overlapping pipeline, pipeline race condition]
 description: "SQL Server race conditions in data pipelines: the four common patterns (lost update, phantom insert, dirty read, overlapping truncate-reload), detection queries, and five prevention strategies including Airflow serialization, atomic SQL operations, transactions, and unique constraints. Includes a complete data pipeline audit."
@@ -31,7 +31,7 @@ Race conditions are more dangerous than deadlocks because:
 
 ---
 
-## Race Condition vs. Deadlock
+### Race Condition vs. Deadlock
 
 | | Race Condition | Deadlock |
 |---|---|---|
@@ -350,7 +350,7 @@ The dashboard uses the `WithDeadlockRetryAsync` wrapper to handle the rare case 
 
 ---
 
-## Remaining Risks and Mitigations
+### Remaining Risks and Mitigations
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|------------|
@@ -364,7 +364,7 @@ The data pipeline's primary defense is **serialization via Airflow** — `max_ac
 
 ---
 
-## Related
+### Related
 
 - [[deadlock-detection-and-prevention]] — the loudly-detected sibling of race conditions
 - [[blocking-and-locking]] — lock types, isolation levels, and blocking chains

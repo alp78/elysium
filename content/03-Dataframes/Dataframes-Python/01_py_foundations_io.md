@@ -1220,7 +1220,7 @@ display(df_pl)
 
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1.513937e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1.382722e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1.370204e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1.469911e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1.428681e6</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Gotcha — Pandas <code style="font-size:0.75em">object</code> vs <code style="font-size:0.75em">string</code> dtype
+### Gotcha — Pandas object vs string dtype
 
 Pandas' default for text is `object` which can hold *anything*.
 Use `string` dtype (or `StringDtype()`) for type safety.
@@ -2115,8 +2115,7 @@ except Exception as e:
     Max int64: 9223372036854775807
     Max + 1  : -9223372036854775808
 
-### Gotcha — Pandas <code style="font-size:0.75em">.values</code> vs <code style="font-size:0.75em">.to_numpy()</code> vs <code style="font-size:0.75em">.to_list()</code>
-
+### Gotcha — Pandas .values vs .to_numpy() vs .to_list()
 
 - **To NumPy**: Extract column as NumPy array.
 
@@ -2452,8 +2451,7 @@ display(size_df)
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
 
-### Pandas <code style="font-size:0.75em">read_csv</code>
-
+### Pandas read_csv
 
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
@@ -2656,7 +2654,7 @@ display(df_peek)
 </table>
 </div>
 
-### Polars <code style="font-size:0.75em">read_csv</code> (Eager)
+### Polars read_csv (Eager)
 
 
 - **Head**: Return the first N rows.
@@ -2694,7 +2692,7 @@ display(df_pl_ohlcv.head(3))
 
 <div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars <code style="font-size:0.75em">scan_csv</code> (Lazy)
+### Polars scan_csv (Lazy)
 
 ```python
 # Lazy scan - no data is read yet!
@@ -2783,8 +2781,7 @@ for f in csv_files:
 - **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
 
-### Pandas <code style="font-size:0.75em">read_json</code>
-
+### Pandas read_json
 
 - **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
@@ -2954,8 +2951,7 @@ display(df_pd_perf.head(3))
 </table>
 </div>
 
-### Polars <code style="font-size:0.75em">read_json</code>
-
+### Polars read_json
 
 - **Head**: Return the first N rows.
 - **Read JSON**: Load a JSON file into a DataFrame.
@@ -2987,7 +2983,7 @@ display(df_pl_perf.head(3))
 
 <div><small>shape: (3, 15)</small><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-05&quot;</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>2</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-06&quot;</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr><tr><td>3</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2021-01-07&quot;</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>&quot;2026-03-04 22:40:26.069309&quot;</td></tr></tbody></table></div>
 
-### Polars <code style="font-size:0.75em">scan_ndjson</code> (Lazy)
+### Polars scan_ndjson (Lazy)
 
 `scan_ndjson` works with newline-delimited JSON files.  Standard JSON
 arrays need to be converted first.  We demonstrate by writing NDJSON
@@ -3074,8 +3070,7 @@ for f in json_files:
 - **Head**: Return the first N rows.
 - **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
 
-### Pandas <code style="font-size:0.75em">read_parquet</code>
-
+### Pandas read_parquet
 
 - **Head**: Return the first N rows.
 - **Read Parquet**: Load a Parquet file. Columnar format: faster and smaller than CSV.
@@ -3177,7 +3172,7 @@ display(df_pd_pq_cols.head(3))
 </table>
 </div>
 
-### Polars <code style="font-size:0.75em">read_parquet</code> (Eager)
+### Polars read_parquet (Eager)
 
 
 - **Head**: Return the first N rows.
@@ -3209,7 +3204,7 @@ display(df_pl_pq_cols.head(3))
 
 <div><small>shape: (3, 3)</small><table><thead><tr><th>date</th><th>symbol</th><th>close</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>&quot;ABI.BR&quot;</td><td>57.21</td></tr><tr><td>2021-01-05</td><td>&quot;ABI.BR&quot;</td><td>57.18</td></tr><tr><td>2021-01-06</td><td>&quot;ABI.BR&quot;</td><td>58.77</td></tr></tbody></table></div>
 
-### Polars <code style="font-size:0.75em">scan_parquet</code> (Lazy)
+### Polars scan_parquet (Lazy)
 
 
 - **Lazy Scan**: Create a LazyFrame without loading data. Execution deferred until .collect().
@@ -3299,8 +3294,7 @@ for f in pq_files:
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
 
-### <code style="font-size:0.75em">dtypes</code> / <code style="font-size:0.75em">schema_overrides</code>
-
+### dtypes / schema_overrides
 
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
@@ -3460,8 +3454,7 @@ display(df_dtype_pl.head(3))
 
 <div><small>shape: (3, 20)</small><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>timestamp</th><th>current_price</th><th>open_price</th><th>day_high</th><th>day_low</th><th>previous_close</th><th>price_change</th><th>price_change_pct</th><th>bid</th><th>ask</th><th>bid_size</th><th>ask_size</th><th>spread</th><th>current_volume</th><th>average_volume_10day</th><th>volume_ratio</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>20192</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BMW.DE&quot;</td><td>&quot;2026-03-12 13:49:54&quot;</td><td>80.4</td><td>79.0</td><td>81.16</td><td>77.9</td><td>80.82</td><td>-0.42</td><td>-0.5197</td><td>80.38</td><td>80.52</td><td>0.0</td><td>0.0</td><td>0.14</td><td>770681</td><td>1209819</td><td>0.637</td></tr><tr><td>20193</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;RHM.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>1551.0</td><td>1536.0</td><td>1588.0</td><td>1535.0</td><td>1520.5</td><td>30.5</td><td>2.0059</td><td>1551.5</td><td>1552.0</td><td>267.0</td><td>45.0</td><td>0.5</td><td>159633</td><td>294973</td><td>0.5412</td></tr><tr><td>20194</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;2026-03-12 12:50:13.639560&quot;</td><td>&quot;BAS.DE&quot;</td><td>&quot;2026-03-12 13:49:55&quot;</td><td>47.67</td><td>46.3</td><td>48.1</td><td>45.96</td><td>46.31</td><td>1.36</td><td>2.9367</td><td>47.68</td><td>47.71</td><td>1393.0</td><td>165.0</td><td>0.03</td><td>1512800</td><td>4089134</td><td>0.37</td></tr></tbody></table></div>
 
-### <code style="font-size:0.75em">null_values</code>
-
+### null_values
 
 - **Read CSV**: Load a CSV file into a DataFrame.
 
@@ -3501,8 +3494,7 @@ display(null_counts_pl)
 
 <div><small>shape: (1, 36)</small><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>6</td><td>71</td><td>35</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
-### <code style="font-size:0.75em">separator</code>
-
+### separator
 
 - **Head**: Return the first N rows.
 - **Read CSV**: Load a CSV file into a DataFrame.
@@ -4167,11 +4159,6 @@ display(comp_df.style.set_properties(**{"text-align": "left"}).hide(axis="index"
 
 ### Pandas vs Polars - Reading & Writing Comparison
 
-<style type="text/css">
-#T_ddd7b_row0_col0, #T_ddd7b_row0_col1, #T_ddd7b_row0_col2, #T_ddd7b_row0_col3, #T_ddd7b_row1_col0, #T_ddd7b_row1_col1, #T_ddd7b_row1_col2, #T_ddd7b_row1_col3, #T_ddd7b_row2_col0, #T_ddd7b_row2_col1, #T_ddd7b_row2_col2, #T_ddd7b_row2_col3, #T_ddd7b_row3_col0, #T_ddd7b_row3_col1, #T_ddd7b_row3_col2, #T_ddd7b_row3_col3, #T_ddd7b_row4_col0, #T_ddd7b_row4_col1, #T_ddd7b_row4_col2, #T_ddd7b_row4_col3, #T_ddd7b_row5_col0, #T_ddd7b_row5_col1, #T_ddd7b_row5_col2, #T_ddd7b_row5_col3, #T_ddd7b_row6_col0, #T_ddd7b_row6_col1, #T_ddd7b_row6_col2, #T_ddd7b_row6_col3, #T_ddd7b_row7_col0, #T_ddd7b_row7_col1, #T_ddd7b_row7_col2, #T_ddd7b_row7_col3, #T_ddd7b_row8_col0, #T_ddd7b_row8_col1, #T_ddd7b_row8_col2, #T_ddd7b_row8_col3, #T_ddd7b_row9_col0, #T_ddd7b_row9_col1, #T_ddd7b_row9_col2, #T_ddd7b_row9_col3, #T_ddd7b_row10_col0, #T_ddd7b_row10_col1, #T_ddd7b_row10_col2, #T_ddd7b_row10_col3, #T_ddd7b_row11_col0, #T_ddd7b_row11_col1, #T_ddd7b_row11_col2, #T_ddd7b_row11_col3, #T_ddd7b_row12_col0, #T_ddd7b_row12_col1, #T_ddd7b_row12_col2, #T_ddd7b_row12_col3, #T_ddd7b_row13_col0, #T_ddd7b_row13_col1, #T_ddd7b_row13_col2, #T_ddd7b_row13_col3, #T_ddd7b_row14_col0, #T_ddd7b_row14_col1, #T_ddd7b_row14_col2, #T_ddd7b_row14_col3 {
-  text-align: left;
-}
-</style>
 <table id="T_ddd7b">
   <thead>
     <tr>

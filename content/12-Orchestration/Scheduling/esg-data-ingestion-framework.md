@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [airflow, gcp, cloud-run, terraform, python]
-tags: [orchestration, python, terraform, airflow, gcp, esg]
+tags: [orchestration, python, terraform, airflow, gcp, esg, scheduling, cron]
 aliases: [ESG ingestion, vendor normalization, circuit breaker, data quality gate, score normalization, MSCI normalization, Sustainalytics normalization, carbon footprint, WACI, SFDR, EU Taxonomy, data vendor, feed ingestion, ESG pipeline]
 keywords: [esg, environmental social governance, vendor normalization, score normalization, msci, sustainalytics, iss esg, bloomberg esg, circuit breaker, anomaly detection, data quality gate, carbon intensity, weighted average carbon intensity, WACI, SFDR, EU Taxonomy, airflow dag, cloud run job, service account segregation, read write separation, data vendor sla, freshness tracking, forward fill, coverage check, pipeline halt]
 description: "ESG data ingestion framework for index providers — covers multi-vendor score normalization (MSCI, Sustainalytics, ISS), circuit breaker patterns for anomaly detection, carbon footprint calculation (WACI/SFDR), and Terraform IAM for segregated read/write service accounts."
@@ -24,7 +24,7 @@ status: complete
 
 ---
 
-## The Multi-Vendor Scale Problem
+### ESG Multi-Vendor Scale Problem
 
 | Vendor | Scale | Range | Direction | Update Freq | Typical Coverage |
 |--------|-------|-------|-----------|-------------|-----------------|
@@ -39,7 +39,7 @@ status: complete
 
 ---
 
-## Normalization Functions
+### ESG Score Normalization Functions
 
 ```python
 """
@@ -125,7 +125,7 @@ def normalize_score(vendor: str, raw_value) -> Optional[float]:
 
 ---
 
-## Airflow DAG: ESG Normalization Pipeline
+### Airflow DAG for ESG Normalization Pipeline
 
 ```python
 from datetime import datetime, timedelta
@@ -235,7 +235,7 @@ with DAG(
 
 ---
 
-## Circuit Breaker Pattern
+### ESG Circuit Breaker Pattern for Anomaly Detection
 
 ```python
 def check_anomalies(calc_date: str, max_deviation_pct: float = 20.0, **context) -> str:
@@ -366,7 +366,7 @@ def calculate_carbon_footprint(
 
 ---
 
-## Terraform: Segregated Service Accounts
+### Terraform Segregated Service Accounts for ESG Pipelines
 
 > [!danger] Regulatory Requirement
 > Financial data pipelines MUST separate Write (can modify production data) from Read (can only query) service accounts. This is both a security best practice and a regulatory requirement under operational risk management frameworks.

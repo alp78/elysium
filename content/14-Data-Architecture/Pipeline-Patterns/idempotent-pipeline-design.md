@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [sql-server, python, airflow]
-tags: [architecture, pipeline, python, sql, airflow]
+tags: [data-architecture, architecture, pipeline, python, sql, airflow]
 aliases: [idempotent pipelines, idempotency, idempotent loads, safe re-runs, replayable pipelines]
 keywords: [idempotent, idempotency, safe re-run, replay, backfill, data pipeline, atomic load, upsert, MERGE, delete-insert, truncate-reload, exactly-once, at-least-once]
 description: "Idempotent pipeline design ensures running a pipeline multiple times with the same input produces the same result without duplicates or corruption — the foundation of reliable data engineering."
@@ -21,7 +21,7 @@ status: complete
 
 An idempotent pipeline produces the same result whether it runs once or ten times with the same input. This is the single most important property of any production data pipeline — it makes re-runs safe, backfills reliable, and incident recovery straightforward.
 
-## Why It Matters
+### Why Idempotent Pipeline Design Matters
 
 Without idempotency, every pipeline failure becomes a crisis:
 - **Re-running** a failed load creates duplicate rows
@@ -76,7 +76,7 @@ Load into a staging table first, then atomic swap into the target:
 
 This isolates the slow I/O (bulk load) from the fast atomic swap.
 
-## Anti-Patterns
+### Idempotency Anti-Patterns
 
 | Anti-Pattern | Problem | Fix |
 |-------------|---------|-----|

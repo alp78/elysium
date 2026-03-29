@@ -20,7 +20,7 @@ status: complete
 
 Branching isolates work so that multiple features, fixes, and experiments can proceed in parallel without interfering with each other. Merging integrates completed work back into the main branch.
 
-## Creating and Switching Branches
+### Creating and Switching Branches
 
 ```bash
 # Create and switch to a new branch
@@ -32,7 +32,7 @@ git checkout main
 # or: git switch main (modern syntax, less overloaded than checkout)
 ```
 
-## Stashing Uncommitted Work
+### Stashing Uncommitted Work
 
 ```bash
 # Stash uncommitted changes (save for later)
@@ -66,7 +66,7 @@ git rebase main
 > [!warning] Never Rebase Shared Branches
 > Rebasing rewrites commit hashes. If others have pulled your branch, rebase will cause conflicts and confusion. Only rebase local/private branches.
 
-## Recovery Techniques
+### Git Branch Recovery Techniques
 
 ```bash
 # Undo the last commit (keep the changes staged)

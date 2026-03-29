@@ -16,7 +16,7 @@ status: complete
 
 BigQuery charges $5 per TB of data scanned on the on-demand pricing model. A single `SELECT *` on a 10 TB table costs $50 — and runs every time someone executes it. Senior data engineers always dry-run queries before executing them, always use partitioned tables, and never select columns they don't need. This note covers the query execution mechanics and the 80/20 cost optimization practices that have the largest impact.
 
-## Running Queries
+### Running BigQuery Queries with bq query
 
 ```bash
 # Run a query
@@ -28,7 +28,7 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) AS total_rows FROM `data-platfo
 > [!warning] Always Set `--use_legacy_sql=false`
 > BigQuery has two SQL dialects: legacy SQL (the original) and standard SQL (GoogleSQL, the modern version). Legacy SQL has different syntax and fewer features. Always use `--use_legacy_sql=false`. Some teams set this as an alias: `alias bq='bq --use_legacy_sql=false'`.
 
-## Dry Run — Estimate Cost Before Executing
+### BigQuery Dry Run — Estimate Cost Before Executing
 
 ```bash
 # CRITICAL: Estimate cost BEFORE running (dry run)
@@ -42,7 +42,7 @@ bq query --use_legacy_sql=false --dry_run \
 > [!tip] The Dry Run Habit
 > Make `--dry_run` your default first step before any non-trivial query. It is free, instant, and prevents accidental large scans. The cost calculation: `bytes_processed / 1_000_000_000_000 * 5` dollars.
 
-## Saving Results to a Table
+### Saving BigQuery Results to a Destination Table
 
 ```bash
 # Run a query and save results to a table
@@ -54,7 +54,7 @@ bq query --use_legacy_sql=false --destination_table=project_data.results \
 # --allow_large_results = required for results > 128MB
 ```
 
-## Parameterized Queries (Caching + SQL Injection Prevention)
+### BigQuery Parameterized Queries for Caching and Injection Prevention
 
 ```bash
 # Parameterized query (prevent SQL injection, enable caching)
@@ -66,7 +66,7 @@ bq query --use_legacy_sql=false \
 # Parameterized queries are cached — repeated calls with same params are free
 ```
 
-## Running Queries from a File and Formatting Output
+### Running BigQuery Queries from a SQL File
 
 ```bash
 # Run from a SQL file
@@ -107,7 +107,7 @@ GROUP BY user_email ORDER BY cost_usd DESC;
 
 Run this weekly. Find the expensive queries and optimize them.
 
-## Cost Estimation Quick Reference
+### BigQuery Cost Estimation Quick Reference
 
 | Data scanned | Cost (on-demand) |
 |---|---|

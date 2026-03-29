@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [git]
-tags: [git]
+tags: [git, github]
 aliases: [Git cheat sheet, git quick reference]
 keywords: [git, cheat sheet, quick reference, status, add, commit, push, pull, branch, merge, rebase, stash, reset, revert, log, diff, blame, cherry-pick, reflog, tag, gh, github cli]
 description: "Exhaustive CLI reference for Git and GitHub CLI — config, staging, committing, branching, merging, rebasing, remotes, history, stashing, undo, tags, and gh commands."
@@ -1342,7 +1342,7 @@ gh api repos/OWNER/REPO --template '{{.full_name}}: {{.stargazers_count}} stars'
 
 ---
 
-## Branch Naming Conventions
+### Branch Naming Conventions
 
 | Prefix | Use |
 |---|---|

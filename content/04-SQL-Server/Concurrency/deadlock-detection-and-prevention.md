@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server, csharp]
-tags: [csharp, sql]
+tags: [csharp, sql, sql-server, tsql]
 aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadlock monitor, deadlock retry]
 keywords: [deadlock, detection, prevention, monitoring, error 1205, circular wait, RCSI, read committed snapshot isolation, extended events, blocking, lock, exclusive lock, shared lock, deadlock graph, retry logic, back-off]
 description: "SQL Server deadlock detection, prevention, and monitoring — what causes deadlocks, how to detect them with DMVs and Extended Events, RCSI as the primary prevention, and application-level retry logic."
@@ -20,7 +20,7 @@ status: complete
 
 A deadlock occurs when two or more sessions each hold a lock that the other needs, creating a circular wait. Neither session can proceed because each is waiting for the other to release its lock. SQL Server's background deadlock monitor thread checks every 5 seconds and kills the session with the lowest estimated rollback cost (the "victim"), which receives error 1205.
 
-## What Is a Deadlock?
+### What Is a Deadlock?
 
 ```
 Session A: holds EXCLUSIVE lock on Table1, waiting for lock on Table2
@@ -36,7 +36,7 @@ Transaction (Process ID XX) was deadlocked on lock resources with another
 process and has been chosen as the deadlock victim. Rerun the transaction.
 ```
 
-## When Do Deadlocks Happen?
+### When Do Deadlocks Happen?
 
 | Scenario | Example |
 |----------|---------|
@@ -136,7 +136,7 @@ FROM (
 ORDER BY deadlock_time DESC;
 ```
 
-## Preventing Deadlocks
+### Preventing Deadlocks
 
 | Strategy | What it does | Impact |
 |----------|-------------|--------|
@@ -242,7 +242,7 @@ DROP TABLE IF EXISTS dbo.deadlock_test_a
 DROP TABLE IF EXISTS dbo.deadlock_test_b
 ```
 
-## Related
+### Related
 
 - [[race-conditions]] — When concurrent access produces wrong data (not stuck processes)
 - [[server-configuration]] — RCSI and other server settings that prevent deadlocks

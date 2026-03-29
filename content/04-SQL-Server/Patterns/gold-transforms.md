@@ -2,7 +2,7 @@
 type: how-to
 category: data-engineering
 technology: [sql-server, python]
-tags: [python, sql]
+tags: [python, sql, sql-server, tsql]
 aliases: [Gold Layer, Gold Transforms, Silver to Gold, Gold DDL, Scoring Tables, Pre-computed Analytics, Factor Scores]
 keywords: [gold layer, medallion architecture, z-score, zscore by group, factor scores, relative value, momentum, sentiment, quality score, governance score, health flags, index performance, cap-weighted, ROW_NUMBER, window functions, LAG, AVG OVER ROWS, CTE, SMA 30, SMA 90, moving average, composite score, composite rank, scores_daily, scores_quarterly, index_performance, dashboard ready, pre-computed, gold schema]
 description: "Complete SQL and Python patterns for the example gold layer — covers all gold table DDL, z-score computation, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs, and dashboard consumption queries."
@@ -798,7 +798,7 @@ ORDER BY date
 
 ---
 
-## Key SQL Techniques Used in Gold Transforms
+### Key SQL Techniques Used in Gold Transforms
 
 | Technique | Where | Why |
 |-----------|-------|-----|
@@ -835,7 +835,7 @@ DELETE FROM gold.index_performance WHERE perf_date > CAST(GETDATE() AS DATE);
 
 ---
 
-## Related Notes
+### Related Notes
 
 - [[silver-transforms]] — upstream: cleaned data that feeds all gold transforms
 - [[bronze-layer-loading]] — raw data layer

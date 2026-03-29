@@ -622,7 +622,7 @@ docker system prune -a
 
 ---
 
-## Full Workflow: Local Build to Artifact Registry
+### Full Workflow: Local Build to Artifact Registry
 
 ```bash
 # 1. Authenticate (one-time setup per machine)

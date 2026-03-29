@@ -8,7 +8,7 @@ technology:
   - airflow
   - cloud-run
   - terraform
-tags: [cost, infrastructure, sql, terraform, airflow, bigquery, gcp]
+tags: [cost, infrastructure, sql, terraform, airflow, bigquery, gcp, billing]
 aliases:
   - TCO
   - total cost of ownership
@@ -893,7 +893,7 @@ Use this blank template to estimate your own architecture before building it.
 
 ---
 
-## Hidden Costs Checklist
+### GCP Hidden Costs Checklist
 
 Before signing off on a budget, audit each item:
 
@@ -974,7 +974,7 @@ Before signing off on a budget, audit each item:
 
 ---
 
-## Summary: Architecture Comparison
+### TCO Summary: Architecture Comparison
 
 | Scenario | Monthly Cost | Fixed Cost % | Variable Cost % | Best For |
 |---|---|---|---|---|

@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases: [merge conflict, conflict markers, resolve conflicts, git merge abort, conflict resolution, git mergetool, rebase conflict, three-way merge, accept incoming, accept current]
 keywords: [merge conflict, conflict markers, resolve conflict, git merge abort, git mergetool, rebase continue, rebase abort, conflict resolution, three-way merge, HEAD, incoming changes, stash pop conflict, VS Code merge tool, accept current, accept incoming, prevent merge conflicts, conflict markers explanation]
 description: "How to understand, resolve, and prevent git merge conflicts — including conflict marker syntax, step-by-step resolution, git mergetool with VS Code, and rebase conflict resolution with a real-world case study."
@@ -44,7 +44,7 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 > - **`git rebase`**: `HEAD` = the target branch (main), `>>>>>>> commit-sha (message)` = your commit being replayed
 > - **`git stash pop`**: `Updated upstream` = the branch you switched to, `Stashed changes` = your stashed work
 
-## Step-by-Step Resolution Process
+### Step-by-Step Merge Conflict Resolution Process
 
 1. Identify conflicted files:
 
@@ -285,7 +285,7 @@ gh pr merge 7 --squash
 4. **Conflict markers differ** between stash pop (`Updated upstream` / `Stashed changes`) and rebase (`HEAD` = target branch / commit SHA = your commit)
 5. **`git rebase --abort`** is your safety net — it undoes the entire rebase if things go wrong
 
-## Preventing Merge Conflicts
+### Preventing Merge Conflicts
 
 Prevention is better than resolution. Strategies that reduce conflict frequency:
 
@@ -302,7 +302,7 @@ Prevention is better than resolution. Strategies that reduce conflict frequency:
 > [!tip] Rebase early, rebase often
 > Running `git rebase origin/main` on your feature branch every morning takes 30 seconds when there are no conflicts. It saves hours when you wait until the PR is blocked at merge time.
 
-## Quick Reference: Conflict Resolution Commands
+### Quick Reference: Conflict Resolution Commands
 
 | Goal | Command |
 |------|---------|

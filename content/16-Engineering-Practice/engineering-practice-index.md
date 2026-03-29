@@ -2,7 +2,7 @@
 type: index
 category: engineering-practice
 technology: [github-actions, git]
-tags: [github-actions, git]
+tags: [github-actions, git, dataops, leadership]
 aliases: [Engineering Practice Index]
 keywords: [engineering practice, ci/cd, security, leadership, github actions, best practices, code review, mentoring, technical writing]
 description: "Index for the Engineering Practice section — CI/CD workflows, security practices, and engineering leadership and collaboration."
@@ -18,7 +18,7 @@ status: complete
 
 Cross-cutting practices that apply across all technologies — DataOps, security fundamentals, and leadership at scale.
 
-## DataOps
+### DataOps Principles and Team Organization
 
 Principles and practices for applying DevOps thinking to data pipelines — CI/CD for data, team organization, and self-service platforms.
 
@@ -26,11 +26,11 @@ Principles and practices for applying DevOps thinking to data pipelines — CI/C
 - [[data-team-organization]] — Team topologies, roles, career ladders, RACI, collaboration
 - [[self-service-data-platform]] — Data democratization, platform components, data products, governance
 
-## Leadership
+### Leadership and Engineering Collaboration
 
 - [[leadership-and-collaboration]] — Code reviews, mentoring, stakeholder management, technical writing, architecture decisions
 
-## Security (Cross-References)
+### Security Cross-References
 
 These notes live in their technology-specific sections but are relevant to engineering practice:
 

@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - lazy evaluation, query optimization, benchmarks
 keywords: [lazy, collect, scan_csv, scan_parquet, query plan, optimization, streaming, benchmark, performance]

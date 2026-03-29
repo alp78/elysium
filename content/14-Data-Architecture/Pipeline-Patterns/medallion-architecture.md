@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [sql-server, python, pyodbc]
-tags: [architecture, pipeline, python, sql]
+tags: [data-architecture, architecture, pipeline, medallion, python, sql]
 aliases: [medallion architecture, bronze silver gold, bronze/silver/gold, data lakehouse, three layer architecture, medallion pattern]
 keywords: [medallion architecture, bronze, silver, gold, raw data, cleaned data, analytics, pipeline, schema, layers, data warehouse, data-pipeline, sql server, pyodbc, parameterized queries]
 description: "The medallion architecture (bronze/silver/gold) implemented in SQL Server — raw data landing, cleaning and deduplication, and analytics-ready aggregation across three schema layers."
@@ -22,7 +22,7 @@ status: complete
 
 The medallion architecture organizes data into three layers — bronze, silver, and gold — each with increasing quality, structure, and business value. This is the core data pattern for the the pipeline steps.
 
-## Architecture Overview
+### Medallion Architecture Overview
 
 | Layer | Schema | Purpose | Refresh |
 |-------|--------|---------|---------|
@@ -32,7 +32,7 @@ The medallion architecture organizes data into three layers — bronze, silver, 
 
 **Pipeline flow:** yfinance API → JSON files → Bronze → Silver → Gold → Dashboard
 
-## Technology Stack
+### Medallion Technology Stack
 
 - SQL Server (ODBC Driver 18)
 - Python + [[bronze-layer-loading|pyodbc]] (parameterized queries, `?` placeholders)
@@ -41,7 +41,7 @@ The medallion architecture organizes data into three layers — bronze, silver, 
 
 The medallion pattern aligns naturally with the [[etl-vs-elt|ELT paradigm]] — raw data lands first, then transforms run inside the warehouse. In dbt projects, [[dbt-staging-models]] correspond to the bronze-to-silver transition, while [[dbt-mart-models]] produce the gold layer.
 
-## Connection Pattern
+### Database Connection Pattern
 
 All Python modules share a single connection factory with credentials from `.env`:
 
@@ -74,7 +74,7 @@ def get_connection(autocommit=False, database=None):
 > [!tip] Credentials Never Hardcoded
 > Every loader and transform imports `get_connection()` to get a database handle. Credentials come from environment variables or `.env` files, never from source code.
 
-## Schema Isolation
+### Medallion Schema Isolation
 
 Each layer has its own SQL Server schema, providing clean namespace separation:
 
@@ -104,7 +104,7 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 - Dashboard-ready format — no further computation needed
 - See [[gold-transforms]]
 
-## Why It Matters
+### Why Medallion Architecture Matters
 
 The medallion architecture enables [[idempotent-pipeline-design|idempotent pipelines]]:
 1. Bronze preserves raw data — you can always reprocess

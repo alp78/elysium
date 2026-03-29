@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory monitoring, disk IO]
 keywords: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory, CPU, disk I/O, buffer cache, swap, available memory, page life expectancy, PLE, SQL Server memory, OOM killer, performance monitoring, Get-Counter]
 description: "Linux and PowerShell commands for monitoring memory, CPU, and disk I/O. Explains the 'available' vs 'free' memory distinction, load average interpretation, and how to read iostat for disk saturation."
@@ -80,7 +80,7 @@ iostat -xz 2    # -x = extended stats, -z = suppress idle devices, 2 = every 2 s
 sudo iotop -o   # -o = only show processes with active I/O
 ```
 
-## SQL Server Memory Interpretation
+### SQL Server memory interpretation — why free -h looks alarming but is normal
 
 > [!tip] Reading Memory on a SQL Server VM
 > SQL Server intentionally grabs as much memory as possible and holds it. This is BY DESIGN -- it's using the RAM as a buffer pool cache. `free -h` will show almost all memory as "used," which looks alarming but is correct behavior. For deeper analysis of buffer pool health, cache hit ratios, and memory grants, see [[memory-and-buffer-pool]].
@@ -94,7 +94,7 @@ sudo iotop -o   # -o = only show processes with active I/O
 > ```
 > PLE > 300 seconds = healthy. PLE < 60 seconds = SQL Server is constantly evicting pages from cache = not enough memory.
 
-## PowerShell
+### PowerShell — Get-CimInstance, Get-Counter for memory, CPU, and disk I/O
 
 ```powershell
 # Memory

@@ -2,7 +2,7 @@
 type: concept
 category: high-availability
 technology: [sql-server, gcp, linux, pacemaker, corosync]
-tags: [sql, gcp]
+tags: [sql, gcp, sql-server, tsql]
 aliases: [AG, Always On AG, Always On Availability Groups, SQL Server HA, HADR, Failover Clustering]
 keywords: [high availability, availability groups, always on, pacemaker, corosync, failover, RTO, RPO, SLA, synchronous commit, asynchronous commit, log shipping, FCI, failover cluster instance, hadr, endpoint, certificate, seeding, DMV, redo queue, log send queue, read-only routing, split-brain, STONITH, GCP ILB, internal load balancer, mssql-server-ha]
 description: "Complete guide to SQL Server 2022 High Availability on Linux GCP VMs: Always On Availability Groups setup with Pacemaker/Corosync, monitoring DMVs, failover operations, read-only routing, troubleshooting, and GCP-specific considerations including Internal Load Balancer configuration."
@@ -1053,7 +1053,7 @@ gcloud compute snapshots list \
 
 ---
 
-## Related
+### Related
 
 - [[tde-encryption]] — Transparent Data Encryption for data-at-rest protection of AG databases
 - [[sql-server-authentication]] — Service account hardening and SQL Server login security

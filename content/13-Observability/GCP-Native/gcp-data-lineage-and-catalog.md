@@ -7,7 +7,7 @@ technology:
   - bigquery
   - python
   - dataflow
-tags: [observability, python, bigquery, gcp]
+tags: [monitoring, observability, python, bigquery, gcp]
 aliases:
   - data lineage
   - data catalog

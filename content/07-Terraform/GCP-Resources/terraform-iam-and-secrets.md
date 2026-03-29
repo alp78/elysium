@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [security, infrastructure, terraform, gcp]
+tags: [security, infrastructure, terraform, iac, gcp]
 aliases: [terraform IAM, terraform service accounts, terraform Secret Manager, GCP IAM bindings terraform, google_service_account]
 keywords: [google_service_account, google_project_iam_member, google_secret_manager_secret, IAM bindings, service account, least privilege, secret manager, secret version, roles, secretAccessor, run.invoker, artifactregistry.writer, conditional resources, Datadog, count]
 description: "Terraform configuration for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. Covers the least-privilege pattern with one service account per workload, resource-level vs project-level bindings, and conditional Datadog resources."
@@ -20,7 +20,7 @@ status: complete
 
 This note covers `iam.tf`, `secrets.tf`, and the IAM portions of `ci.tf` — the service accounts, IAM bindings, and Secret Manager secrets that implement least-privilege access across the example infrastructure.
 
-## Design Principle: One Service Account Per Workload
+### Design Principle: One Service Account Per Workload
 
 A **service account** is a non-human identity that a workload runs as. Each workload gets its own service account with the minimum permissions it needs (**least privilege**). For the underlying GCP IAM concepts -- roles, policies, and the principal hierarchy -- see [[service-accounts-and-iam]]. This is the standard GCP pattern -- one service account per service. The service accounts themselves have **no permissions by default**; they only gain access through explicit IAM bindings.
 
@@ -145,7 +145,7 @@ resource "google_project_iam_member" "pipeline_gcs_writer" {
 
 ---
 
-## Conditional Datadog Resources
+### Conditional Datadog Resources
 
 The Datadog service account is only created if a Datadog API key is provided:
 
@@ -278,7 +278,7 @@ resource "google_service_account_iam_member" "ci_act_as_pipeline" {
 
 ---
 
-## gcloud Verification Commands
+### gcloud Verification Commands
 
 ```bash
 # List all service accounts

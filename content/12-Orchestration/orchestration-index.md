@@ -2,7 +2,7 @@
 type: index
 category: orchestration
 technology: [airflow, python, gcp, linux, powershell]
-tags: [orchestration, python, airflow, gcp]
+tags: [orchestration, python, airflow, gcp, scheduling]
 aliases: [Orchestration Index, Scheduling Index, Airflow Index, Pipeline Scheduling]
 keywords: [orchestration, airflow, cron, scheduling, DAGs, automation, task scheduler, cloud scheduler, cloud composer, systemd timer, pipeline automation, workflow, data pipeline scheduling]
 description: "Index for the Orchestration section — task scheduling on Linux (cron, systemd timers), Windows (Task Scheduler), and GCP (Cloud Scheduler, Workflows), plus comprehensive Apache Airflow coverage."
@@ -18,7 +18,7 @@ status: complete
 
 Orchestration is the control plane that decides **when** pipelines run, **in what order**, and **what happens when they fail**. This section covers scheduling at every level — from OS-level cron to managed cloud services to full DAG-based workflow engines.
 
-## Scheduling
+### Platform-Specific Task Scheduling
 
 Platform-specific task scheduling — when you need to run commands on a timer.
 
@@ -28,7 +28,7 @@ Platform-specific task scheduling — when you need to run commands on a timer.
 | [[windows-scheduling]] | Task Scheduler, schtasks, PowerShell ScheduledTasks module, event-based triggers |
 | [[gcp-scheduling]] | Cloud Scheduler, Cloud Tasks, Cloud Workflows, Cloud Run Job triggers, Cloud Functions |
 
-## Airflow
+### Apache Airflow Workflow Orchestration
 
 Apache Airflow — the industry-standard workflow orchestrator for data pipelines.
 
@@ -40,13 +40,13 @@ Apache Airflow — the industry-standard workflow orchestrator for data pipeline
 | [[airflow-troubleshooting]] | 13+ common errors with fixes, CLI debugging, log analysis, performance tuning |
 | [[airflow-problems]] | Additional Airflow error scenarios and solutions |
 
-## Key Concepts
+### Key Orchestration Concepts
 
 - **[[linux-scheduling]]** — Start here if you just need to run something on a timer
 - **[[airflow-core-concepts]]** — Start here if you need dependency-aware pipeline orchestration
 - **[[gcp-scheduling]]** — Use Cloud Scheduler when you need managed cron without infrastructure
 
-## When to Use What
+### When to Use Which Scheduler
 
 | Scheduler | Best For | Complexity |
 |-----------|----------|------------|

@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, sql-server, gcp]
-tags: [observability, sql, datadog, gcp]
+tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [SQL Server Log Collection, Datadog SQL Logs, SQL Server Errorlog Datadog]
 keywords: [logs.yaml, errorlog, "/var/opt/mssql/log/errorlog", start_position beginning, Bytes Read 0, log collection, logs_enabled, dd-agent mssql group, source sqlserver, failed login, CHECKPOINT, log tailing, agent tails, "host:sql-vm", "service:sql-server", log explorer]
 description: "How to configure Datadog Agent to collect SQL Server errorlog entries from the example SQL VM — including the logs.yaml setup, permission fix, and how to test that logs are flowing."
@@ -18,7 +18,7 @@ The Datadog Agent collects SQL Server metrics by default, but **log collection r
 
 ---
 
-## Configure the Log Source
+### Configure the SQL Server Log Source
 
 SSH into the SQL VM and create the log collection config:
 
@@ -43,7 +43,7 @@ The `usermod -aG mssql dd-agent` step is required — the SQL Server errorlog is
 
 ---
 
-## Verify
+### Verify SQL Server Log Collection
 
 ```bash
 sudo datadog-agent status | grep -A 10 "Integrations" | grep -A 5 "sqlserver"
@@ -53,7 +53,7 @@ You should see `Status: OK` and `Inputs: /var/opt/mssql/log/errorlog`.
 
 ---
 
-## What Gets Logged
+### What Gets Logged from SQL Server Errorlog
 
 SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` query does **not** generate an error log entry.
 
@@ -74,7 +74,7 @@ Logs should appear in **Datadog > Logs > Explorer** within 1–2 minutes, filter
 
 ---
 
-## If Bytes Read Stays at 0
+### Troubleshooting If Bytes Read Stays at 0
 
 The agent tails from the **end** of the file by default. If the file had no new entries since the agent started, `Bytes Read` stays at 0. Force it to read existing content:
 
@@ -95,7 +95,7 @@ After reading the existing log, remove `start_position: beginning` if you don't 
 
 ---
 
-## Log Search Queries
+### SQL Server Log Search Queries in Datadog
 
 In **Datadog > Logs > Explorer:**
 
@@ -107,7 +107,7 @@ host:data-pipeline-sql "Login failed"                    # Failed login events
 
 ---
 
-## Separation from Metrics
+### Separation of Logs from Metrics Config
 
 SQL Server **metrics** (connections, buffer pool, waits) are collected by the `sqlserver` integration check via ODBC. **Logs** (errorlog) are collected by the separate `logs.yaml` file tailing mechanism. These are independent:
 

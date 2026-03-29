@@ -422,7 +422,7 @@ branching_example()
 
 ---
 
-## Trigger Rules
+### Airflow Trigger Rules Reference
 
 Trigger rules control **when a task is allowed to run** based on the state of its upstream tasks. The default is `all_success`.
 
@@ -563,7 +563,7 @@ def idempotent_load(**context):
 
 ---
 
-## Backfill
+### Airflow Backfill — Historical DAG Runs
 
 Backfill runs a DAG for a historical date range. Use it for initial data loads, re-processing after bug fixes, or adding new pipeline coverage.
 
@@ -665,7 +665,7 @@ curl -X POST "http://airflow:8080/api/v1/dags/parameterized_pipeline/dagRuns" \
 
 ---
 
-## Dataset-Driven Scheduling (Airflow 2.4+)
+### Dataset-Driven Scheduling (Airflow 2.4+)
 
 Data-aware scheduling allows a DAG to trigger when upstream DAGs produce a **Dataset** (a logical URI representing a data asset). This decouples producer and consumer DAGs.
 
@@ -813,7 +813,7 @@ with DAG(
 
 ---
 
-## Data Pipeline Pattern: Bronze → Silver → Gold
+### Medallion Architecture DAG — Bronze to Silver to Gold
 
 A full medallion architecture DAG using Task Groups, trigger rules, and callbacks. The bronze layer tasks here follow the patterns described in [[bronze-layer-loading]].
 

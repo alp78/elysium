@@ -405,7 +405,7 @@ join = EmptyOperator(
 
 ---
 
-## Sensors
+### Airflow Sensors — Poke and Reschedule Modes
 
 Sensors are a special type of Operator that **poke** an external system until a condition is met, then succeed. They block a task slot while waiting.
 
@@ -532,7 +532,7 @@ def load_postgres_to_bq(**context):
 
 ---
 
-## XComs: Cross-Task Communication
+### XComs — Cross-Task Communication
 
 XComs (Cross-Communications) allow tasks to exchange small messages via the Metadata DB. A task **pushes** a value; downstream tasks **pull** it.
 
@@ -585,7 +585,7 @@ load_task = BashOperator(
 
 ---
 
-## TaskFlow API
+### TaskFlow API — Decorator-Based DAG Authoring
 
 Introduced in Airflow 2.0, the TaskFlow API uses Python decorators to define tasks and automatically handle XCom push/pull. It dramatically reduces boilerplate.
 
@@ -777,7 +777,7 @@ delete_worker_pods = True
 
 ---
 
-## Jinja Templating
+### Jinja Templating in Airflow Operators
 
 Airflow uses Jinja2 templating in `template_fields` of Operators. Common template variables:
 

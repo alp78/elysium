@@ -2,7 +2,7 @@
 type: reference
 category: terraform
 technology: [terraform, gcp, bigquery, firestore, dataflow]
-tags: [infrastructure, terraform, bigquery, gcp, firestore]
+tags: [infrastructure, terraform, iac, bigquery, gcp, firestore]
 aliases:
   - terraform data services
   - BigQuery terraform blocks

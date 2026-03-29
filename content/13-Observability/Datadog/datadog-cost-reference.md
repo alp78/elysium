@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog]
-tags: [observability, cost, datadog]
+tags: [monitoring, observability, cost, datadog]
 aliases: [Datadog Cost, Datadog Pricing, Datadog Monthly Cost]
 keywords: [Datadog EU, datadoghq.eu, 14-day trial, Infrastructure, Logs, APM Pro, 50-80 per host, dd-agent RAM, 350 MB, 250 MB, free trial, agent cost, SaaS, host count, log volume, trace volume]
 description: "Datadog cost reference for the data platform — the agents themselves are free, costs are Datadog SaaS pricing based on host count and log/trace volume, with the EU 14-day trial covering initial setup."
@@ -18,7 +18,7 @@ Datadog agents themselves add no GCP compute cost — they run on existing VMs. 
 
 ---
 
-## Cost Breakdown
+### Datadog SaaS Cost Breakdown
 
 | Component | Monthly Cost |
 |-----------|-------------|
@@ -31,7 +31,7 @@ The agent itself is free — you pay for Datadog's SaaS based on host count and 
 
 ---
 
-## What Drives Cost
+### What Drives Datadog Pricing
 
 **Host count:** The data platform has 2 monitored hosts (`data-pipeline-airflow` and `data-pipeline-sql`). Cloud Run jobs are ephemeral and don't count as hosts — their metrics come from the [[datadog-gcp-integration|GCP Integration]].
 
@@ -43,7 +43,7 @@ The agent itself is free — you pay for Datadog's SaaS based on host count and 
 
 ---
 
-## RAM Impact on Existing VMs
+### Datadog Agent RAM Impact on Existing VMs
 
 | VM | Total RAM | dd-agent usage | Headroom |
 |----|-----------|----------------|---------|
@@ -54,7 +54,7 @@ Both VMs have sufficient headroom. Monitor via **Datadog Infrastructure > Host M
 
 ---
 
-## Trial and Evaluation
+### Datadog Trial and Evaluation Period
 
 The Datadog EU 14-day trial is sufficient to:
 - Set up both agents
@@ -67,7 +67,7 @@ After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform 
 
 ---
 
-## Compared to GCP Infrastructure Costs
+### Datadog Compared to GCP Infrastructure Costs
 
 For context, Datadog is optional add-on monitoring. The base the data pipeline project GCP infrastructure costs ~$83/month (see cost reference). Datadog adds:
 

@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server configuration, max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB configuration, swappiness, THP]
 keywords: [max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB files, swappiness, transparent huge pages, THP, IO scheduler, trace flags, recovery model, memory limit, buffer pool, Linux optimization, GCP]
 description: "Non-negotiable SQL Server configuration settings: max server memory, RCSI, TempDB, recovery models, and Linux OS tuning (swappiness, THP, I/O scheduler) for SQL Server on Linux GCP."
@@ -224,7 +224,7 @@ sudo udevadm trigger
 
 ---
 
-## TempDB Configuration
+### TempDB Configuration
 
 Best practice: create one TempDB data file per logical CPU core (up to 8), all equally sized. This reduces PFS/GAM/SGAM page contention.
 
@@ -248,7 +248,7 @@ number_of_files = 4
 
 ---
 
-## Trace Flags
+### Trace Flags
 
 Recommended trace flags for SQL Server 2022 on Linux:
 
@@ -265,7 +265,7 @@ sudo systemctl restart mssql-server
 
 ---
 
-## Complete sysctl Reference
+### Complete sysctl Reference
 
 Full `/etc/sysctl.d/99-sqlserver.conf` for SQL Server 2022 on Linux (GCP):
 
@@ -300,7 +300,7 @@ net.ipv4.neigh.default.gc_thresh3 = 16384
 
 ---
 
-## The 7 Deadly Sins of SQL Server
+### The 7 Deadly Sins of SQL Server
 
 | Sin | Why it kills you |
 |-----|-----------------|
@@ -314,7 +314,7 @@ net.ipv4.neigh.default.gc_thresh3 = 16384
 
 ---
 
-## Related
+### Related
 
 - [[memory-and-buffer-pool]] — how the buffer pool uses max server memory
 - [[backup-types-and-strategy]] — recovery model implications for backup strategy

@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [systemctl, journalctl, service management, systemd, daemon, OOM kill, service restart]
 keywords: [systemctl, journalctl, systemd, service, daemon, start service, stop service, restart service, enable on boot, service logs, OOM killer, out of memory, service status, mssql-server, datadog-agent, airflow, service failed, Set-Service, Start-Service]
 description: "Managing Linux systemd services and Windows services for production data engineering infrastructure. Covers start/stop/restart/enable, reading service logs with journalctl, diagnosing OOM kills, and the PowerShell equivalents."
@@ -16,7 +16,7 @@ status: complete
 
 Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [[airflow-core-concepts]].
 
-## Linux (systemd)
+### systemctl, journalctl — managing systemd services and reading logs
 
 ```bash
 # Start / stop / restart a service
@@ -56,7 +56,7 @@ sudo systemctl status mssql-server                  # recent error lines
 sudo journalctl -u mssql-server -n 50 --no-pager    # last 50 log lines
 ```
 
-## Diagnosing OOM Kills
+### Diagnosing OOM kills — when services crash with no error in their own logs
 
 > [!warning] OOM Kills — When Services Crash With No Error in Their Own Logs
 > If a service keeps crashing with no error in its own logs, it was probably killed by the Linux OOM killer (Out Of Memory). Check:
@@ -73,7 +73,7 @@ sudo journalctl -u mssql-server -n 50 --no-pager    # last 50 log lines
 > 4. `systemctl cat <service>` — what is the service definition (ExecStart, environment vars)?
 > 5. `journalctl -u <service> --since "30 min ago"` — extended log window
 
-## PowerShell (Windows Services)
+### PowerShell — Start-Service, Stop-Service, Set-Service for Windows services
 
 ```powershell
 # Start / stop / restart

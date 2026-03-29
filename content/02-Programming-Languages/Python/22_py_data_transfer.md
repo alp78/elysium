@@ -1397,9 +1397,9 @@ fig.update_layout(
 fig.show()
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>local MB/s</th>
       <th>vm MB/s</th>

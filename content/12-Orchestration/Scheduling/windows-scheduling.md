@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [powershell, windows]
-tags: [orchestration]
+tags: [orchestration, scheduling, task-scheduler]
 aliases:
   - Task Scheduler
   - schtasks
@@ -46,7 +46,7 @@ Windows task scheduling is the platform-native mechanism for running scripts, pr
 
 ---
 
-## Task Scheduler Concepts
+### Windows Task Scheduler Core Concepts
 
 Task Scheduler (the Windows service `Schedule`) stores tasks as XML files under `C:\Windows\System32\Tasks\`. Each task contains four components:
 
@@ -489,7 +489,7 @@ Register-ScheduledTask -Xml $xml -TaskName "ETL-Daily-Backup" -Force
 
 ---
 
-## Complete Example: Schedule a Python Pipeline
+### Complete Example — Schedule a Python Pipeline on Windows
 
 This example schedules a Python ETL pipeline that uses a virtual environment, logs to a timestamped file, and sends an email notification on failure.
 
@@ -550,7 +550,7 @@ Write-Host "Task '$taskName' registered in '$taskFolder'."
 
 ---
 
-## Complete Example: Schedule a SQL Server Backup with sqlcmd
+### Complete Example — Schedule a SQL Server Backup with sqlcmd
 
 ```powershell
 # === Schedule nightly SQL Server backup via sqlcmd ===
@@ -1042,7 +1042,7 @@ Get-ChildItem -Path $archiveDir -Filter "*.log" -File |
 
 ---
 
-## When to Use Which Scheduler
+### When to Use Which Windows Scheduler
 
 | Scheduler | Best For | Avoid When |
 |-----------|----------|------------|
@@ -1168,7 +1168,7 @@ Set-ScheduledTask -TaskName "ETL-Daily" `
 
 ---
 
-## Quick Reference Cheat Sheet
+### Windows Task Scheduler Quick Reference Cheat Sheet
 
 ```powershell
 # --- LIST ---

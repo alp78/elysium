@@ -7,7 +7,7 @@ technology:
   - python
   - sql-server
   - terraform
-tags: [python, sql, terraform, bigquery, github-actions]
+tags: [python, sql, terraform, bigquery, github-actions, dataops]
 aliases:
   - parallel backtesting
   - shadow calculation

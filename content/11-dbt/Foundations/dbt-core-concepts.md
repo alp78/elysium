@@ -17,7 +17,7 @@ related:
 > [!abstract] When You Need This
 > You are setting up dbt for the first time, or onboarding a team member who has never used it. This note explains what dbt is, how it works internally, and the mental model for thinking about dbt projects.
 
-## What dbt Is (and Is Not)
+### What dbt Is (and Is Not)
 
 dbt is the **T** in [[etl-vs-elt|ELT]]. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
 
@@ -29,7 +29,7 @@ dbt is the **T** in [[etl-vs-elt|ELT]]. It does not extract data from sources. I
 | Run tests against data | Replace stored procedures (but can supersede them) |
 | Generate documentation and lineage | Handle real-time/streaming data |
 
-## dbt Core vs dbt Cloud
+### dbt Core vs dbt Cloud
 
 | Factor | dbt Core (open source) | dbt Cloud (SaaS) |
 |--------|----------------------|------------------|
@@ -44,7 +44,7 @@ dbt is the **T** in [[etl-vs-elt|ELT]]. It does not extract data from sources. I
 > [!tip] For This Stack
 > We use dbt Core because we already have Airflow for orchestration and GitHub Actions for CI/CD. dbt Core runs inside a Docker container triggered by Airflow.
 
-## Compilation Architecture
+### dbt Compilation Architecture
 
 dbt compiles before executing:
 
@@ -73,7 +73,7 @@ WHERE close_price > 0
 
 After compilation, `target/compiled/` contains pure SQL with `{{ source() }}` resolved to the actual table name.
 
-## The DAG
+### The dbt DAG
 
 Every dbt project is a Directed Acyclic Graph built automatically from two functions:
 
@@ -110,7 +110,7 @@ dbt knows to run staging first, then intermediate, then marts — mirroring the 
 > [!tip] Contrast with Airflow
 > In Airflow, you explicitly define `task_a >> task_b >> task_c`. In dbt, dependencies are implicit from ref(). Airflow orchestrates *when* dbt runs; dbt manages the *order within* a run.
 
-## Materializations
+### dbt Materializations Overview
 
 | Materialization | Creates | When to Use | Storage Cost |
 |----------------|---------|-------------|-------------|
@@ -136,7 +136,7 @@ WHERE price_date > (SELECT MAX(price_date) FROM {{ this }})
 
 See [[dbt-materializations]] for the deep dive with decision matrices.
 
-## Profiles and Targets
+### dbt Profiles and Targets
 
 `profiles.yml` defines where dbt connects. Each profile has multiple targets (environments):
 
@@ -174,7 +174,7 @@ financial_platform:
 
 Switch targets: `dbt run --target prod` or `dbt run --target bigquery`.
 
-## Adapters
+### dbt Adapters
 
 | Adapter | Package | Database |
 |---------|---------|----------|
@@ -184,7 +184,7 @@ Switch targets: `dbt run --target prod` or `dbt run --target bigquery`.
 
 Each adapter handles SQL dialect differences. See [[dbt-sqlserver-adapter]] and [[dbt-bigquery-adapter]].
 
-## Packages
+### dbt Packages
 
 Declare in `packages.yml`, install with `dbt deps`:
 
@@ -200,7 +200,7 @@ packages:
 
 See [[dbt-packages]] for the full package guide.
 
-## The dbt_project.yml
+### The dbt_project.yml
 
 ```yaml
 name: financial_platform
@@ -229,7 +229,7 @@ models:
       +schema: gold
 ```
 
-## Anti-Patterns
+### dbt Anti-Patterns
 
 | Anti-Pattern | Problem | Better Approach |
 |-------------|---------|----------------|

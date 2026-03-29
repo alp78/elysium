@@ -18,7 +18,7 @@ status: complete
 
 Docker packages applications into containers — lightweight, portable units that include everything needed to run: code, runtime, libraries, and configuration. For data engineering, Docker is how pipeline code ships from a developer's laptop to Cloud Run, Airflow, or any orchestrator.
 
-## Notes
+### Notes
 
 | Note | Description |
 |------|-------------|
@@ -28,13 +28,13 @@ Docker packages applications into containers — lightweight, portable units tha
 
 See also: [[docker-cheat-sheet]]
 
-## Key Concepts
+### Key Concepts
 
 - **[[container-lifecycle]]** — Understand the full lifecycle before debugging production containers
 - **[[image-management]]** — Multi-stage builds are essential for keeping pipeline images small
 - **[[docker-compose]]** — The local development equivalent of Cloud Run + Airflow
 
-## Cross-References
+### Cross-References
 
 - **Terraform** — [[terraform-cloud-run]] provisions Cloud Run services that run Docker images
 - **CI/CD** — [[github-actions-ci-cd]] builds and pushes Docker images on merge

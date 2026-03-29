@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server, gcp, linux]
-tags: [sql, gcp]
+tags: [sql, gcp, sql-server, tsql]
 aliases: [SQL Server Audit, audit logging, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection, compliance logging]
 keywords: [SQL Server Audit, server audit, audit specification, database audit specification, CREATE SERVER AUDIT, CREATE SERVER AUDIT SPECIFICATION, CREATE DATABASE AUDIT SPECIFICATION, sys.fn_get_audit_file, LGIF, LGIS, FAILED_LOGIN_GROUP, SUCCESSFUL_LOGIN_GROUP, DATABASE_PERMISSION_CHANGE_GROUP, SERVER_ROLE_MEMBER_CHANGE_GROUP, brute force detection, credential stuffing, GCP Ops Agent, Cloud Logging, Cloud Monitoring, BigQuery sink, quarterly security review, orphaned users, audit file, sqlaudit, compliance, IOSCO, ESMA, GDPR]
 description: "Step-by-step guide to setting up SQL Server Audit on Linux for compliance and threat detection: server audit target, server and database audit specifications, querying audit logs, detecting brute-force attacks, forwarding to GCP Cloud Logging and BigQuery, and running a quarterly security review."
@@ -18,7 +18,7 @@ SQL Server Audit tracks all security-relevant events (login attempts, permission
 
 ---
 
-## SQL Server Audit Architecture
+### SQL Server Audit Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -59,7 +59,7 @@ SQL Server Audit tracks all security-relevant events (login attempts, permission
 
 ---
 
-## Step 1: Create Server Audit
+### Step 1: Create Server Audit
 
 ```sql
 -- ============================================================
@@ -99,7 +99,7 @@ FROM sys.server_audits;
 
 ---
 
-## Step 2: Create Server Audit Specification (Login and Permission Events)
+### Step 2: Create Server Audit Specification (Login and Permission Events)
 
 ```sql
 -- ============================================================
@@ -127,7 +127,7 @@ FROM sys.server_audit_specifications;
 
 ---
 
-## Step 3: Create Database Audit Specification (Data Access Events)
+### Step 3: Create Database Audit Specification (Data Access Events)
 
 ```sql
 -- ============================================================
@@ -261,7 +261,7 @@ ORDER BY total_attempts DESC;
 
 ---
 
-## Step 6: GCP Cloud Logging Integration
+### Step 6: GCP Cloud Logging Integration
 
 Forward SQL Server error log and audit files to Cloud Logging for centralized monitoring, alerting, and long-term retention.
 
@@ -305,7 +305,7 @@ gcloud logging read 'resource.type="gce_instance" AND logName:"sqlserver_errorlo
 
 ---
 
-## Step 7: Create Log-Based Alerts and BigQuery Sink
+### Step 7: Create Log-Based Alerts and BigQuery Sink
 
 ```bash
 # Sink audit logs to BigQuery for long-term analysis
@@ -336,7 +336,7 @@ gcloud monitoring policies create \
 
 ---
 
-## Step 8: Quarterly Security Review
+### Step 8: Quarterly Security Review
 
 Run this review every quarter (set a recurring calendar reminder):
 
@@ -449,7 +449,7 @@ ALTER SERVER AUDIT project_audit WITH (STATE = ON);
 
 ---
 
-## Related
+### Related
 
 - [[tde-encryption]] — encryption at rest that complements audit logging for compliance
 - [[sql-server-authentication]] — login hardening, TLS, and firewall rules

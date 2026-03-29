@@ -2,7 +2,7 @@
 type: concept
 category: terraform
 technology: [terraform, hcl]
-tags: [infrastructure, terraform]
+tags: [infrastructure, terraform, iac]
 aliases: [HCL, HashiCorp Configuration Language, HCL syntax, terraform syntax, tf syntax]
 keywords: [hcl, hashicorp configuration language, terraform syntax, blocks, arguments, resource block, terraform name, gcp name, file naming, tf files, declarative, infrastructure as code]
 description: "HCL (HashiCorp Configuration Language) syntax fundamentals — blocks, arguments, resource naming, file organization, and the difference between Terraform-internal and GCP names."
@@ -16,7 +16,7 @@ status: complete
 
 HashiCorp Configuration Language (HCL) is a declarative language designed by HashiCorp specifically for infrastructure-as-code. Unlike imperative scripts (bash, Python), you describe _what_ you want and Terraform figures out _how_ to create it. HCL files use the `.tf` extension.
 
-## Blocks and Arguments
+### Blocks and Arguments
 
 HCL has two structural elements:
 
@@ -25,7 +25,7 @@ HCL has two structural elements:
 
 Blocks can be nested. For example, a `resource` block may contain a `template` block, which contains a `containers` block, which contains `env` blocks.
 
-## File Naming and Organization
+### File Naming and Organization
 
 Terraform merges **all** `.tf` files in a directory into a single configuration. File names have **no impact** on behavior — you could rename `network.tf` to `dodo.tf` and everything would still work. Files are split purely for human readability and organization.
 
@@ -62,7 +62,7 @@ resource "google_compute_firewall" "allow_sql" {   # "allow_sql" = Terraform-int
 
 They don't have to match.
 
-## Block Types
+### Block Types
 
 The `variable` and `output` blocks below are covered in depth in [[terraform-variables-and-outputs]], which extends HCL syntax with parameterization, type constraints, and validation rules.
 
@@ -78,7 +78,7 @@ The most common block types in Terraform:
 | `locals` | Defines computed values | `locals { sql_ip = resource.network_interface[0].network_ip }` |
 | `data` | Reads existing infrastructure (not created by this config) | `data "google_project" "current" {}` |
 
-## Declarative vs Imperative
+### Declarative vs Imperative
 
 Terraform is declarative: you describe the desired end state, and Terraform computes the steps to reach it. This is fundamentally different from imperative tools like bash scripts or Ansible playbooks, which describe the sequence of actions to perform.
 

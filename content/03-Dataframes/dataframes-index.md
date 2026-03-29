@@ -7,7 +7,7 @@ technology:
   - pandas
   - polars
   - dotnet
-tags: [python, csharp, pandas, polars, dataframes]
+tags: [python, csharp, pandas, polars, deedle, dataframes]
 aliases: [DataFrames Index, DataFrame Reference, Pandas vs Polars Index, Polars.NET Reference]
 keywords: [pandas, polars, polars.net, dataframe, comparison, side-by-side, python data analysis, csharp data analysis]
 description: "Index for the DataFrames section — paired Python (Pandas/Polars) and C# (Polars.NET) references covering 10 topics from foundations to production patterns, each with executable examples and cell outputs."

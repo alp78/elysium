@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [IO redirection, I/O redirection, output redirection, stderr redirect, stdin redirect, file descriptors]
 keywords: [redirection, stdout, stderr, stdin, file descriptor, dev null, redirect output, redirect error, tee, append, overwrite, fd 0, fd 1, fd 2, 2>&1, output to file]
 description: "How to redirect stdin, stdout, and stderr to files, other streams, or /dev/null in bash and PowerShell, including production logging patterns and common gotchas."
@@ -87,7 +87,7 @@ python3 pipeline/run.py 2>&1 | tee -a /var/log/pipeline/run.log
 # 2>&1 = merge stderr into stdout so tee captures both
 ```
 
-## Gotchas and Edge Cases
+### Redirect-before-write gotcha — sort file > file truncates to empty
 
 > [!warning] Redirect Before the Command Exists — Data Loss Bug
 > ```bash
@@ -100,7 +100,7 @@ python3 pipeline/run.py 2>&1 | tee -a /var/log/pipeline/run.log
 > ```
 > The shell opens the output file (truncating it) BEFORE starting the command. This is one of the most common data-loss bugs in shell scripting.
 
-## PowerShell Redirection
+### PowerShell — Out-File, *> all streams redirection
 
 ```powershell
 # Overwrite

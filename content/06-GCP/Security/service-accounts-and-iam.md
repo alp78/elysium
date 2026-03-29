@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, iam, security]
-tags: [security, infrastructure, gcp]
+tags: [security, infrastructure, gcp, iam]
 aliases: [GCP service accounts, IAM bindings, GCP IAM roles, least privilege GCP, service account keys, Workload Identity, IAM policy, gcloud iam]
 keywords: [service account, IAM, identity and access management, least privilege, roles, bindings, gcloud iam service-accounts create, gcloud projects add-iam-policy-binding, roles/bigquery.dataEditor, roles/storage.objectAdmin, roles/run.invoker, key file, Workload Identity, custom roles, service account email, roles/bigquery.jobUser, test permissions, remove role]
 description: "How to create GCP service accounts, generate and rotate keys, grant minimum IAM roles for data pipeline workloads, and verify permissions — implementing least-privilege access as the baseline security standard."
@@ -16,7 +16,7 @@ status: complete
 
 Every GCP resource is protected by Identity and Access Management (IAM). Your pipeline's service account needs precisely the right permissions — too few and the pipeline fails, too many and a compromised credential becomes a security disaster. The principle of least privilege is not a nice-to-have; it is the single most important security practice in cloud engineering. Most tutorials grant `roles/editor` or `roles/owner` to service accounts — this is wrong. These roles grant access to everything in the project: compute, storage, IAM, billing, all of it.
 
-## Service Accounts — Machine Identities
+### GCP Service Accounts — Machine Identities
 
 Service accounts are identities for applications and pipelines, not humans. Every Cloud Run job, VM, and automated script should use a service account, not a human's credentials.
 
@@ -34,7 +34,7 @@ gcloud iam service-accounts create data-pipeline-pipeline \
 # data-pipeline-pipeline@PROJECT_ID.iam.gserviceaccount.com
 ```
 
-## Key Files — Local Development Only
+### Service Account Key Files — Local Development Only
 
 ```bash
 # Generate a key file (for local development ONLY)
@@ -55,7 +55,7 @@ gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pip
 > [!warning] Key Files Are Permanent Credentials
 > A service account key file (`key.json`) does not expire and grants the same access as the service account itself. A single leak in a git commit — even one later removed from history — can result in permanent unauthorized access. In production on GCP (VMs, Cloud Run), use the metadata server for automatic credentials instead. Key files are only justified for local development against GCP APIs.
 
-## IAM Bindings — Granting Roles
+### IAM Bindings — Granting Roles to Service Accounts
 
 For declarative, version-controlled IAM bindings, [[terraform-iam-and-secrets]] provides the Terraform equivalent of these `gcloud` commands.
 
@@ -90,7 +90,7 @@ gcloud projects remove-iam-policy-binding data-platform-prod \
   --role="roles/bigquery.dataEditor"
 ```
 
-## Testing Permissions
+### Testing IAM Permissions
 
 ```bash
 # Test permissions (does this service account have access?)
@@ -102,7 +102,7 @@ gcloud asset analyze-iam-policy \
 
 You can also test what a service account can see by impersonating it during `gcloud` commands (see [[gcloud-output-formatting]]).
 
-## Minimum Permission Set for a Data Pipeline
+### Minimum IAM Permission Set for a Data Pipeline
 
 > [!tip] Least Privilege Reference
 > The minimum permission set for a data pipeline service account:
@@ -112,7 +112,7 @@ You can also test what a service account can see by impersonating it during `gcl
 > - SQL Server: no IAM role needed — authentication is at the database level (see [[sql-server-authentication]] for the parallel least-privilege patterns)
 > - Secret Manager: `roles/secretmanager.secretAccessor` (to read credentials)
 
-## Custom Roles for Tighter Control
+### Custom IAM Roles for Tighter Control
 
 ```bash
 gcloud iam roles create projectPipelineRole --project=data-platform-prod \
@@ -122,7 +122,7 @@ gcloud iam roles create projectPipelineRole --project=data-platform-prod \
 
 Custom roles allow you to grant exactly the permissions needed and no more — finer-grained than any predefined role.
 
-## ADC and the Metadata Server
+### ADC and the GCE Metadata Server
 
 On GCE VMs and Cloud Run, credentials are provided automatically by the GCP metadata server — no key files needed. The credentials are refreshed automatically and scoped to the service account attached to the VM or Cloud Run job. See [[gcloud-authentication]] for the full ADC credential search order, including how to activate a service account via `gcloud auth activate-service-account`.
 

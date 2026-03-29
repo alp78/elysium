@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [firestore, csharp, dotnet, gcp]
-tags: [csharp, sql, gcp, firestore]
+tags: [csharp, nosql, gcp, firestore]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 keywords: [firestore, csharp, dotnet, Google.Cloud.Firestore, DocumentReference, CollectionReference, query, where, order, limit, batch, transaction, snapshot, WriteBatch, FieldValue]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
@@ -31,7 +31,7 @@ using the `Google.Cloud.Firestore` C# SDK and REST API.
 | `watchlists` | User watchlists | Ownership, public/private |
 | `config` | App configuration | Singleton documents |
 
-## Topics Covered
+### Topics Covered — Firestore C# Operations
 1. Setup & Connection
 2. Read Operations
 3. Filtering & Ordering
@@ -1212,7 +1212,7 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
       [RESET] alert_001.acknowledged = false
     
 
-## Real-Time Listeners
+### Real-Time Listeners — Firestore C# on_snapshot Push Notifications
 
 **Note**: Firestore C# SDK's `Listen()` method fails on .NET 10 due to the same
 `AsyncInterfaces` assembly issue that affects collection reads.
@@ -1233,7 +1233,7 @@ await listener.StopAsync();
 For .NET 10 notebooks, use REST polling (same pattern as the GCP notebook, Section 15)
 or run the Python listener instead.
 
-## Aggregation Queries
+### Aggregation Queries — Firestore C# Count Sum Avg
 
 **Note**: Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) also fail
 on .NET 10 due to the `AsyncInterfaces` issue.

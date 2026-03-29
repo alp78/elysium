@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server partitioning, table partitioning, partition function, partition scheme, partition elimination, SWITCH partition, horizontal partitioning, date-based partitioning]
 keywords: [partitioning, partition function, partition scheme, partition elimination, SWITCH, partition boundary, trade_date, monthly partitioning, yearly partitioning, FILEGROUP, sys.partitions, sys.partition_functions, sys.partition_schemes, partition_number, archiving, sliding window, columnstore partition, partition key, RIGHT vs LEFT partition function]
 description: "SQL Server table partitioning by date: partition functions, partition schemes, creating partitioned clustered indexes, partition elimination for query performance, SWITCH for fast archiving and loading, and the sliding window pattern for ongoing pipelines."
@@ -47,7 +47,7 @@ Partition 7: trade_date >= '2026-01-01'                       (2026 — current 
 
 ---
 
-## Step 1: Create the Partition Function
+### Step 1: Create the Partition Function
 
 The partition function defines the boundary values and whether the boundary belongs to the left or right partition.
 
@@ -87,7 +87,7 @@ ORDER BY prv.boundary_id;
 
 ---
 
-## Step 2: Create the Partition Scheme
+### Step 2: Create the Partition Scheme
 
 The partition scheme maps each partition to a filegroup. For most workloads, all partitions map to `PRIMARY`.
 
@@ -110,7 +110,7 @@ ALL TO ([PRIMARY]);
 
 ---
 
-## Step 3: Create the Partitioned Table
+### Step 3: Create the Partitioned Table
 
 The clustered index must use the partition scheme and include the partition key column.
 
@@ -140,7 +140,7 @@ WITH (DATA_COMPRESSION = PAGE);  -- can apply compression to all partitions at o
 
 ---
 
-## Partition Elimination — How Queries Skip Partitions
+### Partition Elimination — How Queries Skip Partitions
 
 When a query includes a filter on the partition key, SQL Server's optimizer uses the partition function to determine which partitions could contain matching rows and skips the rest.
 
@@ -295,7 +295,7 @@ MERGE RANGE ('2021-01-01');
 
 ---
 
-## Per-Partition Compression
+### Per-Partition Compression
 
 Different partitions can have different compression levels — useful for mixed hot/cold data. See [[table-compression]] for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
 
@@ -319,7 +319,7 @@ REBUILD PARTITION = 7 WITH (DATA_COMPRESSION = NONE);
 
 ---
 
-## Monitoring Partitioned Tables
+### Monitoring Partitioned Tables
 
 ```sql
 -- Full partition inventory: rows, size, compression per partition
@@ -359,7 +359,7 @@ JOIN sys.partition_functions pf ON ps.function_id = pf.function_id;
 
 ---
 
-## Partitioning Decision Tree
+### Partitioning Decision Tree
 
 ```
 Is the table > 10 million rows?
@@ -379,7 +379,7 @@ Is the table > 10 million rows?
 
 ---
 
-## Common Pitfalls
+### Common Pitfalls
 
 | Pitfall | Symptom | Fix |
 |---|---|---|
@@ -392,7 +392,7 @@ Is the table > 10 million rows?
 
 ---
 
-## Related
+### Related
 
 - [[storage-internals]] — how pages and filegroups interact with partitions at the storage level
 - [[index-types-and-strategy]] — columnstore indexes as an alternative to partitioning for analytics workloads

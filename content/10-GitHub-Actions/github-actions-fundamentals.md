@@ -1012,7 +1012,7 @@ The retry loop below follows the same [[defensive-scripting|defensive shell patt
 
 ---
 
-## Complete Example: Python Data Pipeline CI
+### Complete Example: Python Data Pipeline CI
 
 ```yaml
 # .github/workflows/ci.yml
@@ -1184,7 +1184,7 @@ jobs:
 
 ---
 
-## Quick Reference: Common Patterns
+### Quick Reference: Common Workflow Patterns
 
 ```yaml
 # Checkout with full git history
@@ -1225,7 +1225,7 @@ jobs:
 
 ---
 
-## See Also
+### See Also
 
 - [[github-actions-patterns]] — matrix builds, reusable workflows, deployment strategies
 - [[github-actions-data-engineering]] — data pipeline CI/CD, Workload Identity, dbt CI

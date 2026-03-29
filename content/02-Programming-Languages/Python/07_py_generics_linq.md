@@ -183,22 +183,9 @@ ohlcv.iloc[100:103]
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -259,14 +246,8 @@ ohlcv.iloc[100:103]
 pldf.slice(100, 3)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21261</td><td>&quot;ABI.BR&quot;</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21262</td><td>&quot;ABI.BR&quot;</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div>
+<small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21261</td><td>&quot;ABI.BR&quot;</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21262</td><td>&quot;ABI.BR&quot;</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 <h4>Pandas — Subset columns with <code style="font-size:0.75em">[[columns]]</code> bracket notation</h4>
 
@@ -276,22 +257,9 @@ ohlcv[['symbol', 'date', 'close', 'volume']].head(5)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -346,14 +314,8 @@ ohlcv[['symbol', 'date', 'close', 'volume']].head(5)
 pldf.select('symbol', 'date', 'close', 'volume').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
 <h4>Pandas — Subset single row with <code style="font-size:0.75em">iloc[n]</code></h4>
 
@@ -401,22 +363,9 @@ ohlcv.loc[ohlcv.symbol == 'ASML.AS', ['date', 'close']].head(5)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -459,14 +408,8 @@ ohlcv.loc[ohlcv.symbol == 'ASML.AS', ['date', 'close']].head(5)
 pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 2)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr><tr><td>2021-01-07</td><td>403.9</td></tr><tr><td>2021-01-08</td><td>416.05</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 2)</small><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr><tr><td>2021-01-07</td><td>403.9</td></tr><tr><td>2021-01-08</td><td>416.05</td></tr></tbody></table></div>
 
 <h4>Pandas — Subset multiple rows with <code style="font-size:0.75em">iloc[[index]]</code></h4>
 
@@ -476,22 +419,9 @@ ohlcv.iloc[[0, 50, 100, 500]]
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -564,14 +494,8 @@ ohlcv.iloc[[0, 50, 100, 500]]
 pldf[[0, 50, 100, 500]]
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (4, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21210</td><td>&quot;ABI.BR&quot;</td><td>2021-03-15</td><td>52.32</td><td>53.05</td><td>52.18</td><td>52.29</td><td>48.9686</td><td>1253312</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21660</td><td>&quot;ABI.BR&quot;</td><td>2022-12-09</td><td>56.64</td><td>56.96</td><td>56.54</td><td>56.88</td><td>54.2262</td><td>1098905</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div>
+<small>shape: (4, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21210</td><td>&quot;ABI.BR&quot;</td><td>2021-03-15</td><td>52.32</td><td>53.05</td><td>52.18</td><td>52.29</td><td>48.9686</td><td>1253312</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21660</td><td>&quot;ABI.BR&quot;</td><td>2022-12-09</td><td>56.64</td><td>56.96</td><td>56.54</td><td>56.88</td><td>54.2262</td><td>1098905</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 <h4>Pandas — Select columns</h4>
 
@@ -581,22 +505,9 @@ ohlcv[['symbol', 'date', 'close']].head(5)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -645,14 +556,8 @@ ohlcv[['symbol', 'date', 'close']].head(5)
 pldf.select('symbol', 'date', 'close').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table></div>
 
 <h4>Pandas — Filter rows</h4>
 
@@ -662,22 +567,9 @@ ohlcv[(ohlcv.symbol == 'ASML.AS') & (ohlcv['close'] > 600)][['symbol', 'date', '
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -726,14 +618,8 @@ ohlcv[(ohlcv.symbol == 'ASML.AS') & (ohlcv['close'] > 600)][['symbol', 'date', '
 pldf.filter((pl.col('symbol') == 'ASML.AS') & (pl.col('close') > 600)).select('symbol', 'date', 'close').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-14</td><td>609.1</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-22</td><td>620.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-23</td><td>638.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-26</td><td>638.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-27</td><td>623.0</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-14</td><td>609.1</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-22</td><td>620.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-23</td><td>638.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-26</td><td>638.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-27</td><td>623.0</td></tr></tbody></table></div>
 
 <h4>Pandas — Sort</h4>
 
@@ -743,22 +629,9 @@ ohlcv.sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -807,14 +680,8 @@ ohlcv.sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(
 pldf.sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>&quot;ISP.MI&quot;</td><td>2023-05-31</td><td>317362978</td></tr><tr><td>&quot;ISP.MI&quot;</td><td>2023-03-13</td><td>311886033</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-11-03</td><td>306973344</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>&quot;ISP.MI&quot;</td><td>2023-05-31</td><td>317362978</td></tr><tr><td>&quot;ISP.MI&quot;</td><td>2023-03-13</td><td>311886033</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-11-03</td><td>306973344</td></tr></tbody></table></div>
 
 <h4>Pandas — Add computed column</h4>
 
@@ -824,22 +691,9 @@ ohlcv.assign(range=ohlcv.high - ohlcv.low)[['symbol', 'close', 'range']].head(5)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>close</th>
@@ -888,14 +742,8 @@ ohlcv.assign(range=ohlcv.high - ohlcv.low)[['symbol', 'close', 'range']].head(5)
 pldf.with_columns((pl.col('high') - pl.col('low')).alias('range')).select('symbol', 'close', 'range').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>close</th><th>range</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>57.21</td><td>2.07</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>57.18</td><td>1.23</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>58.77</td><td>1.55</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>58.4</td><td>0.98</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>close</th><th>range</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>57.21</td><td>2.07</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>57.18</td><td>1.23</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>58.77</td><td>1.55</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>58.4</td><td>0.98</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
 ### Aggregations
 
@@ -911,22 +759,9 @@ ohlcv.groupby('symbol').agg(
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>avg_close</th>
       <th>total_vol</th>
@@ -985,14 +820,8 @@ pldf.group_by('symbol').agg(
 ).sort('avg_close', descending=True).head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_close</th><th>total_vol</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>81633862</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>110400463</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>945070720</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>557855567</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>308359744</td><td>1324</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_vol</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>81633862</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>110400463</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>945070720</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>557855567</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>308359744</td><td>1324</td></tr></tbody></table></div>
 
 <h4>Pandas — HAVING</h4>
 
@@ -1003,22 +832,9 @@ avg_vol[avg_vol > 5_000_000].sort_values(ascending=False).to_frame('avg_volume')
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>avg_volume</th>
     </tr>
@@ -1085,14 +901,8 @@ pldf.group_by('symbol').agg(
 ).filter(pl.col('avg_vol') > 5_000_000).sort('avg_vol', descending=True)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (11, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_vol</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>8.7589e7</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>4.1771e7</td></tr><tr><td>&quot;ENEL.MI&quot;</td><td>2.4679e7</td></tr><tr><td>&quot;BBVA.MC&quot;</td><td>1.6654e7</td></tr><tr><td>&quot;UCG.MI&quot;</td><td>1.3904e7</td></tr><tr><td>&hellip;</td><td>&hellip;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>1.2804e7</td></tr><tr><td>&quot;IBE.MC&quot;</td><td>1.2035e7</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>7.5751e6</td></tr><tr><td>&quot;NDA-FI.HE&quot;</td><td>5.3755e6</td></tr><tr><td>&quot;TTE.PA&quot;</td><td>5.1381e6</td></tr></tbody></table></div>
+<div>
+<small>shape: (11, 2)</small><table><thead><tr><th>symbol</th><th>avg_vol</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>8.7589e7</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>4.1771e7</td></tr><tr><td>&quot;ENEL.MI&quot;</td><td>2.4679e7</td></tr><tr><td>&quot;BBVA.MC&quot;</td><td>1.6654e7</td></tr><tr><td>&quot;UCG.MI&quot;</td><td>1.3904e7</td></tr><tr><td>&hellip;</td><td>&hellip;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>1.2804e7</td></tr><tr><td>&quot;IBE.MC&quot;</td><td>1.2035e7</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>7.5751e6</td></tr><tr><td>&quot;NDA-FI.HE&quot;</td><td>5.3755e6</td></tr><tr><td>&quot;TTE.PA&quot;</td><td>5.1381e6</td></tr></tbody></table></div>
 
 ### Window Functions
 
@@ -1107,22 +917,9 @@ asml[['date', 'close', 'prev_close', 'return_pct']].tail(5)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -1181,14 +978,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 ).select('date', 'close', 'prev_close', 'return_pct').tail(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>return_pct</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>-3.288364</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>0.05231</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>4.566051</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.667334</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 4)</small><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>return_pct</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>-3.288364</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>0.05231</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>4.566051</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.667334</td></tr></tbody></table></div>
 
 <h4>Pandas — Window Function <code style="font-size:0.75em">Cumulative SUM()</code></h4>
 
@@ -1200,22 +991,9 @@ asml[['date', 'volume', 'cum_vol']].tail(5)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>volume</th>
@@ -1266,14 +1044,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 ).select('date', 'volume', 'cum_vol').tail(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>volume</th><th>cum_vol</th></tr><tr><td>date</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>date</th><th>volume</th><th>cum_vol</th></tr><tr><td>date</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table></div>
 
 <h4>Pandas — Window Function <code style="font-size:0.75em">AVG() Moving Average</code></h4>
 
@@ -1285,22 +1057,9 @@ asml[['date', 'close', 'sma_20']].tail(5).round(2)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -1351,14 +1110,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 ).select('date', 'close', 'sma_20').tail(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>sma_20</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>1147.0</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>date</th><th>close</th><th>sma_20</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>1147.0</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table></div>
 
 <h4>Pandas — Window Function <code style="font-size:0.75em">ROW_NUMBER()</code></h4>
 
@@ -1369,22 +1122,9 @@ ohlcv[ohlcv.vol_rank == 1].sort_values('volume', ascending=False)[['symbol', 'da
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1435,14 +1175,8 @@ pldf.with_columns(
 ).filter(pl.col('vol_rank') == 1).sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>&quot;BBVA.MC&quot;</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>&quot;NDA-FI.HE&quot;</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>&quot;BBVA.MC&quot;</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>&quot;NDA-FI.HE&quot;</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table></div>
 
 <h4>Pandas — Window Function <code style="font-size:0.75em">LEAD()</code></h4>
 
@@ -1455,22 +1189,9 @@ asml[asml.gap_days > 3][['date', 'next_date', 'gap_days']].sort_values('gap_days
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>next_date</th>
@@ -1523,14 +1244,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 ).filter(pl.col('gap_days') > 3).sort('gap_days', descending=True).select('date', 'next_date', 'gap_days').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>next_date</th><th>gap_days</th></tr><tr><td>date</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>2021-04-01</td><td>2021-04-06</td><td>5</td></tr><tr><td>2022-04-14</td><td>2022-04-19</td><td>5</td></tr><tr><td>2023-04-06</td><td>2023-04-11</td><td>5</td></tr><tr><td>2023-12-22</td><td>2023-12-27</td><td>5</td></tr><tr><td>2024-03-28</td><td>2024-04-02</td><td>5</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>date</th><th>next_date</th><th>gap_days</th></tr><tr><td>date</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>2021-04-01</td><td>2021-04-06</td><td>5</td></tr><tr><td>2022-04-14</td><td>2022-04-19</td><td>5</td></tr><tr><td>2023-04-06</td><td>2023-04-11</td><td>5</td></tr><tr><td>2023-12-22</td><td>2023-12-27</td><td>5</td></tr><tr><td>2024-03-28</td><td>2024-04-02</td><td>5</td></tr></tbody></table></div>
 
 ### Joins
 
@@ -1543,22 +1258,9 @@ avg_df.merge(scores[['symbol', 'sector', 'composite_rank']], on='symbol').sort_v
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>avg_close</th>
@@ -1619,14 +1321,8 @@ pl_scores = pl.DataFrame({
 pl_avg.join(pl_scores, on='symbol').sort('composite_rank').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_close</th><th>sector</th><th>composite_rank</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>22.430097</td><td>&quot;Communication Services&quot;</td><td>2</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>22.430097</td><td>&quot;Communication Services&quot;</td><td>2</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>sector</th><th>composite_rank</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>22.430097</td><td>&quot;Communication Services&quot;</td><td>2</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>22.430097</td><td>&quot;Communication Services&quot;</td><td>2</td></tr></tbody></table></div>
 
 <h4>Pandas — <code style="font-size:0.75em">STDEV()</code></h4>
 
@@ -1638,22 +1334,9 @@ vol.sort_values(ascending=False).head(10).round(2).to_frame('annual_vol_%')
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>annual_vol_%</th>
     </tr>
@@ -1718,14 +1401,8 @@ pldf.sort('symbol', 'date').with_columns(
 ).sort('annual_vol_%', descending=True).head(10)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>annual_vol_%</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ADYEN.AS&quot;</td><td>50.295865</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>50.045128</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>40.84623</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>39.715469</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>39.305925</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>37.624556</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>37.249051</td></tr><tr><td>&quot;UCG.MI&quot;</td><td>35.550249</td></tr><tr><td>&quot;VOW.DE&quot;</td><td>35.509649</td></tr><tr><td>&quot;ADS.DE&quot;</td><td>34.372174</td></tr></tbody></table></div>
+<div>
+<small>shape: (10, 2)</small><table><thead><tr><th>symbol</th><th>annual_vol_%</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ADYEN.AS&quot;</td><td>50.295865</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>50.045128</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>40.84623</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>39.715469</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>39.305925</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>37.624556</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>37.249051</td></tr><tr><td>&quot;UCG.MI&quot;</td><td>35.550249</td></tr><tr><td>&quot;VOW.DE&quot;</td><td>35.509649</td></tr><tr><td>&quot;ADS.DE&quot;</td><td>34.372174</td></tr></tbody></table></div>
 
 ### CRUD-like Operations
 
@@ -1739,22 +1416,9 @@ pd.concat([ohlcv, new_row], ignore_index=True).tail(3)
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1818,14 +1482,8 @@ new_row = pldf.head(1).with_columns(
 pldf.vstack(new_row).tail(3)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>66877</td><td>&quot;WKL.AS&quot;</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66929</td><td>&quot;WKL.AS&quot;</td><td>2026-03-12</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21160</td><td>&quot;TEST.XX&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>102.0</td><td>53.5761</td><td>50000</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div>
+<small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>66877</td><td>&quot;WKL.AS&quot;</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66929</td><td>&quot;WKL.AS&quot;</td><td>2026-03-12</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21160</td><td>&quot;TEST.XX&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>102.0</td><td>53.5761</td><td>50000</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 <h4>Pandas — Update column</h4>
 
@@ -1835,22 +1493,9 @@ ohlcv[ohlcv.symbol == 'ASML.AS'].assign(adj_close=lambda d: d['close'] * 1.05)[[
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1901,14 +1546,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
 ).select('symbol', 'date', 'adj_close').head(5)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>adj_close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-04</td><td>426.5625</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-05</td><td>427.245</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-06</td><td>422.9925</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-07</td><td>424.095</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-08</td><td>436.8525</td></tr></tbody></table></div>
+<div>
+<small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>adj_close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-04</td><td>426.5625</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-05</td><td>427.245</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-06</td><td>422.9925</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-07</td><td>424.095</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-08</td><td>436.8525</td></tr></tbody></table></div>
 
 <h4>Pandas — Delete rows</h4>
 
@@ -1938,22 +1577,9 @@ ohlcv.drop(columns=['dividends', 'stock_splits', 'is_filled'], errors='ignore').
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -2014,14 +1640,8 @@ ohlcv.drop(columns=['dividends', 'stock_splits', 'is_filled'], errors='ignore').
 pldf.drop('dividends', 'stock_splits', 'is_filled').head(3)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 9)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table></div>
+<div>
+<small>shape: (3, 9)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table></div>
 
 ## Pandas vs Polars — Comparison Matrix
 

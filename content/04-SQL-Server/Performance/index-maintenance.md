@@ -2,7 +2,7 @@
 type: how-to
 category: performance
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren]
 keywords: [index fragmentation, avg_fragmentation_in_percent, index rebuild, index reorganize, fill factor, ONLINE=ON, sys.dm_db_index_physical_stats, REORGANIZE, REBUILD, PAGE compression, DATA_COMPRESSION, columnstore reorganize, COMPRESS_ALL_ROW_GROUPS, statistics update after rebuild, index maintenance script, Ola Hallengren, maintenance window]
 description: "How to detect and fix SQL Server index fragmentation using REORGANIZE and REBUILD operations — includes fragmentation thresholds, automated maintenance script, fill factor guidance, and a recommended maintenance schedule for data pipeline workloads."
@@ -16,7 +16,7 @@ status: complete
 
 Index fragmentation occurs when the physical order of data pages on disk diverges from the logical order of the B-tree index. As pages split during INSERT, UPDATE, and DELETE operations, pages become partially filled and out-of-order. Fragmented indexes cause SQL Server to read more pages than necessary for range scans, increasing I/O and elevating `PAGEIOLATCH_SH` [[wait-stats-analysis|wait statistics]].
 
-## Why Fragmentation Matters
+### Why Fragmentation Matters
 
 - **Range scans** (WHERE date BETWEEN, ORDER BY) read pages sequentially. Fragmented indexes require jumping between non-contiguous pages, causing extra I/O.
 - **Partial pages** waste space — a 50% full page holds half as much data, so range scans read twice as many pages.
@@ -72,7 +72,7 @@ ORDER BY ips.avg_fragmentation_in_percent DESC;
 > [!warning] LIMITED vs. DETAILED Mode
 > The `'LIMITED'` mode reads only the parent-level pages and is fast but approximate. `'DETAILED'` reads all leaf pages for accurate fragmentation data but is slow on large tables. Use `'LIMITED'` for regular monitoring and `'DETAILED'` only before a targeted maintenance operation.
 
-## REORGANIZE — Online, Lightweight
+### REORGANIZE — Online, Lightweight
 
 REORGANIZE physically reorders the leaf pages of an index to match logical order. It is an online operation — the table remains fully accessible during the operation.
 
@@ -100,7 +100,7 @@ WITH (COMPRESS_ALL_ROW_GROUPS = ON);
 > [!info] REORGANIZE Does Not Update Statistics
 > Unlike REBUILD, REORGANIZE does not automatically update statistics. Run `UPDATE STATISTICS` separately after REORGANIZE if the data distribution has changed significantly.
 
-## REBUILD — Heavier, More Thorough
+### REBUILD — Heavier, More Thorough
 
 REBUILD drops and recreates the entire index from scratch. It fully eliminates fragmentation, resets fill factor, and automatically updates statistics.
 
@@ -144,7 +144,7 @@ ALTER INDEX CCI_archive ON dbo.market_data_archive REBUILD;
 > [!warning] REBUILD OFFLINE Locks the Table
 > Without `WITH (ONLINE = ON)`, REBUILD takes a schema modification lock that blocks all reads and writes for the duration. On a large table this can take minutes to hours. Always use `ONLINE = ON` in production unless you have a maintenance window. Note: `ONLINE = ON` requires Developer or Enterprise edition.
 
-## Fill Factor Guidance
+### Fill Factor Guidance
 
 Fill factor controls how full SQL Server packs leaf pages during a rebuild (1–100%). A lower fill factor leaves free space on each page for future inserts, reducing page splits.
 
@@ -155,7 +155,7 @@ Fill factor controls how full SQL Server packs leaf pages during a rebuild (1–
 | Sequential INSERT (time-series) | 90–95% | Mostly appends — minimal splits |
 | The market data fact table | 90% | Daily bulk loads, mostly sequential |
 
-## Automated Maintenance Script
+### Automated Maintenance Script
 
 This script checks fragmentation and applies REORGANIZE or REBUILD based on thresholds:
 
@@ -201,7 +201,7 @@ DEALLOCATE idx_cursor;
 > [!tip] Use Ola Hallengren's Solution in Production
 > For production environments, Ola Hallengren's [IndexOptimize](https://ola.hallengren.com/sql-server-index-and-statistics-maintenance.html) script is the industry standard. It handles edge cases (columnstore, partitioned tables, ONLINE availability), provides detailed logging, and integrates with SQL Agent. The script above is a simplified illustration.
 
-## Statistics After Maintenance
+### Statistics After Maintenance
 
 [[query-plan-analysis|Cardinality estimation]] depends on accurate statistics. Keep them current:
 
@@ -231,7 +231,7 @@ ORDER BY sp.modification_counter DESC;
 > [!info] REBUILD Updates Statistics Automatically
 > An index REBUILD automatically updates statistics with a full scan (equivalent to `WITH FULLSCAN`). REORGANIZE does NOT update statistics. After REORGANIZE, always run `UPDATE STATISTICS` if the data volume changed significantly.
 
-## Index Anti-Patterns
+### Index Anti-Patterns
 
 | Mistake | Why It's Bad | Fix |
 |---------|-------------|-----|
@@ -284,7 +284,7 @@ ON dbo.instrument_tickers (_index, symbol)
 WHERE active = 1;  -- Filtered index for active tickers only
 ```
 
-## Related
+### Related
 
 - [[index-types-and-strategy]] — Choosing the right index type before maintaining it
 - [[wait-stats-analysis]] — High PAGEIOLATCH_SH waits indicate fragmentation or insufficient RAM
@@ -293,7 +293,7 @@ WHERE active = 1;  -- Filtered index for active tickers only
 - [[server-configuration]] — TempDB configuration affects SORT_IN_TEMPDB performance during rebuilds
 - [[essential-dba-queries]] — DMV queries for index health monitoring
 
-## References
+### References
 
 - [sys.dm_db_index_physical_stats (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-db-index-physical-stats-transact-sql)
 - [Ola Hallengren's SQL Server Maintenance Solution](https://ola.hallengren.com/)

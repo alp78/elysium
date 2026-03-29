@@ -2,7 +2,7 @@
 type: how-to
 category: security
 technology: [sql-server, gcp, linux, cloud-kms]
-tags: [security, sql, gcp]
+tags: [security, sql, gcp, sql-server, tsql]
 aliases: [TDE, Transparent Data Encryption, database encryption, at-rest encryption, DEK, Database Encryption Key]
 keywords: [transparent data encryption, TDE, database encryption key, DEK, database master key, DMK, service master key, SMK, certificate, AES_256, encryption at rest, Cloud KMS, KMS keyring, analytics-keyring, analytics-sql-tde, EKM, extensible key management, mdf, ldf, tempdb, GDPR, SOC 2, compliance, backup certificate, restore certificate, percent_complete, encryption_state, AES-NI, hardware acceleration]
 description: "Step-by-step guide to enabling Transparent Data Encryption (TDE) on SQL Server 2022 Linux with GCP Cloud KMS key protection. Covers the encryption key hierarchy, certificate-based TDE setup, critical certificate backup to GCS, disaster recovery restore procedure, and performance impact benchmarks."
@@ -19,7 +19,7 @@ status: complete
 
 Transparent Data Encryption (TDE) encrypts SQL Server database files at rest — protecting `.mdf`, `.ldf`, and `tempdb` files from unauthorized access even if someone obtains the physical disk, a GCS backup file, or a VM disk snapshot.
 
-## What TDE Does and Does Not Do
+### What TDE Does and Does Not Do
 
 **What TDE Does**: Encrypts the physical database files (`.mdf` data files, `.ldf` log files, and tempdb) at rest on disk. Decryption happens automatically in the SQL Server buffer pool — applications see no difference. If someone steals a disk snapshot, copies a `.bak` file, or accesses the raw VM disk, the data is unreadable without the encryption key hierarchy.
 
@@ -35,7 +35,7 @@ For managing the KMS key material and related secrets programmatically, see [[se
 
 ---
 
-## Encryption Key Hierarchy
+### Encryption Key Hierarchy
 
 Understanding the key hierarchy is essential before setting up TDE or attempting disaster recovery.
 
@@ -110,7 +110,7 @@ gcloud kms keys add-iam-policy-binding analytics-sql-tde \
 
 ---
 
-## Step 2: EKM vs. Certificate-Based TDE
+### Step 2: EKM vs. Certificate-Based TDE
 
 > [!important] No EKM Provider for GCP Cloud KMS on Linux
 > SQL Server 2022 on Linux has **limited EKM (Extensible Key Management)** support. The EKM provider for Azure Key Vault works, but there is no official EKM provider for GCP Cloud KMS on Linux. Use **certificate-based TDE** (fully supported, no EKM required). The KMS key is used separately to encrypt the certificate backup stored in GCS.
@@ -334,7 +334,7 @@ WHERE db.name = 'analytics_db';
 
 ---
 
-## Backup and Restore with TDE
+### Backup and Restore with TDE
 
 Encrypted database backups carry the DEK inside the backup file, protected by the certificate. The backup itself is usable only on a server that has:
 1. The same certificate (or a copy restored from backup)
@@ -347,7 +347,7 @@ For backup strategy in an [[high-availability-overview#Backup Strategy with AGs|
 
 ---
 
-## Performance Impact of TDE
+### Performance Impact of TDE
 
 | Metric | Without TDE | With TDE | Impact |
 |---|---|---|---|
@@ -363,7 +363,7 @@ For backup strategy in an [[high-availability-overview#Backup Strategy with AGs|
 
 ---
 
-## Related
+### Related
 
 - [[high-availability-overview]] — AG backup strategy and how TDE interacts with Always On Availability Groups
 - [[sql-server-authentication]] — Service account hardening, login security, and TLS network encryption

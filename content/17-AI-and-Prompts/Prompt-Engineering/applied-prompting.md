@@ -2,7 +2,7 @@
 type: how-to
 category: prompt-engineering
 technology: [claude, gpt-4, gemini, llm, python, sql-server, bigquery, airflow, terraform]
-tags: [ai, python, sql, terraform, airflow, bigquery]
+tags: [ai, prompt-engineering, python, sql, terraform, airflow, bigquery]
 aliases: [applied prompt engineering, prompt engineering examples, before after prompts, prompt optimization examples, research prompts, code generation prompts, data extraction prompts, content creation prompts]
 keywords: [applied prompting, research analysis, content creation, code generation, data extraction, before after optimization, medallion architecture, upsert Python SQL Server, JSON extraction, financial report, blog post, API review, Kubernetes explanation, React Svelte comparison, weak prompts, strong prompts, prompt examples, real-world prompting]
 description: "Applied prompt engineering with complete before/after examples for four core domains: research and analysis, content creation, code and technical tasks, and data analysis and extraction. Every example includes the weak prompt, the optimized prompt, and the principle behind the improvement."

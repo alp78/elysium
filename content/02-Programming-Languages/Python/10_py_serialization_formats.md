@@ -763,20 +763,6 @@ display(
 )
 ```
 
-<style type="text/css">
-#T_6866c_row0_col0, #T_6866c_row0_col1, #T_6866c_row0_col2, #T_6866c_row0_col3, #T_6866c_row0_col4, #T_6866c_row0_col5, #T_6866c_row6_col0, #T_6866c_row6_col1, #T_6866c_row6_col2, #T_6866c_row6_col3, #T_6866c_row6_col4, #T_6866c_row6_col5, #T_6866c_row12_col0, #T_6866c_row12_col1, #T_6866c_row12_col2, #T_6866c_row12_col3, #T_6866c_row12_col4, #T_6866c_row12_col5 {
-  font-weight: bold;
-  border-top: 2px solid #888;
-}
-#T_6866c_row1_col3, #T_6866c_row1_col4, #T_6866c_row1_col5, #T_6866c_row7_col3, #T_6866c_row9_col4, #T_6866c_row10_col5, #T_6866c_row13_col3, #T_6866c_row13_col4, #T_6866c_row13_col5 {
-  background-color: #2e7d32;
-  color: #fff;
-}
-#T_6866c_row2_col5, #T_6866c_row5_col3, #T_6866c_row5_col4, #T_6866c_row8_col5, #T_6866c_row11_col3, #T_6866c_row11_col4, #T_6866c_row16_col4, #T_6866c_row17_col3, #T_6866c_row17_col5 {
-  background-color: #c62828;
-  color: #fff;
-}
-</style>
 <table id="T_6866c">
   <caption>Format Performance Benchmark — green = best, red = worst per bucket</caption>
   <thead>
@@ -980,8 +966,6 @@ display(
 )
 ```
 
-<style type="text/css">
-</style>
 <table id="T_1b570">
   <caption>Compression vs CSV — 100K records (large bucket)</caption>
   <thead>

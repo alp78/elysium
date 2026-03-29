@@ -2,7 +2,7 @@
 type: troubleshooting
 category: observability
 technology: [datadog, docker, gcp, sql-server, terraform]
-tags: [observability, sql, terraform, docker, datadog, gcp]
+tags: [monitoring, observability, sql, terraform, docker, datadog, gcp]
 aliases: [Datadog Troubleshooting, DD Agent Troubleshooting, Datadog Common Issues]
 keywords: [agent not appearing, invalid API key, APM traces missing, no logs, COS filesystem, read-only opt, ghost hosts, ghost host, INACTIVE host, Windows line endings, CRLF, bash\r, terraform apply metadata, VM reset, dd-api-key missing, Airflow VM, startup script, Cloud Run metrics not showing, pipeline logs not in Datadog, Cloud Logging]
 description: "Troubleshooting guide for Datadog agent issues on the data platform — covering agent not appearing, missing APM traces, no logs, COS filesystem constraints, ghost hosts, and Windows line ending issues."
@@ -94,7 +94,7 @@ All 5 containers (4 Airflow + dd-agent) should show status `Up`.
 
 ---
 
-## terraform apply Updated Metadata But Nothing Changed
+### terraform apply Updated Metadata But Agent Did Not Restart
 
 `terraform apply` only updates the VM's **metadata** stored in GCP — it does NOT restart the VM or re-run the startup script. The startup script only executes on boot.
 
@@ -113,7 +113,7 @@ gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b \
 
 ---
 
-## No Logs in Datadog
+### No Logs Appearing in Datadog Log Explorer
 
 ```bash
 # Check agent log collection status
@@ -131,7 +131,7 @@ For SQL Server log collection issues, see [[datadog-sql-server-logs]].
 
 ---
 
-## COS Filesystem Constraints
+### COS Read-Only Filesystem Constraints for dd-agent
 
 Container-Optimized OS has a **read-only root filesystem**. Paths like `/opt` are not writable:
 
@@ -148,7 +148,7 @@ This is already handled correctly in the startup script's `docker run` command.
 
 ---
 
-## Windows Line Endings in Startup Script
+### Windows Line Endings (CRLF) Breaking Startup Script
 
 If the VM shows `env: 'bash\r': No such file or directory`, the startup script has Windows CRLF line endings. The fix is in `infra/compute.tf`:
 
@@ -162,7 +162,7 @@ This `replace()` call strips Windows CR characters before uploading the script a
 
 ---
 
-## Ghost Hosts in Infrastructure
+### Ghost Hosts Appearing in Datadog Infrastructure
 
 When the API key is changed, the old agent may leave a ghost host entry. Ghost hosts show as INACTIVE and auto-disappear after ~2 hours. To list hosts via API:
 
@@ -176,7 +176,7 @@ The Docker-internal PostgreSQL IP (e.g., `172.18.0.3`) also appears as a separat
 
 ---
 
-## Cloud Run Metrics Not Showing
+### Cloud Run Metrics Not Showing in Datadog
 
 Cloud Run jobs are ephemeral — no Datadog Agent runs inside them. Metrics come from the **GCP Integration** (see [[datadog-gcp-integration]]). If no Cloud Run metrics appear:
 
@@ -187,7 +187,7 @@ Cloud Run jobs are ephemeral — no Datadog Agent runs inside them. Metrics come
 
 ---
 
-## Pipeline Logs Not in Datadog
+### Pipeline Logs Not Appearing in Datadog
 
 Cloud Run job logs go to **GCP Cloud Logging**, not through dd-agent. They are not available in Datadog's Log Explorer. View them via:
 
@@ -243,7 +243,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 ---
 
-## Disabling Datadog
+### Disabling Datadog Agents and Integrations
 
 When the trial ends or you want to remove Datadog:
 

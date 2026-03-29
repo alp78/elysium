@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash]
-tags: [shell, bash]
+tags: [shell, bash, linux]
 aliases: [process substitution, here document, here string, heredoc, herestring, advanced input output]
 keywords: [process substitution, here document, heredoc, here string, herestring, diff command output, virtual file descriptor, multi-line input, EOF, stdin, temporary file elimination]
 description: "Bash process substitution (<() and >()), here documents (<<EOF), and here strings (<<<) for treating command output as files and embedding multi-line strings in scripts."

@@ -3,6 +3,8 @@ tags:
   - airflow
   - sql
   - gcp
+  - runbook
+  - incident
 type: runbook
 severity: sev1
 technology: airflow
@@ -16,14 +18,14 @@ updated: 2026-03-23
 > **Severity**: Sev1 | **SLA**: 15 min acknowledge, resolve before publication deadline
 > **Owner**: On-call data engineer
 
-## Symptoms
+### Symptoms — index calculation failure indicators
 
 - Airflow DAG `index_daily_calculation` shows failed or stuck tasks
 - Datadog alert: `index.calc.completed` metric missing for today
 - No new rows in `dbo.index_levels_daily` or `analytics.index_levels_daily` for today's date
 - Client-facing API returns yesterday's values
 
-## Diagnosis
+### Diagnosis — index calculation pipeline troubleshooting
 
 1. **Check Airflow DAG status**
    ```bash
@@ -111,7 +113,7 @@ VALUES ('index_daily_calculation', '$(date +%Y-%m-%d)', 'MANUAL_OVERRIDE',
 
 Follow [[bigquery-quota-exceeded]] runbook.
 
-## Manual Calculation Override
+### Manual calculation override — emergency index publication
 
 If automated pipeline cannot be fixed before the publication deadline:
 
@@ -129,13 +131,13 @@ WHERE calc_date = CAST(GETDATE() AS DATE)
 "
 ```
 
-## Escalation
+### Escalation — index calculation failure
 
 - If not resolved within 30 minutes: escalate to Engineering Lead
 - If publication deadline at risk: notify Index Operations and Client Relations immediately
 - If SLA breached (index not published by deadline): notify Compliance Officer for EU BMR Article 13 reporting
 
-## Post-Incident
+### Post-incident — index calculation failure checklist
 
 - [ ] Send resolution notice to #incidents channel
 - [ ] Update pipeline lineage table with incident details

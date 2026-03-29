@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, sql-server, airflow]
-tags: [observability, sql, airflow, datadog]
+tags: [monitoring, observability, sql, airflow, datadog]
 aliases: [Datadog Monitors, Datadog Alerts, Deadlock Alert, Airflow Monitors]
 keywords: [datadog monitors, alerts, deadlock alert, scheduler down, airflow monitor, metric monitor, change alert, notification, email alert, P1 critical, P2 high, conditional formatting, monitor message, recovery]
 description: "Recommended Datadog monitors for the data platform — deadlock detection on SQL Server, Airflow scheduler health, task failure alerts, and pool starvation warnings."
@@ -122,7 +122,7 @@ In addition to monitors (which send notifications), the SQL Server DBA dashboard
 
 ---
 
-## GCE Automuting
+### GCE Host Automuting in Datadog
 
 When GCE Automuting is enabled in the [[datadog-gcp-integration|GCP Integration]], monitors are automatically muted when a VM is stopped in GCP. This prevents false alerts during intentional maintenance or off-hours cost reduction when the SQL or Airflow VM is stopped.
 

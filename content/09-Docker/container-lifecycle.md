@@ -599,7 +599,7 @@ docker port airflow-webserver 8080
 
 ---
 
-## Removing Containers
+### Removing Containers
 
 ```bash
 # Remove a stopped container
@@ -694,7 +694,7 @@ docker inspect <container> --format='{{json .Mounts}}' | python3 -m json.tool
 
 ---
 
-## Exit Code Reference
+### Exit Code Reference
 
 | Code | Signal | Meaning | Common Cause |
 |------|--------|---------|--------------|

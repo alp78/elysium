@@ -2,7 +2,7 @@
 type: index
 category: terraform
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [Terraform section, Terraform index, IaC section]
 keywords: [terraform, infrastructure as code, IaC, HCL, hashicorp, gcp terraform, terraform guide, terraform reference, declarative infrastructure]
 description: "Central index for all Terraform notes covering HCL fundamentals, GCP resource provisioning, state management, and infrastructure patterns used in data engineering."
@@ -16,7 +16,7 @@ status: complete
 
 Terraform declares your infrastructure in `.tf` files that can be version-controlled, reviewed, and reproduced. Instead of clicking through the GCP Console, you write code that defines your VMs, networks, and services — and Terraform creates, updates, or destroys them to match. This section covers everything from HCL syntax to production GCP resource definitions drawn from a real project.
 
-## Fundamentals
+### Fundamentals
 
 Core Terraform concepts, syntax, and workflow — start here if you are new to Terraform.
 
@@ -28,7 +28,7 @@ Core Terraform concepts, syntax, and workflow — start here if you are new to T
 | [[terraform-plan-apply-destroy]] | The core workflow — init, plan, apply, destroy — plus state commands and import |
 | [[terraform-state-management]] | State files, remote backends, locking, state mv/rm, and why state is sacred |
 
-## GCP Resources
+### GCP Resources
 
 Per-resource-type notes with full HCL definitions, field explanations, and verification commands.
 
@@ -40,7 +40,7 @@ Per-resource-type notes with full HCL definitions, field explanations, and verif
 | [[terraform-cloud-run]] | Cloud Run services and jobs — dashboard, pipeline, setup — VPC access, scaling, secret references |
 | [[terraform-registry-and-ci]] | Artifact Registry Docker repository, cleanup policies, CI/CD service account for GitHub Actions |
 
-## Block Library
+### Block Library
 
 Pre-built, copy-paste Terraform blocks for common GCP resource combinations. Each file covers a logical grouping of resources that are typically provisioned together.
 
@@ -51,7 +51,7 @@ Pre-built, copy-paste Terraform blocks for common GCP resource combinations. Eac
 | [[tf-iam-secrets-serverless]] | Service accounts, IAM, secrets, Cloud Run, Functions, Scheduler, Pub/Sub |
 | [[tf-data-services]] | BigQuery, Firestore, Dataflow, Cloud SQL, monitoring, billing |
 
-## Patterns
+### Patterns
 
 Architectural patterns, dependency management, and module composition.
 

@@ -18,7 +18,7 @@ A materialisation determines how dbt writes a model's SQL output into the wareho
 
 ---
 
-## The Five Materialisation Types
+### The Five Materialisation Types
 
 | Type | Warehouse object | Data is stored? | Rebuilt each run? |
 |---|---|---|---|
@@ -30,7 +30,7 @@ A materialisation determines how dbt writes a model's SQL output into the wareho
 
 ---
 
-## view
+### dbt view Materialisation
 
 The default materialisation. dbt issues a `CREATE OR REPLACE VIEW` on every run. The underlying query executes at query time, always reflecting current source data.
 
@@ -52,7 +52,7 @@ from {{ source('market_data', 'daily_prices') }}
 
 ---
 
-## table
+### dbt table Materialisation
 
 dbt drops and recreates the physical table on every run. Simple and predictable.
 
@@ -185,7 +185,7 @@ where price_date >= date_sub(current_date(), interval {{ var('lookback_days', 3)
 
 ---
 
-## on_schema_change
+### dbt on_schema_change Behaviour
 
 Controls what happens when the model's column set changes compared to the existing table.
 
@@ -209,7 +209,7 @@ Controls what happens when the model's column set changes compared to the existi
 
 ---
 
-## Late-Arriving Data Lookback Pattern
+### dbt Late-Arriving Data Lookback Pattern
 
 A core challenge with incremental models processing financial data is that source systems frequently backfill or correct historical data. A price vendor might correct a corporate action adjustment 2 days after initial delivery.
 
@@ -244,7 +244,7 @@ With `unique_key` and `merge` strategy, dbt will update existing rows that fall 
 
 ---
 
-## ephemeral
+### dbt ephemeral Materialisation
 
 Ephemeral models are not materialised in the warehouse at all. dbt inlines their SQL as a CTE in every model that references them via `ref()`.
 
@@ -273,7 +273,7 @@ When `int_daily_returns` references `int_price_flags`, dbt compiles the ephemera
 
 ---
 
-## snapshot
+### dbt snapshot Materialisation
 
 Snapshots implement SCD Type 2 (slowly changing dimensions) — they record the full history of how a row changed over time.
 
@@ -331,7 +331,7 @@ where '2023-06-30' between dbt_valid_from and coalesce(dbt_valid_to, '9999-12-31
 
 ---
 
-## Decision Matrix
+### Materialisation Decision Matrix
 
 | Scenario | Recommended materialisation |
 |---|---|
@@ -346,7 +346,7 @@ where '2023-06-30' between dbt_valid_from and coalesce(dbt_valid_to, '9999-12-31
 
 ---
 
-## Full-Refresh Mechanics
+### dbt Full-Refresh Mechanics
 
 Running `dbt run --full-refresh` against an incremental model causes dbt to:
 

@@ -1,7 +1,7 @@
 ---
 type: reference
 category: engineering-practice
-tags: []
+tags: [dataops]
 aliases:
   - data team
   - team topology
@@ -236,7 +236,7 @@ Owns the roadmap and strategy for data products and the data platform. Prioritiz
 
 ---
 
-## The T-Shaped Engineer
+### The T-Shaped Engineer
 
 The T-shaped model describes an engineer with:
 - **Broad knowledge** across the data engineering landscape (the horizontal bar of the T)

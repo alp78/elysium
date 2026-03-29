@@ -6,7 +6,7 @@ technology:
   - bigquery
   - python
   - bash
-tags: [observability, cost, infrastructure, python, bash, bigquery, gcp]
+tags: [observability, cost, infrastructure, python, bash, bigquery, gcp, billing]
 aliases:
   - cost monitoring
   - budget alerts

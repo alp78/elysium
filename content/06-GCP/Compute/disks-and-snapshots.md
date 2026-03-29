@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, compute-engine]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, compute-engine]
 aliases: [GCE disks, persistent disk snapshots, disk resize, serial console, disk snapshot GCP]
 keywords: [persistent disk, snapshot, disk resize, serial console, backup, restore, incremental snapshot, resize2fs, xfs_growfs, boot problems, disk management, pd-ssd, pd-balanced, disk list]
 description: "How to manage Compute Engine persistent disks — creating incremental snapshots before risky changes, resizing disks, restoring from snapshots, and using the serial console when a VM won't boot."
@@ -16,14 +16,14 @@ status: complete
 
 Compute Engine persistent disk snapshots are your undo button. Snapshots are incremental — only changed blocks are stored — making them fast and inexpensive to create. The rule is simple: **always snapshot before any risky operation** (OS upgrades, database updates, schema migrations, disk resizing). The serial console provides the last resort for diagnosing VMs that fail to boot.
 
-## Listing Disks
+### Listing Compute Engine Disks
 
 ```bash
 # List all disks
 gcloud compute disks list
 ```
 
-## Creating Snapshots
+### Creating Disk Snapshots Before Risky Changes
 
 ```bash
 # Create a snapshot before risky changes (your undo button)
@@ -39,7 +39,7 @@ gcloud compute snapshots list
 > [!tip] Snapshot Naming Convention
 > Include the date and the reason in the snapshot name: `data-pipeline-sql-before-upgrade-20260322`. This makes it immediately clear which snapshot to restore from when things go wrong at 3 AM.
 
-## Restoring from a Snapshot
+### Restoring a Disk from a Snapshot
 
 Restoration requires creating a new disk from the snapshot, then reattaching it to the VM. There is no in-place restore.
 
@@ -50,7 +50,7 @@ gcloud compute disks create data-pipeline-sql-restored --zone=europe-west1-b \
 # Then: stop VM, detach old disk, attach new disk, start VM
 ```
 
-## Resizing a Disk
+### Resizing a Persistent Disk
 
 GCS persistent disks can only grow, never shrink. The disk resize itself is online (no downtime), but the filesystem inside the VM must be manually expanded after the disk grows.
 
@@ -69,7 +69,7 @@ gcloud compute disks resize data-pipeline-sql-disk --zone=europe-west1-b --size=
 >
 > Skipping this step leaves your application still seeing the old, smaller disk.
 
-## Serial Console — When SSH Fails
+### Serial Console — When SSH Fails
 
 The serial console is your last resort for VMs that will not boot. It shows boot messages, kernel logs, and the early-boot console output — the only diagnostic tool when SSH is unavailable.
 
@@ -85,7 +85,7 @@ gcloud compute instances get-serial-port-output data-pipeline-sql --zone=europe-
 > - Incorrect `/etc/fstab` entries after adding a new disk — VM hangs at mount
 > - Grub misconfiguration after updating boot loader
 
-## Disk Types
+### Compute Engine Disk Types Reference
 
 | Type | Use case | Performance |
 |---|---|---|

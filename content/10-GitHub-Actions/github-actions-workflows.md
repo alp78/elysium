@@ -21,7 +21,7 @@ status: complete
 
 GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [[docker-compose|Docker images]], running pipeline tests, deploying to [[cloud-run-jobs-vs-services|Cloud Run]] via [[terraform-cloud-run|Terraform-managed infrastructure]], and validating [[terraform-plan-apply-destroy|Terraform changes]].
 
-## Workflow Structure
+### Workflow YAML Structure
 
 Every workflow is a YAML file in `.github/workflows/`:
 

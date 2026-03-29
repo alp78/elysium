@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL
 keywords: [SQLContext, DuckDB, SQL Server, database, query, connection, ADO.NET, SQLAlchemy]

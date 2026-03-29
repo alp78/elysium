@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn
 keywords: [plot, bar, line, scatter, histogram, heatmap, Plotly, Plotly.NET, matplotlib, seaborn, visualization]

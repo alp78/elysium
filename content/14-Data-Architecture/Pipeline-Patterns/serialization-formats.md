@@ -2,7 +2,7 @@
 type: reference
 category: data-formats
 technology: [python, kafka, protobuf, avro]
-tags: [architecture, pipeline, python]
+tags: [data-architecture, architecture, pipeline, python]
 aliases: [serialization, data formats comparison, format decision matrix, JSON vs Parquet, Avro vs Protobuf, MessagePack, Pickle, compression codecs, Snappy, Zstd, Gzip, LZ4]
 keywords: [serialization, json, yaml, csv, parquet, avro, protobuf, messagepack, pickle, compression, snappy, zstd, gzip, lz4, schema, binary format, text format, kafka, gRPC, data lake, format comparison, encoding, decoding, schema evolution, cross-language]
 description: "Comprehensive comparison of every serialization format a data engineer encounters — JSON, YAML, CSV, MessagePack, Protobuf, Avro, Parquet, and Pickle — with a format decision matrix and compression codec comparison (Snappy, LZ4, Zstd, Gzip)."
@@ -16,7 +16,7 @@ status: complete
 
 Serialization is the bridge between in-memory data structures and persistent storage or network transmission. This note covers every serialization format a data engineer encounters, from human-readable (JSON, YAML) to high-performance binary (Protobuf, Avro, MessagePack). For detailed JSON and CSV handling, see [[awk-data-processing|CSV processing with awk]]. For Parquet-specific operations, see parquet files.
 
-## Format Decision Matrix
+### Serialization Format Decision Matrix
 
 Choose your format based on the primary constraint: speed, size, schema enforcement, cross-language support, or human readability.
 
@@ -126,7 +126,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 
 ---
 
-## Compression Codec Comparison
+### Compression Codec Comparison
 
 Compression is orthogonal to format — most formats support multiple codecs. Choose based on the dominant constraint. For a deeper treatment of [[compression]] algorithms (snappy, gzip, zstd, lz4) and their trade-offs beyond serialization, see the dedicated compression note.
 

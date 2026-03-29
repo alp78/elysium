@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: []
-tags: [architecture]
+tags: [data-architecture, data-engineering, architecture]
 aliases: [golden rules, engineering principles, data engineering philosophy, first principles, trade-off analysis, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors]
 keywords: [golden rules, data engineering principles, first principles, trade-off analysis, decision framework, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors, boring technology, innovation tokens, schema evolution, idempotent pipelines, raw data preservation, bronze layer, complexity debt, cloud cost optimization, observability, automation, infrastructure as code, CI/CD, shadow pipelines, canary deployments, blue-green deployments, resume-driven development, tight coupling, loose coupling, expand and contract, premature optimization, operational pragmatism, dimensional clarity, lifecycle thinking, data engineering philosophy, simplicity, reliability, cost awareness, anti-patterns]
 description: "The golden rules of data engineering — ten foundational principles that guide every architectural decision, technology choice, and trade-off evaluation. Inspired by Reis & Housley, Kleppmann, Kimball, Densmore, and the five pillars of senior data engineering."
@@ -519,7 +519,7 @@ Both are necessary. Infrastructure observability tells you the pipeline ran. Dat
 
 ---
 
-## The Anti-Patterns — What These Rules Prevent
+### Data Engineering Anti-Patterns — What These Rules Prevent
 
 These rules exist because each one was learned the hard way. The following table maps common anti-patterns to the rules they violate and the consequences they produce:
 

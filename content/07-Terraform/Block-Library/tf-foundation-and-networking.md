@@ -2,7 +2,7 @@
 type: reference
 category: terraform
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform block library, terraform GCP blocks, terraform networking blocks, terraform foundation blocks, GCP terraform snippets, terraform copy-paste blocks]
 keywords: [terraform, gcp, block library, google_compute_network, google_compute_subnetwork, google_compute_router, google_compute_router_nat, google_compute_firewall, google_compute_address, google_dns_managed_zone, google_dns_record_set, google_compute_network_peering, google_compute_shared_vpc_host_project, google_compute_shared_vpc_service_project, google_compute_global_address, google_service_networking_connection, VPC, subnet, Cloud NAT, firewall, IAP, Identity-Aware Proxy, CIDR, ingress, egress, static IP, DNS, private service connect, shared VPC, VPC peering, backend GCS, required_providers, terraform block, provider google, project_id, region, zone, environment, common_labels, locals, outputs, Cloud Router, health check, deny all, SQL Server, Airflow, APM, HTTP, HTTPS, SSH, compact concat, private Google access, secondary ranges, GKE pods, services range, NAT auto allocate]
 description: "Atomic Terraform block library for GCP foundation and networking resources. Every block is self-contained, heavily commented, and copy-pasteable. Covers provider/backend setup, variables, outputs, locals, VPC, subnets, Cloud NAT, firewall rules, static IPs, DNS, VPC peering, Shared VPC, and Private Service Connect."
@@ -775,7 +775,7 @@ resource "google_service_networking_connection" "private_services" {
 
 ---
 
-## Complete Example: Wiring It All Together
+### Complete Example: Wiring It All Together
 
 This section shows a minimal but complete `network.tf` that combines the most common blocks. Copy this as a starting point and remove the sections your workload does not need.
 
@@ -856,7 +856,7 @@ resource "google_compute_firewall" "deny_all_ingress" {
 
 ---
 
-## Quick Reference: Firewall Source Ranges
+### Quick Reference: Firewall Source Ranges
 
 | Use case | Source range |
 |---|---|
@@ -867,7 +867,7 @@ resource "google_compute_firewall" "deny_all_ingress" {
 | Same subnet only | `var.subnet_cidr` (e.g., `10.0.0.0/24`) |
 | All RFC 1918 private ranges | `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` |
 
-## Quick Reference: Common Ports
+### Quick Reference: Common Ports
 
 | Service | Port | Protocol |
 |---|---|---|
@@ -885,7 +885,7 @@ resource "google_compute_firewall" "deny_all_ingress" {
 
 ---
 
-## Pitfalls and Notes
+### Pitfalls and Notes
 
 **VPC peering is non-transitive.** If A peers with B and B peers with C, A cannot reach C. You must create explicit peering between A and C if they need to communicate.
 

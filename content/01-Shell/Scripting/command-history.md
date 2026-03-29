@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [command history, shell history, history recall, reverse search, Ctrl+R]
 keywords: [command history, history, reverse search, Ctrl+R, bash history, HISTSIZE, HISTCONTROL, recall, re-run command, bang bang, exclamation, PSReadLine, predictive intellisense]
 description: "How to search, recall, and re-run previous shell commands in bash and PowerShell, including history configuration for data engineers and incident response."
@@ -71,7 +71,7 @@ sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT TOP 10 *
 # Each iteration builds on the previous — you never retype the connection parameters
 ```
 
-## History Configuration for Data Engineers
+### HISTSIZE, HISTCONTROL — history configuration for .bashrc
 
 > [!info] History Configuration
 > Add these to your `~/.bashrc` to supercharge your history:
@@ -85,7 +85,7 @@ sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT TOP 10 *
 > ```
 > The timestamp format is invaluable during post-incident reviews: "What commands were run on the database server between 14:00 and 14:30 yesterday?"
 
-## PowerShell History
+### PowerShell — Get-History, PSReadLine predictive IntelliSense
 
 ```powershell
 # Search history

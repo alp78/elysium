@@ -1,5 +1,5 @@
 ---
-tags: [gcp]
+tags: [gcp, runbook, incident]
 type: runbook
 severity: sev2
 technology: gcp
@@ -16,7 +16,7 @@ updated: 2026-03-23
 
 ---
 
-## Symptoms
+### Symptoms — Pub/Sub dead letter queue accumulation
 
 - **Cloud Monitoring alert**: `pubsub.googleapis.com/subscription/num_undelivered_messages` growing on DLQ subscription, crossing the alert threshold
 - **Datadog metric**: `custom.pubsub.dlq.message_count` increasing; dashboard shows non-zero DLQ depth that does not drain
@@ -404,7 +404,7 @@ thresholds:
 
 ---
 
-## Verification
+### Verification — confirm DLQ is draining
 
 ```bash
 # 1. Confirm DLQ is draining
@@ -437,7 +437,7 @@ gcloud alpha monitoring policies list \
 
 ---
 
-## Escalation
+### Escalation — Pub/Sub DLQ incident
 
 | Condition | Action |
 |-----------|--------|
@@ -449,7 +449,7 @@ gcloud alpha monitoring policies list \
 
 ---
 
-## Post-Incident
+### Post-incident — DLQ resolution checklist
 
 - [ ] Send resolution notice to #data-engineering-incidents with message count replayed and ISINs affected
 - [ ] Validate ESG score completeness in BigQuery: check for gaps in `score_date` for affected securities
@@ -461,7 +461,7 @@ gcloud alpha monitoring policies list \
 
 ---
 
-## Long-Term Prevention
+### Long-term prevention — Pub/Sub message reliability
 
 | Action | Owner | Priority |
 |--------|-------|----------|

@@ -2,7 +2,7 @@
 type: reference
 category: shell
 technology: [bash, powershell, awk]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [awk, gawk, mawk, field processing, column extraction, text transformation, csv processing, awk reference, awk cheatsheet, GNU awk]
 keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited]
 description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, aggregation, string functions, multi-file processing, advanced patterns, and PowerShell equivalents for every key technique."

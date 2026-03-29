@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - null handling, string operations, datetime, timezones
 keywords: [null, NaN, fillna, dropna, str, dt, timezones, datetime, string methods, missing data]

@@ -2,7 +2,7 @@
 type: concept
 category: data-transformation
 technology: [dbt, sql-server, bigquery, airflow, python]
-tags: [architecture, pipeline, python, sql, airflow, dbt, bigquery]
+tags: [data-architecture, architecture, pipeline, python, sql, airflow, dbt, bigquery]
 aliases: [dbt Core, dbt Cloud, Data Build Tool, dbt models, dbt snapshots, dbt macros, dbt testing, transformation layer]
 keywords: [dbt, data build tool, dbt core, dbt cloud, staging models, intermediate models, mart models, dbt test, schema tests, custom tests, snapshots, SCD type 2, slowly changing dimensions, macros, jinja, incremental models, dbt run, dbt compile, sources, ref, dbt-utils, CI/CD, slim builds, state comparison, airflow dbt integration, medallion architecture, bronze silver gold, ELT]
 description: "dbt (Data Build Tool) is the standard SQL transformation layer for modern data platforms — it implements software engineering practices (version control, testing, documentation, CI/CD) for SQL transforms already inside your warehouse. Covers project structure, staging/intermediate/mart model layers, schema and custom tests, SCD Type 2 snapshots, Jinja macros, Airflow integration, and slim CI builds."
@@ -70,7 +70,7 @@ dbt (Data Build Tool) has become the standard for managing SQL-based transformat
 
 ---
 
-## dbt Project Structure for Financial Data
+### dbt Project Structure for Financial Data
 
 ```
 dbt_project/
@@ -481,7 +481,7 @@ jobs:
 
 ---
 
-## Gotchas & Edge Cases
+### dbt Gotchas and Edge Cases
 
 - **`ref()` vs `source()`:** Use `{{ source('schema', 'table') }}` for raw tables you don't own (bronze layer). Use `{{ ref('model_name') }}` for models defined in your dbt project. Mixing them up breaks the dependency graph.
 - **`on_schema_change`:** When new columns are added to a model and the incremental table already exists, dbt defaults to ignoring new columns. Set `on_schema_change='sync_all_columns'` to auto-add them.

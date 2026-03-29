@@ -1,7 +1,7 @@
 ---
 type: reference
 category: engineering-practice
-tags: []
+tags: [dataops]
 aliases:
   - self-service data
   - data democratization
@@ -133,7 +133,7 @@ Before investing in self-service tooling, ensure:
 
 ---
 
-## Platform Component Architecture
+### Platform Component Architecture
 
 A complete self-service data platform has six layers. Each layer can be assembled from multiple tools; the choices below are a starting point, not a prescription.
 
@@ -287,7 +287,7 @@ metric:
 
 ---
 
-## Query and Exploration Tools
+### Query and Exploration Tools
 
 | Tool | Type | Strengths | Best For |
 |------|------|-----------|---------|
@@ -571,7 +571,7 @@ Track these to know if your self-service investment is working:
 
 ---
 
-## Connection to Data Mesh
+### Connection to Data Mesh
 
 The self-service data platform is the enabling technology for a [[data-mesh-architecture]]. Data mesh cannot function without:
 

@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - unit testing, validation, migration guide
 keywords: [testing, pytest, xUnit, assert_frame_equal, validation, migration, pandas to polars, best practices]

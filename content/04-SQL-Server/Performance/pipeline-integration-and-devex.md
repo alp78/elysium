@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server, python, airflow]
-tags: [pipeline, python, sql, airflow]
+tags: [pipeline, python, sql, airflow, sql-server, tsql]
 aliases: [pipeline integration, SQL comment tagging, Airflow SQL correlation, schema migrations, Flyway SQL Server, Liquibase SQL Server, connection pool management, developer experience]
 keywords: [query tagging, SQL comment, dag_id, task_id, run_id, dm_exec_sql_text, Query Store, schema migrations, Flyway, Liquibase, sqlpackage, dacpac, migration runner, schema_migrations table, connection pool, pymssql, sqlalchemy, ADO.NET, pool_size, max_overflow, connection count, dm_exec_sessions, Datadog tagging, pipeline observability, CI/CD SQL, GitHub Actions, PARSEONLY, idempotent migration]
 description: "Developer experience patterns for SQL Server pipeline integration: tagging queries with Airflow context for monitoring correlation, schema migration management (Flyway/Python runner), and connection pool management for pymssql and ADO.NET."
@@ -353,7 +353,7 @@ EXEC sp_addrolemember 'db_datareader', 'dd_agent';  -- on each database to monit
 
 ---
 
-## Related
+### Related
 
 - [[execution-plans]] — using Query Store to find the most expensive queries during a specific DAG run window
 - [[performance-audit-playbook]] — Phase 5 (expensive queries) using the same DMVs as the Datadog custom query

@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, sql-server]
-tags: [observability, sql, datadog]
+tags: [monitoring, observability, sql, datadog]
 aliases: [SQL Server Integration, sqlserver check, Datadog SQL integration]
 keywords: [datadog, sql server integration, sqlserver check, odbc, odbc driver 18, conf.yaml, dd_agent, connections, buffer pool, waits, batch requests, page life expectancy, DMV, TrustServerCertificate, custom_queries]
 description: "Complete configuration reference for the Datadog SQL Server integration on the example SQL VM — connection setup, ODBC driver, and the full conf.yaml with custom queries."
@@ -49,7 +49,7 @@ instances:
 
 ---
 
-## Connection Parameters
+### SQL Server Integration Connection Parameters
 
 | Parameter | Value | Notes |
 |-----------|-------|-------|
@@ -64,7 +64,7 @@ instances:
 
 ---
 
-## Built-in Metrics Collected
+### Built-in SQL Server Metrics Collected by Datadog
 
 The integration automatically collects these metric groups from SQL Server DMVs:
 
@@ -86,7 +86,7 @@ The integration automatically collects these metric groups from SQL Server DMVs:
 
 ---
 
-## Verifying the Integration
+### Verifying the SQL Server Integration
 
 ```bash
 # Check SQL Server integration status
@@ -100,7 +100,7 @@ Expected: `Status: OK` with metric counts listed.
 
 ---
 
-## After Config Changes
+### Restarting After SQL Server Config Changes
 
 ```bash
 # Restart the agent to pick up config changes

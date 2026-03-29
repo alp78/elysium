@@ -2,7 +2,7 @@
 type: concept
 category: infrastructure
 technology: [terraform]
-tags: [infrastructure, terraform]
+tags: [infrastructure, terraform, iac]
 aliases: [terraform dependencies, terraform dependency graph, depends_on, terraform parallelism, resource references]
 keywords: [dependency graph, implicit dependency, explicit dependency, depends_on, resource reference, parallel creation, terraform plan order, ".id", ".name", ".email", "network_interface[0]"]
 description: "How Terraform builds and resolves the resource dependency graph — implicit dependencies from resource references, explicit depends_on, and how parallelism works during apply."
@@ -60,7 +60,7 @@ resource "google_compute_subnetwork" "main" {
 
 ---
 
-## The Dependency Graph
+### The Dependency Graph
 
 Terraform automatically resolves dependencies from resource references. This is the effective creation order:
 
@@ -145,7 +145,7 @@ resource "google_project_iam_member" "pipeline_bq_access" {
 
 ---
 
-## Viewing the Dependency Graph
+### Viewing the Dependency Graph
 
 Terraform can export the dependency graph in DOT format for visualization:
 
@@ -161,7 +161,7 @@ The output shows every resource and every arrow between them. Useful when debugg
 
 ---
 
-## Circular Dependencies
+### Circular Dependencies
 
 Terraform will fail with an error if it detects a circular dependency (A depends on B, B depends on A). This is usually a sign of a design problem. Common causes:
 
@@ -172,7 +172,7 @@ Terraform will fail with an error if it detects a circular dependency (A depends
 
 ---
 
-## Resource Replacement vs In-Place Update
+### Resource Replacement vs In-Place Update
 
 Some changes can be applied in-place (updating an attribute without recreating the resource). Others require destroying and recreating:
 

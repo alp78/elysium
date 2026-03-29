@@ -2,7 +2,7 @@
 type: concept
 category: engineering-practice
 technology: [sql-server, python, airflow, terraform]
-tags: [python, sql, terraform, airflow]
+tags: [python, sql, terraform, airflow, leadership]
 aliases: [code review best practices, technical design document, ADR template, architecture decision record, blameless post-mortem, incident response, war room, technical debt management, RACI matrix, matrixed organization, mentoring junior engineers, stakeholder communication, senior engineer skills, staff engineer, data engineering leadership]
 keywords: [code review, design doc, ADR, architecture decision record, post-mortem, RCA, root cause analysis, blameless, incident commander, war room, SEV-1, technical debt, RACI, matrixed organization, mentoring, pair programming, stakeholder management, sprint, technical communication, on-call, escalation, salary, career progression, index provider, data engineering leadership, expand-and-contract, contract, ratchet principle, review pyramid, 5 whys]
 description: "Leadership and collaboration skills for senior data engineers at scale: the code review as a teaching tool (review pyramid, feedback principles), technical design documents, stakeholder expectation management, mentoring progression, navigating matrixed organizations (RACI), Architecture Decision Records (ADRs), managing technical debt (four quadrants, technical debt register, when to say no), and incident response with blameless post-mortems (war room roles, 5-whys RCA, Euro market index incident case study). Includes all templates and frameworks."

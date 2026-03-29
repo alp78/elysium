@@ -1,5 +1,5 @@
 ---
-tags: [security, infrastructure, terraform, airflow, gcp, github-actions]
+tags: [security, infrastructure, terraform, airflow, gcp, github-actions, iam]
 type: reference
 technology: [gcp, terraform, airflow, github-actions]
 status: stable
@@ -119,7 +119,7 @@ Store in GitHub Settings > Secrets and variables > Actions:
 - `SA_EMAIL` — Service account email
 - Never store GCP service account JSON keys as GitHub secrets — use WIF instead
 
-## Local Development
+### Local Development Secret Patterns
 
 For local development, secrets often surface as [[environment-variables]] in the shell. The `direnv` pattern below bridges Secret Manager with shell-level credential handling.
 
@@ -160,7 +160,7 @@ export SQL_CONN_STRING="Server=localhost;Database=analytics_db;User=sa;Password=
 5. Verify connectivity
 6. Disable old Secret Manager version
 
-## Anti-Patterns
+### Secret Management Anti-Patterns
 
 | Anti-Pattern | Risk | Better Approach |
 |-------------|------|----------------|

@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server, python, csharp]
-tags: [python, csharp, sql]
+tags: [python, csharp, sql, sql-server, tsql]
 aliases: [SQL Server date functions, datetime types, DATETIMEOFFSET, DATETIME2, DATEADD, DATEDIFF, EOMONTH, DATETRUNC, AT TIME ZONE, ISO 8601, date arithmetic]
 keywords: [date, datetime, DATETIME2, DATETIMEOFFSET, DATE, SMALLDATETIME, DATEADD, DATEDIFF, DATEDIFF_BIG, EOMONTH, DATETRUNC, DATEFROMPARTS, DATETIME2FROMPARTS, FORMAT, CONVERT, GETDATE, GETUTCDATE, SYSUTCDATETIME, SYSDATETIMEOFFSET, ISO 8601, UTC, timezone, AT TIME ZONE, DST daylight saving, trade_date, naive datetime, aware datetime, dateutil, relativedelta, ZoneInfo, DateTimeOffset, DateOnly, pipeline date patterns]
 description: "Complete reference for date and time handling in SQL Server T-SQL, Python, and C# — covering ISO 8601 formats, data type selection, parsing/formatting, date arithmetic, timezone conversion, and DST pitfalls that break pipelines."
@@ -60,7 +60,7 @@ YYYY-DDD                        2026-069                         Ordinal date (d
 
 ---
 
-## SQL Server Date Data Types
+### SQL Server Date Data Types
 
 ```sql
 -- DATE:             2026-03-10 (date only, 3 bytes, range: 0001-01-01 to 9999-12-31)
@@ -76,7 +76,7 @@ YYYY-DDD                        2026-069                         Ordinal date (d
 
 ---
 
-## Current Date and Time Functions
+### Current Date and Time Functions
 
 ```sql
 -- Current date/time — choose carefully:
@@ -139,7 +139,7 @@ SELECT CONVERT(VARCHAR(10), GETDATE(), 120)             -- 2026-03-10 (fast)
 
 ---
 
-## Extracting Date Components
+### Extracting Date Components
 
 ```sql
 SELECT YEAR(GETDATE())                  -- 2026
@@ -182,7 +182,7 @@ SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-0
 
 ---
 
-## Date Arithmetic
+### Date Arithmetic
 
 ```sql
 -- Add/subtract intervals with DATEADD
@@ -217,7 +217,7 @@ SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the w
 
 ---
 
-## Timezone Conversion with AT TIME ZONE
+### Timezone Conversion with AT TIME ZONE
 
 ```sql
 -- Convert between timezones (SQL Server 2016+)
@@ -533,7 +533,7 @@ Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezone
 
 ---
 
-## Linux Terminal Date Reference
+### Linux Terminal Date Reference
 
 ```bash
 # Current date/time in various formats
@@ -575,7 +575,7 @@ BACKUP_FILE="project_backup_$(date +%Y%m%d_%H%M%S).bak"
 
 ---
 
-## Related
+### Related
 
 - [[sargable-queries]] — date predicates on indexed columns: never wrap in CONVERT/CAST in WHERE clauses
 - [[merge-and-upsert]] — transaction patterns that use date range filtering for incremental loads

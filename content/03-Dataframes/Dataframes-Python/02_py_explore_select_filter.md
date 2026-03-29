@@ -66,8 +66,7 @@ We use three datasets from `../data/`:
 ---
 ## Head / Tail / Sample / Glimpse
 
-### Pandas — <code style="font-size:0.75em">head()</code> and <code style="font-size:0.75em">tail()</code>
-
+### Pandas — head() and tail()
 - **Head**: Return the first N rows.
 
 ```python
@@ -278,8 +277,7 @@ display(ohlcv_pd.tail())
   </tbody>
 </table>
 
-### Pandas — <code style="font-size:0.75em">sample()</code>
-
+### Pandas — sample()
 ```python
 display(Markdown("**Random sample of 5 rows:**"))
 display(ohlcv_pd.sample(5, random_state=42))
@@ -384,8 +382,7 @@ display(ohlcv_pd.sample(5, random_state=42))
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">head()</code> and <code style="font-size:0.75em">tail()</code>
-
+### Polars — head() and tail()
 - **Head**: Return the first N rows.
 
 ```python
@@ -406,8 +403,7 @@ display(ohlcv_pl.tail())
 
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>64828</td><td>&quot;WKL.AS&quot;</td><td>2026-03-06</td><td>69.02</td><td>69.36</td><td>67.82</td><td>68.52</td><td>68.52</td><td>1143729</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66875</td><td>&quot;WKL.AS&quot;</td><td>2026-03-09</td><td>68.78</td><td>69.16</td><td>67.64</td><td>68.64</td><td>68.64</td><td>841503</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66876</td><td>&quot;WKL.AS&quot;</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66877</td><td>&quot;WKL.AS&quot;</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66929</td><td>&quot;WKL.AS&quot;</td><td>2026-03-12</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars — <code style="font-size:0.75em">sample()</code> and <code style="font-size:0.75em">glimpse()</code>
-
+### Polars — sample() and glimpse()
 ```python
 display(Markdown("**Random sample of 5 rows:**"))
 display(ohlcv_pl.sample(5, seed=42))
@@ -438,8 +434,7 @@ display(ohlcv_pl.head())
 ---
 ## Shape / Describe / Info
 
-### Pandas — <code style="font-size:0.75em">shape</code>
-
+### Pandas — shape
 ```python
 for name, df in [("ohlcv", ohlcv_pd), ("dim", dim_pd), ("scores", scores_pd)]:
     print(f"{name:>10s}: {df.shape[0]:>8,} rows x {df.shape[1]:>3} cols")
@@ -449,8 +444,7 @@ for name, df in [("ohlcv", ohlcv_pd), ("dim", dim_pd), ("scores", scores_pd)]:
            dim:      169 rows x  26 cols
         scores:      466 rows x  36 cols
 
-### Pandas — <code style="font-size:0.75em">describe()</code>
-
+### Pandas — describe()
 - **Describe**: Summary statistics: count, mean, std, min, max, quartiles.
 
 ```python
@@ -769,8 +763,7 @@ display(ohlcv_pd.describe(include="all"))
   </tbody>
 </table>
 
-### Pandas — <code style="font-size:0.75em">info()</code>
-
+### Pandas — info()
 ```python
 # display hlcv_pd.info() as dataframe
 
@@ -867,8 +860,7 @@ display(info_df)
   </tbody>
 </table>
 
-### Pandas — <code style="font-size:0.75em">dtypes</code>
-
+### Pandas — dtypes
 ```python
 display(ohlcv_pd.dtypes)
 ```
@@ -932,8 +924,7 @@ display(ohlcv_pd.dtypes)
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">shape</code>
-
+### Polars — shape
 ```python
 for name, df in [("ohlcv", ohlcv_pl), ("dim", dim_pl), ("scores", scores_pl)]:
     print(f"{name:>10s}: {df.shape[0]:>8,} rows x {df.shape[1]:>3} cols")
@@ -943,8 +934,7 @@ for name, df in [("ohlcv", ohlcv_pl), ("dim", dim_pl), ("scores", scores_pl)]:
            dim:      169 rows x  26 cols
         scores:      466 rows x  36 cols
 
-### Polars — <code style="font-size:0.75em">describe()</code>
-
+### Polars — describe()
 - **Describe**: Summary statistics: count, mean, std, min, max, quartiles.
 
 ```python
@@ -956,8 +946,7 @@ display(ohlcv_pl.describe())
 
 <div><small>shape: (9, 13)</small><table><thead><tr><th>statistic</th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;count&quot;</td><td>66355.0</td><td>&quot;66355&quot;</td><td>&quot;66355&quot;</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td></tr><tr><td>&quot;null_count&quot;</td><td>0.0</td><td>&quot;0&quot;</td><td>&quot;0&quot;</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;mean&quot;</td><td>33179.733102</td><td>null</td><td>&quot;2023-08-05 00:56:42.354005&quot;</td><td>197.04052</td><td>199.364124</td><td>194.585782</td><td>197.0349</td><td>190.494909</td><td>5.9421e6</td><td>0.011757</td><td>0.000172</td><td>0.00009</td></tr><tr><td>&quot;std&quot;</td><td>19158.201385</td><td>null</td><td>null</td><td>363.150484</td><td>367.873829</td><td>358.011643</td><td>363.052047</td><td>359.635301</td><td>1.6156e7</td><td>0.283142</td><td>0.022716</td><td>null</td></tr><tr><td>&quot;min&quot;</td><td>1.0</td><td>&quot;ABI.BR&quot;</td><td>&quot;2021-01-04&quot;</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>&quot;25%&quot;</td><td>16590.0</td><td>null</td><td>&quot;2022-04-20&quot;</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991.0</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;50%&quot;</td><td>33178.0</td><td>null</td><td>&quot;2023-08-03&quot;</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1.415896e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;75%&quot;</td><td>49767.0</td><td>null</td><td>&quot;2024-11-19&quot;</td><td>186.0</td><td>188.0</td><td>184.0</td><td>186.1</td><td>175.2609</td><td>4.089463e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>&quot;max&quot;</td><td>66930.0</td><td>&quot;WKL.AS&quot;</td><td>&quot;2026-03-12&quot;</td><td>2926.0</td><td>2957.0</td><td>2813.0</td><td>2839.0</td><td>2802.9382</td><td>3.76391539e8</td><td>22.5</td><td>5.0</td><td>1.0</td></tr></tbody></table></div>
 
-### Polars — <code style="font-size:0.75em">schema</code> and <code style="font-size:0.75em">dtypes</code>
-
+### Polars — schema and dtypes
 ```python
 display(Markdown("**Schema dict:**"))
 for col_name, dtype in ohlcv_pl.schema.items():
@@ -991,8 +980,7 @@ print(ohlcv_pl.dtypes)
 ---
 ## Value Counts / Unique / N-Unique
 
-### Pandas — <code style="font-size:0.75em">value_counts()</code>
-
+### Pandas — value_counts()
 - **Head**: Return the first N rows.
 - **Value Counts**: Count occurrences of each unique value.
 
@@ -1058,8 +1046,7 @@ display(ohlcv_pd["symbol"].value_counts().head(10))
   </tbody>
 </table>
 
-### Pandas — <code style="font-size:0.75em">nunique()</code> and <code style="font-size:0.75em">unique()</code>
-
+### Pandas — nunique() and unique()
 ```python
 display(Markdown("**Number of unique values per column:**"))
 display(ohlcv_pd.nunique())
@@ -1136,8 +1123,7 @@ print(ohlcv_pd["symbol"].unique()[:10])
     ['ABI.BR' 'AD.AS' 'ADS.DE' 'ADYEN.AS' 'AI.PA' 'AIR.PA' 'ALV.DE' 'ARGX.BR'
      'ASML.AS' 'BAS.DE']
 
-### Polars — <code style="font-size:0.75em">value_counts()</code>
-
+### Polars — value_counts()
 - **Sort**: Reorder rows by column values.
 - **Head**: Return the first N rows.
 - **Value Counts**: Count occurrences of each unique value.
@@ -1156,8 +1142,7 @@ display(
 
 <div><small>shape: (10, 2)</small><table><thead><tr><th>symbol</th><th>count</th></tr><tr><td>str</td><td>u32</td></tr></thead><tbody><tr><td>&quot;SAN.PA&quot;</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1331</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>1331</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>1331</td></tr><tr><td>&quot;BN.PA&quot;</td><td>1331</td></tr><tr><td>&quot;DSY.PA&quot;</td><td>1331</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>1331</td></tr><tr><td>&quot;TTE.PA&quot;</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>1331</td></tr><tr><td>&quot;CS.PA&quot;</td><td>1331</td></tr></tbody></table></div>
 
-### Polars — <code style="font-size:0.75em">n_unique()</code> and <code style="font-size:0.75em">unique()</code>
-
+### Polars — n_unique() and unique()
 - **Select**: Choose specific columns, optionally transforming them.
 - **N Unique**: Count the number of distinct values.
 
@@ -1184,8 +1169,7 @@ print(ohlcv_pl.get_column("symbol").unique().sort().head(10).to_list())
 ---
 ## Null / Missing Value Inspection
 
-### Pandas — <code style="font-size:0.75em">isna()</code> / <code style="font-size:0.75em">isnull()</code>
-
+### Pandas — isna() / isnull()
 ```python
 display(Markdown("**Null counts per column:**"))
 display(scores_pd.isnull().sum())
@@ -1641,8 +1625,7 @@ if len(rows_with_nulls) > 0:
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">is_null()</code> / <code style="font-size:0.75em">null_count()</code>
-
+### Polars — is_null() / null_count()
 - **Null Count**: Count missing values per column.
 
 ```python
@@ -4431,8 +4414,7 @@ display(ohlcv_pd.close.head())
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">select()</code> and <code style="font-size:0.75em">pl.col()</code>
-
+### Polars — select() and pl.col()
 ```python
 display(ohlcv_pl.select("symbol", "date", "close").head())
 ```
@@ -4448,8 +4430,7 @@ display(ohlcv_pl.select(pl.col("symbol"), pl.col("close")).head())
 ---
 ## Multiple Column Selection
 
-### Pandas — list, <code style="font-size:0.75em">loc</code>
-
+### Pandas — list, loc
 ```python
 display(ohlcv_pd[["symbol", "date", "close"]].head())
 ```
@@ -4603,7 +4584,7 @@ display(ohlcv_pd.loc[:, "open":"close"].head())
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">pl.col()</code> with a list
+### Polars — pl.col() with a list
 
 ```python
 display(ohlcv_pl.select(pl.col(["symbol", "open", "high", "low", "close"])).head())
@@ -4614,8 +4595,7 @@ display(ohlcv_pl.select(pl.col(["symbol", "open", "high", "low", "close"])).head
 ---
 ## Column Selection by Position
 
-### Pandas — <code style="font-size:0.75em">iloc</code>
-
+### Pandas — iloc
 ```python
 display(Markdown("**First three columns by position:**"))
 display(ohlcv_pd.iloc[:, :3].head())
@@ -4716,7 +4696,7 @@ display(ohlcv_pd.iloc[:, [0, 2, 4]].head())
   </tbody>
 </table>
 
-### Polars — index into <code style="font-size:0.75em">columns</code> list
+### Polars — index into columns list
 
 ```python
 # Polars has no positional column indexing — slice the columns list
@@ -4741,8 +4721,7 @@ display(ohlcv_pl.select([ohlcv_pl.columns[i] for i in [0, 2, 4]]).head())
 Pandas selects all columns by default; exclusion uses `drop()` (covered later).
 Polars provides `pl.all()` and `pl.exclude()` as expression-level selectors.
 
-### Polars — <code style="font-size:0.75em">pl.all()</code> and <code style="font-size:0.75em">pl.exclude()</code>
-
+### Polars — pl.all() and pl.exclude()
 ```python
 display(ohlcv_pl.select(pl.all()).head(3))
 ```
@@ -4770,8 +4749,7 @@ display(ohlcv_pl.select(pl.exclude(["volume", "symbol"])).head())
 ---
 ## Column Selection by Dtype
 
-### Pandas — <code style="font-size:0.75em">select_dtypes()</code>
-
+### Pandas — select_dtypes()
 ```python
 display(Markdown("**Numeric columns only:**"))
 display(ohlcv_pd.select_dtypes(include="number").head())
@@ -4902,8 +4880,7 @@ display(ohlcv_pd.select_dtypes(include="object").head())
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">polars.selectors</code>
-
+### Polars — polars.selectors
 ```python
 display(ohlcv_pl.select(cs.numeric()).head())
 ```
@@ -4943,8 +4920,7 @@ display(ohlcv_pl.select(cs.by_dtype(pl.Int64)).head())
 ---
 ## Column Selection by Pattern / Regex
 
-### Pandas — <code style="font-size:0.75em">filter(regex=...)</code>
-
+### Pandas — filter(regex=...)
 ```python
 display(Markdown("**Columns matching regex (contains 'o'):**"))
 display(ohlcv_pd.filter(regex="o").head())
@@ -5131,8 +5107,7 @@ display(ohlcv_pd.filter(regex="e").head())
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">pl.col("^regex$")</code> and <code style="font-size:0.75em">cs.by_name()</code>
-
+### Polars — pl.col("^regex$") and cs.by_name()
 ```python
 display(ohlcv_pl.select(cs.by_name("open", "close")).head())
 ```
@@ -5192,8 +5167,7 @@ display(ohlcv_pl.select(~cs.numeric()).head())
 ---
 ## Renaming Columns
 
-### Pandas — <code style="font-size:0.75em">rename()</code>
-
+### Pandas — rename()
 - **Head**: Return the first N rows.
 - **Rename**: Rename columns.
 
@@ -5270,8 +5244,7 @@ display(
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">rename()</code>
-
+### Polars — rename()
 - **Head**: Return the first N rows.
 - **Rename**: Rename columns.
 
@@ -5283,8 +5256,7 @@ display(
 
 <div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>Open</th><th>high</th><th>low</th><th>Close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars — <code style="font-size:0.75em">alias()</code> inside <code style="font-size:0.75em">select()</code>
-
+### Polars — alias() inside select()
 - **Select**: Choose specific columns, optionally transforming them.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **Head**: Return the first N rows.
@@ -5303,8 +5275,7 @@ display(
 
 <div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>closing_price</th><th>vol</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
-### Polars — <code style="font-size:0.75em">name.prefix()</code> / <code style="font-size:0.75em">name.suffix()</code>
-
+### Polars — name.prefix() / name.suffix()
 - **Select**: Choose specific columns, optionally transforming them.
 - **Head**: Return the first N rows.
 - **Selector: Numeric**: Select all numeric columns (Polars selectors module).
@@ -5390,7 +5361,7 @@ display(ohlcv_pd[new_order].head(3))
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">select()</code> reorders
+### Polars — select() reorders
 
 - **Select**: Choose specific columns, optionally transforming them.
 - **Head**: Return the first N rows.
@@ -5419,8 +5390,7 @@ display(ohlcv_pl.select(front + rest).head(3))
 ---
 ## Dropping Columns
 
-### Pandas — <code style="font-size:0.75em">drop()</code>
-
+### Pandas — drop()
 - **Head**: Return the first N rows.
 
 ```python
@@ -5556,8 +5526,7 @@ display(ohlcv_pd.drop(columns=["volume", "open"]).head(3))
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">drop()</code>
-
+### Polars — drop()
 - **Head**: Return the first N rows.
 
 ```python
@@ -6040,7 +6009,7 @@ ohlcv_pd[ohlcv_pd["close"] > 50].head()
   </tbody>
 </table>
 
-### Pandas — <code style="font-size:0.75em">.loc</code> with a boolean mask
+### Pandas — .loc with a boolean mask
 
 - **Head**: Return the first N rows.
 
@@ -6145,8 +6114,7 @@ ohlcv_pd.loc[ohlcv_pd["close"] > 50].head()
   </tbody>
 </table>
 
-### Polars — <code style="font-size:0.75em">filter</code>
-
+### Polars — filter
 - **Filter**: Keep only rows matching a condition.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **Head**: Return the first N rows.
@@ -6158,7 +6126,7 @@ ohlcv_pl.filter(pl.col("close") > 50).head()
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## Multiple Conditions (<code style="font-size:0.75em">&</code>, <code style="font-size:0.75em">|</code>, <code style="font-size:0.75em">~</code>)
+## Multiple Conditions (&, |, ~)
 
 ### Pandas — AND / OR / NOT
 
@@ -6504,7 +6472,7 @@ ohlcv_pl.filter(
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">query()</code> (Pandas Only)
+## query() (Pandas Only)
 
 ```python
 ohlcv_pd.query("close > 50 and volume > 1_000_000").head()
@@ -6814,8 +6782,7 @@ ohlcv_pd.query("symbol in @tickers").head()
 </table>
 
 ---
-## <code style="font-size:0.75em">isin</code> / <code style="font-size:0.75em">is_in</code>
-
+## isin / is_in
 ### Pandas
 
 - **Head**: Return the first N rows.
@@ -6936,8 +6903,7 @@ ohlcv_pl.filter(pl.col("symbol").is_in(target_tickers)).head()
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>52834</td><td>&quot;BAS.DE&quot;</td><td>2021-01-04</td><td>65.48</td><td>66.07</td><td>64.43</td><td>64.89</td><td>47.4862</td><td>2741508</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>52835</td><td>&quot;BAS.DE&quot;</td><td>2021-01-05</td><td>64.3</td><td>65.47</td><td>63.26</td><td>64.4</td><td>47.1277</td><td>2770337</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>52836</td><td>&quot;BAS.DE&quot;</td><td>2021-01-06</td><td>65.24</td><td>67.55</td><td>65.14</td><td>67.37</td><td>49.3011</td><td>5187251</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>52837</td><td>&quot;BAS.DE&quot;</td><td>2021-01-07</td><td>67.93</td><td>68.53</td><td>67.13</td><td>68.41</td><td>50.0622</td><td>3655366</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>52838</td><td>&quot;BAS.DE&quot;</td><td>2021-01-08</td><td>69.0</td><td>69.24</td><td>68.01</td><td>68.58</td><td>50.1866</td><td>3035733</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">between</code> / <code style="font-size:0.75em">is_between</code>
-
+## between / is_between
 ### Pandas
 
 - **Head**: Return the first N rows.
@@ -7587,11 +7553,11 @@ scores_pl.filter(pl.col("ev_ebitda_zscore").is_not_null()).head()
 <div><small>shape: (5, 36)</small><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>date</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>i64</td><td>f64</td><td>i64</td><td>datetime[ns]</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>168</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;DTE.DE&quot;</td><td>2026-03-04</td><td>&quot;Communication Services&quot;</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>24</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>8</td><td>0.121212</td><td>1.33333</td><td>false</td><td>0.617835</td><td>10</td><td>0.515005</td><td>2</td><td>2026-03-04 22:40:25.489180</td><td>30.838</td><td>28.554556</td><td>164294311936</td><td>0.032159</td><td>&quot;DEUTSCHE TELEKOM AG&quot;</td><td>&quot;Germany&quot;</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td><td>&quot;EUR&quot;</td></tr><tr><td>174</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;IFX.DE&quot;</td><td>2026-03-04</td><td>&quot;Technology&quot;</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>22</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>9</td><td>0.126408</td><td>1.375</td><td>false</td><td>0.579187</td><td>11</td><td>0.512235</td><td>3</td><td>2026-03-04 22:40:25.489180</td><td>43.480333</td><td>38.855556</td><td>57222533120</td><td>0.011201</td><td>&quot;INFINEON TECHNOLOGIES AG&quot;</td><td>&quot;Germany&quot;</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td><td>&quot;EUR&quot;</td></tr><tr><td>172</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;ENR.DE&quot;</td><td>2026-03-04</td><td>&quot;Industrials&quot;</td><td>-0.902738</td><td>-0.743338</td><td>-1.693212</td><td>-1.326075</td><td>-1.166341</td><td>46</td><td>1.645455</td><td>1.137007</td><td>1.474095</td><td>0.05185</td><td>2.541889</td><td>1</td><td>0.075269</td><td>1.8</td><td>false</td><td>-0.123264</td><td>29</td><td>0.417428</td><td>4</td><td>2026-03-04 22:40:25.489180</td><td>155.675</td><td>129.122</td><td>139207262208</td><td>0.027249</td><td>&quot;Siemens Energy AG&quot;</td><td>&quot;Germany&quot;</td><td>162.75</td><td>0.047297</td><td>-0.039256</td><td>0.351744</td><td>&quot;EUR&quot;</td></tr><tr><td>149</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;ABI.BR&quot;</td><td>2026-03-04</td><td>&quot;Consumer Defensive&quot;</td><td>0.474084</td><td>0.844075</td><td>0.552739</td><td>-0.975005</td><td>0.223973</td><td>25</td><td>-0.029791</td><td>1.058542</td><td>1.142783</td><td>0.063063</td><td>0.651891</td><td>10</td><td>0.186198</td><td>1.69231</td><td>false</td><td>0.344755</td><td>17</td><td>0.406873</td><td>5</td><td>2026-03-04 22:40:25.489180</td><td>64.342</td><td>57.869333</td><td>125566156800</td><td>0.024579</td><td>&quot;AB INBEV&quot;</td><td>&quot;Belgium&quot;</td><td>64.48</td><td>-0.017073</td><td>-0.040762</td><td>0.174499</td><td>&quot;EUR&quot;</td></tr><tr><td>196</td><td>&quot;euro_stoxx_50&quot;</td><td>&quot;VOW.DE&quot;</td><td>2026-03-04</td><td>&quot;Consumer Cyclical&quot;</td><td>1.166221</td><td>0.940273</td><td>0.37983</td><td>1.528891</td><td>1.003804</td><td>2</td><td>-0.292748</td><td>0.929392</td><td>0.969628</td><td>0.180805</td><td>-0.411969</td><td>37</td><td>0.297071</td><td>null</td><td>false</td><td>0.555357</td><td>12</td><td>0.382397</td><td>6</td><td>2026-03-04 22:40:25.489180</td><td>102.286667</td><td>101.225556</td><td>47923826688</td><td>0.009381</td><td>&quot;VOLKSWAGEN AG&quot;</td><td>&quot;Germany&quot;</td><td>95.6</td><td>0.013786</td><td>-0.048756</td><td>-0.09039</td><td>&quot;EUR&quot;</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">where</code> / <code style="font-size:0.75em">mask</code> (Pandas) vs <code style="font-size:0.75em">when</code> / <code style="font-size:0.75em">then</code> / <code style="font-size:0.75em">otherwise</code> (Polars)
+## where / mask (Pandas) vs when / then / otherwise (Polars)
 
 These do not strictly *filter* rows — they replace values conditionally while keeping all rows.
 
-### Pandas <code style="font-size:0.75em">where</code> — keep values where True, replace with NaN where False
+### Pandas where — keep values where True, replace with NaN where False
 
 - **Head**: Return the first N rows.
 
@@ -7651,7 +7617,7 @@ ohlcv_pd["close"].where(ohlcv_pd["volume"] > 1_000_000).head(10)
   </tbody>
 </table>
 
-### Pandas <code style="font-size:0.75em">mask</code> — opposite of where (replace where True)
+### Pandas mask — opposite of where (replace where True)
 
 - **Head**: Return the first N rows.
 
@@ -7711,8 +7677,7 @@ ohlcv_pd["close"].mask(ohlcv_pd["volume"] > 5_000_000).head(10)
   </tbody>
 </table>
 
-### Polars <code style="font-size:0.75em">when</code> / <code style="font-size:0.75em">then</code> / <code style="font-size:0.75em">otherwise</code>
-
+### Polars when / then / otherwise
 - **Select**: Choose specific columns, optionally transforming them.
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
@@ -7746,8 +7711,7 @@ ohlcv_pl.with_columns(
 ---
 ## String Accessor Filtering
 
-### Pandas String Accessor Filtering — <code style="font-size:0.75em">.str</code>
-
+### Pandas String Accessor Filtering — .str
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **Head**: Return the first N rows.
 
@@ -7955,8 +7919,7 @@ ohlcv_pd[ohlcv_pd["symbol"].str.contains("DE")].head()
   </tbody>
 </table>
 
-### Polars String Accessor Filtering — <code style="font-size:0.75em">.str</code>
-
+### Polars String Accessor Filtering — .str
 - **Filter**: Keep only rows matching a condition.
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
@@ -7977,8 +7940,7 @@ ohlcv_pl.filter(pl.col("symbol").str.contains("DE")).head()
 ---
 ## Datetime Accessor Filtering
 
-### Pandas Datetime Accessor Filtering — <code style="font-size:0.75em">.dt</code>
-
+### Pandas Datetime Accessor Filtering — .dt
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
 - **Head**: Return the first N rows.
@@ -8292,8 +8254,7 @@ ohlcv_pd[ohlcv_pd["date"].dt.dayofweek == 0].head()
   </tbody>
 </table>
 
-### Polars Datetime Accessor Filtering — <code style="font-size:0.75em">.dt</code>
-
+### Polars Datetime Accessor Filtering — .dt
 - **Filter**: Keep only rows matching a condition.
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
@@ -8318,8 +8279,7 @@ ohlcv_pl.filter(pl.col("date").dt.weekday() == 1).head()  # Monday=1 in Polars
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21165</td><td>&quot;ABI.BR&quot;</td><td>2021-01-11</td><td>57.73</td><td>57.81</td><td>56.39</td><td>56.61</td><td>53.0142</td><td>1518079</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21170</td><td>&quot;ABI.BR&quot;</td><td>2021-01-18</td><td>56.25</td><td>57.3</td><td>56.2</td><td>57.08</td><td>53.4544</td><td>730298</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21175</td><td>&quot;ABI.BR&quot;</td><td>2021-01-25</td><td>54.77</td><td>54.8</td><td>52.89</td><td>53.17</td><td>49.7927</td><td>1974547</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21180</td><td>&quot;ABI.BR&quot;</td><td>2021-02-01</td><td>52.32</td><td>53.3</td><td>52.15</td><td>52.58</td><td>49.2402</td><td>1543605</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">head</code>, <code style="font-size:0.75em">tail</code>, <code style="font-size:0.75em">slice</code>, <code style="font-size:0.75em">sample</code>
-
+## head, tail, slice, sample
 ```python
 # Pandas
 print("head(3):\n", ohlcv_pd.head(3), "\n")
@@ -8578,8 +8538,7 @@ ohlcv_pl.sample(5, seed=42)
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>11529</td><td>&quot;SAN.MC&quot;</td><td>2024-09-18</td><td>4.511</td><td>4.5455</td><td>4.5065</td><td>4.5085</td><td>4.2785</td><td>16487238</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>35604</td><td>&quot;CS.PA&quot;</td><td>2025-10-14</td><td>39.34</td><td>40.27</td><td>39.25</td><td>40.18</td><td>40.18</td><td>3511125</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>63666</td><td>&quot;WKL.AS&quot;</td><td>2022-01-05</td><td>102.2</td><td>102.65</td><td>101.25</td><td>101.8</td><td>95.254</td><td>230509</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>33136</td><td>&quot;PRX.AS&quot;</td><td>2021-05-03</td><td>41.3654</td><td>41.737</td><td>41.0718</td><td>41.3746</td><td>40.8581</td><td>2177525</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>19417</td><td>&quot;SAF.PA&quot;</td><td>2024-07-12</td><td>204.2</td><td>204.8</td><td>201.3</td><td>204.8</td><td>202.5157</td><td>496739</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">unique</code> / <code style="font-size:0.75em">drop_duplicates</code> / <code style="font-size:0.75em">drop_nulls</code> / <code style="font-size:0.75em">dropna</code>
-
+## unique / drop_duplicates / drop_nulls / dropna
 ```python
 # Pandas — unique tickers
 ohlcv_pd["symbol"].drop_duplicates().head(10)
@@ -9359,7 +9318,7 @@ ohlcv_pl.join(dim_pl.select("symbol").unique(), on="symbol", how="semi").head()
 <div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## Filtering <code style="font-size:0.75em">scores_daily</code> — Practical Examples
+## Filtering scores_daily — Practical Examples
 
 ```python
 scores_pd.head(3)

@@ -52,7 +52,7 @@ snapshots/
 
 ---
 
-## Strategy: `timestamp`
+### Snapshot Strategy: timestamp
 
 Use `timestamp` when the source table has a reliable `updated_at` column maintained by the upstream system.
 
@@ -182,7 +182,7 @@ from {{ source('esg_providers_raw', 'raw_esg_ratings') }}
 
 ---
 
-## Full Example: `snap_constituents` — Index Membership and Weights
+### Full Example: snap_constituents — Index Membership and Weights
 
 This is a complete, production-ready snapshot tracking which securities are in each index, their weights, and key descriptive attributes. Entries appear and disappear as indices are rebalanced.
 
@@ -567,7 +567,7 @@ Unlike models, snapshot tables have no native versioning in dbt. If the business
 
 ---
 
-## Running Snapshots
+### Running dbt Snapshots
 
 ```bash
 # Run all snapshots

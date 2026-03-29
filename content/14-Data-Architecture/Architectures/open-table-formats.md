@@ -2,7 +2,7 @@
 type: concept
 category: lakehouse-architecture
 technology: [iceberg, delta-lake, apache-hudi, spark, bigquery, gcp]
-tags: [architecture, bigquery, gcp]
+tags: [data-architecture, architecture, lakehouse, bigquery, gcp]
 aliases: [Apache Iceberg, Delta Lake, Apache Hudi, open table format, lakehouse, data lakehouse, BigLake, ACID transactions on data lake, table format comparison]
 keywords: [iceberg, delta lake, hudi, open table format, lakehouse, parquet, ACID, time travel, snapshot isolation, schema evolution, partition evolution, hidden partitioning, merge-on-read, copy-on-write, compaction, medallion architecture, bronze silver gold, GDPR deletion, right to be forgotten, BigLake Metastore, Nessie catalog, manifest file, snapshot, BigQuery Iceberg, GCS, S3, PII registry, data privacy, Databricks, Spark]
 description: "Open table formats (Apache Iceberg, Delta Lake, Apache Hudi) add a metadata layer on top of Parquet files on cloud storage to provide ACID transactions, snapshot isolation, time travel, schema evolution, and partition evolution. Covers the metadata tree, Iceberg vs Delta Lake vs Hudi comparison, BigQuery/GCP integration, table maintenance, medallion architecture mapping, and GDPR deletion patterns."
@@ -27,7 +27,7 @@ The data lakehouse combines the low-cost storage of a data lake with the transac
 
 ---
 
-## Why Open Table Formats Exist
+### Why Open Table Formats Exist
 
 Traditional Parquet files on cloud storage (GCS, S3) are just files — they have no concept of transactions, schema enforcement, or time travel. If your pipeline crashes mid-write, you get corrupt or partial data. If you need to query "what did this table look like yesterday," you cannot.
 
@@ -186,7 +186,7 @@ ALTER TABLE data-pipeline.silver.daily_ohlcv
 
 ---
 
-## Iceberg vs Delta Lake vs Hudi
+### Iceberg vs Delta Lake vs Hudi Comparison
 
 | Feature | Apache Iceberg | Delta Lake | Apache Hudi |
 |---|---|---|---|
@@ -418,7 +418,7 @@ CREATE TABLE data_catalog.pii_registry (
 
 ---
 
-## Gotchas & Edge Cases
+### Open Table Format Gotchas and Edge Cases
 
 - **Hidden partitioning requires Iceberg-aware query engines:** DuckDB with the Iceberg extension, BigQuery with BigLake, and Spark with the Iceberg Spark extension all support hidden partitioning. Generic Parquet readers do not — they will read all files.
 - **Compaction frequency:** How often to compact depends on write frequency. For streaming writes (thousands of files/day), compact daily. For batch pipelines (1-10 files/day), compact weekly.

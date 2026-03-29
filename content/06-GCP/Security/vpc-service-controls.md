@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, security, vpc]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, security, iam]
 aliases: [VPC Service Controls, VPC-SC, service perimeter, access context manager, data exfiltration prevention, GCP data perimeter]
 keywords: [VPC service controls, VPC-SC, access context manager, service perimeter, access policy, ingress policy, egress policy, access level, data exfiltration, perimeter, restricted services, violation reason, RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER, NO_MATCHING_ACCESS_LEVEL, financial data security, Terraform VPC-SC, gcloud access-context-manager]
 description: "How VPC Service Controls create a data perimeter that prevents exfiltration of BigQuery and GCS data — even for users with IAM admin permissions — and how to configure, audit, and debug VPC-SC violations."
@@ -16,7 +16,7 @@ status: complete
 
 IAM controls *who* can access resources. VPC Service Controls (VPC-SC) control *where* data can flow — even if someone has valid IAM permissions. For a data platform project, this is the difference between "an engineer can query BigQuery" and "an engineer can query BigQuery *but cannot copy the results to their personal GCP project*." VPC-SC enforces this at the network level, regardless of IAM role. Even `roles/owner` cannot exfiltrate data past a properly configured perimeter.
 
-## The Exfiltration Threat Model
+### The Data Exfiltration Threat Model
 
 ```
 Without VPC-SC:
@@ -63,7 +63,7 @@ gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
 # - Only engineers matching the access level can reach services from outside
 ```
 
-## Terraform Pattern for VPC-SC (Production)
+### Terraform Pattern for VPC-SC in Production
 
 ```hcl
 # vpc_sc.tf — define the security perimeter
@@ -139,7 +139,7 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 }
 ```
 
-## What VPC-SC Blocks vs Allows
+### What VPC-SC Blocks vs Allows
 
 | Scenario | Without VPC-SC | With VPC-SC |
 |---|---|---|
@@ -150,7 +150,7 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 | Dashboard reads from Cloud Run | Succeeds | Succeeds (same project, inside perimeter) |
 | Partner receives daily data export | N/A | Succeeds (explicit egress policy for partner project) |
 
-## Debugging VPC-SC Denials
+### Debugging VPC-SC Denial Errors
 
 VPC-SC denials appear in [[cloud-logging|Cloud Audit Logs]] with a specific violation type:
 
@@ -170,7 +170,7 @@ gcloud logging read 'protoPayload.status.code=7 AND
 > [!warning] VPC-SC Is Non-Negotiable for Sensitive Data
 > On a data platform, the processed and enriched data is among the most commercially sensitive assets in the system. A single leak of data before public release could have significant consequences. VPC-SC ensures that even an insider with admin-level IAM permissions cannot exfiltrate this data to an external project or bucket. Implement it from day one — retrofitting a perimeter onto existing services is significantly harder than designing with it.
 
-## Ingress and Egress Policies
+### VPC-SC Ingress and Egress Policies
 
 - **Ingress policies** define what can enter the perimeter from outside. Example: your on-premises Airflow connecting to BigQuery must be declared as an ingress rule.
 - **Egress policies** define what data can leave the perimeter. Example: a partner data delivery that writes to an external GCS bucket must be an explicit egress rule.

@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [performance, sql]
+tags: [performance, sql, sql-server, tsql]
 aliases: [SQL Server audit, performance audit, health check, DBA audit, instance audit]
 keywords: [performance audit, health check, wait stats, PLE, page life expectancy, buffer cache hit ratio, IO latency, missing indexes, unused indexes, blocking, deadlocks, stale statistics, plan cache, ad hoc plans, implicit conversion, TempDB, auto_shrink, MAXDOP, max server memory, cost threshold, RCSI, log reuse wait, sysadmin members, guest access, DMV, post-pipeline health check]
 description: "Step-by-step SQL Server performance audit playbook covering 11 phases: instance overview, memory pressure, wait statistics, IO performance, expensive queries, index health, TempDB, blocking and deadlocks, statistics and plan quality, database sizes, and security. Includes all diagnostic queries and a post-pipeline health check script."
@@ -946,7 +946,7 @@ Invoke-Sqlcmd -ServerInstance "localhost,1433" -Username "sa" -Password "EsgDev2
 
 ---
 
-## Related
+### Related
 
 - [[wait-stats-analysis]] — full wait type catalog and interpretation
 - [[execution-plans]] — reading plans to diagnose the queries found in Phase 5

@@ -2,7 +2,7 @@
 type: index
 category: data-architecture
 technology: []
-tags: [architecture]
+tags: [data-architecture, architecture]
 aliases: [Data Architecture Index, Architecture Index, Data Engineering Architecture]
 keywords: [data architecture, data warehouse, data lake, lakehouse, data mesh, streaming, medallion, star schema, dimensional modeling, Kimball, Inmon, Lambda, Kappa, event-driven, CDC, idempotent, dbt, delta lake, iceberg, pipeline patterns, ETL, ELT]
 description: "Index for the Data Architecture section — modern data architectures (warehouse, lake, lakehouse, mesh, streaming), pipeline design patterns (medallion, idempotency, dbt), and data format standards."

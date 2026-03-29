@@ -17,7 +17,7 @@ status: stable
 
 # Docker Cheat Sheet
 
-## CLI Anatomy
+### CLI Anatomy
 
 ```
 docker [GLOBAL_OPTIONS] COMMAND [OPTIONS] [ARGS]
@@ -886,7 +886,7 @@ docker inspect CONTAINER --format '{{json .State}}' | jq
 
 ---
 
-## Registry Operations
+### Registry Operations
 
 ```bash
 docker login                               # Login to Docker Hub

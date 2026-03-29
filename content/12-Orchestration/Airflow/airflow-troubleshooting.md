@@ -1178,7 +1178,7 @@ maintenance()
 
 ---
 
-## Quick Reference: Task State Machine
+### Airflow Task State Machine Reference
 
 Understanding task states is essential for diagnosing stuck or unexpected behavior.
 

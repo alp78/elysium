@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, compute-engine]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, compute-engine]
 aliases: [Compute Engine VM lifecycle, VM start stop, VM resize, VM machine types, GCE lifecycle]
 keywords: [compute engine, VM, virtual machine, start, stop, reset, resize, machine type, e2, n2, c2, m2, right-sizing, scheduling, resource policy, instance schedule, cost optimization, RUNNING, STOPPED, TERMINATED]
 description: "How to manage Compute Engine VM lifecycle operations — start, stop, reset, resize machine types, schedule start/stop windows, and right-size VMs using monitoring data."
@@ -16,7 +16,7 @@ status: complete
 
 Compute Engine VMs host self-managed services — SQL Server, Airflow, monitoring agents, and any workload that doesn't fit the serverless model. Unlike [[cloud-run-jobs-vs-services|Cloud Run]] (which is ephemeral), VMs are stateful and persistent, making them your responsibility to maintain, secure, and right-size. Understanding the full lifecycle — including scheduled start/stop and cost-aware right-sizing — is essential for operating VMs economically.
 
-## Listing and Describing VMs
+### Listing and Describing Compute Engine VMs
 
 ```bash
 # List all VMs (quick inventory)
@@ -31,7 +31,7 @@ gcloud compute instances describe data-pipeline-sql --zone=europe-west1-b
 # Use --format to extract specific fields
 ```
 
-## Start, Stop, and Reset
+### VM Start, Stop, and Reset Operations
 
 ```bash
 # Start / stop / reset
@@ -46,7 +46,7 @@ gcloud compute instances reset data-pipeline-sql --zone=europe-west1-b
 > [!warning] Disk Charges Continue When Stopped
 > Stopping a VM eliminates compute charges but disk storage charges continue. For VMs you need to stop long-term, consider snapshotting the disk and deleting the VM entirely — then recreating from the snapshot when needed.
 
-## Resizing a VM (Change Machine Type)
+### Resizing a VM by Changing Machine Type
 
 ```bash
 # Resize a VM (change CPU/memory)
@@ -62,7 +62,7 @@ gcloud compute instances start data-pipeline-sql --zone=europe-west1-b
 #   Custom:    --custom-cpu=4 --custom-memory=16GB (exact sizing)
 ```
 
-## Right-Sizing VMs with Monitoring Data
+### Right-Sizing VMs with Cloud Monitoring Data
 
 The most common waste in cloud data engineering is over-provisioned VMs. Right-sizing requires looking at actual utilization, not guesses.
 
@@ -80,7 +80,7 @@ gcloud monitoring time-series list \
 > - If `free -h` on the VM shows less than 60% memory used at peak, try the next smaller machine type. Monitor for a week after downsizing.
 > - An e2-medium running 24/7 costs ~$25/month. An e2-standard-4 costs ~$97/month.
 
-## Scheduled Start/Stop (Save 64% on Business-Hours Workloads)
+### Scheduled Start/Stop to Save 64% on Business-Hours Workloads
 
 If a VM only needs to run during business hours (12 hours/day, 5 days/week), scheduling start/stop saves approximately 64% of compute costs:
 
@@ -93,7 +93,7 @@ gcloud compute instances add-resource-policies data-pipeline-sql --zone=europe-w
   --resource-policies=data-pipeline-schedule
 ```
 
-## Machine Type Selection Guide
+### Compute Engine Machine Type Selection Guide
 
 | Family | Best for | Example |
 |---|---|---|

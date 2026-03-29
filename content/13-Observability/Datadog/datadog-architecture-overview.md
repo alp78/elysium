@@ -2,7 +2,7 @@
 type: concept
 category: observability
 technology: [datadog, gcp, sql-server, airflow, cloud-run]
-tags: [observability, sql, airflow, datadog, gcp]
+tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Datadog Overview, the data pipeline project Observability, Datadog Architecture]
 keywords: [datadog, observability, monitoring, metrics, logs, traces, APM, three pillars, data-pipeline, EU region, datadoghq.eu, agent, GCP integration, Cloud Run, infrastructure, DogStatsD]
 description: "Architecture overview of Datadog monitoring for the data platform — two agents (Airflow VM + SQL VM) plus GCP Integration cover metrics, logs, and traces across the full stack."
@@ -26,7 +26,7 @@ Datadog monitoring for the data platform uses two agents and one GCP Integration
 
 ---
 
-## Infrastructure Topology
+### Datadog Infrastructure Topology
 
 ```
 GCE VM: data-pipeline-airflow (e2-medium, COS)
@@ -63,7 +63,7 @@ Cloud Run Job: data-pipeline-pipeline
 
 ---
 
-## What Gets Monitored
+### What Gets Monitored by Datadog
 
 | Source | Method | Data |
 |--------|--------|------|
@@ -78,7 +78,7 @@ Cloud Run Job: data-pipeline-pipeline
 
 ---
 
-## Three Pillars
+### Three Pillars of Observability in Datadog
 
 | Pillar | What | How it gets to Datadog |
 |--------|------|------------------------|
@@ -177,7 +177,7 @@ After setup, go to **Infrastructure > Host Map** in Datadog. You should see GCE 
 
 ---
 
-## Disabling Datadog
+### Disabling Datadog Agents and Integration
 
 When the trial ends or you want to remove Datadog:
 

@@ -2,7 +2,7 @@
 type: reference
 category: observability
 technology: [datadog, gcp]
-tags: [observability, performance, cost, datadog, gcp]
+tags: [monitoring, observability, performance, cost, datadog, gcp]
 aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost]
 keywords: [datadog cost, datadog pricing, host cost, trial, infrastructure monitoring, APM pro, logs pricing, EU region, datadoghq.eu, 14-day trial, per host, dd-agent free, ram usage 350mb, disable datadog, dd_api_key empty]
 description: "Datadog pricing breakdown for the data platform — agent RAM overhead, trial vs paid costs, and how to cleanly disable all Datadog components by setting dd_api_key to empty."
@@ -22,7 +22,7 @@ The the data pipeline project Datadog setup runs two agents (Airflow VM and SQL 
 
 ---
 
-## Cost Breakdown
+### Datadog Cost Breakdown per Component
 
 | Component | Monthly Cost |
 |-----------|-------------|
@@ -35,7 +35,7 @@ The agent itself is free — you pay for Datadog's SaaS based on host count and 
 
 ---
 
-## What Drives Cost
+### What Drives Datadog Cost
 
 | Feature | Cost Driver |
 |---------|-------------|
@@ -48,7 +48,7 @@ With 2 VMs (Airflow + SQL), expect 2 billable hosts. The Cloud Run job does not 
 
 ---
 
-## Agent Memory Overhead
+### Datadog Agent Memory Overhead
 
 The agents are lightweight additions to existing VMs:
 
@@ -61,7 +61,7 @@ See [[datadog-agent-airflow-vm]] for the full memory budget on the Airflow VM (t
 
 ---
 
-## Disabling Datadog (Removing All Costs)
+### Disabling Datadog to Remove All Costs
 
 Everything is conditional on `var.dd_api_key != ""`. To disable:
 
@@ -93,7 +93,7 @@ One `terraform apply` + one image rebuild cleans up everything.
 
 ---
 
-## Cost Reduction Strategies
+### Datadog Cost Reduction Strategies
 
 If cost is a concern after the trial:
 

@@ -12,7 +12,7 @@ dbt (data build tool) is the transformation layer in the ELT pipeline. It does n
 
 For a concise code-heavy overview, see [[dbt-transformation-layer]]. This section expands on every aspect of dbt for the financial index and ESG data platform.
 
-## Foundations
+### dbt Foundations
 
 | Note | Description |
 |------|-------------|
@@ -20,7 +20,7 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 | [[dbt-project-structure]] | Project layout, naming conventions, config inheritance, multi-adapter setup |
 | [[dbt-cli-reference]] | CLI commands, node selection syntax, flags, output interpretation |
 
-## Modeling
+### dbt Modeling
 
 | Note | Description |
 |------|-------------|
@@ -29,14 +29,14 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 | [[dbt-mart-models]] | Consumption-ready facts and dimensions — the gold layer |
 | [[dbt-materializations]] | View, table, incremental, ephemeral, snapshot — deep dive and decision matrix |
 
-## Quality
+### dbt Quality
 
 | Note | Description |
 |------|-------------|
 | [[dbt-testing-framework]] | Schema tests, dbt-utils, dbt-expectations, custom tests, store-failures |
 | [[dbt-data-contracts-implementation]] | Model contracts, access levels, versioning, breaking change detection |
 
-## Advanced
+### dbt Advanced Topics
 
 | Note | Description |
 |------|-------------|
@@ -44,7 +44,7 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 | [[dbt-packages]] | dbt-utils, dbt-expectations, elementary, dbt-codegen, dbt-audit-helper |
 | [[dbt-snapshots-and-scd]] | SCD Type 2 via snapshots, timestamp vs check strategy, PIT queries |
 
-## Adapters
+### dbt Adapters
 
 | Note | Description |
 |------|-------------|
@@ -52,7 +52,7 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 | [[dbt-bigquery-adapter]] | BigQuery adapter config, partitioning, clustering, cost control, slot estimation |
 | [[dbt-cross-adapter-patterns]] | Dispatch macros for cross-adapter SQL, migration guide |
 
-## Operations
+### dbt Operations
 
 | Note | Description |
 |------|-------------|
@@ -63,13 +63,13 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 | [[dbt-performance-tuning]] | Identifying slow models, adapter-specific tuning, thread optimization |
 | [[dbt-troubleshooting]] | Compilation errors, runtime errors, test failures, common error table |
 
-## Reference
+### dbt Reference
 
 | Note | Description |
 |------|-------------|
 | [[dbt-cheat-sheet]] | CLI commands, Jinja syntax, materialization config, test declarations |
 
-## Key Concepts
+### dbt Key Concepts
 
 1. [[dbt-core-concepts]] — Start here: what dbt is, how it compiles, the DAG
 2. [[dbt-project-structure]] — How to organize a dbt project for the financial data platform
@@ -77,7 +77,7 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 4. [[dbt-testing-framework]] — Testing strategy for data quality
 5. [[dbt-airflow-integration]] — Running dbt in production via Airflow
 
-## When to Use What
+### dbt When to Use What
 
 | Approach | Best For | Avoid When |
 |----------|---------|------------|

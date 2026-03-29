@@ -236,11 +236,6 @@ comparison = pd.DataFrame({
 comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 ```
 
-<style type="text/css">
-#T_ec28a_row0_col0, #T_ec28a_row0_col1, #T_ec28a_row0_col2, #T_ec28a_row1_col0, #T_ec28a_row1_col1, #T_ec28a_row1_col2, #T_ec28a_row2_col0, #T_ec28a_row2_col1, #T_ec28a_row2_col2, #T_ec28a_row3_col0, #T_ec28a_row3_col1, #T_ec28a_row3_col2, #T_ec28a_row4_col0, #T_ec28a_row4_col1, #T_ec28a_row4_col2, #T_ec28a_row5_col0, #T_ec28a_row5_col1, #T_ec28a_row5_col2, #T_ec28a_row6_col0, #T_ec28a_row6_col1, #T_ec28a_row6_col2 {
-  text-align: left;
-}
-</style>
 <table id="T_ec28a">
   <thead>
     <tr>
@@ -671,11 +666,6 @@ pd.DataFrame({
 }).style.set_properties(**{"text-align": "left"}).hide(axis="index")
 ```
 
-<style type="text/css">
-#T_ebb27_row0_col0, #T_ebb27_row0_col1, #T_ebb27_row0_col2, #T_ebb27_row1_col0, #T_ebb27_row1_col1, #T_ebb27_row1_col2, #T_ebb27_row2_col0, #T_ebb27_row2_col1, #T_ebb27_row2_col2, #T_ebb27_row3_col0, #T_ebb27_row3_col1, #T_ebb27_row3_col2, #T_ebb27_row4_col0, #T_ebb27_row4_col1, #T_ebb27_row4_col2, #T_ebb27_row5_col0, #T_ebb27_row5_col1, #T_ebb27_row5_col2, #T_ebb27_row6_col0, #T_ebb27_row6_col1, #T_ebb27_row6_col2, #T_ebb27_row7_col0, #T_ebb27_row7_col1, #T_ebb27_row7_col2, #T_ebb27_row8_col0, #T_ebb27_row8_col1, #T_ebb27_row8_col2, #T_ebb27_row9_col0, #T_ebb27_row9_col1, #T_ebb27_row9_col2 {
-  text-align: left;
-}
-</style>
 <table id="T_ebb27">
   <thead>
     <tr>
@@ -1192,11 +1182,6 @@ checklist = pd.DataFrame({
 checklist.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 ```
 
-<style type="text/css">
-#T_46908_row0_col0, #T_46908_row0_col1, #T_46908_row1_col0, #T_46908_row1_col1, #T_46908_row2_col0, #T_46908_row2_col1, #T_46908_row3_col0, #T_46908_row3_col1, #T_46908_row4_col0, #T_46908_row4_col1, #T_46908_row5_col0, #T_46908_row5_col1, #T_46908_row6_col0, #T_46908_row6_col1, #T_46908_row7_col0, #T_46908_row7_col1, #T_46908_row8_col0, #T_46908_row8_col1, #T_46908_row9_col0, #T_46908_row9_col1, #T_46908_row10_col0, #T_46908_row10_col1, #T_46908_row11_col0, #T_46908_row11_col1 {
-  text-align: left;
-}
-</style>
 <table id="T_46908">
   <thead>
     <tr>

@@ -1,5 +1,5 @@
 ---
-tags: [orchestration, airflow]
+tags: [orchestration, airflow, runbook, incident]
 type: runbook
 severity: sev1
 technology: airflow
@@ -16,7 +16,7 @@ updated: 2026-03-23
 
 ---
 
-## Symptoms
+### Symptoms — scheduler down indicators
 
 - **DAGs not triggering on schedule**: index load DAG has not run at its cron window; constituent refresh is overdue
 - **Airflow webserver UI** shows red banner: `The scheduler does not appear to be running. Last heartbeat was received N minutes ago.`
@@ -330,7 +330,7 @@ docker compose restart airflow-scheduler
 
 ---
 
-## Backfill Missed DAG Runs
+### Backfill missed DAG runs after scheduler recovery
 
 After the scheduler is confirmed healthy, determine what DAG runs were missed during the outage window:
 
@@ -367,7 +367,7 @@ docker exec airflow-scheduler airflow dags trigger esg_score_refresh \
 
 ---
 
-## Verification
+### Verification — confirm scheduler is healthy
 
 ```bash
 # 1. Confirm scheduler container is running and stable
@@ -394,7 +394,7 @@ docker exec airflow-scheduler airflow dags trigger \
 
 ---
 
-## Escalation
+### Escalation — scheduler outage
 
 | Condition | Action |
 |-----------|--------|
@@ -405,7 +405,7 @@ docker exec airflow-scheduler airflow dags trigger \
 
 ---
 
-## Post-Incident
+### Post-incident — scheduler outage checklist
 
 - [ ] Send resolution notice to #data-engineering-incidents with outage duration and missed DAG runs list
 - [ ] Confirm all missed DAG runs have been backfilled and succeeded
@@ -417,7 +417,7 @@ docker exec airflow-scheduler airflow dags trigger \
 
 ---
 
-## Long-Term Prevention
+### Long-term prevention — scheduler reliability
 
 | Action | Owner | Priority |
 |--------|-------|----------|

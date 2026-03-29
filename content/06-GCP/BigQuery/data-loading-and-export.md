@@ -55,7 +55,7 @@ bq load --source_format=PARQUET --hive_partitioning_mode=AUTO \
 # Directory structure: gs://bucket/data/year=2025/month=03/data.parquet
 ```
 
-## Exporting Data to GCS
+### Exporting BigQuery Data to GCS
 
 ```bash
 # Export table to GCS
@@ -71,7 +71,7 @@ bq extract --destination_format=CSV --compression=GZIP \
 > [!info] Export Sharding
 > The `*` wildcard in the export destination path tells BigQuery to shard the output across multiple files. This is required for large tables — BigQuery cannot write a single file larger than ~1 GB. The shards can be read back together with `gs://bucket/prefix-*.parquet`.
 
-## Time Travel — Querying Historical Data
+### BigQuery Time Travel — Querying Historical Data
 
 BigQuery retains 7 days of historical data for every table. The `FOR SYSTEM_TIME AS OF` clause lets you query the table as it existed at any point within that window — without any snapshots or backups needed.
 
@@ -84,7 +84,7 @@ bq query --use_legacy_sql=false \
 # Use case: "The pipeline corrupted data yesterday — how many rows were there before?"
 ```
 
-## Restoring a Table from Time Travel
+### Restoring a BigQuery Table from Time Travel
 
 ```bash
 # Restore a table from time travel
@@ -99,7 +99,7 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 > [!tip] Related pattern
 > The `bq load` workflow mirrors the [[bronze-layer-loading]] pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [[bq-engineering]] covers the advanced query patterns that transform and consume it.
 
-## Format Comparison
+### BigQuery Data Format Comparison
 
 | Format | Schema | Compressed | Best for |
 |---|---|---|---|

@@ -19,7 +19,7 @@ Effective dbt troubleshooting follows a consistent pattern: reproduce the error 
 
 ---
 
-## First Responder Commands
+### dbt First Responder Commands
 
 ```bash
 # Validate profiles.yml connection and project structure
@@ -396,7 +396,7 @@ dbt compile --select fct_esg_scores \
 
 ---
 
-## Common Errors Reference Table
+### dbt Common Errors Reference Table
 
 | # | Error Message (abbreviated) | Cause | Fix |
 |---|----------------------------|-------|-----|
@@ -415,7 +415,7 @@ dbt compile --select fct_esg_scores \
 
 ---
 
-## Incremental `unique_key` Mis-Match
+### Incremental unique_key Mis-Match
 
 If `unique_key` in an incremental model's config references a column that is NULL or not unique in the source, the merge either fails or silently duplicates rows.
 

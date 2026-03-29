@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-storage]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, gcs]
 aliases: [GCS objects, gcloud storage, gsutil, Cloud Storage operations, GCS copy, GCS sync, GCS rsync]
 keywords: [gcloud storage, gsutil, GCS, cloud storage, ls, cp, copy, rsync, sync, mv, move, rm, delete, object metadata, parallel upload, parallel composite upload, component size, gcloud storage vs gsutil, transfer service, large file, incremental sync]
 description: "How to list, copy, sync, move, delete, and inspect metadata of Cloud Storage objects using the gcloud storage CLI — including parallel transfers for large files and incremental sync patterns."
@@ -16,7 +16,7 @@ status: complete
 
 Cloud Storage (GCS) is the connective tissue of every GCP data pipeline — where raw data lands, intermediate files live, backups are stored, and exports are staged. The `gcloud storage` command (part of the gcloud CLI) handles all object operations. It automatically parallelizes large transfers and is generally faster than the older `gsutil` command for most data engineering tasks. For the shell-level rsync and scp equivalents of these operations, see [[data-transfer]].
 
-## Listing Objects
+### Listing GCS Objects with gcloud storage ls
 
 ```bash
 # List objects
@@ -27,7 +27,7 @@ gcloud storage ls gs://data-pipeline-bucket/data/
 > [!info] GCS Has No Real Directories
 > GCS uses a flat namespace with key prefixes that look like directories. `gs://bucket/data/` is not a folder — it is a filter for all objects whose key starts with `data/`. This matters when deleting "directories" (delete all objects with the prefix) or moving "directories" (copy all + delete all).
 
-## Copying Files
+### Copying Files with gcloud storage cp
 
 ```bash
 # Copy local → GCS
@@ -43,7 +43,7 @@ gcloud storage cp -r ./output/ gs://data-pipeline-bucket/pipeline/ --no-user-out
 # For gsutil: gsutil -m cp -r (the -m flag enables multi-threading)
 ```
 
-## Incremental Sync with rsync
+### Incremental Sync with gcloud storage rsync
 
 ```bash
 # Sync (only transfer changed files — like rsync)
@@ -63,7 +63,7 @@ gcloud storage rsync -r -d ./local_data/ gs://data-pipeline-bucket/data/
 > 2. Versioning is enabled on the bucket if you need recovery (see [[gcs-buckets-and-lifecycle]])
 > 3. The sync will delete only what you expect
 
-## Moving and Deleting Objects
+### Moving and Deleting GCS Objects
 
 ```bash
 # Move/rename
@@ -79,7 +79,7 @@ gcloud storage rm -r gs://bucket/old_directory/
 > [!warning] GCS Move Is Not Atomic
 > `gcloud storage mv` is implemented as copy + delete. During the operation, the object exists at both the source and destination paths. For critical data, use copy first, verify the destination, then delete the source manually.
 
-## Viewing Object Metadata
+### Viewing GCS Object Metadata
 
 ```bash
 # View object metadata
@@ -95,7 +95,7 @@ Object metadata fields useful for data engineering:
 - `timeCreated` — when the object was first uploaded
 - `updated` — last modification timestamp
 
-## Transfer Optimization
+### GCS Transfer Optimization and Parallel Uploads
 
 > [!tip] Related pattern
 > For code that needs to read GCS objects transparently alongside local files, [[09_py_fileio_serialization|Python's fsspec]] provides a unified file I/O interface that abstracts away `gs://` vs local paths.
@@ -105,7 +105,7 @@ Object metadata fields useful for data engineering:
 > - **`gsutil` vs `gcloud storage`**: The newer `gcloud storage` command is generally faster and simpler. `gsutil` is still available for features not yet ported. For most data engineering work, use `gcloud storage`.
 > - **Transfer Service** for large-scale moves (>1 TB): `gcloud transfer jobs create gs://source/ gs://dest/` — runs as a managed job with retry, parallelism, and scheduling. More reliable than scripted gsutil for bulk transfers.
 
-## Common Pipeline Patterns
+### Common GCS Pipeline Patterns
 
 ```bash
 # Bronze landing: local data → GCS staging (Python equivalent: [[22_py_data_transfer]])

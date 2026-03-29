@@ -5,7 +5,7 @@ technology:
   - python
   - grpc
   - protobuf
-tags: [architecture, pipeline, api, python]
+tags: [data-architecture, architecture, pipeline, api, python]
 aliases:
   - gRPC
   - Protocol Buffers
@@ -98,7 +98,7 @@ gRPC is a high-performance, open-source RPC framework developed by Google that u
 
 ---
 
-## What gRPC Is
+### What gRPC Is
 
 gRPC stands for **g**oogle **R**emote **P**rocedure **C**all. It is built on three foundational technologies:
 
@@ -117,7 +117,7 @@ gRPC stands for **g**oogle **R**emote **P**rocedure **C**all. It is built on thr
 
 ---
 
-## When Data Engineers Use gRPC
+### When Data Engineers Use gRPC
 
 gRPC is the right choice in these data engineering contexts:
 
@@ -281,7 +281,7 @@ message PriceRecord {
 
 ---
 
-## Complete .proto File Example
+### Complete .proto File Example
 
 A complete service definition for a financial market data platform:
 
@@ -407,7 +407,7 @@ service MarketDataService {
 
 ---
 
-## Four RPC Types
+### Four gRPC RPC Types
 
 gRPC defines four communication patterns. Each maps to a different data engineering use case.
 
@@ -424,7 +424,7 @@ gRPC defines four communication patterns. Each maps to a different data engineer
 
 ---
 
-## Python gRPC Server Implementation
+### Python gRPC Server Implementation
 
 ```python
 # server.py
@@ -654,7 +654,7 @@ if __name__ == "__main__":
 
 ---
 
-## Python gRPC Client Implementation
+### Python gRPC Client Implementation
 
 ```python
 # client.py
@@ -809,7 +809,7 @@ async def example_batch_ingest():
 
 ---
 
-## Server Streaming for Real-Time Market Data
+### gRPC Server Streaming for Real-Time Market Data
 
 Server streaming is the natural model for pushing market data from a feed to downstream consumers.
 
@@ -909,7 +909,7 @@ async def run_vwap_consumer(address: str, symbols: list[str]) -> None:
 
 ---
 
-## Client Streaming for Bulk Ingestion
+### gRPC Client Streaming for Bulk Ingestion
 
 Client streaming lets a Python ingestion process push records to a storage service without polling or buffering the entire batch in memory.
 
@@ -982,7 +982,7 @@ async def ingest_directory(address: str, data_dir: Path) -> None:
 
 ---
 
-## Bidirectional Streaming
+### gRPC Bidirectional Streaming
 
 Bidirectional streaming is useful for scenarios where both sides need to send data simultaneously, such as a dynamic subscription manager.
 
@@ -1164,7 +1164,7 @@ async def pipeline_step(stub_a, stub_b, request, deadline_seconds=5.0):
 
 ---
 
-## Interceptors
+### gRPC Interceptors
 
 Interceptors attach cross-cutting behavior — logging, auth token injection, retry, metrics — to every RPC call without modifying individual method implementations.
 
@@ -1431,7 +1431,7 @@ grpcurl -plaintext -d '{"symbols": ["AAPL"]}' \
 
 ---
 
-## gRPC vs REST Comparison
+### gRPC vs REST Comparison
 
 | Dimension | gRPC | REST/JSON |
 |---|---|---|
@@ -1542,7 +1542,7 @@ class EnrichWithGrpc(DoFn):
 
 ---
 
-## When NOT to Use gRPC
+### When NOT to Use gRPC
 
 > [!warning] Avoid gRPC in These Scenarios
 >

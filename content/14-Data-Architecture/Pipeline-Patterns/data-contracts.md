@@ -1,5 +1,5 @@
 ---
-tags: [architecture, pipeline, python, github-actions]
+tags: [data-architecture, architecture, pipeline, data-contracts, python, github-actions]
 type: concept
 technology: [python, github-actions, protobuf]
 status: stable
@@ -11,7 +11,7 @@ updated: 2026-03-23
 > [!abstract] When You Need This
 > A data contract is a formal agreement between a data producer and its consumers specifying the schema, SLAs, semantics, and ownership of a dataset. Without contracts, schema changes break downstream pipelines silently.
 
-## What a Data Contract Contains
+### What a Data Contract Contains
 
 | Component | Definition | Example |
 |-----------|-----------|---------|
@@ -23,7 +23,7 @@ updated: 2026-03-23
 
 The contract concept parallels [[rest-api-design-and-consumption|API contracts]] in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
 
-## Contract-First Development Workflow
+### Contract-First Development Workflow
 
 ```mermaid
 graph LR
@@ -39,7 +39,7 @@ graph LR
 3. CI validates that produced data matches the contract
 4. Breaking changes require a new major version and migration period
 
-## Schema Definition Formats
+### Schema Definition Formats
 
 | Format | Strengths | When to Use |
 |--------|-----------|-------------|
@@ -49,7 +49,7 @@ graph LR
 | **[[dbt-data-contracts-implementation|dbt YAML]]** | Native to dbt, enforced at build time | Warehouse transforms |
 | **SQL DDL** | Universal, everyone reads SQL | Database tables |
 
-## Example Contract: ESG Score Feed
+### Example Contract: ESG Score Feed
 
 ```yaml
 # contracts/esg-scores-v2.yaml
@@ -108,7 +108,7 @@ non_breaking_changes:
   - Relaxing a constraint
 ```
 
-## Example Contract: Index Constituent Feed
+### Example Contract: Index Constituent Feed
 
 ```yaml
 contract:
@@ -154,7 +154,7 @@ sla:
     completeness: "Exactly N constituents where N = target count for the index"
 ```
 
-## Contract Testing in CI
+### Contract Testing in CI
 
 ```yaml
 # .github/workflows/contract-test.yml
@@ -177,7 +177,7 @@ jobs:
           dbt build --select tag:contract_test --target ci
 ```
 
-## Breaking vs Non-Breaking Changes
+### Breaking vs Non-Breaking Contract Changes
 
 | Change | Breaking? | Action Required |
 |--------|----------|----------------|
@@ -191,7 +191,7 @@ jobs:
 | Relax constraint | No | Minor version bump |
 | Change SLA | Depends | Communicate to all consumers |
 
-## Producer and Consumer Responsibilities
+### Producer and Consumer Responsibilities
 
 | Responsibility | Producer | Consumer |
 |---------------|----------|----------|
@@ -202,7 +202,7 @@ jobs:
 | Documentation | Maintains contract YAML | References contract in their code |
 | Incidents | Notifies consumers of issues | Reports anomalies to producer |
 
-## Anti-Patterns
+### Data Contract Anti-Patterns
 
 | Anti-Pattern | Problem | Better Approach |
 |-------------|---------|----------------|

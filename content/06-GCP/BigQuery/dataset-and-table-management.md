@@ -16,7 +16,7 @@ status: complete
 
 BigQuery is Google's serverless data warehouse. It can scan petabytes in seconds, charges $5 per TB scanned (on-demand), and requires zero infrastructure management. The `bq` CLI (installed with the gcloud SDK) is the command-line interface for all BigQuery operations — listing resources, inspecting schemas, creating structures, and deleting objects. The most consequential configuration decisions — dataset location, partitioning strategy, and clustering columns — must be made at table creation time and cannot be changed later.
 
-## Listing Datasets and Tables
+### Listing BigQuery Datasets and Tables
 
 ```bash
 # List datasets in the current project
@@ -28,7 +28,7 @@ bq ls my_dataset
 # Shows: tableId, Type (TABLE/VIEW/MATERIALIZED_VIEW), row count, size
 ```
 
-## Inspecting Schema and Metadata
+### Inspecting BigQuery Schema and Metadata
 
 ```bash
 # Show table schema (column names and types)
@@ -46,7 +46,7 @@ bq show --format=prettyjson my_dataset.my_table
 # clustering = clustering columns
 ```
 
-## Creating Datasets
+### Creating BigQuery Datasets
 
 ```bash
 # Create a dataset
@@ -85,7 +85,7 @@ bq mk --table --time_partitioning_field=date --time_partitioning_type=DAY \
 > [!tip] Partitioning + Clustering is the Default Best Practice
 > For any time-series data in BigQuery, partition by the date/timestamp column and cluster by the most common filter columns (e.g., `symbol`, `index`). This combination reduces scanned bytes by 90%+ for typical analytical queries compared to unpartitioned tables. See [[querying-and-cost-optimization]] for the full cost impact.
 
-## Deleting Tables and Datasets
+### Deleting BigQuery Tables and Datasets
 
 ```bash
 # Delete a table
@@ -98,7 +98,7 @@ bq rm -r -f my_dataset
 # -r = recursive (delete all tables first)
 ```
 
-## BigQuery Column Types Reference
+### BigQuery Column Types Reference
 
 | Type | Description |
 |---|---|

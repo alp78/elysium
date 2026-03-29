@@ -2,7 +2,7 @@
 type: concept
 category: performance
 technology: [sql-server]
-tags: [performance, sql]
+tags: [performance, sql, sql-server, tsql]
 aliases: [execution plans, query plans, parameter sniffing, cardinality estimation, plan cache, Query Store, SARGability, SHOWPLAN, key lookup, index seek, index scan, table scan]
 keywords: [execution plan, query plan, SSMS, estimated rows, actual rows, cardinality estimation, parameter sniffing, plan cache, Query Store, index seek, index scan, table scan, key lookup, nested loops, hash match, merge join, STATISTICS XML, SET STATISTICS TIME, SET STATISTICS IO, logical reads, plan regression, force plan, sp_query_store_force_plan, implicit conversion, plan reuse, OPTION RECOMPILE]
 description: "How to read, capture, and analyze SQL Server execution plans to identify performance problems — covers plan operators, cardinality estimation errors, parameter sniffing, Query Store setup, and plan forcing to fix regressions."
@@ -66,7 +66,7 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
    - **Number of Executions** — how many times this operator was invoked
    - **Warnings** — yellow triangle icons = spills, implicit conversions, missing indexes
 
-## Estimated vs. Actual Plans
+### Estimated vs. Actual Plans
 
 | Plan Type | How to Get It | What It Shows |
 |-----------|--------------|---------------|
@@ -427,7 +427,7 @@ EXEC sp_query_store_force_plan @query_id = @query_id, @plan_id = @plan_id;
 -- EXEC sp_query_store_unforce_plan @query_id = @query_id, @plan_id = @plan_id;
 ```
 
-## Common Plan Problems and Fixes
+### Common Plan Problems and Fixes
 
 | Problem | Symptom in Plan | Fix |
 |---------|----------------|-----|
@@ -440,7 +440,7 @@ EXEC sp_query_store_force_plan @query_id = @query_id, @plan_id = @plan_id;
 | **Nested loops with many iterations** | Nested Loops with thick outer arrow | Add index on the inner table's join column |
 | **Hash Match spill** | Hash Match with warning (spilled to TempDB) | Increase `max server memory` or fix cardinality to get correct memory grant |
 
-## Tagging Pipeline Queries for Correlation
+### Tagging Pipeline Queries for Correlation
 
 Add a SQL comment header to every pipeline query with DAG context so monitoring tools can slice by DAG, task, and run:
 
@@ -452,7 +452,7 @@ cursor.execute(f"{dag_context} MERGE INTO silver.stock_dim ...")
 
 These comments appear in `sys.dm_exec_sql_text` and in Query Store, enabling correlation between Airflow DAG timing and SQL Server query performance spikes.
 
-## Related
+### Related
 
 - [[wait-stats-analysis]] — The starting point for performance diagnosis
 - [[memory-and-buffer-pool]] — Memory grants, RESOURCE_SEMAPHORE, buffer pool
@@ -462,7 +462,7 @@ These comments appear in `sys.dm_exec_sql_text` and in Query Store, enabling cor
 - [[server-configuration]] — MAXDOP and cost threshold settings that affect plan choices
 - [[essential-dba-queries]] — Quick reference for plan cache queries
 
-## References
+### References
 
 - [Execution Plan Overview (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/performance/execution-plans)
 - [Query Store Overview (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/performance/monitoring-performance-by-using-the-query-store)

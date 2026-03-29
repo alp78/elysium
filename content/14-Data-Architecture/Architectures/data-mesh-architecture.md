@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: []
-tags: [architecture]
+tags: [data-architecture, architecture, data-mesh]
 aliases: [data mesh, domain-driven data, data products, federated governance, data as a product, Zhamak Dehghani, decentralized data architecture, domain ownership, self-serve data platform, federated computational governance]
 keywords: [data mesh, data product, domain ownership, federated governance, self-serve platform, Zhamak Dehghani, domain-oriented, decentralized, data as a product, discoverability, addressability, trustworthiness, self-describing, interoperable, secure, data contract, schema registry, data catalog, DataHub, Amundsen, OpenMetadata, Kafka, centralized data team, data platform, data engineering, organizational design, data governance, medallion architecture, data mesh vs data lake, data mesh vs warehouse, data quality, data lineage, data steward, domain team, platform team, mesh topology]
 description: "Data mesh is an organizational and architectural approach (Zhamak Dehghani, 2019) that decentralizes data ownership to domain teams, treats data as a product, provides a self-serve infrastructure platform, and enforces governance through federation rather than central control. It is primarily an organizational design pattern, not a technology."
@@ -247,7 +247,7 @@ print(f"Compatible: {compatibility}")
 
 ---
 
-## Data Mesh vs Centralized Data Team
+### Data Mesh vs Centralized Data Team
 
 | Dimension | Centralized Data Team | Data Mesh |
 |---|---|---|
@@ -357,7 +357,7 @@ Domains declare data products "done" when the pipeline runs. A data product is d
 
 ---
 
-## Data Mesh and Medallion Architecture: How They Coexist
+### Data Mesh and Medallion Architecture: How They Coexist
 
 [[medallion-architecture|Medallion architecture]] (bronze/silver/gold) is not incompatible with data mesh — it operates at a different level of abstraction.
 

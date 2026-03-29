@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [env vars, environment variables, shell variables, export, PATH variable]
 keywords: [environment variable, env var, export, PATH, bashrc, profile, credential handling, secret management, process environment, child process, variable propagation, unset, printenv]
 description: "How environment variables propagate through process hierarchies in bash and PowerShell, including secure credential handling patterns and persistence across sessions."
@@ -100,7 +100,7 @@ unset SA_PASSWORD
 > [!info] The `ps aux` Credential Leak
 > Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [[container-lifecycle|container]] -- always use this mechanism for containerized workloads.
 
-## PowerShell Environment Variables
+### PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars
 
 ```powershell
 # View all environment variables

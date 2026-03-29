@@ -1,5 +1,5 @@
 ---
-tags: [bigquery]
+tags: [bigquery, runbook, incident]
 type: runbook
 severity: sev2
 technology: bigquery
@@ -16,7 +16,7 @@ updated: 2026-03-23
 
 ---
 
-## Symptoms
+### Symptoms — BigQuery quota or cost spike indicators
 
 - **Queries queuing or timing out**: dbt runs exceed 10-minute timeout; analysts report stale dashboards
 - **Cloud Monitoring alert**: `bigquery/query/count` spike above baseline (typically > 3x rolling average)
@@ -286,7 +286,7 @@ File a billing credit request via GCP Support if the spike was caused by a platf
 
 ---
 
-## Verification
+### Verification — confirm BigQuery quota resolved
 
 After resolution, confirm the incident is cleared:
 
@@ -307,7 +307,7 @@ dbt run --select marts.index_constituents --target prod
 
 ---
 
-## Escalation
+### Escalation — BigQuery quota incident
 
 | Condition | Action |
 |-----------|--------|
@@ -318,7 +318,7 @@ dbt run --select marts.index_constituents --target prod
 
 ---
 
-## Post-Incident
+### Post-incident — BigQuery quota checklist
 
 - [ ] Send resolution notice to #data-engineering-incidents with job IDs and bytes-billed summary
 - [ ] Confirm all stale dashboards and Looker reports have refreshed with current data
@@ -330,7 +330,7 @@ dbt run --select marts.index_constituents --target prod
 
 ---
 
-## Long-Term Prevention
+### Long-term prevention — BigQuery cost control
 
 | Action | Owner | Priority |
 |--------|-------|----------|

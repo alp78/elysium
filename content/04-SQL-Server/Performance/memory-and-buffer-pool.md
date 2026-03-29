@@ -2,7 +2,7 @@
 type: concept
 category: performance
 technology: [sql-server]
-tags: [performance, sql]
+tags: [performance, sql, sql-server, tsql]
 aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS]
 keywords: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, max server memory, memory clerks, MEMORYCLERK_SQLBUFFERPOOL, RESOURCE_SEMAPHORE, memory grant, pending memory grant, sys.dm_os_sys_memory, sys.dm_os_memory_clerks, sys.dm_os_buffer_descriptors, memory pressure, SQL Server memory, GCP VM memory sizing]
 description: "How SQL Server's buffer pool manages data pages in RAM, how to measure memory pressure using Page Life Expectancy and buffer cache hit ratio, and how to configure max server memory correctly on GCP Compute Engine VMs."
@@ -16,7 +16,7 @@ status: complete
 
 SQL Server's buffer pool is its primary data cache — it holds database pages (8 KB each) in RAM so they don't need to be read from disk on every query. Memory is the single biggest performance lever on most SQL Server instances: when data fits in the buffer pool, queries run from RAM (nanoseconds); when it doesn't, they read from disk (milliseconds to seconds, 100–1000x slower).
 
-## Key Terms
+### Key Terms
 
 | Term | Definition |
 |------|-----------|
@@ -27,7 +27,7 @@ SQL Server's buffer pool is its primary data cache — it holds database pages (
 | **Memory grant** | RAM pre-allocated to a query for sort and hash operations before it can execute |
 | **max server memory** | Hard cap on how much RAM SQL Server can allocate. Must always be set — never leave at default (see [[server-configuration]] for the exact `sp_configure` commands). |
 
-## Memory Sizing Rule
+### Memory Sizing Rule
 
 > [!tip] The One Rule for max server memory
 > `max server memory = Total VM RAM − 1 GB`
@@ -108,7 +108,7 @@ WHERE counter_name = 'Page life expectancy'
 > [!info] PLE Context
 > The classic "300 second" threshold was written when SQL Server had much less RAM. On modern systems with 16+ GB, PLE should routinely be 1000–5000+ seconds. A consistently low PLE means your working set doesn't fit in RAM.
 
-## Buffer Cache Hit Ratio
+### Buffer Cache Hit Ratio
 
 ```sql
 -- Buffer cache hit ratio (0–100, higher is better)
@@ -120,7 +120,7 @@ WHERE counter_name = 'Buffer cache hit ratio'
 -- < 95% = problem, < 90% = critical
 ```
 
-## Buffer Pool Distribution by Database
+### Buffer Pool Distribution by Database
 
 ```sql
 -- How much buffer pool each database is using
@@ -184,7 +184,7 @@ When queries appear here, `RESOURCE_SEMAPHORE` appears in [[wait-stats-analysis|
 | Missing indexes causing large sort/hash operations | Add indexes to eliminate the sort |
 | Many concurrent queries all requesting memory simultaneously | Reduce query concurrency or add RAM |
 
-## Freeing Memory (Diagnostic/Testing Only)
+### Freeing Memory (Diagnostic/Testing Only)
 
 > [!warning] Do Not Run in Production Without Cause
 > These commands are for testing and diagnosis. Running them in production flushes caches that queries depend on, causing temporary performance degradation.
@@ -203,7 +203,7 @@ CHECKPOINT;
 DBCC DROPCLEANBUFFERS;
 ```
 
-## Memory Pressure Diagnosis Flow
+### Memory Pressure Diagnosis Flow
 
 When `RESOURCE_SEMAPHORE` is your top [[wait-stats-analysis|wait type]]:
 
@@ -228,7 +228,7 @@ What is requested_memory_kb?
         → Add indexes to eliminate sort operations
 ```
 
-## Memory Configuration for GCP VMs
+### Memory Configuration for GCP VMs
 
 GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 2022:
 
@@ -245,7 +245,7 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 > [!warning] 2 GB VMs Are Insufficient
 > SQL Server 2022 on a 2 GB e2-small VM is critically undersized. The SQL Server engine alone reserves ~700 MB–1 GB, leaving almost nothing for the buffer pool. Any table scan or bulk load will constantly thrash the disk. Minimum production recommendation: 16 GB.
 
-## Related
+### Related
 
 - [[wait-stats-analysis]] — `PAGEIOLATCH_SH` and `RESOURCE_SEMAPHORE` are the wait types indicating buffer pool problems
 - [[query-plan-analysis]] — Cardinality estimation errors cause over-sized memory grants
@@ -253,7 +253,7 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 - [[index-maintenance]] — Fragmented indexes cause excessive page reads that evict good pages from the buffer pool
 - [[essential-dba-queries]] — Combined health dashboard queries
 
-## References
+### References
 
 - [Server Memory Configuration (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/server-memory-server-configuration-options)
 - [sys.dm_os_memory_clerks (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-memory-clerks-transact-sql)

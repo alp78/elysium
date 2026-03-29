@@ -2,7 +2,7 @@
 type: reference
 category: reference
 technology: [gcp, gcloud]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud cheat sheet, gcloud quick reference, GCP CLI cheat sheet]
 keywords: [gcloud, cheat sheet, quick reference, compute, bigquery, cloud run, storage, iam, pubsub, logging, gcp commands, bq, gsutil, gcloud storage, secret manager, firestore, scheduler, cloud run jobs]
 description: "Exhaustive CLI reference for gcloud, bq, and gcloud storage — the one page a senior Data Engineer bookmarks for all GCP command-line work."
@@ -51,7 +51,7 @@ status: stable
 
 ---
 
-## Command Structure
+### gcloud Command Structure and Anatomy
 
 Every `gcloud` invocation follows this anatomy:
 
@@ -90,7 +90,7 @@ bq --project_id=fin-prod-project   query   --use_legacy_sql=false   'SELECT ...'
 
 ---
 
-## Global Flags
+### gcloud Global Flags Reference
 
 These flags apply to nearly every `gcloud` command. Combine freely.
 
@@ -2193,7 +2193,7 @@ gcloud firestore operations describe OPERATION_NAME --project=fin-prod-project
 
 ---
 
-## Quick Reference: Useful One-Liners
+### Quick Reference: Useful gcloud One-Liners
 
 ```bash
 # Get your current project, account, and active config

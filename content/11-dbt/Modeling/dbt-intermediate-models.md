@@ -18,7 +18,7 @@ Intermediate models are the business logic layer — the [[silver-transforms]] t
 
 ---
 
-## Core Principles
+### Intermediate Model Core Principles
 
 | Rule | Rationale |
 |---|---|
@@ -30,7 +30,7 @@ Intermediate models are the business logic layer — the [[silver-transforms]] t
 
 ---
 
-## Materialisation Strategy
+### Intermediate Materialisation Strategy
 
 Most intermediate models are views. The exceptions are:
 
@@ -43,7 +43,7 @@ Most intermediate models are views. The exceptions are:
 
 ---
 
-## int_daily_returns
+### int_daily_returns
 
 Calculates daily simple and log returns from adjusted close prices.
 
@@ -115,7 +115,7 @@ select * from returns
 
 ---
 
-## int_momentum_scores
+### int_momentum_scores
 
 Calculates trailing 12-month momentum (with 1-month skip) and 3-month short-term momentum for each security.
 
@@ -198,7 +198,7 @@ from momentum
 
 ---
 
-## int_value_signals
+### int_value_signals
 
 Computes fundamental value signals: price-to-book, earnings yield, dividend yield.
 
@@ -289,7 +289,7 @@ select * from signals
 
 ---
 
-## int_esg_normalized
+### int_esg_normalized
 
 Normalises raw ESG scores to z-scores within each GICS sector on each score date. This enables cross-sector comparison.
 
@@ -378,7 +378,7 @@ select * from z_scored
 
 ---
 
-## int_corporate_action_adjustments
+### int_corporate_action_adjustments
 
 Builds a multiplicative adjustment factor for each security for each date, used to reconstruct historical adjusted prices.
 
@@ -452,7 +452,7 @@ select * from cumulative
 
 ---
 
-## Ephemeral Models
+### dbt Ephemeral Models for Intermediate Logic
 
 Ephemeral models are inlined as CTEs and never materialised. Use them for simple intermediate steps that are only referenced by a single downstream model.
 
@@ -487,7 +487,7 @@ from {{ ref('stg_market_data__daily_prices') }}
 
 ---
 
-## Anti-Patterns
+### Intermediate Model Anti-Patterns
 
 > [!WARNING] Common intermediate model mistakes
 

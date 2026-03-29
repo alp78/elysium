@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash]
-tags: [shell, bash]
+tags: [shell, bash, linux]
 aliases: [defensive scripting, set -euo pipefail, bash strict mode, safe scripting, script safety]
 keywords: [set -e, set -u, set -o pipefail, defensive scripting, bash strict mode, trap, cleanup, exit on error, unset variable, pipeline failure, production script template, error handling]
 description: "The bash set flags (set -euo pipefail) that prevent the most dangerous scripting bugs, including exit-on-error, unset variable detection, pipeline failure propagation, and cleanup traps."
@@ -25,7 +25,7 @@ set -euo pipefail
 > [!tip] Related pattern
 > The same error-handling philosophy applies in application code: [[08_py_errorhandling]] covers Python's `try`/`except` (the equivalent of `set -e` with explicit catches), and [[08_cs_errorhandling]] covers C#'s `try`/`catch`/`finally` pattern. For error handling in DAG orchestration, see [[airflow-dag-patterns]].
 
-## `set -e` — Exit Immediately on Error
+### set -e — exit immediately on error
 
 ```bash
 set -e
@@ -48,7 +48,7 @@ echo "Pipeline complete"        # PRINTS SUCCESS → you think everything is fin
 >
 > These are not bugs — they are intentional escape hatches. Use `|| true` when a command is allowed to fail (e.g., "delete if exists" patterns). Use `if` when you want to branch on success/failure.
 
-## `set -u` — Treat Unset Variables as Errors
+### set -u — treat unset variables as errors
 
 ```bash
 set -u
@@ -81,7 +81,7 @@ fi
 # The :- syntax provides a default without triggering the unbound variable error
 ```
 
-## `set -o pipefail` — Propagate Pipeline Failures
+### set -o pipefail — propagate pipeline failures
 
 ```bash
 set -o pipefail
@@ -97,7 +97,7 @@ curl -f "https://api.example.com/data" | python3 process.py | gzip > output.gz
 # curl's failure propagates → script exits → your orchestrator retries or alerts
 ```
 
-## The Complete Production Script Template
+### Production script template — set -euo pipefail with trap cleanup
 
 ```bash
 #!/usr/bin/env bash
@@ -127,7 +127,7 @@ log "Connecting to $DB_HOST:$DB_PORT"
 log "Pipeline complete"
 ```
 
-## The `trap` Safety Net
+### trap EXIT — guaranteed cleanup on script exit, error, or signal
 
 > [!info] `trap` Is Your Safety Net
 > The `trap cleanup EXIT` pattern ensures cleanup runs no matter how the script terminates — normal exit, `set -e` error, Ctrl+C (SIGINT), or `kill` (SIGTERM). Always use this for temporary files, database connections, lock files, or anything that needs guaranteed cleanup.

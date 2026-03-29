@@ -1,5 +1,5 @@
 ---
-tags: [sql]
+tags: [sql, runbook, incident]
 type: runbook
 severity: sev1
 technology: sql-server
@@ -16,7 +16,7 @@ updated: 2026-03-23
 
 ---
 
-## Symptoms
+### Symptoms — SQL Server disk full indicators
 
 - **Datadog alert**: `disk.used_pct > 95` on host `sql-vm`, tag `env:prod`
 - **SQL Server error log** (`/var/opt/mssql/log/errorlog`) entries such as:
@@ -352,7 +352,7 @@ find /logdrive/backups -name "*.trn" -mtime +1 -delete
 
 ---
 
-## Verification
+### Verification — confirm disk space reclaimed
 
 After any resolution step, confirm the incident is resolved:
 
@@ -374,7 +374,7 @@ airflow dags trigger index_constituent_load --conf '{"backfill": false}'
 
 ---
 
-## Escalation
+### Escalation — SQL Server disk full incident
 
 | Condition | Action |
 |-----------|--------|
@@ -385,7 +385,7 @@ airflow dags trigger index_constituent_load --conf '{"backfill": false}'
 
 ---
 
-## Post-Incident
+### Post-incident — SQL Server disk full checklist
 
 - [ ] Send resolution notice to #data-engineering-incidents with timeline
 - [ ] Confirm all Airflow DAGs that failed during the incident have been retriggered and succeeded
@@ -396,7 +396,7 @@ airflow dags trigger index_constituent_load --conf '{"backfill": false}'
 
 ---
 
-## Long-Term Prevention
+### Long-term prevention — SQL Server disk capacity
 
 | Action | Owner | Priority |
 |--------|-------|----------|

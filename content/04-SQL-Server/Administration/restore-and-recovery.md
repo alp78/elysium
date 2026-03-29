@@ -2,7 +2,7 @@
 type: how-to
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server restore, point-in-time recovery, PITR, RESTORE DATABASE, NORECOVERY, STOPAT, restore to new database]
 keywords: [restore, RESTORE DATABASE, RESTORE LOG, NORECOVERY, RECOVERY, REPLACE, STOPAT, point-in-time recovery, PITR, full restore, differential restore, log restore, side-by-side restore, MOVE, disaster recovery, crash recovery]
 description: "How to restore a SQL Server database from backup including full restore, point-in-time recovery (PITR) with log replaying, and restoring to a new database for side-by-side comparison."
@@ -18,7 +18,7 @@ Knowing how to perform a restore is the test of whether your backup strategy is 
 
 ---
 
-## Full Restore
+### Full Restore
 
 Overwrites the existing database with the contents of a full backup.
 
@@ -66,7 +66,7 @@ WITH STOPAT = '2026-03-09T14:23:45', RECOVERY;
 
 ---
 
-## Restore to a New Database (Side-by-Side)
+### Restore to a New Database (Side-by-Side)
 
 Use this to restore a backup alongside the existing production database for comparison or investigation — without touching production data.
 
@@ -86,7 +86,7 @@ WITH MOVE 'analytics_db' TO '/var/opt/mssql/data/project_inv.mdf',
 
 ---
 
-## Verifying a Backup Before Restoring
+### Verifying a Backup Before Restoring
 
 Run `RESTORE VERIFYONLY` to check that a backup file is intact without performing the actual restore. This should be part of your regular backup verification schedule.
 
@@ -130,7 +130,7 @@ WHERE command LIKE '%RECOVERY%';
 
 ---
 
-## Related
+### Related
 
 - [[backup-types-and-strategy]] — understanding backup types and the 3-2-1 rule
 - [[server-configuration]] — recovery model configuration

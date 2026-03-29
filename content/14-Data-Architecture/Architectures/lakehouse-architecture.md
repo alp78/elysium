@@ -2,7 +2,7 @@
 type: concept
 category: data-architecture
 technology: [python, gcp, spark, bigquery, databricks]
-tags: [architecture, python, bigquery, gcp]
+tags: [data-architecture, architecture, lakehouse, python, bigquery, gcp]
 aliases: [lakehouse, data lakehouse, lake house, Delta Lake, Apache Iceberg, Apache Hudi, BigLake, Unity Catalog, Tabular, Databricks Lakehouse, lakehouse architecture]
 keywords: [lakehouse, data lakehouse, lake house, data lake, data warehouse, ACID transactions, object storage, schema enforcement, time travel, Delta Lake, Apache Iceberg, Apache Hudi, open table format, medallion architecture, bronze silver gold, BigLake, Unity Catalog, Tabular, Databricks, Snowflake, BigQuery, Spark, Trino, Presto, DuckDB, governance, schema evolution, partition pruning, query engine, Parquet, GCS, S3, cost optimization, lakehouse vs warehouse, lakehouse vs data lake]
 description: "The lakehouse architecture combines the low-cost flexible storage of a data lake with the transactional guarantees and governance of a data warehouse, enabled by open table formats (Delta Lake, Apache Iceberg, Apache Hudi) that add ACID transactions, time travel, and schema enforcement directly on object storage."
@@ -144,7 +144,7 @@ Most production lakehouses use Copy-on-Write for dimension tables (slow-changing
 
 ---
 
-## Open Table Formats: Comparison
+### Open Table Formats Comparison
 
 For a deep technical dive into each format's metadata model, see [[open-table-formats]]. The summary comparison:
 
@@ -166,7 +166,7 @@ For a deep technical dive into each format's metadata model, see [[open-table-fo
 
 ---
 
-## Medallion Architecture as the Lakehouse Pattern
+### Medallion Architecture as the Lakehouse Pattern
 
 The [[medallion-architecture]] (bronze / silver / gold) is the canonical organizational pattern for data within a lakehouse. Each layer is a set of lakehouse tables (Iceberg or Delta) in object storage, with increasing quality and decreasing granularity:
 
@@ -284,7 +284,7 @@ ORDER BY event_date;
 
 ---
 
-## Lakehouse vs Data Warehouse vs Data Lake
+### Lakehouse vs Data Warehouse vs Data Lake
 
 | Dimension | Data Lake | Data Warehouse | Lakehouse |
 |---|---|---|---|
@@ -463,7 +463,7 @@ CALL glue.system.remove_orphan_files(
 
 ---
 
-## Connection to Streaming Architecture
+### Connection to Streaming Architecture
 
 The lakehouse is primarily a batch analytics architecture, but it increasingly handles streaming workloads. For streaming pipelines writing to lakehouse tables, see [[streaming-architecture]]:
 

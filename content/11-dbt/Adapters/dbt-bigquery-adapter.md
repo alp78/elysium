@@ -18,7 +18,7 @@ related:
 
 ---
 
-## Installation
+### BigQuery Adapter Installation
 
 ```bash
 pip install dbt-core==1.8.* dbt-bigquery==1.8.*
@@ -167,7 +167,7 @@ For tables without a natural date column — e.g., a universe table partitioned 
 
 ---
 
-## Clustering
+### BigQuery Clustering
 
 Clustering sorts data within each partition by the specified columns. BigQuery automatically re-clusters as data accumulates. Clustering is free and has no maintenance overhead.
 
@@ -260,7 +260,7 @@ where DATE_TRUNC(score_date, MONTH) IN (
 
 ---
 
-## Slot Estimation and Thread Tuning
+### BigQuery Slot Estimation and Thread Tuning
 
 BigQuery slots are units of compute. On-demand pricing provides up to 2,000 concurrent slots per project. Each query consumes slots proportional to its complexity and data volume.
 
@@ -279,7 +279,7 @@ prod:
 
 ---
 
-## Labels for Cost Attribution
+### BigQuery Labels for Cost Attribution
 
 Labels propagate to BigQuery job metadata and appear in Cloud Billing exports. Mandatory for multi-team environments.
 
@@ -477,7 +477,7 @@ In dbt, use `dbt compile` to get the rendered SQL, then pipe it to `bq query --d
 
 ---
 
-## External Tables with Hive Partitioning
+### BigQuery External Tables with Hive Partitioning
 
 For raw ESG provider files landed in GCS with a Hive-style path structure (see [[data-loading-and-export]] for the upstream loading patterns that produce these files):
 

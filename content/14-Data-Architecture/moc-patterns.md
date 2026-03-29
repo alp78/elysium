@@ -1,5 +1,5 @@
 ---
-tags: [architecture]
+tags: [data-architecture, architecture]
 type: reference
 technology: []
 status: stable

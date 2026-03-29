@@ -2,7 +2,7 @@
 type: concept
 category: engineering-practice
 technology: []
-tags: []
+tags: [dataops]
 aliases:
   - DataOps
   - data operations
@@ -67,7 +67,7 @@ The central insight of DataOps is that **delivering data reliably at speed requi
 
 ---
 
-## What Is DataOps?
+### What Is DataOps?
 
 DataOps emerged from the frustration that traditional data teams — even skilled ones — were slow, brittle, and opaque. Stakeholders waited weeks for new reports. Schema changes broke dashboards silently. Nobody knew what "the right number" was when two reports disagreed. Data engineers became ticket-processing machines rather than value-creating engineers.
 
@@ -157,7 +157,7 @@ This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anoma
 
 ---
 
-## DataOps vs DevOps vs MLOps
+### DataOps vs DevOps vs MLOps Comparison
 
 | Dimension | DevOps | DataOps | MLOps |
 |-----------|--------|---------|-------|
@@ -446,7 +446,7 @@ DataOps is 20% tooling and 80% culture. The tools are the easy part. The hard pa
 
 ---
 
-## DataOps Lifecycle
+### DataOps Lifecycle Flowchart
 
 ```mermaid
 flowchart LR
@@ -477,7 +477,7 @@ flowchart LR
 
 ---
 
-## Anti-Patterns
+### DataOps Anti-Patterns
 
 | Anti-Pattern | Description | Why It's Harmful | Fix |
 |-------------|-------------|-----------------|-----|
@@ -520,7 +520,7 @@ The DORA (DevOps Research and Assessment) four key metrics — originally develo
 
 ---
 
-## DataOps Maturity Model
+### DataOps Maturity Model
 
 | Capability | Crawl (Level 1) | Walk (Level 2) | Run (Level 3) |
 |-----------|----------------|----------------|---------------|
@@ -541,7 +541,7 @@ The DORA (DevOps Research and Assessment) four key metrics — originally develo
 
 ---
 
-## Value Stream Mapping Exercise
+### Value Stream Mapping Exercise
 
 Running a VSM workshop with your data team:
 

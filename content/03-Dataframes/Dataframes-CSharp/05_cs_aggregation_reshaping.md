@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt
 keywords: [groupby, agg, window, rolling, join, merge, pivot, melt, unpivot, cross join]

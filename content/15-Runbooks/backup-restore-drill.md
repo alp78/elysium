@@ -1,5 +1,5 @@
 ---
-tags: []
+tags: [runbook, incident]
 type: runbook
 severity: sev3
 technology: sql-server, gcp
@@ -17,7 +17,7 @@ cadence: quarterly
 
 ---
 
-## Purpose
+### Purpose — backup restore drill objectives
 
 Validate that:
 1. SQL Server backups stored in GCS are intact and restorable — the drill exercises every level of the [[backup-types-and-strategy]] (FULL, DIFF, LOG)
@@ -32,7 +32,7 @@ This drill must be run quarterly. Results must be recorded in the drill log and 
 
 ---
 
-## Pre-Drill Checklist
+### Pre-drill checklist — environment readiness
 
 - [ ] Test VM provisioned in the same GCP region as production (or confirmed that the existing dev VM is available and has SQL Server 2022 on Linux installed)
 - [ ] Sufficient disk space on test VM: at least 2x the backup file size (`df -h /var/opt/mssql/data`)
@@ -366,7 +366,7 @@ VALUES (
 
 ---
 
-## Success Criteria
+### Success criteria — backup restore validation
 
 | Check | Expected | Pass/Fail |
 |---|---|---|
@@ -381,7 +381,7 @@ VALUES (
 
 ---
 
-## Escalation
+### Escalation — backup restore drill failures
 
 | Condition | Escalate to | Action |
 |---|---|---|
@@ -396,7 +396,7 @@ VALUES (
 
 ---
 
-## Post-Drill Checklist
+### Post-drill checklist — documentation and follow-up
 
 - [ ] All 8 success criteria marked Pass
 - [ ] `dbo.backup_restore_drill_log` row inserted with all fields populated

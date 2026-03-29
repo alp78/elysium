@@ -2,7 +2,7 @@
 type: troubleshooting
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases:
   - "non-fast-forward"
   - "detached HEAD"
@@ -74,7 +74,7 @@ This note covers 25 common Git and GitHub error messages encountered in day-to-d
 
 ---
 
-## GitHub Actions: "google-github-actions/auth failed: must specify exactly one of workload_identity_provider or credentials_json"
+### GitHub Actions: "google-github-actions/auth failed: must specify exactly one of workload_identity_provider or credentials_json"
 
 **Cause:** The `GCP_SA_KEY` secret is missing, empty, or not accessible to the workflow. GitHub Actions secrets are not passed to workflows triggered from forks (including Dependabot PRs). The `${{ secrets.GCP_SA_KEY }}` expression resolves to an empty string, and the auth action fails because it receives neither authentication method.
 
@@ -107,7 +107,7 @@ gh run rerun <RUN_ID>
 
 ---
 
-## "Your branch is behind origin/main"
+### "Your branch is behind origin/main"
 
 **Cause:** Your local branch is outdated.
 
@@ -121,13 +121,13 @@ git pull origin main
 
 ---
 
-## "Merge conflict in filename.py"
+### "Merge conflict in filename.py"
 
 See [[git-branching-and-merging]] for full conflict resolution steps. Open the file, resolve the conflict markers, `git add` the resolved file, then `git commit`.
 
 ---
 
-## "Failed to push: rejected — non-fast-forward"
+### "Failed to push: rejected -- non-fast-forward"
 
 **Cause:** Someone pushed to the same branch since your last pull.
 
@@ -141,7 +141,7 @@ git pull --rebase && git push
 
 ---
 
-## "Detached HEAD"
+### "Detached HEAD"
 
 **Cause:** You checked out a specific commit (not a branch). Any new commits will be orphaned.
 
@@ -155,7 +155,7 @@ git checkout -b my-new-branch
 
 ---
 
-## "Committed to wrong branch"
+### "Committed to wrong branch"
 
 **Fix: move the last commit to the correct branch**
 
@@ -172,7 +172,7 @@ For example: if you committed to `main` instead of your feature branch, this seq
 
 ---
 
-## "Accidentally deleted a file"
+### "Accidentally deleted a file"
 
 **Fix: restore from the last commit**
 
@@ -184,7 +184,7 @@ Brings back the file from your last save point (the most recent commit).
 
 ---
 
-## "Need to undo a push"
+### "Need to undo a push"
 
 **Fix: revert and push (safe for shared branches)**
 
@@ -199,7 +199,7 @@ git revert HEAD && git push
 
 ---
 
-## "Accidentally committed a large file"
+### "Accidentally committed a large file"
 
 **Fix: undo commit, stop tracking, recommit**
 
@@ -217,7 +217,7 @@ Undo the commit, stop tracking the big file, and redo the commit without it.
 
 ---
 
-## "Squash merge shows branch as not merged"
+### "Squash merge shows branch as not merged"
 
 After `gh pr merge --squash`, `git branch -d` warns the branch isn't merged. This is normal — squash creates a new combined commit with a different SHA. The changes ARE on main, just as a different commit. Safe to use `git branch -d` anyway (the warning is cosmetic).
 
@@ -225,7 +225,7 @@ See [[pull-requests-and-code-review]] for squash merge workflow details.
 
 ---
 
-## "git status says up to date but I'm missing changes"
+### "git status says up to date but I'm missing changes"
 
 **Cause:** "Up to date with origin/main" means your local matches what was LAST FETCHED. If someone pushed after your last fetch, you won't see it.
 
@@ -239,7 +239,7 @@ git fetch && git status
 
 ---
 
-## "fatal: not a git repository"
+### "fatal: not a git repository"
 
 **Cause:** You're running a git command outside of any repo, or you `cd`'d into the wrong folder.
 
@@ -253,7 +253,7 @@ Navigate to the repo directory first. If you're unsure where the repo is, look f
 
 ---
 
-## "error: pathspec 'branch-name' did not match any file(s) known to git"
+### "error: pathspec 'branch-name' did not match any file(s) known to git"
 
 **Cause:** The branch doesn't exist locally. It might be a remote branch you haven't fetched yet.
 
@@ -267,7 +267,7 @@ git fetch && git switch branch-name
 
 ---
 
-## "fatal: refusing to merge unrelated histories"
+### "fatal: refusing to merge unrelated histories"
 
 **Cause:** Two repos with no common ancestor (e.g., you initialized locally AND on GitHub separately).
 
@@ -281,7 +281,7 @@ git pull origin main --allow-unrelated-histories
 
 ---
 
-## "error: your local changes would be overwritten by merge/checkout"
+### "error: your local changes would be overwritten by merge/checkout"
 
 **Cause:** You have uncommitted changes in files that the operation needs to modify.
 
@@ -297,7 +297,7 @@ Unsaved changes are in the way. Shelve them, do the operation, bring them back. 
 
 ---
 
-## "fatal: the remote end hung up unexpectedly" (large push)
+### "fatal: the remote end hung up unexpectedly" (large push)
 
 **Cause:** You're pushing a repo or file that exceeds the HTTP buffer size (common with large files or initial pushes of big repos).
 
@@ -314,7 +314,7 @@ git config --global http.postBuffer 524288000
 
 ---
 
-## "Permission denied (publickey)"
+### "Permission denied (publickey)"
 
 **Cause:** Your SSH key isn't configured or isn't added to your GitHub account.
 
@@ -338,7 +338,7 @@ Then add the public key to GitHub under **Settings > SSH and GPG Keys**.
 
 ---
 
-## "CONFLICT (modify/delete)" during merge or rebase
+### "CONFLICT (modify/delete)" during merge or rebase
 
 **Cause:** One branch modified a file while the other branch deleted it. Git doesn't know which wins.
 
@@ -355,7 +355,7 @@ One side deleted the file, the other edited it. You must pick one outcome explic
 
 ---
 
-## "fatal: cannot lock ref" or "unable to create ... .lock"
+### "fatal: cannot lock ref" or "unable to create ... .lock"
 
 **Cause:** A previous git operation crashed and left a lock file behind. Or another git process is running.
 
@@ -378,7 +378,7 @@ A previous git command crashed mid-operation and left a lock. Remove it and retr
 
 ---
 
-## "git push rejected after rebase"
+### "git push rejected after rebase"
 
 **Cause:** Rebase rewrites commit SHAs. The remote still has the old commits, so Git sees a divergence.
 
@@ -395,7 +395,7 @@ git push --force-with-lease
 
 ---
 
-## "git pull results in merge commits I don't want"
+### "git pull results in merge commits I don't want"
 
 **Cause:** `git pull` does a fetch + merge by default, creating merge commits that clutter history.
 
@@ -415,7 +415,7 @@ git config --global pull.rebase true
 
 ---
 
-## "warning: LF will be replaced by CRLF" (Windows)
+### "warning: LF will be replaced by CRLF" (Windows)
 
 **Cause:** Windows uses CRLF (`\r\n`) line endings, Unix uses LF (`\n`). Git is auto-converting.
 
@@ -440,7 +440,7 @@ Stop the warnings by telling Git how to handle line endings for your OS.
 
 ---
 
-## "error: failed to push some refs — hint: updates were rejected"
+### "error: failed to push some refs -- hint: updates were rejected"
 
 **Cause:** The remote branch has commits your local branch doesn't. This is NOT the same as a merge conflict — you just need to incorporate the remote changes first.
 
@@ -456,7 +456,7 @@ Someone pushed before you. Rebase your work on top of theirs, then push.
 
 ---
 
-## "HEAD detached at origin/main" after fetch
+### "HEAD detached at origin/main" after fetch
 
 **Cause:** You accidentally ran `git checkout origin/main` (a remote ref) instead of `git checkout main`.
 
@@ -470,7 +470,7 @@ You're looking at the remote pointer instead of your local branch. Switch to the
 
 ---
 
-## "Deleted branch before squash-merging the PR"
+### "Deleted branch before squash-merging the PR"
 
 **Cause:** You deleted the local and/or remote feature branch before merging the PR on GitHub. The PR may auto-close when its head branch disappears.
 
@@ -522,7 +522,7 @@ The commits aren't lost even after deletion. Git remembers the SHA via reflog. R
 
 ---
 
-## "Forgot to include a file in the last commit"
+### "Forgot to include a file in the last commit"
 
 **Scenario:** You committed and pushed, then realized you forgot to stage `.gitignore` (or any other file).
 
@@ -555,7 +555,7 @@ Amending replaces the last commit with a new one that includes the extra file. S
 
 ---
 
-## "Accidentally committed files that should be ignored"
+### "Accidentally committed files that should be ignored"
 
 **Scenario:** You committed and pushed binary files, secrets, or build artifacts that should have been in `.gitignore`. The files are now tracked by Git even though you don't want them in the repo.
 
@@ -592,7 +592,7 @@ git push
 
 ---
 
-## Quick Reference Table
+### Quick Reference Table
 
 | Error / Symptom | Root Cause | Fix |
 |---|---|---|

@@ -6,7 +6,7 @@ technology:
   - cloud-logging
   - cloud-trace
   - python
-tags: [observability, python, gcp]
+tags: [monitoring, observability, python, gcp]
 aliases:
   - Cloud Logging
   - Cloud Trace
@@ -1435,7 +1435,7 @@ Reference infrastructure for this comparison: 2 GCE VMs, BigQuery active usage, 
 
 ---
 
-## Quick Reference: Common gcloud Logging Commands
+### Quick Reference: Common gcloud Logging Commands
 
 ```bash
 # Read recent logs
@@ -1480,7 +1480,7 @@ gcloud projects get-iam-policy PROJECT --format=json > /tmp/policy.json
 gcloud projects set-iam-policy PROJECT /tmp/policy.json
 ```
 
-## Quick Reference: OpenTelemetry Tracing Setup
+### Quick Reference: OpenTelemetry Tracing Setup
 
 ```python
 # Install: pip install opentelemetry-sdk opentelemetry-exporter-gcp-trace

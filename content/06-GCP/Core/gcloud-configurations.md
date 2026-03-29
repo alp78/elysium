@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud config, gcloud configurations, GCP project switching, named configurations]
 keywords: [gcloud config configurations, gcloud config set, project switching, named configurations, multi-project, dev staging production, gcloud config list, activate configuration, environment safety, production protection]
 description: "How to use gcloud named configurations to safely manage multiple GCP projects (dev, staging, production) and switch between them without error-prone manual config changes."
@@ -70,7 +70,7 @@ gcloud config set compute/region europe-west1
 gcloud config set compute/zone europe-west1-b
 ```
 
-## Protecting Production with Visual Cues
+### Protecting Production with Visual Cues in Terminal
 
 > [!warning] Protect Production
 > Color-code your terminal based on which configuration is active. Add this to `~/.bashrc`:
@@ -87,7 +87,7 @@ gcloud config set compute/zone europe-west1-b
 > ```
 > Now your prompt shows `[PROD]` in red when targeting production — a visual safety net against running a destructive command in the wrong project.
 
-## Why It Matters
+### Why Named Configurations Matter for Multi-Project Safety
 
 Without named configurations, switching projects requires remembering to set project, region, zone, and account individually. One forgotten `gcloud config set project` means your next command hits the wrong environment. With named configurations, switching is atomic — one command changes everything.
 

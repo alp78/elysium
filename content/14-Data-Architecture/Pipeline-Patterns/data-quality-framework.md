@@ -1,5 +1,5 @@
 ---
-tags: [architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery]
+tags: [data-architecture, architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery]
 type: concept
 technology: [sql-server, bigquery, airflow, python]
 status: stable
@@ -11,7 +11,7 @@ updated: 2026-03-23
 > [!abstract] When You Need This
 > Every data pipeline needs quality gates. In financial index calculation, a single bad price or weight produces a wrong index level that propagates to ETFs, derivatives, and regulatory filings.
 
-## Quality Dimensions
+### Data Quality Dimensions
 
 | Dimension | Definition | Index Domain Example |
 |-----------|-----------|---------------------|
@@ -55,7 +55,7 @@ The [[silver-transforms]] layer is where most quality gates live, acting as the 
 | Cross-dataset consistency | SQL Server gold = BigQuery published | Halt, reconcile |
 | ESG score range | All normalized scores in 0-100 | Quarantine out-of-range |
 
-## Tooling Comparison
+### Data Quality Tooling Comparison
 
 | Tool | Approach | Best For |
 |------|---------|---------|
@@ -65,22 +65,22 @@ The [[silver-transforms]] layer is where most quality gates live, acting as the 
 | **Custom SQL** | Stored procedures / scripts | Legacy systems, edge cases |
 | **Dataplex Quality** | GCP-native quality scans | BigQuery-centric pipelines |
 
-## Quarantine Pattern
+### Data Quality Quarantine Pattern
 
 When rows fail validation, quarantine for investigation instead of discarding. [[dbt-data-contracts-implementation|dbt data contracts]] can enforce schema-level quality at build time, catching violations before they reach the quarantine stage.
 
 > [!tip] Related pattern
 > For DataFrame-level validation in Python pipelines (e.g., Pandas schema checks, column type assertions), see [[10_py_testing_migration]].
 
-## Anomaly Detection for Financial Time Series
+### Anomaly Detection for Financial Time Series
 
 Use rolling z-score (30-day window, 3-sigma threshold) to flag unusual values. Apply Bollinger-style bands to row counts to detect ingestion anomalies.
 
-## Airflow Integration
+### Quality Gate Airflow Integration
 
 Use `ShortCircuitOperator` as a quality gate task. If critical checks fail, the operator returns False and skips all downstream tasks, preventing bad data from reaching publication.
 
-## SLA Definitions by Dataset
+### SLA Definitions by Dataset
 
 | Dataset | Freshness SLA | Quality Threshold | Fallback |
 |---------|-------------|-------------------|----------|

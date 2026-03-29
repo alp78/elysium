@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, airflow, docker, gcp, cos]
-tags: [orchestration, observability, docker, airflow, datadog, gcp]
+tags: [monitoring, orchestration, observability, docker, airflow, datadog, gcp]
 aliases: [DD Agent Airflow, Datadog Airflow VM, dd-agent COS]
 keywords: [datadog agent, airflow vm, docker, container-optimized os, COS, dd-agent, autodiscovery, docker labels, statsd, DogStatsD, port 8126, APM, startup script, airflow-net, e2-medium]
 description: "How to set up the Datadog Agent as a Docker container on the example Airflow VM (Container-Optimized OS), covering startup script, autodiscovery labels, StatsD metrics, and memory budget."
@@ -189,7 +189,7 @@ In Datadog: **Integrations → Airflow → Install**. This activates the default
 
 ---
 
-## Stale Container Cleanup
+### Stale dd-agent Container Cleanup
 
 The startup script removes old containers before starting new ones, preventing port conflicts after VM reboot:
 
@@ -201,7 +201,7 @@ done
 
 ---
 
-## Memory Budget
+### Datadog Agent Memory Budget on Airflow VM
 
 The Airflow VM is an `e2-medium` (4 GB RAM). Memory allocation with dd-agent:
 
@@ -219,7 +219,7 @@ Leaves ~2.35 GB headroom. Monitor via Datadog Infrastructure > Host Map.
 
 ---
 
-## Terraform Configuration
+### Terraform Configuration for Airflow VM Agent
 
 In `infra/compute.tf`, the Airflow VM metadata passes the API key:
 
@@ -239,7 +239,7 @@ resource "google_compute_instance" "airflow" {
 
 ---
 
-## Agent Management Commands
+### Agent Management Commands on Airflow VM
 
 SSH into the VM first:
 

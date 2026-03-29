@@ -2,7 +2,7 @@
 type: reference
 category: data-engineering
 technology: [sql-server, python, csharp]
-tags: [python, csharp, sql]
+tags: [python, csharp, sql, sql-server, tsql, pandas, linq]
 aliases: [SQL vs Python vs C#, data manipulation comparison, where to transform, window functions SQL Python, LINQ data transforms, ROW_NUMBER Python equivalent, pandas SQL comparison, LINQ vs SQL, data transformation reference]
 keywords: [sql, python, csharp, linq, pandas, window functions, ROW_NUMBER, RANK, LAG, LEAD, pivot, unpivot, z-score, percent change, deduplication, conditional aggregation, running total, moving average, joins, cross-database join, where to transform, data manipulation, transformation layer]
 description: "Side-by-side reference for data manipulation in SQL Server (T-SQL), Python (pandas), and C# (LINQ) — covering where to transform, window functions, pivoting, z-scores, deduplication, and the key insight for choosing the right tool in each scenario."
@@ -18,7 +18,7 @@ The ability to express the same transformation in SQL, Python, and C# is what ma
 
 > This chapter covers: window functions (ROW_NUMBER, RANK, LAG/LEAD, running aggregates, moving averages), pivoting/unpivoting, conditional aggregation, joins, z-scores, percent change, deduplication, and type conversion.
 
-## The Key Insight — Where to Transform
+### The key insight — where to transform (SQL vs Python vs C#)
 
 | Scenario | Best Tool | Why |
 |---|---|---|
@@ -132,7 +132,7 @@ df['moving_avg_30d'] = df.groupby('symbol')['close_price'].transform(
 )
 ```
 
-## Z-Score Normalization
+### Z-score normalization — SQL vs pandas vs LINQ
 
 Z-scores standardize values to a mean of 0 and standard deviation of 1. Commonly used in factor models and scoring systems to make metrics from different scales comparable.
 
@@ -173,7 +173,7 @@ var result = grouped.SelectMany(g => {
 });
 ```
 
-## Percent Change
+### Percent change — LAG-based calculation in SQL, pandas, LINQ
 
 ```sql
 -- SQL Server: percent change day-over-day
@@ -193,7 +193,7 @@ df = df.sort_values(['symbol', 'trade_date'])
 df['pct_change'] = df.groupby('symbol')['close_price'].pct_change() * 100
 ```
 
-## Pivoting and Unpivoting
+### Pivoting and unpivoting — PIVOT/UNPIVOT vs pandas vs LINQ
 
 Pivot: rows → columns. Unpivot: columns → rows.
 
@@ -229,7 +229,7 @@ melted = df.melt(
 )
 ```
 
-## Deduplication
+### Deduplication — ROW_NUMBER vs pandas drop_duplicates vs LINQ DistinctBy
 
 ```sql
 -- SQL Server: keep latest record per key using ROW_NUMBER
@@ -266,7 +266,7 @@ var deduped = records
     .ToList();
 ```
 
-## Conditional Aggregation (CASE WHEN / IIF)
+### Conditional aggregation — CASE WHEN vs numpy.where vs LINQ ternary
 
 ```sql
 -- SQL Server: count records matching a condition within a GROUP BY
@@ -290,7 +290,7 @@ summary = df.groupby('trade_date').agg(
 )
 ```
 
-## Joins
+### Joins — SQL JOIN vs pandas merge vs LINQ Join
 
 ```sql
 -- SQL Server: INNER JOIN (most common)
@@ -322,7 +322,7 @@ combined = pd.merge(sql_df, bq_df, on='symbol', how='inner')
 > [!info] Cross-Database Joins
 > SQL cannot join tables across different database servers. If you need to combine data from SQL Server and BigQuery, pull both to Python DataFrames and use `pd.merge()`. This is one of the primary use cases for Python in data engineering pipelines.
 
-## Type Conversion
+### Type conversion — CAST vs pandas astype vs Convert in C#
 
 ```sql
 -- SQL Server: CAST and TRY_CAST

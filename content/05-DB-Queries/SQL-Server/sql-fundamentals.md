@@ -2,7 +2,7 @@
 type: reference
 category: db-queries
 technology: [sql-server, t-sql]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROUP BY]
 keywords: [sql, t-sql, select, join, inner join, left join, where, group by, having, order by, subquery, union, aggregate, count, sum, avg, distinct, null, like, between, in, case, coalesce]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."

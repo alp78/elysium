@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, gcloud]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud format, gcloud filter, gcloud output, gcloud --format, gcloud --filter]
 keywords: [gcloud, format, filter, output formatting, value, table, csv, json, flattened, basename, server-side filter, projection, transformation, scripting, impersonation, service account impersonation]
 description: "How to use gcloud --format and --filter flags to extract structured data from GCP APIs, enabling scriptable output in table, value, CSV, JSON, and flattened formats."
@@ -16,7 +16,7 @@ status: complete
 
 The `--format` and `--filter` flags are the most underused features of the [[gcloud-authentication|gcloud CLI]]. They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
 
-## Why It Matters
+### Why gcloud Output Formatting Matters
 
 Without `--format`, gcloud outputs human-readable tables that are difficult to parse programmatically. Without `--filter`, you must download all results and filter locally. Together these flags let you:
 - Extract single fields as newline-separated values for shell loops
@@ -86,7 +86,7 @@ gcloud compute instances list --filter="status=RUNNING" --format="value(name,net
 # Perfect for: building inventory scripts, feeding into other commands
 ```
 
-## Service Account Impersonation
+### Service Account Impersonation with gcloud
 
 ```bash
 # Service account impersonation (act as a service account without a key file)
@@ -105,7 +105,7 @@ gcloud compute instances list --impersonate-service-account=pipeline-sa@project.
 >
 > Read the full reference: `gcloud topic formats`
 
-## Common Transformation Functions
+### Common gcloud Format Transformation Functions
 
 | Function | What it does | Example |
 |---|---|---|

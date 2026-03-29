@@ -340,7 +340,7 @@ steps:
 
 ---
 
-## Docker Container Actions
+### Docker Container Actions
 
 ```yaml
 # .github/actions/run-sql-lint/action.yml
@@ -429,7 +429,7 @@ jobs:
 
 ---
 
-## Deployment to Cloud Run
+### Deployment to Cloud Run
 
 Workflow secrets like `WIF_PROVIDER` and service account emails are stored through [[secrets-management|GitHub's encrypted secrets]] mechanism and injected at runtime.
 
@@ -730,7 +730,7 @@ jobs:
 
 ---
 
-## Docker Build + Push to Artifact Registry
+### Docker Build and Push to Artifact Registry
 
 ```yaml
 # .github/workflows/docker-build.yml
@@ -806,7 +806,7 @@ jobs:
 
 ---
 
-## Multi-Environment Deployment
+### Multi-Environment Deployment
 
 ```yaml
 # .github/workflows/multi-env-deploy.yml
@@ -928,7 +928,7 @@ jobs:
 
 ---
 
-## Branch Protection + Required Status Checks
+### Branch Protection and Required Status Checks
 
 Configure in **Settings → Branches → Add rule**:
 - Require status checks: `lint`, `test (3.12)`, `build-check`
@@ -1163,7 +1163,7 @@ jobs:
 
 ---
 
-## Complete Pattern: PR → Test → Deploy
+### Complete Pattern: PR to Test to Deploy
 
 ```yaml
 # .github/workflows/full-pipeline.yml
@@ -1297,7 +1297,7 @@ jobs:
 
 ---
 
-## See Also
+### See Also
 
 - [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, core concepts
 - [[github-actions-data-engineering]] — data pipeline CI/CD, dbt, Workload Identity

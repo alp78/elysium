@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform VPC, terraform networking, GCP VPC terraform, firewall rules terraform, Cloud NAT terraform]
 keywords: [VPC, subnet, Cloud NAT, firewall, IAP, Identity-Aware Proxy, google_compute_network, google_compute_subnetwork, google_compute_router_nat, google_compute_firewall, CIDR, ingress, egress, network topology, private IP]
 description: "Terraform configuration for GCP networking: VPC, subnet, Cloud Router, Cloud NAT, and firewall rules for SQL Server, Airflow UI, APM, IAP SSH, and deny-all ingress."
@@ -44,7 +44,7 @@ Egress happens when a VM initiates an outbound connection: `apt-get update`, pul
 
 ---
 
-## Architecture Overview
+### Architecture Overview
 
 ```
 GCP Project (europe-west1)
@@ -59,7 +59,7 @@ GCP Project (europe-west1)
 
 ---
 
-## Resource: VPC Network
+### Resource: VPC Network
 
 ```hcl
 resource "google_compute_network" "main" {
@@ -77,7 +77,7 @@ A **Virtual Private Cloud** — an isolated private network in GCP. All VMs, Clo
 
 ---
 
-## Resource: Subnet
+### Resource: Subnet
 
 ```hcl
 resource "google_compute_subnetwork" "main" {
@@ -99,7 +99,7 @@ A **subnet** — a contiguous block of private IP addresses within the VPC, scop
 
 ---
 
-## Resource: Cloud Router
+### Resource: Cloud Router
 
 ```hcl
 resource "google_compute_router" "main" {
@@ -119,7 +119,7 @@ A **Cloud Router** — a virtual router that provides dynamic routing for the VP
 
 ---
 
-## Resource: Cloud NAT
+### Resource: Cloud NAT
 
 ```hcl
 resource "google_compute_router_nat" "main" {

@@ -2,7 +2,7 @@
 type: concept
 category: sql-server
 technology: [sql-server]
-tags: [sql]
+tags: [sql, sql-server, tsql]
 aliases: [SQL Server compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, table compression]
 keywords: [compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, REBUILD, ALTER INDEX, buffer pool, disk space, cold tables, gold layer, archival, financial time-series, prefix compression, dictionary compression, columnstore compression, ONLINE rebuild, compression savings]
 description: "How SQL Server page and row compression works, when to apply each type, how to estimate savings before committing, and how to apply compression with minimal blocking using ONLINE rebuilds. Includes data pipeline guidance for gold-layer tables."
@@ -18,7 +18,7 @@ SQL Server page and row compression reduce the on-disk and in-memory footprint o
 
 ---
 
-## Why Compression Matters for the Buffer Pool
+### Why Compression Matters for the Buffer Pool
 
 SQL Server's [[storage-internals|buffer pool]] is an in-memory cache of 8 KB pages. When a query reads data, SQL Server loads pages from disk into the buffer pool. If the table is large, the working set of pages can exceed available RAM, causing pages to be evicted and re-read — generating [[wait-stats-analysis|PAGEIOLATCH_SH]] waits.
 
@@ -31,7 +31,7 @@ SQL Server decompresses data on the fly as pages are loaded into the buffer pool
 
 ---
 
-## Compression Types
+### Compression Types
 
 SQL Server offers two row-based compression types (plus columnstore, which is a separate index type):
 
@@ -239,7 +239,7 @@ ORDER BY buffer_mb DESC;
 
 ---
 
-## Compression and Columnstore Indexes
+### Compression and Columnstore Indexes
 
 [[index-types-and-strategy|Columnstore indexes]] use their own compression (delta stores + column segments with ~10x compression ratio). If a table has a clustered columnstore index (CCI), the `DATA_COMPRESSION` setting applies to the delta store (recently loaded rows not yet compressed into segments), not the main columnstore storage.
 
@@ -247,7 +247,7 @@ For tables with a CCI, do not apply PAGE or ROW compression — the columnstore 
 
 ---
 
-## Performance Impact
+### Performance Impact
 
 | Workload | Before Compression | After Page Compression | Impact |
 |---|---|---|---|
@@ -261,7 +261,7 @@ The read improvements dominate for dashboard and reporting workloads. The write 
 
 ---
 
-## Related
+### Related
 
 - [[storage-internals]] — how SQL Server pages, buffer pool, and the 8 KB page structure work
 - [[index-types-and-strategy]] — columnstore indexes and when they provide better compression than page compression

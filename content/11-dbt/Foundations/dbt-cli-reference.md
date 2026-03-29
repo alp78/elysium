@@ -17,7 +17,7 @@ Complete reference for the dbt command-line interface. All examples are oriented
 
 ---
 
-## Core Commands Overview
+### Core Commands Overview
 
 | Command | What it does |
 |---|---|
@@ -38,7 +38,7 @@ Complete reference for the dbt command-line interface. All examples are oriented
 
 ---
 
-## dbt run
+### dbt run
 
 Materialise one or more models into the warehouse.
 
@@ -88,7 +88,7 @@ dbt run --select fct_index_performance --full-refresh
 
 ---
 
-## dbt test
+### dbt test
 
 ```bash
 # Test everything
@@ -118,7 +118,7 @@ dbt test --no-fail-fast
 
 ---
 
-## dbt build
+### dbt build
 
 `dbt build` is the recommended command for CI/CD. It runs seeds, snapshots, models, and tests in DAG-topological order, so a model is tested before its downstream models execute.
 
@@ -141,7 +141,7 @@ dbt build --full-refresh --select tag:incremental
 
 ---
 
-## dbt compile
+### dbt compile
 
 Renders Jinja templates to plain SQL without executing anything. Useful for debugging macro output.
 
@@ -156,7 +156,7 @@ dbt compile --select int_daily_returns
 
 ---
 
-## dbt debug
+### dbt debug
 
 Validates that dbt can connect to the warehouse and that `dbt_project.yml` parses correctly.
 
@@ -168,7 +168,7 @@ dbt debug
 
 ---
 
-## dbt deps
+### dbt deps
 
 Installs packages declared in `packages.yml`.
 
@@ -189,7 +189,7 @@ packages:
 
 ---
 
-## dbt seed
+### dbt seed
 
 Loads CSV files from the `seeds/` directory into the warehouse.
 
@@ -215,7 +215,7 @@ Typical seeds for a financial platform:
 
 ---
 
-## dbt snapshot
+### dbt snapshot
 
 Executes snapshot definitions to capture SCD Type 2 history.
 
@@ -253,7 +253,7 @@ from {{ ref('stg_market_data__index_constituents') }}
 
 ---
 
-## dbt docs
+### dbt docs
 
 ```bash
 # Generate the docs site (writes to target/catalog.json + manifest.json)
@@ -270,7 +270,7 @@ Documentation is pulled from `description:` fields in `.yml` files and rendered 
 
 ---
 
-## dbt source freshness
+### dbt source freshness
 
 Checks whether source tables have been updated within the configured freshness window.
 
@@ -289,7 +289,7 @@ Exit codes: `0` = pass, `1` = warn, `2` = error. Wire `2` into your alerting sys
 
 ---
 
-## dbt ls (list)
+### dbt ls (list)
 
 List DAG nodes without executing anything.
 
@@ -312,7 +312,7 @@ dbt ls --output json --select tag:daily
 
 ---
 
-## dbt clean
+### dbt clean
 
 Deletes compiled artifacts and installed packages. Run before a fresh `dbt deps`.
 
@@ -323,7 +323,7 @@ dbt clean
 
 ---
 
-## dbt retry
+### dbt retry
 
 Re-runs the last failed invocation using the same selection and flags. Useful in CI when a transient network error causes a single model failure.
 
@@ -372,7 +372,7 @@ dbt run --select marts/ --exclude fct_composite_scores+
 
 ---
 
-## Key Flags Reference
+### Key Flags Reference
 
 | Flag | Commands | Purpose |
 |---|---|---|
@@ -392,7 +392,7 @@ dbt run --select marts/ --exclude fct_composite_scores+
 
 ---
 
-## --defer and Slim CI Pattern
+### --defer and Slim CI Pattern
 
 `--defer` lets developers run only their changed models in a dev environment, resolving unselected upstream `ref()` calls against the production schema instead of rebuilding everything.
 
@@ -412,7 +412,7 @@ This means a developer who only changes `int_esg_normalized` does not need to re
 
 ---
 
-## Reading CLI Output
+### Reading CLI Output
 
 ```
 Running with dbt=1.8.0

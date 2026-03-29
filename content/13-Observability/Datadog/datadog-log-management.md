@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, sql-server, airflow, docker]
-tags: [observability, sql, docker, airflow, datadog]
+tags: [monitoring, observability, sql, docker, airflow, datadog]
 aliases: [Log Collection, SQL Server Log Collection, Datadog Logs, errorlog, log tailing]
 keywords: [datadog log collection, SQL server errorlog, log tailing, logs.yaml, file tailing, source sqlserver, dd-agent mssql group, bytes read, start_position beginning, container logs, docker autodiscovery, DD_LOGS_ENABLED, DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL, Live Tail, Log Explorer]
 description: "How to configure Datadog log collection for the data platform — SQL Server errorlog file tailing on the SQL VM and Docker container log collection on the Airflow VM."
@@ -131,7 +131,7 @@ In Datadog: **Logs > Explorer** → filter by:
 
 ---
 
-## Viewing Logs in Datadog
+### Viewing Logs in Datadog Log Explorer
 
 > [!tip] Use Live Tail for Real-Time Logs
 > In Datadog, use **Logs > Live Tail** (not Log Explorer) to see logs in real time. New accounts may show an onboarding wizard — Live Tail bypasses it.
@@ -142,7 +142,7 @@ In Datadog: **Logs > Explorer** → filter by:
 
 ---
 
-## Cloud Run Pipeline Logs
+### Cloud Run Pipeline Logs in Datadog
 
 > [!warning] Cloud Run Logs Are NOT in Datadog
 > Cloud Run job logs go to **GCP Cloud Logging** (see [[cloud-logging]] for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
@@ -155,7 +155,7 @@ The `LOG_FORMAT=json` env var on the Cloud Run Job formats logs as JSON, which e
 
 ---
 
-## Config File Locations
+### Log Collection Config File Locations
 
 | File | Purpose |
 |------|---------|

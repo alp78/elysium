@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [git]
+tags: [git, github]
 aliases: [git tag, annotated tag, semantic versioning, release tags, lightweight tag, git push tags, version label, tag a release, SemVer git]
 keywords: [git tag, tagging, annotated tag, lightweight tag, release, versioning, semantic versioning, semver, v1.0.0, git push tags, push tag to github, list tags, mark release, tag message, tag annotation, production release, git tag -a]
 description: "How to create lightweight and annotated git tags, push them to GitHub, and use semantic versioning to mark production releases."
@@ -16,7 +16,7 @@ status: complete
 
 Git tags are named pointers to specific commits, used to mark significant points in a repository's history — most commonly production releases. Unlike branches, tags do not move as new commits are added. A tag always points to the same commit. This note covers lightweight tags, annotated tags, pushing tags to GitHub, and the semantic versioning convention used to name them.
 
-## Lightweight vs Annotated Tags
+### Lightweight vs Annotated Tags
 
 Git has two types of tags:
 
@@ -143,7 +143,7 @@ git push origin --delete v1.0.0-draft
 > [!warning] Deleting pushed tags affects others
 > If collaborators have already fetched a tag, deleting it from the remote does not remove it from their local repos. Coordinate with your team before deleting published tags.
 
-## Integration with GitHub Actions
+### Integration with GitHub Actions
 
 Tags are a common CI/CD trigger. When you push a tag matching a pattern like `v*`, a GitHub Actions workflow can automatically build, test, and deploy. See [[github-actions-ci-cd]] for workflow configuration.
 
@@ -158,7 +158,7 @@ on:
 
 This fires the workflow whenever a tag starting with `v` is pushed — covering `v1.0.0`, `v2.3.1`, etc.
 
-## Quick Reference: Tagging Commands
+### Quick Reference: Tagging Commands
 
 | Goal | Command |
 |------|---------|

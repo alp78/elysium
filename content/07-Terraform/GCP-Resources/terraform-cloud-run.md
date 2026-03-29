@@ -2,7 +2,7 @@
 type: reference
 category: infrastructure
 technology: [terraform, gcp]
-tags: [infrastructure, terraform, gcp]
+tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run service terraform, Cloud Run job terraform]
 keywords: [Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run job, Cloud Run service, session affinity, direct VPC egress, startup probe, secret injection, task_count, max_retries, timeout, scaling, min_instances, PRIVATE_RANGES_ONLY]
 description: "Terraform configuration for Cloud Run services (long-running HTTP endpoints) and Cloud Run jobs (batch run-to-completion), including VPC access, secret injection, session affinity, scaling, and the double-nested job template structure."
@@ -20,12 +20,12 @@ status: complete
 
 This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.
 
-## Cloud Run Billing Note
+### Cloud Run Billing Note
 
 > [!info] Billing: Actual Usage, Not Limits
 > Cloud Run bills **actual CPU/memory usage**, not the limits defined in the configuration. Setting `cpu = "2"` and `memory = "2Gi"` as limits does not mean you pay for 2 CPUs — you pay for what the container actually consumes during execution. Lowering limits does not save cost; it only risks OOM kills or CPU throttling if the workload exceeds them.
 
-## Locals Block
+### Locals Block
 
 ```hcl
 locals {
@@ -256,7 +256,7 @@ Other pipeline environment variables:
 
 ---
 
-## Resource: Setup Job
+### Resource: Setup Job
 
 ```hcl
 resource "google_cloud_run_v2_job" "setup" {
@@ -285,7 +285,7 @@ resource "google_cloud_run_v2_job" "setup" {
 
 ---
 
-## gcloud Verification Commands
+### gcloud Verification Commands
 
 ```bash
 # List all Cloud Run services

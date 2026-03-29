@@ -4,7 +4,7 @@ category: data-architecture
 technology:
   - python
   - gcp
-tags: [architecture, api, python, gcp]
+tags: [data-architecture, architecture, api, python, gcp]
 aliases:
   - API comparison
   - protocol comparison
@@ -82,7 +82,7 @@ status: complete
 
 ---
 
-## The Protocol Landscape for Data Engineers
+### Protocol Landscape Overview for Data Engineers
 
 APIs are not interchangeable. The protocol you choose determines latency, throughput, schema guarantees, infrastructure complexity, and what your consumers can actually do with the data. Data engineers deal with a wider range of protocols than most backend engineers because the job spans three distinct integration directions:
 
@@ -714,7 +714,7 @@ FIX (Financial Information eXchange) is the industry standard messaging protocol
 
 ---
 
-## The Master Comparison Table
+### Master Protocol Comparison Table
 
 | Protocol | Transport | Payload | Direction | Latency | Throughput | Browser | Streaming | Schema | Auth | When DE Uses It |
 |----------|-----------|---------|-----------|---------|------------|---------|-----------|--------|------|-----------------|
@@ -811,7 +811,7 @@ WebTransport is a web standard (currently in WHATWG draft) that exposes QUIC str
 
 ---
 
-## Authentication Quick Reference
+### Protocol Authentication Quick Reference
 
 Each protocol has idiomatic authentication patterns. Using the wrong one creates unnecessary friction.
 

@@ -1,6 +1,8 @@
 ---
 tags:
   - sql
+  - runbook
+  - incident
 type: runbook
 severity: sev2
 technology: sql-server, gcp
@@ -17,7 +19,7 @@ updated: 2026-03-23
 
 ---
 
-## Symptoms
+### Symptoms — missed corporate action indicators
 
 - A constituent's weight in the index jumped abnormally — a 2-for-1 split doubles share count but price should halve; if price adjustment is missing, weight doubles
 - Index level shows an unexplained large single-day move not consistent with market conditions
@@ -439,7 +441,7 @@ If this returns > 0, open the [[data-restatement-procedure]] as a parallel works
 
 ---
 
-## Escalation
+### Escalation — corporate action incident
 
 | Condition | Escalate to | SLA |
 |---|---|---|
@@ -451,7 +453,7 @@ If this returns > 0, open the [[data-restatement-procedure]] as a parallel works
 
 ---
 
-## Post-Incident Checklist
+### Post-incident checklist — corporate action resolution
 
 - [ ] `dbo.corporate_actions.applied_flag = 1` for the affected action
 - [ ] `dbo.corporate_action_audit` row inserted with all factor and divisor values

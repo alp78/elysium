@@ -18,7 +18,7 @@ A well-organised dbt project is the foundation for maintainability at scale. Thi
 
 ---
 
-## Directory Tree
+### dbt Directory Tree
 
 ```
 financial_platform/
@@ -90,7 +90,7 @@ financial_platform/
 
 ---
 
-## dbt_project.yml — Fully Annotated
+### dbt_project.yml — Fully Annotated
 
 ```yaml
 # dbt_project.yml
@@ -189,7 +189,7 @@ tests:
 
 ---
 
-## Naming Conventions
+### dbt Naming Conventions
 
 | Layer | Prefix | Pattern | Example |
 |---|---|---|---|
@@ -205,7 +205,7 @@ tests:
 
 ---
 
-## _sources.yml Pattern
+### dbt _sources.yml Pattern
 
 ```yaml
 # models/staging/market_data/_sources.yml
@@ -267,7 +267,7 @@ sources:
 
 ---
 
-## Config Inheritance: Project → Folder → Model
+### dbt Config Inheritance: Project to Folder to Model
 
 ```
 dbt_project.yml (project level)
@@ -291,7 +291,7 @@ select ...
 
 ---
 
-## Multi-Adapter Layout (SQL Server + BigQuery Dispatch)
+### Multi-Adapter Layout (SQL Server + BigQuery Dispatch)
 
 dbt's dispatch system lets you write adapter-specific macro implementations without forking model SQL.
 
@@ -328,7 +328,7 @@ group by 1
 
 ---
 
-## Mapping to Medallion Architecture
+### dbt Mapping to Medallion Architecture
 
 The directory structure directly mirrors the [[medallion-architecture]] layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
 
@@ -349,7 +349,7 @@ Gold (consumption-ready)
 
 ---
 
-## profiles.yml Reference (not committed to repo)
+### profiles.yml Reference (not committed to repo)
 
 ```yaml
 # ~/.dbt/profiles.yml

@@ -57,7 +57,7 @@ All files land in the `target/` directory. In CI/CD they are uploaded to GCS for
 
 ---
 
-## Python Script: Push Results to DogStatsD
+### Python Script: Push dbt Results to DogStatsD
 
 Parse `run_results.json` after each dbt run and emit custom metrics to the Datadog Agent's DogStatsD UDP endpoint.
 

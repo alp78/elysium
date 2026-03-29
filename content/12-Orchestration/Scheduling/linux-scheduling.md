@@ -2,7 +2,7 @@
 type: reference
 category: orchestration
 technology: [bash, linux]
-tags: [orchestration, bash]
+tags: [orchestration, bash, scheduling, cron]
 aliases: [cron, crontab, systemd timer, at, anacron, Linux scheduling, cron job, cron expression, crontab syntax, cron schedule, crond, cron daemon, task scheduler linux]
 keywords: [cron, crontab, crontab -e, crontab -l, crontab -r, systemd timer, systemd.timer, OnCalendar, at command, batch command, atq, atrm, anacron, anacrontab, flock, overlap prevention, cron overlap, MAILTO, cron logging, cron debugging, cron environment, cron PATH, cron TZ, cron syslog, "/etc/cron.d", "/etc/crontab", cron.daily, cron.weekly, "@reboot", "@hourly", "@daily", "@weekly", "@monthly", journalctl timer, persistent timer, ssh config, ssh key, ed25519, ssh-copy-id, ssh tunnel, ProxyCommand, IAP tunnel, cron vs airflow, cloud scheduler, task scheduling linux, job scheduling, recurring job, scheduled task linux]
 description: "Exhaustive reference for Linux task scheduling covering cron, systemd timers, at/batch, and anacron. Includes crontab syntax, overlap prevention with flock, environment handling, output logging, SSH configuration for remote scheduling, and a decision table for choosing between cron, Airflow, and Cloud Scheduler."

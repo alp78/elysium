@@ -6,7 +6,7 @@ technology:
   - fastapi
   - bash
   - gcp
-tags: [architecture, api, python, bash, gcp]
+tags: [data-architecture, architecture, api, python, bash, gcp]
 aliases:
   - REST API
   - RESTful

@@ -151,7 +151,7 @@ git blame -C src/transform.py
 
 ---
 
-## git show — Inspect a Commit
+### git show — Inspect a Commit
 
 ```bash
 # Show full details of a specific commit (message, author, diff)
@@ -213,7 +213,7 @@ git show <commit-sha> --stat
 
 ---
 
-## Quick Reference Cheat Sheet
+### Quick Reference Cheat Sheet
 
 | Command | Purpose |
 |---------|---------|

@@ -2,7 +2,7 @@
 type: reference
 category: data-architecture
 technology: [sql-server, bigquery, gcp, python, bash, powershell, csharp, terraform, airflow, docker]
-tags: [architecture, python, csharp, bash, sql, terraform, docker, airflow, bigquery, gcp]
+tags: [data-architecture, architecture, python, csharp, bash, sql, terraform, docker, airflow, bigquery, gcp]
 aliases: [technology selection, decision matrix, when to use, build vs buy, language comparison, Python vs C# vs bash, SQL Server vs BigQuery, Airflow vs cron, Terraform vs CLI]
 keywords: [technology selection, decision matrix, language selection, build vs buy, trade-off analysis, Python vs bash, Python vs C#, SQL vs Python, SQL Server vs BigQuery, Airflow vs cron, Terraform vs gcloud, Cloud Run vs Compute Engine, Pub/Sub vs direct calls, GCS vs BigQuery, star schema vs flat, ETL vs ELT, Firestore vs Bigtable, Cloud SQL vs SQL Server, orchestration selection, compute selection, storage selection, database selection, API protocol selection, architecture selection, data model selection, infrastructure as code, cost comparison, latency comparison, scaling comparison, managed vs self-hosted, serverless vs VM, batch vs streaming, Docker vs bare metal, dbt vs custom SQL, Datadog vs Cloud Monitoring, CI/CD selection, testing strategy selection]
 description: "Comprehensive decision-matrix reference for data engineering technology selection — language choice (Python/Bash/PowerShell/C#/SQL), database selection (SQL Server/BigQuery/Cloud SQL/Firestore/Bigtable), GCP component selection (compute/messaging/storage), orchestration (Airflow/cron/Cloud Scheduler/Composer), infrastructure tooling (Terraform/gcloud/Console), data modeling, API protocols, architecture patterns, and build-vs-buy frameworks. Every decision backed by trade-off analysis with specific thresholds and decision rules."
@@ -912,7 +912,7 @@ When choosing between technologies, cost is a dimension — not the only dimensi
 
 ---
 
-## Serialization Format Selection
+### Serialization Format Selection
 
 When data moves between systems, the format matters for performance, compatibility, and cost.
 
@@ -933,7 +933,7 @@ When data moves between systems, the format matters for performance, compatibili
 
 ---
 
-## Decision Anti-Patterns
+### Technology Selection Anti-Patterns
 
 Common mistakes when selecting technology — and the correction:
 

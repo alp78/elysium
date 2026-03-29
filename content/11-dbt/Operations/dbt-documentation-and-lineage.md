@@ -56,7 +56,7 @@ Opens the lineage graph and documentation browser at `http://localhost:8080`.
 
 ---
 
-## Model Descriptions
+### dbt Model Descriptions
 
 Descriptions live in `.yml` files co-located with models. They render as rich text in the docs browser and can include Markdown.
 
@@ -93,14 +93,14 @@ models:
 
 ---
 
-## Doc Blocks
+### dbt Doc Blocks
 
 Long methodological descriptions that are reused across multiple models belong in doc blocks, stored in `.md` files inside the `models/` directory.
 
 ```markdown
 <!-- models/docs/esg_methodology.md -->
 {% docs esg_score_normalisation %}
-## ESG Score Normalisation
+### ESG Score Normalisation Doc Block
 
 Raw provider scores are mapped to a common 0–100 scale using a min-max
 normalisation applied per pillar per universe. The transformation follows

@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-monitoring, observability]
-tags: [observability, infrastructure, gcp]
+tags: [observability, infrastructure, gcp, monitoring]
 aliases: [Cloud Monitoring, GCP metrics, time series, gcloud monitoring, VM CPU metrics, Cloud Monitoring metrics descriptors, BigQuery metrics]
 keywords: [cloud monitoring, metrics, time series, gcloud monitoring time-series list, metrics descriptors, CPU utilization, disk read, disk write, network, cloud run job completions, pubsub backlog, bigquery slot usage, capacity planning, right-sizing, monitoring time-series, interval-start-time, doubleValue]
 description: "How to query Cloud Monitoring time-series metrics using the gcloud CLI — listing available metric types and reading historical metric data for capacity planning, right-sizing, and pipeline health monitoring."
@@ -16,7 +16,7 @@ status: complete
 
 Cloud Monitoring captures time-series metrics for every GCP resource. When your VM's CPU spikes, when a Cloud Run job fails repeatedly, or when a Pub/Sub subscription is falling behind — Cloud Monitoring has the data. The `gcloud monitoring` commands let you explore available metrics and read historical data from the command line, without opening the Cloud Console. This is essential for scripted capacity planning and right-sizing decisions.
 
-## Listing Available Metric Types
+### Listing Available Cloud Monitoring Metric Types
 
 ```bash
 # List available metric types
@@ -51,7 +51,7 @@ gcloud monitoring time-series list \
 > [!tip] Use Metrics for Right-Sizing Decisions
 > Pull CPU utilization data before any VM resize decision. If the top 5 data points (peak values from the last 7 days) are all below 0.30 (30%), the VM is over-provisioned. The `sort -n | tail -5` pipeline extracts the highest recorded values, which represent true peak load. See [[vm-lifecycle]] for the full right-sizing workflow.
 
-## Key Metrics for Data Engineers
+### Key Cloud Monitoring Metrics for Data Engineers
 
 ```bash
 # Useful metrics for data engineers:
@@ -65,7 +65,7 @@ gcloud monitoring time-series list \
 # bigquery.googleapis.com/slots/total_available         — BigQuery slot usage
 ```
 
-## Metrics vs Logs — When to Use Each
+### Metrics vs Logs — When to Use Each
 
 | Signal type | Tool | Best for |
 |---|---|---|
@@ -74,7 +74,7 @@ gcloud monitoring time-series list \
 
 Metrics tell you *how much* and *when* — they are aggregated numbers over time. Logs tell you *what happened* — they are discrete events with full context. Senior engineers use both together: metrics surface anomalies, logs explain them.
 
-## Common Monitoring Patterns for Data Engineering
+### Common Cloud Monitoring Patterns for Data Engineering
 
 **Is the Pub/Sub backlog growing?**
 ```bash
@@ -93,7 +93,7 @@ gcloud monitoring time-series list \
 # Look for "failed" in the result label to count job failures
 ```
 
-## Alerting Policies
+### Cloud Monitoring Alerting Policies
 
 While `gcloud monitoring` CLI commands are used for ad-hoc queries, alerting policies are best configured through the Cloud Console or Terraform. The Cloud Console's alerting UI supports:
 - Threshold conditions on any metric (e.g., CPU > 80% for 5 minutes)

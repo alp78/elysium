@@ -5,7 +5,7 @@ technology:
   - csharp
   - dotnet
   - polars
-tags: [pipeline, csharp, polars, dataframes]
+tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - with_columns, when/then, apply, transform
 keywords: [with_columns, when, then, otherwise, apply, map, transform, method chaining, expressions]

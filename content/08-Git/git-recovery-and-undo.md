@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git]
-tags: [git]
+tags: [git, github]
 aliases: [git reset, git revert, git reflog, git stash, undo commit, recover lost commit, git undo]
 keywords: [git reset, git revert, git reflog, git restore, git stash, reset --soft, reset --hard, reset --mixed, HEAD~1, reflog, recover, undo, cherry-pick, lost commit, detached HEAD, branch deleted, merge conflict abort]
 description: "Complete guide to undoing changes in Git — safe methods (restore, revert) and destructive methods (reset --hard), using reflog to recover lost commits, and stash for temporary shelving."
@@ -19,7 +19,7 @@ status: complete
 
 Everyone makes mistakes. Git has several ways to undo things, ranging from completely safe to permanently destructive. The key is matching the right tool to the situation.
 
-## Decision Tree: Which Undo to Use
+### Decision Tree: Which Git Undo to Use
 
 | Situation | Safe Action |
 |-----------|-------------|
@@ -31,7 +31,7 @@ Everyone makes mistakes. Git has several ways to undo things, ranging from compl
 
 ---
 
-## Safe: Discard Uncommitted Changes
+### Safe: Discard Uncommitted Changes
 
 ```bash
 # Discard uncommitted changes to a file
@@ -51,7 +51,7 @@ git checkout -- filename.py
 
 ---
 
-## Safe: Revert a Commit (Creates a New Undo Commit)
+### Safe: Revert a Commit (Creates a New Undo Commit)
 
 ```bash
 # Create a new commit that undoes a specific commit
@@ -69,7 +69,7 @@ git revert HEAD
 
 ---
 
-## Careful: Reset (Rewrites History)
+### Careful: Reset (Rewrites History)
 
 ```bash
 # Undo last commit, keep changes staged
@@ -102,7 +102,7 @@ git reset --hard origin/main
 
 ---
 
-## Recover: Reflog — Git's Safety Net
+### Recover: Reflog — Git's Safety Net
 
 ```bash
 # Show a log of all recent HEAD movements
@@ -122,7 +122,7 @@ git reset --hard abc1234
 
 ---
 
-## Stash — Temporarily Shelve Work
+### Stash — Temporarily Shelve Work
 
 ```bash
 # Stash all modified tracked files
@@ -253,7 +253,7 @@ rm -f .git/index.lock
 
 ---
 
-## Advanced: Cherry-pick
+### Advanced: Cherry-pick
 
 ```bash
 # Apply a specific commit onto the current branch
@@ -263,7 +263,7 @@ git cherry-pick abc1234
 # In plain English: Copy one specific commit from another branch onto mine.
 ```
 
-## Advanced: Interactive Rebase
+### Advanced: Interactive Rebase
 
 ```bash
 # Reorder, squash, edit, or drop the last 5 commits
@@ -277,7 +277,7 @@ git rebase -i HEAD~5
 > [!warning] Only Rebase Unpushed Commits
 > Interactive rebase rewrites history. Only use on commits that haven't been pushed to a shared branch.
 
-## Advanced: Bisect — Find the Breaking Commit
+### Advanced: Bisect — Find the Breaking Commit
 
 ```bash
 git bisect start

@@ -2,7 +2,7 @@
 type: concept
 category: prompt-engineering
 technology: [claude, gpt-4, gemini, grok, llm]
-tags: [ai]
+tags: [ai, prompt-engineering]
 aliases: [prompt engineering basics, prompt fundamentals, prompt principles, LLM input design, context hierarchy, token efficiency]
 keywords: [prompt engineering, context hierarchy, system prompt, user prompt, token efficiency, clarity, specificity, intent alignment, ambiguity, structure, reasoning, creativity, factuality, completion engine, context window, front-load]
 description: "Core principles of prompt engineering: the three axioms of LLM completion, the four-level context hierarchy (system → user → history → model knowledge), and how to achieve clarity, specificity, and intent alignment. Covers how prompt structure shapes reasoning, creative, and factual outputs."
@@ -33,7 +33,7 @@ Prompt engineering is the practice of designing inputs to AI models that produce
 
 ---
 
-## Context Hierarchy
+### Context Hierarchy and Priority Levels
 
 Every prompt operates within a context hierarchy. Understanding this hierarchy is essential because it determines what the model pays attention to and what it deprioritizes.
 

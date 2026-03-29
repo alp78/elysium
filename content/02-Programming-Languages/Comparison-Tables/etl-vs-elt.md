@@ -2,7 +2,7 @@
 type: reference
 category: data-architecture
 technology: [sql-server, bigquery, python]
-tags: [python, sql, bigquery]
+tags: [python, sql, bigquery, data-architecture, sql-server]
 aliases: [ETL vs ELT, extract transform load, extract load transform, ETL comparison]
 keywords: [etl, elt, extract transform load, extract load transform, comparison, data pipeline, data warehouse, medallion architecture, bigquery, sql server]
 description: "Comparison of ETL (Extract-Transform-Load) vs ELT (Extract-Load-Transform) patterns — when to use each, trade-offs, and how they map to the medallion architecture."
@@ -21,7 +21,7 @@ status: complete
 
 Two fundamental patterns for moving and transforming data. The choice between them drives your architecture, tool selection, and cost profile.
 
-## Comparison
+### ETL vs ELT comparison — transform location, cost, and debugging
 
 | Dimension | ETL | ELT |
 |-----------|-----|-----|
@@ -34,21 +34,21 @@ Two fundamental patterns for moving and transforming data. The choice between th
 | **Debugging** | Harder (intermediate state in memory/logs) | Easier (intermediate layers are queryable tables) |
 | **Schema flexibility** | High (code handles any structure) | Moderate (warehouse schema must accommodate raw data) |
 
-## When to Use ETL
+### When to use ETL — external APIs, ML, unstructured data
 
 - Transformations require external APIs, ML models, or complex Python logic
 - Data must be cleaned/validated before it enters the warehouse
 - The warehouse has limited compute and you want to offload processing
 - You are working with unstructured data (images, PDFs, raw text)
 
-## When to Use ELT
+### When to use ELT — SQL transforms, raw data preservation, elastic compute
 
 - Most transformations are SQL-expressible (joins, aggregations, window functions)
 - You want to preserve raw data for audit and reprocessing ([[idempotent-pipeline-design|idempotency]])
 - The warehouse has elastic compute (BigQuery auto-scales, SQL Server has headroom)
 - Multiple teams need different views of the same raw data
 
-## Hybrid ETL/ELT in Practice
+### Hybrid ETL/ELT — Python extraction with SQL warehouse transforms
 
 The the pipeline steps uses a hybrid approach:
 

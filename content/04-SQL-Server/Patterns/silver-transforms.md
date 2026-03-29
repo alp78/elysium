@@ -2,7 +2,7 @@
 type: how-to
 category: data-engineering
 technology: [sql-server, python]
-tags: [python, sql]
+tags: [python, sql, sql-server, tsql]
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
 keywords: [silver layer, medallion architecture, SCD Type 2, slowly changing dimensions, deduplication, gap fill, forward fill, is_filled, trading calendar, upsert, unique index, filtered index, valid_from, valid_to, is_current, OHLCV transform, signals daily, signals quarterly, index_dim SCD2, upserting, insert or update, parameterized queries, silver schema]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."
@@ -328,7 +328,7 @@ WHERE is_filled = 1 AND date > CAST(GETDATE() AS DATE)
 
 ---
 
-## Silver Index Design
+### Silver Index Design
 
 | Table | Index | Purpose |
 |-------|-------|---------|
@@ -342,7 +342,7 @@ WHERE is_filled = 1 AND date > CAST(GETDATE() AS DATE)
 
 ---
 
-## Key SQL Techniques Used in Silver Transforms
+### Key SQL Techniques Used in Silver Transforms
 
 | Technique | Where | Why |
 |-----------|-------|-----|
@@ -390,7 +390,7 @@ DELETE FROM silver.index_usa_ohlcv  WHERE date > CAST(GETDATE() AS DATE) AND is_
 
 ---
 
-## Related Notes
+### Related Notes
 
 - [[bronze-layer-loading]] — upstream: raw data loading patterns and DDL
 - [[gold-transforms]] — downstream: aggregations, scoring, and dashboard-ready views

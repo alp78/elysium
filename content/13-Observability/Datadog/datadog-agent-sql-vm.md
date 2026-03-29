@@ -2,7 +2,7 @@
 type: how-to
 category: observability
 technology: [datadog, sql-server, ubuntu, gcp]
-tags: [observability, sql, datadog, gcp]
+tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [DD Agent SQL VM, Datadog SQL Server VM, datadog-agent systemd]
 keywords: [datadog agent, sql server vm, ubuntu, systemd, install_script_agent7, datadog.yaml, dd_agent login, sql server integration, manual install, bootstrap, startup script, odbc]
 description: "How to set up the Datadog Agent as a systemd service on the example SQL Server VM (Ubuntu 22.04), covering automated bootstrap, manual install steps, and the dd_agent SQL login."
@@ -68,7 +68,7 @@ GRANT VIEW ANY DEFINITION TO dd_agent;
 
 ---
 
-## Manual Install (if missed during bootstrap)
+### Datadog Agent Manual Install on SQL VM
 
 If the Datadog Agent was not installed during VM bootstrap (e.g., `dd-api-key` metadata was not set at first boot), install it manually:
 
@@ -141,7 +141,7 @@ sudo datadog-agent status
 
 ---
 
-## Config File Locations
+### Datadog Agent Config File Locations on SQL VM
 
 | File | Purpose |
 |------|---------|
@@ -151,7 +151,7 @@ sudo datadog-agent status
 
 ---
 
-## Agent Management Commands
+### Datadog Agent Management Commands on SQL VM
 
 SSH into the VM first:
 

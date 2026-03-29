@@ -2,7 +2,7 @@
 type: concept
 category: gcp
 technology: [gcp, cloud-storage]
-tags: [infrastructure, gcp]
+tags: [infrastructure, gcp, gcs]
 aliases: [GCS buckets, GCS lifecycle, GCS storage classes, GCS versioning, Cloud Storage lifecycle rules, STANDARD NEARLINE COLDLINE ARCHIVE]
 keywords: [GCS bucket, cloud storage, storage class, STANDARD, NEARLINE, COLDLINE, ARCHIVE, lifecycle rules, versioning, SetStorageClass, auto-transition, auto-delete, uniform bucket level access, location, data residency, lifecycle.json, cost optimization, retrieval cost]
 description: "How to create GCS buckets with appropriate storage classes and configure lifecycle rules to automatically transition objects through STANDARD → NEARLINE → COLDLINE → ARCHIVE, reducing storage costs for aging pipeline data."
@@ -16,7 +16,7 @@ status: complete
 
 Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [[backup-types-and-strategy|backup retention policy]] ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
 
-## Creating Buckets
+### Creating GCS Buckets with gcloud storage
 
 ```bash
 # Create a bucket
@@ -30,7 +30,7 @@ gcloud storage buckets create gs://data-pipeline-pipeline-data \
 > [!tip] Always Use Uniform Bucket-Level Access
 > `--uniform-bucket-level-access` disables per-object ACLs and enforces IAM-only access control. This is simpler to manage, audit, and secure. It is the recommended setting for all new buckets. Once enabled, it cannot be disabled for 90 days.
 
-## Storage Classes and Cost Trade-offs
+### GCS Storage Classes and Cost Trade-offs
 
 ```bash
 # Storage classes and cost trade-offs:
@@ -53,7 +53,7 @@ Choosing the right storage class is one of the most impactful [[finops-cost-opti
 > [!warning] Minimum Storage Duration Charges
 > Moving an object to NEARLINE before 30 days charges you for the full 30 days regardless. COLDLINE has a 90-day minimum, ARCHIVE has 365 days. Only transition objects when you are confident they won't need to be deleted before the minimum duration expires.
 
-## Lifecycle Rules
+### GCS Lifecycle Rules for Auto-Tiering
 
 Lifecycle rules automate object transitions and deletions. Define rules in a JSON file and apply to the bucket.
 
@@ -85,7 +85,7 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --lifecycle-file=
 > [!tip] Lifecycle Rules Are "Set and Forget"
 > Once configured, lifecycle rules run automatically with no ongoing maintenance. They are evaluated daily. For pipeline staging buckets, a common pattern is: STANDARD for 30 days (active pipeline window) → NEARLINE for 60 days (occasional re-processing) → COLDLINE for 275 days (compliance retention) → deleted at 365 days.
 
-## Versioning
+### GCS Object Versioning
 
 ```bash
 # Enable versioning (protect against accidental overwrites)
@@ -100,7 +100,7 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --versioning
 > [!tip] Related pattern
 > For reproducible bucket provisioning with lifecycle rules baked in, use [[tf-compute-and-storage|Terraform storage blocks]] instead of manual `gcloud` commands.
 
-## Bucket Location and Data Residency
+### GCS Bucket Location and Data Residency
 
 The `--location` flag determines where data is physically stored:
 - **Multi-region** (`EU`, `US`, `ASIA`) — data replicated across multiple regions, highest availability
