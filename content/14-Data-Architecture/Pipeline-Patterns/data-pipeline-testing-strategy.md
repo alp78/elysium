@@ -43,10 +43,10 @@ Every page in this vault covers *how* to use a testing tool — pytest fixtures,
 ```mermaid
 block-beta
     columns 7
-    space:2 E2E["E2E\nNightly"]:3 space:2
-    space:1 INT["Integration\nOn merge"]:5 space:1
-    CONTRACT["Contract + Quality\nEvery PR + every load"]:7
-    UNIT["Unit Tests — fastest, most tests, every PR"]:7
+    space:2 E2E["E2E — Nightly\n\nFull pipeline on test data\nSlowest, fewest tests"]:3 space:2
+    space:1 INT["Integration — On Merge\n\nReal connections, test database\nMinutes per run"]:5 space:1
+    CONTRACT["Contract + Quality — Every PR + Every Load\n\nSchema conformance, row counts, nulls, ranges, freshness"]:7
+    UNIT["Unit Tests — Every PR\n\nTransform logic, SQL expressions, dbt generic tests\nFastest, cheapest, most tests"]:7
 
     style E2E fill:#cc4125,stroke:#cc4125,color:#fff
     style INT fill:#e8b84d,stroke:#e8b84d,color:#1a1a2e

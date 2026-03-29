@@ -46,9 +46,44 @@ For SA creation and IAM binding commands, see [[service-accounts-and-iam#GCP Ser
 
 ### Credential Types — Short-Lived vs Long-Lived
 
-> [!info]- Credential Comparison Table
+> [!info]- Credential Risk Spectrum
 >
 > Each credential type has a different lifetime, risk profile, and use case. Short-lived credentials are always preferred — they limit the blast radius of a leak.
+
+```mermaid
+flowchart LR
+    subgraph SAFE["SHORT-LIVED — Auto-Expire"]
+        direction TB
+        META["Metadata Server\n1h auto-refreshed\nVMs, Cloud Run"]
+        WIF["WIF Federated\nMinutes\nGitHub Actions, CI/CD"]
+        OIDC["OIDC ID Token\n1 hour\nService-to-service"]
+        ACCESS["OAuth2 Access Token\n1 hour\nSDK API calls"]
+    end
+
+    subgraph CAUTION["LONG-LIVED — Must Revoke"]
+        direction TB
+        REFRESH["OAuth2 Refresh Token\nUntil revoked\nLocal dev gcloud auth"]
+    end
+
+    subgraph DANGER["PERMANENT — Never Expires"]
+        direction TB
+        KEYFILE["SA Key File JSON\nNever expires\nLast resort only"]
+    end
+
+    SAFE ~~~ CAUTION ~~~ DANGER
+
+    style SAFE fill:#1a3a1a,stroke:#34a853,stroke-width:2px,color:#fff
+    style CAUTION fill:#3a2a0a,stroke:#e8b84d,stroke-width:2px,color:#fff
+    style DANGER fill:#3a1a1a,stroke:#cc4125,stroke-width:2px,color:#fff
+    style META fill:#34a853,stroke:#2d9248,color:#fff
+    style WIF fill:#2d9248,stroke:#268a3e,color:#fff
+    style OIDC fill:#268a3e,stroke:#208234,color:#fff
+    style ACCESS fill:#208234,stroke:#1a7a2a,color:#fff
+    style REFRESH fill:#e8b84d,stroke:#c9a030,color:#1a1a2e
+    style KEYFILE fill:#cc4125,stroke:#a33020,color:#fff
+```
+
+The full reference with revocation details:
 
 | Credential | Lifetime | Revocable | Risk if Leaked | Use Case |
 |------------|----------|-----------|----------------|----------|
