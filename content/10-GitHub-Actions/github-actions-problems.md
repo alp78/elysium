@@ -1,10 +1,24 @@
 ---
-tags: [ci-cd, github-actions]
+title: "GitHub Actions Problems"
 type: reference
-technology: github-actions
-status: stable
-updated: 2026-03-23
+category: github-actions
+technology: [github-actions]
+tags: [ci-cd, github-actions, security, troubleshooting, cost-management]
+aliases:
+  - "GitHub Actions Issues"
+  - "CI/CD Problems"
+  - "Workflow Troubleshooting"
+  - "GitHub Actions Security"
+keywords: [supply chain attack, pull_request_target, secret exposure, workflow injection, YAML untestable, cache miss, runner inconsistency, permission model, cost surprise, concurrency confusion, matrix explosion, action pinning, feedback loop, reusable workflow limits]
 description: "Comprehensive catalog of GitHub Actions problems in distributed teams — 20 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
+related:
+  - "[[github-actions-fundamentals]]"
+  - "[[github-actions-patterns]]"
+  - "[[github-actions-data-engineering]]"
+  - "[[on-call-guide]]"
+status: stable
+created: 2026-03-23
+updated: 2026-03-30
 ---
 
 # GitHub Actions Problems in Distributed Teams
@@ -312,7 +326,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ## High — Team Velocity Killers
 
-### Minute Feedback Loops
+### 20-Minute Feedback Loops
 
 **What happens:** A developer makes a change to a workflow file — maybe adding a new step, fixing a conditional, or adjusting a matrix. They push, wait in a queue, watch the job run for 15-20 minutes, and discover a syntax error, wrong variable name, or logic bug on line 3. They fix it and push again. Teams routinely report 10-14 push/wait cycles to get a single workflow change working. In a distributed team across time zones, this can consume an entire workday.
 

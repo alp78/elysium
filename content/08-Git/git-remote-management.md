@@ -134,6 +134,10 @@ This is the correct way to push a branch after rebasing. Rebasing rewrites commi
 
 Always use `--force-with-lease`. The only reason to use bare `--force` is if you deliberately want to discard someone else's pushed commits, which is almost never the right call.
 
+> [!warning] force-with-lease Requires Recent Fetch
+>
+> `--force-with-lease` checks against your last-fetched remote state. If you haven't fetched in hours, someone else's push won't be detected — the lease is stale. Always run `git fetch origin` immediately before `git push --force-with-lease` to ensure you have the latest remote state.
+
 ### Common Force-Push Scenario: Rebase Then Push
 
 After rebasing your feature branch onto the latest main (to resolve PR merge conflicts), the standard sequence is:

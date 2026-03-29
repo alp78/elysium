@@ -166,6 +166,10 @@ git stash clear
 # clear — empty the entire stash stack
 ```
 
+> [!danger] stash clear Deletes ALL Stashes
+>
+> `git stash clear` permanently removes every entry in the stash stack — not just the top one. There is no undo. If you meant to drop just one entry, use `git stash drop stash@{N}` with the specific index. Always run `git stash list` first to verify what's in the stack.
+
 ---
 
 ## Common Error Fixes

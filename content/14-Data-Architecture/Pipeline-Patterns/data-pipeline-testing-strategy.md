@@ -40,19 +40,23 @@ Every page in this vault covers *how* to use a testing tool — pytest fixtures,
 
 ## The Data Engineering Testing Pyramid
 
-```mermaid
-block-beta
-    columns 7
-    space:2 E2E["E2E — Nightly\n\nFull pipeline on test data\nSlowest, fewest tests"]:3 space:2
-    space:1 INT["Integration — On Merge\n\nReal connections, test database\nMinutes per run"]:5 space:1
-    CONTRACT["Contract + Quality — Every PR + Every Load\n\nSchema conformance, row counts, nulls, ranges, freshness"]:7
-    UNIT["Unit Tests — Every PR\n\nTransform logic, SQL expressions, dbt generic tests\nFastest, cheapest, most tests"]:7
+> [!danger] E2E Pipeline Validation
+>
+> Full bronze → silver → gold on test data. **Slowest, fewest tests — run nightly.**
 
-    style E2E fill:#cc4125,stroke:#cc4125,color:#fff
-    style INT fill:#e8b84d,stroke:#e8b84d,color:#1a1a2e
-    style CONTRACT fill:#4285f4,stroke:#4285f4,color:#fff
-    style UNIT fill:#34a853,stroke:#34a853,color:#fff
-```
+> [!warning] Integration Tests
+>
+> Real connections, test database. **Minutes per run — run on merge to main.**
+
+> [!example] Contract + Quality Assertions
+>
+> Schema conformance, row counts, nulls, ranges, freshness. **Seconds — every PR + every load.**
+
+> [!success] Unit Tests — The Foundation
+>
+> Transform logic, SQL expressions, dbt generic tests. **Fastest, cheapest, most tests — every PR.**
+
+The pyramid reads bottom-to-top: the base (unit tests) runs the most tests at the lowest cost, while the peak (E2E) runs the fewest tests at the highest cost. Each layer catches a different class of failure. The **Skip It And...** column shows what breaks in production when that layer is missing — this is the business case for each test type.
 
 | Layer | What It Tests | Speed | When It Runs | Skip It And... |
 |---|---|---|---|---|

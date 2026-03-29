@@ -277,11 +277,69 @@ git clone --depth 1 https://github.com/org/repo.git
 
 ---
 
+## Pre-Commit Hooks — Automated Quality Gates
+
+### pre-commit Framework — run checks before every commit
+
+> [!info] What Pre-Commit Hooks Do
+>
+> Git hooks are scripts that run automatically at specific points in the Git workflow. Pre-commit hooks run BEFORE the commit is created — if they fail, the commit is aborted. This catches secrets, lint errors, and formatting issues before they reach the repo.
+
+```bash
+# Install the pre-commit framework
+pip install pre-commit
+```
+
+Create `.pre-commit-config.yaml` in the repo root:
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+```
+
+```bash
+# Install hooks into .git/hooks/
+pre-commit install
+
+# Run against all files (first time or CI)
+pre-commit run --all-files
+
+# Run a specific hook
+pre-commit run gitleaks --all-files
+```
+
+> [!tip] Hooks for Data Engineering Teams
+>
+> - **gitleaks** — blocks commits containing API keys, passwords, GCP key files
+> - **ruff** — Python linting and formatting (replaces flake8 + black + isort)
+> - **terraform_fmt** — enforces consistent Terraform formatting
+> - **sqlfluff** — SQL linting (add via `repo: https://github.com/sqlfluff/sqlfluff`)
+
+> [!warning] Hooks Run Locally Only
+>
+> Pre-commit hooks run on each developer's machine. They can be bypassed with `git commit --no-verify`. For mandatory enforcement, run the same checks in GitHub Actions CI — hooks are the fast first line of defense, CI is the mandatory second line.
+
+---
+
 ## Related
 
 - [[git-daily-workflow]] — status, add, commit, push, pull commands for everyday work
 - [[git-branching-and-merging]] — creating, switching, merging, and deleting branches
-- [[gitignore-patterns]] — excluding files from Git tracking
+- [[gitignore-patterns]] — excluding files from Git tracking and Git LFS for large files
 - [[github-actions-ci-cd]] — CI/CD pipelines that use `git clone` and repository operations
 - [[pull-requests-and-code-review]] — the PR workflow built on top of branches and remotes
 

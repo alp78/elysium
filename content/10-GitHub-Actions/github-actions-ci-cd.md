@@ -120,12 +120,12 @@ The `credentials_json` field receives the full JSON content of the service accou
 | `DD_API_KEY` | Datadog API key | Pipeline containers for APM/log shipping |
 | `DB_PASSWORD` | Database SA password | Pipeline and dashboard containers |
 
-#### Important rules
-
-- Never commit secret files (`.json` keys, `.env` files) to Git — add them to `.gitignore`
-- Secrets are not passed to workflows triggered from **forks** (including Dependabot) — this is a GitHub security feature
-- When a secret is missing or empty, the `${{ secrets.NAME }}` expression resolves to an empty string, which causes actions like `google-github-actions/auth` to fail with a cryptic error
-- Rotate secrets periodically — delete the old key in GCP/Datadog, generate a new one, update the GitHub secret
+> [!danger] Secret Handling Rules
+>
+> - Never commit secret files (`.json` keys, `.env`) to Git — add them to `.gitignore`
+> - Secrets are NOT passed to workflows triggered from forks (including Dependabot) — this is a GitHub security feature
+> - A missing or mistyped secret resolves to `""` silently — no error, just blank credentials downstream
+> - Rotate secrets periodically: delete old key in GCP/Datadog, generate new, update GitHub secret
 
 ---
 

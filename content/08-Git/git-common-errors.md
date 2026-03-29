@@ -104,8 +104,7 @@ gh run rerun <RUN_ID>
 
 > [!warning] Fork and Dependabot Limits
 >
-> Fork and Dependabot Workflows.
-> If the workflow was triggered by a fork or Dependabot, secrets are intentionally blocked by GitHub. You'll need to merge the PR first, then the push-to-main workflow will have access to secrets.
+> If the workflow was triggered by a fork or Dependabot, secrets are intentionally blocked by GitHub. Merge the PR first, then the push-to-main workflow will have access to secrets.
 
 ---
 
@@ -381,7 +380,6 @@ A previous git command crashed mid-operation and left a lock. Remove it and retr
 
 > [!warning] Check Running Processes First
 >
-> Check for Running Processes First.
 > Before deleting the lock file, confirm no other git process (e.g., a GUI client, IDE plugin, or background script) is currently running against this repo. Deleting an active lock can corrupt the operation in progress.
 
 ---
@@ -446,7 +444,6 @@ Stop the warnings by telling Git how to handle line endings for your OS.
 
 > [!tip] gitattributes Is More Reliable
 >
-> .gitattributes is More Reliable.
 > For cross-platform teams, commit a `.gitattributes` file to the repo that enforces line endings per file type, rather than relying on each developer's local config.
 
 ---
@@ -562,7 +559,6 @@ git push --force-with-lease
 
 > [!warning] Only Amend Own Branch
 >
-> Only Amend Your Own Feature Branch.
 > Only amend commits on your own feature branch. Never amend commits on `main` or shared branches — other developers may have already pulled the original commit.
 
 Amending replaces the last commit with a new one that includes the extra file. Since the commit hash changes, you need to force-push. `--force-with-lease` is the safe way to do it.
@@ -601,7 +597,6 @@ git push
 
 > [!warning] Secrets Need History Rewrite
 >
-> Secrets Require History Rewrite.
 > This does NOT erase the files from Git history — they remain in previous commits. If you accidentally committed secrets (API keys, passwords), you need `git filter-branch` or [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/) to purge them from all history, then force-push.
 
 `.gitignore` only prevents **new** files from being tracked. Files already committed are still tracked even after adding them to `.gitignore`. The `git rm --cached` command tells Git to forget about them without deleting them from your disk. See [[gitignore-patterns]] for how to structure `.gitignore` correctly from the start.

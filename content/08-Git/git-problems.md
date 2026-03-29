@@ -292,6 +292,10 @@ git config --global alias.fpush '!echo "WARNING: Force pushing. Are you sure? (c
 
 1. **Find the lost commits using reflog on a machine that had them:**
 
+> [!tip] Reflog Recovers for ~90 Days
+>
+> Even after `git reset --hard` or a force-push, orphaned commits remain in the local object store for ~90 days. `git reflog` shows every HEAD movement — the "lost" commits are still there. Act fast: `git gc --prune=now` or expiration permanently destroys them.
+
 ```bash
 # On any engineer's machine that had pulled the commits
 git reflog --all | grep "the lost commit message or timestamp"
@@ -368,6 +372,10 @@ git nuke origin/main
 ```
 
 4. **Never work directly on main.** Enforce via a pre-commit hook:
+
+> [!warning] Block Direct Main Commits
+>
+> Branch protection rules on GitHub only block pushes. A local pre-commit hook blocks the commit BEFORE it's created — catching the mistake at the earliest possible point. This hook exits with error 1, which aborts the commit.
 
 ```bash
 # .git/hooks/pre-commit (make executable: chmod +x)
@@ -457,6 +465,10 @@ git config --global mergetool.vscode.cmd 'code --wait $MERGED'
 VS Code's merge editor shows "Incoming", "Current", and the merged result simultaneously. Use "Accept Both" or manually edit the result pane.
 
 2. **Never use `--no-edit` or `--strategy-option=theirs` on dbt models or SQL:**
+
+> [!danger] Strategy Merge Silently Discards Changes
+>
+> `git merge -X theirs` accepts the other branch's version for every conflict without showing conflict markers. Your changes are silently discarded — no warning, no diff, no undo. Never use this on logic files (SQL, Python, dbt models). Resolve conflicts manually.
 
 ```bash
 # DANGEROUS — silently accepts one whole side

@@ -236,6 +236,59 @@ git status --ignored
 git ls-files
 ```
 
+---
+
+## Git LFS — Large File Storage
+
+### Git LFS — tracking large files without bloating the repo
+
+> [!info] When to Use Git LFS
+>
+> Git stores every version of every file in full. A 500 MB Parquet file changed 10 times = 5 GB of repo history. Git LFS replaces large files with lightweight pointers in the repo, storing the actual content on a separate server. Use for binary files, data samples, model artifacts, and any file > 10 MB.
+
+```bash
+# Install Git LFS (once per machine)
+git lfs install
+
+# Track file patterns — creates/updates .gitattributes
+git lfs track "*.parquet"
+git lfs track "*.pkl"
+git lfs track "*.csv"
+git lfs track "data/samples/**"
+
+# Verify tracking rules
+cat .gitattributes
+```
+
+```bash
+# Commit the .gitattributes file (must be tracked by Git)
+git add .gitattributes
+git commit -m "chore: configure Git LFS for data files"
+
+# Then add and commit large files normally
+git add data/sample.parquet
+git commit -m "feat: add sample data for testing"
+git push   # LFS uploads the file to the LFS server
+```
+
+> [!warning] LFS Must Be Set Up Before First Commit
+>
+> If you commit a large file BEFORE running `git lfs track`, it goes into regular Git history. You must then use `git lfs migrate` to retroactively move it to LFS — which rewrites history and requires a force-push.
+
+```bash
+# Check which files are managed by LFS
+git lfs ls-files
+
+# Migrate existing large files to LFS (rewrites history)
+git lfs migrate import --include="*.parquet" --everything
+```
+
+> [!tip] GitHub LFS Storage Limits
+>
+> Free GitHub accounts get 1 GB LFS storage + 1 GB bandwidth/month. Each additional 50 GB data pack costs $5/month. For large datasets, store in GCS and reference by path — Git LFS is for files that must be versioned alongside code (test fixtures, model artifacts), not for production data.
+
+---
+
 ## Related
 
 - [[git-daily-workflow]] — the daily workflow that benefits from a clean .gitignore

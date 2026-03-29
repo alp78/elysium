@@ -312,6 +312,14 @@ Prevention is better than resolution. Strategies that reduce conflict frequency:
 >
 > Running `git rebase origin/main` on your feature branch every morning takes 30 seconds when there are no conflicts. It saves hours when you wait until the PR is blocked at merge time.
 
+### SQL Migration Conflicts — Data Engineering Gotcha
+
+> [!warning] Migration File Ordering Conflicts
+>
+> When two engineers create SQL migration files simultaneously (e.g., `V003_add_column.sql` and `V003_create_table.sql`), Git sees a file-level conflict only if both modified the same file. But migration tools (Flyway, Alembic, dbt) process files by version number — two files with the same version number will fail at runtime, not at merge time.
+>
+> **Prevention:** use timestamp-based migration names (`20260330_001_add_column.sql`) instead of sequential version numbers. Timestamps never collide. If using sequential versioning, coordinate via a shared "next version" tracker or rebase and renumber before merging.
+
 ### Quick Reference: Conflict Resolution Commands
 
 | Goal | Command |

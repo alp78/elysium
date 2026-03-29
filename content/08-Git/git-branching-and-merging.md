@@ -22,14 +22,19 @@ Branching isolates work so that multiple features, fixes, and experiments can pr
 
 ### Creating and Switching Branches
 
+> [!tip] Prefer git switch over git checkout
+>
+> `git switch` (Git 2.23+) is the modern replacement for `git checkout` when switching branches. Unlike `checkout`, `switch` cannot accidentally discard uncommitted work — it refuses to switch if there are conflicts. Use `git switch -c branch` to create, `git switch branch` to switch.
+
 ```bash
-# Create and switch to a new branch
+# Create and switch to a new branch (modern)
+git switch -c feature/pulse-chart-fix
+
+# Or the traditional way (still works)
 git checkout -b feature/pulse-chart-fix
-# -b = create the branch if it doesn't exist
 
 # Switch branches
-git checkout main
-# or: git switch main (modern syntax, less overloaded than checkout)
+git switch main
 ```
 
 ### Stashing Uncommitted Work
@@ -73,19 +78,25 @@ git rebase main
 # Undo the last commit (keep the changes staged)
 git reset --soft HEAD~1
 # HEAD~1 = one commit back
-# --soft = keep changes staged (ready to re-commit with a different message)
+# --soft = keep changes staged (ready to re-commit)
+```
 
-# Discard all uncommitted changes (⚠️ DESTRUCTIVE)
+> [!danger] checkout -- Destroys Uncommitted Work
+>
+> `git checkout -- .` permanently deletes ALL uncommitted changes to tracked files. Unlike `reset --hard`, there is NO reflog recovery — uncommitted work was never recorded by Git. Use `git stash` first if you might need the changes back.
+
+```bash
+# Discard all uncommitted changes (DESTRUCTIVE — no recovery)
 git checkout -- .
-# Reverts all modified tracked files to the last commit
 # Does NOT affect untracked files
+```
 
+```bash
 # Recover from disaster (the reflog — Git's undo history)
 git reflog
-# Shows: every HEAD movement (commits, checkouts, resets, rebases)
-# If you accidentally reset --hard or deleted a branch, the commits are still there
+# Shows every HEAD movement (commits, checkouts, resets, rebases)
 git checkout <hash-from-reflog>
-# Recovers the "lost" commit — nothing in Git is truly deleted for 30 days
+# Recovers "lost" committed work — survives ~90 days
 ```
 
 See [[git-recovery-and-undo]] for detailed recovery workflows.
