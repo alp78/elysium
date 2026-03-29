@@ -23,6 +23,7 @@ set -euo pipefail
 ```
 
 > [!tip] Related pattern
+>
 > The same error-handling philosophy applies in application code: [[08_py_errorhandling]] covers Python's `try`/`except` (the equivalent of `set -e` with explicit catches), and [[08_cs_errorhandling]] covers C#'s `try`/`catch`/`finally` pattern. For error handling in DAG orchestration, see [[airflow-dag-patterns]].
 
 ### set -e — exit immediately on error

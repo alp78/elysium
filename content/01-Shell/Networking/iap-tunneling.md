@@ -56,6 +56,7 @@ Step by step:
 > The VM never sees your workstation's IP address. It sees a connection from an IP in the **GCP internal network** (typically in the `10.x.x.x` or `35.235.240.0/20` range). That's why `ss -tnp` on the VM shows a VPC-internal peer address, not your home IP.
 
 > [!tip] Related pattern
+>
 > IAP requires the `iap.tunnelResourceAccessor` IAM role -- see [[service-accounts-and-iam]] for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [[terraform-networking]].
 
 ## IAP Tunnel Commands — All Variants

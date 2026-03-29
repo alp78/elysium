@@ -68,7 +68,8 @@ command_a ; command_b
 free -h ; df -h ; docker ps ; ss -tlnp
 ```
 
-> [!warning] Never Use Semicolons in Data-Loading Scripts
+> [!warning] Never use semicolons in data scripts
+>
 > A semicolon between "delete old data" and "load new data" means the load runs even if the delete failed — and now you have duplicate data.
 
 ### OR Operator (||) — Fallback on Failure

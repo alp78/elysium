@@ -37,7 +37,8 @@ YYYY-Www-D                      2026-W11-2                       ISO week + day 
 YYYY-DDD                        2026-069                         Ordinal date (day 69 of 2026)
 ```
 
-> [!warning] Date Format Rules for Pipelines
+> [!warning] Date format rules for pipelines
+>
 > 1. **Store dates as `DATE` or `DATETIME2` in SQL Server, never as strings.** String dates cannot be indexed efficiently, cannot be compared with `<`/`>`, and break when formats change.
 > 2. **If you must store as string, use ISO 8601 (`YYYY-MM-DD`).** It sorts correctly as text: `"2026-03-10" < "2026-03-11"` works. American `MM/DD/YYYY` does not: `"03/10/2026" < "12/01/2025"` gives the wrong answer.
 > 3. **Always store timestamps in UTC.** Convert to local time only at the presentation layer (dashboard, reports). Your SQL Server, pipeline, and API should never deal with local time.
@@ -76,6 +77,7 @@ date +%Y%m%d_%H%M%S                 # 20260310_163000 (compact with time — for
 ```
 
 > [!info] Format specifiers
+>
 > **Date:**
 > - `%Y` — 4-digit year (2026) | `%y` — 2-digit year (26)
 > - `%m` — month 01-12 | `%b` — abbreviated (Mar) | `%B` — full (March)
@@ -151,7 +153,8 @@ find /data -type f -mtime -1
 # -mtime -1 = modified less than 1 day ago
 ```
 
-> [!warning] Always Set Servers to UTC
+> [!warning] Always set servers to UTC
+>
 > Every server in your infrastructure should run on UTC:
 > ```bash
 > sudo timedatectl set-timezone UTC
@@ -317,7 +320,8 @@ SELECT FORMAT(GETDATE(), 'yyyy-MM-ddTHH:mm:ssK')       -- 2026-03-10T16:30:00+01
 SELECT CONVERT(VARCHAR(10), GETDATE(), 120)             -- 2026-03-10 (fast)
 ```
 
-> [!warning] FORMAT() Performance
+> [!warning] FORMAT() performance trap
+>
 > `FORMAT()` is 10–50x slower than `CONVERT()` because it calls .NET formatting internally. In queries processing millions of rows, always use `CONVERT(VARCHAR, date, style_code)` instead of `FORMAT(date, 'pattern')`.
 
 ### Extracting Date Components in T-SQL
@@ -395,7 +399,8 @@ SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the w
 -- Use case: GROUP BY date period without FORMAT/CONVERT overhead
 ```
 
-> [!warning] DATEDIFF Counts Boundary Crossings
+> [!warning] DATEDIFF counts boundaries
+>
 > `DATEDIFF(YEAR, '2025-12-31', '2026-01-01')` returns `1` even though the dates are only 1 day apart. `DATEDIFF` counts how many year/month/day boundaries are crossed, not full periods elapsed. For "how many complete months between two dates," use more careful arithmetic.
 
 ### Timezone Conversion in T-SQL
@@ -467,7 +472,8 @@ GROUP BY DATEPART(QUARTER, trade_date), YEAR(trade_date)
 -- Q1 2026, Q2 2026, etc.
 ```
 
-> [!warning] @@DATEFIRST and Weekday Numbers
+> [!warning] @@DATEFIRST and weekday numbers
+>
 > `DATEPART(WEEKDAY, date)` returns 1-7, but what day is "1" depends on the `@@DATEFIRST` setting:
 > - US default: `@@DATEFIRST = 7` → Sunday=1, Monday=2, ..., Saturday=7
 > - ISO standard: `@@DATEFIRST = 1` → Monday=1, ..., Sunday=7
@@ -506,7 +512,8 @@ now = datetime.now(timezone.utc)
 now = datetime.now()   # naive — is this UTC? Local? Who knows?
 ```
 
-> [!warning] Never Use datetime.utcnow()
+> [!warning] Never use datetime.utcnow()
+>
 > `datetime.utcnow()` is deprecated in Python 3.12 and returns a **naive** datetime with no timezone info. Code that receives it cannot tell if it's UTC or local time. Always use `datetime.now(timezone.utc)` instead.
 
 ### Creating Dates in Python
@@ -609,7 +616,8 @@ d - relativedelta(months=6)                         # date(2025, 9, 10)
 date(2026, 1, 31) + relativedelta(months=1)         # date(2026, 2, 28) (not Feb 31!)
 ```
 
-> [!tip] Use dateutil for Month/Year Arithmetic
+> [!tip] dateutil for month/year arithmetic
+>
 > Python's `timedelta` only handles days, seconds, and microseconds — not months or years. Use `dateutil.relativedelta` for month/year arithmetic. It correctly handles edge cases like January 31 + 1 month = February 28 (not February 31).
 
 ### Timezone Conversion in Python
@@ -702,7 +710,8 @@ pd.date_range("2026-01-01", periods=12, freq="MS")     # Monthly start dates
 pd.date_range("2026-01-01", periods=4, freq="QS")      # Quarterly start dates
 ```
 
-> [!warning] Naive vs Aware Datetimes
+> [!warning] Naive vs aware datetimes
+>
 > Python has two kinds of datetimes:
 > - **Naive** (`datetime(2026, 3, 10, 15, 30)`) — no timezone information. You don't know if this is UTC, Paris, or Tokyo. Comparing two naive datetimes from different timezones gives wrong results silently.
 > - **Aware** (`datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)`) — has timezone. Comparisons, arithmetic, and conversions are correct.
@@ -910,7 +919,8 @@ while (d2.DayOfWeek == DayOfWeek.Saturday || d2.DayOfWeek == DayOfWeek.Sunday)
     d2 = d2.AddDays(-1);
 ```
 
-> [!warning] DateTime vs DateTimeOffset in C#
+> [!warning] DateTime vs DateTimeOffset
+>
 > `DateTime` has a `Kind` property (Local, Utc, Unspecified) that is not part of the value — it's metadata that gets silently lost during serialization, database round-trips, and JSON conversion. This causes bugs that are nearly impossible to track down.
 >
 > `DateTimeOffset` embeds the UTC offset directly in the value. It round-trips correctly through SQL Server (`DATETIMEOFFSET`), JSON, and API responses. **Use `DateTimeOffset` for all timestamps in your code.**

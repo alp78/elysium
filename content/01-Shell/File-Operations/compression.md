@@ -133,6 +133,7 @@ tar tzf archive.tar.gz | head -20
 ### Compression strategy matrix — choosing the right algorithm for data pipelines
 
 > [!tip] Related pattern
+>
 > For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [[serialization-formats]]. For writing Parquet with specific compression options in code, see [[10_py_serialization_formats]] (Python) and [[10_cs_serialization_formats]] (C#).
 
 > [!tip] Pipeline compression strategy

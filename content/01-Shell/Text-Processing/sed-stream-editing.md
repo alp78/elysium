@@ -43,7 +43,8 @@ status: complete
 
 `sed` (stream editor) is a non-interactive, line-oriented text transformation tool. It processes input one line at a time, applies a sequence of editing commands, and writes results to standard output. Used by data engineers daily for log cleaning, SQL migration file edits, CSV header fixes, config file patching, and bulk in-place file edits across entire codebases.
 
-> [!info] Scope of This Note
+> [!info] Scope of this note
+>
 > This note covers GNU sed (Linux default) and BSD sed (macOS default), with explicit callouts where behaviour differs. PowerShell equivalents are provided for every major command pattern so Windows-native pipelines are fully covered.
 
 ---
@@ -111,7 +112,8 @@ Every sed command can be preceded by an address that controls which lines it app
 | `5,/pattern/` | From line 5 to the first line matching pattern |
 | `addr!` | Negate — every line NOT matching addr |
 
-> [!tip] Zero Address
+> [!tip] Zero address
+>
 > GNU sed supports address `0` in range `0,/pattern/` so the range can match from the very first line, even if it matches the opening pattern.
 
 ---
@@ -199,7 +201,8 @@ sed 's#https://old.example.com#https://new.example.com#g' bookmarks.sql
 sed 's@/data/raw@/data/processed@g' pipeline.sh
 ```
 
-> [!tip] Any Byte Can Be a Delimiter
+> [!tip] Any byte can be a delimiter
+>
 > sed accepts any byte after `s` as the delimiter. Conventionally `|`, `#`, `@`, `,`, and `!` are used when the pattern contains `/`. Pick one that never appears in your pattern or replacement.
 
 ---
@@ -208,7 +211,8 @@ sed 's@/data/raw@/data/processed@g' pipeline.sh
 
 By default sed writes to stdout and leaves the source file untouched. The `-i` flag edits the file in place.
 
-> [!warning] GNU sed vs BSD sed (macOS) Difference
+> [!warning] GNU sed vs BSD sed difference
+>
 > **GNU sed (Linux):** `sed -i 's/old/new/g' file` — the suffix for the backup is optional. Omitting it means no backup is made.
 > **BSD sed (macOS):** `sed -i '' 's/old/new/g' file` — the suffix argument is mandatory; pass an empty string `''` for no backup. Omitting the `''` causes a syntax error.
 > Use `sed -i.bak` when you need behaviour identical on both platforms.
@@ -262,7 +266,8 @@ find ./config -name '*.yaml' -print0 | xargs -0 sed -i 's/v1\.0/v2\.0/g'
 sed -i 's/DEBUG/INFO/g' service-a.log service-b.log service-c.log
 ```
 
-> [!warning] No Undo for In-Place Edits
+> [!warning] No undo for in-place edits
+>
 > `sed -i` modifies files immediately. Always test with `sed 's/old/new/g' file | head` before committing to `-i`. Use `-i.bak` for safety on large or critical files.
 
 ---
@@ -511,7 +516,8 @@ sed -n 's/^DB_HOST=//p' .env
 sed -n '/ERROR/{=; p}' app.log    # Prints line number, then the line
 ```
 
-> [!tip] sed as a grep Replacement
+> [!tip] sed as a grep replacement
+>
 > `sed -n '/pattern/p'` is equivalent to `grep 'pattern'`. The advantage is that you can chain it with substitutions in the same pass — e.g., find lines matching a pattern AND transform them simultaneously.
 
 ---
@@ -606,7 +612,8 @@ sed 'N; s/\n/,/' pairs.txt
 sed '5~5G' long_file.txt      # GNU sed only
 ```
 
-> [!info] Hold Space Is an Advanced Feature
+> [!info] Hold space is advanced
+>
 > Most day-to-day sed work never touches the hold space. It becomes useful for multi-line context operations where awk or Python would be cleaner. If a hold-space solution is hard to read, prefer `awk` or a short Python script.
 
 ---
@@ -635,7 +642,8 @@ sed '1s/$/,loaded_at/' incremental.csv
 sed '1s/,$//' exported.csv
 ```
 
-> [!warning] CSV with Quoted Fields
+> [!warning] CSV with quoted fields
+>
 > sed operates on raw text and does not understand CSV quoting rules. If your CSV has quoted fields that may contain commas or newlines, use Python's `csv` module or `awk` with FPAT instead.
 
 ### Remove BOM from UTF-8 Files
@@ -682,7 +690,8 @@ find . -name '*.sql' -print0 | xargs -0 sed -i 's/\r$//'
 cat -A clean.csv | head -3
 ```
 
-> [!tip] dos2unix Shortcut
+> [!tip] dos2unix shortcut
+>
 > If `dos2unix` is installed, `dos2unix file.txt` is shorter. Use sed when `dos2unix` is unavailable (containers, minimal images) or when you need to combine CRLF conversion with other transforms in one pass.
 
 ### Add Prefix or Suffix to Every Line (Bulk INSERT Generation)
@@ -855,7 +864,8 @@ sed -E \
   raw_api.log > sanitised_api.log
 ```
 
-> [!warning] PII Regex Is Not a Substitute for Proper Data Governance
+> [!warning] PII regex is not data governance
+>
 > Regex-based redaction handles common patterns but will miss obfuscated or unusual formats. Use a dedicated PII detection library (e.g., Google Cloud DLP, Microsoft Presidio) for compliance-critical use cases. sed redaction is appropriate for quick local log inspection, not production pipelines.
 
 ### Idempotent Pipeline: Normalise Input Before Loading
@@ -879,7 +889,8 @@ sed \
 
 PowerShell uses the `-replace` operator, which accepts .NET regular expressions (a superset of POSIX ERE). All substitutions are regex-based by default.
 
-> [!info] PowerShell Regex Is .NET Regex
+> [!info] PowerShell regex is .NET regex
+>
 > .NET regex is more powerful than POSIX: named groups `(?<name>...)`, lookaheads, lookbehinds, and non-greedy quantifiers are all supported. The `-replace` operator is case-insensitive by default; use `-creplace` for case-sensitive matching.
 
 ### Basic Substitution
@@ -1097,7 +1108,8 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 | `0` address | Supported | Not supported |
 | `1~2` step address | Supported | Not supported |
 
-> [!tip] Cross-Platform sed Scripts
+> [!tip] Cross-platform sed scripts
+>
 > For scripts that must run on both Linux and macOS:
 > 1. Always use `-i.bak` (or handle the suffix in a conditional)
 > 2. Prefer `-E` for extended regex instead of BRE `\+`, `|`
