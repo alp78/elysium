@@ -357,7 +357,7 @@ foreach (var col in scD2.ColumnKeys)
 dfP.Column("symbol").ValueCounts()
 ```
 
-<!-- Polars DataFrame: (50 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>count</th></tr></thead><tbody><tr><td>ABI.BR</td><td>1331</td></tr><tr><td>AD.AS</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1331</td></tr><tr><td>AI.PA</td><td>1331</td></tr><tr><td>AIR.PA</td><td>1331</td></tr><tr><td>ARGX.BR</td><td>1331</td></tr><tr><td>ASML.AS</td><td>1331</td></tr><tr><td>BN.PA</td><td>1331</td></tr><tr><td>BNP.PA</td><td>1331</td></tr><tr><td>CS.PA</td><td>1331</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 40 more rows ...</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (50 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>count</th></tr></thead><tbody><tr><td>ABI.BR</td><td>1331</td></tr><tr><td>AD.AS</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1331</td></tr><tr><td>AI.PA</td><td>1331</td></tr><tr><td>AIR.PA</td><td>1331</td></tr><tr><td>ARGX.BR</td><td>1331</td></tr><tr><td>ASML.AS</td><td>1331</td></tr><tr><td>BN.PA</td><td>1331</td></tr><tr><td>BNP.PA</td><td>1331</td></tr><tr><td>CS.PA</td><td>1331</td></tr><tr><td colspan='2'>... 40 more rows ...</td></tr></tbody></table></div>
 
 #### Deedle — Frequency distribution via GroupBy and counting
 
@@ -512,7 +512,7 @@ display(ProfilePolars(dimP));
 
     eurostoxx50_ohlcv: (66355, 12)
 
-<!-- Polars DataFrame: (12 rows, 4 columns) --><table><thead><tr><th>column</th><th>type</th><th>nulls</th><th>unique</th></tr></thead><tbody><tr><td>id</td><td>i64</td><td>0</td><td>66355</td></tr><tr><td>symbol</td><td>str</td><td>0</td><td>50</td></tr><tr><td>date</td><td>date</td><td>0</td><td>1331</td></tr><tr><td>open</td><td>f64</td><td>0</td><td>29671</td></tr><tr><td>high</td><td>f64</td><td>0</td><td>31651</td></tr><tr><td>low</td><td>f64</td><td>0</td><td>31695</td></tr><tr><td>close</td><td>f64</td><td>0</td><td>31505</td></tr><tr><td>adj_close</td><td>f64</td><td>0</td><td>57739</td></tr><tr><td>volume</td><td>i64</td><td>0</td><td>65199</td></tr><tr><td>dividends</td><td>f64</td><td>0</td><td>216</td></tr><tr><td colspan='4' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 2 more rows ...</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (12 rows, 4 columns) --><table><thead><tr><th>column</th><th>type</th><th>nulls</th><th>unique</th></tr></thead><tbody><tr><td>id</td><td>i64</td><td>0</td><td>66355</td></tr><tr><td>symbol</td><td>str</td><td>0</td><td>50</td></tr><tr><td>date</td><td>date</td><td>0</td><td>1331</td></tr><tr><td>open</td><td>f64</td><td>0</td><td>29671</td></tr><tr><td>high</td><td>f64</td><td>0</td><td>31651</td></tr><tr><td>low</td><td>f64</td><td>0</td><td>31695</td></tr><tr><td>close</td><td>f64</td><td>0</td><td>31505</td></tr><tr><td>adj_close</td><td>f64</td><td>0</td><td>57739</td></tr><tr><td>volume</td><td>i64</td><td>0</td><td>65199</td></tr><tr><td>dividends</td><td>f64</td><td>0</td><td>216</td></tr><tr><td colspan='4'>... 2 more rows ...</td></tr></tbody></table></div>
 
     dim_country: (212, 2)
 
@@ -1027,7 +1027,7 @@ containsB.Select("symbol").Unique()
 
     Paris-listed (.PA): 21296 rows
 
-<!-- Polars DataFrame: (16 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr><tr><td>CS.PA</td></tr><tr><td>DG.PA</td></tr><tr><td>DSY.PA</td></tr><tr><td>EL.PA</td></tr><tr><td>MC.PA</td></tr><tr><td>OR.PA</td></tr><tr><td colspan='1' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (16 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr><tr><td>CS.PA</td></tr><tr><td>DG.PA</td></tr><tr><td>DSY.PA</td></tr><tr><td>EL.PA</td></tr><tr><td>MC.PA</td></tr><tr><td>OR.PA</td></tr><tr><td colspan='1'>... 6 more rows ...</td></tr></tbody></table></div>
 
     Symbol contains BN: 2662 rows
 

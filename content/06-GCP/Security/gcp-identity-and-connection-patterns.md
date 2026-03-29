@@ -46,57 +46,58 @@ For SA creation and IAM binding commands, see [[service-accounts-and-iam#GCP Ser
 
 ### Credential Types — Short-Lived vs Long-Lived
 
-> [!info]- Credential Risk Spectrum
+> [!tip] Short-Lived Credentials — Auto-Expire
 >
-> Each credential type has a different lifetime, risk profile, and use case. Short-lived credentials are always preferred — they limit the blast radius of a leak.
-
-```mermaid
-flowchart LR
-    subgraph SAFE["SHORT-LIVED — Auto-Expire"]
-        direction TB
-        META["Metadata Server\n1h auto-refreshed\nVMs, Cloud Run"]
-        WIF["WIF Federated\nMinutes\nGitHub Actions, CI/CD"]
-        OIDC["OIDC ID Token\n1 hour\nService-to-service"]
-        ACCESS["OAuth2 Access Token\n1 hour\nSDK API calls"]
-    end
-
-    subgraph CAUTION["LONG-LIVED — Must Revoke"]
-        direction TB
-        REFRESH["OAuth2 Refresh Token\nUntil revoked\nLocal dev gcloud auth"]
-    end
-
-    subgraph DANGER["PERMANENT — Never Expires"]
-        direction TB
-        KEYFILE["SA Key File JSON\nNever expires\nLast resort only"]
-    end
-
-    SAFE ~~~ CAUTION ~~~ DANGER
-
-    style SAFE fill:#1a3a1a,stroke:#34a853,stroke-width:2px,color:#fff
-    style CAUTION fill:#3a2a0a,stroke:#e8b84d,stroke-width:2px,color:#fff
-    style DANGER fill:#3a1a1a,stroke:#cc4125,stroke-width:2px,color:#fff
-    style META fill:#34a853,stroke:#2d9248,color:#fff
-    style WIF fill:#2d9248,stroke:#268a3e,color:#fff
-    style OIDC fill:#268a3e,stroke:#208234,color:#fff
-    style ACCESS fill:#208234,stroke:#1a7a2a,color:#fff
-    style REFRESH fill:#e8b84d,stroke:#c9a030,color:#1a1a2e
-    style KEYFILE fill:#cc4125,stroke:#a33020,color:#fff
-```
-
-The full reference with revocation details:
-
-| Credential | Lifetime | Revocable | Risk if Leaked | Use Case |
-|------------|----------|-----------|----------------|----------|
-| OAuth2 access token | 1 hour | Auto-expires | Low — usable for 1 hour max | Standard API calls (Python, C#, gcloud) |
-| OAuth2 refresh token | Until revoked | Yes (`gcloud auth revoke`) | Medium — can mint new access tokens | Local dev (`gcloud auth login`) |
-| SA key file (JSON) | **Never expires** | Must delete the key | **Critical** — full SA access until deleted | Last resort for local dev; never in production |
-| Metadata server token | 1 hour, auto-refreshed | N/A (VM-scoped) | Low — never leaves the VM | VMs, Cloud Run — the production standard |
-| WIF federated token | Minutes | Auto-expires | Very low — scoped to one CI run | GitHub Actions, cross-cloud, external IdPs |
-| OIDC ID token | 1 hour | Auto-expires | Low — audience-scoped | Service-to-service auth (Cloud Run invoker) |
-
-> [!danger] SA Key Files Are Permanent Liabilities
+> **Metadata Server Token** — 1 hour, auto-refreshed
+> The production standard. Available on every GCE VM and Cloud Run instance.
+> Token never leaves the VM, never touches disk, never needs rotation.
+> Use case: all production workloads.
 >
-> A leaked SA key file grants full access to that service account's permissions **forever** — until someone notices and deletes the key. There is no expiry. Key files are the #1 cause of GCP security incidents. Use metadata server tokens (on VMs/Cloud Run) or WIF (in CI/CD) instead.
+> **WIF Federated Token** — Minutes
+> Exchanged from an external OIDC provider (GitHub Actions, AWS, Azure AD).
+> Scoped to a single CI run. No key file ever exists.
+> Use case: GitHub Actions, cross-cloud authentication.
+>
+> **OIDC ID Token** — 1 hour
+> Audience-scoped identity token for service-to-service authentication.
+> Proves "I am this service account" to a specific target service.
+> Use case: Cloud Run invoker, authenticated Cloud Functions.
+>
+> **OAuth2 Access Token** — 1 hour
+> The standard bearer token for all GCP API calls.
+> Issued by any of the methods above. Auto-expires after 1 hour.
+> Use case: every Python/C#/gcloud API call uses one of these under the hood.
+
+> [!warning] Long-Lived Credentials — Must Revoke
+>
+> **OAuth2 Refresh Token** — Until revoked
+> Created by `gcloud auth login` and `gcloud auth application-default login`.
+> Can mint new access tokens indefinitely until explicitly revoked with
+> `gcloud auth revoke`. Medium risk — a leaked refresh token lets an attacker
+> generate fresh access tokens.
+> Use case: local development only.
+
+> [!danger] Permanent Credentials — Never Expire
+>
+> **SA Key File (JSON)** — Never expires
+> A downloaded JSON file containing the service account's private key.
+> Grants full access to everything the SA is authorized to do — **forever** —
+> until someone manually deletes the key in the GCP console. There is no
+> expiry. There is no auto-revocation. This is the #1 cause of GCP security
+> incidents. The key must be deleted with
+> `gcloud iam service-accounts keys delete KEY_ID`.
+> Use case: **last resort** for local development when ADC login is insufficient.
+> Never in production. Never committed to git. Rotate every 90 days if you
+> must use one.
+
+> [!danger] Key File Leak Response
+>
+> If you suspect a key file was leaked (committed to git, found in a Docker
+> image layer, visible in logs): immediately delete the key in IAM, then
+> rotate every secret the SA had access to. Attackers actively scan public
+> repos for GCP key patterns. See
+> [[service-accounts-and-iam#Service Account Key Files — Local Development Only]]
+> for the deletion and rotation procedure.
 
 ### The OAuth2 Token Flow — What Actually Happens
 

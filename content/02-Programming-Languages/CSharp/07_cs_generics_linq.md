@@ -606,7 +606,7 @@ new DataFrame(
     Series.From("AvgVolume", results.Select(s => (long)s.AvgVol).ToArray()))
 ```
 
-<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AvgVolume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
+<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AvgVolume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2'>... 1 more rows ...</td></tr></tbody></table>
 
 #### LINQ — `STDEV()`
 
@@ -869,7 +869,7 @@ new DataFrame(
     Series.From("AvgVol", linqHaving.Select(s => (long)s.AvgVol).ToArray()))
 ```
 
-<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AvgVol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
+<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>AvgVol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601</td></tr><tr><td>SAN.MC</td><td>41770987</td></tr><tr><td>ENEL.MI</td><td>24678699</td></tr><tr><td>BBVA.MC</td><td>16654456</td></tr><tr><td>UCG.MI</td><td>13903710</td></tr><tr><td>ENI.MI</td><td>12976208</td></tr><tr><td>INGA.AS</td><td>12803589</td></tr><tr><td>IBE.MC</td><td>12034835</td></tr><tr><td>DTE.DE</td><td>7575084</td></tr><tr><td>NDA-FI.HE</td><td>5375454</td></tr><tr><td colspan='2'>... 1 more rows ...</td></tr></tbody></table>
 
 #### Polars DataFrame — HAVING
 
@@ -880,7 +880,7 @@ df.GroupBy("symbol").Agg(
 ).Filter(Col("avg_vol") > Lit(5_000_000.0)).Sort("avg_vol", descending: true)
 ```
 
-<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>avg_vol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601.04</td></tr><tr><td>SAN.MC</td><td>41770987.15</td></tr><tr><td>ENEL.MI</td><td>24678699.42</td></tr><tr><td>BBVA.MC</td><td>16654456.88</td></tr><tr><td>UCG.MI</td><td>13903710.14</td></tr><tr><td>ENI.MI</td><td>12976208.15</td></tr><tr><td>INGA.AS</td><td>12803589.45</td></tr><tr><td>IBE.MC</td><td>12034835.18</td></tr><tr><td>DTE.DE</td><td>7575084.131</td></tr><tr><td>NDA-FI.HE</td><td>5375454.051</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 1 more rows ...</td></tr></tbody></table>
+<!-- Polars DataFrame: (11 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>avg_vol</th></tr></thead><tbody><tr><td>ISP.MI</td><td>87588601.04</td></tr><tr><td>SAN.MC</td><td>41770987.15</td></tr><tr><td>ENEL.MI</td><td>24678699.42</td></tr><tr><td>BBVA.MC</td><td>16654456.88</td></tr><tr><td>UCG.MI</td><td>13903710.14</td></tr><tr><td>ENI.MI</td><td>12976208.15</td></tr><tr><td>INGA.AS</td><td>12803589.45</td></tr><tr><td>IBE.MC</td><td>12034835.18</td></tr><tr><td>DTE.DE</td><td>7575084.131</td></tr><tr><td>NDA-FI.HE</td><td>5375454.051</td></tr><tr><td colspan='2'>... 1 more rows ...</td></tr></tbody></table>
 
 ### Window Functions
 
