@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
-tags: [testing, shell, bash, gcp]
+tags: [testing, shell, bash, linux, powershell, gcp, networking]
 aliases: [netcat, nc, ping, traceroute, mtr, dig, DNS, port testing, TCP test, ss, connectivity]
 keywords: [netcat, nc, ping, traceroute, mtr, dig, DNS lookup, port testing, TCP test, ss, connectivity, connection refused, connection timed out, /dev/tcp, Test-NetConnection, Resolve-DnsName, network debugging, firewall, GCP firewall rules]
 description: "Systematic network connectivity debugging from DNS resolution through TCP port reachability to application-level authentication. Covers netcat, dig, traceroute, mtr, ss, and PowerShell Test-NetConnection."
@@ -70,7 +70,7 @@ mtr -c 10 hostname
 ss -tlnp   # -t=TCP, -l=listening, -n=numeric, -p=show process
 ```
 
-## Production Scenario — Pipeline Can't Connect to the Database
+### Debugging a failed database connection — systematic network stack walkthrough
 
 ```bash
 # Systematic debugging (work through the network stack)
@@ -100,7 +100,7 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 # Look for a rule allowing TCP:1433 from your source IP/range
 ```
 
-## The "It Works from My Machine" Problem
+### The "it works from my machine" problem — user context, DNS, and connection pools
 
 > [!warning] The "It Works from My Machine" Problem
 > If your pipeline fails to connect but you can connect manually from the same VM, check:
@@ -109,7 +109,7 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 > 3. **Connection pool exhaustion:** The pipeline may have used all available connections. Check: `SELECT COUNT(*) FROM sys.dm_exec_sessions WHERE is_user_process = 1`
 > 4. **TCP keepalive:** Idle connections through a load balancer or NAT gateway are silently dropped after a timeout (often 5 minutes). The pipeline thinks the connection is alive, but the network has closed it. Fix: set connection pool idle timeout lower than the NAT timeout.
 
-## PowerShell
+### PowerShell — Test-NetConnection, Resolve-DnsName for connectivity debugging
 
 ```powershell
 # Test port connectivity

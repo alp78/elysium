@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell, networking]
 aliases: [ss, netstat, socket inspection, TCP state, LISTEN, ESTABLISHED, TIME-WAIT, ephemeral ports, connection refused vs timed out]
 keywords: [ss, netstat, socket inspection, TCP state, LISTEN, ESTAB, TIME-WAIT, ephemeral ports, loopback, 0.0.0.0, 127.0.0.1, connection refused, connection timed out, connection count, Get-NetTCPConnection, SQL Server ports, 1433, 1434, DAC, connection pool, Recv-Q]
 description: "Reading socket state with ss (socket statistics) to diagnose network connectivity issues. Covers listening vs established connections, loopback vs all-interface binding, ephemeral ports, TIME-WAIT connections, and the 'connection refused vs timed out' distinction."
@@ -49,7 +49,7 @@ ss -tlnp
 | **Peer Address:Port** | For LISTEN, always `0.0.0.0:*` (accepting from anyone). For ESTAB, the remote client's IP and port. |
 | **Process** | The program that owns this socket. Requires `sudo` to see other users' processes. |
 
-## Interpreting Local Address — Who Can Connect
+### ss local address — 0.0.0.0 vs 127.0.0.1 determines who can connect
 
 > [!info] The IP address determines WHO can connect
 > - **`0.0.0.0:1433`** — listening on ALL IPv4 interfaces. Any machine on the network can connect. This is how SQL Server, SSH, and web servers normally listen. Equivalent: `*:1433`
@@ -59,7 +59,7 @@ ss -tlnp
 > - **`127.0.0.53%lo:53`** — bound to loopback via the `lo` interface. `systemd-resolved` uses this for local DNS
 > - **`10.0.0.3:1433`** — bound to a SPECIFIC interface. Only connections arriving on that IP are accepted
 
-## Common Services and Their Default Ports
+### Common services and default ports — SSH, SQL Server, Datadog, PostgreSQL, Airflow
 
 ```bash
 # Port    Service                     Typical Bind Address
@@ -82,7 +82,7 @@ ss -tlnp
 > - **1434** — SQL Server Browser service. Tells clients which port each *named instance* uses. Irrelevant when using the default instance on default port 1433. Can be disabled.
 > - **1431** — Dedicated Admin Connection (DAC). An emergency-only connection that bypasses normal resource limits. Used when the server is so overloaded that normal connections are rejected. Always localhost-only. Connect with: `sqlcmd -S admin:localhost -U sa`
 
-## Viewing Established Connections
+### ss -tnp — viewing established connections and reading peer addresses
 
 ```bash
 # Show active (established) TCP connections
@@ -108,7 +108,7 @@ ss -tnp
 > [!info] What Are Ephemeral Ports?
 > When a client connects, the OS picks a random high port (typically 32768-60999 on Linux) for the client side. The server sees this as the "peer port." Each connection gets a unique ephemeral port. That's why you see different port numbers (56434, 26733) even though both connections go to the same SQL Server on port 1433.
 
-## Filtering and Counting Connections
+### ss filtering — counting connections, TIME-WAIT, and per-client breakdown
 
 ```bash
 # Count connections to SQL Server
@@ -139,7 +139,7 @@ watch -n 1 'ss -tn | grep :1433 | wc -l'
 # Updates every second — useful during load testing or deployment
 ```
 
-## Connection Refused vs Connection Timed Out
+### Connection refused vs connection timed out — diagnosing the root cause
 
 > [!warning] "Connection Refused" vs "Connection Timed Out" — Completely Different Root Causes
 > These two errors look similar but have completely different causes:
@@ -149,7 +149,7 @@ watch -n 1 'ss -tn | grep :1433 | wc -l'
 >
 > A quick way to tell: `nc -zv -w 3 host port`. "Connection refused" is instant. "Connection timed out" takes 3 seconds (your timeout). The speed of the failure tells you which layer is broken.
 
-## PowerShell — Socket Inspection
+### PowerShell — Get-NetTCPConnection for socket inspection and connection counts
 
 ```powershell
 # List all listening TCP ports with process names

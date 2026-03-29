@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [cp, mv, rm, chmod, chown, mkdir, file permissions, safe delete, file ownership]
 keywords: [cp, mv, rm, chmod, chown, mkdir, rsync, file copy, file move, delete, permissions, ownership, octal permissions, safe delete, trash, archive mode, disk usage, docker permissions, airflow uid]
 description: "Safe file copying, moving, and deletion patterns for production environments. Covers rsync archive mode, chmod octal notation, chown for Docker/Airflow containers, and the safe delete pattern using a trash directory."
@@ -58,7 +58,7 @@ rename 's/\.csv$/.csv.bak/' *.csv
 # Renames all .csv files to .csv.bak in one command
 ```
 
-## Safe Delete Pattern
+### rm — safe delete pattern with trash directory
 
 ```bash
 # Delete
@@ -83,7 +83,7 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 > ```
 > This gives you a recovery window. In production, the cost of a 30-second delay to verify is infinitely less than the cost of accidentally deleting a database backup directory.
 
-## Directory Creation and Permissions
+### mkdir, chmod, chown — directory creation and file permissions
 
 ```bash
 # Create directory with parents
@@ -117,7 +117,7 @@ chown -R 50000:0 /home/airflow/dags/   # Airflow default UID 50000
 > ```
 > The UID 50000 is Airflow's default container user. Verify with `docker inspect` if using a custom image. For the full [[container-lifecycle]] including bind mounts and volume management, see the Docker section.
 
-## Disk Usage Analysis
+### du, df — disk usage and free space analysis
 
 ```bash
 # Disk usage analysis
@@ -135,7 +135,7 @@ df -h
 # For the full disk-full investigation workflow, see the [[sql-server-disk-full]] runbook
 ```
 
-## PowerShell
+### PowerShell — Copy-Item, Move-Item, Remove-Item, New-Item file operations
 
 ```powershell
 # Copy

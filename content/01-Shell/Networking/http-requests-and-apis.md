@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [api, shell, bash]
+tags: [api, shell, bash, linux, powershell]
 aliases: [curl, wget, HTTP request, REST API, Invoke-RestMethod, Invoke-WebRequest]
 keywords: [curl, wget, HTTP, REST API, GET request, POST request, JSON, bearer token, download file, retry, timeout, status code, timing breakdown, Invoke-RestMethod, Invoke-WebRequest, curl vs wget, connect-timeout, max-time, health check]
 description: "Making HTTP requests from the command line with curl and PowerShell's Invoke-RestMethod. Covers headers, JSON bodies, authentication, file downloads with retry, timing breakdown for latency diagnosis, and when to use curl vs wget vs Python requests."
@@ -67,7 +67,7 @@ curl -fSL --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 300 \
 curl -X PUT -T backup.sql.gz https://storage.example.com/backups/
 ```
 
-**Timing breakdown — where is the latency?**
+#### curl -w — timing breakdown to diagnose latency
 
 ```bash
 curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTLS: %{time_appconnect}s\nFirst byte: %{time_starttransfer}s\nTotal: %{time_total}s\n" https://api.example.com/health
@@ -79,7 +79,7 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 > - **TLS slow** — certificate chain is large or OCSP stapling is missing
 > - **First byte - TLS slow** — server processing time is the bottleneck
 
-## Tool Selection — curl vs wget vs Python requests
+### curl vs wget vs Python requests — tool selection
 
 > [!tip] `curl` vs `wget` vs Python `requests`
 > - **curl**: Best for one-off requests, debugging, health checks, and scripts. Supports every protocol. Use in bash scripts.
@@ -88,7 +88,7 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 >
 > In production scripts, always set `--retry`, `--connect-timeout`, and `--max-time` on curl. A hanging curl with no timeout can block your pipeline indefinitely.
 
-## PowerShell — Invoke-RestMethod, Invoke-WebRequest
+### PowerShell — Invoke-RestMethod, Invoke-WebRequest for HTTP requests
 
 ```powershell
 # GET request

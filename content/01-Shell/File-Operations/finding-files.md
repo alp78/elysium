@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [find, fd, locate, file search, find command, xargs]
 keywords: [find, fd, locate, xargs, file search, recursive search, find by name, find by size, find by time, mtime, mmin, find and delete, empty directories, parallel processing, Get-ChildItem, Where-Object, find large files]
 description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and PowerShell equivalents."
@@ -89,14 +89,14 @@ find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip
 # -P 4 = run 4 gzip processes in parallel (4x faster on multi-core)
 ```
 
-## Tool Comparison — `find` vs `fd` vs `locate`
+### find vs fd vs locate — tool comparison
 
 > [!tip] `find` vs `fd` vs `locate`
 > - `find` is universal but single-threaded and slow on large trees. Good for: combining with `-exec`, complex predicates.
 > - `fd` (install: `apt install fd-find`) is 5-10x faster, respects `.gitignore`, has a simpler syntax: `fd "\.parquet$" /data/`. Use it for interactive searching.
 > - `locate` uses a pre-built database (updated by `updatedb` cron): `locate "*.parquet"` — instant results but stale by up to 24 hours. Good for: "where did I put that file last week?"
 
-## PowerShell — Get-ChildItem with Where-Object
+### PowerShell — Get-ChildItem, Where-Object, Select-String for file search
 
 ```powershell
 # Find by name pattern (recursive)

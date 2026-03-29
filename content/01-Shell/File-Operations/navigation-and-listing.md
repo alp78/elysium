@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [ls, du, df, directory listing, disk usage, disk free, tree command]
 keywords: [ls, du, df, tree, directory listing, disk usage, disk space, file sizes, hidden files, human readable, sort by time, modification time, disk free, filesystem, navigation]
 description: "Linux and PowerShell commands for navigating the filesystem, listing files sorted by modification time, checking disk usage with du, and monitoring free disk space with df. Includes the du vs df discrepancy explained."
@@ -34,7 +34,7 @@ ls -d */              # show only directories
 tree -L 2 --dirsfirst # visual tree (apt install tree)
 ```
 
-## Production Scenario — Investigating Disk Space on a Database Server
+### du, ls, df — investigating disk space on a database server
 
 This is the opening move in the [[sql-server-disk-full]] runbook.
 
@@ -51,7 +51,7 @@ df -h /var/opt/mssql/
 
 > [!warning] SQL Server **stops** when the disk is full. Monitor `df -h` regularly on database servers.
 
-## The `du` vs `df` Discrepancy
+### du vs df discrepancy — why disk usage numbers don't match
 
 > [!warning] `du` vs `df` Numbers Don't Always Match
 > `du` measures actual file sizes. `df` measures filesystem block allocation. These numbers frequently disagree because:
@@ -66,7 +66,7 @@ df -h /var/opt/mssql/
 > # Fix: restart the process, or more precisely, identify which log rotation is broken
 > ```
 
-## PowerShell
+### PowerShell — Get-ChildItem, Get-PSDrive for listing and disk usage
 
 ```powershell
 # List files sorted by modification time (newest last)

@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
-tags: [shell, bash, gcp]
+tags: [shell, bash, linux, powershell, gcp, networking]
 aliases: [IAP, Identity-Aware Proxy, IAP tunnel, gcloud start-iap-tunnel, iap.tunnelInstances.accessTunnelResourceAccessor]
 keywords: [IAP, Identity-Aware Proxy, IAP tunnel, gcloud start-iap-tunnel, gcloud compute ssh, tunnel-through-iap, local-host-port, SQL Server tunnel, SSMS IAP, no public IP, secure connectivity, GCE access, VPN alternative, bastion host alternative, IAP debugging, 35.235.240.0/20, IAP IP range]
 description: "Google Cloud IAP (Identity-Aware Proxy) tunneling for secure access to VMs with no public IP. Covers how IAP works at the network level, all tunnel command variants, debugging common failures, and comparison with Cloud VPN and bastion hosts."
@@ -16,7 +16,7 @@ status: complete
 
 Identity-Aware Proxy (IAP) is Google Cloud's way to let you access VMs that have no public IP. It's the backbone of secure GCE connectivity: your SSH sessions, database connections, and even SSMS all travel through IAP when configured correctly. Understanding how IAP tunneling works at the network level — not just "run this gcloud command" — is what separates debugging in minutes from debugging in hours.
 
-## How IAP Tunneling Works — The Full Path
+### How IAP tunneling works — the full network path from workstation to VM
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -93,7 +93,7 @@ gcloud compute start-iap-tunnel data-pipeline-airflow 5432 --local-host-port=127
 # Each tunnel is an independent process — they don't interfere with each other
 ```
 
-## Debugging IAP Tunnels
+### Debugging IAP tunnels — API, IAM, firewall, and VM state checks
 
 ```bash
 # Symptom: "gcloud compute start-iap-tunnel" hangs
@@ -129,7 +129,7 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 # Or configure your SQL client to send keepalive queries
 ```
 
-## Verifying the Tunnel from Both Ends
+### Verifying the IAP tunnel from both ends — local listener and VM connections
 
 ```bash
 # On your Windows workstation — check the local listener
@@ -162,7 +162,7 @@ ss -tnp | grep :1433
 # IAP terminates the tunnel at its proxy — the VM only sees internal GCP traffic.
 ```
 
-## IAP vs VPN vs Bastion Host
+### IAP vs Cloud VPN vs bastion host — choosing the right access method
 
 > [!tip] IAP vs VPN vs Bastion Host
 > Three ways to access private VMs. Here's when to use each:

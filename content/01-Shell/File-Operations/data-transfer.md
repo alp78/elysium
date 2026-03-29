@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
-tags: [shell, bash, gcp]
+tags: [shell, bash, gcp, linux, powershell, sql-server]
 aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, file transfer, data movement]
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run]
 description: "Complete guide to data transfer tools for data engineering: rsync for local and remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd for query-based export."
@@ -101,7 +101,7 @@ rsync -avz --bwlimit=50000 source_dir/ dest_dir/   # 50,000 KB/s ≈ 50 MB/s
 rsync -avc source_dir/ dest_dir/   # -c = checksum instead of mtime+size
 ```
 
-## rsync Trailing Slash Gotcha
+### rsync trailing slash — source path determines copy behavior
 
 > [!warning] rsync Trailing Slash Gotcha
 > This is the single most common rsync mistake:
@@ -146,7 +146,7 @@ rsync -avzP -e "ssh -p 2222" /data/exports/ user@127.0.0.1:/data/imports/
 # Alternative: use gcloud compute scp for simpler transfers (see below)
 ```
 
-## rsync vs cp — When to Use Which
+### rsync vs cp — when to use which
 
 > [!tip] rsync vs cp — When to Use Which
 > | Scenario | Use | Why |
@@ -325,7 +325,7 @@ gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recurs
 # (uses the JSON API with resumable uploads by default)
 ```
 
-## gsutil vs gcloud storage
+### gsutil vs gcloud storage — choosing between legacy and modern CLI
 
 > [!tip] gsutil vs gcloud storage
 > `gsutil` is the legacy tool (Python-based, slower). `gcloud storage` is the modern replacement (Go-based, faster, same flags). Both work, but prefer `gcloud storage` for new scripts:
@@ -452,7 +452,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 # -NoTypeInformation = don't add the #TYPE line at the top
 ```
 
-## Transfer Decision Matrix
+### Transfer decision matrix — choosing the right tool by scenario
 
 | Scenario | Tool | Command Pattern |
 |----------|------|-----------------|
@@ -475,7 +475,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 
 Once data lands in GCS, you can load it directly into BigQuery with `bq load` -- see [[data-loading-and-export]] for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron -- see [[linux-scheduling]] for crontab patterns.
 
-## Compression Trade-offs for Transfers
+### Compression trade-offs — when to use -z during transfers
 
 > [!tip] Compression Trade-offs
 > Not all data benefits from transfer compression:
@@ -490,7 +490,7 @@ Once data lands in GCS, you can load it directly into BigQuery with `bq load` --
 >
 > When in doubt, test: `rsync -avz` vs `rsync -av` on a representative sample. If the compressed transfer isn't significantly faster, drop the `-z`.
 
-## Resumability Matters More Than Speed
+### Resumability — why resume support matters more than raw speed
 
 > [!warning] For Transfers Over 1 GB, Resume Support Is Critical
 > For transfers over 1 GB, the ability to resume after failure is more valuable than raw speed. Here's why:

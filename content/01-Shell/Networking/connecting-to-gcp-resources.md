@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp, bigquery, sql-server, airflow]
-tags: [shell, bash, sql, airflow, bigquery, gcp]
+tags: [shell, bash, linux, powershell, sql-server, airflow, bigquery, gcp]
 aliases: [GCP connectivity, gcloud compute ssh, bq query, Cloud Run, Airflow IAP, Datadog agent, connection matrix]
 keywords: [GCP connectivity, gcloud compute ssh, gcloud compute scp, bq query, bigquery client, Cloud Run, Airflow webserver, Datadog agent, IAP tunnel, pymssql, pyodbc, sqlcmd, SSMS, Invoke-Sqlcmd, GCS, BigQuery API, connection matrix, service account, application default credentials]
 description: "Complete guide to connecting to every GCP resource type: SSH to Compute Engine VMs, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, and Datadog agent. Includes a connection quick reference matrix."
@@ -196,9 +196,12 @@ bq query --use_legacy_sql=false `
 > [!info] Why BigQuery Doesn't Need a Tunnel
 > BigQuery has no "server" running on a VM. It's a multi-tenant API endpoint at `bigquery.googleapis.com`. Your query is sent as an HTTPS request, BigQuery allocates compute on the fly, runs the query, and returns results. The only "firewall" is IAM: does your account have the `bigquery.jobs.create` permission?
 
-## Cloud Run Services (HTTPS — No Tunnel Needed)
+### Cloud Run services — HTTPS endpoints with identity token auth
 
 Cloud Run services expose an HTTPS endpoint. You call them like any API.
+
+> [!info] Cloud Run authentication
+> Cloud Run services can be public (`allUsers`) or require authentication. For authenticated services, you pass a **Google identity token** (not an access token) in the `Authorization: Bearer` header. `gcloud auth print-identity-token` generates this token from your active gcloud credentials. The token is a short-lived JWT scoped to your identity — it proves *who you are*, unlike an access token which proves *what you can do*.
 
 ```bash
 # Get the service URL
@@ -221,7 +224,7 @@ $url = gcloud run services describe data-pipeline-pipeline --region=europe-west1
 Invoke-RestMethod -Uri "$url/health" -Headers @{Authorization = "Bearer $token"}
 ```
 
-## Airflow Webserver on Compute Engine (via IAP Tunnel)
+### Airflow webserver on Compute Engine — IAP tunnel to port 8080
 
 Airflow runs on port 8080 inside the VM. Same pattern as SQL Server: tunnel + connect.
 
@@ -252,9 +255,17 @@ gcloud compute start-iap-tunnel data-pipeline-airflow 8080 `
 Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health"
 ```
 
-## Datadog Agent on Compute Engine
+### Datadog agent on Compute Engine — localhost-only access via SSH
 
 Datadog agent listens on localhost only — you must SSH into the VM to interact with it.
+
+> [!info] Datadog agent ports
+> The Datadog agent runs three listeners, all bound to `127.0.0.1` (not externally reachable):
+> - **5000** — agent HTTP API (health, config, metadata)
+> - **5001** — agent IPC (internal process communication)
+> - **8126** — APM trace agent (receives application traces)
+>
+> Because they listen on localhost only, you must SSH into the VM to query them. There is no way to open an IAP tunnel to these ports from outside — SSH is the only path.
 
 ```bash
 # SSH in and check agent status
@@ -279,7 +290,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 # LISTEN  0  4096  127.0.0.1:8126   0.0.0.0:*   users:(("trace-agent",pid=...))
 ```
 
-## Connection Quick Reference Matrix
+### Connection quick reference matrix — protocol and tunnel requirements by service
 
 | Resource | Protocol | Needs Tunnel? | Local Command | Port |
 |----------|----------|---------------|---------------|------|

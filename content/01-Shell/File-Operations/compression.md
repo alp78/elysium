@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell]
-tags: [shell, bash]
+tags: [shell, bash, linux, powershell]
 aliases: [gzip, zstd, tar, compress, decompress, archive, zip, snappy]
 keywords: [gzip, zstd, tar, compression, decompress, archive, zip, snappy, compress data, tar.gz, tar.zst, gz, compression algorithm, compression level, pipeline compression strategy, 7zip, GZipStream, Compress-Archive]
 description: "Compression tools and strategies for data engineering: gzip for compatibility, zstd for performance, tar for directory archiving. Includes a compression strategy matrix for pipeline intermediate files, archives, Parquet, and database backups."
@@ -67,7 +67,7 @@ tar tzf archive.tar.gz | head -20
 # ALWAYS list before extracting archives from unknown sources
 ```
 
-## Compression Strategy Matrix
+### Compression strategy matrix — choosing the right algorithm for data pipelines
 
 > [!tip] Related pattern
 > For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [[serialization-formats]]. For writing Parquet with specific compression options in code, see [[10_py_serialization_formats]] (Python) and [[10_cs_serialization_formats]] (C#).
@@ -84,7 +84,7 @@ tar tzf archive.tar.gz | head -20
 >
 > **The 90% rule:** For almost all data engineering work, `zstd` at default settings is the right answer. It compresses better than gzip, decompresses faster than gzip, and supports streaming. The only reason to use gzip is backward compatibility with tools that do not yet support zstd.
 
-## PowerShell — Compress-Archive, 7-Zip, GZipStream
+### PowerShell — Compress-Archive, 7-Zip, GZipStream
 
 ```powershell
 # Compress-Archive (built-in, zip format only)
