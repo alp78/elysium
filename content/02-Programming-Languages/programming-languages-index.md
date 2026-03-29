@@ -47,6 +47,7 @@ Paired Python and C# references covering 24 topics. Each note was converted from
 | 22 | Data Transfer (GCS, SQL Server, BigQuery benchmarks) | [[22_py_data_transfer\|Data Transfer]] | [[22_cs_data_transfer\|Data Transfer]] |
 | 23 | Data Ingestion (bulk load SQL Server, BigQuery, Firestore) | [[23_py_data_ingestion\|Data Ingestion]] | [[23_cs_data_ingestion\|Data Ingestion]] |
 | 24 | Streaming & Real-Time (WebSocket, SSE, Pub/Sub, Firestore) | [[24_py_streaming_realtime\|Streaming]] | [[24_cs_streaming_realtime\|Streaming]] |
+| 25 | Functional Data Pipeline (Medallion, Pydantic, FastAPI, Airflow) | [[25_py_functional_pipeline\|Pipeline]] | — |
 
 ## How These Notes Work
 
