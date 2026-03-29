@@ -41,23 +41,17 @@ Every page in this vault covers *how* to use a testing tool — pytest fixtures,
 ## The Data Engineering Testing Pyramid
 
 ```mermaid
-graph TB
-    subgraph Pyramid["Testing Pyramid — Data Engineering"]
-        direction TB
-        E2E["🔺 E2E Pipeline Validation<br><i>Slowest — fewest tests — run nightly</i>"]
-        INT["Integration Tests<br><i>Real connections, test data — run on merge</i>"]
-        CONTRACT["Contract Tests<br><i>Schema conformance — run on every PR</i>"]
-        QUALITY["Data Quality Assertions<br><i>Row counts, nulls, ranges — run on every load</i>"]
-        UNIT["Unit Tests<br><i>Transform logic — fastest, cheapest, most tests</i>"]
-    end
+block-beta
+    columns 7
+    space:2 E2E["E2E\nNightly"]:3 space:2
+    space:1 INT["Integration\nOn merge"]:5 space:1
+    CONTRACT["Contract + Quality\nEvery PR + every load"]:7
+    UNIT["Unit Tests — fastest, most tests, every PR"]:7
 
-    E2E --- INT --- CONTRACT --- QUALITY --- UNIT
-
-    style E2E fill:#cc4125,stroke:#333,color:#fff
-    style INT fill:#e8b84d,stroke:#333,color:#000
-    style CONTRACT fill:#6aa84f,stroke:#333,color:#fff
-    style QUALITY fill:#4285f4,stroke:#333,color:#fff
-    style UNIT fill:#34a853,stroke:#333,color:#fff
+    style E2E fill:#cc4125,stroke:#cc4125,color:#fff
+    style INT fill:#e8b84d,stroke:#e8b84d,color:#1a1a2e
+    style CONTRACT fill:#4285f4,stroke:#4285f4,color:#fff
+    style UNIT fill:#34a853,stroke:#34a853,color:#fff
 ```
 
 | Layer | What It Tests | Speed | When It Runs | Skip It And... |
