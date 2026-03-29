@@ -472,60 +472,168 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ## Anti-Patterns
 
-### Security mistakes that cause incidents
+> [!abstract] Security Mistakes That Cause Incidents
+>
+> Every anti-pattern below has caused a production incident. Each one
+> looked reasonable at the time.
 
-> [!danger] Every anti-pattern below has caused a production incident. Each one looked reasonable at the time.
+---
 
 ### Single SA for everything — no blast radius containment
 
-One service account shared by the pipeline, dashboard, CI/CD, and monitoring. When the SA key leaks, the attacker has access to everything — all data, all services, all environments.
+> [!danger] One SA shared across all workloads
+>
+> One service account used by the pipeline, dashboard, CI/CD, and monitoring.
+> When the SA key leaks, the attacker has access to **everything** — all data,
+> all services, all environments. There is no containment boundary.
 
-**The fix:** one SA per workload. The pipeline SA reads/writes data. The dashboard SA reads gold only. The CI SA deploys but doesn't read data. See [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]].
+> [!success] One SA per workload
+>
+> The pipeline SA reads/writes data. The dashboard SA reads gold tables only.
+> The CI SA deploys but doesn't read data. A compromised SA affects only its
+> own workload. See [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]].
+
+---
 
 ### SA key files in production — permanent liability
 
-A JSON key file on a VM, in a Docker image, or in an environment variable. If the VM is compromised, the attacker has permanent access even after the VM is rebuilt.
+> [!danger] Key file on a VM, in a Docker image, or in an env var
+>
+> A JSON key file on a production VM. If the VM is compromised, the attacker
+> has **permanent** access — even after the VM is rebuilt, reimaged, and
+> redeployed. The key never expires and works from anywhere.
 
-**The fix:** use the metadata server on VMs/Cloud Run. Use WIF in CI/CD. Key files should only exist on developer workstations, and even then, prefer `gcloud auth application-default login`.
+> [!success] Use metadata server or WIF
+>
+> On VMs and Cloud Run: the metadata server provides auto-refreshing tokens
+> with zero files on disk. In CI/CD: WIF exchanges an external OIDC token
+> for a short-lived GCP token. Key files should only exist on developer
+> workstations, and even then, prefer `gcloud auth application-default login`.
+
+---
 
 ### roles/editor or roles/owner on service accounts — over-permissioned
 
-`roles/editor` grants write access to almost every GCP service. A pipeline that only writes to BigQuery and GCS does not need editor access to Compute Engine, Pub/Sub, Cloud Functions, and 200 other services.
+> [!danger] Granting roles/editor to a pipeline SA
+>
+> `roles/editor` grants write access to ~200 GCP services. A pipeline that
+> writes to BigQuery and GCS does not need access to Compute Engine, Pub/Sub,
+> Cloud Functions, IAM, or billing. A compromised editor SA can create VMs,
+> open firewall ports, and exfiltrate data.
 
-**The fix:** grant the minimum specific roles. See [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]] for the exact role list.
+> [!success] Grant minimum specific roles
+>
+> `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` +
+> `roles/storage.objectAdmin` (on specific buckets) +
+> `roles/secretmanager.secretAccessor`. Nothing more. See
+> [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]]
+> for the exact role list.
+
+---
 
 ### Hardcoding credentials in code or env vars — leaked in logs and git
 
-`SA_PASSWORD = "MyPassword123"` in a Python file, or `export SA_PASSWORD=...` in a Dockerfile. Both end up in git history, Docker image layers, or Cloud Logging output.
+> [!failure] SA_PASSWORD in source code or Dockerfile
+>
+> Credentials in Python files end up in git history — permanently, even after
+> deletion. Credentials in Dockerfiles end up in image layers — extractable
+> by anyone with pull access. Credentials in env vars end up in Cloud Logging
+> output when a process dumps its environment on crash.
 
-**The fix:** store credentials in Secret Manager. Fetch at runtime. See [[secrets-management]].
+> [!success] Store in Secret Manager, fetch at runtime
+>
+> Credentials live in GCP Secret Manager with per-secret IAM bindings.
+> Application code fetches them at startup — nothing on disk, nothing in git,
+> nothing in logs. See [[secrets-management#Access from Python]] for the
+> Python pattern and [[secrets-management#Airflow Connections Backed by Secret Manager]]
+> for Airflow integration.
+
+---
 
 ### Skipping VPC-SC because "IAM is enough" — data exfiltration risk
 
-IAM controls WHO can access data. VPC-SC controls WHERE data can flow. Without VPC-SC, a compromised SA can copy BigQuery data to an attacker-controlled project — IAM permits it because the SA has read access.
+> [!danger] No VPC Service Controls on sensitive data
+>
+> IAM controls WHO can access data. Without VPC-SC, a compromised SA with
+> `roles/bigquery.dataViewer` can copy your entire dataset to an
+> attacker-controlled GCP project. IAM says "yes, you can read." Nothing
+> says "no, you can't copy it out."
 
-**The fix:** deploy VPC-SC perimeters around sensitive data. See [[vpc-service-controls]].
+> [!success] Deploy VPC-SC perimeters around sensitive data
+>
+> VPC-SC restricts WHERE data can flow — even IAM-authorized requests are
+> blocked if they cross the perimeter boundary. Data stays inside the
+> project. See [[vpc-service-controls]] for perimeter setup and the
+> ingress/egress policy patterns.
+
+---
 
 ### Never rotating SA keys — permanent risk accumulation
 
-A key file downloaded 18 months ago, shared with three people, two of whom have left the company. The key still works.
+> [!warning] Key file downloaded 18 months ago, shared with 3 people
+>
+> Two of those people have left the company. The key still works. Nobody
+> remembers who has a copy. The key grants the same access it did on day one
+> — there is no degradation, no expiry warning, no audit trail of who used
+> it from where.
 
-**The fix:** 90-day rotation calendar. Disable old key versions before deleting. See [[secrets-management#Service Account Keys]].
+> [!success] 90-day rotation calendar
+>
+> Create new key → update Secret Manager version → update all consumers →
+> verify → disable old key → wait 24 hours → delete old key. Automate this
+> with a Cloud Scheduler job or a quarterly calendar reminder. See
+> [[secrets-management#Service Account Keys]] for the full rotation procedure.
+
+---
 
 ### Using the Compute Engine default SA — over-permissioned by default
 
-The default SA (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) has `roles/editor` — write access to nearly everything. VMs created without specifying a custom SA inherit this default.
+> [!warning] VM created without specifying a custom SA
+>
+> The default SA (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`)
+> has `roles/editor` — write access to nearly everything in the project.
+> Every VM created without a custom SA inherits this over-permissioned
+> identity silently.
 
-**The fix:** always attach a custom SA with minimum roles when creating VMs. Never use the default SA for production workloads.
+> [!success] Always attach a custom SA
+>
+> Specify `--service-account=` when creating VMs with `gcloud compute
+> instances create`. In Terraform, set `service_account { email = ... }` on
+> every `google_compute_instance`. Never leave the default SA in place for
+> production workloads.
+
+---
 
 ### TrustServerCertificate=yes on public-facing SQL Server — no TLS validation
 
-Acceptable behind an IAP tunnel (transport is already encrypted). Dangerous on a public-facing SQL Server — a man-in-the-middle can intercept the connection.
+> [!warning] Skipping certificate validation on a public endpoint
+>
+> `TrustServerCertificate=yes` accepts any certificate — including one
+> presented by a man-in-the-middle attacker. Behind an IAP tunnel this is
+> acceptable (the tunnel encrypts transport). On a public-facing SQL Server
+> with no tunnel, it is a security hole.
 
-**The fix:** use a CA-signed certificate. See [[sql-server-authentication#openssl req -x509 — generate TLS certificate for SQL Server]].
+> [!success] Use a CA-signed certificate for public endpoints
+>
+> Generate a TLS certificate from Let's Encrypt or an internal CA. Configure
+> SQL Server to use it. Remove `TrustServerCertificate=yes` from connection
+> strings. See [[sql-server-authentication#openssl req -x509 — generate TLS certificate for SQL Server]]
+> for the certificate generation procedure.
+
+---
 
 ### Running gcloud auth login expecting Python SDK to work — wrong credential store
 
-`gcloud auth login` sets credentials for the gcloud CLI only. Python/C# client libraries use ADC, which requires a separate `gcloud auth application-default login`.
+> [!failure] "Permission denied" after gcloud auth login
+>
+> `gcloud auth login` sets credentials for the gcloud CLI tool **only**.
+> Python, C#, and Go client libraries use Application Default Credentials
+> (ADC), which is a completely separate credential store. Running one does
+> not set the other.
 
-**The fix:** run both commands, or use a key file with `GOOGLE_APPLICATION_CREDENTIALS`. See [[gcloud-authentication#gcloud auth application-default login — ADC for application code]].
+> [!success] Run both commands for local development
+>
+> `gcloud auth login` for CLI tools + `gcloud auth application-default login`
+> for your application code. Or set `GOOGLE_APPLICATION_CREDENTIALS` to a
+> key file. See [[gcloud-authentication#gcloud auth application-default login — ADC for application code]]
+> for the distinction.
