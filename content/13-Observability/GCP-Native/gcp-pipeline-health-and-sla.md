@@ -278,8 +278,9 @@ if __name__ == "__main__":
         exit(1)  # Non-zero exit triggers Cloud Scheduler alert or CI failure
 ```
 
-> [!warning] `__TABLES__` reflects DML completion, not streaming inserts
-> For streaming-insert pipelines, `last_modified_time` updates only after a query or DML touches the table. Use `INFORMATION_SCHEMA.STREAMING_TIMELINE` or a custom freshness metric instead.
+> [!warning] __TABLES__ and streaming inserts
+>
+> `__TABLES__` reflects DML completion, not streaming inserts. For streaming-insert pipelines, `last_modified_time` updates only after a query or DML touches the table. Use `INFORMATION_SCHEMA.STREAMING_TIMELINE` or a custom freshness metric instead.
 
 ---
 

@@ -18,7 +18,8 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 
 ## Linux — kill, pkill, killall
 
-> [!info] SIGTERM (signal 15) — graceful shutdown
+> [!info] SIGTERM graceful shutdown
+>
 > Docker uses the same SIGTERM→SIGKILL escalation — see [[container-lifecycle]]. The process can:
 > 1. Flush buffers and close file handles
 > 2. Commit or rollback database transactions
@@ -28,7 +29,8 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 >
 > Always try SIGTERM first. Wait 10-30 seconds for the process to respond.
 
-> [!danger] SIGKILL (signal 9) — force kill
+> [!danger] SIGKILL force kill
+>
 > The kernel terminates the process **immediately** — no chance to clean up:
 > - Open files may be corrupted (half-written)
 > - Database transactions are NOT rolled back (the DB server does it later)
@@ -44,7 +46,9 @@ kill -9 <PID>
 
 #### pkill -f — kill by command line pattern
 
-> [!danger] `pkill` without `-f` matches **process name only** (first 15 characters)
+> [!danger] pkill without -f is broad
+>
+> `pkill` without `-f` matches **process name only** (first 15 characters).
 > `pkill python` kills every Python process on the system. Always use `-f` to match
 > the full command line: `pkill -f "python run_pipeline"` targets only that specific
 > script.
@@ -53,7 +57,8 @@ kill -9 <PID>
 pkill -f "python run_pipeline"
 ```
 
-> [!warning] `killall` is dangerous on macOS — it kills ALL processes
+> [!warning] killall differs on macOS
+>
 > On Linux, `killall python3` kills all processes named `python3`. On macOS/BSD,
 > `killall` with no arguments kills **every process you own**. Prefer `pkill -f` for
 > portability.
@@ -64,7 +69,9 @@ killall python3
 
 #### kill -- -PGID — kill a process group (parent and all children)
 
-> [!info] A negative PID signals the entire process group. Use this to kill a parent
+> [!info] Kill entire process group
+>
+> A negative PID signals the entire process group. Use this to kill a parent
 > process and all its children at once (e.g., a bash script that spawned multiple
 > subprocesses). Find the PGID with `ps -o pid,pgid,cmd -p <PID>`.
 
@@ -74,7 +81,8 @@ kill -- -<PGID>
 
 ### SIGTERM → strace → SIGKILL — the correct kill escalation sequence
 
-> [!tip] The Correct Kill Escalation
+> [!tip] Kill escalation sequence
+>
 > ```
 > kill <PID>              # SIGTERM — ask nicely (wait 10-30 seconds)
 >   ↓ (no response)
@@ -88,7 +96,8 @@ kill -- -<PGID>
 > ```
 > Before reaching for `-9`, always try to understand WHY the process is stuck. `strace -p <PID>` attaches to the process and shows what system calls it's making — if it's stuck in `read()` on a socket, the problem is network or the remote server, not the local process.
 
-> [!warning] After a Force Kill — Always Check for Remnants
+> [!warning] Check for remnants after kill -9
+>
 > After `kill -9`, manually check for:
 > - Lock files left in `/var/run/`, `/tmp/`, or the application's data directory
 > - Shared memory segments: `ipcs -m` (list), `ipcrm -m <shmid>` (remove)
@@ -99,7 +108,9 @@ kill -- -<PGID>
 
 #### Stop-Process — graceful and forced termination
 
-> [!info] Without `-Force`, `Stop-Process` sends a close request (equivalent to SIGTERM).
+> [!info] Stop-Process behavior
+>
+> Without `-Force`, `Stop-Process` sends a close request (equivalent to SIGTERM).
 > With `-Force`, it terminates immediately (equivalent to SIGKILL).
 
 ```powershell
@@ -109,7 +120,9 @@ Stop-Process -Id <PID> -Force
 
 #### Stop-Process -Name — kill by process name
 
-> [!warning] `Stop-Process -Name "python"` kills ALL Python processes, same as `killall`.
+> [!warning] Stop-Process -Name kills all matches
+>
+> `Stop-Process -Name "python"` kills ALL Python processes, same as `killall`.
 > Use `Where-Object` on `CommandLine` to target a specific script.
 
 ```powershell

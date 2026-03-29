@@ -21,12 +21,14 @@ status: complete
 #### List creation — literals, list(), range, nested
 
 > [!info] List fundamentals
+>
 > - Ordered, mutable, allows duplicates and mixed types
 > - O(1) append and index access, O(n) insert/remove
 > - 0-indexed with negative indexing (`[-1]` = last element) and slicing (`list[start:stop:step]`)
 > - No fixed-size array built-in (use `array.array` or NumPy)
 
 > [!warning] Anti-patterns
+>
 > - **`list` for membership tests** — O(n); use `set` for large data
 > - **`insert(0, x)` frequently** — O(n) shift; use `deque.appendleft()`
 > - **Modifying during iteration** — use a copy or comprehension instead
@@ -186,6 +188,7 @@ print(f"stack:  {stack}")
 Hash-based mapping with O(1) average lookup, insert, and delete. Insertion-ordered since Python 3.7. Keys must be hashable (immutable): `str`, `int`, `float`, `tuple`, `frozenset` — NOT `list` or `dict`. `defaultdict` auto-creates missing keys with a factory function; `Counter` is a specialized dict for counting occurrences.
 
 > [!warning] Anti-patterns
+>
 > - **Mutable keys** (lists, dicts) — `TypeError`; use tuples instead
 > - **Bracket access without checking** — `KeyError`; use `.get()`
 > - **`dict` for ordered data** when a list of tuples suffices
@@ -324,12 +327,14 @@ print(f"Total:        {c.total()}")
 #### Set creation — literals, set(), frozenset
 
 > [!info] Set fundamentals
+>
 > - Unique hashable elements with O(1) membership testing and deduplication
 > - Built-in set algebra: union, intersection, difference, symmetric difference
 > - `frozenset` — immutable variant (can be dict keys or inside another set)
 > - `{}` for non-empty sets, but `set()` for empty (since `{}` creates an empty dict)
 
 > [!warning] Anti-patterns
+>
 > - **`list` + `in`** for uniqueness — O(n); use `set`
 > - **Mutable elements** (lists, dicts) — unhashable, raises `TypeError`
 > - **Relying on set order** — unordered (no guaranteed iteration order)
@@ -616,7 +621,8 @@ Each data structure enforces a specific access pattern:
 - **Deque:** Double-ended queue — efficiently add/remove from both ends in O(1). Use cases: sliding windows, both-ends access.
 - **Priority Queue:** Items come out in priority order, not insertion order — use the `heapq` module.
 
-> [!warning] Don't use `list.pop(0)` for FIFO queues
+> [!warning] Don't use list.pop(0) for FIFO queues
+>
 > `list.pop(0)` is O(n) because it shifts all remaining elements. Use `deque.popleft()` which is O(1). Also avoid using a single list as both stack and queue — the semantics become confusing.
 
 #### collections.deque — Stack (LIFO) with append and pop

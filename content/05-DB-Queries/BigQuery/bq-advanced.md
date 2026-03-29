@@ -1484,6 +1484,7 @@ LIMIT 15
 ## MERGE (Upsert)
 
 > [!tip] Related pattern
+>
 > For cross-language equivalents of MERGE and window functions, see [[sql-python-csharp-transforms]] which compares how the same logic is expressed in SQL, Python, and C#.
 
 ### MERGE (Upsert) — Syntax and Patterns

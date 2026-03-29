@@ -82,6 +82,7 @@ gh pr merge --rebase
 | `--rebase` | Linear history, no merge commit | Clean history + individual commits visible |
 
 > [!tip] After Squash Merge
+>
 > After `gh pr merge --squash`, `git branch -d` may warn the branch isn't merged (different SHA). This is normal — squash creates a new combined commit with a different SHA. The changes ARE on main, just as a different commit. Safe to use `git branch -d` anyway (the warning is cosmetic).
 
 ### Preventing "PR is not mergeable" Errors
@@ -116,6 +117,7 @@ Go to **Settings → Branches → Branch protection rules → Add rule** for `ma
 - This forces contributors to always update before merging, avoiding dirty histories
 
 > [!tip] Combining Options B and C
+>
 > With both enabled, you click "Update branch" on the PR page (no CLI needed), wait for checks to pass, then merge. If you also enable auto-merge, it all happens automatically.
 
 ---
@@ -144,6 +146,7 @@ git stash pop
 - `git stash pop` — re-apply the shelved changes onto the new branch
 
 > [!warning] Stash Pop Can Conflict
+>
 > If the stashed changes touch the same lines that differ between branches, `git stash pop` will produce merge conflicts. This is expected — the stash is still preserved (not dropped) when conflicts occur, so your work is safe.
 
 ### Step 2: Resolve stash pop conflicts

@@ -290,7 +290,9 @@ dbt run --full-refresh --select fct_esg_scores
 dbt run --full-refresh --select fct_esg_scores+
 ```
 
-> [!warning] `--full-refresh` on an incremental model drops and recreates the table. Schedule it during a maintenance window for large tables to avoid breaking downstream queries mid-execution.
+> [!warning] Full-refresh drops the table
+>
+> `--full-refresh` on an incremental model drops and recreates the table. Schedule it during a maintenance window for large tables to avoid breaking downstream queries mid-execution.
 
 ---
 
@@ -347,7 +349,9 @@ For severe corruption, drop and rebuild from scratch:
 dbt snapshot --full-refresh --select snap_issuer_details
 ```
 
-> [!warning] `--full-refresh` on a snapshot drops the full history. Only do this if the source system retains the full history of changes. Coordinate with the data governance team before destroying SCD history in regulated environments.
+> [!warning] Full-refresh destroys snapshot history
+>
+> `--full-refresh` on a snapshot drops the full history. Only do this if the source system retains the full history of changes. Coordinate with the data governance team before destroying SCD history in regulated environments.
 
 ---
 

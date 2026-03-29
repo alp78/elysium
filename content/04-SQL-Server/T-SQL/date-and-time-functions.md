@@ -52,6 +52,7 @@ YYYY-DDD                        2026-069                         Ordinal date (d
 | C# internal | `DateTimeOffset` | `new DateTimeOffset(2026, 3, 10, 15, 30, 0, TimeSpan.FromHours(1))` | Preserves offset, unambiguous |
 
 > [!info] Date Format Rules for Pipelines
+>
 > 1. **Store dates as `DATE` or `DATETIME2` in SQL Server, never as strings.** String dates cannot be indexed efficiently, cannot be compared with `<`/`>`, and break when formats change.
 > 2. **If you must store as string, use ISO 8601 (`YYYY-MM-DD`).** It sorts correctly as text.
 > 3. **Always store timestamps in UTC.** Convert to local time only at the presentation layer.
@@ -89,6 +90,7 @@ SELECT SYSDATETIMEOFFSET()    -- 2026-03-10 16:30:00.1234567 +01:00 (with offset
 ```
 
 > [!warning] GETDATE() vs SYSUTCDATETIME()
+>
 > `GETDATE()` returns server-local time — if the server timezone is ever changed, all your comparisons break. `SYSUTCDATETIME()` always returns UTC. Set servers to UTC (`timedatectl set-timezone UTC`) so they are the same, but always code defensively with `SYSUTCDATETIME()`.
 
 ---
@@ -135,6 +137,7 @@ SELECT CONVERT(VARCHAR(10), GETDATE(), 120)             -- 2026-03-10 (fast)
 ```
 
 > [!warning] FORMAT() Performance
+>
 > `FORMAT()` uses .NET formatting under the hood and is 10-50x slower than `CONVERT`. In queries processing millions of rows (like the data pipeline), always use `CONVERT` for date-to-string formatting. Use `FORMAT` only for one-off display queries.
 
 ---
@@ -171,6 +174,7 @@ SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-0
 ```
 
 > [!warning] @@DATEFIRST and Weekday Numbers
+>
 > `DATEPART(WEEKDAY, date)` returns 1-7, but what day is "1" depends on the `@@DATEFIRST` setting:
 > - US default: `@@DATEFIRST = 7` → Sunday=1, Monday=2, ..., Saturday=7
 > - ISO standard: `@@DATEFIRST = 1` → Monday=1, ..., Sunday=7
@@ -212,7 +216,9 @@ SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the w
 -- Use case: GROUP BY date period without FORMAT/CONVERT overhead
 ```
 
-> [!warning] DATEDIFF Counts Boundary Crossings, Not Full Periods
+> [!warning] DATEDIFF Counts Boundary Crossings
+>
+> DATEDIFF Counts Boundary Crossings, Not Full Periods.
 > `DATEDIFF(YEAR, '2025-12-31', '2026-01-01')` = 1, even though they are only 1 day apart. `DATEDIFF(MONTH, '2026-01-31', '2026-02-01')` = 1, even though they are 1 day apart. For "how many complete months," use more careful logic combining DATEDIFF with DAY comparison.
 
 ---
@@ -293,8 +299,9 @@ Python has two kinds of datetimes — this distinction matters enormously in pip
 - **Naive** (`datetime(2026, 3, 10, 15, 30)`) — no timezone information. Comparing two naive datetimes from different timezones gives wrong results silently.
 - **Aware** (`datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)`) — has timezone. Comparisons, arithmetic, and conversions are correct.
 
-> [!warning] Never Create Naive Datetimes in Pipeline Code
-> Always pass `tzinfo=`. If a library returns a naive datetime, immediately tag it:
+> [!warning] Never Create Naive Datetimes
+>
+> Never Create Naive Datetimes in Pipeline Code. Always pass `tzinfo=`. If a library returns a naive datetime, immediately tag it:
 > ```python
 > naive_from_api = datetime.fromisoformat("2026-03-10T15:30:00")
 > aware = naive_from_api.replace(tzinfo=timezone.utc)  # because you KNOW the API returns UTC
@@ -481,6 +488,7 @@ TimeZoneInfo.ConvertTime(utcNow, tokyo)     // +09:00 (no DST in Japan)
 ```
 
 > [!warning] DateTime vs DateTimeOffset in C#
+>
 > `DateTime` has a `Kind` property (Local, Utc, Unspecified) that is not part of the value — it's metadata that gets silently lost during serialization, database round-trips, and JSON conversion. This causes bugs that are nearly impossible to track down. `DateTimeOffset` embeds the UTC offset directly in the value. It round-trips correctly through SQL Server (`DATETIMEOFFSET`), JSON, and API responses. Use `DateTimeOffset` for all timestamps in your code.
 >
 > `DateOnly` (.NET 6+) is perfect for trade dates — it cannot accidentally have a time component, eliminating an entire class of off-by-one bugs at day boundaries.
@@ -567,6 +575,7 @@ BACKUP_FILE="project_backup_$(date +%Y%m%d_%H%M%S).bak"
 ```
 
 > [!tip] Always Set Servers to UTC
+>
 > Every server in your infrastructure should run on UTC:
 > ```bash
 > sudo timedatectl set-timezone UTC

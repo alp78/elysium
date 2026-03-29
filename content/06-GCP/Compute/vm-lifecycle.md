@@ -44,6 +44,7 @@ gcloud compute instances reset data-pipeline-sql --zone=europe-west1-b
 ```
 
 > [!warning] Disk Charges Continue When Stopped
+>
 > Stopping a VM eliminates compute charges but disk storage charges continue. For VMs you need to stop long-term, consider snapshotting the disk and deleting the VM entirely — then recreating from the snapshot when needed.
 
 ### Resizing a VM by Changing Machine Type
@@ -76,6 +77,7 @@ gcloud monitoring time-series list \
 ```
 
 > [!tip] Right-Sizing Rules of Thumb
+>
 > - If peak CPU utilization is 30%, you're paying for 70% wasted capacity. Downsize.
 > - If `free -h` on the VM shows less than 60% memory used at peak, try the next smaller machine type. Monitor for a week after downsizing.
 > - An e2-medium running 24/7 costs ~$25/month. An e2-standard-4 costs ~$97/month.

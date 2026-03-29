@@ -661,7 +661,8 @@ Bronze Load Complete
        Silver Layer Load
 ```
 
-> [!warning] Drift Detection Is Early Warning, Not a Replacement for Validation
+> [!warning] Drift detection is early warning
+>
 > Schema and data drift checks run *before* your Great Expectations suite. They catch problems that rule-based checks miss: a column silently renamed, a data provider switching currency conventions, a third-party API returning yesterday's data instead of today's. In financial indexing, a drift alert at 8:55 AM that says "mean price of the Asia/Pacific index constituents dropped 30% — likely a JPY/USD feed error" is the difference between catching a bad index value before publication and issuing a correction after €500M in ETF trades have already settled.
 
 ---

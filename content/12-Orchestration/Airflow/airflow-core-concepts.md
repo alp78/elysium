@@ -66,7 +66,8 @@ status: complete
 
 Apache Airflow is an open-source **workflow orchestration platform** for programmatically authoring, scheduling, monitoring, and managing data pipelines. Pipelines are defined as Python code, making them version-controllable, testable, and dynamically generated.
 
-> [!warning] What Airflow Is NOT
+> [!warning] What Airflow is NOT
+>
 > Airflow is **not a data processing framework**. It does not move or transform data itself — it **orchestrates** tools that do. Think of Airflow as the conductor, not the orchestra. Data processing happens in Spark, dbt, BigQuery, or Python scripts that Airflow triggers. Treating Airflow as a data-processing engine (e.g., loading large DataFrames into XComs) is the single most common architectural mistake.
 
 ---
@@ -258,7 +259,8 @@ with DAG(
     start >> extract >> transform >> load >> end
 ```
 
-> [!tip] `catchup=False` is Almost Always Right
+> [!tip] catchup=False is almost always right
+>
 > With `catchup=True` (the default), Airflow creates a DAG Run for every missed interval between `start_date` and now when the DAG is first unpaused. For a DAG with `start_date=2024-01-01` and `schedule="@daily"`, that could be hundreds of runs. Always set `catchup=False` unless you explicitly need historical backfill, and use `airflow dags backfill` for intentional backfills.
 
 ### Schedule Values

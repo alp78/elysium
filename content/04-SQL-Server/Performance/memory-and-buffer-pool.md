@@ -29,7 +29,9 @@ SQL Server's buffer pool is its primary data cache — it holds database pages (
 
 ### Memory Sizing Rule
 
-> [!tip] The One Rule for max server memory
+> [!tip] The Max Memory Rule
+>
+> The One Rule for max server memory.
 > `max server memory = Total VM RAM − 1 GB`
 >
 > Leave at least 1 GB for the OS, kernel, and any other processes on the VM. On a 16 GB GCP VM: set max server memory to 15 GB (15,360 MB).
@@ -52,6 +54,7 @@ WHERE name = 'max server memory (MB)';
 ```
 
 > [!warning] Never Leave at Default
+>
 > The default max server memory is 2,147,483,647 MB (unlimited). SQL Server will consume nearly all available RAM, starving the OS and creating instability. On GCP VMs, this can cause the OOM killer to terminate the `sqlservr` process during spikes. Always set this before going to production.
 
 ## Checking Available System Memory
@@ -106,6 +109,7 @@ WHERE counter_name = 'Page life expectancy'
 | Sudden drops | A large table scan or index rebuild flushed the buffer pool | Identify the query; schedule off-peak |
 
 > [!info] PLE Context
+>
 > The classic "300 second" threshold was written when SQL Server had much less RAM. On modern systems with 16+ GB, PLE should routinely be 1000–5000+ seconds. A consistently low PLE means your working set doesn't fit in RAM.
 
 ### Buffer Cache Hit Ratio
@@ -186,7 +190,9 @@ When queries appear here, `RESOURCE_SEMAPHORE` appears in [[wait-stats-analysis|
 
 ### Freeing Memory (Diagnostic/Testing Only)
 
-> [!warning] Do Not Run in Production Without Cause
+> [!warning] Diagnostic Use Only
+>
+> Do Not Run in Production Without Cause.
 > These commands are for testing and diagnosis. Running them in production flushes caches that queries depend on, causing temporary performance degradation.
 
 ```sql
@@ -239,10 +245,13 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 | Medium data warehouse | e2-standard-8 (32 GB) | n2-highmem-4 (32 GB) |
 | Large analytical workload | n2-highmem-8 (64 GB) | n2-highmem-16 (128 GB) |
 
-> [!tip] Related pattern: buffer pool metrics in Datadog
+> [!tip] Buffer Pool in Datadog
+>
+> Related pattern: buffer pool metrics in Datadog.
 > The [[datadog-sql-server-integration]] exposes buffer cache hit ratio and PLE as continuous time-series metrics, enabling alerting on memory pressure trends before they become incidents.
 
 > [!warning] 2 GB VMs Are Insufficient
+>
 > SQL Server 2022 on a 2 GB e2-small VM is critically undersized. The SQL Server engine alone reserves ~700 MB–1 GB, leaving almost nothing for the buffer pool. Any table scan or bulk load will constantly thrash the disk. Minimum production recommendation: 16 GB.
 
 ### Related

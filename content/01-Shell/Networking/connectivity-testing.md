@@ -20,7 +20,8 @@ The first question in any network debugging session is: "Can my client reach the
 
 #### nc (netcat) — testing port reachability
 
-> [!info] `nc` (netcat) flags
+> [!info] nc (netcat) flags
+>
 > - `-z` — scan mode (don't send data, just check if the port is open)
 > - `-v` — verbose (shows "succeeded!" or "refused")
 > - `-w 5` — timeout after 5 seconds (don't hang on unreachable hosts)
@@ -29,7 +30,8 @@ The first question in any network debugging session is: "Can my client reach the
 nc -zv -w 5 hostname 1433
 ```
 
-> [!tip] "Connection refused" vs "Connection timed out" — different diagnoses
+> [!tip] Refused vs timed out diagnosis
+>
 > - **Refused** = the host is reachable but nothing is listening on that port (service
 >   down, wrong port number)
 > - **Timed out** = packets are being dropped (firewall rule, host unreachable, wrong IP)
@@ -38,7 +40,9 @@ nc -zv -w 5 hostname 1433
 
 #### bash /dev/tcp — port test without netcat installed
 
-> [!info] Bash has a built-in TCP pseudo-device. No external tools needed — works on
+> [!info] Bash /dev/tcp built-in
+>
+> Bash has a built-in TCP pseudo-device. No external tools needed — works on
 > minimal containers and Docker images where netcat isn't installed.
 
 ```bash
@@ -47,7 +51,9 @@ timeout 5 bash -c "echo > /dev/tcp/hostname/1433" && echo "OPEN" || echo "CLOSED
 
 #### nc port sweep — test multiple data engineering ports at once
 
-> [!info] Sweeps common data engineering ports in a loop. Useful as a first diagnostic
+> [!info] Port sweep for diagnostics
+>
+> Sweeps common data engineering ports in a loop. Useful as a first diagnostic
 > when connecting to a new VM or after firewall changes.
 
 ```bash
@@ -58,7 +64,9 @@ done
 
 #### dig — DNS lookup and record queries
 
-> [!info] `dig` queries DNS records. `+short` strips all metadata and returns just the
+> [!info] dig DNS lookup
+>
+> `dig` queries DNS records. `+short` strips all metadata and returns just the
 > answer. Use `@8.8.8.8` to query Google's public DNS — useful when you suspect your
 > local DNS is stale or broken.
 
@@ -68,7 +76,8 @@ dig hostname A
 dig @8.8.8.8 hostname
 ```
 
-> [!warning] `dig +short` may return a CNAME, not an IP
+> [!warning] dig +short may return CNAME
+>
 > If the hostname is a CNAME alias, `dig +short` returns the alias target, not the IP.
 > Chain them: `dig +short hostname` → returns CNAME → `dig +short that-cname` → returns
 > IP. Or use `dig +short hostname A` to force A-record resolution.
@@ -77,7 +86,9 @@ dig @8.8.8.8 hostname
 
 #### traceroute — trace the network path to a host
 
-> [!info] Shows each network hop between you and the destination. If the trace stops at
+> [!info] traceroute hop analysis
+>
+> Shows each network hop between you and the destination. If the trace stops at
 > a specific hop, that's where the firewall or routing issue is. `***` lines mean the hop
 > is blocking ICMP or dropping packets.
 
@@ -85,13 +96,16 @@ dig @8.8.8.8 hostname
 traceroute hostname
 ```
 
-> [!warning] `traceroute` uses UDP by default — many firewalls block it
+> [!warning] traceroute uses UDP by default
+>
 > Use `traceroute -T` for TCP-based tracing (more likely to pass through firewalls).
 > On GCP, ICMP is often blocked between VPCs — TCP traceroute gives more reliable results.
 
 #### mtr — combines ping + traceroute in real time
 
-> [!info] `mtr` continuously probes each hop and shows loss percentage, latency, and
+> [!info] mtr real-time path analysis
+>
+> `mtr` continuously probes each hop and shows loss percentage, latency, and
 > jitter. A sudden latency jump at a specific hop = bottleneck. Packet loss at a hop =
 > congestion or drops. Install with `apt install mtr`.
 
@@ -101,7 +115,9 @@ mtr -c 10 hostname
 
 #### ss -tlnp — show listening ports on the local machine
 
-> [!info] `ss` is the modern replacement for `netstat`. Flags: `-t` = TCP, `-l` = listening,
+> [!info] ss listening port check
+>
+> `ss` is the modern replacement for `netstat`. Flags: `-t` = TCP, `-l` = listening,
 > `-n` = numeric (don't resolve names), `-p` = show process. Use this to verify that the
 > service you're trying to reach is actually listening on the expected port. For deeper
 > connection state analysis, see [[socket-inspection]].
@@ -140,14 +156,16 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 # Look for a rule allowing TCP:1433 from your source IP/range
 ```
 
-> [!warning] `ping` uses ICMP — GCP blocks ICMP by default between VPCs
+> [!warning] ping uses ICMP blocked by GCP
+>
 > A `ping` timeout does NOT mean the host is unreachable. GCP's default firewall rules
 > block ICMP. Skip straight to `nc -zv` (TCP port test) in GCP environments. Only use
 > `ping` if you've confirmed ICMP is allowed by a firewall rule.
 
 ### The "it works from my machine" problem — user context, DNS, and connection pools
 
-> [!warning] The "It Works from My Machine" Problem
+> [!warning] "Works from my machine" problem
+>
 > If your pipeline fails to connect but you can connect manually from the same VM, check:
 > 1. **User context:** Your manual test runs as your user; the pipeline runs as a service account or different user. Different users may have different network namespaces (Docker), proxy settings (`http_proxy` env var), or firewall rules.
 > 2. **DNS:** Your `/etc/hosts` may have an entry that the pipeline's container doesn't.
@@ -158,7 +176,9 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 
 #### Test-NetConnection — test port reachability
 
-> [!info] Returns a rich object with `TcpTestSucceeded`, source IP, remote IP, and
+> [!info] Test-NetConnection output
+>
+> Returns a rich object with `TcpTestSucceeded`, source IP, remote IP, and
 > latency. The verbose output is helpful for debugging; the `.TcpTestSucceeded` property
 > is useful in scripts.
 
@@ -166,7 +186,8 @@ gcloud compute firewall-rules list --filter="direction=INGRESS" --format="table(
 Test-NetConnection -ComputerName hostname -Port 1433
 ```
 
-> [!warning] `Test-NetConnection` takes ~5 seconds per test
+> [!warning] Test-NetConnection is slow
+>
 > Each call has a built-in timeout. For sweeping multiple ports, this is painfully slow
 > compared to `nc`. Use `[System.Net.Sockets.TcpClient]` for faster programmatic checks
 > in PowerShell scripts.
@@ -178,7 +199,9 @@ Test-NetConnection -ComputerName hostname -Port 1433
 
 #### Resolve-DnsName — DNS lookup
 
-> [!info] Returns structured objects with `Name`, `Type`, `IPAddress`, and `TTL`.
+> [!info] Resolve-DnsName output
+>
+> Returns structured objects with `Name`, `Type`, `IPAddress`, and `TTL`.
 
 ```powershell
 Resolve-DnsName hostname
@@ -192,7 +215,9 @@ Test-NetConnection -ComputerName hostname -TraceRoute
 
 #### Get-NetTCPConnection — show listening ports with process names
 
-> [!info] PowerShell equivalent of `ss -tlnp`. Joins connection data with process names
+> [!info] PowerShell listening ports
+>
+> PowerShell equivalent of `ss -tlnp`. Joins connection data with process names
 > using `Get-Process`.
 
 ```powershell

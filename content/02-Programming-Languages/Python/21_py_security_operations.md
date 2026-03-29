@@ -277,6 +277,7 @@ print("    4. Workload Identity Federation config")
 Impersonation: act as another SA without holding its key. The source requests a short-lived token for the target — requires `roles/iam.serviceAccountTokenCreator`. Use for: dev testing production SA access, CI/CD escalation, cross-project access, local development matching production behavior.
 
 > [!warning] Impersonation anti-patterns
+>
 > - Granting `serviceAccountTokenCreator` at project level — scope to specific SAs
 > - Using impersonation for long-running workloads — prefer WIF or attached SA
 > - Not auditing who can impersonate — `tokenCreator` is effectively "become this identity"
@@ -704,7 +705,9 @@ for k, v in db_config.items():
 
 Use Secret Manager for API keys, passwords, certificates shared across services. Labels enable IAM conditions (e.g., `sensitivity=high` in prod).
 
-> [!danger] Never hardcode secrets in code, bake them into Docker images, or store them in GCS/BigQuery instead of Secret Manager.
+> [!danger] Never hardcode secrets in code,
+>
+> Never hardcode secrets in code, bake them into Docker images, or store them in GCS/BigQuery instead of Secret Manager.
 
 ```python
 new_secret_id = "notebook-demo-secret"
@@ -740,7 +743,9 @@ Add a new version to replace the secret value — old versions stay accessible u
 
 Recommended frequency: API/SA keys 90 days, DB passwords 30–90 days, certificates before expiry (1 year max), KMS keys 1–3 years (automatic via rotation policy).
 
-> [!warning] Don't rotate without updating consumers first (outages). Don't destroy old versions immediately (breaks services). Don't skip rotation because "it has never been leaked" — you wouldn't know.
+> [!warning] Don't rotate without updating consumers
+>
+> Don't rotate without updating consumers first (outages). Don't destroy old versions immediately (breaks services). Don't skip rotation because "it has never been leaked" — you wouldn't know.
 
 ```python
 new_password = secrets_module.token_urlsafe(24)
@@ -1353,6 +1358,7 @@ Four Cloud SQL authentication methods, from simplest to most secure:
 4. **IP allowlisting** — `gcloud sql instances patch --authorized-networks=IP/32`. For known office/VPN IPs, static CI runners, temporary debugging.
 
 > [!abstract]- Decision matrix by scenario
+>
 > | Scenario | Recommended method |
 > |---|---|
 > | Dev running a notebook | SQL auth + IP allowlist |
@@ -1364,6 +1370,7 @@ Four Cloud SQL authentication methods, from simplest to most secure:
 > | Temporary debugging session | SQL auth + temporary IP allowlist |
 
 > [!danger] Cloud SQL anti-patterns
+>
 > - **Hardcoding SQL passwords** in code → store in Secret Manager, read via `os.environ`
 > - **`0.0.0.0/0` as authorized network** → restrict to specific IPs or use Auth Proxy
 > - **Public IP without SSL** in production → credentials travel in plaintext
@@ -1500,7 +1507,9 @@ except Exception as e:
 
 The server CA certificate proves you're talking to the real Cloud SQL instance (MITM protection). This does NOT replace username/password — the cert verifies the server, the password verifies the client. Required for public internet, compliance (PCI-DSS, SOC2), cross-cloud traffic.
 
-> [!danger] Never use `TrustServerCertificate=yes` in production — accepts any cert. Don't assume encryption = authentication (encrypted channel to the wrong server is still compromised).
+> [!danger] Never use TrustServerCertificate=yes in production
+>
+> Never use `TrustServerCertificate=yes` in production — accepts any cert. Don't assume encryption = authentication (encrypted channel to the wrong server is still compromised).
 
 pymssql uses FreeTDS — TLS via `TDSSSL` env var, cert validation via `TDSCAFILE`.
 
@@ -1672,7 +1681,9 @@ print(results.to_string(index=False))
 
 Encrypt individual field values with KMS before inserting into BigQuery — the table stores ciphertext. Only callers with KMS decrypt access see plaintext. Use for PII (GDPR, CCPA), multi-tenant isolation, or shared datasets with sensitive columns.
 
-> [!warning] Don’t encrypt columns you need to query/filter/join on — ciphertext is not searchable (use tokenization instead). Don’t use the same KMS key for all tenants.
+> [!warning] Don’t encrypt columns you need
+>
+> Don’t encrypt columns you need to query/filter/join on — ciphertext is not searchable (use tokenization instead). Don’t use the same KMS key for all tenants.
 
 ```python
 sample_data = [
@@ -1991,7 +2002,9 @@ Firestore has **two** access control layers:
 
 2. **Security rules (Firebase)** — apply ONLY to Firebase client SDKs (web, mobile). Written in a declarative language, deployed via Firebase CLI. Server-side admin SDKs bypass rules completely.
 
-> [!info] This section demonstrates IAM-based access control, which is what governs access from server-side code. The `googleapis.com` REST API uses IAM, not Firebase security rules.
+> [!info] This section demonstrates IAM-based access
+>
+> This section demonstrates IAM-based access control, which is what governs access from server-side code. The `googleapis.com` REST API uses IAM, not Firebase security rules.
 
 #### Full-access write with SA credentials
 
@@ -2192,7 +2205,9 @@ print(f"  Match:     {recovered_data == plaintext_data}")
 
 CSEK: you provide a 256-bit AES key in the request header. Google uses it but **never stores it** — lost key = permanent data loss. Maximum customer control. Use for ultra-sensitive data where even trusting Google with a KMS key is not acceptable.
 
-> [!danger] Never store the CSEK key in GCS or any Google service. Never use the same key for all objects. Always have a key backup strategy. Prefer CMEK when it satisfies compliance — CSEK adds significant operational burden.
+> [!danger] Never store the CSEK key
+>
+> Never store the CSEK key in GCS or any Google service. Never use the same key for all objects. Always have a key backup strategy. Prefer CMEK when it satisfies compliance — CSEK adds significant operational burden.
 
 ```python
 csek_key = os.urandom(32)
@@ -2231,7 +2246,9 @@ print("  Google does not store CSEK keys — you must manage them yourself")
 
 Signed URLs grant time-limited access to a private GCS object without requiring authentication. Use for sharing with external users, frontend direct upload/download, temporary links in emails. Max 7 days; cannot be revoked before expiry.
 
-> [!warning] Don't log signed URLs (anyone reading logs gets access). Use the shortest expiration needed. Don't use the same SA for signing and production (key rotation invalidates all URLs).
+> [!warning] Don't log signed URLs (anyone
+>
+> Don't log signed URLs (anyone reading logs gets access). Use the shortest expiration needed. Don't use the same SA for signing and production (key rotation invalidates all URLs).
 
 ```python
 blob_to_sign = bucket.blob("bronze/csv/dim_index.csv")
@@ -2503,6 +2520,7 @@ print("    Trust model:    publicly trusted, auto-rotated by Google")
         Trust model:    publicly trusted, auto-rotated by Google
 
 > [!abstract]- Security Operations Audit Summary
+>
 > **Identity & Authentication:** SA key file, ADC, service account impersonation, short-lived access tokens (600s), Workload Identity Federation (GitHub OIDC), ID vs access token comparison, IAM permissions test
 >
 > **Secret Manager:** Read/create/rotate/disable/destroy secrets, version pinning, JSON secrets, IAM audit, application caching patterns
@@ -2581,7 +2599,9 @@ print(f"  Stopped: {VM_NAME}")
 print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 ```
 
-> [!danger]- Full teardown commands (IRREVERSIBLE — all data will be lost)
+> [!danger]- Full teardown commands (IRREVERSIBLE
+>
+> Full teardown commands (IRREVERSIBLE — all data will be lost)
 > ```bash
 > # Delete Cloud SQL instance
 > gcloud sql instances delete $SQL_INSTANCE --quiet

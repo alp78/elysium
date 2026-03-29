@@ -798,7 +798,9 @@ reordered.Rows[Enumerable.Range(0, 3)]
 ---
 ## Row Filtering
 
-> [!info] C# DataFrame libraries are immutable by design
+> [!info] C# DataFrame libraries are immutable
+>
+> C# DataFrame libraries are immutable by design
 > Unlike Pandas (which supports dangerous in-place mutation), Polars.NET and Deedle
 > return new DataFrames from filter operations — eliminating the chained-indexing bugs
 > that plague Pandas pipelines. The trade-off is slightly higher memory usage for

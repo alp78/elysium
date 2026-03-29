@@ -2,7 +2,7 @@
 type: how-to
 category: data-engineering
 technology: [sql-server, python]
-tags: [python, sql, sql-server, tsql]
+tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Gold Layer, Gold Transforms, Silver to Gold, Gold DDL, Scoring Tables, Pre-computed Analytics, Factor Scores]
 keywords: [gold layer, medallion architecture, z-score, zscore by group, factor scores, relative value, momentum, sentiment, quality score, governance score, health flags, index performance, cap-weighted, ROW_NUMBER, window functions, LAG, AVG OVER ROWS, CTE, SMA 30, SMA 90, moving average, composite score, composite rank, scores_daily, scores_quarterly, index_performance, dashboard ready, pre-computed, gold schema]
 description: "Complete SQL and Python patterns for the example gold layer — covers all gold table DDL, z-score computation, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs, and dashboard consumption queries."
@@ -12,6 +12,14 @@ updated: 2026-03-22
 status: complete
 ---
 
+> [!abstract] Medallion Project — Financial Index Pipeline
+>
+> This page documents the implementation of a specific financial data pipeline
+> (STOXX/yfinance stock index scoring system) on SQL Server. For the general
+> patterns and alternative approaches, see the [[sql-server-index#Patterns]]
+> section. For the architectural theory behind bronze/silver/gold layering,
+> see [[medallion-architecture]].
+
 # Gold Transforms
 
 The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [[silver-transforms|silver]] and write to gold tables. In dbt, the equivalent role is served by [[dbt-mart-models|mart models]] that expose business-ready datasets.
@@ -19,6 +27,7 @@ The gold layer contains pre-computed analytics scores ready for dashboard consum
 **Pipeline flow:** [[silver-transforms|Silver]] → Python + pandas → Gold tables → Blazor dashboard
 
 > [!info] Gold Layer Role
+>
 > Gold is the presentation layer. Data in gold is denormalized, scored, ranked, and ready to display. No joins required for the dashboard — every query returns display-ready values. Gold tables are refreshed on every pipeline run; stale rows are deleted and replaced.
 
 ---

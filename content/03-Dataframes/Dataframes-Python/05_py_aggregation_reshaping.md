@@ -57,14 +57,18 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 
 ## Basic Group By
 
-> [!warning] `as_index=False` vs `as_index=True` — fundamentally different output
+> [!warning] as_index=False vs as_index=True
+>
+> `as_index=False` vs `as_index=True` — fundamentally different output
 > Pandas `groupby()` defaults to `as_index=True`, which puts group keys into the index.
 > This breaks chaining with `.merge()` and makes the output unusable with many Pandas
 > operations. Always use `as_index=False` for pipeline code to get a flat DataFrame.
 >
 > Polars `group_by()` always returns a flat DataFrame — no index concept exists.
 
-> [!tip] Pandas named aggregation — `.agg(new_name=("column", "func"))` — is the cleanest
+> [!tip] Pandas named aggregation
+>
+> Pandas named aggregation — `.agg(new_name=("column", "func"))` — is the cleanest
 > syntax for groupby. It names the output columns explicitly and avoids the confusing
 > MultiIndex column headers that `.agg({"col": ["mean", "sum"]})` produces.
 
@@ -1001,6 +1005,7 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 ## Inner Join
 
 > [!danger] Silent row explosion on many-to-many joins
+>
 > If both DataFrames have duplicate keys and you don't set `validate=`, `merge()` produces
 > a Cartesian product for those keys — your 66K row DataFrame can become millions of rows
 > with no error or warning. **Always** add `validate='many_to_one'` or `validate='one_to_one'`
@@ -1012,6 +1017,7 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 > ```
 
 > [!warning] Pandas vs Polars merge defaults
+>
 > - Pandas `merge()` defaults to `how='inner'` — rows without matches are silently dropped
 > - Polars `join()` defaults to `how='inner'` too, but uses different suffix behavior:
 >   Pandas appends `_x`/`_y`, Polars appends `_right`
@@ -1093,7 +1099,9 @@ display(result_pl.select("symbol", "short_name", "date", "close", "sector").head
 
 ## Left Join
 
-> [!warning] Left join with duplicate keys silently multiplies rows
+> [!warning] Left join with duplicate keys
+>
+> Left join with duplicate keys silently multiplies rows
 > This left join produces more rows than the left DataFrame because `scores_pd` has
 > multiple rows per symbol (one per date). The output has `len(ohlcv) × scores_per_symbol`
 > rows — a classic accidental many-to-many. Always check `len(result)` after a join.

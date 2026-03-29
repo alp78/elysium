@@ -81,7 +81,8 @@ Reads the cumulative deadlock counter from SQL Server's performance counters DMV
 
 **Metric in Datadog:** `sqlserver.deadlocks.total` (monotonic_count, collected every 15 seconds).
 
-> [!info] Why monotonic_count?
+> [!info] Why monotonic_count
+>
 > `sys.dm_os_performance_counters.cntr_value` for deadlocks is a cumulative counter — it only ever increases. Using `monotonic_count` tells Datadog to compute the delta between collections, giving you deadlocks-per-interval rather than a raw ever-growing number. This is what enables the deadlock alert monitor to trigger on **new** deadlocks.
 
 ---

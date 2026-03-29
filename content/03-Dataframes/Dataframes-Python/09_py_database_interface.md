@@ -2998,11 +2998,13 @@ Connect Pandas and Polars directly to SQL Server tables for reading, writing, an
 ## Connection Setup
 
 > [!danger] Never hardcode credentials in connection strings
+>
 > Use environment variables (`os.environ.get()`) or a secret manager. The `.env` file
 > should be in `.gitignore` and never committed. See [[environment-variables]] for secure
 > credential handling patterns.
 
-> [!warning] `TrustServerCertificate=yes` disables certificate validation
+> [!warning] TrustServerCertificate=yes disables certificate validation
+>
 > Acceptable for local development. In production, use a valid TLS certificate and
 > remove this flag — otherwise connections are vulnerable to man-in-the-middle attacks.
 
@@ -3047,13 +3049,17 @@ print("Connection OK")
 
 ## Reading Tables
 
-> [!danger] `pd.read_sql()` loads the entire result set into memory
+> [!danger] pd.read_sql() loads the entire result
+>
+> `pd.read_sql()` loads the entire result set into memory
 > `SELECT * FROM table` on a 10M row table allocates the full DataFrame in RAM. For large
 > tables, use `chunksize=` to iterate in batches, or add a `WHERE` clause to limit rows.
 > Polars `pl.read_database()` has the same issue — neither library supports server-side
 > cursors by default.
 
-> [!warning] SQL injection risk with string formatting in queries
+> [!warning] SQL injection risk with string
+>
+> SQL injection risk with string formatting in queries
 > Never use f-strings for user input: `f"WHERE symbol = '{user_input}'"` is injectable.
 > Use parameterized queries: `pd.read_sql("SELECT * FROM t WHERE symbol = ?", engine,
 > params=["ASML"])`.
@@ -3290,7 +3296,9 @@ print(f"First batch: {df.shape}")
 
 ## Writing to SQL Server
 
-> [!warning] `df.to_sql()` is extremely slow by default — ~100 rows/second
+> [!warning] df.to_sql() is extremely slow by default
+>
+> `df.to_sql()` is extremely slow by default — ~100 rows/second
 > Pandas inserts rows one at a time through SQLAlchemy. For bulk loading, use
 > `method="multi"` (batches inserts) or `fast_executemany=True` on the engine:
 > ```python
@@ -3300,7 +3308,8 @@ print(f"First batch: {df.shape}")
 > For tables >100K rows, use `bcp` instead — it's 10-50x faster than any ORM approach.
 > See [[data-transfer]] for bcp patterns.
 
-> [!danger] `if_exists="replace"` drops and recreates the table
+> [!danger] if_exists="replace" drops the table
+>
 > This destroys indexes, constraints, permissions, and foreign keys. Use
 > `if_exists="append"` with a preceding `DELETE` for controlled replacement, or use
 > `MERGE`/upsert patterns from [[merge-and-upsert]].

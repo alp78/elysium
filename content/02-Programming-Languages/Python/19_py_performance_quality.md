@@ -33,15 +33,20 @@ Topics covered:
 #### perf_counter and timeit — wall-clock timing
 
 > [!info] Timing tools
+>
 > - `time.perf_counter()` — high-resolution wall-clock timing
 > - `timeit` — reliable micro-benchmarks (auto-repeats, disables GC)
 > - `%%timeit` in Jupyter — auto-calibrates
 > - Always warm up first (imports, caching)
 > - C# equivalent: `BenchmarkDotNet`, `Stopwatch`
 
-> [!tip] Never optimize without measuring first. Gut feelings are wrong.
+> [!tip] Never optimize without measuring first.
+>
+> Never optimize without measuring first. Gut feelings are wrong.
 
-> [!warning] Don't use `time.time()` for benchmarks (lower resolution). Don't time a single run (cache/OS scheduling skew results).
+> [!warning] Don't use time.time() for benchmarks
+>
+> Don't use `time.time()` for benchmarks (lower resolution). Don't time a single run (cache/OS scheduling skew results).
 
 ```python
 import time
@@ -134,13 +139,18 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
 #### sys.getsizeof and memory measurement
 
 > [!info] Memory measurement
+>
 > - `sys.getsizeof()` — shallow size only (not contents)
 > - `tracemalloc` — tracks allocations with file and line number
 > - C# equivalent: `dotMemory`, `GC.GetTotalMemory()`
 
-> [!tip] Memory is the silent killer. A 10x blowup is invisible until OOM-kill in production.
+> [!tip] Memory is the silent killer.
+>
+> Memory is the silent killer. A 10x blowup is invisible until OOM-kill in production.
 
-> [!warning] `sys.getsizeof` on containers only shows the container, not elements. Don't use `memory_profiler` in production.
+> [!warning] sys.getsizeof on containers only shows
+>
+> `sys.getsizeof` on containers only shows the container, not elements. Don't use `memory_profiler` in production.
 
 ```python
 # --- sys.getsizeof (shallow) ---
@@ -260,12 +270,15 @@ del regular, slotted, list_data
 #### cProfile — built-in CPU profiler
 
 > [!info] cProfile
+>
 > - `cProfile.run()` — profiles and prints per-function timing
 > - `tottime` — in-function only | `cumtime` — including sub-calls
 > - `pstats` — programmatic analysis
 > - C# equivalent: dotTrace, PerfView
 
-> [!tip] Profile the WHOLE program first, then zoom into hotspots. Don't guess. Don't profile in production (use py-spy for sampling).
+> [!tip] Profile the WHOLE program first,
+>
+> Profile the WHOLE program first, then zoom into hotspots. Don't guess. Don't profile in production (use py-spy for sampling).
 
 ```python
 def fib(n):
@@ -358,7 +371,9 @@ for fn in [concat_plus, concat_join, concat_io]:
 | O(n²) | Quadratic | Nested loops — red flag for n > 10K |
 | O(2ⁿ) | Exponential | Naive recursion — no-go for n > 25 |
 
-> [!tip] Know the complexity of your data structures. If *n* can grow, O(n²) is a ticking time bomb. Fix the algorithm before optimizing constants.
+> [!tip] Know the complexity of your
+>
+> Know the complexity of your data structures. If *n* can grow, O(n²) is a ticking time bomb. Fix the algorithm before optimizing constants.
 
 ```python
 def measure(fn, *args, label=""):
@@ -467,6 +482,7 @@ print(f"  deque is {t_list/t_deque:.0f}x faster")
 #### Golden rules of Python performance
 
 > [!tip] Golden Rules of Performance
+>
 > 1. **Measure before optimizing** — profile first, the bottleneck is never where you think
 > 2. **Algorithm > micro-optimization** — O(n²) → O(n log n) beats any loop unrolling
 > 3. **Use built-in data structures** — list/dict/set are C-implemented
@@ -513,6 +529,7 @@ fib_cached.cache_clear()
 #### Absolute no-go's — patterns that should never appear in production
 
 > [!danger] Absolute no-go's — never in production
+>
 > 1. **String `+=` in loop** — O(n²), use `"".join()`
 > 2. **Nested loops on large data** — O(n²), use dict lookup or set intersection
 > 3. **Bare `except:`** — catches `SystemExit`, `KeyboardInterrupt`. Catch specific exceptions
@@ -563,7 +580,9 @@ print(f"  Call 3: {good_append(3)}")
 
 #### Code smells and anti-patterns
 
-> [!warning] Code smells — patterns indicating deeper problems
+> [!warning] Code smells
+>
+> Code smells — patterns indicating deeper problems
 > 1. **God function/class** — >30 lines = doing too much. Split by single responsibility
 > 2. **Deep nesting** — `if: if: if: for: if:` → use early returns, guard clauses
 > 3. **Magic numbers** — `if x > 86400` → use `SECONDS_PER_DAY = 86400`
@@ -610,7 +629,9 @@ print("Guard clauses produce the same result, but are flat and readable.")
 
 Type annotations (`def f(x: int) -> str`) document intent. `mypy`/`pyright` check statically — no runtime cost. Catches `NoneType` errors, wrong argument types, missing attributes at lint time. C# equivalent: the language IS statically typed; Python adds this opt-in.
 
-> [!tip] Type hints are free documentation. Always use them in function signatures. Don't use `Any` everywhere — it defeats the purpose.
+> [!tip] Type hints are free documentation.
+>
+> Type hints are free documentation. Always use them in function signatures. Don't use `Any` everywhere — it defeats the purpose.
 
 ```python
 # Without types — what does this return? what types are valid?

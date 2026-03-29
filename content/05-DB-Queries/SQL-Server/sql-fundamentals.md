@@ -827,13 +827,17 @@ ORDER BY yr, mo
 
 ## JOINs Across Medallion Layers
 
-> [!danger] JOINs silently multiply rows when keys have duplicates
+> [!danger] JOINs Multiply Rows on Duplicates
+>
+> JOINs silently multiply rows when keys have duplicates.
 > A `JOIN` on a non-unique key produces a Cartesian product for those keys. If
 > `silver.index_dim` has 2 rows for `ASML.AS` and OHLCV has 1,331 rows, the result has
 > 2,662 rows for ASML — silently doubling your data with no error. Always verify row
 > counts after a JOIN: `SELECT COUNT(*) FROM result` vs expected.
 
-> [!warning] LEFT JOIN with NULL keys — rows disappear silently
+> [!warning] NULL Keys Break LEFT JOINs
+>
+> LEFT JOIN with NULL keys — rows disappear silently.
 > `NULL = NULL` returns `FALSE` in SQL, not `TRUE`. If join keys contain NULLs, those
 > rows never match. Use `COALESCE(key, 'UNKNOWN')` or `IS NOT DISTINCT FROM` (SQL Server
 > doesn't support this — use `WHERE key1 = key2 OR (key1 IS NULL AND key2 IS NULL)`).
@@ -1248,7 +1252,9 @@ ORDER BY s.composite_rank
 
 ## Window Functions
 
-> [!warning] Window functions do NOT reduce row count — unlike GROUP BY
+> [!warning] Window Functions Keep All Rows
+>
+> Window functions do NOT reduce row count — unlike GROUP BY.
 > `AVG(close) OVER (PARTITION BY symbol)` adds a column to every row without collapsing.
 > Forgetting this and expecting aggregated output is the most common window function
 > mistake. If you want one row per group, use GROUP BY. If you want the aggregate on
@@ -2023,6 +2029,7 @@ FROM silver.eurostoxx50_ohlcv
 ## Bronze → Silver → Gold Transforms
 
 > [!tip] Related pattern
+>
 > The SQL that creates and populates the bronze tables queried here is covered in [[bronze-layer-loading]], which walks through the ingestion pipeline that feeds this medallion architecture.
 
 ### Bronze → Silver → Gold Transforms — Daily Returns

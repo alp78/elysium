@@ -179,13 +179,17 @@ for name, files in [("SQL Insert", sql_insert_files), ("BigQuery", bq_files)]:
 
 ## Upload files from Local to GCS
 
-> [!warning] GCS uploads are NOT atomic — partial uploads leave incomplete objects
+> [!warning] GCS uploads are NOT atomic
+>
+> GCS uploads are NOT atomic — partial uploads leave incomplete objects
 > If an upload fails mid-transfer, a partial object may remain in the bucket. Use
 > resumable uploads (default for `google-cloud-storage` client) and verify with
 > checksums after upload. For critical data, upload to a staging prefix first, then
 > rename (which IS atomic in GCS).
 
-> [!tip] `google-cloud-storage` resumable uploads resume automatically on retry
+> [!tip] google-cloud-storage resumable uploads resume automatically
+>
+> `google-cloud-storage` resumable uploads resume automatically on retry
 > The Python client library uses resumable uploads by default for files >8MB. If the
 > connection drops, re-running the same upload continues from where it stopped.
 
@@ -1496,7 +1500,9 @@ fig.show()
 
 ## Parallel Transfer
 
-> [!warning] Python's GIL limits multithreading for CPU-bound work, not I/O
+> [!warning] GIL and I/O parallelism
+>
+> Python's GIL limits multithreading for CPU-bound work, not I/O.
 > For GCS uploads (I/O-bound), `ThreadPoolExecutor` works well — the GIL is released
 > during network I/O. For CPU-bound work like compression, use `ProcessPoolExecutor`
 > instead. Mixing CPU and I/O in the same pool causes stalls.
@@ -2292,7 +2298,9 @@ fig.show()
 
 ## Production Pipeline — Compress, Split, Parallel Upload, Download, Verify, Merge
 
-> [!danger] Always verify checksums after transfer — silent corruption is real
+> [!danger] Always verify checksums after transfer
+>
+> Always verify checksums after transfer — silent corruption is real
 > Network transfers can produce bit-flip errors that don't trigger TCP checksum failures.
 > GCS stores CRC32C and MD5 checksums for every object — verify after download. Without
 > verification, you won't know a 1GB Parquet file is corrupt until a query fails on row

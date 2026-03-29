@@ -64,7 +64,9 @@ except Exception:
     raise
 ```
 
-> [!warning] Missing Transaction = Empty Table on Crash
+> [!warning] Missing Transaction Risks Data Loss
+>
+> Missing Transaction = Empty Table on Crash.
 > If the process crashes between DELETE and INSERT without a transaction, the table is left empty. The explicit `conn.commit()` after both operations ensures all-or-nothing behavior. Never delete without having the INSERT in the same transaction.
 
 
@@ -185,6 +187,7 @@ INSERT INTO silver.index_dim (
 
 
 > [!tip] SCD Type 2 Key Design
+>
 > The `is_current = 1` flag is the critical filter for all downstream queries. Every JOIN to `silver.index_dim` must include `AND d.is_current = 1` to avoid double-counting historical versions. The `valid_to IS NULL` condition is equivalent but the flag is faster with a filtered index.
 
 ---
@@ -290,7 +293,9 @@ WHEN NOT MATCHED THEN
     INSERT (symbol) VALUES (source.symbol);
 ```
 
-> [!info] MERGE and RCSI — How Locking Works
+> [!info] MERGE and RCSI Locking
+>
+> MERGE and RCSI — How Locking Works.
 > Under the hood, MERGE acquires an **Update (U) lock** on each row during the seek phase. U locks are compatible with shared (S) locks but not with other U or X locks. This prevents conversion deadlocks where two sessions both hold S and both try to promote to X. When the row is modified, the U lock converts to an Exclusive (X) lock. With RCSI enabled, a copy of the old row version is written to TempDB before the update, allowing concurrent readers to see the pre-MERGE snapshot without blocking.
 
 ---
@@ -426,6 +431,7 @@ IF @@ROWCOUNT = 0
 ```
 
 > [!warning] Capture @@ROWCOUNT Immediately
+>
 > Must be read **immediately** after the statement. Even `SET @var = ...` resets it — use `SET @var = @@ROWCOUNT` as the first line after the statement.
 
 ---
@@ -531,7 +537,9 @@ INSERT INTO table3 ...;    -- never reached
 COMMIT;                     -- never reached
 ```
 
-> [!tip] Always Use XACT_ABORT ON With Explicit Transactions
+> [!tip] Always Use XACT_ABORT ON
+>
+> Always Use XACT_ABORT ON With Explicit Transactions.
 > Without it, a mid-transaction error leaves you in a half-committed state that's hard to detect. `SET XACT_ABORT ON` before `BEGIN TRAN` is a near-universal best practice.
 
 ### Error Functions Inside CATCH
@@ -655,6 +663,7 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 ```
 
 > [!warning] Long-Running Reads Kill TempDB With RCSI
+>
 > A long-running SELECT (e.g., a slow dashboard query or an open transaction) holds a snapshot LSN. SQL Server cannot clean up version store entries older than that LSN. The version store grows without bound until TempDB fills and all writes fail. Monitor TempDB usage and kill long-running read sessions if TempDB space becomes critical.
 
 ---

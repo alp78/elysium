@@ -201,7 +201,9 @@ volumes:
     target: /tmp/scratch
 ```
 
-> [!tip] When to Use Named Volumes vs Bind Mounts
+> [!tip] Named Volumes vs Bind Mounts
+>
+> When to Use Named Volumes vs Bind Mounts.
 > Use **named volumes** for database data and other persistent state that Docker should fully manage. Use **bind mounts** for source code, DAGs, and config files you need to edit on the host and have reflected immediately inside the container without a rebuild.
 
 **`restart` policy options**
@@ -225,7 +227,9 @@ depends_on:
     condition: service_completed_successfully  # wait for a one-shot container to exit 0
 ```
 
-> [!danger] `depends_on` Without `service_healthy` Causes Silent Startup Failures
+> [!danger] depends_on Needs service_healthy
+>
+> `depends_on` Without `service_healthy` Causes Silent Startup Failures.
 > `service_started` only waits for the container process to start, not for the application inside to be ready. If Airflow starts before PostgreSQL finishes initialization, the scheduler crashes with a connection error, enters a restart loop, and the logs fill with misleading "database does not exist" errors. Always use `condition: service_healthy` with a `healthcheck` that verifies the service is actually accepting connections.
 
 **Network configuration**
@@ -278,10 +282,13 @@ LOG_LEVEL=DEBUG
 WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
 ```
 
-> [!danger] `.env` Files Are Loaded Automatically and Often Leaked
+> [!danger] Auto-Loaded .env File Risk
+>
+> `.env` Files Are Loaded Automatically and Often Leaked.
 > `docker compose` silently loads `.env` from the compose file's directory -- even if you did not specify `env_file`. If this file contains production secrets and gets committed to git, the credentials are exposed in git history permanently. Add `.env` to `.gitignore` on day one. For production, use a secrets manager (GCP Secret Manager, Vault) and inject values via CI/CD -- never store production credentials in `.env` files on disk.
 
 > [!tip] Related pattern
+>
 > The `env_file` and `environment` directives here mirror the [[environment-variables|shell environment variable]] conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
 
 ---
@@ -315,7 +322,9 @@ docker compose up -d --force-recreate airflow-worker
 docker compose up -d --build --force-recreate airflow-webserver
 ```
 
-> [!info] `up` vs `start`
+> [!info] up vs start
+>
+> `up` vs `start`.
 > `docker compose up` creates containers if they don't exist, then starts them. `docker compose start` only starts existing stopped containers — it cannot create new ones.
 
 ### Stopping Services
@@ -343,7 +352,9 @@ docker compose stop
 docker compose stop airflow-scheduler
 ```
 
-> [!warning] `docker compose down -v` is Destructive
+> [!warning] down -v Deletes All Volumes
+>
+> `docker compose down -v` is Destructive.
 > This deletes all named volumes — including your database data. Run `docker compose down` (without `-v`) when you just want to stop the stack. Only use `-v` when you explicitly want to wipe state and start fresh.
 
 ### Starting and Restarting
@@ -394,7 +405,9 @@ docker compose up -d --build --force-recreate airflow-scheduler
 docker compose pull postgres && docker compose up -d --force-recreate postgres
 ```
 
-> [!warning] Scaling Services with Published Ports
+> [!warning] Scaling with Published Ports
+>
+> Scaling Services with Published Ports.
 > If a service has `ports: - "5432:5432"`, you cannot scale it beyond 1 replica — only one process can bind to host port 5432. Remove the `ports` key or use host-port 0 (dynamic assignment) before scaling.
 
 ---
@@ -500,7 +513,9 @@ docker compose cp airflow-webserver:/opt/airflow/logs/scheduler ./local-logs
 docker compose cp ./my-config.cfg airflow-webserver:/opt/airflow/
 ```
 
-> [!tip] `exec` vs `run`
+> [!tip] exec vs run
+>
+> `exec` vs `run`.
 > Use `exec` to interact with an already-running service (most common — checking logs, running admin commands). Use `run` for one-off tasks like database migrations or initialization scripts, especially when the service is not yet started.
 
 ---
@@ -556,6 +571,7 @@ services:
 ```
 
 > [!info] Automatic Override Loading
+>
 > If a file named `docker-compose.override.yaml` exists alongside `docker-compose.yaml`, Compose loads and merges it automatically. You don't need the `-f` flag. Rename it to `docker-compose.dev.yaml` if you want explicit control over when it applies.
 
 ### Project Name
@@ -600,9 +616,11 @@ docker system df -v
 ```
 
 > [!warning] Volume Pruning
+>
 > `docker volume prune` removes ALL volumes not currently mounted by at least one container. If your database container is stopped (but not removed), its volume is still "in use" — but if the container was removed (via `docker compose down`), the volume becomes "unused" and will be deleted. Always run `docker compose down` (without `-v`) instead of letting volumes accumulate for pruning.
 
 > [!tip] Routine Cleanup Pattern
+>
 > After tearing down a dev stack you no longer need:
 > ```bash
 > docker compose down          # remove containers and networks; keep volumes

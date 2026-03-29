@@ -52,7 +52,9 @@ Opens the lineage graph and documentation browser at `http://localhost:8080`.
     gsutil web set -m index.html gs://fin-dbt-docs
 ```
 
-> [!tip] Run `dbt docs generate` after `dbt run` so that `catalog.json` reflects the freshly materialized tables, not stale schema information.
+> [!tip] Generate docs after run
+>
+> Run `dbt docs generate` after `dbt run` so that `catalog.json` reflects the freshly materialized tables, not stale schema information.
 
 ---
 
@@ -201,7 +203,9 @@ exposures:
       email: reg-reporting@example.com
 ```
 
-> [!note] Exposures are the primary mechanism for impact analysis. Before changing `fct_esg_scores`, the lineage graph immediately shows that three high-maturity consumers will be affected.
+> [!note] Exposures for impact analysis
+>
+> Exposures are the primary mechanism for impact analysis. Before changing `fct_esg_scores`, the lineage graph immediately shows that three high-maturity consumers will be affected.
 
 ---
 

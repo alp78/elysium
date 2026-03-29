@@ -235,6 +235,7 @@ module "gcs_buckets" {
 ```
 
 > [!tip] Use Community Modules Carefully
+>
 > Terraform Registry modules are useful for standard patterns (GCS buckets, VPCs) but add an external dependency. Pin to a version range (`~> 5.0`) to avoid unexpected breaking changes. For core infrastructure, writing your own modules gives you full understanding and control.
 
 ---
@@ -247,6 +248,7 @@ Extract code into a module when:
 3. You want to provide a stable interface to a complex configuration
 
 > [!tip] Related pattern
+>
 > Module composition in Terraform mirrors [[18_py_designpatterns|software design patterns]] like facade (a module hides complexity behind a simple interface) and composition over inheritance (combining small modules rather than building monolithic configs).
 
 Do NOT extract when:

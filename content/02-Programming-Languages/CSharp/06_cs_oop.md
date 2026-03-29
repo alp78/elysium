@@ -23,6 +23,7 @@ status: complete
 Classes define types with **auto-properties** (`get`/`set`), constructors for initialization, methods for behavior, and `ToString` for display. Auto-properties eliminate boilerplate backing fields, and constructors enforce required initialization at creation. For simple data carriers without behavior, prefer `record` instead.
 
 > [!warning] Anti-patterns
+>
 > - **Public fields** instead of properties — loses validation and encapsulation
 > - **Constructors doing heavy work** — use factory methods or init logic
 > - **Not overriding `ToString`** — defaults to type name, which isn't useful
@@ -119,6 +120,7 @@ Console.WriteLine($"New radius: {c.Radius}");
 #### Inheritance — base class, virtual, override, sealed
 
 > [!info] Inheritance mechanics
+>
 > - `virtual` — marks a method for overriding
 > - `override` — in a child class, provides a new implementation
 > - `base.Method()` — calls the parent version
@@ -126,6 +128,7 @@ Console.WriteLine($"New radius: {c.Radius}");
 > - Use inheritance for IS-A relationships; prefer composition (fields/properties) for HAS-A
 
 > [!warning] Anti-patterns
+>
 > - **Deep hierarchies** (>3 levels) — prefer composition
 > - **Forgetting `virtual`** — method won't dispatch polymorphically
 > - **`new` keyword hiding** instead of `override` — silently breaks polymorphism
@@ -248,6 +251,7 @@ Console.WriteLine($"as Cat: {maybeCat?.Name ?? "null"}");
 An `abstract` class cannot be instantiated — `abstract` methods must be overridden by derived classes, while concrete methods provide shared implementation. Unlike interfaces, abstract classes can have fields, constructors, and state. Use them when derived classes share common state and behavior; for a pure contract with no shared code, use an interface instead.
 
 > [!warning] Anti-patterns
+>
 > - **Abstract class with no shared code** — use an interface instead
 > - **Too many abstract methods** — interface is more appropriate
 > - **Deep abstract hierarchies** — prefer composition over inheritance
@@ -406,6 +410,7 @@ Encapsulation hides internal data, exposing only what's necessary. Choose the mo
 Properties with `private set` allow read from outside, write only inside. `init`-only properties (`{ get; init; }`) can only be set during construction.
 
 > [!warning] Access modifier pitfalls
+>
 > - **Public fields** bypass validation and encapsulation — use properties instead
 > - **Everything public** exposes implementation details and makes the API hard to evolve
 > - **`protected` for non-inheritance scenarios** — use `private` instead
@@ -466,6 +471,7 @@ Console.WriteLine(@"
 #### static members — shared state, factory methods, utility classes
 
 > [!info] Static members
+>
 > - `static` fields/properties — shared by all instances, one copy per type
 > - `static` methods — don't need an instance (called via `ClassName.Method()`)
 > - `static` constructors — run once when the type is first used
@@ -473,6 +479,7 @@ Console.WriteLine(@"
 > - Unlike Python's `@classmethod`, C# static methods cannot be overridden in subclasses
 
 > [!warning] Anti-patterns
+>
 > - **Mutable static state** shared across threads — race conditions
 > - **Static methods that should be instance methods** — testability suffers
 > - **God classes** with many static methods — violates single responsibility

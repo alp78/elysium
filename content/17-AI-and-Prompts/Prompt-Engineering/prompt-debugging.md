@@ -40,7 +40,8 @@ When a model produces poor output, the problem is almost always in the prompt, n
 
 ---
 
-> [!warning] Increasing Token Count Rarely Fixes a Broken Prompt
+> [!warning] More tokens rarely fix prompts
+>
 > When output is poor, the instinct is to add more instructions. But a 2,000-token prompt with contradictory constraints produces worse output than a 500-token prompt with clear structure. Before adding tokens, audit the existing prompt for (1) conflicting instructions, (2) buried goals, and (3) missing format specifications. Removing noise is often more effective than adding signal.
 
 ### Intent vs. Output Misalignment
@@ -472,7 +473,8 @@ Format:
 | 10+ constraints in a flat list | Model deprioritizes later items | Group constraints by type, bold the critical ones |
 | "As an AI language model..." | Priming the model to be generic | Never remind the model it's an AI — give it a specific role |
 
-> [!warning] Contradictory Instructions Kill Output Quality
+> [!warning] Contradictory instructions
+>
 > "Be concise but thorough" forces the model into an unresolvable tradeoff and produces mediocre output in both directions. Every pair of constraints must be compatible. When you notice a tension, resolve it in the prompt by specifying which dimension takes priority.
 
 > [!tip] The Fastest Path to Better Output

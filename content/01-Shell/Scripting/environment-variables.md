@@ -45,7 +45,9 @@ env | grep -i proxy
 
 #### export — set and propagate variables to child processes
 
-> [!warning] `MY_VAR="value"` is NOT an environment variable
+> [!warning] Without export it is not exported
+>
+> `MY_VAR="value"` is NOT an environment variable.
 > Without `export`, the variable is a **shell variable** — visible only in the current
 > shell. Child processes (Python scripts, docker commands, cron jobs) will NOT see it.
 > This is the #1 cause of "it works in my terminal but not in my script."
@@ -56,7 +58,9 @@ export MY_VAR="value"
 
 #### VAR=value command — set variable for a single command only
 
-> [!info] The variable exists only for the duration of the command. After it exits, the
+> [!info] Scoped to single command
+>
+> The variable exists only for the duration of the command. After it exits, the
 > variable is gone — not even the current shell has it. This is the cleanest way to pass
 > one-off configuration.
 
@@ -72,7 +76,9 @@ unset MY_VAR
 
 #### ~/.bashrc vs ~/.profile — persisting variables across sessions
 
-> [!info] `~/.bashrc` is executed for every new interactive bash shell. `~/.profile` (or
+> [!info] .bashrc vs .profile
+>
+> `~/.bashrc` is executed for every new interactive bash shell. `~/.profile` (or
 > `~/.bash_profile`) is executed for login shells only. `source` re-reads the file in the
 > current shell without opening a new one.
 
@@ -81,14 +87,16 @@ echo 'export GOOGLE_CLOUD_PROJECT="data-platform-prod"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-> [!warning] Variables set in `.bashrc` are NOT available to cron jobs
+> [!warning] .bashrc not available in cron
+>
 > Cron runs commands in a minimal environment that does NOT source `.bashrc`. Define
 > variables directly in the crontab (`VAR=value` above the schedule line) or source the
 > profile explicitly at the start of the cron command.
 
 ## Secure Credential Handling
 
-> [!warning] Never Hardcode Credentials in Scripts
+> [!warning] Never hardcode credentials
+>
 > Any user on the system can run `ps aux` and see the full command line of every running process. Passing a password as a command-line argument makes it visible to everyone.
 
 #### .env files and source — secure credential handling in scripts
@@ -109,14 +117,17 @@ sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 unset SA_PASSWORD
 ```
 
-> [!info] The `ps aux` Credential Leak
+> [!info] ps aux credential leak
+>
 > Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [[container-lifecycle|container]] -- always use this mechanism for containerized workloads.
 
 ### PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars
 
 #### Get-ChildItem Env: — view all environment variables
 
-> [!info] `Env:` is a PowerShell drive mapping to the process environment — each variable
+> [!info] PowerShell Env: drive
+>
+> `Env:` is a PowerShell drive mapping to the process environment — each variable
 > is a "file" you can read with `$env:NAME`.
 
 ```powershell
@@ -132,7 +143,9 @@ $env:MY_VAR = "value"
 
 #### SetEnvironmentVariable — persist across sessions (registry)
 
-> [!info] `"User"` = per-user (HKCU registry). `"Machine"` = system-wide (requires
+> [!info] Persist across sessions
+>
+> `"User"` = per-user (HKCU registry). `"Machine"` = system-wide (requires
 > Administrator). Existing sessions do NOT pick up the change until restarted.
 
 ```powershell
@@ -146,7 +159,8 @@ Remove-Item Env:MY_VAR
 [Environment]::SetEnvironmentVariable("MY_VAR", $null, "User")
 ```
 
-> [!warning] PowerShell `$env:PATH` vs System PATH
+> [!warning] Session PATH vs system PATH
+>
 > Modifying `$env:PATH` in a PowerShell session only affects that session and its children. The system PATH (visible to new terminal windows, services, etc.) is stored in the registry. To permanently add a directory:
 > ```powershell
 > $current = [Environment]::GetEnvironmentVariable("PATH", "User")

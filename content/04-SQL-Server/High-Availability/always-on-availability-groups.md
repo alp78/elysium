@@ -74,7 +74,9 @@ A single SQL Server instance that runs on one node at a time but can fail over t
 | Readable secondaries | Yes | No |
 | GCP implementation | Each VM has its own persistent disk | Requires shared filesystem (GlusterFS, NFS, or iSCSI) |
 
-> [!info] GCP Strongly Favors AGs Over FCI
+> [!info] GCP Favors AGs Over FCI
+>
+> GCP Strongly Favors AGs Over FCI.
 > GCP doesn't offer native shared storage like AWS EBS Multi-Attach or Azure Shared Disks. Setting up GlusterFS or NFS for FCI adds complexity and another failure point. Use AGs.
 
 ### Option 3: Log Shipping (Simple DR)
@@ -136,7 +138,9 @@ CREATE ENDPOINT [Hadr_endpoint]
 ALTER ENDPOINT [Hadr_endpoint] STATE = STARTED;
 ```
 
-> [!info] Certificate-Based Authentication on Linux
+> [!info] Certificate Auth on Linux
+>
+> Certificate-Based Authentication on Linux.
 > AGs on Linux use **certificate-based authentication** (not Windows authentication). You create a certificate on the primary and copy it to all secondaries — Windows Kerberos is not available on Linux.
 
 ### Step 3: Create and Export the Certificate (Primary)
@@ -213,10 +217,13 @@ FOR REPLICA ON
     );
 ```
 
-> [!tip] REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1
+> [!tip] Synchronized Secondary Commitment
+>
+> REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1.
 > This prevents data loss during failover — the primary will not acknowledge a commit until at least 1 synchronous secondary has hardened the log. Trade-off: if both synchronous secondaries go down, the primary stops accepting writes.
 
 > [!info] SEEDING_MODE = AUTOMATIC
+>
 > SQL Server streams the initial database copy over the AG endpoint instead of requiring manual backup/restore. For large databases (100+ GB), manual seeding with backup/restore is faster.
 
 ### Step 6: Join Secondaries to the AG
@@ -333,7 +340,9 @@ sudo pcs constraint colocation add ag_vip with master ag_cluster-clone INFINITY
 sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 ```
 
-> [!info] GCP: Use Internal TCP/UDP Load Balancer Instead of Floating VIP
+> [!info] Use ILB Instead of Floating VIP
+>
+> GCP: Use Internal TCP/UDP Load Balancer Instead of Floating VIP.
 > GCP doesn't support Gratuitous ARP, so a floating VIP may not work reliably. Create an Internal Load Balancer (ILB) with a health check on port 1433 and backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary.
 
 ---

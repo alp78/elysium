@@ -80,7 +80,9 @@ git commit -m "chore: stop tracking .env, add to .gitignore"
 git push
 ```
 
-> [!warning] This Does NOT Erase History
+> [!warning] History Is Not Erased
+>
+> This Does NOT Erase History.
 > `git rm --cached` removes the file from future commits. It remains in previous commits. If the file contained secrets, anyone with repository access can still see them in the history.
 
 ---
@@ -116,6 +118,7 @@ git push
 ## If Secrets Were Accidentally Committed
 
 > [!warning] Rotate First, Then Scrub
+>
 > If you accidentally committed secrets (API keys, passwords), **rotate them immediately** — before scrubbing the history. Anyone who fetched the repo has already seen them.
 
 Then use one of these tools to remove them from ALL history:
@@ -141,7 +144,9 @@ git filter-branch --force --index-filter \
 git push --force --all
 ```
 
-> [!warning] Force-Push After History Rewrite
+> [!warning] Force-Push After Rewrite
+>
+> Force-Push After History Rewrite.
 > After using BFG or `filter-branch`, you must force-push all branches. This is destructive — every collaborator must reclone or run `git fetch --all && git reset --hard origin/main`.
 
 ---

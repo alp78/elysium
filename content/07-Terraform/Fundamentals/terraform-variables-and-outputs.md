@@ -127,6 +127,7 @@ terraform apply
 ```
 
 > [!warning] Gitignore terraform.tfvars
+>
 > Always add `terraform.tfvars` to `.gitignore`. It contains passwords and API keys. If it is ever committed, rotate all credentials immediately.
 
 ### Locals — Computed Values
@@ -220,6 +221,7 @@ terraform -chdir=infra output -json
 ```
 
 > [!tip] Outputs without Re-applying
+>
 > You can retrieve outputs at any time without re-running `terraform apply`: `terraform -chdir=infra output`. This is useful for scripting CI/CD workflows that need the Cloud Run URL or VM IP without modifying infrastructure.
 
 ## Related

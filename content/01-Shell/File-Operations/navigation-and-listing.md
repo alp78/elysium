@@ -20,7 +20,8 @@ The `ls` command is your window into the file system. The flags you choose deter
 
 #### ls -lhrt — the data engineer's default listing
 
-> [!info] `ls -lhrt` — the data engineer's default
+> [!info] ls -lhrt flags
+>
 > - `-l` — long format (permissions, owner, group, size, date, name)
 > - `-h` — human-readable sizes (1.2G instead of 1289748480)
 > - `-r` — reverse order
@@ -33,7 +34,9 @@ ls -lhrt
 
 #### ls -la — show hidden files (dotfiles)
 
-> [!info] `-a` includes entries starting with `.` — the convention Unix uses to hide
+> [!info] Show hidden files with -a
+>
+> `-a` includes entries starting with `.` — the convention Unix uses to hide
 > files. In data engineering directories, critical files like `.env`, `.git/`,
 > `.dockerignore`, and `.dbt/` are all hidden by default. If a pipeline can't find its
 > config, check hidden files first.
@@ -44,7 +47,9 @@ ls -la
 
 #### ls -d */ — list only directories
 
-> [!info] `-d` tells `ls` to list the directory entry itself rather than its contents.
+> [!info] List directories only with -d
+>
+> `-d` tells `ls` to list the directory entry itself rather than its contents.
 > Combined with the `*/` glob, this shows only directories in the current path — useful
 > for surveying project structure without file noise.
 
@@ -54,7 +59,9 @@ ls -d */
 
 #### tree — visual directory tree
 
-> [!info] `tree` prints a recursive directory structure as an indented tree. Not installed
+> [!info] tree command
+>
+> `tree` prints a recursive directory structure as an indented tree. Not installed
 > by default on minimal Linux images (Debian slim, Alpine, Docker base images). Install
 > with `apt install tree` (Debian/Ubuntu) or `yum install tree` (RHEL/CentOS).
 
@@ -62,11 +69,14 @@ ls -d */
 tree -L 2 --dirsfirst
 ```
 
-> [!tip] `-L 2` limits depth to 2 levels — essential for large repos. Without `-L`,
+> [!tip] Limit tree depth with -L
+>
+> `-L 2` limits depth to 2 levels — essential for large repos. Without `-L`,
 > `tree` recurses the entire subtree. On a data directory with millions of partitioned
 > Parquet files this produces unusable output and can take minutes.
 
-> [!danger] Never parse `ls` output in scripts
+> [!danger] Never parse ls output in scripts
+>
 > `ls` output is designed for humans, not programs. Filenames containing spaces, newlines,
 > or glob characters break any script that parses `ls`. Instead:
 > - **Loop over files:** `for f in *.csv; do ...` (shell glob — safe)
@@ -90,11 +100,14 @@ ls -lhS /var/opt/mssql/data/*.mdf /var/opt/mssql/data/*.ndf 2>/dev/null
 df -h /var/opt/mssql/
 ```
 
-> [!warning] SQL Server **stops** when the disk is full. Monitor `df -h` regularly on database servers.
+> [!warning] SQL Server stops when disk is full
+>
+> Monitor `df -h` regularly on database servers.
 
 ### du vs df discrepancy — why disk usage numbers don't match
 
-> [!warning] `du` vs `df` Numbers Don't Always Match
+> [!warning] du vs df numbers don't match
+>
 > `du` measures actual file sizes. `df` measures filesystem block allocation. These numbers frequently disagree because:
 > 1. **Deleted files still held open:** If a process (e.g., SQL Server) has a file open and you delete it, `du` won't count it but `df` still does — the blocks aren't freed until the process closes the file handle. This is the #1 cause of "I deleted 20GB of logs but disk space didn't change."
 > 2. **Filesystem metadata and reserved blocks:** ext4 reserves 5% for root by default. Reduce with `tune2fs -m 1 /dev/sda1` (set to 1%) on data-only volumes.
@@ -109,7 +122,9 @@ df -h /var/opt/mssql/
 
 #### df -i — check inode usage when disk is "full" but df shows free space
 
-> [!danger] Running out of inodes produces the same "No space left on device" error as
+> [!danger] Inode exhaustion looks like disk full
+>
+> Running out of inodes produces the same "No space left on device" error as
 > running out of disk blocks — but `df -h` shows plenty of free space. This happens on
 > systems with millions of small files (e.g., a `/tmp` full of tiny lock files, or a
 > logging directory with one file per request). Check inodes with:
@@ -118,7 +133,8 @@ df -h /var/opt/mssql/
 df -i /var/opt/mssql/
 ```
 
-> [!tip] `ncdu` — interactive disk usage explorer
+> [!tip] ncdu interactive disk explorer
+>
 > `ncdu` (NCurses Disk Usage) provides an interactive, navigable view of disk consumption
 > sorted by size. Far more efficient than running `du` repeatedly. Install with
 > `apt install ncdu`, then run `ncdu /var/opt/mssql/`. Press `d` to delete directly from
@@ -128,7 +144,9 @@ df -i /var/opt/mssql/
 
 #### Get-ChildItem — list files sorted by modification time
 
-> [!info] `Get-ChildItem` (aliases: `ls`, `dir`, `gci`) returns rich objects with
+> [!info] Get-ChildItem returns objects
+>
+> `Get-ChildItem` (aliases: `ls`, `dir`, `gci`) returns rich objects with
 > properties like `Name`, `Length`, `LastWriteTime`, and `Mode`. Unlike Unix `ls`, the
 > output is typed — you pipe objects, not text. This makes PowerShell immune to the
 > filename-parsing pitfalls that plague bash `ls`.
@@ -139,7 +157,9 @@ Get-ChildItem -Path . | Sort-Object LastWriteTime
 
 #### Get-ChildItem — human-readable file sizes
 
-> [!info] PowerShell has no `-h` flag for human-readable sizes. Build a calculated
+> [!info] Human-readable sizes in PowerShell
+>
+> PowerShell has no `-h` flag for human-readable sizes. Build a calculated
 > property with `Select-Object` and a format expression. This pattern is reusable
 > anywhere you need to display byte counts cleanly.
 
@@ -154,7 +174,9 @@ Get-ChildItem -Path . | Sort-Object Length -Descending |
 
 #### Get-ChildItem -Force — show hidden and system files
 
-> [!info] By default `Get-ChildItem` skips hidden and system files entirely — unlike
+> [!info] Get-ChildItem skips hidden files
+>
+> By default `Get-ChildItem` skips hidden and system files entirely — unlike
 > `ls` which only hides dotfiles. Use `-Force` to include everything, or `-Hidden` to
 > return hidden items only.
 
@@ -162,14 +184,17 @@ Get-ChildItem -Path . | Sort-Object Length -Descending |
 Get-ChildItem -Force
 ```
 
-> [!warning] `-Force` required even for literal paths to hidden files
+> [!warning] -Force required for hidden files
+>
 > `Get-ChildItem -Path ".env"` returns nothing if `.env` is hidden — no error, no
 > output. You must use `Get-ChildItem -Force -Path ".env"`. This catches many people
 > when debugging "file not found" issues on Windows.
 
 #### Get-ChildItem -Recurse — recursive directory size (equivalent of du -sh)
 
-> [!info] Pipe recursive file objects into `Measure-Object -Sum` to total the `Length`
+> [!info] Recursive directory size
+>
+> Pipe recursive file objects into `Measure-Object -Sum` to total the `Length`
 > property. The `-File` switch excludes directories (which have no meaningful `Length`).
 
 ```powershell
@@ -178,7 +203,8 @@ $bytes = (Get-ChildItem -Path "C:\data\pipeline" -Recurse -File |
 [math]::Round($bytes / 1GB, 2)
 ```
 
-> [!warning] `-Filter` vs `-Include` — performance trap
+> [!warning] -Filter vs -Include performance
+>
 > `-Filter` is applied by the filesystem provider during retrieval (fast). `-Include`
 > retrieves everything first, then filters in PowerShell (slow). On directories with
 > millions of files, `-Include "*.parquet"` can take 10x longer than
@@ -186,7 +212,9 @@ $bytes = (Get-ChildItem -Path "C:\data\pipeline" -Recurse -File |
 
 #### Get-PSDrive — check free disk space across all drives
 
-> [!info] `Get-PSDrive` returns PS drive objects including `Used` and `Free` byte counts.
+> [!info] Get-PSDrive free space
+>
+> `Get-PSDrive` returns PS drive objects including `Used` and `Free` byte counts.
 > Filter to `FileSystem` provider to exclude registry and certificate drives.
 
 ```powershell

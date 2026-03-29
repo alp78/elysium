@@ -47,7 +47,9 @@ status: complete
 --   (can't seek — must scan)              (seekable — known prefix)
 ```
 
-> [!danger] SARGability Is Not Flagged by SQL Server
+> [!danger] SARGability Is Not Auto-Flagged
+>
+> SARGability Is Not Flagged by SQL Server.
 > SQL Server silently falls back to a full index scan when you wrap a column in a function. There is no warning, no error, and no plan hint. The query returns correct results -- just 100x slower. The only way to detect this is reading the execution plan and looking for Scan operators with a Predicate (not a Seek Predicate).
 
 ---
@@ -152,7 +154,9 @@ WHERE YEAR(signal_date) = 2025;
 
 ## Implicit Conversions — The Silent Killer
 
-> [!danger] Implicit Conversions Cause Full Table Scans with Zero Warnings
+> [!danger] Implicit Conversions Kill Performance
+>
+> Implicit Conversions Cause Full Table Scans with Zero Warnings.
 > When `pyodbc` sends an `NVARCHAR` parameter against a `VARCHAR` column, SQL Server silently converts every row in the table to `NVARCHAR` for comparison. This means: correct results, zero errors, but a full clustered index scan on every query. A table with 50M rows that used to seek in 2ms now scans for 8 seconds. The execution plan shows a `PlanAffectingConvert` warning, but only if you look for it.
 
 The most common silent performance killer in Python-to-SQL pipelines. Python's `pyodbc` sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents index seeks.

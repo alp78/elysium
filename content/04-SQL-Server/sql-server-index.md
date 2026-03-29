@@ -83,12 +83,21 @@ Ensuring uptime and disaster recovery.
 
 ### Patterns
 
-Data pipeline patterns built on SQL Server.
+SQL Server-specific implementations of data engineering patterns — schema design, loading strategies, change tracking, incremental processing, and common mistakes to avoid.
 
-- [[medallion-architecture]] — Bronze/silver/gold layers, schema design
-- [[bronze-layer-loading]] — JSON to bronze, parameterized queries, pyodbc, fast_executemany
-- [[silver-transforms]] — Deduplication, SCD Type 2, gap-filling, MERGE
-- [[gold-transforms]] — Analytics, scoring, pre-computed aggregations, window functions
+* [[sql-server-schema-layering]] — Schema-per-layer, schema-per-domain, naming conventions, cross-schema security
+* [[sql-server-loading-patterns]] — bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy — benchmarks, trade-offs, minimal logging
+* [[sql-server-change-tracking]] — Manual SCD2, temporal tables, CDC, Change Tracking, dbt snapshots — decision matrix
+* [[sql-server-incremental-transforms]] — Watermark loading, partition SWITCH, window functions at scale, gap-fill, pre-computed aggregations
+* [[sql-server-pipeline-anti-patterns]] — 20+ anti-patterns: row-by-row inserts, SELECT *, silent truncation, cursor ETL, NOLOCK abuse
+
+### Medallion-Project — Financial Index Pipeline
+
+Complete worked implementation of a stock index scoring pipeline on SQL Server, using the patterns above.
+
+* [[bronze-layer-loading]] — JSON → pyodbc → bronze tables (truncate-and-reload, fast_executemany)
+* [[silver-transforms]] — SCD2 dimensions, upsert signals, OHLCV gap-fill
+* [[gold-transforms]] — Z-score computation, composite factor scoring, index performance
 
 See also: [[sql-server-cheat-sheet]]
 

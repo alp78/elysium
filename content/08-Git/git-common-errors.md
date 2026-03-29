@@ -102,7 +102,9 @@ gh run rerun <RUN_ID>
 
 `run rerun` re-executes a failed workflow run. Try the deployment again now that the secret is set.
 
-> [!warning] Fork and Dependabot Workflows
+> [!warning] Fork and Dependabot Limits
+>
+> Fork and Dependabot Workflows.
 > If the workflow was triggered by a fork or Dependabot, secrets are intentionally blocked by GitHub. You'll need to merge the PR first, then the push-to-main workflow will have access to secrets.
 
 ---
@@ -195,6 +197,7 @@ git revert HEAD && git push
 `revert HEAD` creates an undo commit for the last change. This undoes the last pushed commit by creating an "anti-commit" and pushing it. Unlike `git reset`, revert is safe on shared branches because it doesn't rewrite history.
 
 > [!tip] Revert vs Reset
+>
 > Use `git revert` when undoing pushed commits on shared branches. Use `git reset` only on commits that haven't been pushed yet. See [[git-recovery-and-undo]] for details.
 
 ---
@@ -213,6 +216,7 @@ git commit -m "remove large file"
 Undo the commit, stop tracking the big file, and redo the commit without it.
 
 > [!warning] Large File History
+>
 > This removes the file from the next commit but does NOT erase it from Git history. If the file is too large for GitHub's limit, you may need BFG Repo-Cleaner to purge it from all history.
 
 ---
@@ -310,6 +314,7 @@ git config --global http.postBuffer 524288000
 `http.postBuffer` increases the maximum HTTP POST size to 500 MB. The push is too big for the default buffer — make it bigger.
 
 > [!tip] Alternative for Large Files
+>
 > For truly large assets, consider [[gitignore-patterns]] to keep them out of the repo, or use Git LFS (Large File Storage) rather than increasing the buffer.
 
 ---
@@ -334,6 +339,7 @@ ssh-keygen -t ed25519 -C "your@email.com"
 Then add the public key to GitHub under **Settings > SSH and GPG Keys**.
 
 > [!info] HTTPS Alternative
+>
 > If SSH setup is blocked by your network, switch the remote to HTTPS: `git remote set-url origin https://github.com/owner/repo.git` and use a Personal Access Token as your password.
 
 ---
@@ -373,7 +379,9 @@ rm -f .git/index.lock
 
 A previous git command crashed mid-operation and left a lock. Remove it and retry.
 
-> [!warning] Check for Running Processes First
+> [!warning] Check Running Processes First
+>
+> Check for Running Processes First.
 > Before deleting the lock file, confirm no other git process (e.g., a GUI client, IDE plugin, or background script) is currently running against this repo. Deleting an active lock can corrupt the operation in progress.
 
 ---
@@ -391,6 +399,7 @@ git push --force-with-lease
 `--force-with-lease` force-pushes BUT only if no one else has pushed to the branch since your last fetch. It is the safe alternative to `--force`. Your rebase changed the history — force-push, but make sure you're not overwriting someone else's work.
 
 > [!warning] Never Force-Push to main
+>
 > Only force-push to your own feature branches. Never force-push to `main` or any shared branch. See [[git-branching-and-merging]] for branch protection rules.
 
 ---
@@ -435,7 +444,9 @@ git config --global core.autocrlf input
 
 Stop the warnings by telling Git how to handle line endings for your OS.
 
-> [!tip] .gitattributes is More Reliable
+> [!tip] gitattributes Is More Reliable
+>
+> .gitattributes is More Reliable.
 > For cross-platform teams, commit a `.gitattributes` file to the repo that enforces line endings per file type, rather than relying on each developer's local config.
 
 ---
@@ -518,6 +529,7 @@ This explicitly creates the remote ref from the SHA, bypassing the tracking cach
 The commits aren't lost even after deletion. Git remembers the SHA via reflog. Recreate the branch, push it, reopen the PR, then squash-merge normally.
 
 > [!tip] Safe Deletion Order
+>
 > Always merge/squash the PR on GitHub FIRST, then delete the branch. GitHub's "Delete branch" button after merge is the safest workflow.
 
 ---
@@ -548,7 +560,9 @@ git push --force-with-lease
 
 `--force-with-lease` overwrites the remote branch only if nobody else has pushed since your last fetch.
 
-> [!warning] Only Amend Your Own Feature Branch
+> [!warning] Only Amend Own Branch
+>
+> Only Amend Your Own Feature Branch.
 > Only amend commits on your own feature branch. Never amend commits on `main` or shared branches — other developers may have already pulled the original commit.
 
 Amending replaces the last commit with a new one that includes the extra file. Since the commit hash changes, you need to force-push. `--force-with-lease` is the safe way to do it.
@@ -585,7 +599,9 @@ git commit -m "chore: stop tracking logos, add to .gitignore"
 git push
 ```
 
-> [!warning] Secrets Require History Rewrite
+> [!warning] Secrets Need History Rewrite
+>
+> Secrets Require History Rewrite.
 > This does NOT erase the files from Git history — they remain in previous commits. If you accidentally committed secrets (API keys, passwords), you need `git filter-branch` or [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/) to purge them from all history, then force-push.
 
 `.gitignore` only prevents **new** files from being tracked. Files already committed are still tracked even after adding them to `.gitignore`. The `git rm --cached` command tells Git to forget about them without deleting them from your disk. See [[gitignore-patterns]] for how to structure `.gitignore` correctly from the start.

@@ -37,6 +37,7 @@ gcloud compute snapshots list
 ```
 
 > [!tip] Snapshot Naming Convention
+>
 > Include the date and the reason in the snapshot name: `data-pipeline-sql-before-upgrade-20260322`. This makes it immediately clear which snapshot to restore from when things go wrong at 3 AM.
 
 ### Restoring a Disk from a Snapshot
@@ -62,7 +63,9 @@ gcloud compute disks resize data-pipeline-sql-disk --zone=europe-west1-b --size=
 # SSH in and run: sudo resize2fs /dev/sda1 (ext4) or sudo xfs_growfs / (xfs)
 ```
 
-> [!warning] Filesystem Must Be Expanded Manually
+> [!warning] Expand Filesystem After Resize
+>
+> Filesystem Must Be Expanded Manually.
 > After `gcloud compute disks resize`, the new disk capacity is allocated but invisible to the OS. You must SSH in and run the appropriate filesystem expansion command:
 > - **ext4:** `sudo resize2fs /dev/sda1`
 > - **xfs:** `sudo xfs_growfs /`
@@ -79,7 +82,9 @@ gcloud compute instances get-serial-port-output data-pipeline-sql --zone=europe-
 # Shows boot messages, kernel logs — the only way to diagnose a VM that won't boot
 ```
 
-> [!info] Common Scenarios for Serial Console Use
+> [!info] Serial Console Use Cases
+>
+> Common Scenarios for Serial Console Use.
 > - Kernel panic after an OS update — the VM boots but SSH never comes up
 > - Disk full causing boot failure — `/` mounted read-only, init fails
 > - Incorrect `/etc/fstab` entries after adding a new disk — VM hangs at mount

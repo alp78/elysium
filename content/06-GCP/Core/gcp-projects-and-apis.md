@@ -64,7 +64,9 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 # artifactregistry.googleapis.com — Artifact Registry (Docker images)
 ```
 
-> [!tip] Enable All Data Engineering APIs at Once
+> [!tip] Enable All APIs at Once
+>
+> Enable All Data Engineering APIs at Once.
 > When bootstrapping a new project, enable all required APIs in one command to avoid hitting disabled-API errors one by one during setup:
 > ```bash
 > gcloud services enable \
@@ -80,6 +82,7 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 > ```
 
 > [!warning] APIs Are Per-Project
+>
 > Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [[terraform-index|Terraform]].
 
 ### GCP API Lifecycle States

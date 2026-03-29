@@ -450,6 +450,7 @@ LIMIT 10
 ## Stored Procedures
 
 > [!tip] Related pattern
+>
 > Tools like [[dbt-bigquery-adapter|dbt's BigQuery adapter]] generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
 
 ### Stored Procedures — Basic SP with Parameters
@@ -838,7 +839,9 @@ LIMIT 15
 
 ## Slowly Changing Dimensions (SCD)
 
-> [!danger] SCD Type 1 Destroys History Permanently
+> [!danger] SCD Type 1 Destroys History
+>
+> SCD Type 1 Destroys History Permanently.
 > SCD Type 1 overwrites in place -- once the old value is gone, it is unrecoverable unless you have a backup or the source system retains history. In financial pipelines, always default to SCD Type 2 for dimension attributes that affect calculations (sector, index membership, weighting). A sector change can retroactively alter historical portfolio returns if the dimension is Type 1.
 
 ### Slowly Changing Dimensions — SCD Type 1 Overwrite
@@ -1260,7 +1263,9 @@ LIMIT 10
 
 ## Execution Plans & Query Optimization
 
-> [!warning] BigQuery SELECT * Scans All Columns and Bills Accordingly
+> [!warning] BigQuery SELECT * Is Expensive
+>
+> BigQuery SELECT * Scans All Columns and Bills Accordingly.
 > BigQuery is columnar -- you pay per column scanned, not per row. `SELECT *` on a 1 TB table costs the full 1 TB price even if you only need two columns. Always select specific columns. Use the query validator in the BigQuery console (top-right of the editor) to preview bytes scanned before running.
 
 For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [[querying-and-cost-optimization]].
@@ -1320,7 +1325,9 @@ SELECT
 
 **Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
 
-> [!warning] SERIALIZABLE Kills Concurrency at Scale
+> [!warning] SERIALIZABLE Kills Concurrency
+>
+> SERIALIZABLE Kills Concurrency at Scale.
 > SERIALIZABLE takes range locks that block all other transactions touching overlapping key ranges. In a pipeline with concurrent writers (e.g., two Airflow tasks writing to overlapping date ranges), SERIALIZABLE causes cascading blocking and potential deadlocks. Only use it for single-row critical writes where correctness is non-negotiable.
 
 ## Bulk Loading Patterns

@@ -49,7 +49,8 @@ sudo usermod -aG mssql dd-agent
 sudo systemctl restart datadog-agent
 ```
 
-> [!info] Why `usermod -aG mssql`?
+> [!info] Why usermod to mssql group
+>
 > The SQL Server errorlog file is owned by the `mssql` user. The Datadog agent runs as `dd-agent` — adding it to the `mssql` group grants read access to the log file without changing file permissions.
 
 ### Verify Log Collection
@@ -144,7 +145,8 @@ In Datadog: **Logs > Explorer** → filter by:
 
 ### Cloud Run Pipeline Logs in Datadog
 
-> [!warning] Cloud Run Logs Are NOT in Datadog
+> [!warning] Cloud Run logs not in Datadog
+>
 > Cloud Run job logs go to **GCP Cloud Logging** (see [[cloud-logging]] for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
 
 ```powershell

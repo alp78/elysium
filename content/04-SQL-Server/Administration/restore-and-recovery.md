@@ -32,6 +32,7 @@ WITH REPLACE, RECOVERY;
 ```
 
 > [!warning] REPLACE Destroys Existing Data
+>
 > `WITH REPLACE` overwrites the existing database without confirmation. Ensure you are targeting the correct database and server before running. Consider a side-by-side restore first if you are uncertain.
 
 ---
@@ -61,7 +62,9 @@ WITH STOPAT = '2026-03-09T14:23:45', RECOVERY;
 | `STOPAT = 'timestamp'` | Stop replaying the log at this exact point in time |
 | `REPLACE` | Overwrite the existing database |
 
-> [!info] PITR Requires FULL Recovery Model
+> [!info] PITR Needs FULL Recovery
+>
+> PITR Requires FULL Recovery Model.
 > Point-in-time recovery is only possible if the database was in FULL recovery model at the time of the events you want to recover. If the database was in SIMPLE recovery, you can only restore to the last full or differential backup.
 
 ---
@@ -81,7 +84,9 @@ WITH MOVE 'analytics_db' TO '/var/opt/mssql/data/project_inv.mdf',
 -- Use case: "restore yesterday's backup alongside production to compare data"
 ```
 
-> [!tip] Side-by-Side for Safe Investigation
+> [!tip] Side-by-Side Investigation
+>
+> Side-by-Side for Safe Investigation.
 > When investigating a data quality issue, always restore to a new database name (`project_investigation`) rather than overwriting production. This lets you compare old vs. current data without risk.
 
 ---

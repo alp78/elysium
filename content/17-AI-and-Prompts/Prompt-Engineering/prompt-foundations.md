@@ -140,7 +140,8 @@ Constraints:
 > [!tip] Constraints Unlock Creativity
 > Counter-intuitively, giving the model more constraints for creative tasks produces better output than giving it freedom. Open-ended creative prompts produce generic output; constrained ones produce distinctive output.
 
-> [!danger] LLMs Hallucinate Financial Data with High Confidence
+> [!danger] LLM financial data hallucination
+>
 > Models will invent plausible-looking financial figures (stock prices, P/E ratios, revenue numbers) that are completely fabricated. Never use LLM output for any financial calculation, index value, or regulatory filing without verifying against a primary data source. The hallucination rate on specific numerical facts is significantly higher than on qualitative reasoning tasks.
 
 ### Factual Tasks: Source Grounding and Uncertainty Handling

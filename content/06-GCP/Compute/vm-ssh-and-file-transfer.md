@@ -27,6 +27,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 ```
 
 > [!tip] No Public IP Required
+>
 > Using `--tunnel-through-iap` means your VM can have no external IP address at all. This eliminates an entire attack surface — the VM is completely unreachable from the public internet, yet you can still SSH into it using your gcloud credentials.
 
 ### Running Remote Commands Non-Interactively on a VM
@@ -61,6 +62,7 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 ### Handling Permission Errors on SCP
 
 > [!warning] Permission Errors on SCP
+>
 > `gcloud compute scp` logs in as your username, which may not have write access to the target directory (e.g., `/opt/airflow/dags/` owned by UID 50000). Fix:
 > ```bash
 > # Step 1: SCP to /tmp/ (writable by everyone)

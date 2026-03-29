@@ -37,7 +37,8 @@ Code reviews are not quality gates — they are the primary mechanism through wh
                └───────────────────────┘
 ```
 
-> [!warning] The Most Expensive Code Review Mistake: Approving Without Running the Query
+> [!warning] Approve-without-running risk
+>
 > In data engineering, the most dangerous PRs look correct in review but produce wrong results at scale. A SQL query that works on 1,000 rows may produce duplicates or incorrect aggregations on 10M rows. For any PR that modifies a gold-layer query or calculation, request that the author include a diff of before/after query results on a representative dataset -- not just "tests pass."
 
 #### What senior reviewers look for in data pipeline PRs
@@ -394,7 +395,8 @@ A senior data engineer's career is defined not by how many incidents they preven
 | **Communications Lead** | Updates stakeholders, writes status page updates | PM or senior engineer (not the person debugging) |
 | **Scribe** | Records timeline, decisions, and actions in real-time | Any team member (critical for post-mortem) |
 
-> [!warning] Never Let the Debugger Also Communicate
+> [!warning] Separate debugging from communication
+>
 > The golden rule: never let the person debugging also communicate. Debugging requires focus. Status updates require context switching. Assign different people.
 
 #### Incident severity levels for a financial data platform

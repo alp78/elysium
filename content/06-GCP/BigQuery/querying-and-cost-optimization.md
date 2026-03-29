@@ -25,7 +25,9 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) AS total_rows FROM `data-platfo
 # Backticks around fully-qualified table names: `project.dataset.table`
 ```
 
-> [!warning] Always Set `--use_legacy_sql=false`
+> [!warning] Always Use Standard SQL
+>
+> Always Set `--use_legacy_sql=false`.
 > BigQuery has two SQL dialects: legacy SQL (the original) and standard SQL (GoogleSQL, the modern version). Legacy SQL has different syntax and fewer features. Always use `--use_legacy_sql=false`. Some teams set this as an alias: `alias bq='bq --use_legacy_sql=false'`.
 
 ### BigQuery Dry Run — Estimate Cost Before Executing
@@ -40,6 +42,7 @@ bq query --use_legacy_sql=false --dry_run \
 ```
 
 > [!tip] The Dry Run Habit
+>
 > Make `--dry_run` your default first step before any non-trivial query. It is free, instant, and prevents accidental large scans. The cost calculation: `bytes_processed / 1_000_000_000_000 * 5` dollars.
 
 ### Saving BigQuery Results to a Destination Table

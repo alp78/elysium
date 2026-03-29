@@ -650,7 +650,8 @@ jobs:
           retention-days: 7
 ```
 
-> [!danger] terraform apply -auto-approve in CI Can Destroy Production Resources
+> [!danger] Auto-approve can destroy resources
+>
 > The `apply` job below runs `terraform apply -auto-approve` on merge to main. A bad Terraform change that passes plan review can still destroy resources if state drift occurred between plan and apply. Mitigations: (1) always use the `production` environment with required reviewers, (2) pin `terraform_version` to avoid behavior changes, (3) consider downloading the plan artifact from the PR workflow and running `terraform apply tfplan` instead of a fresh apply.
 
 ### Terraform CI/CD — Apply on Merge to Main
@@ -1095,7 +1096,8 @@ jobs:
 
 ### Cancel Redundant Runs
 
-> [!warning] cancel-in-progress Kills Running Deploy Jobs
+> [!warning] Cancel-in-progress kills deploys
+>
 > Setting `cancel-in-progress: true` at the workflow level cancels any in-flight run when a new push arrives. This is safe for PR checks but dangerous for deploy workflows -- cancelling a deployment mid-flight can leave infrastructure in an inconsistent state. Use `cancel-in-progress: ${{ github.event_name == 'pull_request' }}` to limit cancellation to PR events only.
 
 ```yaml

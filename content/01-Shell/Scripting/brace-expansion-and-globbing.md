@@ -68,12 +68,14 @@ shopt -s failglob
 rm *.csv                  # ERROR if no .csv files exist (instead of passing literal "*.csv")
 ```
 
-> [!warning] The `failglob` Safety Net
+> [!warning] The failglob safety net
+>
 > Without `failglob`, running `rm *.csv` in a directory with no CSV files passes the literal string `*.csv` to `rm`, which tries to delete a file named `*.csv`. With `failglob` enabled, the shell raises an error instead — a critical safety guard in scripts.
 
 ### shopt settings for .bashrc — extglob, globstar, failglob
 
-> [!tip] `shopt` Settings for Your `.bashrc`
+> [!tip] shopt settings for .bashrc
+>
 > ```bash
 > shopt -s extglob      # extended globbing (!(pattern), +(pattern), etc.)
 > shopt -s globstar     # ** matches recursively through directories

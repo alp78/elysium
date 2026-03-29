@@ -23,6 +23,7 @@ status: complete
 C# methods must declare a return type (`int`, `string`, `void`). Parameters are typed. Static typing catches signature mismatches at compile time. Overloading allows same name with different parameter types.
 
 > [!warning] Function anti-patterns
+>
 > - Returning `null` instead of a meaningful empty value or `Optional`
 > - Very long parameter lists — use a config object or builder
 > - Methods doing too much — single responsibility principle
@@ -53,6 +54,7 @@ RunDemo();
 #### Expression-bodied and tuple return
 
 > [!info] Expression-bodied and tuple return
+>
 > - `=>` syntax — eliminates braces and `return` for one-liners
 > - Tuples return multiple values: `(string, int) GetInfo() => ("Alice", 30)`
 > - Callers destructure: `var (name, age) = GetInfo()`
@@ -82,6 +84,7 @@ Console.WriteLine($"As tuple: {Divide(17, 5)}");
 #### Func&lt;T, TResult&gt; — function with return value
 
 > [!info] Delegate types
+>
 > - `Func<T, TResult>` — holds a method that returns a value
 > - `Action<T>` — holds a void method
 > - Both store lambdas, named methods, or method groups — functions as first-class values
@@ -185,7 +188,9 @@ Console.WriteLine($"  '{raw}' -> '{result}'");
 
 Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses the default; tests inject a fixed `DateTime` for deterministic results. No interface needed — `Func<DateTime>` is lightweight DI.
 
-> [!warning] Don't use `DateTime.Now` directly — untestable and non-deterministic.
+> [!warning] Don't use DateTime.Now directly
+>
+> Don't use `DateTime.Now` directly — untestable and non-deterministic.
 
 ```csharp
 Dictionary<string, object> ProcessOrder(
@@ -258,12 +263,15 @@ LoadData(new[] { "users", "orders", "products" },
 #### Sorting with Func as key
 
 > [!info] LINQ with Func
+>
 > - `OrderBy(x => x.Property)` — extracts the sort key
 > - `ThenBy` — secondary sort
 > - `GroupBy` + `Select` — aggregation over groups
 > - Declarative and composable
 
-> [!warning] `OrderBy` then another `OrderBy` **replaces** the first — use `ThenBy` for secondary sort.
+> [!warning] OrderBy replaces previous sort
+>
+> `OrderBy` then another `OrderBy` **replaces** the first — use `ThenBy` for secondary sort.
 
 ```csharp
 var employees = new[]
@@ -315,6 +323,7 @@ Console.WriteLine(Connect("db.example.com", ssl: false));  // named, skip port
 #### ref — pass by reference
 
 > [!info] Pass by reference
+>
 > - `ref int x` — passes the variable itself; changes are visible to the caller
 > - Both sides must use the `ref` keyword
 > - Variable must be initialized before passing
@@ -384,7 +393,8 @@ Console.WriteLine($"Total(array):   {Total(nums)}");
 
 #### No **kwargs — alternatives
 
-> [!info] C# has no `**kwargs` — alternatives
+> [!info] C# has no kwargs equivalent
+>
 > - Anonymous object: `new { key = value }` (common in ASP.NET)
 > - `Dictionary<string, object>` for dynamic keys
 > - Named params with defaults for compile-time safety
@@ -408,12 +418,15 @@ LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] 
 #### Lambda expressions
 
 > [!info] Lambda syntax
+>
 > - `(params) => expression` — single-expression (return is implicit)
 > - `(params) => { statements }` — multi-statement with explicit `return`
 > - Assign to `Func<T, TResult>` (returns value) or `Action<T>` (void)
 > - Lambdas capture enclosing scope variables automatically
 
-> [!warning] Keep lambdas short (≤3 lines). Extract complex logic to named methods. Don't use lambdas with side effects in LINQ — use `foreach`.
+> [!warning] Keep lambdas short (≤3 lines).
+>
+> Keep lambdas short (≤3 lines). Extract complex logic to named methods. Don't use lambdas with side effects in LINQ — use `foreach`.
 
 ```csharp
 Func<int, int> square = x => x * x;
@@ -429,6 +442,7 @@ Console.WriteLine($"add(3, 4): {add(3, 4)}");
 #### Statement lambda — multi-line body with { }
 
 > [!info] Statement lambda syntax
+>
 > - `(params) => { statements; return value; }` — braces and explicit `return` required
 > - Supports `if`/`else`, loops, `try`/`catch`
 > - Still captures enclosing scope
@@ -472,6 +486,7 @@ Console.WriteLine($"Youngest: {youngest}");
 #### Action, Predicate, and closure capture
 
 > [!info] Delegate types and closures
+>
 > - `Action<T>` — side-effect lambdas (void)
 > - `Predicate<T>` — boolean tests used by `List.FindAll`, `Exists`
 > - Closures capture the **variable reference**, not its value — changes are shared
@@ -513,7 +528,9 @@ Console.WriteLine($"times(5): {times(5)}");    // 50 — sees the change!
 | **Named method** | Reusable, complex, needs documentation |
 | **Statement lambda** | Multi-line body with braces and explicit `return` |
 
-> [!warning] Don't write complex lambdas that should be methods. Don't create named methods for trivial one-liners used once.
+> [!warning] Lambda vs method choice
+>
+> Don't write complex lambdas that should be methods. Don't create named methods for trivial one-liners used once.
 
 ## Closures & Scope
 
@@ -606,7 +623,9 @@ Console.WriteLine($"age 150: {isValidAge(150)}");
 
 #### Loop capture gotcha
 
-> [!danger] Lambdas in a `for` loop capture the variable itself — after the loop, all see the final value. Fix: `int captured = i` inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
+> [!danger] Lambdas in a for loop
+>
+> Lambdas in a `for` loop capture the variable itself — after the loop, all see the final value. Fix: `int captured = i` inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
 
 ```csharp
 var funcs = new List<Func<int>>();
@@ -633,7 +652,9 @@ Console.WriteLine($"Good: [{string.Join(", ", funcsGood.Select(f => f()))}]");  
 
 Delegates declare a function signature as a type — type-safe function pointers. Built-in: `Func<T, TResult>` (returns value), `Action<T>` (void), `Predicate<T>` (returns bool). Custom: `delegate int Op(int a, int b)`. Delegates can chain multiple methods via `+=` (multicast). Events are restricted delegates that only the owner can invoke.
 
-> [!warning] With multicast delegates, only the **last** handler's return value is kept. Use `Func`/`Action` for simple cases — custom delegate types add unnecessary ceremony.
+> [!warning] Multicast delegate return values
+>
+> With multicast delegates, only the **last** handler's return value is kept. Use `Func`/`Action` for simple cases — custom delegate types add unnecessary ceremony.
 
 ```csharp
 int Add(int a, int b) => a + b;
@@ -717,6 +738,7 @@ Console.WriteLine();
 **Extension methods:** add methods to existing types without modifying their source code. Defined as static methods in a static class with `this` before the first parameter. LINQ methods (`.Where`, `.Select`, `.OrderBy`) are all extension methods on `IEnumerable<T>`.
 
 > [!warning] Overloading pitfalls
+>
 > - Overloads that do fundamentally different things — confusing API
 > - Too many overloads — use optional/named parameters or generics instead
 > - Ambiguous overloads cause compiler errors when it can't decide

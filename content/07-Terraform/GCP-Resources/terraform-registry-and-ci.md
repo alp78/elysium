@@ -68,6 +68,7 @@ Two policies work together to prevent unbounded storage growth:
 | `delete-untagged` | `DELETE` | `tag_state = UNTAGGED` | Deletes images that have no tag (e.g., after a newer image takes the `latest` tag, the old one becomes untagged). Prevents orphaned layers from consuming storage. |
 
 > [!tip] Prevent Storage Bloat
+>
 > Without cleanup policies, every CI push accumulates permanently. With daily deployments and a 5-version retention window, storage stays bounded to approximately 5× the image size per repository.
 
 ### Registry Path Structure
@@ -135,6 +136,7 @@ resource "google_service_account_iam_member" "ci_act_as_dashboard" {
 | `roles/iam.serviceAccountUser` | **Act as** another service account. When GitHub Actions deploys a Cloud Run job or service, it must specify which service account the workload runs as. This role allows CI to assign those identities without gaining their permissions. |
 
 > [!info] Least Privilege Chain
+>
 > The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [[terraform-iam-and-secrets]] for the full IAM design.
 
 ---

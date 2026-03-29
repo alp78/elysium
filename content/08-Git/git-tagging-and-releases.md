@@ -25,7 +25,9 @@ Git has two types of tags:
 | **Lightweight** | A name pointing to a commit SHA — nothing more | Quick local markers, temporary references |
 | **Annotated** | A full Git object with tagger name, email, date, and a message | Production releases — preferred |
 
-> [!tip] Use annotated tags for releases
+> [!tip] Use Annotated Tags
+>
+> Use annotated tags for releases.
 > Annotated tags are stored as full objects in the Git database with metadata. They can be signed with GPG, show up properly in `git describe`, and are the standard for marking software releases. Use lightweight tags only for temporary local bookmarks.
 
 ## Creating Tags
@@ -73,7 +75,9 @@ git tag -n
 
 - `-n` — show the first line of each tag's annotation message alongside the tag name
 
-> [!info] Tags are local until pushed
+> [!info] Tags Are Local Until Pushed
+>
+> Tags are local until pushed.
 > Tags created with `git tag` exist only in your local repository. They are **not** pushed automatically with `git push`. You must explicitly push them — see the Pushing Tags section below.
 
 ## Pushing Tags to GitHub
@@ -95,7 +99,9 @@ git push origin --tags
 
 - `--tags` — push every local tag that does not yet exist on the remote
 
-> [!warning] --tags pushes all tags including drafts
+> [!warning] Pushes All Tags Including Drafts
+>
+> --tags pushes all tags including drafts.
 > `git push origin --tags` pushes every tag, including work-in-progress or test tags you may have created locally. For cleaner release workflows, push individual tags by name (`git push origin v1.0.0`) rather than using `--tags`.
 
 ## Semantic Versioning Context
@@ -140,7 +146,9 @@ git tag -d v1.0.0-draft
 git push origin --delete v1.0.0-draft
 ```
 
-> [!warning] Deleting pushed tags affects others
+> [!warning] Deleting Pushed Tags Affects Others
+>
+> Deleting pushed tags affects others.
 > If collaborators have already fetched a tag, deleting it from the remote does not remove it from their local repos. Coordinate with your team before deleting published tags.
 
 ### Integration with GitHub Actions

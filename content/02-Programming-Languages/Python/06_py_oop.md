@@ -28,6 +28,7 @@ from dataclasses import dataclass, field
 #### Class definition — __init__, attributes, __str__
 
 > [!info] Class basics
+>
 > - `class Dog:` — defines a type
 > - `__init__` — initializes instance attributes (`self.name`)
 > - Class attributes (`species`) — shared by all instances
@@ -35,6 +36,7 @@ from dataclasses import dataclass, field
 > - For simple data containers without behavior, prefer `dataclass` or `namedtuple`
 
 > [!warning] Anti-patterns
+>
 > - **Mutable class attributes** (lists/dicts) — shared and mutated by all instances
 > - **Not defining `__repr__`** — defaults to unhelpful `<Dog at 0x...>`
 > - **`__init__` doing heavy work** — use factory methods for complex setup
@@ -154,6 +156,7 @@ print(f"new radius: {c.radius}")
 `class Dog(Animal)` inherits from `Animal`. Override methods by redefining them; `super().__init__()` calls the parent constructor. Python supports multiple inheritance via MRO (C3 linearization). Use inheritance for IS-A relationships; prefer composition (attributes) for HAS-A.
 
 > [!warning] Anti-patterns
+>
 > - **Deep hierarchies** (>3 levels) — prefer composition
 > - **Forgetting `super().__init__()`** — parent state not initialized
 > - **Diamond inheritance** without understanding MRO — confusing dispatch
@@ -274,12 +277,14 @@ print(f"MRO:   {[c.__name__ for c in Duck.__mro__]}") # Method Resolution Order 
 #### Abstract class
 
 > [!info] Abstract base class
+>
 > - `class Shape(ABC)` with `@abstractmethod` — defines methods subclasses must implement
 > - Concrete methods provide shared logic
 > - Instantiating an abstract class raises `TypeError`
 > - For pure contracts without shared code, use `Protocol` instead
 
 > [!warning] Anti-patterns
+>
 > - **ABC with no shared code** — use `Protocol` for structural typing
 > - **Forgetting `@abstractmethod`** — method becomes optional, not enforced
 > - **Too many abstract methods** — split into smaller ABCs
@@ -406,6 +411,7 @@ print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
 Python uses conventions, not enforcement: `name` is public, `_name` is protected (convention), and `__name` triggers name mangling (`_ClassName__name`) to prevent accidental override in subclasses. `@property` provides validated access to private backing fields. Use `_` for internal implementation details and `__` only for name-collision prevention — `__` for privacy alone is overkill.
 
 > [!warning] Anti-patterns
+>
 > - **Accessing `_private` attrs from outside** — violates the convention
 > - **Overusing `__mangling`** — makes testing and inheritance harder
 > - **No access control at all** — public everything loses encapsulation
@@ -474,11 +480,13 @@ print("Python: conventions only — nothing is truly private")
 #### @staticmethod and @classmethod — definition and factory methods
 
 > [!info] Class methods vs static methods
+>
 > - `@classmethod` — receives `cls` as first argument; enables factory methods and inheritance-aware construction
 > - `@staticmethod` — gets no implicit argument; just a function namespaced to the class
 > - Use `@classmethod` for factories; `@staticmethod` for class-namespaced utilities
 
 > [!warning] Anti-patterns
+>
 > - **`@staticmethod` when a module-level function is clearer** — unnecessary nesting
 > - **Instance method when `self` is never used** — make it `@staticmethod`
 > - **Not using `cls` in `@classmethod`** — should be `@staticmethod` instead

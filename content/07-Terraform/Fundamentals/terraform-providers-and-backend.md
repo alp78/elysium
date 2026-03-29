@@ -60,6 +60,7 @@ Declares external provider plugins that Terraform must download before it can ma
 | `version` | `~> 6.0` | **Pessimistic constraint** — allows `6.x` but not `7.0`. The `~>` operator permits only the rightmost digit to increment: `6.0`, `6.1`, `6.99` are all valid, but `7.0` is not. This prevents breaking changes from a major version bump while still receiving minor updates. |
 
 > [!tip] Version Constraint Operators
+>
 > - `= 6.0.0` — exact version only
 > - `>= 1.5` — any version 1.5 or higher
 > - `~> 6.0` — pessimistic: allows 6.x, blocks 7.0
@@ -74,7 +75,9 @@ Tells Terraform to store its **state file** remotely in a Google Cloud Storage b
 | `bucket` | `data-pipeline-tf-state` | The GCS bucket name. This bucket must exist before `terraform init` — Terraform does not create it. It holds `terraform.tfstate`, the JSON file that maps every resource in these `.tf` files to its real GCP counterpart. |
 | `prefix` | `terraform/state` | A path prefix inside the bucket. The actual state file is stored at `terraform/state/default.tfstate`. Using a prefix allows multiple Terraform configurations to share one bucket without colliding. |
 
-> [!warning] The Backend Bucket Must Exist First
+> [!warning] Backend Bucket Must Pre-exist
+>
+> The Backend Bucket Must Exist First.
 > The `backend` block is **exclusively** for storing the `.tfstate` file. It has nothing to do with providers, resources, or any other Terraform concept. The GCS bucket must be created manually (or by a separate Terraform config) before running `terraform init`.
 
 ### Why Remote State?

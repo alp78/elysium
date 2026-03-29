@@ -200,6 +200,7 @@ gcloud compute instances describe VM_NAME --format='get(labels)'
 ```
 
 > [!warning] Labels Are Not Retroactive
+>
 > Labels only appear on billing export rows created after the label was applied. Label resources at creation time via IaC (Terraform, etc.) to ensure full coverage.
 
 ### Budget Alerts
@@ -317,6 +318,7 @@ gcloud compute instances create INSTANCE_NAME \
 ```
 
 > [!warning] Cost Trap: Idle VMs
+>
 > A stopped VM still charges for its attached persistent disk and any reserved static IP. To pay zero, delete the disk or resize to the minimum, and release the static IP. Stopping alone does NOT eliminate all costs.
 
 #### Special Licensing Costs
@@ -381,7 +383,9 @@ BigQuery has two fundamentally different pricing models. Choose based on workloa
 - First **1 TB/month free**
 - Billed on bytes scanned, not rows returned, not execution time
 
-> [!danger] Cost Trap: Full-Table Scans
+> [!danger] Full-Table Scan Costs
+>
+> Cost Trap: Full-Table Scans.
 > `SELECT * FROM huge_table` scans every byte. A 10 TB table costs $62.50 per full scan. Always filter on partitioned columns and cluster keys to minimize bytes scanned.
 
 #### Model 2: Editions (Capacity / Slot-Based)
@@ -420,6 +424,7 @@ Partitioned tables get long-term pricing applied per-partition, so old partition
 - Prefer batch loads (free) or the Storage Write API where possible
 
 > [!tip] Free Tier Summary (BigQuery)
+>
 > - 1 TB queries/month (on-demand)
 > - 10 GB storage/month
 > - Free batch loading, exporting, copying, and metadata operations
@@ -619,10 +624,14 @@ Daily cost = 1 × 300 × (2 × 0.0000240 + 4 × 0.0000025)
            = $0.0174/day → ~$0.52/month
 ```
 
-> [!tip] Cloud Run vs VM for Batch Jobs
+> [!tip] Cloud Run vs VM
+>
+> Cloud Run vs VM for Batch Jobs.
 > A Cloud Run Job running 1 hour/day costs roughly $0.04–0.08/day. An e2-standard-2 VM running 24/7 costs ~$49/month. If a job runs less than ~8 hours/day, Cloud Run is cheaper even before accounting for provisioning overhead.
 
-> [!warning] Cost Trap: min-instances > 0
+> [!warning] Min Instances Cost Trap
+>
+> Cost Trap: min-instances > 0.
 > Setting `--min-instances=1` on a Cloud Run Service keeps one container always warm. CPU allocated between requests at the idle rate. For low-traffic services that don't need sub-second cold start, keep min-instances at 0.
 
 ```bash
@@ -682,10 +691,14 @@ Volume = 500M × max(500, 1000) bytes = 500M × 1000 = 500 GB
 Cost   = (500 - 10) × $0.04 = 490 × $0.04 = $19.60/month
 ```
 
-> [!warning] Cost Trap: Large Message Payloads
+> [!warning] Large Message Payloads
+>
+> Cost Trap: Large Message Payloads.
 > Pub/Sub is billed on raw bytes. If you publish 1 MB JSON blobs, you pay 1000× more than publishing a 1 KB event ID and fetching the payload from GCS. Store large payloads in GCS; publish a reference to Pub/Sub.
 
-> [!warning] Cost Trap: Retained Acknowledged Messages
+> [!warning] Retained Acknowledged Messages
+>
+> Cost Trap: Retained Acknowledged Messages.
 > If a subscription has message retention enabled (for replay), all acknowledged messages are stored at $0.27/GB/month. This can accumulate fast for high-volume topics. Set retention only as long as needed.
 
 ```bash
@@ -721,6 +734,7 @@ See [[pubsub-messaging]] and [[pubsub-topics-and-subscriptions]] for operational
 | Archive | $0.0012 | $0.050 | 365 days | Compliance, legal hold, cold backups |
 
 > [!warning] Early Deletion Charges
+>
 > Deleting a Nearline object before 30 days charges you for the remaining duration. Deleting a Coldline object at day 45 of 90 charges you for the remaining 45 days of minimum. Plan lifecycle transitions carefully.
 
 #### Operations Pricing
@@ -742,7 +756,9 @@ Class A ops are 12.5× more expensive than Class B. Minimizing unnecessary bucke
 | Internet (thereafter) | $0.12/GB |
 | Dedicated Interconnect | $0.02–0.04/GB |
 
-> [!danger] Cost Trap: Data Egress
+> [!danger] Data Egress Costs
+>
+> Cost Trap: Data Egress.
 > Downloading 1 TB from GCS to the internet costs $122.88. Keep downstream compute in the same region as your GCS buckets. If data must leave GCP, compress it first.
 
 #### Free Tier
@@ -814,10 +830,14 @@ See [[gcs-buckets-and-lifecycle]] and [[gcs-object-operations]] for operational 
 
 Free tier resets daily (not monthly), making Firestore effectively free for development workloads.
 
-> [!tip] Writes Are 3× More Expensive Than Reads
+> [!tip] Writes Cost 3x More
+>
+> Writes Are 3× More Expensive Than Reads.
 > At $0.18/100K writes vs $0.06/100K reads, writes are 3× more expensive. Batch writes using `writeBatch()` to reduce operation count, and avoid unnecessary document overwrites.
 
-> [!danger] Cost Trap: Unindexed Collection-Group Queries
+> [!danger] Unindexed Collection-Group Queries
+>
+> Cost Trap: Unindexed Collection-Group Queries.
 > A query that cannot use an index falls back to a collection scan, reading every document in the collection. A 1M-document collection with 10 such queries/day = 10M reads = $6/day = $180/month. Always verify query plans and index coverage.
 
 #### Firestore cost estimation — reads, writes, deletes, storage
@@ -896,10 +916,14 @@ Shuffle = 100 × $0.011 = $1.10
 Total   ≈ $6.92
 ```
 
-> [!warning] Cost Trap: Over-Provisioned Worker Counts
+> [!warning] Over-Provisioned Workers
+>
+> Cost Trap: Over-Provisioned Worker Counts.
 > Dataflow autoscaling helps, but setting `--num-workers` too high wastes money on idle workers. Let autoscaling determine worker count, or profile the job first with a small `--num-workers=2` run to establish a baseline.
 
-> [!warning] Cost Trap: Streaming Jobs Running 24/7
+> [!warning] Streaming Jobs Running 24/7
+>
+> Cost Trap: Streaming Jobs Running 24/7.
 > A 10-worker streaming Dataflow job at $0.069/vCPU/hour with 4 vCPUs/worker = $0.276/worker/hour × 10 = $2.76/hour = $66.24/day = ~$2,000/month just for compute. Evaluate whether Cloud Run, Cloud Functions, or Pub/Sub + BigQuery streaming inserts can replace a Dataflow streaming job.
 
 ```bash
@@ -988,6 +1012,7 @@ gcloud functions deploy FUNCTION_NAME \
 Secret Manager almost never appears as a cost item. With 6 free versions, a typical application stays in the free tier.
 
 > [!tip] Secret Version Hygiene
+>
 > Destroy old secret versions that are no longer in rotation. Each active version costs $0.06/month. If you have 100 secrets with 10 versions each, that's 1,000 versions = $57/month (minus the 6 free).
 
 ```bash
@@ -1013,10 +1038,13 @@ gcloud secrets versions disable VERSION_NUMBER --secret=SECRET_NAME
 | Log storage beyond 30 days | $0.01/GB/month | 30 days retention included |
 | Log bucket storage | $0.01/GB/month | — |
 
-> [!danger] Cost Trap: DEBUG-Level Logging in Production
+> [!danger] Debug Logging in Production
+>
+> Cost Trap: DEBUG-Level Logging in Production.
 > A service logging at DEBUG level can generate 10–100× more log volume than INFO level. At $0.50/GB, 1 TB/month of logs = $476.84 (after 50 GB free). Always use INFO or WARNING in production; use log sampling for high-throughput services.
 
 > [!warning] Log Exclusion Filters
+>
 > Use log exclusion filters to drop high-volume, low-value logs before they are ingested and billed.
 
 ```bash
@@ -1064,6 +1092,7 @@ See [[cloud-logging]] for logging infrastructure patterns.
 | Egress to internet | $0.12/GB | — |
 
 > [!tip] Clean Up Old Image Tags
+>
 > Container images accumulate fast. A 2 GB image with 50 versions = 100 GB = $10/month. Set up cleanup policies to delete images older than N days or beyond the last N versions.
 
 ```bash
@@ -1094,7 +1123,9 @@ gcloud artifacts repositories set-cleanup-policies REPO_NAME \
 | NAT gateway uptime | $0.044/hour (~$32/month per gateway) | None |
 | Data processed | $0.045/GB | None |
 
-> [!warning] Hidden Cost: Cloud NAT Gateway
+> [!warning] Hidden Cloud NAT Cost
+>
+> Hidden Cost: Cloud NAT Gateway.
 > A Cloud NAT gateway costs $32/month just for existing, even with zero traffic. If you have NAT gateways in multiple regions "just in case," that adds up fast. Disable NAT in regions where VMs do not need internet access.
 
 ```bash
@@ -1129,7 +1160,9 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 | Cloud CDN cache fill | $0.02–$0.08/GB |
 | Dedicated Interconnect | $0.02–$0.04/GB |
 
-> [!tip] Keep Data and Compute Co-Located
+> [!tip] Co-Locate Data and Compute
+>
+> Keep Data and Compute Co-Located.
 > Run BigQuery, GCS, Compute Engine, and Cloud Run in the same region. Cross-region egress at $0.08/GB adds up quickly when processing terabytes of data. This is especially important when GCS → Dataflow → BigQuery — all should be in the same region.
 
 ---

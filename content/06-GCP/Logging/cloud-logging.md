@@ -77,7 +77,9 @@ gcloud logging tail 'resource.type="cloud_run_job" AND severity>=ERROR'
 # Use case: watch pipeline execution in real-time
 ```
 
-> [!tip] Use `gcloud logging tail` During Active Incidents
+> [!tip] Use Logging Tail for Incidents
+>
+> Use `gcloud logging tail` During Active Incidents.
 > `gcloud logging tail` is your live monitoring window during an incident or deployment. Combine it with a severity filter and resource type to see only what matters. Unlike polling `gcloud logging read` repeatedly, `tail` opens a streaming connection — entries appear in near-real-time with sub-second latency.
 
 ### Writing Test Log Entries
@@ -115,6 +117,7 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 | `k8s_container` | Kubernetes/GKE containers |
 
 > [!tip] Related pattern
+>
 > SQL Server [[audit-logging]] can forward its audit events to Cloud Logging via the Datadog agent or custom log sinks, unifying database and infrastructure logs in one place. For teams using Datadog as an alternative log destination, [[datadog-log-management]] provides the routing configuration.
 
 ### Querying VPC-SC Violations in Cloud Logging

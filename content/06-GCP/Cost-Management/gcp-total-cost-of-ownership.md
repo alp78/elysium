@@ -63,6 +63,7 @@ status: complete
 This reference provides concrete, line-item TCO calculations for four archetypal data engineering pipeline architectures on GCP. All prices use **GCP list pricing as of early 2026** in the `us-central1` region unless noted. Committed use discounts (CUDs) and sustained use discounts (SUDs) are called out where applicable.
 
 > [!warning] Prices Change
+>
 > GCP pricing evolves. Always cross-check line items against the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) before committing to a budget. The figures here are accurate reference points, not contractual quotes.
 
 ---
@@ -143,6 +144,7 @@ A small team (1–2 engineers) running a **daily batch pipeline** that ingests f
 - Cost: **$0.00/month**
 
 > [!info] Cloud Scheduler Free Tier
+>
 > The first 3 jobs per month per billing account are always free. A small pipeline rarely exceeds this.
 
 **Cloud Run Jobs — 3 jobs × 5 min × 30 days**
@@ -162,6 +164,7 @@ Monthly memory cost: 90 × 300 × 2 × $0.0000025 = **$0.135**
 Total Cloud Run: **$0.783/month** → round to **~$0.80/month**
 
 > [!info] Cloud Run Free Tier
+>
 > Cloud Run includes 180,000 vCPU-seconds and 360,000 GB-seconds free per month per billing account. This architecture uses ~27,000 vCPU-seconds and ~54,000 GB-seconds, which is **entirely within the free tier**. Cost = $0.00 in practice for a new account. Shown at full price here for accuracy when free tier is exhausted.
 
 **GCS Standard Storage — 50 GB**
@@ -172,6 +175,7 @@ Total Cloud Run: **$0.783/month** → round to **~$0.80/month**
 - 0.5 × $6.25 = **$3.13/month**
 
 > [!tip] BigQuery Free Tier
+>
 > The first 1 TB of queries per month per billing account is free. This architecture's 500 GB is within the free tier → **$0.00 in practice**. Shown at full on-demand price here for budgeting once free tier is consumed or shared across projects.
 
 **BigQuery Storage — 100 GB active**
@@ -263,6 +267,7 @@ A mid-size pipeline for a team of 2–4 engineers:
 - With sustained use discount (SUD, ~20% for full month): $97.89 × 0.80 = **$78.31/month**
 
 > [!info] Sustained Use Discounts
+>
 > GCP automatically applies SUDs to N1, N2, and E2 instances that run for >25% of the month. A VM running 100% of the month gets ~20% off. No commitment required. CUDs (1-year or 3-year commitments) can save up to 37–57%.
 
 **SQL Server VM Disk — 200 GB SSD**
@@ -291,6 +296,7 @@ A mid-size pipeline for a team of 2–4 engineers:
 - Total NAT: **$32.57/month**
 
 > [!warning] Cloud NAT is Expensive
+>
 > Cloud NAT costs ~$32/month just to exist, before processing charges. Evaluate whether your VMs actually need outbound internet access. If only one VM needs external API access, consider a Cloud Run Job for ingestion instead (no NAT needed — Cloud Run has built-in internet access via Google's infrastructure).
 
 **Disk Snapshots — 200 GB total footprint**
@@ -378,6 +384,7 @@ A common pattern: stop VMs on nights and weekends (e.g., run only 10 hours/day, 
 | **Total paused (partial hours)** | **~$108/month** |
 
 > [!tip] Stop VMs, Disks Keep Billing
+>
 > Stopping a VM eliminates compute charges but **persistent disk charges continue at full rate**. A 200 GB SSD disk costs $34/month whether the VM is running or not. Size disks carefully — you can always resize up, but downsizing requires data migration.
 
 #### Everything destroyed — only Terraform state + GCS backup remains
@@ -449,6 +456,7 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 - Total Composer: **~$316/month**
 
 > [!warning] Cloud Composer Minimum Cost
+>
 > Cloud Composer 2's smallest configuration (1 scheduler, 1 web server, 1 worker, shared database) runs approximately $300–$350/month with no DAGs running. This is the floor. Every additional worker node adds ~$25–$50/month. If you have fewer than ~15 DAGs and a small team, self-hosted Airflow on an e2-standard-2 saves $250+/month.
 
 **BigQuery Queries — 10 TB scanned**
@@ -468,6 +476,7 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 - Total Cloud Run Services: **~$2.53/month** (plus min-instances if set)
 
 > [!tip] Cloud Run Min Instances
+>
 > If you configure `min-instances: 1` on a Cloud Run service for low-latency cold start, that instance runs continuously. At 1 vCPU / 512 MB: 730 hr × 3600 s × $0.000024 = $63.07/month per service. For 2 services with min-instances=1: **~$126/month additional**. Only set min-instances if your SLA requires <100 ms cold start.
 
 **Cloud Run Jobs — 10 jobs × 5 min × 30 days**
@@ -497,6 +506,7 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 - Total Datadog: **$86.00/month** (annual contract; month-to-month is ~$31/host → ~$93/month)
 
 > [!warning] Datadog Pricing Escalates Fast
+>
 > Datadog charges per host, per log GB, per APM span, per custom metric, and per synthetics test. The $86/month base assumes 2 infrastructure hosts and 1 APM host on annual Pro plan. Log ingestion ($0.10/GB after free tier), custom metrics ($0.008/metric), and real-user monitoring can double or triple this. Always review your Datadog bill monthly.
 
 **Cloud Logging — 50 GB ingested**
@@ -668,7 +678,9 @@ Prod (large — 3 worker nodes, higher-spec scheduler):
 
 Total Composer: **$1,062/month**
 
-> [!warning] Cloud Composer Large Environment
+> [!warning] Cloud Composer Cost
+>
+> Cloud Composer Large Environment.
 > A large Cloud Composer 2 environment with 3+ workers easily reaches $700–$1,000/month. At this scale, evaluate whether GCP Workflows + Cloud Run is a viable DAG-light alternative for simple dependency chains.
 
 **BigQuery — Enterprise Edition, 200 Reserved Slots (Prod)**
@@ -680,7 +692,9 @@ Reserved slots pricing:
 Alternatively, **committed use slots** at 1-year commitment:
 - 200 slots × $0.04 × 730 × ~0.70 (est. discount) = **~$4,088/month**
 
-> [!info] BigQuery Editions vs On-Demand
+> [!info] BigQuery Pricing Models
+>
+> BigQuery Editions vs On-Demand.
 > On-demand pricing ($6.25/TB) is cheaper than slot reservations until approximately 270 TB/month of queries (at the Standard Edition rate). A team scanning 50–100 TB/month should stay on on-demand. Reservations make sense for >200 TB/month of predictable workloads, or when you need query performance guarantees (slots = guaranteed compute).
 
 For this architecture, using **on-demand for dev/staging** and **100 reserved slots for prod** as a realistic scenario:
@@ -842,7 +856,9 @@ All managed Airflow services carry a ~$250–$350/month minimum. Self-hosting on
 - **AWS**: Cheaper EBS snapshots, Athena slightly cheaper, largest ecosystem
 - **Azure**: Strong for SQL Server workloads (Azure Hybrid Benefit — BYOL SQL Server license cuts costs significantly if you own SQL Server licenses)
 
-> [!tip] Azure Hybrid Benefit for SQL Server
+> [!tip] Azure Hybrid Benefit
+>
+> Azure Hybrid Benefit for SQL Server.
 > If your organization already holds SQL Server Enterprise or Standard licenses with Software Assurance, Azure Hybrid Benefit allows you to bring them to Azure at no additional license charge. This is not available on GCP — on GCP, SQL Server on Linux is free-to-license ONLY if you use open-source SQL (SQL Server on Linux uses the SQL Server license baked into the GCP marketplace image price, or you BYOL). Factor license costs in when comparing SQL Server workloads cross-cloud.
 
 ---

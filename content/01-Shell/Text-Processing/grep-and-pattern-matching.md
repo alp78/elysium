@@ -119,7 +119,8 @@ Select-String -Pattern 'error' -Path application.log
 Select-String -Pattern 'error' -Path application.log -CaseSensitive
 ```
 
-> [!tip] grep is case-sensitive by default; PowerShell is the opposite
+> [!tip] Case sensitivity defaults differ
+>
 > `grep` requires `-i` to be case-insensitive. `Select-String` is case-insensitive by default and requires `-CaseSensitive` to enforce case. Keep this inverted default in mind when porting scripts.
 
 ---
@@ -306,7 +307,8 @@ Select-String -Pattern 'INFO|DEBUG|^\s*$' application.log -NotMatch
 Get-Process | Where-Object { $_.ProcessName -like '*python*' }
 ```
 
-> [!tip] Chain grep -v calls vs. use -Ev for performance
+> [!tip] Use -Ev over chained grep -v
+>
 > Two chained `grep -v` calls read the file twice through the pipe. Using `grep -Ev 'pattern1|pattern2'` applies both exclusions in a single pass, which matters on large log files.
 
 ---
@@ -437,7 +439,8 @@ grep '^[[:alpha:]]' data.csv
 grep '^[[:space:]]' script.py
 ```
 
-> [!info] POSIX classes vs \d \w \s
+> [!info] POSIX classes vs shorthand
+>
 > POSIX character classes (`[:digit:]`, `[:alpha:]`) work in BRE and ERE. Perl-style shortcuts (`\d`, `\w`, `\s`) require `grep -P`. In PowerShell's .NET regex, `\d`, `\w`, `\s` are always available.
 
 ---
@@ -542,6 +545,7 @@ Select-String -Pattern '"[a-zA-Z_][a-zA-Z0-9_]*"\s*:' response.json
 ```
 
 > [!warning] Use jq for real JSON parsing
+>
 > `grep` can find JSON keys but cannot handle multiline JSON, nested structures, or arrays correctly. For structured JSON querying, use `jq` in bash or `ConvertFrom-Json` in PowerShell. Grep is appropriate for quick scans of NDJSON (newline-delimited JSON) log files.
 
 #### Regex pattern — match log levels (ERROR, WARN, INFO, DEBUG)
@@ -720,6 +724,7 @@ Select-String -Pattern 'password(?!_hash)' config.py
 ```
 
 > [!warning] grep -P is not portable
+>
 > `grep -P` is GNU grep only. macOS's BSD grep does not support it. On macOS, install `grep` via Homebrew (`brew install grep`) and use `ggrep -P`, or use `perl -ne 'print if /pattern/'` as a portable alternative. In CI/CD pipelines targeting Linux, `-P` is safe.
 
 ---
@@ -980,6 +985,7 @@ Get-ChildItem -Recurse -Include *.py, *.yaml, *.json |
 ```
 
 > [!warning] Never commit real credentials
+>
 > When searching for credential patterns to audit, run the search BEFORE a `git add` and add detected files to `.gitignore`. If credentials already appear in git history, use `git filter-repo` (not `git filter-branch`) to purge them.
 
 ---
@@ -1017,7 +1023,8 @@ Get-Content required_fields.csv | Select-String -Pattern ',,'
 Get-Content data.csv | Where-Object { ($_ -split ',').Count -ne 7 }
 ```
 
-> [!tip] Use Import-Csv for structured CSV work in PowerShell
+> [!tip] Use Import-Csv for CSV in PowerShell
+>
 > PowerShell's `Import-Csv` turns every row into a typed object with named properties. This is almost always better than `grep | cut` for CSV manipulation. Use `Select-String` on CSVs only for quick keyword scans where you don't need field-level access.
 
 ---
@@ -1263,6 +1270,7 @@ rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match
 | Output colorization | Yes | Yes (better) | Yes |
 
 > [!tip] When to use grep vs rg
+>
 > - Use `grep` when it is already available and the task is simple (single file, small file, already in a pipe).
 > - Use `rg` for any recursive codebase search — its speed and `.gitignore` awareness make it the clear choice.
 > - Use `grep -F` / `rg -F` for literal string searches where regex overhead is unnecessary.
@@ -1349,7 +1357,8 @@ findstr "ERROR FATAL CRITICAL" application.log
 findstr /S /I /N "password" C:\Projects\*.cfg
 ```
 
-> [!tip] Prefer Select-String over findstr in modern PowerShell
+> [!tip] Prefer Select-String over findstr
+>
 > `findstr` has quirks: its regex flavor is non-standard (limited character classes, no `+` or `?` quantifiers in basic mode), and piping its output into further processing is error-prone due to encoding issues. Use `Select-String` for all PowerShell scripting. Reserve `findstr` only for `.bat` files or contexts where PowerShell is unavailable.
 
 ---
@@ -1505,5 +1514,6 @@ Get-ChildItem -Recurse -Filter *.sql |
 - [[viewing-processes]] — `ps aux | grep` patterns for finding processes
 - [[defensive-scripting]] — Handle grep exit codes (0 = match found, 1 = no match, 2 = error)
 
-> [!info] grep exit codes matter in scripts
+> [!info] grep exit codes in scripts
+>
 > `grep` returns exit code `0` if at least one match is found, `1` if no matches, and `2` on error (e.g., file not found). In bash scripts, use `if grep -q 'pattern' file; then` to branch on whether a match exists without printing output (`-q` suppresses all output). In PowerShell, `Select-String` returns `$null` when there are no matches, which is falsy — use `if (Select-String ...)` directly.

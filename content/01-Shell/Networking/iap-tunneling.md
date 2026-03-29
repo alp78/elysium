@@ -51,7 +51,8 @@ Step by step:
 8. SQL Server processes the query and sends the response back through the same tunnel
 ```
 
-> [!info] The VM Never Sees Your Real IP
+> [!info] VM never sees your real IP
+>
 > The VM never sees your workstation's IP address. It sees a connection from an IP in the **GCP internal network** (typically in the `10.x.x.x` or `35.235.240.0/20` range). That's why `ss -tnp` on the VM shows a VPC-internal peer address, not your home IP.
 
 > [!tip] Related pattern
@@ -63,7 +64,9 @@ Step by step:
 
 #### gcloud compute ssh — interactive SSH through IAP tunnel
 
-> [!info] `gcloud compute ssh` with `--tunnel-through-iap` is the standard way to reach
+> [!info] SSH through IAP
+>
+> `gcloud compute ssh` with `--tunnel-through-iap` is the standard way to reach
 > a Compute Engine VM that has no public IP. Under the hood, it opens an IAP tunnel on
 > an ephemeral port, then runs SSH through it. This is a shortcut that combines tunnel
 > creation + SSH session into one command.
@@ -81,7 +84,9 @@ gcloud compute ssh data-pipeline-sql \
 
 #### gcloud compute start-iap-tunnel — forward a specific port through IAP
 
-> [!info] `start-iap-tunnel` creates a persistent TCP tunnel that maps a local port on
+> [!info] Persistent TCP tunnel
+>
+> `start-iap-tunnel` creates a persistent TCP tunnel that maps a local port on
 > your machine to a remote port on a VM. Unlike `gcloud compute ssh`, this does NOT open
 > a shell — it holds the tunnel open so other applications (SSMS, pgAdmin, a browser) can
 > connect through it.
@@ -95,7 +100,8 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
     --zone=europe-west1-b
 ```
 
-> [!tip] Understanding the port mapping
+> [!tip] Port mapping explained
+>
 > | Parameter | Meaning |
 > |---|---|
 > | `data-pipeline-sql` | VM instance name |
@@ -107,7 +113,8 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 > After running: connect via SSMS → `127.0.0.1,1435`
 > For sqlcmd through the tunnel, see [[sqlcmd-connection-and-usage]].
 
-> [!danger] IAP tunnel idle timeout — 10 minutes
+> [!danger] IAP 10-minute idle timeout
+>
 > IAP closes tunnels after **10 minutes of inactivity**. If you open SSMS, run a query,
 > then go to lunch, your connection is dead when you return — and any in-progress
 > transaction is rolled back.
@@ -119,7 +126,8 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 > - For long-running queries: use `nohup` or `screen` on the VM instead of running them
 >   through the tunnel
 
-> [!warning] `0.0.0.0` vs `127.0.0.1` — security implication
+> [!warning] 0.0.0.0 vs 127.0.0.1 security
+>
 > Using `0.0.0.0` means **any device on your local network** can connect to your tunnel.
 > On a corporate network or shared WiFi, this exposes your database tunnel to other
 > machines. Use `127.0.0.1` unless you specifically need another machine to route through
@@ -129,7 +137,9 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 
 #### IAP tunnels — running multiple tunnels simultaneously
 
-> [!info] Each `start-iap-tunnel` command is an independent process. Run as many as you
+> [!info] Multiple simultaneous tunnels
+>
+> Each `start-iap-tunnel` command is an independent process. Run as many as you
 > need in separate terminals — they don't interfere with each other. A typical development
 > session tunnels to 2-3 services at once.
 
@@ -148,6 +158,7 @@ gcloud compute start-iap-tunnel data-pipeline-airflow 5432 \
 ```
 
 > [!tip] Port collision anti-pattern
+>
 > If you use the same local port as the remote port (e.g., `1433:1433`) and you have a
 > local SQL Server Express installed, the tunnel fails with "address already in use."
 > Always pick a non-standard local port like `1435` for tunneled services.
@@ -156,7 +167,9 @@ gcloud compute start-iap-tunnel data-pipeline-airflow 5432 \
 
 #### Symptom: `start-iap-tunnel` hangs without output
 
-> [!info] Work through these causes in order — the most common is a missing firewall rule.
+> [!info] Debugging IAP tunnel hangs
+>
+> Work through these causes in order — the most common is a missing firewall rule.
 
 ```bash
 # Cause 1: IAP API not enabled
@@ -183,7 +196,9 @@ gcloud compute instances describe data-pipeline-sql \
 
 #### Symptom: tunnel opens but connections fail
 
-> [!info] The tunnel is up but the application can't connect. SSH into the VM and verify
+> [!info] Tunnel open but connections fail
+>
+> The tunnel is up but the application can't connect. SSH into the VM and verify
 > the service is actually listening on the expected port.
 
 ```bash
@@ -193,7 +208,9 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 
 #### Symptom: tunnel drops after a few minutes of inactivity
 
-> [!info] IAP has a 10-minute idle timeout. Use `--iap-tunnel-disable-connection-check`
+> [!info] Tunnel drops after idle period
+>
+> IAP has a 10-minute idle timeout. Use `--iap-tunnel-disable-connection-check`
 > or configure TCP keepalives in your SQL client.
 
 ```bash
@@ -237,7 +254,8 @@ ss -tnp | grep :1433
 
 ### IAP vs Cloud VPN vs bastion host — choosing the right access method
 
-> [!tip] IAP vs VPN vs Bastion Host
+> [!tip] IAP vs VPN vs bastion host
+>
 > Three ways to access private VMs. Here's when to use each:
 >
 > | Approach | Setup Complexity | Cost | Security | Use Case |

@@ -177,7 +177,8 @@ After setup, go to **Infrastructure > Host Map** in Datadog. You should see GCE 
 
 ---
 
-> [!warning] Datadog Agent Counts Toward GCE CPU and Memory Budget
+> [!warning] Agent resource overhead
+>
 > The Datadog Agent consumes approximately 1-2% CPU and 200-400 MB RAM continuously. On an e2-small (2 vCPU, 2 GB RAM) running SQL Server, the agent takes 10-20% of available memory. If SQL Server starts experiencing memory pressure (buffer cache hit ratio dropping below 99%), investigate agent overhead before resizing the VM. Use `systemctl stop datadog-agent` temporarily to confirm.
 
 ### Disabling Datadog Agents and Integration

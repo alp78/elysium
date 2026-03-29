@@ -406,7 +406,9 @@ Packs all rows into a single TDS packet. ODBC Driver 18 with TLS encryption. 5-1
 
 `fast_executemany=True` packs all rows into a single TDS packet per chunk — 5–10x faster. ODBC Driver 18 with TLS. Chunk at 10K rows to avoid timeouts. For >1M rows, `bcp` is 2–5x faster.
 
-> [!warning] Always chunk large datasets — sending all rows in one `executemany()` causes `Communication link failure`. Always set `fast_executemany=True` — without it, falls back to row-by-row.
+> [!warning] Always chunk large datasets
+>
+> Always chunk large datasets — sending all rows in one `executemany()` causes `Communication link failure`. Always set `fast_executemany=True` — without it, falls back to row-by-row.
 
 ```python
 def pyodbc_fast(tier):
@@ -441,7 +443,9 @@ The `bcp` CLI is the fastest bulk loader for SQL Server. Native TDS bulk-insert 
 
 `bcp` streams rows via native TDS bulk-insert protocol — bypasses SQL parser, writes directly to table pages. 10–50x faster than row-by-row. Always use `-F 2` (skip header), `-b 10000` (batch size for recovery).
 
-> [!warning] Don't hardcode passwords in CLI args — use `-T` (trusted) or env vars. Don't skip `-b` (batch size) — one failed row rolls back the entire load.
+> [!warning] Don't hardcode passwords in CLI args
+>
+> Don't hardcode passwords in CLI args — use `-T` (trusted) or env vars. Don't skip `-b` (batch size) — one failed row rolls back the entire load.
 
 ```python
 BCP = shutil.which('bcp') or 'bcp'
@@ -743,7 +747,9 @@ Write OHLCV data into Firestore. Each row becomes a document in the `ohlcv_bench
 
 500-doc batches (Firestore's limit). Each `batch.commit()` is a single atomic gRPC call. Simple API. For >50K docs, `BulkWriter` is 2–5x faster (parallel batches).
 
-> [!warning] Don't exceed 500 docs per batch (rejected). Don't forget to commit the final partial batch.
+> [!warning] Don't exceed 500 docs per
+>
+> Don't exceed 500 docs per batch (rejected). Don't forget to commit the final partial batch.
 
 ```python
 def fs_batch_write(tier):

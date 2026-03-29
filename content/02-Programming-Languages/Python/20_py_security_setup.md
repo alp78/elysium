@@ -224,7 +224,9 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 ## Service Account
 
-> [!warning] Service account key files are the #1 cause of credential leaks in GCP
+> [!warning] Service account key leak risk
+>
+> Service account key files are the #1 cause of credential leaks in GCP.
 > Prefer Workload Identity Federation (WIF) over downloaded JSON keys. If you must use
 > keys: store them in Secret Manager, never commit them to git, and rotate every 90 days.
 > See the Workload Identity Federation section below for the keyless alternative.
@@ -623,13 +625,16 @@ print("  GCP_SA_KEY_PATH set")
 
 ## Secret Manager
 
-> [!danger] Never store secrets in environment variables in Docker images or git repos
+> [!danger] Never store secrets in environment
+>
+> Never store secrets in environment variables in Docker images or git repos
 > Environment variables are visible in `docker inspect`, process listings, and build logs.
 > Use Secret Manager with IAM bindings to control access. The helper below writes secret
 > values to temp files — these are deleted after creation, but ensure `/tmp` is not
 > world-readable on shared systems.
 
 > [!warning] Secret versions are immutable and billable
+>
 > Each `add-version` creates a new immutable version. Old versions remain accessible (and
 > billable) until explicitly destroyed. Use `gcloud secrets versions destroy` to clean up
 > old versions after rotation.

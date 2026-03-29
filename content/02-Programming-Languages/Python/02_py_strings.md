@@ -116,6 +116,7 @@ print(f"Modified: {s}")
 #### Indexing (0-based)
 
 > [!info] Indexing and slicing
+>
 > - `s[i]` — access by index (0-based)
 > - `s[-1]` — last character (eliminates `len(s)-1`)
 > - `s[a:b]` — slice from `a` to `b` (right-exclusive)
@@ -187,6 +188,7 @@ for i, ch in enumerate(s[:5]):
 #### Case Methods  — Case, Whitespace, Checking, Searching, Replacing
 
 > [!info] Case methods
+>
 > - `casefold()` — more aggressive than `lower()`, handles Unicode (`"Straße"` → `"strasse"`)
 > - Use `casefold()` for case-insensitive comparison, not `lower()`
 > - `title()` / `capitalize()` — handle word boundaries automatically
@@ -392,12 +394,14 @@ print(f"encode('ascii'):   {'hello'.encode('ascii')}")
 #### f-strings (recommended, Python 3.6+)
 
 > [!info] f-string syntax
+>
 > - `f"..."` embeds any expression in `{braces}`
 > - Format specifiers: `f"{n:.2f}"` | method calls: `f"{s.upper()}"` | expressions: `f"{a + 1}"`
 > - Faster than `.format()` and more readable
 > - Use f-strings for all new code; `.format()` when the template is a variable
 
 > [!danger] Injection risk
+>
 > Never use f-strings in SQL or shell commands — use parameterized queries. For logging, use `logger.info("msg %s", val)` for lazy evaluation.
 
 ```python
@@ -505,7 +509,8 @@ except ImportError:
 
 Strings are immutable — each `+=` copies the entire string. For *n* concatenations, this is O(n²) total work. Use `"".join()` or `io.StringIO` for O(n) string building.
 
-> [!warning] Don't use `+=` in loops
+> [!warning] Don't use += in loops
+>
 > Each iteration copies the growing string into a new object. CPython may optimize simple cases, but this is not guaranteed. Always consider the building strategy for more than ~10 concatenations. For 2–5 concatenations, `+` is fine.
 
 #### String concatenation performance — += in loops is O(n²)

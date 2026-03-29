@@ -69,7 +69,9 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 
 ## Null Representations
 
-> [!danger] Pandas integer columns with nulls silently upcast to float64
+> [!danger] Pandas integer columns with nulls
+>
+> Pandas integer columns with nulls silently upcast to float64
 > A column of `[1, 2, None, 4]` becomes `[1.0, 2.0, NaN, 4.0]` — the integers are now
 > floats. This breaks join keys (`1.0 != 1` in string comparisons) and produces
 > unexpected results in groupby. Fix: use `pd.Int64Dtype()` (nullable integer) or
@@ -77,7 +79,9 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 >
 > Polars uses a single `null` representation for all types — no silent type coercion.
 
-> [!warning] `NaN != NaN` in Pandas — equality comparisons on missing values
+> [!warning] NaN != NaN in Pandas
+>
+> `NaN != NaN` in Pandas — equality comparisons on missing values
 > `np.nan == np.nan` returns `False`. This means `df[df["col"] == np.nan]` matches
 > **nothing**. Always use `df["col"].isna()` or `df["col"].isnull()` to detect missing
 > values. Polars `null == null` also returns `null` (not True), requiring `.is_null()`.

@@ -48,6 +48,7 @@ from typing import Literal
 One function per HTTP method: `requests.get/post/put/delete`. `params=` for query strings, `json=` for JSON body (auto-sets `Content-Type`), `headers=` for custom headers. `resp.json()` parses response; `resp.raise_for_status()` throws on 4xx/5xx. For concurrent calls, use `httpx.AsyncClient` instead.
 
 > [!warning] Anti-patterns
+>
 > - **No timeout** — `requests` has no default timeout; always pass `timeout=`
 > - **New session per request** — use `requests.Session()` for connection reuse
 > - **Hardcoded API keys** — use env vars or secret managers
@@ -187,7 +188,9 @@ with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
 
 #### httpx.AsyncClient — concurrent API calls
 
-> [!warning] `asyncio.gather()` fires ALL tasks concurrently — add a semaphore for rate-limited APIs
+> [!warning] asyncio.gather() fires ALL tasks concurrently
+>
+> `asyncio.gather()` fires ALL tasks concurrently — add a semaphore for rate-limited APIs
 > For 50 tickers, `gather(*tasks)` opens 50 connections simultaneously. Most financial
 > data APIs reject bursts above 5-10 req/s. Use `asyncio.Semaphore(5)` to cap concurrency.
 > See [[13_py_advancedpipelines]] for the full rate-limited pattern.
@@ -295,6 +298,7 @@ comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 Three essential patterns for API integrations: **pagination** loops through pages until exhausted, **retry with exponential backoff** handles transient 429/5xx errors, and **bulk POST** batches records into one request to reduce round trips by 10-100x. For streaming APIs (WebSocket, SSE), use async streaming instead.
 
 > [!warning] Anti-patterns
+>
 > - **Fetching all pages without limit** — unbounded loop if API broken
 > - **Linear retry (no backoff)** — hammers the failing service
 > - **One POST per record** — N round trips instead of 1
@@ -389,6 +393,7 @@ print(f"  Server received: {len(data['json']['trades'])} trades")
 Define Pydantic models for request/response validation. `@app.get`/`post`/`delete` decorators wire handlers to routes. FastAPI auto-generates Swagger docs at `/docs`. `uvicorn` serves the ASGI app. Type hints drive validation, serialization, and documentation simultaneously.
 
 > [!warning] Anti-patterns
+>
 > - **Business logic in route handlers** — extract to service functions
 > - **In-memory storage in production** — use a database
 > - **No input validation** — Pydantic handles types, but add business rules too
@@ -1249,6 +1254,7 @@ checklist.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 ## Summary
 
 > [!abstract]- Quick Reference
+>
 > **HTTP Clients**
 > | Pattern | Description |
 > |---|---|

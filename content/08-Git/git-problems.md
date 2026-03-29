@@ -168,7 +168,9 @@ obj/
 
 **Fix procedure**
 
-> [!danger] Rotate credentials FIRST — assume the secret is compromised the moment you discover it. Do not clean history before rotating. Cleaning history is housekeeping; rotating is security.
+> [!danger] Rotate Credentials First
+>
+> Rotate credentials FIRST — assume the secret is compromised the moment you discover it. Do not clean history before rotating. Cleaning history is housekeeping; rotating is security.
 
 1. **Immediately rotate all exposed credentials.** Do not skip this step.
 
@@ -380,7 +382,9 @@ fi
 
 **Fix procedure**
 
-> [!warning] Do NOT run `git gc`, `git gc --prune=now`, or `git prune` after an accidental reset. This permanently destroys the orphaned commits. Recovery depends on the reflog being intact.
+> [!warning] Do Not Run gc After Reset
+>
+> Do NOT run `git gc`, `git gc --prune=now`, or `git prune` after an accidental reset. This permanently destroys the orphaned commits. Recovery depends on the reflog being intact.
 
 1. **Open the reflog immediately:**
 
@@ -1020,7 +1024,9 @@ Merge creates a new "merge commit" (M) that ties the two histories together. No 
 
 The primary goal is a **clean, linear history**. With rebase, main's log reads as a straight sequence of commits — easy to read, easy to `git bisect`, easy to audit (EU BMR requires traceable methodology changes).
 
-> [!danger] The Golden Rule of Rebasing
+> [!danger] Golden Rule of Rebasing
+>
+> The Golden Rule of Rebasing.
 > **Never rebase a branch that you have already pushed to a shared remote if others might be basing their work on it.** Because rebase creates brand new commits (different SHAs), teammates who pulled the original commits will have diverged histories. Their next `git pull` will see conflicts between the old commits and the new rebased ones — even though the code is identical. This causes severe history conflicts and lost work. Only rebase **local, private** feature branches before you open a pull request.
 
 #### Handling Conflicts During Rebase
@@ -1044,6 +1050,7 @@ git rebase --abort
 ```
 
 > [!warning] Multiple Conflicts per Rebase
+>
 > If your branch has 10 commits and 3 of them touch the same file that changed on main, you may need to resolve conflicts 3 separate times — once per commit being replayed. This is why keeping branches short-lived (fewer commits to replay) dramatically reduces rebase pain.
 
 **Consequences**

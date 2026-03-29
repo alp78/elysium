@@ -35,6 +35,7 @@ gcloud pubsub topics publish pipeline-events \
 ```
 
 > [!tip] Use Attributes for Filtering
+>
 > Pub/Sub supports server-side attribute filtering — subscriptions can be configured to only deliver messages matching specific attribute conditions. This means you can have one topic for all pipeline events but multiple subscriptions, each receiving only the events relevant to that consumer, without any client-side filtering.
 
 ## Consuming Messages
@@ -47,7 +48,9 @@ gcloud pubsub subscriptions pull pipeline-sub --limit=10 --auto-ack
 # Without --auto-ack: messages remain in the queue (peek without consuming)
 ```
 
-> [!warning] `--auto-ack` is for Testing Only
+> [!warning] Auto-Ack Is for Testing Only
+>
+> `--auto-ack` is for Testing Only.
 > In production consumer code, never auto-acknowledge. Acknowledge only after successfully processing the message. If you auto-ack and your processing fails, the message is lost — no retry, no dead letter. Ack only on success.
 
 ### Monitoring the Pub/Sub Subscription Backlog
@@ -64,7 +67,9 @@ A growing backlog is the primary indicator of pipeline lag. If messages arrive f
 
 ### Pub/Sub Ordering Keys and Exactly-Once Delivery
 
-> [!warning] Pub/Sub Ordering and Exactly-Once Delivery
+> [!warning] Ordering and Exactly-Once
+>
+> Pub/Sub Ordering and Exactly-Once Delivery.
 > By default, Pub/Sub does **NOT** guarantee message ordering. Messages may arrive out of order, and may be delivered more than once (at-least-once delivery). For data pipelines, this means:
 >
 > 1. **Your consumers must be idempotent.** If a message is delivered twice, processing it twice must produce the same result as processing it once. Use MERGE (upsert) instead of INSERT.

@@ -779,7 +779,8 @@ backend = airflow.providers.hashicorp.secrets.vault.VaultBackend
 backend_kwargs = {"connections_path": "airflow/connections", "variables_path": "airflow/variables", "url": "http://vault:8200", "token": "vault-token"}
 ```
 
-> [!warning] Never Store Secrets in DAG Files
+> [!warning] No secrets in DAG files
+>
 > Never hardcode passwords, API keys, or service account JSON in DAG code. Use environment variables, Secret Manager, or the Connections/Variables store. DAG files are typically version-controlled and visible to all developers.
 
 ---
@@ -919,7 +920,8 @@ Approximate monthly costs for running Airflow at small/medium scale (us-central1
 | AWS MWAA (mw1.small) | 20-30 min | ~$400-600 | AWS-primary teams |
 | Astronomer Astro | Variable | ~$500+ | Enterprise, dbt-heavy |
 
-> [!tip] Self-Hosted Wins on Cost at Small Scale
+> [!tip] Self-hosted wins at small scale
+>
 > For teams with < 100 DAG Runs/day and strong infra skills, self-hosted on a single GCE VM with Cloud SQL is often the right choice. You get full control and pay ~$200/month instead of $600+. The operational cost is the Airflow knowledge required — not the infra.
 
 ---

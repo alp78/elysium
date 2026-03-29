@@ -23,6 +23,7 @@ status: complete
 Arrays are fixed-size, contiguous memory with O(1) index access — the fastest collection type due to cache locality. Size is set at creation and cannot be changed. Use arrays for fixed data, buffers, interop, and performance-critical indexed access. For dynamic sizing (add/remove), use `List<T>` instead.
 
 > [!warning] Anti-patterns
+>
 > - **`Array.Resize`** creates a new array and copies — it's not in-place
 > - **Resizing arrays manually** — use `List<T>` for dynamic collections
 
@@ -309,6 +310,7 @@ Console.WriteLine($"Substring:     '{sub1}'");
 Hash-based mapping with O(1) average lookup, insert, and remove. Keys must implement `GetHashCode`/`Equals` properly (built-in types like `string`, `int` work out of the box). `SortedDictionary<K,V>` keeps keys sorted. C# has no `defaultdict` — use `GetValueOrDefault` or `TryGetValue` pattern. No `Counter` — use `GroupBy` + `Count` or a manual dictionary.
 
 > [!warning] Anti-patterns
+>
 > - **Duplicate keys in initializer** — throws `ArgumentException`
 > - **Bracket access without checking** key exists — `KeyNotFoundException`
 > - **Mutable keys** — changing a key's hash after insertion breaks lookup
@@ -441,12 +443,14 @@ foreach (var (key, value) in sorted)
 #### HashSet&lt;T&gt; creation — unordered unique elements
 
 > [!info] HashSet
+>
 > - `HashSet<T>` — unique elements with O(1) membership, deduplication, and set algebra
 > - Set operations: `UnionWith`, `IntersectWith`, `ExceptWith`, `SymmetricExceptWith`
 > - `SortedSet<T>` — keeps elements sorted
 > - No `frozenset` equivalent — use `ImmutableHashSet` from `System.Collections.Immutable`
 
 > [!warning] Anti-patterns
+>
 > - **`List` + `Contains`** for uniqueness checks — O(n) per check vs O(1) for `HashSet`
 > - **Mutable elements** — hash changes break lookup
 
@@ -542,6 +546,7 @@ Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
 #### ValueTuple basics
 
 > [!info] ValueTuple
+>
 > - Lightweight value type with named fields — lives on the stack, compared by value, no heap allocation
 > - Deconstruction: `var (x, y) = tuple` unpacks into separate variables
 > - Avoid `System.Tuple` (older reference type using `Item1`/`Item2`) in new code
@@ -622,6 +627,7 @@ Console.WriteLine($"All values:      [{string.Join(", ", Enum.GetValues<Color>()
 #### Stack — Stack&lt;T&gt; (LIFO)
 
 > [!info] Stack operations (all O(1))
+>
 > - `Push` — adds to top
 > - `Pop` — removes and returns top
 > - `Peek` — reads top without removing

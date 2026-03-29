@@ -148,6 +148,7 @@ DBCC SHRINKFILE (analytics_db_log, 1024);  -- shrink to 1 GB
 ```
 
 > [!danger] DBCC SHRINKFILE on the log
+>
 > Shrinking the log file fragments it into many small VLFs, which degrades future log write performance. Use only in emergencies, then grow it back to the correct size immediately. Never automate log shrink.
 
 5. Verify recovery and restart the Airflow pipeline tasks.
@@ -185,6 +186,7 @@ SELECT name, is_read_committed_snapshot_on FROM sys.databases WHERE name = 'anal
 ```
 
 > [!warning] RCSI and TempDB
+>
 > RCSI stores row versions in TempDB. Monitor TempDB growth after enabling. On high-throughput pipelines, version store can grow significantly. See [[memory-and-buffer-pool]] for TempDB sizing.
 
 2. Capture deadlock graphs from the `system_health` Extended Events session (always-on):
@@ -970,6 +972,7 @@ WHERE index_code = 'MSCI_WORLD' AND effective_date >= '2026-01-01';
 ```
 
 > [!warning] NOLOCK hint
+>
 > `WITH (NOLOCK)` / `READUNCOMMITTED` can return uncommitted rows, skip rows, or return the same row twice due to page splits. Never use on financial calculations, only on non-critical dashboard queries where approximate data is acceptable.
 
 ---
@@ -1310,6 +1313,7 @@ WHEN NOT MATCHED THEN INSERT ...;
 ```
 
 > [!danger] MERGE reliability
+>
 > Microsoft has acknowledged bugs in `MERGE` related to duplicate key errors and unexpected behavior with concurrent access. The general recommendation for high-concurrency ETL is to avoid `MERGE` and use explicit `DELETE + INSERT` or `UPDATE + INSERT` patterns. See [KB2647913](https://support.microsoft.com/kb/2647913).
 
 **Fix procedure**
@@ -1555,6 +1559,7 @@ ALTER DATABASE tempdb ADD FILE (NAME = tempdev8, FILENAME = '/var/opt/mssql/data
 ```
 
 > [!warning] TempDB changes require SQL Server restart
+>
 > TempDB file changes take effect after `sudo systemctl restart mssql-server`. Plan a maintenance window.
 
 3. Enable trace flag 1118 (uniform extent allocation, reduces GAM contention):
@@ -1695,6 +1700,7 @@ ORDER BY wait_time_ms DESC;
 ```
 
 > [!warning] CXPACKET waits
+>
 > High `CXPACKET` waits indicate parallelism skew (one thread finishes, others wait). This is a symptom of bad MAXDOP or CTFP settings. Raising cost threshold for parallelism is usually the correct fix — not blindly setting MAXDOP 1.
 
 **Fix procedure**

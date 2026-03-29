@@ -29,6 +29,7 @@ using System.Runtime.CompilerServices;
 ## Async and Await
 
 > [!info] Async fundamentals
+>
 > - `async` — marks a method as asynchronous, returning `Task` or `Task<T>`
 > - `await` — pauses the method until the awaited task completes; the thread is released to the pool, not blocked
 > - The thread pool manages threads automatically
@@ -36,18 +37,24 @@ using System.Runtime.CompilerServices;
 **Why async matters for data engineering:** API calls (BigQuery, GCS, REST) are I/O-bound — async lets you overlap them. A pipeline that fetches 10 APIs sequentially in 10s can do it in ~1s with async.
 
 > [!warning] Async pitfalls
+>
 > - **`.Result` or `.Wait()`** — deadlocks in UI/web contexts; always `await`
 > - **`async void`** — exceptions are unobservable; use `async Task`
 > - **`await` in a loop** when `Task.WhenAll` works — sequential instead of concurrent
 > - For **CPU-bound work**, use `Task.Run` or `Parallel` instead
 
-> [!danger] `.Result` and `.Wait()` cause deadlocks in synchronization contexts
+> [!danger] .Result and .Wait() cause deadlocks
+>
+> `.Result` and `.Wait()` cause deadlocks in synchronization contexts
 > Calling `.Result` or `.Wait()` on a `Task` from a thread with a `SynchronizationContext` (ASP.NET, WinForms, WPF) blocks the thread that the `await` continuation needs to resume on, causing a permanent deadlock. Always use `await` instead. In rare cases where sync-over-async is unavoidable, use `Task.Run(() => AsyncMethod()).Result` to escape the context.
 
-> [!danger] `async void` — exceptions are unobservable and crash the process
+> [!danger] async void
+>
+> `async void` — exceptions are unobservable and crash the process
 > Exceptions in `async void` methods propagate to the `SynchronizationContext` and terminate the process. The caller has no `Task` to `await` or catch. Always use `async Task`. The only valid use of `async void` is UI event handlers (`async void Button_Click`).
 
-> [!tip] `ConfigureAwait(false)` in library code
+> [!tip] ConfigureAwait(false) in library code
+>
 > In library code (not UI or ASP.NET controllers), add `.ConfigureAwait(false)` after every `await` to avoid capturing the synchronization context. This prevents deadlocks when callers use `.Result` and improves performance by skipping context marshaling.
 
 #### async/await Task — basic async method
@@ -498,12 +505,14 @@ await foreach (var item in FetchPagesAsync(10, 3))
 ## Tasks and Parallelism
 
 > [!info] Task and parallel APIs
+>
 > - `Task.Run()` — schedules work on the thread pool (returns a `Task`)
 > - `Parallel.ForEach()` — partitions a collection, processes on multiple threads, blocks until done
 > - `Parallel.ForEachAsync()` (.NET 6+) — async version
 > - C# has **no GIL** — multiple threads execute truly in parallel
 
 > [!warning] CPU parallelism pitfalls
+>
 > - `Task.Run` for I/O-bound work — use `async`/`await` instead (no thread needed)
 > - Too many `Task.Run` calls — thread pool exhaustion
 > - Shared mutable state without locking — race conditions
@@ -652,15 +661,19 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 ## Threading and Concurrency
 
 > [!info] Threading primitives
+>
 > - `new Thread(method)` — creates an OS thread
 > - `.Start()` — begins execution; `.Join()` — blocks until complete
 > - `lock` — mutual exclusion (sugar for `Monitor.Enter`/`Exit`)
 > - `Interlocked` — atomic operations without locks (`Increment`, `Add`, `Exchange`)
 > - `IsBackground = true` — daemon thread that dies when main exits
 
-> [!tip] In modern C#, prefer `Task`/`async` over raw threads. Use threads only when you need explicit control (priority, apartment state, dedicated long-running work).
+> [!tip] In modern C#, prefer Task/async
+>
+> In modern C#, prefer `Task`/`async` over raw threads. Use threads only when you need explicit control (priority, apartment state, dedicated long-running work).
 
 > [!warning] Threading pitfalls
+>
 > - Creating threads for short work — use `Task.Run` (thread pool) instead
 > - Not joining threads — orphaned threads may prevent shutdown
 > - Shared mutable state without synchronization — race conditions
@@ -708,7 +721,9 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
       [102] fetch_events finished
       Results: [fetch_events done, fetch_users done, fetch_products done]
 
-> [!danger] `++` and `+=` are not atomic — they cause race conditions without synchronization
+> [!danger] ++ and += are not atomic
+>
+> `++` and `+=` are not atomic — they cause race conditions without synchronization
 > `counter++` in C# compiles to read-increment-write which can interleave across threads. Use `lock`, `Interlocked.Increment`, or `ConcurrentDictionary` for thread-safe mutation. Unlike Python's GIL, C# has true parallelism, making races more frequent and harder to reproduce.
 
 #### Threading race condition demo (WITHOUT lock)
@@ -895,12 +910,15 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 #### ReaderWriterLockSlim
 
 > [!info] ReaderWriterLockSlim
+>
 > - `EnterReadLock` — allows multiple concurrent readers
 > - `EnterWriteLock` — gives exclusive access (blocks readers and other writers)
 > - `UpgradeableReadLock` — promotes a reader to writer without releasing
 > - Optimized for read-heavy workloads; for write-heavy, a simple `lock` is better
 
-> [!warning] Always release in `finally` — deadlock on exception otherwise.
+> [!warning] Always release in finally
+>
+> Always release in `finally` — deadlock on exception otherwise.
 
 ```csharp
 // ReaderWriterLockSlim — allows many concurrent readers OR one exclusive writer

@@ -20,7 +20,9 @@ Data pipelines frequently interact with REST APIs (financial data providers, clo
 
 #### curl — basic GET requests
 
-> [!info] `curl` prints the response body to stdout. Add `-v` for full request/response
+> [!info] curl basic usage
+>
+> `curl` prints the response body to stdout. Add `-v` for full request/response
 > headers including TLS handshake — invaluable for debugging redirects, auth failures, and
 > certificate issues.
 
@@ -31,14 +33,17 @@ curl -v https://api.example.com/data
 
 #### curl -w "%{http_code}" — health check that returns only the status code
 
-> [!info] `-s` silences progress, `-o /dev/null` discards the body, `-w` prints a format
+> [!info] Health check with status code
+>
+> `-s` silences progress, `-o /dev/null` discards the body, `-w` prints a format
 > string. Use in scripts and monitoring to check HTTP status without processing the body.
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}" https://api.example.com/health
 ```
 
-> [!warning] curl does NOT follow redirects by default
+> [!warning] curl does not follow redirects
+>
 > A `301` or `302` response returns the redirect HTML, not the final resource. Add `-L`
 > to follow redirects. Without `-L`, a health check against a load balancer that redirects
 > HTTP → HTTPS returns `301`, not the actual health status.
@@ -59,6 +64,7 @@ curl -X POST https://api.example.com/webhook \
 #### curl --retry --connect-timeout — download with retry and timeout
 
 > [!info] Production download flags
+>
 > - `-f` — fail on server errors (non-zero exit code instead of HTML error page)
 > - `-S` — show errors even in silent mode
 > - `-L` — follow redirects (3xx → follow the Location header)
@@ -81,7 +87,8 @@ curl -X PUT -T backup.sql.gz https://storage.example.com/backups/
 curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTLS: %{time_appconnect}s\nFirst byte: %{time_starttransfer}s\nTotal: %{time_total}s\n" https://api.example.com/health
 ```
 
-> [!info] Interpreting the timing breakdown
+> [!info] Timing breakdown interpretation
+>
 > - **DNS slow** — check `/etc/resolv.conf`, consider local DNS cache
 > - **Connect slow** — network latency to the server
 > - **TLS slow** — certificate chain is large or OCSP stapling is missing
@@ -89,7 +96,8 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 
 ### curl vs wget vs Python requests — tool selection
 
-> [!tip] `curl` vs `wget` vs Python `requests`
+> [!tip] curl vs wget vs Python requests
+>
 > - **curl**: Best for one-off requests, debugging, health checks, and scripts. Supports every protocol. Use in bash scripts.
 > - **wget**: Best for downloading files (automatic retry, resume, mirroring). `wget -c` resumes interrupted downloads. Use for large file transfers.
 > - **Python requests**: Best for complex API interactions (pagination, OAuth flows, session management). Use in your pipeline code -- see [[15_py_webapis]] for httpx, requests, and async HTTP patterns.
@@ -100,7 +108,9 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 
 #### Invoke-RestMethod — GET request with automatic JSON parsing
 
-> [!info] `Invoke-RestMethod` auto-parses JSON into PowerShell objects — you get
+> [!info] Invoke-RestMethod auto-parses JSON
+>
+> `Invoke-RestMethod` auto-parses JSON into PowerShell objects — you get
 > properties directly. Use `Invoke-WebRequest` when you need access to status codes,
 > headers, or raw content.
 
@@ -119,7 +129,9 @@ $response.Content
 
 #### Invoke-RestMethod -Method Post — send JSON body
 
-> [!info] Pipe a hashtable to `ConvertTo-Json` for the body. PowerShell handles
+> [!info] POST with JSON body
+>
+> Pipe a hashtable to `ConvertTo-Json` for the body. PowerShell handles
 > serialization and content type.
 
 ```powershell
@@ -130,7 +142,9 @@ Invoke-RestMethod -Uri "https://api.example.com/webhook" -Method Post `
 
 #### Invoke-WebRequest -OutFile — download with retry (PowerShell 7+)
 
-> [!warning] `-MaximumRetryCount` and `-RetryIntervalSec` are PowerShell 7+ only.
+> [!warning] Retry flags are PowerShell 7+ only
+>
+> `-MaximumRetryCount` and `-RetryIntervalSec` are PowerShell 7+ only.
 > Windows PowerShell 5.1 has no built-in retry — wrap in a `for` loop with `try/catch`.
 
 ```powershell

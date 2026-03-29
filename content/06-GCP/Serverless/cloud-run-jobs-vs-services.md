@@ -75,6 +75,7 @@ gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
 The first execution after a period of inactivity takes longer because Cloud Run needs to pull and start the container image. For data pipelines triggered 3x/day, cold starts are a minor annoyance. Mitigation strategies:
 
 > [!tip] Reducing Cold Start Latency
+>
 > - **Keep images small.** A 2 GB image with unnecessary dependencies takes 30-60 seconds to pull. A 200 MB slim image starts in 5-10 seconds. Use [[docker-compose]] locally to mirror the production container environment during development.
 > - **Multi-stage Docker builds.** Build dependencies in stage 1, copy only the runtime into the final image.
 > - **Min instances = 1** (for services): keeps one instance warm. Not applicable to Jobs (they always cold start).

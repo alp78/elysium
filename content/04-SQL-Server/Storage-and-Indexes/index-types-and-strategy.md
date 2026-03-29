@@ -723,7 +723,9 @@ ALTER DATABASE analytics_db SET AUTO_UPDATE_STATISTICS_ASYNC ON;
 -- ASYNC: stats update happens in background (query doesn't wait)
 ```
 
-> [!tip] Always Update Statistics After Bulk Loads
+> [!tip] Update Stats After Bulk Loads
+>
+> Always Update Statistics After Bulk Loads.
 > After any pipeline run that inserts or updates more than 10% of a table, statistics may be stale. The optimizer will make poor plan choices until statistics reflect the new data distribution. Run `UPDATE STATISTICS table WITH FULLSCAN` immediately after large loads.
 
 ---

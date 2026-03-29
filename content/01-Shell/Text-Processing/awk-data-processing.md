@@ -19,6 +19,7 @@ status: complete
 awk (also gawk -- GNU awk, mawk -- faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script. For a side-by-side comparison of the same operations in SQL, Python, and C#, see [[sql-python-csharp-transforms]].
 
 > [!info] Which awk are you running?
+>
 > On macOS the default `awk` is BSD awk. On Linux it is usually gawk. On Windows you use PowerShell natively or install gawk via Chocolatey (`choco install gawk`) or Git Bash. All examples below work in gawk. BSD awk differences are noted inline.
 
 ---
@@ -130,6 +131,7 @@ awk -F',' '
 ```
 
 > [!tip] Embed multi-line awk programs
+>
 > For programs longer than one line, use single quotes on the command line or put the program in a file and invoke `awk -f program.awk data.txt`. For complex logic, `-f` is much more maintainable.
 
 ---
@@ -167,6 +169,7 @@ awk -F',' -v OFS='\t' '{$1=$1; print}' data.csv > data.tsv
 ```
 
 > [!warning] OFS and $0
+>
 > Printing `$0` always gives the original line, even if you set OFS. You must trigger a field rebuild by assigning any `$N = $N` or `$1=$1` before printing `$0` if you want OFS applied to the whole record.
 
 ### Printf for Formatted Output
@@ -328,7 +331,8 @@ awk '/PIPELINE/ && $5 > 60 {print NR, $0}' pipeline.log
 awk -F',' 'NR>1 && $2=="FAILED" && NR<=21' jobs.csv
 ```
 
-> [!tip] Numeric vs. String Comparison
+> [!tip] Numeric vs string comparison
+>
 > In awk, `$3 > 100` does numeric comparison if `$3` looks like a number. `$3 > "100"` forces string comparison. This is usually intuitive but can surprise you with zero-padded strings like "007" vs "07".
 
 ---
@@ -383,6 +387,7 @@ awk -F',' '{print $1, toupper($2)}' data.csv
 ```
 
 > [!warning] sub() and gsub() target parameter
+>
 > If you omit the third argument, `sub()` and `gsub()` operate on `$0`. To modify a specific field, pass it as the third argument: `gsub(/x/, "y", $3)`. Remember that modifying `$0` or a field triggers a full record rebuild.
 
 ### Computing Aggregates
@@ -472,7 +477,8 @@ END {
 awk -F',' 'NR>1 {sum[$1]+=$3} END {for(k in sum) print k, sum[k]}' data.csv | sort -k2 -rn
 ```
 
-> [!tip] Order of associative array iteration
+> [!tip] Associative array order
+>
 > In awk, `for(k in array)` does NOT guarantee any specific order. Pipe to `sort` when order matters. In gawk 4+ you can use `PROCINFO["sorted_in"] = "@ind_str_asc"` for sorted iteration.
 
 ### Pivot-Like Operations (Crosstab)
@@ -500,6 +506,7 @@ END {
 ```
 
 > [!info] Multi-dimensional arrays
+>
 > gawk supports true multi-dimensional arrays with `array[i][j]`. POSIX awk simulates them with `array[i,j]` (uses SUBSEP as key separator). For portability, use `array[i,j]` and split with `split(key, parts, SUBSEP)`.
 
 ---
@@ -528,6 +535,7 @@ awk -F',' '{
 ```
 
 > [!warning] Quoted fields with commas
+>
 > awk's `-F','` splits on every literal comma, including ones inside quoted fields like `"Smith, John"`. For proper RFC 4180 CSV parsing, use Python's `csv` module, `csvkit`, or `miller` (`mlr`). For simple CSVs without embedded commas, awk is fine.
 
 ### Extract Columns from `docker ps` Output
@@ -810,6 +818,7 @@ awk '{
 ```
 
 > [!warning] Getline and shell injection
+>
 > When using `getline` with dynamically constructed shell commands, sanitize any user-controlled input to prevent shell injection. Prefer to pre-process with shell pipelines when possible.
 
 ### Custom Record Separator (RS)
@@ -1161,9 +1170,11 @@ awk -F',' '!seen[$2]++ {print $2}' file
 ```
 
 > [!tip] Debugging awk programs
+>
 > Add `{print NR, NF, $0}` as your first rule to see the record number, field count, and raw content. This quickly reveals parsing issues like unexpected field separators, extra whitespace, or CRLF endings from Windows files.
 
 > [!tip] Performance: mawk vs gawk
+>
 > For pure text processing on very large files (multi-GB logs), `mawk` is often 2–5x faster than `gawk` because it has a leaner runtime. Use `mawk` for speed-critical pipelines if extended gawk features (multi-dim arrays, PROCINFO, gensub) are not needed.
 
 ---

@@ -72,7 +72,9 @@ DBCC FREEZEIO('analytics_db');     -- Freeze writes
 DBCC THAWIO('analytics_db');       -- Resume writes
 ```
 
-> [!warning] SUSPEND_FOR_SNAPSHOT_BACKUP Is SQL Server 2022+
+> [!warning] SQL Server 2022+ Only
+>
+> SUSPEND_FOR_SNAPSHOT_BACKUP Is SQL Server 2022+.
 > `ALTER DATABASE ... SET SUSPEND_FOR_SNAPSHOT_BACKUP = ON` is available only in SQL Server 2022. For older versions, use the `DBCC FREEZEIO` / `DBCC THAWIO` approach. The freeze duration should be minimized (seconds) — all writes are blocked during the freeze.
 
 ---

@@ -173,7 +173,8 @@ crontab -l > ~/crontab-backup.txt
 0 0 1 1 *     command    # midnight on January 1st each year
 ```
 
-> [!warning] The day-of-month OR day-of-week trap
+> [!warning] Day-of-month OR day-of-week trap
+>
 > In standard Vixie cron, if BOTH day-of-month and day-of-week are specified (not `*`), the job runs when EITHER condition is true. To implement true "first Monday of the month", use the guard pattern shown above or switch to systemd timers, which support `OnCalendar=Mon *-*-1..7`.
 
 ### Special Strings (@reboot, @daily, etc.)
@@ -250,8 +251,9 @@ timedatectl
 sudo timedatectl set-timezone UTC
 ```
 
-> [!warning] cron PATH issues — the #1 source of "it works in terminal but not in cron"
-> Always test a failing cron job by running it exactly as cron would: `env -i HOME=/root SHELL=/bin/bash PATH=/usr/bin:/bin /path/to/your/script.sh`. This strips your environment down to cron's defaults and surfaces missing PATH entries immediately.
+> [!warning] Cron PATH issues
+>
+> This is the #1 source of "it works in terminal but not in cron." Always test a failing cron job by running it exactly as cron would: `env -i HOME=/root SHELL=/bin/bash PATH=/usr/bin:/bin /path/to/your/script.sh`. This strips your environment down to cron's defaults and surfaces missing PATH entries immediately.
 
 #### PowerShell equivalent (Windows Task Scheduler environment)
 
@@ -447,7 +449,8 @@ MAILTO=oncall@example.com
 */5 *  * * *   pipeline /usr/bin/flock -n /tmp/pulse.lock /home/pipeline/scripts/pulse_check.sh >> /var/log/pipeline/pulse.log 2>&1
 ```
 
-> [!tip] Prefer /etc/cron.d/ for production services
+> [!tip] Prefer /etc/cron.d/ for production
+>
 > Drop-in files in `/etc/cron.d/` are version-controllable, can be deployed by configuration management tools (Ansible, Chef, Terraform provisioners), and survive `crontab -r` accidents. Name them after the application: `/etc/cron.d/pipeline`, `/etc/cron.d/datadog-custom-checks`.
 
 ```bash
@@ -891,7 +894,8 @@ which anacron && anacron -V
 cat /etc/anacrontab
 ```
 
-> [!tip] Anacron for development machine pipelines
+> [!tip] Anacron for development machines
+>
 > If you run scheduled ETL jobs or data quality checks on your laptop or development machine (not a 24/7 server), use anacron. Replace cron's `@daily` with anacron's `period=1` and your jobs will always eventually run even if you're not at your desk at the scheduled time.
 
 ---

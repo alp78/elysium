@@ -70,7 +70,8 @@ terraform -chdir=infra apply -target="google_compute_instance.airflow"
 gcloud compute instances reset data-pipeline-airflow --zone=europe-west1-b
 ```
 
-> [!warning] terraform apply Does Not Restart the VM
+> [!warning] Apply does not restart the VM
+>
 > `terraform apply` only updates the VM's **metadata** stored in GCP — it does NOT restart the VM or re-run the startup script. The startup script only executes on boot. You must manually reset the VM after applying metadata changes.
 
 #### Step 5 — Wait 2–3 minutes, then verify

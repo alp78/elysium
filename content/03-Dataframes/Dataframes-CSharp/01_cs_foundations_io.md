@@ -1107,13 +1107,16 @@ foreach (var f in files)
 ---
 ## Reading CSV
 
-> [!warning] Polars.NET `ReadCsv` only supports UTF-8 encoding
-> Files from legacy systems (BCP exports, Excel CSV) may use Latin-1 or Windows-1252
+> [!warning] Polars.NET ReadCsv UTF-8 only
+>
+> Polars.NET `ReadCsv` only supports UTF-8 encoding. Files from legacy systems (BCP exports, Excel CSV) may use Latin-1 or Windows-1252
 > encoding. Polars.NET raises an error on non-UTF-8 bytes — preprocess with
 > `File.ReadAllText(path, Encoding.Latin1)` and write to a temp file, or use
 > `CsvReader` from `CsvHelper` which supports arbitrary encodings.
 
-> [!tip] `tryParseDates: true` enables automatic date detection. Without it, date columns
+> [!tip] tryParseDates: true enables automatic date
+>
+> `tryParseDates: true` enables automatic date detection. Without it, date columns
 > remain as strings. Always set this for data pipeline CSV reads to avoid downstream
 > type-casting issues.
 
@@ -1230,6 +1233,7 @@ df.Head(3)
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04T00:00:00.000</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05T00:00:00.000</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06T00:00:00.000</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 > [!info] Polars.NET — NDJSON (newline-delimited JSON)
+>
 > ```csharp
 > var df = DataFrame.ReadJson(path, jsonFormat: JsonFormat.JsonLines);
 > var lf = LazyFrame.ScanNdjson(path);  // lazy scan

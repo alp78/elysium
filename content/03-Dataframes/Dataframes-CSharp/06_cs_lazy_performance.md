@@ -130,7 +130,9 @@ result.Head(5)
 
 #### Explain: inspect the optimized query plan
 
-> [!info] `Explain()` shows the optimized query plan as a string. It may not be exposed in Polars.NET 0.4.0 — the code catches the exception and notes the limitation.
+> [!info] Explain() shows the optimized query
+>
+> `Explain()` shows the optimized query plan as a string. It may not be exposed in Polars.NET 0.4.0 — the code catches the exception and notes the limitation.
 
 ```csharp
 try

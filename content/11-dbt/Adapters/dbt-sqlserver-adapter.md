@@ -87,7 +87,8 @@ financial_index:
       threads: 8
 ```
 
-> [!note] `TrustServerCertificate` vs `encrypt`
+> [!note] Certificate vs encryption settings
+>
 > These are distinct ODBC connection string properties. `encrypt=true` enables TLS negotiation; `TrustServerCertificate=true` skips certificate validation. Always use `encrypt=true` — the certificate setting controls only whether the cert is verified, not whether the channel is encrypted.
 
 ### Azure AD / Service Principal (Azure SQL only)

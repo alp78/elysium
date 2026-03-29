@@ -159,9 +159,13 @@ ohlcv_pl.head(3)
 ---
 ### Pandas — Direct Column Assignment with df["col"] = expression
 
-> [!info] `df["col"] = expression` creates a new column in-place on the DataFrame. Fast for simple arithmetic but mutates the original — use `.copy()` first. Each column is a separate statement; no chaining.
+> [!info] Direct column assignment
+>
+> `df["col"] = expression` creates a new column in-place on the DataFrame. Fast for simple arithmetic but mutates the original — use `.copy()` first. Each column is a separate statement; no chaining.
 
-> [!warning] Direct assignment mutates the original DataFrame. Always `.copy()` first in pipelines to avoid corrupting shared references.
+> [!warning] Direct assignment mutates the original
+>
+> Direct assignment mutates the original DataFrame. Always `.copy()` first in pipelines to avoid corrupting shared references.
 
 ```python
 df = ohlcv_pd.copy()
@@ -277,7 +281,9 @@ df[["symbol", "date", "volume"]].head()
 ---
 ### Pandas assign() — create columns in a chainable pipeline
 
-> [!info] `.assign()` returns a **new** DataFrame with added columns — the original is unchanged. Each keyword argument becomes a column name. Use `lambda d: ...` to reference the DataFrame being built, including columns created earlier in the same call (e.g., `range` is used in `pct_range`). This is the Pandas equivalent of Polars `.with_columns()` — enables method chaining.
+> [!info] Pandas assign() immutable columns
+>
+> `.assign()` returns a **new** DataFrame with added columns — the original is unchanged. Each keyword argument becomes a column name. Use `lambda d: ...` to reference the DataFrame being built, including columns created earlier in the same call (e.g., `range` is used in `pct_range`). This is the Pandas equivalent of Polars `.with_columns()` — enables method chaining.
 
 ```python
 (ohlcv_pd
@@ -355,7 +361,9 @@ df[["symbol", "date", "volume"]].head()
 ---
 ### Polars with_columns() — add computed columns with expressions
 
-> [!info] `.with_columns()` adds new columns using Polars expressions. `pl.col("name")` references a column; `.alias("new")` names the result. All original columns are kept. Multiple expressions in one call are computed **in parallel** — unlike Pandas `.assign()` which is sequential.
+> [!info] .with_columns() adds new columns using
+>
+> `.with_columns()` adds new columns using Polars expressions. `pl.col("name")` references a column; `.alias("new")` names the result. All original columns are kept. Multiple expressions in one call are computed **in parallel** — unlike Pandas `.assign()` which is sequential.
 
 ```python
 # with_columns context — add new columns, keep all originals
@@ -382,7 +390,9 @@ ohlcv_pl.with_columns(
 ---
 ### Polars select() + alias() — return only computed columns
 
-> [!info] `.select()` returns **only** the listed columns — unlike `.with_columns()` which keeps all originals. Use it when you want a lean result with just the columns you need. Combine with `.alias()` to rename computed expressions.
+> [!info] Polars select() returns subset columns
+>
+> `.select()` returns **only** the listed columns — unlike `.with_columns()` which keeps all originals. Use it when you want a lean result with just the columns you need. Combine with `.alias()` to rename computed expressions.
 
 ```python
 # Continuing expressions — chain methods on pl.col() results
@@ -399,9 +409,13 @@ ohlcv_pl.select(
 ---
 ### Pandas apply() and map() — row-level and element-level transforms
 
-> [!info] `.map()` applies a function to each **element** of a Series. `.apply()` applies a function to each **row** (axis=1) or **column** (axis=0) of a DataFrame. Both are Python-level loops under the hood.
+> [!info] map() vs apply() behavior
+>
+> `.map()` applies a function to each **element** of a Series. `.apply()` applies a function to each **row** (axis=1) or **column** (axis=0) of a DataFrame. Both are Python-level loops under the hood.
 
-> [!danger] `apply()` is 10-100x slower than vectorized operations. Use it only when no vectorized alternative exists (e.g., calling an external API per row, complex branching logic). For arithmetic, string, or date operations, always use vectorized methods first.
+> [!danger] apply() performance penalty
+>
+> `apply()` is 10-100x slower than vectorized operations. Use it only when no vectorized alternative exists (e.g., calling an external API per row, complex branching logic). For arithmetic, string, or date operations, always use vectorized methods first.
 
 ```python
 # map — element-wise transformation on a Series
@@ -541,9 +555,13 @@ ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 ---
 ### Polars map_elements() / map_batches() — custom Python functions on columns
 
-> [!info] `map_elements` runs a Python function **per element** — analogous to Pandas `.apply()`. `map_batches` receives the **whole Series** at once — use it for NumPy interop or batch operations.
+> [!info] map_elements runs a Python function
+>
+> `map_elements` runs a Python function **per element** — analogous to Pandas `.apply()`. `map_batches` receives the **whole Series** at once — use it for NumPy interop or batch operations.
 
-> [!warning] `map_elements` breaks Polars' query optimizer and runs in Python, not Rust. Always prefer native expressions. Use `map_elements` only when no expression equivalent exists.
+> [!warning] map_elements breaks Polars' query optimizer
+>
+> `map_elements` breaks Polars' query optimizer and runs in Python, not Rust. Always prefer native expressions. Use `map_elements` only when no expression equivalent exists.
 
 ```python
 # map_elements — per-element Python function (slow, use sparingly)
@@ -566,7 +584,9 @@ ohlcv_pl.with_columns(
 ---
 ### Pandas np.where() / np.select() — conditional column creation
 
-> [!info] `np.where(condition, true_val, false_val)` creates a column from a binary condition (if/else). For multiple conditions, use `np.select([cond1, cond2, ...], [val1, val2, ...], default=...)` — the Pandas equivalent of SQL `CASE WHEN`.
+> [!info] np.where() and np.select() conditionals
+>
+> `np.where(condition, true_val, false_val)` creates a column from a binary condition (if/else). For multiple conditions, use `np.select([cond1, cond2, ...], [val1, val2, ...], default=...)` — the Pandas equivalent of SQL `CASE WHEN`.
 
 ```python
 # np.where — binary condition (if/else)
@@ -740,7 +760,9 @@ df[["symbol", "date", "open", "close", "move"]].head(10)
 ---
 ### Polars when() / then() / otherwise() — conditional expressions
 
-> [!info] `pl.when(cond).then(val).otherwise(val)` is Polars' native `CASE WHEN` — equivalent to `np.where` in Pandas. Chain multiple `.when().then()` for multi-branch logic (like `np.select`). Runs in Rust, fully optimized.
+> [!info] pl.when(cond).then(val).otherwise(val) is Polars' native CASE WHEN
+>
+> `pl.when(cond).then(val).otherwise(val)` is Polars' native `CASE WHEN` — equivalent to `np.where` in Pandas. Chain multiple `.when().then()` for multi-branch logic (like `np.select`). Runs in Rust, fully optimized.
 
 ```python
 # when/then/otherwise — binary condition (Polars equivalent of np.where)
@@ -773,7 +795,9 @@ ohlcv_pl.with_columns(
 
 #### Pandas astype() — cast column types
 
-> [!info] `.astype("type")` converts a column to a different dtype. Common casts: `int64` → `float64` (for division), `object` → `category` (for memory), `str` → `datetime64` (for date ops). Returns a new Series — assign it back to the column.
+> [!info] Pandas astype() dtype casting
+>
+> `.astype("type")` converts a column to a different dtype. Common casts: `int64` → `float64` (for division), `object` → `category` (for memory), `str` → `datetime64` (for date ops). Returns a new Series — assign it back to the column.
 
 ```python
 # astype — cast volume from int to float for division safety
@@ -808,9 +832,13 @@ print(df["symbol"].cat.categories[:5].tolist())
 
 #### Polars cast() — cast column types
 
-> [!info] `.cast(pl.Type)` converts a column's dtype within an expression. Use inside `.with_columns()` to cast in place, or `.alias()` to create a new column. Polars types: `pl.Float64`, `pl.Int32`, `pl.Utf8`, `pl.Date`, `pl.Boolean`.
+> [!info] .cast(pl.Type) converts a column's dtype
+>
+> `.cast(pl.Type)` converts a column's dtype within an expression. Use inside `.with_columns()` to cast in place, or `.alias()` to create a new column. Polars types: `pl.Float64`, `pl.Int32`, `pl.Utf8`, `pl.Date`, `pl.Boolean`.
 
-> [!warning] `.cast(strict=True)` (default) raises an error on invalid values. Use `strict=False` to get nulls instead of errors — useful for dirty data.
+> [!warning] .cast(strict=True) (default) raises an error
+>
+> `.cast(strict=True)` (default) raises an error on invalid values. Use `strict=False` to get nulls instead of errors — useful for dirty data.
 
 ```python
 # cast — convert volume from Int64 to Float64
@@ -866,7 +894,9 @@ ohlcv_pl.with_columns(
 
 #### Pandas .str Accessor — string transforms
 
-> [!info] `.str` gives access to vectorized string methods on a Series: `.str.upper()`, `.str.lower()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. Works on `object` or `string` dtype columns. Much faster than `apply(lambda x: x.upper())`.
+> [!info] .str gives access to vectorized
+>
+> `.str` gives access to vectorized string methods on a Series: `.str.upper()`, `.str.lower()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. Works on `object` or `string` dtype columns. Much faster than `apply(lambda x: x.upper())`.
 
 ```python
 # .str accessor — vectorized string operations on a column
@@ -972,7 +1002,9 @@ df[["symbol", "clean"]].drop_duplicates().head()
 
 #### Polars .str Accessor — string transforms
 
-> [!info] Polars `.str` namespace: `.str.to_uppercase()`, `.str.to_lowercase()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. After `.str.split()` the result is a List column — chain `.list.first()`, `.list.last()`, `.list.len()` to extract elements.
+> [!info] Polars .str namespace: .str.to_uppercase(), .str.to_lowercase(),
+>
+> Polars `.str` namespace: `.str.to_uppercase()`, `.str.to_lowercase()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. After `.str.split()` the result is a List column — chain `.list.first()`, `.list.last()`, `.list.len()` to extract elements.
 
 ```python
 # .str accessor — string transforms inside Polars expressions
@@ -1000,7 +1032,9 @@ ohlcv_pl.with_columns(
 #### Pandas .dt Accessor — datetime transforms
 
 
-> [!info] `.dt` gives access to datetime components: `.dt.year`, `.dt.month`, `.dt.day`, `.dt.day_name()`, `.dt.quarter`, `.dt.weekday`. The column must be `datetime64` dtype — convert with `pd.to_datetime()` first if it's a string.
+> [!info] .dt gives access to datetime
+>
+> `.dt` gives access to datetime components: `.dt.year`, `.dt.month`, `.dt.day`, `.dt.day_name()`, `.dt.quarter`, `.dt.weekday`. The column must be `datetime64` dtype — convert with `pd.to_datetime()` first if it's a string.
 
 ```python
 # .dt accessor — extract date components from a datetime column
@@ -1071,7 +1105,9 @@ df[["date", "year", "month", "weekday", "quarter"]].head()
 #### Polars .dt Accessor — datetime transforms
 
 
-> [!info] Polars `.dt` namespace: `.dt.year()`, `.dt.month()`, `.dt.day()`, `.dt.weekday()`, `.dt.quarter()`, `.dt.ordinal_day()`. Note: Polars weekday is 1=Monday (ISO), Pandas is 0=Monday.
+> [!info] Polars .dt namespace: .dt.year(), .dt.month(),
+>
+> Polars `.dt` namespace: `.dt.year()`, `.dt.month()`, `.dt.day()`, `.dt.weekday()`, `.dt.quarter()`, `.dt.ordinal_day()`. Note: Polars weekday is 1=Monday (ISO), Pandas is 0=Monday.
 
 ```python
 # .dt accessor — extract date components inside Polars expressions
@@ -1098,7 +1134,9 @@ ohlcv_pl.with_columns(
 ---
 ### Arithmetic & Math Operations
 
-> [!info] Both Pandas and Polars support element-wise arithmetic (`+`, `-`, `*`, `/`), NumPy functions (`np.log`, `np.sqrt`), and group-level computations (`.pct_change()`, `.cumsum()`). Pandas uses `.groupby("col")["target"].method()` syntax; Polars uses `.method().over("col")` expressions.
+> [!info] Both Pandas and Polars support
+>
+> Both Pandas and Polars support element-wise arithmetic (`+`, `-`, `*`, `/`), NumPy functions (`np.log`, `np.sqrt`), and group-level computations (`.pct_change()`, `.cumsum()`). Pandas uses `.groupby("col")["target"].method()` syntax; Polars uses `.method().over("col")` expressions.
 
 ```python
 # Pandas — arithmetic, log, pct_change, cumsum grouped by symbol
@@ -1245,7 +1283,9 @@ This makes pipelines **reproducible** and **testable**.
 
 #### Pandas — Tweak Function Pattern (chainable transform)
 
-> [!info] The "tweak function" pattern wraps all DataFrame transforms in a single function: `def tweak(df) -> df`. Inside, chain `.assign()`, `.rename()`, `.astype()`, `.query()`, `.sort_values()` etc. Call it as `df.pipe(tweak)` to include in a pipeline. This is the idiomatic Pandas approach to composable, testable transforms.
+> [!info] The "tweak function" pattern wraps
+>
+> The "tweak function" pattern wraps all DataFrame transforms in a single function: `def tweak(df) -> df`. Inside, chain `.assign()`, `.rename()`, `.astype()`, `.query()`, `.sort_values()` etc. Call it as `df.pipe(tweak)` to include in a pipeline. This is the idiomatic Pandas approach to composable, testable transforms.
 
 ```python
 # Tweak function — all Pandas transforms in one chainable function
@@ -1401,7 +1441,9 @@ tweak_ohlcv_pd(ohlcv_pd).head()
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
-> [!info] Polars tweak functions use `.with_columns()`, `.filter()`, `.sort()`, `.rename()` chained naturally — no `.pipe()` needed because Polars methods already return new DataFrames (immutable by design).
+> [!info] Polars tweak functions use .with_columns(),
+>
+> Polars tweak functions use `.with_columns()`, `.filter()`, `.sort()`, `.rename()` chained naturally — no `.pipe()` needed because Polars methods already return new DataFrames (immutable by design).
 
 ```python
 # Tweak function — all Polars transforms in one chainable function
@@ -1931,7 +1973,9 @@ display(Markdown(comparison))
 
 ### What Is an Expression?
 
-> [!info] A Polars expression is a **lazy computation** — it describes *what* to compute, not *how*. `pl.col("close") * 2` creates an `Expr` object. It does nothing until passed into a context (`.select()`, `.with_columns()`, `.filter()`, `.group_by().agg()`). The optimizer then fuses, reorders, and parallelizes all expressions for maximum performance.
+> [!info] Polars expressions are lazy
+>
+> A Polars expression is a **lazy computation** — it describes *what* to compute, not *how*. `pl.col("close") * 2` creates an `Expr` object. It does nothing until passed into a context (`.select()`, `.with_columns()`, `.filter()`, `.group_by().agg()`). The optimizer then fuses, reorders, and parallelizes all expressions for maximum performance.
 
 ```python
 # An expression is a lazy computation — it's not executed until placed in a context
@@ -2119,7 +2163,9 @@ dim_pl.select(
 
 
 - **Window (.over)**: Compute a value per row based on its group, without collapsing rows. Like SQL OVER(PARTITION BY).
-> [!info] `.over("col")` is the Polars equivalent of SQL `PARTITION BY` — it computes an expression **within each group** without collapsing rows. Equivalent to Pandas `groupby("col").transform()`. Chain any expression before `.over()`: `.mean().over()`, `.rank().over()`, `.cum_sum().over()`, `.shift().over()`.
+> [!info] .over("col") is the Polars equivalent
+>
+> `.over("col")` is the Polars equivalent of SQL `PARTITION BY` — it computes an expression **within each group** without collapsing rows. Equivalent to Pandas `groupby("col").transform()`. Chain any expression before `.over()`: `.mean().over()`, `.rank().over()`, `.cum_sum().over()`, `.shift().over()`.
 
 ```python
 # .over("symbol") — window expression: rank and mean within each symbol group
@@ -2182,7 +2228,9 @@ scores_pl.select(
 ### Polars Selectors (cs module) — select columns by dtype
 
 
-> [!info] `import polars.selectors as cs` — select columns by **dtype** instead of name. `cs.numeric()` selects all numeric columns, `cs.float()` only floats, `cs.string()` only strings. Combine with `|` (union), `&` (intersection), `-` (difference). Use `cs.by_name()` to mix name-based and type-based selection.
+> [!info] import polars.selectors as cs
+>
+> `import polars.selectors as cs` — select columns by **dtype** instead of name. `cs.numeric()` selects all numeric columns, `cs.float()` only floats, `cs.string()` only strings. Combine with `|` (union), `&` (intersection), `-` (difference). Use `cs.by_name()` to mix name-based and type-based selection.
 
 ```python
 # cs.numeric() — select all numeric columns regardless of name
@@ -2228,7 +2276,9 @@ Imperative code mutates step by step; chained (declarative) code reads as a pipe
 
 #### Pandas — unchained imperative style
 
-> [!warning] Imperative style (separate statements per step) is readable for beginners but creates many intermediate variables, makes it easy to accidentally reuse stale references, and is hard to compose into reusable pipelines. Prefer chained style below.
+> [!warning] Imperative style (separate statements per
+>
+> Imperative style (separate statements per step) is readable for beginners but creates many intermediate variables, makes it easy to accidentally reuse stale references, and is hard to compose into reusable pipelines. Prefer chained style below.
 
 ```python
 # Imperative: each step is a separate statement, intermediate variable "df" is reused
@@ -2324,7 +2374,9 @@ display(df[["symbol", "date", "close", "daily_return"]].head(10))
 
 #### Pandas — chained declarative style with .pipe()
 
-> [!info] Chained style: start from the DataFrame and chain `.query()`, `.assign()`, `.sort_values()`, `.head()` in one expression. No intermediate variables. Wrap in parentheses `(...)` for multi-line readability. Use `.pipe(func)` to insert custom functions into the chain.
+> [!info] Chained declarative style
+>
+> Chained style: start from the DataFrame and chain `.query()`, `.assign()`, `.sort_values()`, `.head()` in one expression. No intermediate variables. Wrap in parentheses `(...)` for multi-line readability. Use `.pipe(func)` to insert custom functions into the chain.
 
 ```python
 result_pd = (
@@ -2425,7 +2477,9 @@ display(result_pd)
 
 #### Polars — natural chaining with expressions
 
-> [!info] Polars is designed for chaining — every method returns a new DataFrame. No `.pipe()` needed, no `.copy()` needed. The chain reads top to bottom: filter → compute → sort → limit → select.
+> [!info] Polars is designed for chaining
+>
+> Polars is designed for chaining — every method returns a new DataFrame. No `.pipe()` needed, no `.copy()` needed. The chain reads top to bottom: filter → compute → sort → limit → select.
 
 ```python
 result_pl = (
@@ -2448,7 +2502,9 @@ display(result_pl)
 
 #### Pandas .pipe() — compose reusable transform functions
 
-> [!info] `.pipe(func)` inserts a custom function into a Pandas chain. The function receives the DataFrame as its first argument and must return a DataFrame. This lets you break complex transforms into named, testable, reusable functions.
+> [!info] .pipe(func) inserts a custom function
+>
+> `.pipe(func)` inserts a custom function into a Pandas chain. The function receives the DataFrame as its first argument and must return a DataFrame. This lets you break complex transforms into named, testable, reusable functions.
 
 ```python
 # Reusable transform functions — each takes a DataFrame and returns a DataFrame
@@ -2583,7 +2639,9 @@ display(result_pd)
 
 #### Polars — reusable functions with expression variables
 
-> [!info] In Polars, reuse is achieved by **storing expressions in variables**. An expression is just a Python object — assign it to a name, then pass it into `.with_columns()` or `.select()` anywhere. No `.pipe()` needed.
+> [!info] In Polars, reuse is achieved
+>
+> In Polars, reuse is achieved by **storing expressions in variables**. An expression is just a Python object — assign it to a name, then pass it into `.with_columns()` or `.select()` anywhere. No `.pipe()` needed.
 
 ```python
 # Reusable expressions — define once, use in any context

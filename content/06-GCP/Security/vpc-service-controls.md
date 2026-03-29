@@ -167,13 +167,19 @@ gcloud logging read 'protoPayload.status.code=7 AND
 # NO_MATCHING_ACCESS_LEVEL — caller doesn't meet access level criteria (wrong IP, no managed device)
 ```
 
-> [!warning] VPC-SC Is Non-Negotiable for Sensitive Data
+> [!warning] VPC-SC Is Non-Negotiable
+>
+> VPC-SC Is Non-Negotiable for Sensitive Data.
 > On a data platform, the processed and enriched data is among the most commercially sensitive assets in the system. A single leak of data before public release could have significant consequences. VPC-SC ensures that even an insider with admin-level IAM permissions cannot exfiltrate this data to an external project or bucket. Implement it from day one — retrofitting a perimeter onto existing services is significantly harder than designing with it.
 
-> [!danger] VPC-SC Dry Run Mode Before Enforcement
+> [!danger] VPC-SC Dry Run First
+>
+> VPC-SC Dry Run Mode Before Enforcement.
 > Deploying VPC-SC in enforce mode without testing will instantly break every cross-project API call, Cloud Build trigger, and external service integration. Always start in **dry run mode** (`--perimeter-type=PERIMETER_TYPE_REGULAR --spec-type=DRY_RUN`) and monitor Cloud Audit Logs for would-be violations for at least one full pipeline cycle before switching to enforce. A single missing ingress rule can take down your entire data platform.
 
-> [!warning] VPC-SC Does Not Protect Against Insider Data Access
+> [!warning] VPC-SC Skips Insider Access
+>
+> VPC-SC Does Not Protect Against Insider Data Access.
 > VPC-SC prevents data from leaving the perimeter, but it does not restrict what users can see within the perimeter. An engineer with BigQuery read access can still query all tables and view all results inside the project. For column-level and row-level restrictions within the perimeter, use BigQuery column-level security and authorized views.
 
 ### VPC-SC Ingress and Egress Policies

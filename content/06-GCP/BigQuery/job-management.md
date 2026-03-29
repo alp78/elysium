@@ -47,6 +47,7 @@ bq cancel <job_id>
 ```
 
 > [!tip] Cancel Before the Bill Arrives
+>
 > BigQuery charges are based on bytes *scanned*, which accumulates as a query runs. Canceling a query mid-execution stops the scan and limits the charge to bytes processed up to that point. If you catch an accidental large scan quickly, you can significantly reduce the cost.
 
 ### Finding the BigQuery Job ID

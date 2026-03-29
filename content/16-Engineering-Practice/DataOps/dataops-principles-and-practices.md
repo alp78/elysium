@@ -305,10 +305,12 @@ Continuous Integration and Continuous Delivery for data pipelines follows the sa
 | **Feature flags** | New logic behind a flag, toggle without redeploy | Experimental features |
 | **Shadow mode** | New pipeline runs in parallel; output not served | Validating new logic before cutover |
 
-> [!danger] A Bad Data Deploy Corrupts History -- Not Just Future Runs
+> [!danger] Bad deploys corrupt history
+>
 > Unlike stateless web services, data pipelines have state (the data itself). A bad deploy doesn't just affect new requests -- it can corrupt historical data or create gaps that are invisible until a downstream consumer notices weeks later. Always test in staging with production-representative data volumes before promoting to production. Have a rollback plan that includes both code rollback AND data repair (re-running from the last known-good state).
 
-> [!warning] Schema Migrations in Data Pipelines Are Not Reversible
+> [!warning] Schema migrations are not reversible
+>
 > Adding a column is easy to roll back. Dropping or renaming a column is not -- any downstream consumers that depend on the old schema will break immediately. Always deploy schema changes as additive operations (add new columns, deprecate old ones, remove after all consumers migrate). Never drop a column and deploy new pipeline code in the same release.
 
 ---
@@ -416,7 +418,8 @@ Development → Staging → Production
 - **Environment sprawl** — dozens of ad-hoc dev environments with no cleanup
 - **Skipping staging** — deploying directly from dev to production under pressure
 
-> [!warning] Staging Data Must Represent Production
+> [!warning] Staging data must represent production
+>
 > The most common reason staging tests don't catch production bugs is that staging data doesn't represent production data. Either use a recent anonymized copy of production, or generate synthetic data that matches production distributions and edge cases.
 
 ---
@@ -539,7 +542,8 @@ The DORA (DevOps Research and Assessment) four key metrics — originally develo
 | **Metrics** | No measurement | DORA metrics tracked | DORA + data-specific metrics, improving trend |
 | **Cultural** | Blame culture, heroes | Blameless postmortems | Continuous improvement, psychological safety |
 
-> [!info] You Don't Need to Be at Level 3 Everywhere
+> [!info] Prioritize maturity by pain point
+>
 > Prioritize maturity in the areas that cause the most pain. If incidents are your biggest problem, invest in observability first. If speed is the bottleneck, invest in CI/CD. Don't try to do everything at once.
 
 ---

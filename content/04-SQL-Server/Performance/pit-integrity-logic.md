@@ -20,6 +20,7 @@ status: complete
 # Point-in-Time Data Integrity
 
 > [!danger] Why This Matters
+>
 > A stock index provider must answer: "What were the exact constituents, weights, and ESG scores of Index X on Date Y?" with full audit trail. Getting this wrong means publishing incorrect index levels — a regulatory and reputational catastrophe under EU BMR.
 
 ---
@@ -73,6 +74,7 @@ WHERE index_code = 'EURO_STOXX_50'
 ```
 
 > [!warning] Boundary Convention
+>
 > Use half-open intervals: `effective_date <= X AND expiry_date > X`. This prevents double-counting on transition dates. The convention means a constituent is "in" on its effective_date and "out" on its expiry_date.
 
 ### BigQuery: PIT with DATE Ranges
@@ -163,6 +165,7 @@ WHERE index_code = 'EURO_STOXX_50'
 ```
 
 > [!tip] Regulatory Use
+>
 > EU BMR requires you to reproduce any published index level exactly as it was calculated at the time. Bi-temporal modeling lets you answer: "Given what we knew on publication date, was our calculation correct?" — even if the underlying data was later corrected.
 
 ---
@@ -235,6 +238,7 @@ ORDER BY final_weight DESC;
 ```
 
 > [!danger] The Residual Rule
+>
 > Always assign the rounding residual to the **largest** constituent. This minimizes the relative impact. A 0.0000000001 residual on a 9.8% weight is negligible; on a 0.1% weight it would be material.
 
 ### Validation: Weight Sum Check
@@ -375,6 +379,7 @@ OUTER APPLY (
 ```
 
 > [!tip] Why Temp Tables?
+>
 > Materializing the PIT constituent list first reduces the join fan-out. Without this, the optimizer may choose a nested loop across the full price history. With 2.5M price rows and 50 constituents, this reduces the working set by 99%.
 
 ### BigQuery: Optimized PIT Join
@@ -405,6 +410,7 @@ ORDER BY p.price_date, p.instrument_isin;
 ```
 
 > [!tip] BigQuery Optimization
+>
 > Partition `daily_prices` by `price_date` and cluster by `instrument_isin`. This turns a full-table scan into a partition-pruned scan, reducing bytes processed (and cost) by 90%+.
 
 ---

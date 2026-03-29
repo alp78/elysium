@@ -63,9 +63,11 @@ EXEC sp_configure 'max server memory';
 ```
 
 > [!warning] Never Skip This Setting
+>
 > Without `max server memory`, SQL Server claims all available RAM on the VM. The OS runs out of memory, the OOM killer fires, and the process crashes. This is one of the 7 Deadly Sins of SQL Server.
 
 > [!tip] mssql-conf vs sp_configure
+>
 > `sp_configure` takes effect immediately and persists, but gets overridden by `mssql-conf` on next restart if both are set. `mssql-conf` requires a restart to apply. Pick one method and stick with it.
 
 ---
@@ -99,10 +101,13 @@ Without RCSI, readers block writers and writers block readers. Dashboard queries
 ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 ```
 
-> [!tip] RCSI Is the Single Most Impactful Setting
+> [!tip] RCSI Is Most Impactful
+>
+> RCSI Is the Single Most Impactful Setting.
 > Enabling RCSI eliminates the most common class of deadlocks: reader/writer conflicts. The pipeline (writer) and dashboard (reader) can operate concurrently without blocking each other.
 
 > [!warning] RCSI and TempDB Space
+>
 > RCSI requires TempDB space to store row versions. Monitor TempDB usage after enabling. A long-running read transaction with RCSI enabled can cause the TempDB version store to grow indefinitely.
 
 ---
@@ -163,6 +168,7 @@ cat /proc/sys/vm/swappiness
 ```
 
 > [!warning] Never Set Swappiness to 0
+>
 > This completely disables swap and the OOM killer will terminate SQL Server under memory pressure. The value `1` means "swap only as a last resort."
 
 ### Transparent Huge Pages (THP)

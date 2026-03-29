@@ -108,7 +108,8 @@ where effective_date >= '2000-01-01'   -- Exclude pre-history bootstrap data
 {% endsnapshot %}
 ```
 
-> [!note] `unique_key` granularity matters
+> [!note] Unique key granularity
+>
 > The `unique_key` determines what counts as "one entity" across time. Here it is `index_id || '|' || constituent_id` — so a security's membership in a specific index is tracked as one entity. If the same security appears in multiple indices, each index-constituent pair gets its own SCD2 history.
 
 ---
@@ -167,7 +168,8 @@ from {{ source('esg_providers_raw', 'raw_esg_ratings') }}
 {% endsnapshot %}
 ```
 
-> [!warning] `check_cols = 'all'` is expensive
+> [!warning] check_cols all is expensive
+>
 > Setting `check_cols = 'all'` compares every column. For wide ESG tables with 80+ columns, this creates a very large hash and adds significant compute. Explicitly list the columns that represent meaningful business changes.
 
 ### `timestamp` vs `check` Decision Matrix
@@ -474,7 +476,7 @@ order by esg_provider_id, dbt_valid_from
 
 ## Gotchas and Known Issues
 
-> [!danger] Critical gotchas that cause data quality issues
+> [!danger] Critical snapshot gotchas
 
 ### Duplicate `unique_key` in Source
 
@@ -530,10 +532,12 @@ When a constituent is removed from an index, the source row disappears. By defau
 }}
 ```
 
-> [!note] `invalidate_hard_deletes` overhead
-> When enabled, dbt runs an additional query to find keys present in the snapshot but absent from the source. For very large snapshot tables this adds meaningful query time. Consider partitioning the snapshot table by a date column and filtering accordingly.
+> [!note] Hard delete invalidation overhead
+>
+> When `invalidate_hard_deletes` is enabled, dbt runs an additional query to find keys present in the snapshot but absent from the source. For very large snapshot tables this adds meaningful query time. Consider partitioning the snapshot table by a date column and filtering accordingly.
 
-> [!danger] Snapshot Timestamps Record Pipeline Time, Not Business Time
+> [!danger] Pipeline time vs business time
+>
 > This is the single most misunderstood aspect of dbt snapshots. `dbt_valid_from` does NOT contain the business effective date -- it contains when the pipeline last ran. If your pipeline runs Monday through Friday but misses Saturday/Sunday, weekend changes all get stamped with Monday's timestamp. PIT queries using `dbt_valid_from` will show incorrect results for weekend dates. Always store and query on the source `effective_date` for business-logic PIT joins.
 
 ### Snapshot Timestamps Use `current_timestamp`

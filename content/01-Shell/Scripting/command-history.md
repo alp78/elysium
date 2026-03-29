@@ -29,7 +29,8 @@ history | grep "sqlcmd"
 # Finds every sqlcmd command you've ever run in this shell
 ```
 
-> [!tip] Reverse incremental search — the most important shortcut in bash
+> [!tip] Reverse search with Ctrl+R
+>
 > 1. Press `Ctrl+R`, then type a fragment (e.g., `sqlcmd`)
 > 2. Bash shows the most recent match: `(reverse-i-search)'sqlcmd': sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db`
 > 3. Press `Ctrl+R` again to cycle through older matches
@@ -38,7 +39,9 @@ history | grep "sqlcmd"
 
 #### !! — re-run the last command
 
-> [!info] The most common use: `sudo !!` — re-runs the last command with `sudo` prepended
+> [!info] sudo !! pattern
+>
+> The most common use: `sudo !!` — re-runs the last command with `sudo` prepended
 > after a "permission denied" error.
 
 ```bash
@@ -53,7 +56,8 @@ sudo !!
 !docker
 ```
 
-> [!warning] `!string` runs the matched command **immediately** without confirmation
+> [!warning] !string runs without confirmation
+>
 > `!rm` re-runs your most recent `rm` command with no chance to review it. Use
 > `!rm:p` to **print** the match without executing, then `!!` to run it after review.
 
@@ -72,7 +76,9 @@ cd $_
 
 #### Leading space — prevent a command from being saved to history
 
-> [!info] Requires `HISTCONTROL=ignorespace` in `.bashrc`. Use for commands containing
+> [!info] Hide from history with leading space
+>
+> Requires `HISTCONTROL=ignorespace` in `.bashrc`. Use for commands containing
 > temporary credentials or sensitive parameters.
 
 ```bash
@@ -93,7 +99,8 @@ sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT TOP 10 *
 
 ### HISTSIZE, HISTCONTROL — history configuration for .bashrc
 
-> [!info] History Configuration
+> [!info] History configuration
+>
 > Add these to your `~/.bashrc` to supercharge your history:
 > ```bash
 > export HISTSIZE=50000            # commands to keep in memory
@@ -122,7 +129,9 @@ Invoke-History
 
 #### Set-PSReadLineOption — predictive IntelliSense (PowerShell 7+)
 
-> [!tip] PSReadLine's predictive IntelliSense shows matching commands from history as you
+> [!tip] PSReadLine predictive IntelliSense
+>
+> PSReadLine's predictive IntelliSense shows matching commands from history as you
 > type. Arrow keys to select, Right arrow to accept. This alone is worth upgrading to
 > PowerShell 7.
 

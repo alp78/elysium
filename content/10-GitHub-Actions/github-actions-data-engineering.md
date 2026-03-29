@@ -928,10 +928,12 @@ jobs:
 
 ## Workload Identity Federation (Keyless GCP Auth)
 
-> [!important] No more service account JSON keys
+> [!important] No more JSON keys
+>
 > Workload Identity Federation lets GitHub Actions authenticate to GCP using OIDC tokens -- no long-lived keys to rotate or accidentally expose.
 
-> [!danger] Missing attribute_condition Allows Any GitHub Repo to Impersonate Your SA
+> [!danger] Missing attribute_condition risk
+>
 > The `--attribute-condition` in the OIDC provider setup restricts which GitHub repositories can request tokens. If you omit this condition or set it to a wildcard, ANY public GitHub repository can authenticate as your service account and access your GCP resources. Always restrict to your specific org/repo: `assertion.repository=='my-org/my-repo'`. For additional safety, add `assertion.ref=='refs/heads/main'` to restrict to the main branch only.
 
 ### One-Time GCP Setup

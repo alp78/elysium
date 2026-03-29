@@ -59,12 +59,14 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 #### DateTime, DateOnly, TimeOnly, DateTimeOffset — creating objects
 
 > [!info] Date and time types
+>
 > - `DateTime.Now` — local time | `DateTime.UtcNow` — UTC
 > - `DateOnly` — dates without time | `TimeOnly` — times without date (.NET 6+)
 > - `DateTimeOffset` — carries timezone offset; always prefer UTC for storage
 > - `UtcNow` is monotonic (no DST jumps)
 
 > [!warning] Anti-patterns
+>
 > - **`DateTime.Now` for storage** — timezone-dependent; use `UtcNow`
 > - **Comparing `DateTime` with different `Kind`s** — undefined behavior
 
@@ -698,6 +700,7 @@ Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 #### Math class
 
 > [!info] Math class
+>
 > - `Math.Abs` — absolute value
 > - `Math.Max` / `Math.Min` — comparisons
 > - `Math.Clamp(value, min, max)` — restricts to a range (replaces manual `if`/`else`)
@@ -908,6 +911,7 @@ for (int i = 0; i < 8; i++)
 The standard .NET logging abstraction — same API for console, file, and cloud providers. `ILoggerFactory` creates typed loggers; `ILogger<T>` provides category-based filtering. Log levels: `Trace` < `Debug` < `Information` < `Warning` < `Error` < `Critical`. Use **structured logging** with named placeholders (`logger.LogInformation("Processed {Count} rows", rowCount)`) — backends like Seq, ELK, and GCP index the values.
 
 > [!warning] Anti-pattern
+>
 > Don't use `Console.WriteLine` for logging — it has no levels, timestamps, or filtering.
 
 ```csharp
@@ -996,6 +1000,7 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 #### Environment.GetEnvironmentVariable — read and set env vars
 
 > [!info] Environment variables
+>
 > - `Environment.GetEnvironmentVariable("NAME")` — reads a single variable
 > - `GetEnvironmentVariables()` — returns all as `IDictionary`
 > - Standard across all platforms; use for connection strings, API keys, deployment config

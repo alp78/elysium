@@ -274,7 +274,9 @@ FROM
 
 ### Step 4 — Apply retroactive price adjustment to historical prices before ex_date
 
-> [!danger] This modifies the time series permanently. Run in a transaction and validate before committing.
+> [!danger] Permanent time series modification
+>
+> This modifies the time series permanently. Run in a transaction and validate before committing.
 
 ```sql
 BEGIN TRANSACTION;

@@ -23,6 +23,7 @@ status: complete
 Wrap risky code in `try:` and catch specific exception types with `except ExceptionType as e:`. Unmatched exceptions propagate up the call stack. Use for I/O operations, parsing external data, and network calls — not for expected conditions (use `if`/`else`, `.get()`, or LBYL checks instead).
 
 > [!warning] Anti-patterns
+>
 > - **Bare `except:`** — catches everything including `KeyboardInterrupt`
 > - **`except Exception` with `pass`** — silently swallows all errors
 > - **Exceptions for flow control** — slow; use `if`/`else` instead
@@ -46,10 +47,12 @@ except IndexError as e:
 
     Caught: list index out of range
 
-> [!danger] Bare `except:` catches KeyboardInterrupt and SystemExit
+> [!danger] Bare except: catches everything
+>
 > A bare `except:` (no exception type) catches *everything* including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill with Ctrl+C. Always catch `Exception` at broadest, and only when you re-raise or log.
 
-> [!warning] Logging exceptions — always use `exc_info=True`
+> [!warning] Always use exc_info=True
+>
 > `logging.error(f"Failed: {e}")` loses the traceback. Use `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to capture the full stack trace in logs. Without the traceback, production debugging is nearly impossible.
 
 #### Multiple except clauses
@@ -139,7 +142,9 @@ process_with_cleanup(True)
 
 #### raise vs raise from — exception chaining
 
-> [!warning] Always use `raise ... from e` when wrapping exceptions
+> [!warning] Use raise ... from for chaining
+>
+> Always use `raise ... from e` when wrapping exceptions
 > Plain `raise NewException("msg")` inside an `except` block sets `__context__` (implicit chaining) but not `__cause__`. Use `raise NewException("msg") from e` to explicitly link the cause. Use `raise ... from None` to deliberately suppress the chain when internal details should be hidden from callers.
 
 ```python
@@ -166,12 +171,14 @@ except RuntimeError as e:
 #### Exception hierarchy — BaseException tree, args, __cause__
 
 > [!info] Exception hierarchy
+>
 > - `BaseException` — root; `SystemExit` and `KeyboardInterrupt` are siblings of `Exception`
 > - Always catch `Exception`, not `BaseException`
 > - Properties: `args` (tuple), `__cause__` (`raise ... from`), `__context__` (implicit chaining)
 > - Hierarchical catching: `except OSError` catches all OS-related errors
 
-> [!danger] Never catch `BaseException`
+> [!danger] Never catch BaseException
+>
 > This prevents `Ctrl+C` (`KeyboardInterrupt`) and `sys.exit()` from working.
 
 ```python
@@ -382,12 +389,14 @@ except ConfigError as e:
 #### Basic with statement
 
 > [!info] Context manager protocol
+>
 > - `with open(path) as f:` — calls `__enter__` on start, `__exit__` on end (even on exception)
 > - No `finally` needed — cleanup is automatic
 > - Stack multiple: `with open(a) as f1, open(b) as f2:`
 > - Use for files, DB connections, locks, temp directories, network sockets
 
 > [!warning] Anti-patterns
+>
 > - **Manual `try`/`finally`** when `with` is available — more verbose, easier to forget
 > - **Not closing** files, connections, or cursors — resource leaks
 
@@ -506,6 +515,7 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
 #### Safe parse helpers — return default on failure instead of raising
 
 > [!info] Safe parse pattern
+>
 > - `safe_int(value, default=0)` — wraps `int()` in `try`/`except`, returns default on failure
 > - Composable in comprehensions and `map()` calls
 > - Use for parsing CSV/JSON fields where bad values are expected
@@ -599,6 +609,7 @@ for r in bad:  print(f"    ERROR: {r.error}")
 #### Retry pattern for transient errors
 
 > [!tip] Only retry transient exceptions
+>
 > Pass a specific tuple of retryable exceptions (e.g., `ConnectionError`, `TimeoutError`) to avoid retrying permanent failures like `ValueError` or `PermissionError`. In production, use `tenacity` or `stamina` libraries instead of hand-rolling retry logic.
 
 ```python

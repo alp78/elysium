@@ -86,6 +86,7 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 #### TransformBlock and ActionBlock
 
 > [!info] TPL Dataflow blocks
+>
 > - `TransformBlock<TIn, TOut>` — transforms items with configurable parallelism
 > - `ActionBlock<T>` — terminal consumer
 > - `LinkTo` — connects blocks; `PropagateCompletion` cascades shutdown
@@ -93,6 +94,7 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 > - For simple sequential processing, plain `async`/`await` is simpler
 
 > [!warning] Anti-patterns
+>
 > - **Not calling `Complete()`** — downstream blocks wait forever
 > - **Unbounded buffer** — set `BoundedCapacity` to prevent OOM
 
@@ -258,11 +260,13 @@ Console.WriteLine($"  Done in {sw.ElapsedMilliseconds}ms");
 #### Parallel fetch with rate limiting
 
 > [!info] Rate-limited parallel fetch
+>
 > - `SemaphoreSlim(maxConcurrent)` — limits simultaneous API calls
 > - `WaitAsync` blocks when the limit is reached; `Release` in `finally` ensures cleanup
 > - `Task.WhenAll` runs all fetches concurrently within the limit
 
 > [!warning] Anti-patterns
+>
 > - **Unbounded concurrency** — gets rate-limited or banned by APIs
 > - **Not releasing semaphore on error** — deadlocks remaining tasks
 
@@ -435,12 +439,14 @@ await producer; // ensure producer completed without exceptions
 #### Process — spawn external programs
 
 > [!info] Process execution
+>
 > - `Process.Start` with `RedirectStandardOutput` — captures stdout
 > - `WaitForExitAsync` — non-blocking wait; `ExitCode` = success (0) or failure
 > - Separate OS process with own memory — child crash doesn't take down the parent
 > - Language-agnostic: child can be Python, Go, Rust, or shell scripts
 
 > [!danger] Security
+>
 > Never use `Shell=true` with user input — command injection risk. Always check `ExitCode` to catch silent failures.
 
 ```csharp

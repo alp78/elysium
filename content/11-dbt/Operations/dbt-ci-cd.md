@@ -51,7 +51,9 @@ dbt build \
 - `--defer` — for upstream models that were not selected, dbt resolves references to the **production** relations instead of requiring them to exist in dev. This avoids re-materialising untouched staging models.
 - `--state ./prod-manifest` — directory containing `manifest.json` from the last successful production run.
 
-> [!tip] `state:modified+` is the single biggest CI cost-saver for large projects. A 300-model ESG project may touch only 4–8 models per PR, so CI runs in 2–3 minutes instead of 45.
+> [!tip] State-modified CI optimization
+>
+> `state:modified+` is the single biggest CI cost-saver for large projects. A 300-model ESG project may touch only 4-8 models per PR, so CI runs in 2-3 minutes instead of 45.
 
 ---
 
@@ -164,7 +166,9 @@ pip install pre-commit sqlfluff
 pre-commit install
 ```
 
-> [!note] `dbt compile` in the pre-commit hook requires a working `profiles.yml` pointing at a dev target. Use environment variables so the hook works on every developer's machine without checking in credentials.
+> [!note] Pre-commit hook requirements
+>
+> `dbt compile` in the pre-commit hook requires a working `profiles.yml` pointing at a dev target. Use environment variables so the hook works on every developer's machine without checking in credentials.
 
 ---
 

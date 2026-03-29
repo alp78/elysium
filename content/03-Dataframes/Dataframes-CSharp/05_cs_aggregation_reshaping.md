@@ -184,7 +184,9 @@ dimExD
 ---
 ## Grouping & Aggregation
 
-> [!info] Polars.NET `GroupBy()` always returns a flat DataFrame — no index concept.
+> [!info] Polars.NET GroupBy() returns flat DataFrame
+>
+> Polars.NET `GroupBy()` always returns a flat DataFrame — no index concept.
 > Deedle's `GroupRowsBy<T>()` creates a hierarchical row key, requiring explicit
 > flattening before further operations. Choose Polars for pipeline code where flat
 > DataFrames chain cleanly; Deedle when you need time-series-aware operations.
@@ -579,7 +581,9 @@ dfDWithRolling.Columns[new[] { "symbol", "date", "close", "rolling_mean_20" }].R
 ---
 ## Joins
 
-> [!danger] Joins with duplicate keys silently multiply rows
+> [!danger] Joins with duplicate keys silently
+>
+> Joins with duplicate keys silently multiply rows
 > If both sides of a join have duplicate keys, the result is a Cartesian product for
 > those keys — your 66K row DataFrame can explode to millions with no error or warning.
 > Always check `result.Shape` after a join and compare to the expected row count.

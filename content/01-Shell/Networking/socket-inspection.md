@@ -22,7 +22,8 @@ The most underused debugging skill in data engineering is reading socket state. 
 
 #### ss -tlnp — listing listening TCP sockets with process info
 
-> [!info] `ss -tlnp` flags
+> [!info] ss -tlnp flags
+>
 > - `-t` — TCP only (use `-u` for UDP, `-x` for Unix sockets)
 > - `-l` — listening sockets only (waiting for incoming connections)
 > - `-n` — numeric (show port numbers, not service names — much faster)
@@ -51,7 +52,8 @@ ss -tlnp
 
 ### ss local address — 0.0.0.0 vs 127.0.0.1 determines who can connect
 
-> [!info] The IP address determines WHO can connect
+> [!info] Bind address determines access
+>
 > - **`0.0.0.0:1433`** — listening on ALL IPv4 interfaces. Any machine on the network can connect. This is how SQL Server, SSH, and web servers normally listen. Equivalent: `*:1433`
 > - **`127.0.0.1:5000`** — LOOPBACK only. Only processes on THIS machine can connect. External machines get "connection refused" even if firewall allows it. Use case: Datadog agent, internal APIs
 > - **`[::]:22`** — listening on ALL IPv6 interfaces. On Linux with dual-stack, often handles BOTH IPv4 and IPv6
@@ -77,7 +79,8 @@ ss -tlnp
 # 6379    Redis                       127.0.0.1 (loopback — should NEVER be 0.0.0.0)
 ```
 
-> [!tip] SQL Server Port Breakdown
+> [!tip] SQL Server port breakdown
+>
 > - **1433** — The database engine. This is where your queries go. Always `0.0.0.0` for production.
 > - **1434** — SQL Server Browser service. Tells clients which port each *named instance* uses. Irrelevant when using the default instance on default port 1433. Can be disabled.
 > - **1431** — Dedicated Admin Connection (DAC). An emergency-only connection that bypasses normal resource limits. Used when the server is so overloaded that normal connections are rejected. Always localhost-only. Connect with: `sqlcmd -S admin:localhost -U sa`
@@ -105,7 +108,8 @@ ss -tnp
 #          This is your interactive SSH session via gcloud compute ssh
 ```
 
-> [!info] What Are Ephemeral Ports?
+> [!info] Ephemeral ports explained
+>
 > When a client connects, the OS picks a random high port (typically 32768-60999 on Linux) for the client side. The server sees this as the "peer port." Each connection gets a unique ephemeral port. That's why you see different port numbers (56434, 26733) even though both connections go to the same SQL Server on port 1433.
 
 ### ss filtering — counting connections, TIME-WAIT, and per-client breakdown
@@ -118,7 +122,9 @@ ss -tn | grep :1433 | wc -l
 
 #### ss + awk — count connections per remote IP
 
-> [!info] Shows which clients are consuming the most connections. Useful for identifying
+> [!info] Per-client connection counts
+>
+> Shows which clients are consuming the most connections. Useful for identifying
 > connection pool leaks or runaway pipeline processes.
 
 ```bash
@@ -127,7 +133,8 @@ ss -tn | grep :1433 | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -rn
 
 #### ss state time-wait — detect rapid connect/disconnect patterns
 
-> [!warning] Excessive TIME-WAIT connections (>1000) can exhaust ephemeral ports
+> [!warning] Excessive TIME-WAIT connections
+>
 > TIME-WAIT is normal for short-lived queries, but if a pipeline opens and closes
 > connections rapidly without pooling, ephemeral ports (32768-60999) fill up. Fix: use
 > connection pooling in your application, or tune `net.ipv4.tcp_tw_reuse=1` in sysctl.
@@ -138,7 +145,9 @@ ss -tn state time-wait | grep :1433
 
 #### ss -s — connection states summary
 
-> [!info] A quick health check: how many connections are established, closing, or waiting?
+> [!info] Connection states summary
+>
+> A quick health check: how many connections are established, closing, or waiting?
 > Use during incidents to see if connection counts are abnormal.
 
 ```bash
@@ -147,7 +156,9 @@ ss -s
 
 #### watch + ss — real-time connection monitoring
 
-> [!info] Updates every second — useful during load testing, deployment, or incident
+> [!info] Real-time connection monitoring
+>
+> Updates every second — useful during load testing, deployment, or incident
 > response. Watch for connection count climbing steadily (pool leak) or dropping to zero
 > (service crash).
 
@@ -157,7 +168,8 @@ watch -n 1 'ss -tn | grep :1433 | wc -l'
 
 ### Connection refused vs connection timed out — diagnosing the root cause
 
-> [!warning] "Connection Refused" vs "Connection Timed Out" — Completely Different Root Causes
+> [!warning] Refused vs timed out root causes
+>
 > These two errors look similar but have completely different causes:
 >
 > - **Connection refused** = The packet reached the server, but nothing is listening on that port. The kernel sends back a TCP RST (reset). Diagnosis: check `ss -tlnp` — is the service running? Is it bound to the right interface?
@@ -194,7 +206,9 @@ Get-NetTCPConnection -LocalPort 1433 -State Established |
 
 #### Get-NetTCPConnection | Group-Object State — connection state breakdown
 
-> [!info] Shows how many connections are in each TCP state (Listen, Established, TimeWait).
+> [!info] PowerShell connection state breakdown
+>
+> Shows how many connections are in each TCP state (Listen, Established, TimeWait).
 > A quick health check equivalent to `ss -s` on Linux.
 
 ```powershell

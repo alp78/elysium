@@ -396,6 +396,7 @@ DBCC SHRINKFILE (mydb_log, 1024);  -- shrink to 1 GB minimum
 ```
 
 > [!warning] SHRINKFILE Is a Last Resort
+>
 > Shrinking and then letting the log grow again causes log file fragmentation. The correct long-term fix is to take log backups regularly (every 15 minutes for FULL recovery model) to prevent the log from growing in the first place. See [[backup-types-and-strategy]].
 
 #### du, find, journalctl — OS disk full Linux cleanup

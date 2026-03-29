@@ -224,6 +224,7 @@ display(pd.DataFrame(sample))
 </table>
 
 > [!tip] Related pattern
+>
 > For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [[streaming-architecture]].
 
 ## WebSocket Streaming

@@ -29,6 +29,7 @@ The state file (`terraform.tfstate`) is a JSON document that maps every resource
 4. Shows what will change
 
 > [!warning] The State File Is Sacred
+>
 > If you lose the state file, Terraform doesn't know what exists and will try to recreate everything — causing duplicates, conflicts, and potentially destroying running services. Always use remote state. Never delete the state file.
 
 ---
@@ -67,9 +68,12 @@ terraform {
 - The GCS bucket access controls protect sensitive values stored in state (passwords, connection strings)
 
 > [!info] GCS Bucket Must Pre-exist
+>
 > Create the state bucket manually (or via a separate bootstrap Terraform config) before running `terraform init`. The GCS backend cannot create its own bucket.
 
-> [!warning] Never Run Concurrent `terraform apply` on the Same State
+> [!warning] No Concurrent Applies
+>
+> Never Run Concurrent `terraform apply` on the Same State.
 > Even with GCS locking, two engineers running `terraform plan` simultaneously can both see the same "clean" state, then apply conflicting changes. The second apply may overwrite the first's changes or corrupt state. Use CI/CD pipelines (GitHub Actions, Cloud Build) as the single point of entry for `terraform apply` in shared environments.
 
 ```bash
@@ -104,6 +108,7 @@ terraform force-unlock <LOCK_ID>
 ```
 
 > [!warning] Force-Unlock Carefully
+>
 > Only force-unlock if you are certain no other `terraform apply` is running. Unlocking while an apply is in progress can corrupt the state file.
 
 ---
@@ -172,9 +177,12 @@ terraform state rm google_compute_instance.airflow
 ```
 
 > [!warning] Never Edit State Manually
+>
 > Never edit `terraform.tfstate` directly in a text editor. Use `terraform state mv` and `terraform state rm` for all state manipulation. Manual edits corrupt the state and can cause all resources to be destroyed on the next apply.
 
-> [!danger] `terraform state rm` Followed by `terraform apply` Destroys Resources
+> [!danger] State rm Then Apply Destroys Resources
+>
+> `terraform state rm` Followed by `terraform apply` Destroys Resources.
 > If you `terraform state rm` a resource and then run `terraform apply`, Terraform sees the resource definition in your `.tf` files but not in state, so it tries to create a new one. If the resource already exists in GCP (which it does -- you just removed it from state), the apply either fails with a "resource already exists" error or, worse, creates a duplicate. Always pair `terraform state rm` with either removing the resource block from `.tf` files or immediately importing it back into a different state.
 
 ### Importing Existing Resources
@@ -227,7 +235,9 @@ terraform -chdir=infra validate
 
 ### State Security
 
-> [!danger] State File Contains Plaintext Secrets
+> [!danger] State Contains Secrets
+>
+> State File Contains Plaintext Secrets.
 > Terraform stores all resource attributes in state -- including database passwords, API keys, and secret values passed via `google_secret_manager_secret_version`. Anyone with read access to the GCS state bucket can extract every secret in your infrastructure. Treat the state bucket with the same security as your secret manager: restrict access to the Terraform service account and human admins only, enable audit logging, and never download state files to local machines.
 
 The state file contains sensitive values (passwords, connection strings, secret versions). Secure the GCS bucket:

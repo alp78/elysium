@@ -1086,6 +1086,7 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 ## Security Operations Audit Summary
 
 > [!abstract]- Security Operations Audit Summary (C#)
+>
 > **Identity & Authentication:** SA key file (`ServiceAccountCredential`), ADC, service account impersonation, short-lived access tokens
 >
 > **Secret Manager:** Read/create/rotate/disable secrets, JSON secret parsing

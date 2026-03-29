@@ -23,7 +23,8 @@ updated: 2026-03-23
 
 The contract concept parallels [[rest-api-design-and-consumption|API contracts]] in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
 
-> [!warning] A Contract Without Enforcement Is Just Documentation
+> [!warning] Enforce contracts in CI
+>
 > Writing a contract YAML file that nobody validates in CI provides a false sense of safety. The contract must be checked automatically on every pipeline run -- schema validation in CI, SLA checks in Airflow, and freshness monitors in Datadog. If the enforcement step is missing, the contract will drift from reality within weeks, and downstream consumers will still break on schema changes.
 
 ### Contract-First Development Workflow

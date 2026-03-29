@@ -30,9 +30,11 @@ The ability to express the same transformation in SQL, Python, and C# is what ma
 | Cross-database joins | Python (pandas merge) | SQL can't join across different database servers |
 
 > [!tip] The Golden Rule
+>
 > Transform data as close to its source as possible, and as late as you can get away with. SQL transformations in the database are almost always faster than pulling data to Python and transforming there. But Python is necessary when crossing system boundaries (API → DB) or when using libraries that don't exist in SQL (scipy, statsmodels, scikit-learn).
 
 > [!info] Context for This Reference
+>
 > SQL examples use SQL Server T-SQL dialect. Python examples use pandas (the standard for data engineering; see also Polars for large-scale pipelines). C# examples use LINQ, which is idiomatic for the application/dashboard layer. For connection recipes, see the database connections note. The SQL window functions and aggregations here are the same patterns applied in [[gold-transforms]] to produce analytics-ready scores, and the BigQuery variants are covered in [[bq-advanced]]. The pandas DataFrame operations map directly to [[05_py_aggregation_reshaping]].
 
 ## Window Functions
@@ -320,6 +322,7 @@ combined = pd.merge(sql_df, bq_df, on='symbol', how='inner')
 ```
 
 > [!info] Cross-Database Joins
+>
 > SQL cannot join tables across different database servers. If you need to combine data from SQL Server and BigQuery, pull both to Python DataFrames and use `pd.merge()`. This is one of the primary use cases for Python in data engineering pipelines.
 
 ### Type conversion — CAST vs pandas astype vs Convert in C#

@@ -27,6 +27,7 @@ SQL Server execution plans are the primary diagnostic tool for query performance
 | **Live** | SSMS: Include Live Query Statistics | Real-time animation showing rows flowing through operators as the query runs. |
 
 > [!tip] Always Use Actual Plans for Diagnosis
+>
 > Estimated plans can mislead when statistics are stale. The estimated cost percentages are computed from optimizer predictions — when those predictions are wrong, the cost distribution is wrong too. Always cross-reference with actual row counts.
 
 ---
@@ -173,6 +174,7 @@ Each operator's cost is split into I/O cost and CPU cost:
 - **High CPU cost** → the operator is doing heavy computation (sorting, hashing, string comparisons). Solution: reduce the number of rows reaching this operator, or simplify the expression.
 
 > [!warning] Cost Percentages Are Based on Estimates
+>
 > Cost percentages are based on the optimizer's **estimates**, not actual execution. If statistics are stale, the cost distribution can be completely wrong. A scan showing "5%" might actually dominate execution time if the optimizer underestimated the row count. Always cross-reference costs with **actual row counts** and `SET STATISTICS TIME/IO` output.
 
 #### SET STATISTICS TIME/IO — get actual timing per query
@@ -430,6 +432,7 @@ cursor.executemany("INSERT INTO ...", rows)
 ```
 
 > [!info] Full SARGability Reference
+>
 > For the complete list of SARGable vs. non-SARGable patterns, the detection query, and the data pipeline quick-reference table, see [[sargable-queries]].
 
 ---
@@ -472,6 +475,7 @@ OPTION (RECOMPILE);
 ```
 
 > [!tip] When to Use RECOMPILE
+>
 > Use `OPTION (RECOMPILE)` sparingly — only on queries that run a few times per pipeline (not thousands of times in a loop). Recompilation has CPU overhead.
 
 ---
@@ -540,6 +544,7 @@ ON bronze.pulse_tickers (_index) INCLUDE (symbol, rank, activity_score, volume_s
 ```
 
 > [!info] Missing Index DMVs
+>
 > For the systematic missing index detection query using `sys.dm_db_missing_index_details`, see [[index-types-and-strategy#Missing Index DMV Queries]].
 
 ---

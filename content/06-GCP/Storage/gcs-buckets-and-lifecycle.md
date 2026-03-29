@@ -27,7 +27,9 @@ gcloud storage buckets create gs://data-pipeline-pipeline-data \
 # --uniform-bucket-level-access = simplified IAM (recommended, disable ACLs)
 ```
 
-> [!tip] Always Use Uniform Bucket-Level Access
+> [!tip] Use Uniform Bucket-Level Access
+>
+> Always Use Uniform Bucket-Level Access.
 > `--uniform-bucket-level-access` disables per-object ACLs and enforces IAM-only access control. This is simpler to manage, audit, and secure. It is the recommended setting for all new buckets. Once enabled, it cannot be disabled for 90 days.
 
 ### GCS Storage Classes and Cost Trade-offs
@@ -50,7 +52,9 @@ gcloud storage buckets create gs://data-pipeline-pipeline-data \
 
 Choosing the right storage class is one of the most impactful [[finops-cost-optimization]] levers available in GCP -- a single class change on a multi-TB bucket can save thousands per month.
 
-> [!warning] Minimum Storage Duration Charges
+> [!warning] Minimum Duration Charges
+>
+> Minimum Storage Duration Charges.
 > Moving an object to NEARLINE before 30 days charges you for the full 30 days regardless. COLDLINE has a 90-day minimum, ARCHIVE has 365 days. Only transition objects when you are confident they won't need to be deleted before the minimum duration expires.
 
 ### GCS Lifecycle Rules for Auto-Tiering
@@ -82,7 +86,9 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --lifecycle-file=
 # Set and forget — GCS handles the transitions automatically
 ```
 
-> [!tip] Lifecycle Rules Are "Set and Forget"
+> [!tip] Lifecycle Rules Are Automatic
+>
+> Lifecycle Rules Are "Set and Forget".
 > Once configured, lifecycle rules run automatically with no ongoing maintenance. They are evaluated daily. For pipeline staging buckets, a common pattern is: STANDARD for 30 days (active pipeline window) → NEARLINE for 60 days (occasional re-processing) → COLDLINE for 275 days (compliance retention) → deleted at 365 days.
 
 ### GCS Object Versioning
@@ -94,10 +100,13 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --versioning
 # Retrieve old versions: gcloud storage ls -a gs://bucket/file.csv (shows all versions)
 ```
 
-> [!info] Versioning and Lifecycle Rules Together
+> [!info] Versioning with Lifecycle Rules
+>
+> Versioning and Lifecycle Rules Together.
 > When versioning is enabled, overwritten objects become "noncurrent" versions rather than being deleted. Lifecycle rules can be configured to delete noncurrent versions after N days using the `"isLive": false` condition, preventing unbounded storage growth while retaining a short recovery window.
 
 > [!tip] Related pattern
+>
 > For reproducible bucket provisioning with lifecycle rules baked in, use [[tf-compute-and-storage|Terraform storage blocks]] instead of manual `gcloud` commands.
 
 ### GCS Bucket Location and Data Residency

@@ -2,7 +2,7 @@
 type: how-to
 category: data-engineering
 technology: [sql-server, python]
-tags: [python, sql, sql-server, tsql]
+tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Bronze Layer, Bronze DDL, Bronze Loading, JSON to Bronze, Raw Layer Loading, Bronze Tables, Bronze Schema]
 keywords: [bronze layer, raw layer, medallion architecture, DDL, pyodbc, parameterized queries, JSON loading, truncate reload, upsert, merge, OHLCV, trading calendar, index_dim, signals_daily, signals_quarterly, pulse, fast_executemany, executemany, batch insert, identity column, SYSUTCDATETIME, IS NOT EXISTS CREATE TABLE, idempotent DDL, bronze schema]
 description: "Complete DDL and Python loading patterns for the example medallion bronze layer — covers all table definitions, idempotent schema creation, pyodbc connection setup, truncate-and-reload vs merge loading strategies, and JSON-to-bronze data flow."
@@ -12,6 +12,14 @@ updated: 2026-03-22
 status: complete
 ---
 
+> [!abstract] Medallion Project — Financial Index Pipeline
+>
+> This page documents the implementation of a specific financial data pipeline
+> (STOXX/yfinance stock index scoring system) on SQL Server. For the general
+> patterns and alternative approaches, see the [[sql-server-index#Patterns]]
+> section. For the architectural theory behind bronze/silver/gold layering,
+> see [[medallion-architecture]].
+
 # Bronze Layer Loading
 
 The bronze layer is the raw data landing zone in the [[medallion-architecture]]. Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [[silver-transforms|silver]].
@@ -19,6 +27,7 @@ The bronze layer is the raw data landing zone in the [[medallion-architecture]].
 **Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [[silver-transforms|Silver transforms]]
 
 > [!info] Bronze Layer Role
+>
 > Bronze is append-friendly and ephemeral for snapshot tables. Most bronze tables are truncated and reloaded on every pipeline run — history is preserved in silver, not bronze. The exception is OHLCV data, which accumulates over time.
 
 ---
@@ -505,6 +514,7 @@ conn.commit()                    # commit the transaction (or rollback on error)
 ```
 
 > [!tip] fast_executemany Performance
+>
 > Setting `cursor.fast_executemany = True` before `executemany()` enables pyodbc's ODBC batch mode, which is dramatically faster than row-by-row inserts. Use it for all bulk loads.
 
 ### Strategy 2: Merge (OHLCV Only)

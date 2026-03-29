@@ -85,7 +85,9 @@ git add -A
 # In plain English: Mark everything for the next save. Use with caution.
 ```
 
-> [!warning] Avoid `git add -A` or `git add .` in Production Repos
+> [!warning] Avoid Staging Everything
+>
+> Avoid `git add -A` or `git add .` in Production Repos.
 > In repos with sensitive files (.env, credentials), stage specific files by name instead. Use [[gitignore-patterns|.gitignore]] as a safety net, not as your primary defense against committing secrets or large files.
 
 #### git add -p — interactive staging, choose hunks within files
@@ -134,6 +136,7 @@ git commit --amend -m "fix: correct timezone handling"
 ```
 
 > [!danger] Never Amend a Pushed Commit
+>
 > Amending a pushed commit rewrites its SHA, creating a fork in history. Anyone who has pulled the original commit will get "divergent branches" errors on their next pull. On shared branches, use `git revert` to undo changes safely. On personal feature branches where you are the sole contributor, `--force-with-lease` is acceptable after an amend.
 
 ### Conventional Commit Format
@@ -206,9 +209,12 @@ git fetch
 ```
 
 > [!tip] Fetch Is Always Safe
+>
 > `git fetch` is always safe — it never modifies your files. `git pull` might cause [[git-merge-conflicts|merge conflicts]]. When in doubt, fetch first and inspect with `git log origin/main --oneline`.
 
-> [!warning] `git pull` Without `--rebase` Creates Noise Merge Commits
+> [!warning] Pull Without Rebase Creates Noise
+>
+> `git pull` Without `--rebase` Creates Noise Merge Commits.
 > The default `git pull` creates a merge commit every time your branch has diverged from origin -- even by a single commit. Over time this pollutes history with dozens of "Merge branch 'main' of ..." commits. Set `git config --global pull.rebase true` to make rebase the default. This keeps history linear and makes `git log` actually useful for debugging.
 
 ### The Feature Branch Workflow (Complete Cycle)
@@ -231,7 +237,9 @@ Pushing a branch or opening a PR typically triggers [[github-actions-fundamental
 
 ### Rules for Distributed Data Teams
 
-> [!danger] Secrets in Git History Are Permanent
+> [!danger] Secrets in History Are Permanent
+>
+> Secrets in Git History Are Permanent.
 > If you accidentally commit a `.env` file, API key, or service account JSON, removing it from the latest commit is not enough. The secret remains in git history forever and can be extracted with `git log --all --full-history -- path/to/secret`. You must use `git filter-repo` or BFG Repo-Cleaner to purge the file from all history, then force-push and notify all collaborators to re-clone. Assume any secret that touched git is compromised and rotate it immediately.
 
 - **Never push directly to main** — always use PRs
@@ -260,6 +268,7 @@ See [[git-recovery-and-undo]] for detailed recovery procedures and [[git-common-
 ### Best Practices for Data Pipeline Teams
 
 > [!tip] Best Practices
+>
 > 1. **Never commit credentials.** Add to [[gitignore-patterns|.gitignore]]: `*.env`, `*.json` (service account keys), `secrets/`. Use `git-secrets` to scan for AWS/GCP keys before each commit.
 > 2. **SQL migrations in git.** Number them sequentially: `V001__create_ohlcv.sql`, `V002__add_signals.sql`. Never modify a committed migration — create a new one. See the dbt and migration notes for versioning patterns.
 > 3. **DAG files in git.** Airflow reads DAGs from a directory — changes are deployed by updating the files. Version them in git, deploy via [[github-actions-ci-cd|CI/CD]] or SCP.

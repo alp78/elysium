@@ -24,7 +24,9 @@ Topics covered:
 - Dapper (micro-ORM, like pandas read_sql / SQLAlchemy)
 - Real-world Index Provider Queries (index provider)
 
-> [!info] Run this cell once before any cells that use NuGet packages — suppresses harmless CS1701/CS1702 assembly version warnings.
+> [!info] Run this cell once before
+>
+> Run this cell once before any cells that use NuGet packages — suppresses harmless CS1701/CS1702 assembly version warnings.
 
 ```csharp
 #r "nuget: Microsoft.Data.SqlClient"
@@ -126,6 +128,7 @@ SQLite uses the ADO.NET pattern: `SqliteConnection`, `SqliteCommand`, `SqliteDat
 named placeholders. Python equivalent: `sqlite3.connect(":memory:")`.
 
 > [!info] ADO.NET pattern (SQLite)
+>
 > - `SqliteConnection` / `SqliteCommand` / `SqliteDataReader` — same API as SqlClient
 > - `@param` named placeholders prevent SQL injection
 > - Always `using` connections to avoid leaks
@@ -287,6 +290,7 @@ PRAGMAs configure SQLite behavior per connection. Set them right after `Open()`.
 WAL mode enables concurrent readers. Cache and mmap control memory usage.
 
 > [!info] Key PRAGMAs
+>
 > - Set right after `Open()` — configure per connection
 > - `journal_mode=WAL` — enables concurrent reads
 > - `busy_timeout` — retries instead of failing on lock
@@ -607,6 +611,7 @@ pragmaConn.Close();
 Quick reference of all important SQLite PRAGMAs — set these right after `Open()`.
 
 > [!abstract]- SQLite PRAGMA Quick Reference
+>
 > | PRAGMA | Value | Effect |
 > |---|---|---|
 > | `journal_mode` | `WAL` | Concurrent reads + one writer |
@@ -632,6 +637,7 @@ Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
 gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [[sql-fundamentals]].
 
 > [!info] ADO.NET pattern (SQL Server)
+>
 > - `SqlConnection` + `SqlCommand` + `SqlDataReader` — same pattern as SQLite
 > - Always use `@param` for safety
 > - `sys.*` catalog views give full metadata
@@ -970,7 +976,9 @@ SQL Server stores index data in 8KB B-tree pages. INSERT/UPDATE/DELETE cause pag
 | > 30% | `ALTER INDEX idx REBUILD` (recreates index, resets to 0%) |
 | < 1000 pages | Don't bother (too small) |
 
-> [!tip] Always `UPDATE STATISTICS` after `REBUILD` — stale stats produce bad query plans. Schedule via SQL Agent job. For data warehouses, rebuild after each ETL load.
+> [!tip] Always UPDATE STATISTICS after REBUILD
+>
+> Always `UPDATE STATISTICS` after `REBUILD` — stale stats produce bad query plans. Schedule via SQL Agent job. For data warehouses, rebuild after each ETL load.
 
 ```csharp
 QueryToTable(conn, @"
@@ -1192,8 +1200,9 @@ Console.WriteLine("Ran 13 queries on unindexed columns to provoke recommendation
 
 #### SQL Server — missing index recommendations from the query optimizer
 
-> [!info] Missing index advisor (`sys.dm_db_missing_index_details`)
-> - SQL Server records missing indexes every time it compiles a plan
+> [!info] Missing index advisor
+>
+> `sys.dm_db_missing_index_details` — SQL Server records missing indexes every time it compiles a plan.
 > - `equality_columns` — WHERE `=` | `inequality_columns` — WHERE `>`
 > - `included_columns` — SELECT → INCLUDE
 > - `avg_user_impact` — estimated % improvement
@@ -1279,6 +1288,7 @@ Quick reference of essential SQL Server DMVs and commands for monitoring,
 tuning, and troubleshooting.
 
 > [!abstract]- SQL Server Administration Quick Reference
+>
 > **Metadata:** `sys.tables`, `sys.schemas`, `sys.columns` (table/column metadata) | `sys.indexes` (index definitions) | `sys.partitions` (row counts) | `OBJECT_ID('schema.table')` (get object ID)
 >
 > **Index Management**
@@ -1681,6 +1691,7 @@ in-memory database. In production, use SQL Server/PostgreSQL with migrations.
 Entity classes = tables, properties = columns. `DbContext` maps entities via `DbSet<T>`. LINQ queries are compile-time checked. Change tracking generates SQL on `SaveChanges()`. In-memory provider for notebooks; SQL Server for production.
 
 > [!warning] EF Core pitfalls
+>
 > - Lazy loading without understanding N+1 queries
 > - Not using `AsNoTracking()` for read-only queries — adds tracking overhead
 > - Loading entire tables — use `IQueryable`, not `ToList()`
@@ -1726,6 +1737,7 @@ public class Trade
 #### EF Core — DbContext definition
 
 > [!info] DbContext setup
+>
 > - `DbContext` maps `DbSet<T>` properties to tables
 > - `OnConfiguring` — chooses the provider (`UseInMemoryDatabase` for tests, `UseSqlServer` for production)
 > - `OnModelCreating` — configures relationships (`HasOne`/`WithMany`) and constraints (`HasIndex`)
@@ -1955,7 +1967,9 @@ dt
 
 `FromSqlRaw` — raw SQL inside EF Core. Use `{0}`, `{1}` placeholders (auto-parameterised). Can chain LINQ after. For complex analytics (CTEs, PIVOT, window functions) or stored procedures. Alternative: use Dapper alongside EF Core.
 
-> [!danger] Never use string interpolation `$"...{var}..."` with `FromSqlRaw` — injection risk. Use `FromSqlInterpolated` instead (auto-parameterises `{var}` into `@p0`).
+> [!danger] Never use string interpolation $"...{var}..."
+>
+> Never use string interpolation `$"...{var}..."` with `FromSqlRaw` — injection risk. Use `FromSqlInterpolated` instead (auto-parameterises `{var}` into `@p0`).
 
 ```csharp
 // Demo with LINQ instead (works with InMemory provider)
@@ -2005,6 +2019,7 @@ public partial class AddVolumeColumn : Migration
 ```
 
 > [!warning] Migration best practices
+>
 > - One migration per logical change (not one per deployment)
 > - Always test `Down()` — rollbacks must work
 > - Generate SQL scripts for production (`dotnet ef migrations script`)
@@ -2716,7 +2731,9 @@ dt
 | `threads` | CPU cores | N-2 if shared machine, all cores if solo |
 | `enable_object_cache` | false | Enable for notebooks (re-running queries), disable for ETL |
 
-> [!tip] How to know if tuning is needed
+> [!tip] How to know if tuning
+>
+> How to know if tuning is needed
 > 1. Query slow → `EXPLAIN ANALYZE` → check for disk spills
 > 2. "Out of Memory" → increase `memory_limit`
 > 3. CPU at 100% → reduce `threads` if other services need CPU
@@ -2780,6 +2797,7 @@ Console.WriteLine("VACUUM ANALYZE: stats updated + space reclaimed");
 Quick reference of all DuckDB tuning and maintenance commands.
 
 > [!abstract]- DuckDB Tuning & Maintenance Reference
+>
 > **Indexes:** `CREATE INDEX idx ON t(col)` (ART index for equality) | `CREATE UNIQUE INDEX` | `duckdb_indexes()` (list all)
 >
 > **Storage:** `CALL pragma_database_size()` | `CALL pragma_storage_info('table')` (per-column compression) | `SUMMARIZE table` | `DESCRIBE table`
@@ -3167,6 +3185,7 @@ results
 ## Summary
 
 > [!abstract]- C# Database Quick Reference
+>
 > **SQLite** (`Microsoft.Data.Sqlite`)
 > | Pattern | Description |
 > |---|---|

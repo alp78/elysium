@@ -70,6 +70,7 @@ ORDER BY ips.avg_fragmentation_in_percent DESC;
 ```
 
 > [!warning] LIMITED vs. DETAILED Mode
+>
 > The `'LIMITED'` mode reads only the parent-level pages and is fast but approximate. `'DETAILED'` reads all leaf pages for accurate fragmentation data but is slow on large tables. Use `'LIMITED'` for regular monitoring and `'DETAILED'` only before a targeted maintenance operation.
 
 ### REORGANIZE — Online, Lightweight
@@ -97,7 +98,9 @@ WITH (COMPRESS_ALL_ROW_GROUPS = ON);
 -- Run after bulk loads to ensure all data is compressed
 ```
 
-> [!info] REORGANIZE Does Not Update Statistics
+> [!info] REORGANIZE Skips Statistics Update
+>
+> REORGANIZE Does Not Update Statistics.
 > Unlike REBUILD, REORGANIZE does not automatically update statistics. Run `UPDATE STATISTICS` separately after REORGANIZE if the data distribution has changed significantly.
 
 ### REBUILD — Heavier, More Thorough
@@ -141,7 +144,9 @@ ALTER INDEX CCI_archive ON dbo.market_data_archive REBUILD;
 -- Also eliminates deleted rows (ghost records from DELETEs)
 ```
 
-> [!warning] REBUILD OFFLINE Locks the Table
+> [!warning] REBUILD OFFLINE Blocks Access
+>
+> REBUILD OFFLINE Locks the Table.
 > Without `WITH (ONLINE = ON)`, REBUILD takes a schema modification lock that blocks all reads and writes for the duration. On a large table this can take minutes to hours. Always use `ONLINE = ON` in production unless you have a maintenance window. Note: `ONLINE = ON` requires Developer or Enterprise edition.
 
 ### Fill Factor Guidance
@@ -198,7 +203,9 @@ DEALLOCATE idx_cursor;
 -- https://ola.hallengren.com/
 ```
 
-> [!tip] Use Ola Hallengren's Solution in Production
+> [!tip] Use Ola Hallengren in Production
+>
+> Use Ola Hallengren's Solution in Production.
 > For production environments, Ola Hallengren's [IndexOptimize](https://ola.hallengren.com/sql-server-index-and-statistics-maintenance.html) script is the industry standard. It handles edge cases (columnstore, partitioned tables, ONLINE availability), provides detailed logging, and integrates with SQL Agent. The script above is a simplified illustration.
 
 ### Statistics After Maintenance
@@ -228,7 +235,9 @@ ORDER BY sp.modification_counter DESC;
 -- pct_modified > 20% → stats are likely stale
 ```
 
-> [!info] REBUILD Updates Statistics Automatically
+> [!info] REBUILD Auto-Updates Statistics
+>
+> REBUILD Updates Statistics Automatically.
 > An index REBUILD automatically updates statistics with a full scan (equivalent to `WITH FULLSCAN`). REORGANIZE does NOT update statistics. After REORGANIZE, always run `UPDATE STATISTICS` if the data volume changed significantly.
 
 ### Index Anti-Patterns

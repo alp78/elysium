@@ -38,7 +38,9 @@ start_date = "2023-06-01"
 
 Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEAD) has. Everything between `=======` and `>>>>>>> feat/new-history` is what the incoming branch has. Git is saying: "These two versions disagree. You decide which one to keep."
 
-> [!info] Conflict markers in different contexts
+> [!info] Conflict Marker Labels Vary
+>
+> Conflict markers in different contexts.
 > The marker labels change depending on the operation:
 > - **`git merge`**: `HEAD` = your branch, `>>>>>>> branch-name` = the branch being merged in
 > - **`git rebase`**: `HEAD` = the target branch (main), `>>>>>>> commit-sha (message)` = your commit being replayed
@@ -74,7 +76,9 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 
    Git will pre-populate the commit message with merge information. You can edit it or accept the default.
 
-> [!warning] Do not leave conflict markers in your code
+> [!warning] Remove All Conflict Markers
+>
+> Do not leave conflict markers in your code.
 > If you stage a file that still contains `<<<<<<<` markers, Git will accept the commit — but the file will be broken. Always verify the file is clean before running `git add`.
 
 ## Aborting a Merge
@@ -90,6 +94,7 @@ git merge --abort
 Use this when you start a merge, find the conflicts too complex to resolve now, and want to step back and reconsider your approach (e.g., rebase instead of merge, or coordinate with the teammate who made the conflicting changes).
 
 > [!tip] Abort is always safe
+>
 > `git merge --abort` is completely safe. It restores your working directory exactly to where it was before you ran `git merge`. No work is lost.
 
 ## Visual Merge Tools
@@ -141,7 +146,9 @@ git rebase --abort   # Cancel the entire rebase, restore pre-rebase state
 git rebase --skip    # Skip the current commit (use only if that commit is no longer needed)
 ```
 
-> [!warning] Rebase --abort vs Merge --abort
+> [!warning] Rebase vs Merge Abort
+>
+> Rebase --abort vs Merge --abort.
 > Both abort commands are safe and restore your prior state. Remember: after a `git rebase`, commit SHAs change — you will need to `git push --force-with-lease` to update the remote. See [[git-remote-management]] for safe force-push usage.
 
 ## Real-World Case Study: Rebase a PR After Another PR Was Merged
@@ -166,7 +173,9 @@ git stash pop
 - `git checkout fix/stock-chart-missing-latest-date` — switch to the feature branch
 - `git stash pop` — re-apply the shelved changes onto the new branch
 
-> [!warning] Stash pop can produce conflicts
+> [!warning] Stash Pop Can Conflict
+>
+> Stash pop can produce conflicts.
 > If the stashed changes touch the same lines that differ between branches, `git stash pop` will produce merge conflicts. This is expected — the stash is still preserved (not dropped) when conflicts occur, so your work is safe.
 
 ### Step 2: Resolve Stash Pop Conflicts
@@ -300,6 +309,7 @@ Prevention is better than resolution. Strategies that reduce conflict frequency:
 - **Enable branch protection rules** — "Require branches to be up to date before merging" forces every PR to be rebased before it can merge. See [[pull-requests-and-code-review]] for setup.
 
 > [!tip] Rebase early, rebase often
+>
 > Running `git rebase origin/main` on your feature branch every morning takes 30 seconds when there are no conflicts. It saves hours when you wait until the PR is blocked at merge time.
 
 ### Quick Reference: Conflict Resolution Commands

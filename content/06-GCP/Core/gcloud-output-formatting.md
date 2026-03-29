@@ -96,6 +96,7 @@ gcloud compute instances list --impersonate-service-account=pipeline-sa@project.
 ```
 
 > [!info] Full Format Expression Language
+>
 > The `--format` specification is a complete expression language supporting:
 > - **Projections:** `table(name, status)` — select specific fields
 > - **Transformations:** `.basename()`, `.date()`, `.len()`, `.yesno()` — modify values

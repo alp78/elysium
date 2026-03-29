@@ -18,12 +18,14 @@ When an Airflow VM is slow, a query is hanging, or a runaway process is pinning 
 
 ## Linux — ps, top, htop, pstree
 
-> [!info] `ps aux` flags
+> [!info] ps aux flags
+>
 > - `a` — show processes from all users
 > - `u` — user-oriented format (USER, PID, %CPU, %MEM, VSZ, RSS, TTY, STAT, START, TIME, COMMAND)
 > - `x` — include processes without a controlling terminal (daemons, background jobs)
 
 > [!info] Important columns
+>
 > - **PID** — process ID (needed for `kill`)
 > - **%CPU** — CPU usage percentage (can exceed 100% on multi-core)
 > - **%MEM** — percentage of physical memory used
@@ -39,7 +41,8 @@ ps aux
 
 #### ps aux | grep — find a specific process
 
-> [!warning] `grep` matches itself in `ps` output
+> [!warning] grep matches itself in ps output
+>
 > `ps aux | grep mssql` always shows the `grep mssql` process too. Use the bracket
 > trick: `ps aux | grep "[m]ssql"` — the regex `[m]ssql` matches `mssql` but not the
 > literal string `[m]ssql` in grep's own command line.
@@ -50,7 +53,9 @@ ps aux | grep "[m]ssql"
 
 #### pstree -p — show parent-child process relationships
 
-> [!info] Shows which process spawned which — critical for understanding if a Python
+> [!info] Process tree relationships
+>
+> Shows which process spawned which — critical for understanding if a Python
 > process is a child of Airflow (scheduled) or a manual run (someone's SSH session).
 
 ```bash
@@ -63,7 +68,8 @@ pstree -p
 top
 ```
 
-> [!tip] Interactive commands inside `top`
+> [!tip] Interactive commands in top
+>
 > - `P` — sort by CPU (default)
 > - `M` — sort by memory
 > - `k` — kill a process (enter PID when prompted)
@@ -71,7 +77,8 @@ top
 > - `1` — show per-CPU breakdown (one core maxed while others idle = single-threaded bottleneck)
 > - `q` — quit
 
-> [!tip] `htop` — better `top` (install: `apt install htop`)
+> [!tip] htop is better top
+>
 > - `F5` — toggle tree view
 > - `F6` — choose sort column
 > - `F9` — kill signal selection menu
@@ -103,14 +110,16 @@ sudo docker stats --no-stream
 iostat -xz 2 3    # -x = extended stats, -z = suppress zero-activity, 2 3 = every 2s × 3 samples
 ```
 
-> [!info] `iostat` key columns
+> [!info] iostat key columns
+>
 > - **await** — average I/O wait time in ms (>20ms = slow disk)
 > - **%util** — percentage of time the device is busy (>80% = saturated)
 > - If `%util` is 100%, your pipeline is I/O bound — no amount of CPU optimization will help
 
 ### The D state — uninterruptible sleep processes that cannot be killed
 
-> [!warning] D State Processes Cannot Be Killed — Not Even with `kill -9`
+> [!warning] D state processes cannot be killed
+>
 > If you see processes in state `D` in `ps aux`, they are waiting for I/O and **cannot be killed** — not even with `kill -9`. They will stay until the I/O completes or the kernel gives up. Common causes:
 > 1. NFS mount hung (network storage is unreachable)
 > 2. Disk hardware failure (the drive isn't responding)

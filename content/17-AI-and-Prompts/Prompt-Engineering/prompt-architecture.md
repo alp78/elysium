@@ -67,7 +67,8 @@ The goal is the **single most important sentence** in your prompt. If the model 
 | "Write tests" | "Write unit tests for the `compute_daily_scores` function covering: normal input, empty dataframe, missing columns, and NaN values" |
 | "Analyze this data" | "Identify the top 3 anomalies in this time series data and explain what each one likely means in a financial context" |
 
-> [!warning] Buried Goals Produce Poor Output
+> [!warning] Buried goals produce poor output
+>
 > If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [[prompt-debugging#4.2 Intent vs Output Misalignment|intent vs. output misalignment]] for the failure mode this prevents.
 
 ### Layer 3: Constraints — Defining the Negative Space
@@ -85,7 +86,8 @@ Constraints prevent the model from going off track. They are **negative space** 
 | **Exclusions** | "Do not suggest using a different framework" |
 | **Accuracy** | "If you're not sure, say so — do not guess" |
 
-> [!tip] Positive Instructions Beat Negative Instructions
+> [!tip] Positive beats negative instructions
+>
 > "Maximum 3 sentences" is stronger than "don't be verbose." Specific metrics outperform adjectives. When you find yourself writing "don't be X," convert it to "do Y instead" wherever possible.
 
 ### Layer 4: Format — Eliminating Wasted Iterations
@@ -166,7 +168,8 @@ For each issue found:
 
 **When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [[model-specific-prompting#Claude Anthropic|Claude-specific guidance]]).
 
-> [!warning] JSON Output from LLMs Frequently Contains Syntax Errors
+> [!warning] LLM JSON syntax errors
+>
 > Models occasionally produce invalid JSON -- trailing commas, unescaped quotes, missing brackets, or markdown code fence wrappers around the JSON. Always wrap `json.loads()` in a try/except and implement a retry-with-repair strategy. Adding "Return ONLY valid JSON, no markdown formatting" to the prompt reduces but does not eliminate this issue. For production pipelines, use the model's structured output mode (Anthropic's tool_use, OpenAI's JSON mode) instead of parsing free-text JSON.
 
 ### JSON Schema: Machine-Readable Structured Output

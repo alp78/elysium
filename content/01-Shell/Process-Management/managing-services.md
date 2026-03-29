@@ -20,7 +20,8 @@ Every long-running process in your infrastructure -- SQL Server, Airflow, Datado
 
 #### systemctl start, stop, restart — control service lifecycle
 
-> [!warning] `restart` drops all active connections
+> [!warning] restart drops all connections
+>
 > `systemctl restart mssql-server` stops then starts the service — all database
 > connections are terminated. In-flight queries are killed, uncommitted transactions are
 > rolled back. Use `reload` when possible to avoid downtime.
@@ -33,7 +34,9 @@ sudo systemctl restart mssql-server
 
 #### systemctl reload — re-read config without restarting
 
-> [!info] Sends SIGHUP to re-read configuration without stopping the service. Not all
+> [!info] Reload without restart
+>
+> Sends SIGHUP to re-read configuration without stopping the service. Not all
 > services support reload — check with `systemctl cat <service>` to see if the unit
 > file defines `ExecReload`.
 
@@ -49,7 +52,8 @@ sudo systemctl status mssql-server
 
 #### systemctl enable — start service automatically on boot
 
-> [!warning] `enable` does NOT start the service now
+> [!warning] enable does not start now
+>
 > `systemctl enable` only creates the symlink for boot startup. To start immediately AND
 > enable on boot: `sudo systemctl enable --now mssql-server`.
 
@@ -60,7 +64,9 @@ sudo systemctl disable mssql-server
 
 #### journalctl -u — read service logs
 
-> [!info] `-u` filters by unit (service name). `--since` accepts human-readable times.
+> [!info] journalctl filter and follow
+>
+> `-u` filters by unit (service name). `--since` accepts human-readable times.
 > `-f` follows in real-time (like `tail -f`). `-n 50` shows last 50 lines.
 
 ```bash
@@ -76,7 +82,8 @@ systemctl list-units --type=service --state=running
 
 ### Diagnosing OOM kills — when services crash with no error in their own logs
 
-> [!warning] OOM Kills — When Services Crash With No Error in Their Own Logs
+> [!warning] OOM kills crash with no logs
+>
 > If a service keeps crashing with no error in its own logs, it was probably killed by the Linux OOM killer (Out Of Memory). Check:
 > ```bash
 > dmesg | grep -i "oom|killed process" | tail -10
@@ -84,7 +91,8 @@ systemctl list-units --type=service --state=running
 > ```
 > The OOM killer selects the process with the highest memory usage and kills it to prevent the entire system from freezing. Fix: increase VM memory, reduce SQL Server's `max server memory`, or add swap as a buffer.
 
-> [!tip] Quick Service Debugging Workflow
+> [!tip] Service debugging workflow
+>
 > 1. `systemctl status <service>` — is it running or failed?
 > 2. `journalctl -u <service> -n 50 --no-pager` — last 50 log lines
 > 3. `dmesg | grep -i oom` — was it OOM killed?
@@ -109,7 +117,9 @@ Set-Service -Name "MSSQLSERVER" -StartupType Automatic
 
 #### Get-Service -DependentServices — check what else stops
 
-> [!info] Shows services that depend on this one. Stopping SQL Server may also stop
+> [!info] Check dependent services
+>
+> Shows services that depend on this one. Stopping SQL Server may also stop
 > SQL Server Agent, SSIS, or other dependent services.
 
 ```powershell

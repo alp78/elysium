@@ -94,7 +94,9 @@ FROM sys.server_audits;
 -- project_audit   STARTED      /var/opt/mssql/audit/         1000         CONTINUE
 ```
 
-> [!tip] ON_FAILURE = SHUTDOWN for Strict Compliance
+> [!tip] ON_FAILURE = SHUTDOWN
+>
+> ON_FAILURE = SHUTDOWN for Strict Compliance.
 > If `ON_FAILURE = CONTINUE`, the database keeps running if audit logging fails (e.g., disk full). If `ON_FAILURE = SHUTDOWN`, SQL Server halts to ensure no unaudited operations occur. Use SHUTDOWN only when regulatory requirements mandate it — a disk-full condition would take your database offline.
 
 ---
@@ -415,6 +417,7 @@ WHERE db.name = 'analytics_db';
 ```
 
 > [!tip] Set a Quarterly Calendar Reminder
+>
 > Security audits are only useful if they're done regularly. Create a recurring calendar event for "SQL Server Quarterly Security Review" with a link to this runbook and a template for documenting findings.
 
 ---

@@ -64,6 +64,7 @@ git rebase main
 ```
 
 > [!warning] Never Rebase Shared Branches
+>
 > Rebasing rewrites commit hashes. If others have pulled your branch, rebase will cause conflicts and confusion. Only rebase local/private branches.
 
 ### Git Branch Recovery Techniques

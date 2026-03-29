@@ -62,20 +62,25 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 ## Read, Write, Append Files
 
 > [!info] File modes
+>
 > - `'r'` — read (default) | `'w'` — write (truncates!) | `'a'` — append | `'x'` — exclusive create
 > - Add `'b'` for binary (`'rb'`, `'wb'`), `'+'` for read+write (`'r+'`, `'w+'`)
 > - Always specify `encoding='utf-8'` — the default varies by OS (Windows uses cp1252)
 > - Use `pathlib.Path` for modern path handling (preferred over `os.path`)
 
-> [!warning] Always use `with` for file operations
+> [!warning] Always use with for file operations
+>
 > - `open()` without `with` leaks file handles if an exception occurs
 > - `'w'` mode truncates existing files immediately — no undo
 > - Omitting `encoding=` causes platform-dependent behavior
 
-> [!danger] Omitting `encoding=` causes platform-dependent behavior
+> [!danger] Omitting encoding= causes platform-dependent behavior
+>
 > On Windows, `open()` defaults to `cp1252` (not UTF-8). A file written on Linux (UTF-8) and read on Windows (cp1252) silently corrupts non-ASCII characters like accented names, currency symbols, and emoji. Always pass `encoding='utf-8'` explicitly.
 
-> [!warning] Windows newline translation silently corrupts binary-like text
+> [!warning] Windows newline translation silently corrupts
+>
+> Windows newline translation silently corrupts binary-like text
 > Python's text mode translates `\n` to `\r\n` on Windows. For CSV files, this causes double-newlines (blank rows) unless you pass `newline=""` to `open()`. For binary formats (Parquet, Avro, images), always use `'rb'`/`'wb'` mode.
 
 #### tempfile.mkdtemp — create isolated temp directory
@@ -313,6 +318,7 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
 The `csv` module handles quoting, escaping, and delimiters automatically. `csv.reader`/`csv.writer` work with list-based rows; `csv.DictReader`/`csv.DictWriter` use dict-based rows with named columns — preferred in data engineering since you access columns by name, not index.
 
 > [!warning] CSV pitfalls
+>
 > - **Never use `split(',')`** — breaks on quoted commas. Always use the `csv` module.
 > - **Avoid positional indexing** with `csv.reader` — fragile if columns reorder. Use `DictReader` instead.
 > - **For large CSV (>100MB)** — use pandas, Polars, or DuckDB instead of the built-in module.
@@ -529,6 +535,7 @@ print(f"  {csv_string.strip()}")
 #### json.dumps — dict → JSON string
 
 > [!info] JSON serialization
+>
 > - `json.dumps(obj, indent=2, sort_keys=True)` — converts dicts/lists to JSON string
 > - `default=` — handles non-serializable types (datetime, Decimal)
 > - For high-throughput, use `orjson` (3-10x speed)
@@ -654,7 +661,9 @@ print(f"  Source: {loaded['source']['dataset']}.{loaded['source']['table']}")
 
 #### json.dumps default parameter — serialize datetime, Decimal, custom objects
 
-> [!warning] `json.dumps()` raises `TypeError` on datetime, Decimal, set, bytes, and dataclasses
+> [!warning] json.dumps() raises TypeError on datetime,
+>
+> `json.dumps()` raises `TypeError` on datetime, Decimal, set, bytes, and dataclasses
 > The built-in JSON encoder only handles `dict`, `list`, `str`, `int`, `float`, `bool`, and `None`. Any other type raises `TypeError: Object of type X is not JSON serializable`. Always provide a `default=` handler or use `orjson` which handles these natively.
 
 ```python
@@ -744,7 +753,9 @@ with open(jsonl_file, "r", encoding="utf-8") as f:
 
 `yaml.safe_load()` parses YAML into dicts/lists safely — prevents arbitrary code execution (unlike `yaml.load` which can instantiate any Python object). Auto-detects types (numbers, booleans, dates).
 
-> [!danger] Never use `yaml.load()` without `SafeLoader` — security risk. Always use `yaml.safe_load()`.
+> [!danger] Never use yaml.load() without SafeLoader
+>
+> Never use `yaml.load()` without `SafeLoader` — security risk. Always use `yaml.safe_load()`.
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="yaml_"))
@@ -934,7 +945,9 @@ For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Av
 
 Serialization converts in-memory objects to bytes/string. JSON for text interchange, `pickle` for Python caching (not safe for untrusted data), `struct` for binary protocols. `StringIO`/`BytesIO` for in-memory streams (API payloads, cloud uploads without disk).
 
-> [!danger] Never unpickle data from untrusted sources — arbitrary code execution risk.
+> [!danger] Never unpickle data from untrusted sources
+>
+> Never unpickle data from untrusted sources — arbitrary code execution risk.
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="serial_"))
@@ -1262,6 +1275,7 @@ print(f"  Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert
 #### str.encode / bytes.decode — UTF-8, ASCII, Latin-1 character encoding
 
 > [!info] Character encoding
+>
 > - `str.encode('utf-8')` → bytes
 > - `bytes.decode('utf-8')` → string
 > - UTF-8 is the universal standard — always specify encoding explicitly (default varies by platform)
@@ -1387,6 +1401,7 @@ print(f"  Full URL: https://api.example.com/quote?{qs}")
 #### aiofiles — non-blocking file operations
 
 > [!info] aiofiles
+>
 > - Wraps standard `open()` with `async`/`await` — releases the event loop during disk I/O
 > - Essential for asyncio-based web servers
 > - Standard `open()` blocks the entire event loop; `aiofiles` uses a thread pool internally
@@ -1426,6 +1441,7 @@ shutil.rmtree(tmp)
 #### orjson — fast JSON serialization
 
 > [!info] orjson
+>
 > - Rust-based JSON, 3-10x faster than stdlib
 > - `dumps()` returns `bytes` (not `str`)
 > - Handles `datetime`, `numpy`, `dataclass` natively
@@ -1473,6 +1489,7 @@ print(f"  Speedup: {std_time/orj_time:.1f}x")
 #### pydantic — typed models with validation
 
 > [!info] Pydantic
+>
 > - `class Model(BaseModel)` — validates types on construction, auto-coerces (`"42"` → `42`)
 > - `model_dump()` → dict | `model_dump_json()` → JSON string
 > - Generates JSON schema automatically
@@ -1561,6 +1578,7 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
       Speedup:    5.4x
 
 > [!tip] Related pattern
+>
 > When writing pipeline output to files, codec selection (gzip, zstd, snappy) significantly affects both file size and read performance — see [[compression]] for benchmark data and decision guidance.
 
 ## Cloud and Object Storage

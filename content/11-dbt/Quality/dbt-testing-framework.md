@@ -237,7 +237,8 @@ tests:
 
 Singular tests are plain SQL files in the `tests/` directory. A test passes when the query returns **zero rows**. Any returned row represents a failure.
 
-> [!danger] Singular Tests with No Rows in Source Pass Silently
+> [!danger] Empty tables pass singular tests
+>
 > A singular test that queries an empty table returns zero rows and passes -- even though no data was validated. This is the most common false-positive in dbt testing. Always pair singular tests with a `dbt_expectations.expect_table_row_count_to_be_between` test to ensure the source table actually has data. Otherwise a broken ingestion pipeline produces an empty table that passes all quality checks.
 
 ### assert_no_negative_prices
@@ -500,7 +501,8 @@ Guidance by data type:
 
 ---
 
-> [!warning] severity: warn Still Exits 0 Even with Thousands of Failures
+> [!warning] Warn severity always exits 0
+>
 > A test with `severity: warn` will report failures in the dbt output but exit with code 0, meaning your CI pipeline treats it as a success. If you promote `warn` tests to detect real issues, add a post-run script that parses `run_results.json` and fails CI when warn-level failures exceed a threshold. Otherwise, warnings accumulate unnoticed.
 
 ## Test Coverage Strategy by Layer

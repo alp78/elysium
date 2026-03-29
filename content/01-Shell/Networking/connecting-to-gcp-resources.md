@@ -22,7 +22,9 @@ The VM is your most direct resource — you SSH into it, run commands, and trans
 
 #### gcloud compute ssh — connect to GCE VM (Linux)
 
-> [!info] Drops you into a bash prompt on the VM. First connection may take 10-30s
+> [!info] SSH to GCE VM
+>
+> Drops you into a bash prompt on the VM. First connection may take 10-30s
 > while gcloud propagates your SSH key to VM metadata.
 
 ```bash
@@ -31,7 +33,9 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 #### gcloud compute ssh --command — run a remote command without interactive session
 
-> [!info] `--command` executes the command on the VM and returns output to your terminal.
+> [!info] Remote command execution
+>
+> `--command` executes the command on the VM and returns output to your terminal.
 > Useful for quick health checks without opening an interactive shell.
 
 ```bash
@@ -39,7 +43,8 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
     --command="free -h && df -h && ss -tlnp"
 ```
 
-> [!tip] Common SSH connection errors and their causes
+> [!tip] Common SSH connection errors
+>
 > - **"Permission denied"** → SSH key not propagated. Run `gcloud compute os-login ssh-keys add`
 > - **"Connection timed out"** → VM is stopped, or firewall blocks `35.235.240.0/20` on port 22
 > - **"Could not fetch resource"** → wrong zone, wrong instance name, or VM deleted
@@ -63,7 +68,9 @@ SQL Server on a private GCE VM requires a two-step connection: open the IAP tunn
 
 #### gcloud start-iap-tunnel + sqlcmd — SQL Server via IAP (Linux)
 
-> [!info] Step 1: Open the IAP tunnel in a dedicated terminal (or background with `&`).
+> [!info] Two-step IAP tunnel connection
+>
+> Step 1: Open the IAP tunnel in a dedicated terminal (or background with `&`).
 > Step 2: Connect through the tunnel using sqlcmd, SSMS, or Python.
 
 ```bash
@@ -71,7 +78,8 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
     --local-host-port=127.0.0.1:1435 --zone=europe-west1-b &
 ```
 
-> [!warning] SQL Server uses COMMA for port, not colon
+> [!warning] SQL Server uses comma for port
+>
 > `sqlcmd -S 127.0.0.1,1435` — note the **comma** between host and port. This is
 > SQL Server's convention. A colon (`127.0.0.1:1435`) won't work.
 
@@ -87,7 +95,9 @@ sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db \
 
 #### Debug from the VM side — verify SQL Server is listening
 
-> [!info] If the tunnel is up but connections fail, SSH in and check that `sqlservr` is
+> [!info] Debug from VM side
+>
+> If the tunnel is up but connections fail, SSH in and check that `sqlservr` is
 > listening on port 1433.
 
 ```bash
@@ -145,7 +155,9 @@ BigQuery is a serverless service — there is no server to connect to. You authe
 
 #### bq query — BigQuery interactive queries (Linux)
 
-> [!info] `--use_legacy_sql=false` is required — without it, `bq` defaults to legacy SQL
+> [!info] bq query requires standard SQL flag
+>
+> `--use_legacy_sql=false` is required — without it, `bq` defaults to legacy SQL
 > which has different syntax and limitations. Backticks around the fully-qualified table
 > name must be escaped as `\`` in bash.
 
@@ -170,7 +182,9 @@ bq ls data-platform-prod:data-pipeline
 
 #### gcloud auth list — debug BigQuery authentication
 
-> [!info] The active account must have `bigquery.jobs.create` permission (typically via
+> [!info] Debug BigQuery authentication
+>
+> The active account must have `bigquery.jobs.create` permission (typically via
 > BigQuery User or BigQuery Data Viewer role). If queries fail with "Access Denied,"
 > check which account is active.
 
@@ -199,7 +213,8 @@ bq query --use_legacy_sql=false `
 # Note: backtick escaping in PowerShell requires double backticks ``
 ```
 
-> [!info] Why BigQuery Doesn't Need a Tunnel
+> [!info] BigQuery needs no tunnel
+>
 > BigQuery has no "server" running on a VM. It's a multi-tenant API endpoint at `bigquery.googleapis.com`. Your query is sent as an HTTPS request, BigQuery allocates compute on the fly, runs the query, and returns results. The only "firewall" is IAM: does your account have the `bigquery.jobs.create` permission?
 
 ### Cloud Run services — HTTPS endpoints with identity token auth
@@ -207,6 +222,7 @@ bq query --use_legacy_sql=false `
 Cloud Run services expose an HTTPS endpoint. You call them like any API.
 
 > [!info] Cloud Run authentication
+>
 > Cloud Run services can be public (`allUsers`) or require authentication. For authenticated services, you pass a **Google identity token** (not an access token) in the `Authorization: Bearer` header. `gcloud auth print-identity-token` generates this token from your active gcloud credentials. The token is a short-lived JWT scoped to your identity — it proves *who you are*, unlike an access token which proves *what you can do*.
 
 ```bash
@@ -266,6 +282,7 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health"
 Datadog agent listens on localhost only — you must SSH into the VM to interact with it.
 
 > [!info] Datadog agent ports
+>
 > The Datadog agent runs three listeners, all bound to `127.0.0.1` (not externally reachable):
 > - **5000** — agent HTTP API (health, config, metadata)
 > - **5001** — agent IPC (internal process communication)
@@ -310,7 +327,8 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 | **Datadog Agent** | HTTP | SSH into VM | `datadog-agent status` (on VM) | 5000/8126 |
 | **Docker on GCE** | Unix socket | SSH into VM | `docker ps` (on VM) | N/A |
 
-> [!tip] The Pattern
+> [!tip] The pattern
+>
 > Anything running on a VM with no public IP requires an IAP tunnel (or SSH). Anything that's a Google-managed service (BigQuery, Cloud Run, GCS) uses HTTPS APIs directly — no tunnel, no port management, just IAM.
 
 ## Related

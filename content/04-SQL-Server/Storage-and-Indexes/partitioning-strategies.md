@@ -17,6 +17,7 @@ status: complete
 SQL Server table partitioning divides a large table into smaller horizontal slices based on a partition key column — typically a date. Each partition is a logically independent unit: queries that filter on the partition key can skip entire partitions without scanning them (partition elimination). Partitions also enable fast `SWITCH` operations that move a full partition between tables in milliseconds — the basis for efficient archiving and sliding-window pipeline patterns. BigQuery uses the same partitioning concept for [[querying-and-cost-optimization|cost optimization and query performance]].
 
 > [!info] When to Partition
+>
 > Only partition when a single table exceeds **10 million rows** and queries consistently filter by the partition key. Partitioning small tables adds metadata overhead with no performance benefit. The number one use case is large time-series tables (financial price data, pipeline audit logs) where most queries filter by `trade_date` or a similar date column.
 
 ---
@@ -79,7 +80,9 @@ WHERE pf.name = 'pf_trade_date_yearly'
 ORDER BY prv.boundary_id;
 ```
 
-> [!info] RIGHT vs LEFT Partition Functions
+> [!info] RIGHT vs LEFT Boundaries
+>
+> RIGHT vs LEFT Partition Functions.
 > - **RANGE RIGHT:** The boundary value is included in the RIGHT (higher) partition. `'2022-01-01'` goes into the "2022" partition.
 > - **RANGE LEFT:** The boundary value is included in the LEFT (lower) partition. `'2021-12-31'` goes into the "2021" partition.
 >
@@ -135,7 +138,9 @@ CREATE TABLE dbo.market_data_partitioned (
 WITH (DATA_COMPRESSION = PAGE);  -- can apply compression to all partitions at once
 ```
 
-> [!warning] Partition Key Must Be in the Clustered Index Key
+> [!warning] Partition Key in Clustered Index
+>
+> Partition Key Must Be in the Clustered Index Key.
 > The partition key column (`trade_date`) must be part of the clustered index key. If you try to create a partitioned table on a column not in the clustered index, SQL Server will raise an error. For a table partitioned by `trade_date`, the clustered index key should be `(trade_date, symbol)` — trade_date first (for partition elimination) or second (for symbol-first lookups, but then partition elimination only works if trade_date is also in the WHERE clause).
 
 ---
@@ -168,7 +173,9 @@ WHERE p.object_id = OBJECT_ID('dbo.market_data_partitioned')
 ORDER BY partition_number;
 ```
 
-> [!warning] Partition Elimination Requires a SARGable Predicate on the Partition Key
+> [!warning] Partition Elimination Needs SARGable Predicates
+>
+> Partition Elimination Requires a SARGable Predicate on the Partition Key.
 > `WHERE trade_date >= '2025-01-01'` — eliminates older partitions. Good.
 > `WHERE YEAR(trade_date) = 2025` — wraps the column in a function. SQL Server may NOT eliminate partitions. Use [[sargable-queries]] patterns: always filter directly on the column.
 
@@ -245,6 +252,7 @@ SWITCH TO dbo.market_data_partitioned PARTITION 7;
 ```
 
 > [!warning] SWITCH Requirements
+>
 > Both source and target tables must:
 > - Have identical column definitions (same names, types, nullability, defaults)
 > - Have identical indexes (clustered index key columns and order)

@@ -65,6 +65,7 @@ git revert HEAD
 ```
 
 > [!tip] Revert is the Safe Way
+>
 > `git revert` is the SAFE way to undo work on shared branches. It doesn't rewrite history. Anyone who already pulled still has a consistent view — they just see your new "undo" commit arrive.
 
 ---
@@ -90,7 +91,9 @@ git reset --hard HEAD~1
 # In plain English: Undo my last commit and throw away all the changes. Gone forever.
 ```
 
-> [!warning] `git reset --hard` is DESTRUCTIVE
+> [!warning] Hard Reset Is Destructive
+>
+> `git reset --hard` is DESTRUCTIVE.
 > Uncommitted work is permanently lost. Only use on local, unpushed commits.
 
 ```bash
@@ -117,7 +120,9 @@ git reset --hard abc1234
 # In plain English: I accidentally deleted something — reflog showed me the commit, now I'm recovering it.
 ```
 
-> [!tip] Even `--hard` is Recoverable
+> [!tip] Even Hard Reset Is Recoverable
+>
+> Even `--hard` is Recoverable.
 > Even after `git reset --hard`, your work is usually recoverable via reflog for up to 90 days.
 
 ---
@@ -215,7 +220,9 @@ When `git stash pop` produces conflicts, files will contain conflict markers:
 >>>>>>> Stashed changes      ← your stashed work
 ```
 
-> [!warning] Stash Is Still Preserved on Conflict
+> [!warning] Stash Preserved on Conflict
+>
+> Stash Is Still Preserved on Conflict.
 > When `git stash pop` conflicts, the stash entry is NOT auto-dropped. Your work is safe. After resolving, manually drop it: `git stash drop`.
 
 ```bash
@@ -275,6 +282,7 @@ git rebase -i HEAD~5
 ```
 
 > [!warning] Only Rebase Unpushed Commits
+>
 > Interactive rebase rewrites history. Only use on commits that haven't been pushed to a shared branch.
 
 ### Advanced: Bisect — Find the Breaking Commit

@@ -91,6 +91,7 @@ WHEN NOT MATCHED THEN
 ```
 
 > [!info] MERGE Reference
+>
 > For full MERGE syntax and all four load patterns (truncate-reload, read-then-insert/update, SCD Type 2, delete-and-insert), see [[merge-and-upsert]].
 
 ### Pattern 3: Dirty Read (Reading Uncommitted Data)
@@ -171,7 +172,9 @@ GROUP BY _index;
 -- If spread is large, multiple processes may have written at different times
 ```
 
-> [!tip] Add loaded_at Columns to All Pipeline Tables
+> [!tip] Add loaded_at to All Tables
+>
+> Add loaded_at Columns to All Pipeline Tables.
 > Add `loaded_at DATETIME2 DEFAULT SYSUTCDATETIME()` to every bronze/silver/gold table. This column enables post-run validation and makes race condition detection trivial.
 
 ---
@@ -267,7 +270,9 @@ ALTER TABLE gold.scores_daily
     ADD CONSTRAINT UQ_scores_daily UNIQUE (_index, symbol, score_date);
 ```
 
-> [!warning] Prefer Loud Failure Over Silent Corruption
+> [!warning] Prefer Loud Failure
+>
+> Prefer Loud Failure Over Silent Corruption.
 > A primary key violation is far better than silent data corruption — the application fails loudly and the problem is immediately visible. Add unique constraints to every table that should have unique rows.
 
 ---
@@ -302,6 +307,7 @@ All bronze loaders follow the same pattern: DELETE per index + bulk INSERT + sin
 Every loader has `conn.rollback()` in the `except` block — if any step fails, the entire batch is rolled back. No partial writes.
 
 > [!info] OHLCV Loader Theoretical Risk
+>
 > `load_ohlcv.py` fetches existing `(symbol, date)` keys into a Python set, then only inserts missing rows. There is a theoretical race window — if another process inserts the same key between the SELECT and INSERT, a primary key violation would occur. In practice, this is prevented by `max_active_runs=1` on the DAG, and a PK violation would fail loudly rather than corrupt data.
 
 ### Silver Transforms — SCD Type 2 in Single Transaction

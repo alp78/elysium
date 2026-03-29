@@ -373,7 +373,8 @@ gcloud tasks queues update my-pipeline-queue \
 # These settings can be changed live without disrupting in-flight tasks
 ```
 
-> [!tip] Cloud Tasks for Third-Party API Rate Limiting
+> [!tip] Cloud Tasks for rate limiting
+>
 > If you need to call an external API (e.g., a financial data vendor) for 5,000 tickers daily, do NOT loop and call synchronously — you will hit rate limits. Instead: enqueue 5,000 tasks with `--max-dispatches-per-second=10`. Cloud Tasks delivers exactly 10 tasks/second to your worker, which calls the API once per task. The queue acts as a governor.
 
 ---
@@ -565,7 +566,8 @@ main:
           rates: ${rates_result.body}
 ```
 
-> [!tip] Parallel Branches for Independent Pipeline Legs
+> [!tip] Parallel branches for performance
+>
 > If you are ingesting multiple independent data sources that do not depend on each other, use parallel branches. A workflow with three sequential steps that each take 5 minutes takes 15 minutes. The same three steps in parallel branches takes 5 minutes (plus overhead). This is the primary performance lever in Cloud Workflows.
 
 ---
@@ -1129,7 +1131,8 @@ gcloud scheduler jobs create pubsub daily-fan-out \
   --message-body='{"trigger":"daily","env":"prod"}'
 ```
 
-> [!tip] Fan-Out vs Sequential Orchestration
+> [!tip] Fan-out vs sequential orchestration
+>
 > Fan-out via Pub/Sub is for **independent** parallel pipelines — they share a trigger time but do not depend on each other's results. If pipeline B must receive the output of pipeline A, use Cloud Workflows (sequential steps) or Airflow (task dependencies) instead. Pub/Sub does not enforce ordering between subscribers.
 
 ---

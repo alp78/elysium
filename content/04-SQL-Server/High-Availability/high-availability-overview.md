@@ -79,6 +79,7 @@ A single SQL Server instance that runs on one node at a time but can fail over t
 | GCP implementation | Each VM has its own persistent disk | Requires shared filesystem (GlusterFS, NFS, or iSCSI) |
 
 > [!warning] GCP and FCI
+>
 > **On GCP, AGs are strongly preferred** because GCP doesn't offer native shared storage like AWS EBS Multi-Attach or Azure Shared Disks. You'd need to set up GlusterFS or an NFS server, adding complexity and another failure point.
 
 ### Option 3: Log Shipping
@@ -240,10 +241,13 @@ FOR REPLICA ON
     );
 ```
 
-> [!info] REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1
+> [!info] Synchronized Secondary Commitment
+>
+> REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1.
 > The primary will not acknowledge a commit until at least 1 synchronous secondary has hardened the log. This prevents data loss during failover but means if both synchronous secondaries go down, the primary stops accepting writes.
 
 > [!tip] SEEDING_MODE = AUTOMATIC
+>
 > SQL Server streams the initial database copy over the AG endpoint instead of requiring manual backup/restore. For large databases (100+ GB), manual seeding with backup/restore is faster.
 
 ### Step 6: Join Secondaries to the AG
@@ -379,7 +383,9 @@ sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 
 The virtual IP (`10.132.0.100`) floats between nodes — it's always assigned to the current primary. Applications connect to this IP instead of individual node IPs.
 
-> [!info] GCP Internal Load Balancer Instead of Floating VIP
+> [!info] Use ILB Instead of Floating VIP
+>
+> GCP Internal Load Balancer Instead of Floating VIP.
 > GCP doesn't support Gratuitous ARP. An Internal TCP/UDP Load Balancer is often used instead of a floating VIP. Create an ILB with a health check on port 1433 and a backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary. See [[#Internal Load Balancer instead of floating VIP]] below.
 
 ---
@@ -558,6 +564,7 @@ After failover, the old primary becomes a secondary and starts receiving log rec
 Used when: the primary is down and cannot be recovered quickly.
 
 > [!warning] Data Loss Risk
+>
 > Forced failover may result in committed transactions being lost if the secondary was not fully synchronized. Always prefer planned failover when possible.
 
 #### Force failover on the target secondary
@@ -759,6 +766,7 @@ sudo crm_mon -1              # one-shot cluster status
 Two nodes both think they're the primary. This is the most dangerous HA failure.
 
 > [!warning] Split-Brain is Critical
+>
 > Two primaries will diverge immediately. Stop all writes as soon as possible and determine which node has the most recent `last_hardened_lsn`.
 
 #### Prevention
@@ -860,6 +868,7 @@ FROM sys.availability_groups ag;
 ```
 
 > [!tip] Within-Region vs Cross-Region Latency
+>
 > Within the same GCP region (zone-to-zone), round-trip is ~0.5ms — negligible. Cross-region (e.g., europe-west1 → us-central1) can be 80-120ms — use async for cross-region replicas.
 
 ---

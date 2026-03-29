@@ -76,6 +76,7 @@ gcloud auth revoke
 ### The ADC Credential Search Order
 
 > [!info] The ADC Search Order
+>
 > When your Python code does `google.auth.default()` (covered in [[17_py_gcp]]), it searches for credentials in this exact order:
 > 1. `GOOGLE_APPLICATION_CREDENTIALS` environment variable (path to a JSON key file)
 > 2. Application Default Credentials from `gcloud auth application-default login`
@@ -85,14 +86,19 @@ gcloud auth revoke
 > **On GCE VMs and Cloud Run, you never need key files.** The metadata server provides credentials automatically. Key files are only for local development and non-GCP environments. Every key file is a security liability — they don't expire, can be leaked in git repos, and grant permanent access.
 
 > [!tip] Best Practice
+>
 > Use `GOOGLE_APPLICATION_CREDENTIALS` locally for development, and rely on the metadata server in production. Never commit key files to source control.
 
-> [!danger] Service Account Key Files Are Permanent Credentials
+> [!danger] SA Key Files Never Expire
+>
+> Service Account Key Files Are Permanent Credentials.
 > Unlike OAuth tokens, SA key files never expire. A leaked key file in a git repo, a Docker image layer, or a log file grants permanent access until the key is explicitly revoked in the GCP console. Attackers actively scan public repos for GCP key patterns. If you suspect a key was leaked, immediately delete the key in IAM, then rotate all secrets the SA had access to. See [[service-accounts-and-iam]] for key rotation procedures.
 
 ### GCP Authentication Gotchas and Edge Cases
 
-> [!warning] ADC Token Caching Can Cause Stale Permissions
+> [!warning] ADC Token Caching Issues
+>
+> ADC Token Caching Can Cause Stale Permissions.
 > `gcloud auth application-default login` caches the token in `~/.config/gcloud/application_default_credentials.json`. If your IAM roles change after login, the cached token still carries the old scopes until it refreshes (up to 1 hour). Force a refresh with `gcloud auth application-default login` again. This is a frequent source of "works on my machine but fails in CI" issues.
 
 - `gcloud auth login` and `gcloud auth application-default login` are **different credentials** for different purposes. You often need both for local development.

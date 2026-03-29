@@ -22,7 +22,9 @@ This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jo
 
 ### Cloud Run Billing Note
 
-> [!info] Billing: Actual Usage, Not Limits
+> [!info] Billing Is Usage-Based
+>
+> Billing: Actual Usage, Not Limits.
 > Cloud Run bills **actual CPU/memory usage**, not the limits defined in the configuration. Setting `cpu = "2"` and `memory = "2Gi"` as limits does not mean you pay for 2 CPUs — you pay for what the container actually consumes during execution. Lowering limits does not save cost; it only risks OOM kills or CPU throttling if the workload exceeds them.
 
 ### Locals Block

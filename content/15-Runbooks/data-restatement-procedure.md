@@ -33,7 +33,8 @@ updated: 2026-03-23
 
 ---
 
-> [!danger] Restatements Are Regulatory Events Under EU BMR
+> [!danger] Restatements are regulatory events
+>
 > Under EU Benchmark Regulation Article 13, a material restatement of published index values requires formal notification to clients and potentially to ESMA. A "quick fix" pushed to production without the audit trail, client notification, and compliance sign-off constitutes a regulatory violation. Always follow every step in this runbook -- even if the fix itself takes 5 minutes.
 
 ## Diagnosis
@@ -168,7 +169,8 @@ sha256sum /tmp/suspect_input.csv
 
 ## Resolution
 
-> [!danger] Step 0 — HALT pending publications immediately
+> [!danger] Step 0 — Halt publications
+>
 > Before touching any data, prevent any further automated publication of incorrect values.
 
 ### Step 0 — Halt the pipeline
@@ -294,7 +296,9 @@ SELECT @@ROWCOUNT AS rows_merged;
 -- ROLLBACK TRANSACTION; -- use this to abort if anything looks wrong
 ```
 
-> [!caution] Hold this transaction open in a separate session while you prepare the BigQuery update. Commit both within the same change window to minimise the window of inconsistency.
+> [!caution] Dual-system commit window
+>
+> Hold this transaction open in a separate session while you prepare the BigQuery update. Commit both within the same change window to minimise the window of inconsistency.
 
 ### Step 5 — Apply correction to BigQuery
 

@@ -71,7 +71,8 @@ dispatch:
     search_order: ['your_project', 'dbt_utils']
 ```
 
-> [!note] dbt_utils already provides many cross-adapter macros
+> [!note] Check dbt_utils first
+>
 > `dbt-labs/dbt_utils` implements `date_trunc`, `dateadd`, `datediff`, `safe_divide`, `safe_cast`, and others. Before writing your own dispatch macros, check whether `dbt_utils` already covers the function. Write custom dispatch only for logic that `dbt_utils` does not provide or when you need different behavior than the dbt_utils implementation.
 
 ---
@@ -255,7 +256,8 @@ select
 from {{ source('esg_provider', 'raw_scores') }}
 ```
 
-> [!warning] `target.type` in models is a code smell at scale
+> [!warning] Inline target.type is a code smell
+>
 > Inline `target.type` branches work for 1-2 differences but become unmaintainable as divergence grows. If you find yourself writing 3+ `target.type` branches in a single model, extract the adapter-specific expressions into dispatch macros.
 
 ### `target.type` in schema tests

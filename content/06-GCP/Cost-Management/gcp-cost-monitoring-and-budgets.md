@@ -120,6 +120,7 @@ bq ls --datasets PROJECT_ID
 Enable **detailed usage cost export** if you want resource-level attribution (e.g., per-VM, per-disk costs). It is more expensive in terms of rows but essential for serious FinOps work.
 
 > [!warning] Export Lag
+>
 > Billing data typically lags by 24–48 hours. Do not alert on same-day data for critical decisions. Use a 2-day buffer in time-sensitive queries.
 
 ### Key Columns in the Export Table
@@ -226,6 +227,7 @@ LIMIT 50;
 ```
 
 > [!tip] Partition Your Queries
+>
 > The billing export table is partitioned on `usage_start_time`. Always filter on this column (not `usage_end_time`) to avoid full table scans. A 30-day query on a busy account can easily scan 10+ GB without a partition filter.
 
 ---
@@ -277,6 +279,7 @@ gcloud billing budgets delete BUDGET_ID --billing-account=ACCOUNT_ID
 ```
 
 > [!warning] Budget Alert Lag
+>
 > Budget alerts are based on spend data that can lag up to 24 hours. A 100% alert does not mean spending stops — charges continue to accrue. Use budget alerts as early warning signals, not hard cutoffs.
 
 ### Budget Alert → Pub/Sub → Cloud Function
@@ -626,6 +629,7 @@ gcloud scheduler jobs create http start-dev-vms \
 ```
 
 > [!warning] Spot VM Gotcha
+>
 > Spot VMs can be preempted with 30 seconds notice. Never run stateful workloads or anything that cannot checkpoint. Use them for: batch ETL, ML training jobs, CI/CD workers, and parallelizable data processing.
 
 #### Committed Use Discounts
@@ -653,6 +657,7 @@ gcloud compute commitments describe my-commitment --region=us-central1
 | Spot VM | No commit, preemptible | 60–91% |
 
 > [!tip] Custom Machine Types
+>
 > When a standard machine type has more RAM or vCPU than you need, create a custom machine type. Example: instead of n2-standard-8 (8 vCPU, 32 GB), use `n2-custom-6-24576` (6 vCPU, 24 GB). Pay only for what you configure.
 
 ```bash
@@ -667,6 +672,7 @@ gcloud compute instances create my-instance \
 ### BigQuery
 
 > [!warning] On-Demand Cost Trap
+>
 > On-demand BigQuery pricing charges per byte scanned. A single `SELECT *` on a 10 TB table costs ~$50. Enforce partition filters and use `--dry_run` before running unfamiliar queries.
 
 #### Partition and Cluster Tables
@@ -791,6 +797,7 @@ gcloud storage buckets describe gs://BUCKET_NAME \
 ```
 
 > [!warning] Early Deletion Fees
+>
 > Nearline has a 30-day minimum storage duration. Coldline: 90 days. Archive: 365 days. If you delete or transition early, you still pay for the minimum. Design lifecycle rules so objects stay in each class at least as long as the minimum.
 
 ```bash
@@ -846,7 +853,9 @@ gcloud run jobs update JOB_NAME \
   --region=us-central1
 ```
 
-> [!tip] Cloud Run vs Cloud Functions Cost
+> [!tip] Cloud Run vs Functions Cost
+>
+> Cloud Run vs Cloud Functions Cost.
 > Cloud Run bills per 100ms of CPU+memory allocation. Cloud Functions Gen2 runs on Cloud Run under the hood. For jobs that run infrequently and complete quickly, Cloud Run Jobs with `min-instances=0` is almost free — you only pay during execution.
 
 ---
@@ -884,6 +893,7 @@ gcloud pubsub subscriptions modify-config SUBSCRIPTION_NAME \
 ### Cloud Logging
 
 > [!warning] Logging Cost Trap
+>
 > Cloud Logging charges $0.01/GB for ingestion beyond the free tier (first 50 GB/project/month are free). A verbose application logging at DEBUG level can easily exceed 100 GB/month. Always exclude DEBUG in production.
 
 #### Exclude Debug Logs
@@ -971,6 +981,7 @@ gcloud compute networks subnets update SUBNET_NAME \
 ```
 
 > [!tip] Private Google Access
+>
 > Enabling Private Google Access on a subnet allows VMs without external IPs to reach GCP APIs (BigQuery, GCS, Pub/Sub, etc.) without NAT. This eliminates NAT gateway costs for GCP-internal traffic.
 
 ---

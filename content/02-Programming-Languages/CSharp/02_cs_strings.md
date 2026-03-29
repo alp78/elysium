@@ -157,6 +157,7 @@ Console.WriteLine($"Modified: {s}");
 #### Indexing (0-based)
 
 > [!info] Indexing and slicing
+>
 > - `s[i]` — returns a `char` at position `i`
 > - `s[^i]` — indexes from the end (`^1` = last char), eliminating `s[s.Length - i]`
 > - `s[a..b]` — substring via Range syntax (C# 8+), right-exclusive (`s[0..5]` = indices 0-4)
@@ -276,12 +277,14 @@ for (int i = 0; i < 5; i++)
 #### Case Methods
 
 > [!info] Case methods
+>
 > - `ToUpper()` / `ToLower()` — convert all characters
 > - `ToTitleCase()` — via `CultureInfo.CurrentCulture.TextInfo`, capitalizes each word
 > - No built-in `swapcase` or `casefold`
 > - Culture-aware: `ToUpper(CultureInfo)` handles locale-specific rules (e.g., Turkish `i` → `İ`)
 
 > [!warning] Anti-pattern
+>
 > Don't use `ToUpper()` for case-insensitive comparison — use `StringComparison.OrdinalIgnoreCase` instead.
 
 ```csharp
@@ -555,6 +558,7 @@ Console.WriteLine($"GBP: {amt.ToString("C2", new CultureInfo("en-GB"))}");
 #### StringBuilder vs string + — concatenation performance comparison
 
 > [!info] StringBuilder
+>
 > - Modifies an internal char buffer in place — `Append`/`AppendLine`/`Insert`/`Replace`
 > - O(n) for n appends vs O(n²) for `string +` in a loop
 > - Pre-allocate capacity for known sizes: `new StringBuilder(1024)`
@@ -644,6 +648,7 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 #### Regex.Match() — First Match
 
 > [!info] Regex
+>
 > - `Regex.Match` — returns the first match (check `.Success`)
 > - `Regex.Matches` — returns all matches as `MatchCollection`
 > - Use `@""` verbatim strings to avoid double-escaping backslashes
@@ -651,6 +656,7 @@ Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
 > - For simple `Contains`/`StartsWith` checks, string methods are faster
 
 > [!warning] Anti-patterns
+>
 > - **Not checking `.Success`** before reading `.Value` — empty match is not null
 > - **Recompiling the same pattern in a loop** — cache with `new Regex()`
 

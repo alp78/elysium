@@ -148,7 +148,9 @@ git config --global user.email "your.email@company.com"
 
 *In plain English:* Use the same email as your GitHub account.
 
-> [!warning] Email Must Match GitHub Account
+> [!warning] Email Must Match GitHub
+>
+> Email Must Match GitHub Account.
 > If your `user.email` does not match the email associated with your GitHub account, your commits will not be linked to your GitHub profile and will not count toward your contribution graph.
 
 ### Useful Global Settings
@@ -174,6 +176,7 @@ git config --global core.autocrlf true
 *In plain English:* Stops Windows/Mac/Linux line-ending differences from polluting your diffs.
 
 > [!tip] Linux and macOS Users
+>
 > On Linux or macOS, use `core.autocrlf input` instead of `true`. This converts CRLF to LF on commit but does not convert on checkout, keeping your files with Unix line endings.
 
 #### git config pull.rebase false — set merge as default pull strategy
@@ -199,6 +202,7 @@ git config --list
 ### Credential Caching
 
 > [!tip] Avoid Re-entering Your Password
+>
 > Run `git config --global credential.helper store` to avoid re-entering your password. On Windows, use `manager-core` for the Windows Credential Manager.
 
 ```bash
@@ -226,6 +230,7 @@ git init
 *In plain English:* Start tracking this folder with Git.
 
 > [!tip] What git init Creates
+>
 > Running `git init` creates a hidden `.git/` subdirectory containing all of Git's internal data: the object store, refs, config, hooks, and HEAD pointer. Deleting this folder removes all Git history from the project without touching your actual files.
 
 ### Clone an Existing Repository
@@ -261,10 +266,13 @@ git clone --depth 1 https://github.com/org/repo.git
 
 *In plain English:* Quick download without the full history. Good for CI/CD.
 
-> [!tip] Shallow Clones in CI/CD Pipelines
+> [!tip] Shallow Clones for CI/CD
+>
+> Shallow Clones in CI/CD Pipelines.
 > Shallow clones with `--depth 1` are the standard approach in [[github-actions-ci-cd]] pipelines. Cloning the full history of a large repository adds unnecessary time to every pipeline run. GitHub Actions uses `actions/checkout` with `fetch-depth: 1` by default for this reason.
 
 > [!warning] Shallow Clone Limitations
+>
 > A shallow clone cannot be used as the basis for a `git push` to the original remote without first unshallowing (`git fetch --unshallow`). It also cannot run `git bisect` or other commands that require full history traversal.
 
 ---

@@ -140,10 +140,14 @@ resource "google_compute_router_nat" "main" {
 | `nat_ip_allocate_option` | `AUTO_ONLY` | GCP automatically allocates external IP addresses for NAT. The alternative `MANUAL_ONLY` lets you specify your own static IPs — useful when a firewall allowlist needs a fixed source IP. |
 | `source_subnetwork_ip_ranges_to_nat` | `ALL_SUBNETWORKS_ALL_IP_RANGES` | Every subnet in the VPC can use this NAT gateway. Could be restricted to specific subnets, but with only one subnet, this is fine. |
 
-> [!info] Why Cloud NAT instead of public IPs?
+> [!info] Why Cloud NAT Over Public IPs
+>
+> Why Cloud NAT instead of public IPs?.
 > The SQL VM must never be directly reachable from the internet. Cloud NAT provides outbound-only connectivity — external traffic can flow out (for package downloads, API calls) but nothing can initiate a connection in.
 
-> [!warning] Cloud NAT Port Exhaustion Under High Concurrency
+> [!warning] Cloud NAT Port Exhaustion
+>
+> Cloud NAT Port Exhaustion Under High Concurrency.
 > Cloud NAT allocates 64 ports per VM by default. If a pipeline opens many concurrent outbound connections (e.g., hundreds of parallel API calls), you can exhaust the NAT port pool and see `RESOURCE_EXHAUSTED` errors. Increase the minimum ports per VM with `min_ports_per_vm` in the NAT config, or use `enable_dynamic_port_allocation = true` for bursty workloads.
 
 ---
@@ -273,9 +277,12 @@ resource "google_compute_firewall" "deny_all_ingress" {
 | `source_ranges` | `["0.0.0.0/0"]` | All IPv4 addresses (the entire internet). |
 
 > [!info] Firewall Evaluation Order
+>
 > GCP evaluates all rules in priority order. The `allow_sql` rule (priority 1000, the default) takes precedence over `deny_all_ingress` (priority 65000). If a packet matches an allow rule first, it's admitted. If no allow rule matches, this deny catches it.
 
-> [!danger] Overly Broad `source_ranges` Are the Number One Firewall Mistake
+> [!danger] Overly Broad Source Ranges
+>
+> Overly Broad `source_ranges` Are the Number One Firewall Mistake.
 > Setting `source_ranges = ["0.0.0.0/0"]` on any allow rule exposes that port to the entire internet. This is the most common cause of database breaches in cloud environments. Always restrict source ranges to known CIDR blocks (VPC subnet, IAP range, office IP). If you need temporary access, use IAP tunneling instead of opening ports.
 
 ---

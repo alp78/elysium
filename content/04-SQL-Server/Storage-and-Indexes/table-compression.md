@@ -41,7 +41,9 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 | **ROW** | Removes internal padding; stores variable-length values without trailing zeros; uses shorter integer representation when possible | 10-40% | Minimal | Active OLTP tables, mixed read/write |
 | **PAGE** | All ROW compression techniques, plus prefix compression (common values per column stored once) and dictionary compression (repeated values across columns replaced with short codes) | 40-80% | Low-moderate | Read-heavy tables, historical data, gold layer |
 
-> [!info] PAGE Compression Includes ROW Compression
+> [!info] PAGE Includes ROW Compression
+>
+> PAGE Compression Includes ROW Compression.
 > PAGE compression applies all ROW compression techniques first, then adds prefix compression and dictionary compression on top. You never need to apply both — PAGE compression is strictly superior.
 
 ---
@@ -61,7 +63,9 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 - **Tables with highly random data** — compression ratio approaches 0% on random bytes, encrypted data, GUIDs, or truly varied text
 - **Small tables** — tables under ~1,000 rows gain nothing; the metadata overhead may increase size
 
-> [!warning] Don't Compress Tables with Frequent Updates
+> [!warning] Avoid Compressing Hot Tables
+>
+> Don't Compress Tables with Frequent Updates.
 > Page compression is not free on write paths. If a table receives thousands of row-level updates per second (e.g., a hot bronze staging table), compressing it will increase CPU and may slow write throughput. Only compress tables that have stabilized and are primarily read.
 
 ---
@@ -131,7 +135,9 @@ REBUILD WITH (
 );
 ```
 
-> [!warning] ONLINE = ON Requires Enterprise Edition
+> [!warning] Enterprise Edition Required
+>
+> ONLINE = ON Requires Enterprise Edition.
 > Online index rebuilds are not available in Standard Edition. On Standard Edition, an index rebuild takes a schema modification (Sch-M) lock on the table — blocking all reads and writes for the duration. Schedule Standard Edition rebuilds during maintenance windows. See [[blocking-and-locking]] for lock type details.
 
 #### CREATE TABLE WITH DATA_COMPRESSION = PAGE — apply at creation time

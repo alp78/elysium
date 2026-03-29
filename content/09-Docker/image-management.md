@@ -170,6 +170,7 @@ CMD ["--env", "prod"]
 ```
 
 > [!tip] Rule of Thumb
+>
 > Use CMD for pipeline/batch containers where you want easy overrides. Use ENTRYPOINT for server containers or when the executable must always be the same. When in doubt, use CMD — it is more flexible.
 
 ### .dockerignore
@@ -229,6 +230,7 @@ service-account.json
 ```
 
 > [!warning] Secrets in Build Context
+>
 > Any file in the build context can end up in the image if a `COPY . .` instruction is used. Always add credential files to `.dockerignore`. Use `docker history` to verify no secrets were baked in.
 
 ### Build Context
@@ -279,6 +281,7 @@ docker build --platform linux/amd64 -t data-pipeline-pipeline:latest .
 ```
 
 > [!warning] M1/M2 Mac + GCP
+>
 > If you build on Apple Silicon without `--platform linux/amd64`, the image will be `linux/arm64`. Cloud Run will refuse it with a cryptic error. Always set the platform when building for GCP.
 
 ### Build Cache and Layer Optimization
@@ -301,6 +304,7 @@ CMD ["python", "main.py"]
 ```
 
 > [!tip] Cache-Busting Strategy
+>
 > If you need to force a fresh pip install without `--no-cache` (e.g., to pick up a patched transitive dependency), bump the requirements file with a comment line, or use `--build-arg CACHE_DATE=$(date +%Y-%m-%d)` with a corresponding `ARG CACHE_DATE` in the Dockerfile.
 
 ---
@@ -346,6 +350,7 @@ docker run --rm data-pipeline-pipeline:debug pip list
 ```
 
 > [!tip] Image Size Matters
+>
 > Smaller images mean faster pulls, faster cold starts on [[cloud-run-jobs-vs-services|Cloud Run]], and lower storage costs in [[terraform-registry-and-ci|Artifact Registry]]. A 200MB image pulls in ~3 seconds on Cloud Run; a 1.5GB image takes 30+ seconds on cold start.
 
 ---
@@ -374,7 +379,9 @@ docker tag data-pipeline-pipeline:latest europe-west1-docker.pkg.dev/data-platfo
 | Date-based | `myimage:20260322` | Scheduled batch jobs |
 | Branch + SHA | `myimage:main-a3f1c9d` | Multi-branch CI |
 
-> [!warning] Why `latest` is Dangerous in Production
+> [!warning] latest Tag Is Dangerous
+>
+> Why `latest` is Dangerous in Production.
 > `latest` is mutable — it points to whatever was pushed last. Two deployments using `latest` may run different code if someone pushed between them. In Cloud Run job definitions, Terraform, or Kubernetes manifests, always pin to an immutable tag (git SHA or semantic version). Use `latest` only for local development and quick tests.
 
 ---
@@ -422,6 +429,7 @@ docker pull python:3.12-slim
 | GitHub Container Registry | Images in GitHub Actions CI | GITHUB_TOKEN | Free for public, included in Actions minutes |
 
 > [!tip] Artifact Registry vs Container Registry
+>
 > GCP deprecated Container Registry (`gcr.io`) in favor of Artifact Registry (`pkg.dev`). All new projects should use Artifact Registry. See [[terraform-registry-and-ci]] for Terraform configuration.
 
 ---
@@ -481,6 +489,7 @@ docker history data-pipeline-pipeline:latest | awk '$4 != "0B"'
 ```
 
 > [!tip] Debugging Large Images
+>
 > Run `docker history` to find which layer is eating the most space. A large RUN layer usually means a package manager cache was not cleaned up in the same RUN instruction. Because each `RUN` is a separate layer, a subsequent `RUN rm -rf /var/lib/apt/lists/*` does NOT reduce the image size — the original layer still exists. The cleanup must be in the same `RUN` as the install.
 
 ---
@@ -617,7 +626,9 @@ docker system prune -a
 # Useful before a demo or after a period of heavy experimentation
 ```
 
-> [!warning] docker system prune -a
+> [!warning] System Prune Deletes Everything
+>
+> docker system prune -a.
 > This removes every image not referenced by a running container, including base images you pulled but are not actively using. Your next build will re-pull them. Only run this when you explicitly want to reclaim maximum disk space and are prepared for slower next builds.
 
 ---

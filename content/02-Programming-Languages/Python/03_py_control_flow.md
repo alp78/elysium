@@ -25,6 +25,7 @@ Python uses indentation (not braces) to define blocks. Conditions don't need par
 Conditional chains check conditions top-to-bottom — the **first matching condition wins**, all subsequent branches are skipped. Put the most specific threshold first (`>=90` before `>=80` before `>=70`). Truthy/falsy: `False`, `0`, `""`, `[]`, `{}`, `None` are falsy; everything else is truthy. Chained comparisons: `10 < x < 20` means `10 < x and x < 20`.
 
 > [!warning] Control flow pitfalls
+>
 > - Deep `if`/`elif` nesting — extract to functions or use `match`/`case`
 > - Redundant `else` after `return` — `if cond: return x; return y` is cleaner
 > - Mixing tabs and spaces — causes `IndentationError`
@@ -80,12 +81,15 @@ print(f"val={val} → {label}")
 #### Truthy/falsy and chained comparisons
 
 > [!info] Truthy/falsy
+>
 > - `if items:` — `True` for non-empty collections
 > - Falsy values: `0`, `0.0`, `""`, `None`, `[]`, `{}`, `set()`
 > - Chained comparisons: `0 < x < 100` evaluates `x` only once
 > - `and`/`or` return operands: `name = user or "Anonymous"`
 
-> [!warning] Don't use `if x == True` — just `if x`. But be careful with truthy checks when `0` or `""` is legitimate data — be explicit in those cases.
+> [!warning] Don't use if x == True
+>
+> Don't use `if x == True` — just `if x`. But be careful with truthy checks when `0` or `""` is legitimate data — be explicit in those cases.
 
 ```python
 items = [1, 2, 3]
@@ -113,11 +117,14 @@ if 10 < x < 20:                   # Python exclusive! Chained comparison
 #### match/case — pattern matching
 
 > [!info] Pattern matching (Python 3.10+)
+>
 > - `match`/`case` — tests against patterns, not just equality
 > - `|` for OR, `_` for wildcard, `if` for guards, variable binding
 > - First match wins
 
-> [!warning] Bare variable names in `case` **capture** (don't compare) — use literals or guards. Don't forget the `_` default — unmatched values silently pass through.
+> [!warning] Bare variable names in case
+>
+> Bare variable names in `case` **capture** (don't compare) — use literals or guards. Don't forget the `_` default — unmatched values silently pass through.
 
 ```python
 command = "quit"
@@ -156,6 +163,7 @@ match point:
 #### match with type checking
 
 > [!info] Type patterns
+>
 > - `case int(n)` — matches integers and binds to `n`
 > - Combine with guards: `case int(n) if n > 0`
 > - Replaces `isinstance()` chains with clean pattern syntax
@@ -189,6 +197,7 @@ for v in [42, -5, "hello", [1, 2, 3], 3.14]:
 #### for and while loops — iteration over iterables
 
 > [!info] Loop types
+>
 > - `for` — iterates over any iterable (list, range, dict, generator)
 > - `while` — repeats until the condition is false
 > - `for i in range(n)` — replaces C-style `for(i=0; i<n; i++)`
@@ -196,6 +205,7 @@ for v in [42, -5, "hello", [1, 2, 3], 3.14]:
 > - No `do-while` — use `while True: ... if cond: break`
 
 > [!warning] Loop anti-patterns
+>
 > - `for i in range(len(items))` — use `for item in items` or `enumerate()`
 > - `while True` without `break` — always have an exit condition
 > - Modifying a list during iteration — use a copy or comprehension
@@ -212,7 +222,8 @@ for fruit in ["apple", "banana", "cherry"]:
 
 #### range()
 
-> [!info] `range()` forms
+> [!info] range() forms
+>
 > - `range(stop)`, `range(start, stop)`, `range(start, stop, step)`
 > - Stop is exclusive; negative step for countdown
 > - Lazy — constant memory regardless of size; `500 in range(1000)` is O(1)
@@ -281,6 +292,7 @@ for key, value in d.items():     # key-value pairs
 #### enumerate and zip
 
 > [!info] Enumerate and zip
+>
 > - `enumerate(iterable, start=0)` — yields `(index, element)`
 > - `zip(a, b)` — yields `(a_i, b_i)`, stopping at the shortest
 > - Both are lazy; use `enumerate` instead of `range(len(items))`
@@ -319,11 +331,14 @@ for name, age in zip(names, ages):
 #### while and for/else
 
 > [!info] While and for/else
+>
 > - `while` — repeats until condition is false
 > - `for`/`else` — the `else` block runs only if no `break` occurred (search found/not found idiom)
 > - Use `for`/`else` for search patterns; `while` for polling, retry, input validation
 
-> [!warning] The `else` in `for`/`else` runs when there's **no** `break` — the name is counterintuitive. Don't use it for non-search patterns.
+> [!warning] The else in for/else runs
+>
+> The `else` in `for`/`else` runs when there's **no** `break` — the name is counterintuitive. Don't use it for non-search patterns.
 
 ```python
 count = 0
@@ -375,6 +390,7 @@ for i in range(3):
 #### break — exit the innermost loop
 
 > [!info] Loop control
+>
 > - `break` — exits the innermost loop immediately (does NOT exit outer loops)
 > - `continue` — skips to the next iteration
 > - `pass` — no-op placeholder for empty blocks
@@ -396,7 +412,9 @@ print()
 
 `continue` jumps to the next iteration, skipping the remaining body — avoids nested `if`/`else` for filtering. `pass` is a no-op placeholder for empty blocks.
 
-> [!warning] Don't use `pass` in production `except` blocks — at minimum log the error.
+> [!warning] Don't use pass in production
+>
+> Don't use `pass` in production `except` blocks — at minimum log the error.
 
 ```python
 for i in range(10):
@@ -499,6 +517,7 @@ A function with `yield` becomes a generator. Each `next()` call resumes executio
 Key concepts: `yield from` delegates to sub-generators, generator expressions `(x for x in ...)` are lazy comprehensions, `StopIteration` signals exhaustion, and the iterator protocol requires `__iter__()` + `__next__()`.
 
 > [!warning] Generator pitfalls
+>
 > - Returning a list when `yield` would be lazier
 > - Calling `list()` on a generator just to iterate — defeats lazy evaluation
 > - Generators are single-use — exhausted after one pass
@@ -540,6 +559,7 @@ print(f"  next: {next(gen)}")    # 1
 #### List vs generator expression
 
 > [!info] List vs generator expression
+>
 > - `[expr for x in iter]` — creates a list in memory (eager)
 > - `(expr for x in iter)` — creates a generator (lazy, on-demand, constant memory)
 > - As a function arg, parentheses can be omitted: `sum(x**2 for x in range(n))`
@@ -590,7 +610,9 @@ print(f"Flatten: {list(flatten(nested))}")
 
 `while True` with `yield` produces infinite values. Callers control with `islice`, break, or `zip`. Zero storage — values computed on demand.
 
-> [!danger] Never call `list()` or `len()` on an infinite generator — hangs or OOM. Always limit with `islice` or `break`.
+> [!danger] Never call list() or len()
+>
+> Never call `list()` or `len()` on an infinite generator — hangs or OOM. Always limit with `islice` or `break`.
 
 ```python
 def naturals(start=0):
@@ -623,6 +645,7 @@ print(f"reversed:       {list(reversed([1,2,3]))}")
 #### itertools
 
 > [!info] Key itertools functions (all lazy generators)
+>
 > - `chain` — joins iterables end-to-end
 > - `cycle` — repeats infinitely
 > - `repeat` — yields same value *n* times
@@ -745,7 +768,9 @@ print(f"\npandas json_normalize:\n{df}")
 
 `[expr for item in iterable if condition]` — builds a new list by applying an expression to each element, optionally filtering with `if`. More readable than `map`/`filter`/`lambda` and faster than equivalent `for` loops (optimized at bytecode level).
 
-> [!warning] Don't use comprehensions for side effects (printing, writing). Don't nest beyond 2 levels — use explicit loops instead.
+> [!warning] Don't use comprehensions for side
+>
+> Don't use comprehensions for side effects (printing, writing). Don't nest beyond 2 levels — use explicit loops instead.
 
 ```python
 squares = [x**2 for x in range(10)]
@@ -784,6 +809,7 @@ print(f"Grid:     {grid}")
 #### Dict and set comprehensions
 
 > [!info] Dict and set comprehensions
+>
 > - `{k: v for item in iterable}` — builds a dict
 > - `{expr for item}` — builds a set (auto-deduplicates)
 > - Both support `if` filtering
@@ -819,6 +845,7 @@ print(f"Unique lengths: {unique_lengths}")
 #### map and filter
 
 > [!info] Map and filter
+>
 > - `map(func, iterable)` — applies `func` to every element
 > - `filter(pred, iterable)` — keeps elements where `pred` is True
 > - Both are lazy; best with named functions (`map(str.upper, words)`)
@@ -844,6 +871,7 @@ print(f"Evens:   {evens}")
 #### reduce and built-in aggregations
 
 > [!info] Reduce and built-in aggregations
+>
 > - `reduce(func, iterable, initial)` — applies `func` cumulatively, folds into one value
 > - Prefer built-ins: `sum()`, `min()`, `max()`, `any()`, `all()` — faster (C code) and short-circuit
 
@@ -873,6 +901,7 @@ print(f"any():   {any(x > 3 for x in nums)}")    # True if ANY match
 #### sorted() with key function — custom sort order, multi-key, reverse
 
 > [!info] Sorting
+>
 > - `sorted(iterable, key=func)` — returns a new sorted list
 > - `list.sort()` — sorts in place
 > - `key` extracts the comparison value: `key=len`, `key=str.lower`, `key=lambda x: x[1]`
@@ -902,7 +931,9 @@ print(f"By last char:  {sorted(names, key=lambda n: n[-1])}")
 | **`map`/`filter`** | You already have a named function |
 | **Generator** | Lazy pipeline, large data, memory-constrained |
 
-> [!warning] Avoid nested comprehensions with more than 2 levels — use explicit loops instead. Don't use comprehensions for side effects; don't use `for` loops when a comprehension would be cleaner.
+> [!warning] Avoid nested comprehensions with more
+>
+> Avoid nested comprehensions with more than 2 levels — use explicit loops instead. Don't use comprehensions for side effects; don't use `for` loops when a comprehension would be cleaner.
 
     Use comprehension: simple transform/filter → new collection
     Use for loop:      side effects, complex logic, multiple statements

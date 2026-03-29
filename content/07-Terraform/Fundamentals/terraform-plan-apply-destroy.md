@@ -67,6 +67,7 @@ terraform plan -out=tfplan
 ```
 
 > [!warning] Always Review the Plan
+>
 > Never run `terraform apply` without first reviewing `terraform plan`. Terraform can and will destroy production resources if the configuration changes. Look specifically for lines beginning with `-` (destroy) and `~` (update in-place).
 
 #### Plan output symbols — +create, ~update, -destroy, -/+replace
@@ -91,7 +92,9 @@ terraform apply tfplan
 terraform apply
 ```
 
-> [!info] For the data pipeline project
+> [!info] Data Pipeline Approach
+>
+> For the data pipeline project.
 > The data pipeline project applies Terraform changes **manually** — there is no automated `terraform apply` in CI/CD. CI/CD only handles application code (Docker images, Cloud Run deployments). Infrastructure changes are deliberate, reviewed, and applied by hand.
 
 #### terraform apply -target — apply only specific resources
@@ -116,6 +119,7 @@ terraform destroy -target=google_compute_instance.airflow
 ```
 
 > [!warning] Destroy is Permanent
+>
 > `terraform destroy` will remove all GCP resources managed by this configuration — VMs, Cloud Run services, firewall rules, service accounts, and secrets. There is no undo. For production, set `deletion_protection = true` on critical resources.
 
 ---

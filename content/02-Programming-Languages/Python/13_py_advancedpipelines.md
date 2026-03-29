@@ -106,7 +106,9 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 
 ## Parallel API Ingestion
 
-> [!danger] `asyncio.gather()` without a semaphore fires ALL requests simultaneously
+> [!danger] asyncio.gather() without a semaphore fires
+>
+> `asyncio.gather()` without a semaphore fires ALL requests simultaneously
 > For 50 symbols, `gather(*[fetch(s) for s in symbols])` opens 50 connections at once.
 > Most financial data APIs have strict rate limits (Twelve Data: 8/min, Alpha Vantage:
 > 5/min). Without a semaphore, every request after the limit returns `429 Too Many
@@ -319,7 +321,9 @@ A broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines. Wor
 3. Celery/RQ → multiple machines, distributed workers
 4. Dask/Spark → distributed data processing at scale
 
-> [!example] Celery example (requires Redis + worker process)
+> [!example] Celery example (requires Redis +
+>
+> Celery example (requires Redis + worker process)
 > ```python
 > from celery import Celery
 > app = Celery("tasks", broker="redis://localhost:6379/0")

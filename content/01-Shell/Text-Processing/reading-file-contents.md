@@ -20,7 +20,9 @@ A senior data engineer reads files differently depending on context. Checking a 
 
 #### cat, head, tail, less — basic file reading
 
-> [!info] `cat` concatenates and prints. Fine for files under a few hundred lines.
+> [!info] cat for small files
+>
+> `cat` concatenates and prints. Fine for files under a few hundred lines.
 > For larger files, use `less` (pager with search) or `head`/`tail`.
 
 ```bash
@@ -29,7 +31,9 @@ cat filename
 
 #### head, tail — check file boundaries
 
-> [!info] `head` shows the top, `tail` shows the bottom. `head -n 1` extracts the
+> [!info] head and tail basics
+>
+> `head` shows the top, `tail` shows the bottom. `head -n 1` extracts the
 > header row from a CSV — use this to check column names before loading.
 
 ```bash
@@ -40,7 +44,9 @@ head -n 1 data.csv
 
 #### tail -f — follow a log file in real-time
 
-> [!info] `-f` (follow) keeps the terminal open, printing new lines as they're appended.
+> [!info] Follow log with tail -f
+>
+> `-f` (follow) keeps the terminal open, printing new lines as they're appended.
 > The most-used command during incidents. `Ctrl+C` to stop.
 
 ```bash
@@ -50,7 +56,8 @@ tail -f /var/log/pipeline/*.log
 
 #### tail -f | grep — filter noise from a live log stream
 
-> [!warning] `--line-buffered` is required when piping grep after `tail -f`
+> [!warning] --line-buffered required with tail -f
+>
 > Without it, grep buffers output and you see nothing for minutes. `--line-buffered`
 > forces grep to flush on every matching line.
 
@@ -97,7 +104,8 @@ grep "ERROR" /tmp/outage_window.log | awk '{print $NF}' | sort | uniq -c | sort 
 
 ### grep performance on large files — -F, -m, ripgrep, LC_ALL=C
 
-> [!tip] `grep` Performance on Large Files
+> [!tip] grep performance on large files
+>
 > - `grep -F "literal string"` is 3-5x faster than `grep "regex"` for literal matches. The `-F` flag uses a fast string-matching algorithm instead of the regex engine. Always use it when you don't need regex.
 > - `grep -m 10 "pattern"` stops after 10 matches. If you only need the first few occurrences in a 50GB file, this saves minutes.
 > - For recursive searches across thousands of files, use `ripgrep` (`rg`): `rg "pattern" /path/` — it respects `.gitignore`, uses multiple threads, and is 5-10x faster than `grep -r`.
@@ -107,7 +115,9 @@ grep "ERROR" /tmp/outage_window.log | awk '{print $NF}' | sort | uniq -c | sort 
 
 #### Get-Content — read entire file or head/tail
 
-> [!info] Aliases: `cat`, `type`, `gc`. `-Head` and `-Tail` work like `head -n` and
+> [!info] Get-Content basics
+>
+> Aliases: `cat`, `type`, `gc`. `-Head` and `-Tail` work like `head -n` and
 > `tail -n`.
 
 ```powershell
@@ -124,7 +134,9 @@ Get-Content filename -Wait -Tail 10
 
 #### Select-String — search inside files (PowerShell grep)
 
-> [!info] Returns `MatchInfo` objects with `LineNumber`, `Line`, and `Filename` properties.
+> [!info] Select-String returns MatchInfo
+>
+> Returns `MatchInfo` objects with `LineNumber`, `Line`, and `Filename` properties.
 > `-Context 3` shows 3 lines before and after each match. For the full `Select-String`
 > reference, see [[grep-and-pattern-matching]].
 

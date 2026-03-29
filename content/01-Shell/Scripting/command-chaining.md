@@ -132,7 +132,8 @@ zcat /var/log/pipeline-2025-03-*.gz | \
 
 This pipeline decompresses, filters, extracts fields, counts occurrences, and shows the top 20 error patterns — all in a single streaming pass. No intermediate files, no memory explosion. A 50GB compressed log can be analyzed in minutes on a machine with 2GB of RAM.
 
-> [!info] The Pipeline Exit Code Trap
+> [!info] Pipeline exit code trap
+>
 > By default, a pipeline's exit code is the exit code of the **last** command only. If `grep` finds nothing (exit code 1) but `wc -l` succeeds (exit code 0), the pipeline reports success. This masks failures silently.
 >
 > Fix this with `set -o pipefail`:
@@ -157,7 +158,8 @@ command *> all.txt
 # This is more comprehensive than bash's 2>&1
 ```
 
-> [!info] PowerShell Objects vs Bash Text
+> [!info] PowerShell objects vs bash text
+>
 > This is the fundamental difference between the two shells. Bash pipes raw text — every command must parse the text it receives, and subtle formatting changes can break downstream commands. PowerShell pipes structured .NET objects with typed properties. This means `Sort-Object CPU` sorts by the actual numeric CPU value, not by a string that happens to look like a number. When you are processing structured data (JSON, CSV, database results), PowerShell's object pipeline eliminates an entire class of parsing bugs.
 >
 > The trade-off: PowerShell is verbose and slower for simple text processing. Use bash for log analysis, file manipulation, and Unix-native tools. Use PowerShell for structured data, Windows administration, and .NET integration.

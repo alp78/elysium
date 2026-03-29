@@ -139,10 +139,13 @@ DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
 | `RESOURCE_SEMAPHORE` | Memory grant queue (queries waiting for RAM) | Reduce query memory grants, increase RAM |
 | `ASYNC_NETWORK_IO` | Client not consuming results fast enough | Check Airflow worker network, Python cursor fetchsize |
 
-> [!tip] Related pattern: Datadog monitoring
+> [!tip] Datadog Monitoring
+>
+> Related pattern: Datadog monitoring.
 > These same wait types can be tracked continuously via [[datadog-sql-server-integration]], which surfaces `PAGEIOLATCH`, `LCK_M`, and other waits as Datadog metrics. For custom DMV-based queries exposed through Datadog, see [[datadog-custom-queries]].
 
 > [!info] High Signal Waits = CPU Bottleneck
+>
 > If `signal_wait_sec` is a significant fraction of `wait_sec`, the bottleneck is CPU — sessions are waiting to be scheduled even after their resource is available. This is distinct from `SOS_SCHEDULER_YIELD` which indicates queries are running but actively yielding their time slice.
 
 ---
@@ -246,6 +249,7 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 | TempDB | < 2ms | 2–5ms | > 5ms |
 
 > [!warning] Log Latency Is the Most Impactful
+>
 > Every COMMIT waits for the log flush to complete (synchronous fsync). `avg_write_latency_ms` on the `.ldf` file directly adds to every transaction's response time. The log file must be on the fastest available disk — separate from the data files when possible.
 
 ---

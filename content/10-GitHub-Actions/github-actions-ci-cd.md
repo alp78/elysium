@@ -108,7 +108,8 @@ steps:
 
 The `credentials_json` field receives the full JSON content of the service account key. The action uses it to authenticate with GCP for deployments.
 
-> [!danger] Missing Secret Produces a Cryptic Error, Not a Clear Failure
+> [!danger] Missing secret gives cryptic error
+>
 > When `GCP_SA_KEY` is missing or empty, the expression `${{ secrets.GCP_SA_KEY }}` resolves to an empty string. The `google-github-actions/auth` action then fails with `must specify exactly one of workload_identity_provider or credentials_json` -- not "secret is missing." Always verify secrets exist with `gh secret list` before debugging authentication failures.
 
 #### Common secrets for GCP projects
@@ -128,7 +129,8 @@ The `credentials_json` field receives the full JSON content of the service accou
 
 ---
 
-> [!warning] Secrets Resolve to Empty String When Missing
+> [!warning] Missing secrets resolve to empty string
+>
 > GitHub Actions does not fail when a secret is undefined -- `${{ secrets.UNDEFINED }}` silently becomes `""`. This means a typo in a secret name will not produce a "missing variable" error but will instead cause downstream actions to receive blank credentials. Use `gh secret list` to verify secret names match exactly.
 
 ### Example: Build and Deploy to Cloud Run

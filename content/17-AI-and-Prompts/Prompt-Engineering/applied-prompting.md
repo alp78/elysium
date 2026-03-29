@@ -92,7 +92,8 @@ Do NOT include: generic introductions ("In today's data-driven world..."),
 calls to action, author bios, or SEO keywords.
 ```
 
-> [!tip] Audience Specification Is Underrated
+> [!tip] Audience specification matters
+>
 > "Mid-level data engineers who have built pipelines but haven't used the bronze/silver/gold pattern" tells the model exactly what to include (practical implementation) and what to skip (why pipelines matter in the first place). Audience anchoring is one of the highest-ROI additions to a content prompt.
 
 > [!info] Medallion Architecture
@@ -146,7 +147,8 @@ Do not add logging, docstrings, or type hints beyond what's
 functionally necessary.
 ```
 
-> [!tip] Schema Inclusion Is Critical for Code Tasks
+> [!tip] Include the actual schema
+>
 > Paste the actual table schema. "A table with date, symbol, and metrics columns" produces generic code that won't match your primary key constraints or column types. The schema is the ground truth — include it verbatim.
 
 > [!warning] The "Don't Add X" Constraint for Code

@@ -524,7 +524,8 @@ schema_registry.set_compatibility("daily-ohlcv-value", "BACKWARD")
 | File size | Smallest | Small (slightly larger than Protobuf) |
 | Human readability | No (binary) | Schema is JSON (readable), data is binary |
 
-> [!warning] Data Contracts Are Organizational, Not Just Technical
+> [!warning] Contracts are organizational
+>
 > The hardest part of data contracts is not the Protobuf definition — it is getting agreement from the producing team that they will not change the schema without going through the contract evolution process. This requires management support, documented ownership (RACI matrix), and CI/CD enforcement. A contract without enforcement is just documentation.
 
 ## FinOps: Cloud Cost Optimization for Data Platforms
@@ -847,7 +848,8 @@ Processing Time: ─────────────────────
 
 **For financial index calculation:** Use **accumulating mode** with a 5-minute allowed lateness. The intraday value is approximate anyway — end-of-day official values are always recalculated from the full batch pipeline.
 
-> [!tip] Batch vs Streaming Is Not a Binary Choice
+> [!tip] Batch vs streaming hybrid
+>
 > The "lambda architecture" (run both batch and streaming in parallel) has fallen out of favor because maintaining two codepaths is expensive. The "kappa architecture" (streaming only, replay when needed) is theoretically cleaner but operationally harder. In practice, financial index platforms and similar firms use a **pragmatic hybrid**: streaming for intraday approximations, batch for official end-of-day values. The batch pipeline is the system of record. The streaming pipeline is a best-effort preview. Never let a streaming pipeline produce the official index value — that requires the determinism and auditability that only batch processing guarantees.
 
 ## Related

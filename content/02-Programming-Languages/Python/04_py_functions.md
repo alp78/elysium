@@ -21,12 +21,14 @@ status: complete
 #### def, return, docstrings — basic function definition
 
 > [!info] Function basics
+>
 > - `def name(params): body` — defines a function
 > - `return` — returns a value; without it, functions implicitly return `None`
 > - Docstrings (triple-quoted first line) — built-in documentation via `help()`
 > - Functions are first-class objects: assign to variables, pass as arguments, return from other functions
 
 > [!warning] Function anti-patterns
+>
 > - Very long parameter lists — use `**kwargs` or a config object
 > - Functions doing too much — single responsibility principle
 > - Missing docstrings on public functions — undocumented API
@@ -52,7 +54,9 @@ print(greet("Bob"))
 
 A function with no `return` (or bare `return`) returns `None` — Python's equivalent of C#'s `void`. Use for side-effect functions (print, log, write, mutate).
 
-> [!warning] Don't assign the result of a `None`-returning function — it's likely a bug. Don't mix `return None` and `return value` in the same function.
+> [!warning] None-returning function pitfalls
+>
+> Don't assign the result of a `None`-returning function — it's likely a bug. Don't mix `return None` and `return value` in the same function.
 
 ```python
 def print_greeting(name):
@@ -68,6 +72,7 @@ print(f"Return value: {result}")       # None
 #### Default parameters, *args, **kwargs — tuple return and unpacking
 
 > [!info] Parameters and arguments
+>
 > - Default parameters: `def f(x=10)`
 > - Named arguments: `f(x=5)` — self-documenting
 > - `*args` — collects extra positional arguments as a tuple
@@ -75,6 +80,7 @@ print(f"Return value: {result}")       # None
 > - Order: positional, `*args`, keyword-only, `**kwargs`
 
 > [!warning] Parameter pitfalls
+>
 > - **Mutable defaults:** `def f(lst=[])` shares the list across all calls — use `lst=None` instead
 > - Too many defaulted params — use a config dict or dataclass
 
@@ -111,7 +117,9 @@ print(apply(greet, "Eve"))
 
 Inner functions capture variables from the enclosing scope. `make_multiplier(3)` returns a function that multiplies by 3 — each call creates independent state. Use for factory functions, parameterized callbacks, and partial application. For complex state, prefer a class.
 
-> [!warning] Don't mutate captured variables without `nonlocal` — Python creates a local shadow instead.
+> [!warning] Don't mutate captured variables without nonlocal
+>
+> Don't mutate captured variables without `nonlocal` — Python creates a local shadow instead.
 
 ```python
 def make_multiplier(n):
@@ -194,7 +202,9 @@ print(f"  Pipeline: '{raw}' → '{result}'")
 
 Accept a `get_now` callable with default `None` (uses real time). Tests inject a lambda returning a fixed datetime — makes time-dependent code deterministic. No mocking framework needed.
 
-> [!warning] Don't call `datetime.now()` directly in production code — it's untestable. Don't monkeypatch `datetime` in tests — it's fragile.
+> [!warning] Avoid datetime.now() in production
+>
+> Don't call `datetime.now()` directly in production code — it's untestable. Don't monkeypatch `datetime` in tests — it's fragile.
 
 ```python
 def process_order(order, get_now=None):
@@ -241,6 +251,7 @@ loader.load(["users", "orders", "products"])
 #### Sorting with key= function
 
 > [!info] Sorting with key
+>
 > - `sorted(iterable, key=func)` — returns a new sorted list
 > - `key` extracts the comparison value: `key=len`, `key=lambda x: x["salary"]`
 > - `reverse=True` for descending
@@ -276,11 +287,14 @@ for e in by_salary:
 #### Mutable default argument trap — def f(lst=[]) pitfall
 
 > [!info] Mutable default trap
+>
 > - `def f(lst=[])` creates ONE list at definition time — all calls share it
 > - Fix: use `None` as default, create inside: `if lst is None: lst = []`
 > - Immutable defaults (`int`, `str`, `tuple`) are safe
 
-> [!danger] Mutable default arguments (`def f(lst=[], d={})`) cause shared state across calls. The same issue applies to dicts and sets — always use the `None` sentinel pattern.
+> [!danger] Mutable default arguments (def f(lst=[],
+>
+> Mutable default arguments (`def f(lst=[], d={})`) cause shared state across calls. The same issue applies to dicts and sets — always use the `None` sentinel pattern.
 
 ```python
 def bad_append(item, lst=[]):         # BAD: shared across calls
@@ -344,6 +358,7 @@ kitchen_sink("a", "b", "c", keyword_only="custom", x=1, y=2)
 #### Positional-only (/) and keyword-only (*) parameters
 
 > [!info] Parameter kinds
+>
 > - Before `/` = **positional-only** (allows renaming params without breaking callers)
 > - After `*` = **keyword-only** (prevents positional misuse)
 > - Matches built-in signatures like `len(obj, /)`
@@ -367,6 +382,7 @@ print(func(1, normal=2, kw_only=3))
 `lambda params: expression` creates an anonymous function — limited to one expression, no statements. Use for short throwaway functions as arguments: `sorted(data, key=lambda x: x[1])`.
 
 > [!warning] Lambda anti-patterns
+>
 > - **Assigning lambda to a variable** — use `def` instead (has a name, docstring)
 > - **Complex lambdas** — unreadable; extract to a named function
 > - **Lambda with side effects** — use `def` for clarity
@@ -381,6 +397,7 @@ print(f"lambda add: {add(3, 4)}")
 #### Lambdas with sorted, map, filter
 
 > [!info] Lambdas with built-ins
+>
 > - `sorted(key=lambda)`, `map(lambda, iter)`, `filter(lambda, iter)`
 > - `map`/`filter` are lazy — generate on demand
 > - Comprehensions are often more Pythonic: prefer `[x**2 for x in nums]` over `list(map(...))`
@@ -404,7 +421,9 @@ print(f"Evens:   {list(filter(lambda x: x % 2 == 0, nums))}")
 
 Python resolves names in LEGB order: Local → Enclosing → Global → Built-in. Closures capture enclosing scope variables. `nonlocal` modifies enclosing scope; `global` modifies module-level (but prefer passing params instead).
 
-> [!warning] Modifying an enclosing variable without `nonlocal` creates a local shadow instead of updating the outer variable.
+> [!warning] Modifying an enclosing variable without
+>
+> Modifying an enclosing variable without `nonlocal` creates a local shadow instead of updating the outer variable.
 
 ```python
 x = "global"
@@ -455,6 +474,7 @@ print(f"counter2(): {counter2()}")  # 1
 A decorator takes a function and returns a modified version. `@decorator` applies at definition time. `@functools.wraps` preserves the original `__name__` and `__doc__`. Use for cross-cutting concerns: timing, logging, retry, caching, authentication.
 
 > [!warning] Decorator pitfalls
+>
 > - Forgetting `@functools.wraps` — breaks `help()` and debugging
 > - Side effects at import time — surprising behavior
 > - Too many stacked decorators (>3) — hard to debug order
@@ -486,7 +506,9 @@ print(f"  Name: {slow_sum.__name__}")     # 'slow_sum' (preserved by wraps)
 
 #### Lambda loop capture gotcha — closures bind by reference
 
-> [!danger] Lambdas in a loop capture the variable itself — not the value. After the loop, all see the final value. Fix: default argument `i=i` captures the current value.
+> [!danger] Lambdas in a loop capture
+>
+> Lambdas in a loop capture the variable itself — not the value. After the loop, all see the final value. Fix: default argument `i=i` captures the current value.
 
 ```python
 funcs_bad = [lambda: i for i in range(3)]
@@ -574,6 +596,7 @@ print(f"add('a', 'b'): {add('a', 'b')}")   # works! Python doesn't enforce  # ty
 #### Built-in decorators — @property, @staticmethod, @classmethod
 
 > [!info] Built-in decorators
+>
 > - `@property` — makes a method act like an attribute
 > - `@staticmethod` — takes no `self`
 > - `@classmethod` — receives `cls`; use for factory methods and inheritance-safe constructors
@@ -685,6 +708,7 @@ print(f"apply_nohint: {apply_func_nohint(lambda x: x * 2, 5)}")
 #### Type aliases, __annotations__, get_type_hints — runtime introspection
 
 > [!info] Type introspection
+>
 > - Type aliases give readable names: `UserMap = dict[int, str]`
 > - `__annotations__` stores hints as a dict for runtime introspection — this is how Pydantic validates types
 > - `get_type_hints()` resolves forward references

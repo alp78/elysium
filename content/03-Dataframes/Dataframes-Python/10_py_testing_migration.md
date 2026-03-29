@@ -73,7 +73,9 @@ import time
 
 ## Enrich with Company Info
 
-> [!info] This section builds a complete analytical pipeline: enrich OHLCV with company
+> [!info] This section builds a complete
+>
+> This section builds a complete analytical pipeline: enrich OHLCV with company
 > metadata via left join, compute returns with window functions, aggregate by sector, and
 > visualize. Each step chains Polars expressions — the same pattern used in production.
 
@@ -1065,7 +1067,9 @@ ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 
 ## Concepts to Unlearn
 
-> [!warning] Three Pandas habits that don't exist in Polars
+> [!warning] Three Pandas habits that don't
+>
+> Three Pandas habits that don't exist in Polars
 > 1. **Index:** Polars has no index. Use `sort()` + `filter()` instead of `set_index()`
 > 2. **inplace:** Polars never mutates. Every operation returns a new DataFrame
 > 3. **iterrows:** Polars expressions replace row-by-row loops entirely
@@ -1141,7 +1145,9 @@ display(ohlcv_pl.select(ohlcv_pl.columns[1:4]).head(3))
 
 ## Translation Table
 
-> [!tip] Bookmark this table — it covers the 15 most common Pandas→Polars translations.
+> [!tip] Bookmark this table
+>
+> Bookmark this table — it covers the 15 most common Pandas→Polars translations.
 > The biggest behavioral differences: Polars has no index, no inplace mutation, and uses
 > expression-based column references (`pl.col("name")`) instead of bracket indexing.
 

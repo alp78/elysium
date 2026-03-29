@@ -89,7 +89,8 @@ python3 pipeline/run.py 2>&1 | tee -a /var/log/pipeline/run.log
 
 ### Redirect-before-write gotcha — sort file > file truncates to empty
 
-> [!warning] Redirect Before the Command Exists — Data Loss Bug
+> [!warning] Redirect-before-write data loss
+>
 > ```bash
 > # This TRUNCATES output.txt before the command even runs:
 > sort output.txt > output.txt   # BUG: file is now empty

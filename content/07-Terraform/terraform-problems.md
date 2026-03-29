@@ -150,7 +150,9 @@ fi
 
 **Fix procedure**
 
-> [!danger] If `deletion_protection` was NOT enabled and resources are gone, data on deleted Persistent Disks is permanently unrecoverable without snapshots.
+> [!danger] Deleted Data Is Unrecoverable
+>
+> If `deletion_protection` was NOT enabled and resources are gone, data on deleted Persistent Disks is permanently unrecoverable without snapshots.
 
 1. Confirm what was destroyed via Cloud Audit Logs:
 
@@ -400,7 +402,9 @@ echo "Plan check passed: no protected resources destroyed."
 
 **Fix procedure**
 
-> [!danger] If the VM was destroyed and `deletion_protection` was NOT enabled, the boot disk data is gone unless a snapshot existed. Check snapshots immediately.
+> [!danger] Boot Disk Data May Be Lost
+>
+> If the VM was destroyed and `deletion_protection` was NOT enabled, the boot disk data is gone unless a snapshot existed. Check snapshots immediately.
 
 1. Check for existing disk snapshots:
 

@@ -40,7 +40,8 @@ echo "Pipeline complete"        # PRINTS SUCCESS → you think everything is fin
 # You get an error exit code, your orchestrator detects the failure
 ```
 
-> [!warning] When `set -e` Does NOT Trigger
+> [!warning] When set -e does not trigger
+>
 > - Commands in `if` conditions: `if rm /nonexistent; then ...` — the `rm` failure does NOT trigger exit
 > - Commands before `||`: `rm /nonexistent || true` — the `|| true` absorbs the error
 > - Commands in subshells: `(failing_command)` — the subshell exits, but the parent may not
@@ -129,7 +130,8 @@ log "Pipeline complete"
 
 ### trap EXIT — guaranteed cleanup on script exit, error, or signal
 
-> [!info] `trap` Is Your Safety Net
+> [!info] trap is your safety net
+>
 > The `trap cleanup EXIT` pattern ensures cleanup runs no matter how the script terminates — normal exit, `set -e` error, Ctrl+C (SIGINT), or `kill` (SIGTERM). Always use this for temporary files, database connections, lock files, or anything that needs guaranteed cleanup.
 >
 > Common trap signals:

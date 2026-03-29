@@ -231,7 +231,8 @@ Owns the roadmap and strategy for data products and the data platform. Prioritiz
 | **Typical demand** | High | Very high | Very high | High | Medium |
 | **Avg. seniority at hire** | Mid | Mid-Senior | Junior-Mid | Mid-Senior | Senior |
 
-> [!info] The Analytics Engineer Role Is Relatively New
+> [!info] Analytics engineer role
+>
 > The analytics engineer role (coined by dbt Labs around 2019) fills the gap between raw data engineering and business analytics. In organizations without this role, analytics engineers either don't exist (causing poor model quality) or data engineers do their job (causing context switching and slow delivery).
 
 ---
@@ -403,7 +404,8 @@ For P0 and P1 incidents, run a blameless postmortem within 48 hours:
 6. **Action items** — Concrete prevention and detection improvements, with owners and due dates
 7. **What went well** — Even in incidents, something went right
 
-> [!info] "Human Error" Is Never the Root Cause
+> [!info] Human error is never root cause
+>
 > If your postmortem concludes "the engineer made a mistake," you have not found the root cause. Ask "why was it possible for that mistake to cause this incident?" The root cause is always a process, system, or architectural failure that allowed the human error to propagate.
 
 ---

@@ -21,12 +21,14 @@ status: complete
 #### datetime module — creating date, time, datetime, timedelta objects
 
 > [!info] Date and time types
+>
 > - `datetime.now()` — local time | `datetime.now(timezone.utc)` — UTC
 > - `date.today()` — date-only | `time()` — time-only
 > - `timedelta` — arithmetic (add/subtract days, hours, seconds)
 > - Naive datetimes have no timezone; aware ones include `tzinfo`
 
 > [!warning] Anti-patterns
+>
 > - **`datetime.now()` for storage** — timezone-naive; use `datetime.now(timezone.utc)`
 > - **Comparing naive and aware** datetimes — raises `TypeError`
 
@@ -565,6 +567,7 @@ print(f"+ 1y 2m 3d:      {dt + relativedelta(years=1, months=2, days=3)}")
 #### Built-in math — abs(), max(), min(), divmod(), clamp
 
 > [!info] Math built-ins
+>
 > - `abs()`, `max()`, `min()` — built-in, no import needed
 > - `max`/`min` accept any number of arguments
 > - Clamp pattern: `max(lo, min(val, hi))`
@@ -799,6 +802,7 @@ for i in range(8):
 Loggers form a hierarchy (root > app > app.module) — set level on parent, children inherit. Handlers direct output (console, file, network); formatters control layout. Levels: `DEBUG` < `INFO` < `WARNING` < `ERROR` < `CRITICAL`. Use lazy evaluation: `logger.info("msg %s", val)` only formats if the level is active.
 
 > [!warning] Anti-patterns
+>
 > - **`print()` for logging** — no levels, timestamps, or filtering
 > - **f-string in log calls** — always evaluated, even if level is filtered
 > - **`basicConfig` in library code** — should only be in the entry point
@@ -909,6 +913,7 @@ json_logger.warning("Schema drift detected in %s", "users")
 #### os.environ — reading and setting environment variables
 
 > [!info] Environment variables
+>
 > - `os.environ["KEY"]` — raises `KeyError` if missing
 > - `os.environ.get("KEY", default)` — returns default silently
 > - `os.environ["KEY"] = value` — sets for the current process only
@@ -916,6 +921,7 @@ json_logger.warning("Schema drift detected in %s", "users")
 > - For complex structured config, use config files with env var overrides
 
 > [!warning] Anti-patterns
+>
 > - **Hardcoding secrets in code** — use env vars or secret managers
 > - **`os.environ["KEY"]` without handling `KeyError`** — crashes if missing
 

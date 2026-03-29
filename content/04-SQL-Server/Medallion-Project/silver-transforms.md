@@ -2,7 +2,7 @@
 type: how-to
 category: data-engineering
 technology: [sql-server, python]
-tags: [python, sql, sql-server, tsql]
+tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
 keywords: [silver layer, medallion architecture, SCD Type 2, slowly changing dimensions, deduplication, gap fill, forward fill, is_filled, trading calendar, upsert, unique index, filtered index, valid_from, valid_to, is_current, OHLCV transform, signals daily, signals quarterly, index_dim SCD2, upserting, insert or update, parameterized queries, silver schema]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."
@@ -11,6 +11,14 @@ created: 2026-03-22
 updated: 2026-03-22
 status: complete
 ---
+
+> [!abstract] Medallion Project — Financial Index Pipeline
+>
+> This page documents the implementation of a specific financial data pipeline
+> (STOXX/yfinance stock index scoring system) on SQL Server. For the general
+> patterns and alternative approaches, see the [[sql-server-index#Patterns]]
+> section. For the architectural theory behind bronze/silver/gold layering,
+> see [[medallion-architecture]].
 
 # Silver Transforms
 
@@ -37,6 +45,7 @@ File: `db/ddl/silver_schema.sql`
 Tracks company attribute changes (sector, name, etc.) over time. When an attribute changes, the old row is closed and a new row is inserted — history is never overwritten.
 
 > [!info] SCD Type 2 Pattern
+>
 > SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [[idempotent-pipeline-design]] for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [[dbt-snapshots-and-scd]].
 
 #### CREATE TABLE silver.index_dim — SCD Type 2 with valid_from, valid_to, is_current
@@ -313,6 +322,7 @@ WHERE symbol = ?
 ```
 
 > [!warning] Stale Forward-Fill Issue
+>
 > If `is_filled = 1` rows accumulate beyond today's date, they block new real data from being inserted (UNIQUE constraint). Run the cleanup query and re-run the pipeline to fix:
 > ```sql
 > DELETE FROM silver.index_europe_ohlcv WHERE date > CAST(GETDATE() AS DATE) AND is_filled = 1;
@@ -338,6 +348,7 @@ WHERE is_filled = 1 AND date > CAST(GETDATE() AS DATE)
 | `silver.{ohlcv}` | `UNIQUE (symbol, date)` | Prevent duplicate price rows |
 
 > [!tip] Filtered Unique Index
+>
 > The `WHERE is_current = 1` on `UX_silver_index_dim_current` is a SQL Server **filtered index**. Uniqueness only applies to active rows — historical (closed) rows can have duplicate `(_index, symbol)` pairs because they represent different time periods. This is what makes SCD Type 2 work without violating uniqueness.
 
 ---

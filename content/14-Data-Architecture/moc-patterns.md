@@ -12,13 +12,15 @@ Every reusable pattern in the vault, grouped by concern. Use this as a starting 
 
 ## Loading Patterns
 
-- [[bronze-layer-loading]] — Truncate-reload and MERGE patterns for landing raw data
+- [[sql-server-loading-patterns]] — bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy — benchmarks and trade-offs
+- [[sql-server-schema-layering]] — Schema-per-layer, schema-per-domain, naming conventions, cross-schema security
 - [[data-loading-and-export]] — BigQuery data loading (CSV, JSON, Parquet, streaming)
 
 ## Transformation Patterns
 
-- [[silver-transforms]] — SCD Type 2, upsert, gap-fill, data cleaning
-- [[gold-transforms]] — Z-score computation, composite scoring, dashboard views
+- [[sql-server-change-tracking]] — Manual SCD2, temporal tables, CDC, Change Tracking, dbt snapshots
+- [[sql-server-incremental-transforms]] — Watermark loading, partition SWITCH, window functions, gap-fill
+- [[sql-server-pipeline-anti-patterns]] — 20+ SQL Server pipeline anti-patterns with fixes
 - [[dbt-transformation-layer]] — SQL-first transforms with dbt: staging, intermediate, marts
 - [[medallion-architecture]] — Bronze/Silver/Gold layered processing pattern
 

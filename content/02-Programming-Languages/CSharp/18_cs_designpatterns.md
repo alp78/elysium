@@ -638,6 +638,7 @@ IndexPipeline/
 ## Summary
 
 > [!abstract]- C# Design Patterns Quick Reference
+>
 > | Pattern | C# | Usage |
 > |---|---|---|
 > | **Dependency Injection** | `interface IRepo` + `class SqlRepo : IRepo` | Constructor injection, `AddScoped<IRepo, SqlRepo>()` |

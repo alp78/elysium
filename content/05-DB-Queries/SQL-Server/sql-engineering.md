@@ -426,6 +426,7 @@ ORDER BY [rank]
 ## Stored Procedures
 
 > [!tip] Related pattern
+>
 > The [[dbt-sqlserver-adapter]] generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
 
 ### Stored Procedures — Basic SP with Parameters
@@ -573,7 +574,9 @@ END;
 
 ## User-Defined Functions
 
-> [!danger] Scalar UDFs Force Row-by-Row Execution
+> [!danger] Scalar UDFs Kill Performance
+>
+> Scalar UDFs Force Row-by-Row Execution.
 > T-SQL scalar UDFs (non-inlineable) disable parallelism and force SQL Server to call the function once per row. A simple scalar UDF on a 10M-row table can turn a 2-second query into a 2-minute query. Always use inline table-valued functions (iTVFs) instead -- the optimizer can fold them into the outer query plan. SQL Server 2019+ has "scalar UDF inlining," but many patterns are still not eligible.
 
 ### User-Defined Functions — Inline Table-Valued Function
@@ -1199,7 +1202,9 @@ SELECT
 
 **Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
 
-> [!warning] READ UNCOMMITTED (NOLOCK) Can Return Wrong Data
+> [!warning] NOLOCK Can Return Wrong Data
+>
+> READ UNCOMMITTED (NOLOCK) Can Return Wrong Data.
 > `NOLOCK` / `READ UNCOMMITTED` can read rows that are being moved by a page split, causing the same row to appear twice or not at all in the result. It can also read uncommitted data that is later rolled back. Never use NOLOCK for counts, sums, or any calculation where accuracy matters -- even for "approximate" dashboards, the error can be larger than expected.
 
 ## Bulk Loading Patterns

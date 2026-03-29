@@ -42,6 +42,7 @@ SELECT SERVERPROPERTY('ProductVersion') AS Version,
 - **Action:** If more than 2 CUs behind, recommend patching in the next maintenance window
 
 > [!info] Edition Limits
+>
 > Standard edition: 128 GB RAM max, 24 cores. Express edition: 1.4 GB RAM, 1 socket. Ensure the edition matches workload requirements before tuning anything else.
 
 ### Uptime
@@ -131,6 +132,7 @@ ORDER BY name;
 #### sys.databases — red flags: auto_shrink, auto_stats, RCSI disabled
 
 > [!warning] auto_shrink = ON is Critical
+>
 > Auto-shrink causes massive fragmentation and CPU spikes. It shrinks the file, then the next insert grows it again, endlessly. Disable immediately: `ALTER DATABASE [db] SET AUTO_SHRINK OFF;`
 
 - `auto_stats = 0` or `auto_update_stats = 0` — SQL Server can't optimize queries without current statistics. Enable: `ALTER DATABASE [db] SET AUTO_CREATE_STATISTICS ON; ALTER DATABASE [db] SET AUTO_UPDATE_STATISTICS ON;`
@@ -353,6 +355,7 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 | avg write ms (log files) | < 2 ms | 2–5 ms | 5–10 ms | > 10 ms |
 
 > [!warning] Log Files Are More Sensitive
+>
 > Every transaction must wait for the log write to complete before returning success. A 10ms log write latency means every INSERT/UPDATE/DELETE takes at least 10ms regardless of how fast the query itself runs.
 
 #### High IO latency remediation — SSD, separate data/log, add indexes
@@ -458,6 +461,7 @@ ORDER BY improvement_score DESC;
 - `included_columns` = columns selected but not filtered on (add as `INCLUDE`)
 
 > [!tip] Don't Blindly Create Every Missing Index
+>
 > Look for overlaps — if two recommendations differ only in included columns, merge them into one index. Too many indexes slows down writes.
 
 ### Unused Indexes
@@ -483,7 +487,9 @@ WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
 ORDER BY us.user_updates DESC;
 ```
 
-> [!warning] Only Drop After Verifying Uptime > 7 Days
+> [!warning] Verify Uptime Before Dropping
+>
+> Only Drop After Verifying Uptime > 7 Days.
 > If the server restarted yesterday, the index might be used by a weekly job that hasn't run yet. An index with `user_updates = 48000` and `user_seeks = 0` is a good drop candidate: `DROP INDEX IX_scores_old ON gold.scores;`
 
 ### Index Fragmentation
@@ -510,6 +516,7 @@ ORDER BY ips.avg_fragmentation_in_percent DESC;
 | > 30% | Rebuild (heavier, can be online in Enterprise) | `ALTER INDEX [name] ON [table] REBUILD;` |
 
 > [!info] SSDs Change the Calculus
+>
 > Fragmentation matters less on SSDs than spinning disks because random reads are fast. On SSD, you can raise the rebuild threshold to 50% or higher. The main benefit of defragmenting on SSD is reclaiming wasted space, not improving read performance.
 
 ---
@@ -561,6 +568,7 @@ ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev4', FILENAME = '/var/opt/mssql/da
 ```
 
 > [!tip] Why Equal-Sized Files Matter
+>
 > SQL Server uses proportional fill — it writes to the file with the most free space. If files are different sizes, one file gets all the writes and contention returns. All TempDB data files must be the same size.
 
 ---
@@ -570,6 +578,7 @@ ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev4', FILENAME = '/var/opt/mssql/da
 **Purpose:** Identify current blocking chains and historical deadlock frequency. Blocking reduces concurrency; deadlocks kill transactions.
 
 > [!info] Full Deadlock Coverage
+>
 > For comprehensive deadlock detection, Extended Events setup, prevention patterns, and retry logic, see [[deadlock-detection-and-prevention]].
 
 ### Current Blocking Chains
@@ -765,7 +774,9 @@ WHERE log_reuse_wait_desc <> 'NOTHING';
 | `REPLICATION` | Log reader hasn't processed these records yet | Check replication agent |
 | `DATABASE_MIRRORING` | Mirror hasn't acknowledged these records | Check mirror health |
 
-> [!warning] LOG_BACKUP with No Backup Schedule is an Emergency
+> [!warning] LOG_BACKUP Without Backups
+>
+> LOG_BACKUP with No Backup Schedule is an Emergency.
 > The log will grow until the disk fills up and the database stops accepting writes. If the disk is nearly full, this is a P1 incident.
 
 ---

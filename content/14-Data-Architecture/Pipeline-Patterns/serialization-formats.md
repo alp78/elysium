@@ -87,7 +87,8 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 - Schema evolution: fields are numbered, not named — adding field #4 doesn't break readers expecting fields 1-3
 - Best for: gRPC services, cross-team APIs where both teams are managed (schema contract required), high-throughput cross-service messaging
 
-> [!info] Protobuf Schema Example
+> [!info] Protobuf schema example
+>
 > ```protobuf
 > message OHLCVRecord {
 >   string symbol = 1;

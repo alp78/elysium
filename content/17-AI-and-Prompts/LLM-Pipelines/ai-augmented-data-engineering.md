@@ -101,7 +101,8 @@ collection.add(
 
 ## Using LLMs in Data Pipelines
 
-> [!warning] Always Validate LLM-Extracted Corporate Actions Against a Second Source
+> [!warning] Validate LLM extractions
+>
 > An LLM may extract the wrong split ratio (e.g., 1:4 instead of 4:1), invent an effective date, or misclassify a rights issue as a dividend. For index calculation pipelines, a wrong corporate action adjustment factor silently corrupts the entire price history. Treat LLM extraction as a first pass that must be confirmed against the vendor's structured data feed or a human review queue before it enters the pipeline.
 
 #### Corporate actions extraction from press releases
@@ -203,7 +204,8 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
 > [!tip] GCP Vector Database Recommendation
 > For a financial data platform on GCP: Start with pgvector (if you already run PostgreSQL for Airflow metadata) or AlloyDB AI (managed, GCP-native). Move to Pinecone or Weaviate when you need >10M vectors or sub-10ms latency.
 
-> [!danger] LLM API Calls in a Loop Can Generate Thousands of Dollars in Charges in Minutes
+> [!danger] LLM API cost explosion
+>
 > A pipeline processing 10,000 documents with no rate limiting or cost cap can burn through $500+ before anyone notices. Always implement a hard daily budget ceiling with an immediate circuit breaker (raise an exception, not just log a warning). Monitor cumulative spend in real-time via the `response.usage` fields, not via the billing dashboard (which has multi-hour delay).
 
 ## Cost Management and Token Budgeting
@@ -402,7 +404,8 @@ def validate_index_weights(weights: pd.Series, index_key: str,
 6. DOCUMENT  → AI generates docs from final code, human reviews for accuracy
 ```
 
-> [!warning] AI Tools Are Junior Developers, Not Senior Architects
+> [!warning] AI tools are junior developers
+>
 > Treat AI-generated code the way you would treat a junior engineer's PR: assume it is probably correct for common patterns but might miss edge cases, security implications, or financial domain nuances. Never merge AI-generated code without a thorough review. The productivity gain comes from the speed of generation, not from skipping review. An AI that writes 10 tests in 30 seconds saves you time even if you spend 5 minutes reviewing and fixing 2 of them.
 
 ## Related

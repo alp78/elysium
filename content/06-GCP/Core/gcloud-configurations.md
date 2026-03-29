@@ -73,6 +73,7 @@ gcloud config set compute/zone europe-west1-b
 ### Protecting Production with Visual Cues in Terminal
 
 > [!warning] Protect Production
+>
 > Color-code your terminal based on which configuration is active. Add this to `~/.bashrc`:
 > ```bash
 > gcloud_env() {

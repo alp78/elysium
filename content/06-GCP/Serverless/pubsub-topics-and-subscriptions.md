@@ -52,6 +52,7 @@ gcloud pubsub subscriptions create pipeline-sub \
 ```
 
 > [!info] At-Least-Once Delivery
+>
 > Pub/Sub guarantees **at-least-once delivery**: every message will be delivered at least once, but may be delivered more than once. The `--ack-deadline` determines how long the consumer has to process and acknowledge a message before Pub/Sub considers it unacknowledged and redelivers it. Set the deadline to exceed your maximum expected processing time plus margin.
 
 ### Creating Pub/Sub Push Subscriptions
@@ -81,7 +82,9 @@ gcloud pubsub subscriptions update pipeline-sub \
 # You can inspect dead-lettered messages to understand why processing failed
 ```
 
-> [!tip] Always Configure Dead Letter Topics in Production
+> [!tip] Configure Dead Letter Topics
+>
+> Always Configure Dead Letter Topics in Production.
 > Without a dead letter topic, a single unprocessable message (due to a malformed payload or a persistent consumer bug) will be retried indefinitely and can block all subsequent message processing. Dead letter topics isolate these "poison pill" messages so the rest of the queue can continue flowing.
 
 ### Pub/Sub Pull vs Push Comparison

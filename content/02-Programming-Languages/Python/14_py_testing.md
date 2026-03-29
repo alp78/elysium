@@ -81,11 +81,13 @@ ipytest.autoconfig()
 ## Unit Testing with pytest
 
 > [!info] pytest fundamentals
+>
 > - De-facto standard Python test framework
 > - Automatic discovery: files `test_*.py` or `*_test.py`, functions `test_*` — no base class needed
 > - Plain `assert` statements get rewritten to show rich diffs on failure
 
 > [!info] Running pytest in notebooks
+>
 > pytest runs from the command line (`pytest test_mymodule.py`). In notebooks, we use `ipytest` to run pytest cells interactively. In production, test files live in a `tests/` directory.
 
 #### pytest assert — basic test functions
@@ -428,6 +430,7 @@ ipytest.run()
 ## Fixtures and Parametrize
 
 > [!info] Fixtures
+>
 > - `@pytest.fixture` — marks a function that provides test data or resources
 > - Tests declare the fixture as a parameter — pytest injects it automatically
 > - `yield` separates setup (before) from teardown (after)
@@ -588,6 +591,7 @@ The `@pytest.mark.parametrize` decorator takes a comma-separated string of param
 Use parametrize when the **logic is the same but the data varies**: fee tier calculations, currency conversions, input validation, OHLCV invariants.
 
 > [!warning] Parametrize pitfalls
+>
 > - Don't parametrize when the test **logic** differs — write separate tests
 > - Don't put too many cases in one parametrize — hard to find which row failed
 > - Use `ids=` to name each case: `@pytest.mark.parametrize(..., ids=["valid", "negative"])`
@@ -683,24 +687,29 @@ ipytest.run()
 
 ## Mocking and Patching
 
-> [!danger] `patch()` must target where the name is LOOKED UP, not where it's defined
+> [!danger] patch() target location matters
+>
+> `patch()` must target where the name is LOOKED UP, not where it's defined.
 > `@patch("mymodule.requests.get")` is wrong if `mymodule` imports `get` directly.
 > Patch the reference in the consuming module: `@patch("mymodule.get")`. This is the #1
 > source of "my mock isn't working" — the real function still runs because you patched
 > the wrong location.
 
 > [!info] Mocking library
+>
 > - `unittest.mock` — Python's built-in mocking library (works with pytest)
 > - `Mock()` — creates a flexible fake that records all calls
 > - `MagicMock()` — adds pre-configured magic methods
 > - `patch()` — temporarily replaces a real object in a module
 
 > [!tip] Why mock?
+>
 > Don't call real Bloomberg API / exchange / database in tests. Tests must be fast, isolated, and deterministic. Mock the boundary (API client), test the logic (transform, validate).
 
 #### unittest.mock Mock() — return_value, assert_called_once_with
 
 > [!info] Mock pattern
+>
 > - `Mock()` creates a fake object
 > - `mock_client.get_quote.return_value = {...}` — configures canned data (no real API call)
 > - Test verifies: caller reads the right field, spread is positive, correct symbol was requested
@@ -799,7 +808,9 @@ ipytest.run()
 
 `patch()` temporarily replaces real objects with mocks during the test.
 
-> [!warning] Patch where the object is **used**, not where it's defined
+> [!warning] Patch at the usage site
+>
+> Patch where the object is **used**, not where it's defined.
 > If `my_module.py` does `from datetime import datetime`, patch `"my_module.datetime"`, NOT `"datetime.datetime"`.
 
 #### Dependency injection — testable market hours check
@@ -877,7 +888,9 @@ ipytest.run()
 
 `@patch.dict(os.environ, {...})` temporarily injects fake env vars for one test — original env is restored after. Standard pattern for testing Docker/K8s config-reading code.
 
-> [!warning] If env vars are already set (from `.env`, Docker, or a previous cell), default-value tests will fail. Fix: use `@patch.dict(os.environ, {}, clear=True)` to guarantee a clean env.
+> [!warning] If env vars are already
+>
+> If env vars are already set (from `.env`, Docker, or a previous cell), default-value tests will fail. Fix: use `@patch.dict(os.environ, {}, clear=True)` to guarantee a clean env.
 
 ```python
 def get_exchange_config():
@@ -946,6 +959,7 @@ Key testing patterns for data engineering and finance:
 4. **Parametrize for edge cases** — splits, dividends, halts, holidays
 
 > [!tip] Related pattern
+>
 > The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [[dbt-testing-framework]], where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [[data-quality-framework]].
 
 #### Pure function testing — normalize_trades transform
@@ -1087,6 +1101,7 @@ def test_index_weight_calculation():
 #### Data quality validation — validate_eod_prices, OHLCV invariants
 
 > [!info] EOD price validation invariants
+>
 > - `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%
 > - Returns error strings — empty = all valid
 > - Financial APIs return garbage more often than expected — these tests are the last line of defense
@@ -1183,7 +1198,9 @@ ipytest.run()
 
 Integration tests execute real SQL against SQL Server — mocked tests can pass while real queries fail (SQL syntax differences, schema drift, data constraints). The stoxx database uses medallion architecture: `bronze` (raw OHLCV) → `silver` (cleaned + gap-filled) → `gold` (scores, index performance).
 
-> [!warning] Don't run against production. Don't depend on specific values — test invariants. In CI, use Testcontainers for ephemeral DBs.
+> [!warning] Don't run against production. Don't
+>
+> Don't run against production. Don't depend on specific values — test invariants. In CI, use Testcontainers for ephemeral DBs.
 
 ```python
 # Load credentials from .env — never hardcode passwords in notebooks
@@ -1360,7 +1377,9 @@ assert_test(f"daily returns within +/-20% ({extreme} violations)", extreme == 0)
 
 Pandera defines a schema (column names, types, ranges, nullability) and validates a DataFrame against it — invalid data raises `SchemaError`. Validates ALL columns at once and reports ALL violations. Integrates with pytest.
 
-> [!warning] Don't make schemas too strict — allow NULL where the source allows it. Don't validate bronze data with silver schema — each layer has its own.
+> [!warning] Don't make schemas too strict
+>
+> Don't make schemas too strict — allow NULL where the source allows it. Don't validate bronze data with silver schema — each layer has its own.
 
 ```python
 # Define schema for silver OHLCV data
@@ -1630,6 +1649,7 @@ print("  -x                       Stop on first failure")
       -x                       Stop on first failure
 
 > [!abstract]- Python Testing Quick Reference
+>
 > **Framework**
 > | Command | Purpose |
 > |---|---|

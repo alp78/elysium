@@ -57,6 +57,7 @@ bq mk --dataset --location=EU --description="data pipeline data" project_data
 ```
 
 > [!warning] Dataset Location Is Permanent
+>
 > The `--location` flag sets data residency for all tables in the dataset. Once created, location cannot be changed. For EU data residency compliance, always specify `--location=EU` (multi-region EU) or a specific European region like `europe-west1`.
 
 ## Creating Tables
@@ -82,7 +83,9 @@ bq mk --table --time_partitioning_field=date --time_partitioning_type=DAY \
 #       Then clustering on symbol further narrows to only the relevant data blocks
 ```
 
-> [!tip] Partitioning + Clustering is the Default Best Practice
+> [!tip] Partition and Cluster by Default
+>
+> Partitioning + Clustering is the Default Best Practice.
 > For any time-series data in BigQuery, partition by the date/timestamp column and cluster by the most common filter columns (e.g., `symbol`, `index`). This combination reduces scanned bytes by 90%+ for typical analytical queries compared to unpartitioned tables. See [[querying-and-cost-optimization]] for the full cost impact.
 
 ### Deleting BigQuery Tables and Datasets

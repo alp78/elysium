@@ -82,6 +82,7 @@ status: complete
 Firestore is a serverless, fully managed document database that occupies a specific niche in the GCP data stack: low-latency reads and writes, flexible schema, and native real-time listeners that push changes to clients without polling. This note covers how to use Firestore as the connective tissue of data pipelines — tracking state, reacting to events, driving configuration, and acting as a hot-tier store alongside BigQuery and Pub/Sub.
 
 > [!tip] Scope
+>
 > This is not a Firestore CRUD tutorial. The focus is on **pipeline architecture patterns**: when Firestore earns its place, how to integrate it with other GCP services, and the full Python code required to do so production-ready.
 
 ---
@@ -102,6 +103,7 @@ Understanding the latency expectations of each paradigm prevents overengineering
 Most pipeline metadata use cases (dashboards, alerting, config) need **operational read latency**, not streaming throughput. This is where Firestore fits naturally.
 
 > [!warning] Latency vs. Throughput
+>
 > Real-time latency does not mean high throughput. Firestore is optimized for low-latency access to individual documents and small query sets, not for scanning millions of rows per second. If you need both, use Firestore for hot operational data and BigQuery for the analytical layer.
 
 ---
@@ -140,6 +142,7 @@ Gold scores computed in BigQuery are written to Firestore (`stocks` collection) 
 | Relational integrity with foreign keys | No enforced referential integrity | Cloud SQL |
 
 > [!danger] The Expensive Anti-Pattern
+>
 > Using Firestore as an analytics database — running `collection.stream()` over tens of thousands of documents to compute aggregations — generates enormous read costs with no performance advantage over a SQL query. Materialize aggregations into dedicated summary documents or export to BigQuery instead.
 
 ---
@@ -279,6 +282,7 @@ service cloud.firestore {
 ```
 
 > [!tip] Cache Config With TTL
+>
 > Fetch config once at pipeline startup and cache it in memory. For long-running jobs, implement a TTL-based refresh (e.g., re-fetch every 5 minutes). This avoids a Firestore read on every loop iteration while still picking up config changes.
 
 ---
@@ -359,6 +363,7 @@ unsubscribe = col_ref.on_snapshot(on_change)
 | Best for | Audit, snapshot analytics | Operational dashboards, downstream triggers |
 
 > [!warning] Listener Process Availability
+>
 > The real-time CDC listener is a long-running process. Run it on [[cloud-run-jobs-vs-services|Cloud Run (service)]] with a health check, not as a one-shot job. Ensure it reconnects on transient Firestore errors.
 
 ---
@@ -851,6 +856,7 @@ python streaming_pipeline.py \
 ```
 
 > [!tip] Late Data Handling
+>
 > Add `--allow_late_data` or configure `beam.WindowInto` with `allowed_lateness` to handle messages that arrive after the window closes. For IoT use cases, a 30-second allowed lateness typically covers network delays without significantly increasing state size. See [[streaming-architecture]] for watermark and trigger strategies.
 
 ---
@@ -894,6 +900,7 @@ gcloud projects set-iam-policy PROJECT_ID policy.json
 ```
 
 > [!warning] Audit Log Volume and Cost
+>
 > DATA_READ logs for Firestore can generate millions of log entries per day at scale. Filter aggressively with log-based metrics rather than exporting all audit logs to BigQuery.
 
 ### Structured Logging From Pipeline Code
@@ -927,7 +934,9 @@ class FirestoreOperationLogger(logging.LoggerAdapter):
 | Stored data | 1 GiB | $0.18 per GiB/month |
 | Network egress | 10 GiB/month | Standard GCP egress rates |
 
-> [!tip] Free Tier Is Generous for State Tracking
+> [!tip] Generous Free Tier
+>
+> Free Tier Is Generous for State Tracking.
 > A pipeline that runs hourly, writing 3 state updates per run (start / complete / fail) uses 72 writes per day — well within the 20,000 free writes. Firestore is effectively free for pure pipeline state tracking at this scale.
 
 ### Minimize Read Costs
@@ -1061,6 +1070,7 @@ On Cloud Run or GKE with Workload Identity, omit the explicit credentials — th
 | `roles/datastore.importExportAdmin` | Run export/import jobs | Export-to-BigQuery pipelines |
 
 > [!tip] Principle of Least Privilege
+>
 > Dashboard services that only display state should receive `roles/datastore.viewer`. Pipeline workers that write state should receive `roles/datastore.user`. Never assign `roles/datastore.owner` to runtime service accounts.
 
 ### VPC Service Controls
@@ -1074,6 +1084,7 @@ gcloud access-context-manager perimeters update PERIMETER_NAME \
 ```
 
 > [!warning] VPC-SC and Cloud Functions
+>
 > If Firestore is in a VPC-SC perimeter and a Cloud Function writes to it, the function's service account must be inside the perimeter's access policy. Misconfiguration results in `PERMISSION_DENIED` errors that can be difficult to distinguish from IAM errors.
 
 ### Data Encryption

@@ -2440,14 +2440,18 @@ display(size_df)
 
 ### Pandas read_csv
 
-> [!danger] `pd.read_csv()` infers dtypes from the first 100 rows by default
+> [!danger] read_csv() dtype inference trap
+>
+> `pd.read_csv()` infers dtypes from the first 100 rows by default.
 > If the first 100 rows of a column contain only integers but row 101 has a float or
 > null, Pandas silently coerces the entire column. Always specify `dtype=` for critical
 > columns, or use `dtype_backend="pyarrow"` for consistent nullable types. Integer columns
 > with any null values are silently upcast to `float64` — a common source of broken join
 > keys (`1.0 != 1` in string comparisons).
 
-> [!warning] Encoding defaults differ between Pandas and Polars
+> [!warning] Encoding defaults differ between Pandas
+>
+> Encoding defaults differ between Pandas and Polars
 > Pandas `read_csv()` defaults to `encoding='utf-8'` but **silently falls back** on some
 > platforms. Polars only supports UTF-8 — non-UTF-8 files raise an error immediately.
 > For files from legacy systems (SQL Server BCP exports, Excel CSV), always specify

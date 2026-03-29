@@ -25,9 +25,12 @@ gcloud storage ls gs://data-pipeline-bucket/data/
 ```
 
 > [!info] GCS Has No Real Directories
+>
 > GCS uses a flat namespace with key prefixes that look like directories. `gs://bucket/data/` is not a folder — it is a filter for all objects whose key starts with `data/`. This matters when deleting "directories" (delete all objects with the prefix) or moving "directories" (copy all + delete all).
 
-> [!danger] `gcloud storage rm -r` Is Irreversible Without Versioning
+> [!danger] Recursive Delete Is Irreversible
+>
+> `gcloud storage rm -r` Is Irreversible Without Versioning.
 > `gcloud storage rm -r gs://bucket/prefix/` deletes all matching objects immediately with no confirmation prompt and no trash. If versioning is not enabled on the bucket, the data is permanently gone. Always enable versioning on buckets containing pipeline data or backups (see [[gcs-buckets-and-lifecycle]]). A single typo in the prefix can wipe an entire dataset.
 
 ### Copying Files with gcloud storage cp
@@ -61,6 +64,7 @@ gcloud storage rsync -r -d ./local_data/ gs://data-pipeline-bucket/data/
 ```
 
 > [!warning] Sync with Delete is Irreversible
+>
 > The `-d` (delete) flag on `gcloud storage rsync` removes GCS objects that don't exist locally. Always double-check:
 > 1. The source and destination are in the correct order
 > 2. Versioning is enabled on the bucket if you need recovery (see [[gcs-buckets-and-lifecycle]])
@@ -80,6 +84,7 @@ gcloud storage rm -r gs://bucket/old_directory/
 ```
 
 > [!warning] GCS Move Is Not Atomic
+>
 > `gcloud storage mv` is implemented as copy + delete. During the operation, the object exists at both the source and destination paths. For critical data, use copy first, verify the destination, then delete the source manually.
 
 ### Viewing GCS Object Metadata
@@ -101,14 +106,18 @@ Object metadata fields useful for data engineering:
 ### GCS Transfer Optimization and Parallel Uploads
 
 > [!tip] Related pattern
+>
 > For code that needs to read GCS objects transparently alongside local files, [[09_py_fileio_serialization|Python's fsspec]] provides a unified file I/O interface that abstracts away `gs://` vs local paths.
 
 > [!tip] Large File Transfer Options
+>
 > - **Parallel composite upload** for large files (>150 MB): `gcloud storage cp --component-size=32Mi large_file.parquet gs://bucket/` — splits the file into 32 MB chunks, uploads in parallel, and composes them on the server.
 > - **`gsutil` vs `gcloud storage`**: The newer `gcloud storage` command is generally faster and simpler. `gsutil` is still available for features not yet ported. For most data engineering work, use `gcloud storage`.
 > - **Transfer Service** for large-scale moves (>1 TB): `gcloud transfer jobs create gs://source/ gs://dest/` — runs as a managed job with retry, parallelism, and scheduling. More reliable than scripted gsutil for bulk transfers.
 
-> [!warning] Parallel Composite Upload Creates Non-Standard Objects
+> [!warning] Composite Upload Compatibility Risk
+>
+> Parallel Composite Upload Creates Non-Standard Objects.
 > When using `--component-size` for parallel composite uploads, the resulting GCS object is composed from multiple components. Some tools (older versions of gsutil, third-party libraries) may fail to read composite objects correctly, or the CRC32C checksum may differ from what a standard upload produces. Test downstream readers before enabling this in production pipelines.
 
 ### Common GCS Pipeline Patterns

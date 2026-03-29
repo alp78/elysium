@@ -334,7 +334,8 @@ Compilation Error in model fct_index_performance
 
 The PR is blocked until the column is restored or the contract YAML is updated and the version is bumped.
 
-> [!warning] Contract ≠ backward-compatible schema
+> [!warning] Breaking schema changes
+>
 > Removing a declared column or changing its data type is always a breaking change regardless of version. To remove a column gracefully: publish a new version, deprecate the old one, give consumers a migration window, then delete the old version.
 
 ### `dbt source freshness` in CI

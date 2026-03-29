@@ -74,6 +74,7 @@ ORDER BY r.total_elapsed_time DESC;
 ```
 
 > [!tip] Suspended Status
+>
 > A query with high `elapsed_time` but low `cpu_time` is not using CPU — it is WAITING for a resource (lock, disk, memory). This is the key to diagnosing whether a problem is compute-bound or I/O-bound.
 
 ---
@@ -89,6 +90,7 @@ KILL 82;
 ```
 
 > [!warning] Kill With Caution
+>
 > Killing a session with a long-running open transaction will roll back all of its work. The rollback may take longer than the original operation. Always check elapsed time and reads before killing.
 
 ---
@@ -202,6 +204,7 @@ ORDER BY p.rows DESC;
 ```
 
 > [!warning] Heaps Are Dangerous
+>
 > A table without a clustered index forces every query into a full table scan. In silver and gold layers, every table must have a clustered index. See [[index-types-and-strategy]] for the correct clustered key selection.
 
 ---
@@ -239,6 +242,7 @@ LEFT JOIN (
 ```
 
 > [!info] No Built-In Scheduler
+>
 > SQL Server has no built-in backup scheduler. If backups are happening, something external is doing it — a SQL Agent job, cron, or Airflow DAG.
 
 ---

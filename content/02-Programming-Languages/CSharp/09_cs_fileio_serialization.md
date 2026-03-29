@@ -49,6 +49,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 #### File.WriteAllText and File.ReadAllText
 
 > [!info] File class — one-line read/write
+>
 > - `WriteAllText` — creates or overwrites a file
 > - `ReadAllText` — reads entire file into a string
 > - UTF-8 by default
@@ -179,7 +180,9 @@ Console.WriteLine($"\n  Cleaned up: {tmpDir}");
 
 Write header + rows with `string.Join`. Read with `Split(',')`. Works for simple data without commas or quotes. For production CSV with quoting, use `CsvHelper`.
 
-> [!warning] Manual `Split` breaks on quoted commas — use `CsvHelper` for user-facing CSV.
+> [!warning] Manual Split breaks on quoted commas
+>
+> Manual `Split` breaks on quoted commas — use `CsvHelper` for user-facing CSV.
 
 ```csharp
 #nullable enable
@@ -302,6 +305,7 @@ Directory.Delete(tmpDir, recursive: true);
 #### JsonSerializerOptions — configure camelCase, indentation, encoding
 
 > [!info] JsonSerializerOptions
+>
 > - `WriteIndented` — pretty print
 > - `PropertyNamingPolicy` — camelCase for APIs
 > - `Encoder` — Unicode handling
@@ -676,6 +680,7 @@ For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Av
 #### Serialization Streams — System.IO hierarchy FileStream, MemoryStream, StreamReader
 
 > [!info] Stream hierarchy
+>
 > - `Stream` — abstract base class
 > - `FileStream` — files | `MemoryStream` — in-memory | `NetworkStream` — network
 > - `StreamReader`/`StreamWriter` — wrap streams for text I/O
@@ -899,7 +904,9 @@ Directory.Delete(tmpDir, recursive: true);
 
 Async versions of every I/O method (`ReadAllTextAsync`, `ReadLineAsync`, `ReadAsync`) release the thread during I/O — essential for web servers handling concurrent requests. Same API, just add `Async` suffix and `await`.
 
-> [!warning] Don't use `.Result` or `.Wait()` on async methods — deadlock risk. Don't forget `CancellationToken` for graceful shutdown. Don't mix sync and async in the same code path.
+> [!warning] Don't use .Result or .Wait()
+>
+> Don't use `.Result` or `.Wait()` on async methods — deadlock risk. Don't forget `CancellationToken` for graceful shutdown. Don't mix sync and async in the same code path.
 
 ```csharp
 var tmpDir = Path.Combine(Path.GetTempPath(), "async_cs_" + Guid.NewGuid().ToString("N")[..8]);
@@ -951,7 +958,9 @@ Directory.Delete(tmpDir, recursive: true);
 
 `[JsonSerializable]` generates serialization code at compile time — no reflection, 2–5x faster, zero allocations, AOT-compatible. Required for Native AOT. Use for high-throughput APIs (>1000 req/s), serverless (cold start), hot paths. Overkill for prototyping.
 
-> [!info] Source generators require a partial class in a real project. The pattern below demonstrates the API — actual codegen needs a `.csproj`.
+> [!info] Source generators require a partial
+>
+> Source generators require a partial class in a real project. The pattern below demonstrates the API — actual codegen needs a `.csproj`.
 
 ```csharp
 Console.WriteLine(@"
@@ -1096,7 +1105,9 @@ Directory.Delete(tmpDir, recursive: true);
 
 `Pipe` is a producer-consumer buffer. `PipeWriter` writes bytes, `PipeReader` reads without copying (zero-allocation). Buffer manages growth and recycling automatically. Built-in backpressure. Used internally by ASP.NET Core (Kestrel) for HTTP parsing. Don't use for simple file reads.
 
-> [!info] This demonstrates the pattern — real usage requires a continuous data source (network stream, log pipe).
+> [!info] This demonstrates the pattern
+>
+> This demonstrates the pattern — real usage requires a continuous data source (network stream, log pipe).
 
 ```csharp
 Console.WriteLine(@"
@@ -1165,6 +1176,7 @@ Console.WriteLine("  Pipelines: used by ASP.NET Core Kestrel for HTTP parsing");
 #### Zero-allocation CSV parsing with ReadOnlySpan&lt;char&gt;
 
 > [!info] Zero-allocation CSV parsing
+>
 > - `AsSpan()` — creates a zero-allocation view
 > - `IndexOf` finds delimiters; `Slice` creates sub-views without new strings
 > - Orders of magnitude less GC pressure than `Split`
@@ -1213,7 +1225,9 @@ Console.WriteLine($"  Split: {parts[0]}, close={parts[2]}");
 
 `Encoding.UTF8.GetBytes(string)` converts text to bytes. `.GetString(bytes)` converts back. C# strings are internally UTF-16; APIs/files use UTF-8. Always specify encoding explicitly — without it, you get mojibake or data corruption.
 
-> [!danger] Never use `Encoding.Default` (varies by OS) or ASCII for non-English text (silently loses characters like `€`).
+> [!danger] Never use Encoding.Default (varies by
+>
+> Never use `Encoding.Default` (varies by OS) or ASCII for non-English text (silently loses characters like `€`).
 
 ```csharp
 var text = "Euro Stoxx 50: SAP €166.52, ASML €685.40";

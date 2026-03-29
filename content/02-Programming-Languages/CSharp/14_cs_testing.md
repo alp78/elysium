@@ -86,6 +86,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 #### Imports and test attribute stubs
 
 > [!info] Notebook test infrastructure
+>
 > This cell defines stub versions of xUnit's `[Fact]`, `[Theory]`, and `[InlineData]` attributes, plus a lightweight `Assert` class. In a real project, xUnit NuGet provides these. The stubs avoid assembly version conflicts in .NET Interactive while keeping the API surface identical — test code is copy-pasteable into a real xUnit project.
 
 ```csharp
@@ -254,11 +255,13 @@ public static class Assert
 xUnit is the most widely used testing framework in .NET. `[Fact]` marks a single test case (like pytest `test_*`). `[Theory]` + `[InlineData]` creates parametrized tests (like `@pytest.mark.parametrize`). xUnit creates a new class instance per test for isolation — no `[SetUp]`/`[TearDown]`, use constructor/`IDisposable` instead.
 
 > [!warning] Testing anti-patterns
+>
 > - Don't **share state** between tests — each test should be independent
 > - Don't **test private methods** — test the public API that uses them
 > - Don't **assert on implementation details** — assert on observable behavior
 
 > [!info] Running xUnit in notebooks
+>
 > xUnit normally runs via `dotnet test` with a test project. In notebooks, we call test methods directly and report results. In production, tests live in a separate `MyProject.Tests` project.
 
 #### Helper to run tests in notebook
@@ -359,6 +362,7 @@ RunTest("Missing key throws KeyNotFoundException", () =>
 ## Theory and InlineData
 
 > [!info] xUnit test attributes
+>
 > - `[Fact]` — single test case
 > - `[Theory]` + `[InlineData]` — parametrized (runs once per data set); C# equivalent of `@pytest.mark.parametrize`
 > - In notebooks we simulate with a loop; in real projects, xUnit discovers automatically
@@ -407,6 +411,7 @@ foreach (var (vol, bps) in feeCases)
 #### Parametrize: currency conversion
 
 > [!info] Parametrized test pattern
+>
 > - Array of named tuples = test cases
 > - `foreach` destructures each tuple
 > - `Assert.Equal(exp, amt * rate, precision: 5)` handles floating-point rounding (IEEE 754)
@@ -435,6 +440,7 @@ foreach (var (amt, rate, exp, label) in fxCases)
 #### Parametrize: OHLCV validation
 
 > [!info] OHLCV candle invariants
+>
 > - `high >= max(open, close)`
 > - `low <= min(open, close)`
 > - `volume >= 0`
@@ -876,6 +882,7 @@ RunTest("Index weight calculation with mock", () =>
 #### Data quality checks
 
 > [!info] EOD price validation invariants
+>
 > - `close > 0`, `high >= low`, `volume >= 0`, daily return < 20%
 > - Returns a list of error strings — empty = all valid
 > - Bad API data is common: 0 for missing fields, negative prices from currency bugs, unadjusted splits
@@ -944,6 +951,7 @@ RunTest("Catches invalid prices", () =>
 Integration tests verify code against real dependencies (DB, APIs, files) — not just mocked interfaces. The stoxx database uses a medallion architecture: `bronze` (raw OHLCV), `silver` (cleaned + gap-filled), `gold` (scores, index performance).
 
 > [!warning] Integration testing pitfalls
+>
 > - Don't run against production — use staging or Testcontainers
 > - Don't hardcode connection strings — use env vars
 > - Don't depend on specific data values — test invariants and ranges
@@ -1135,11 +1143,14 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 #### IServiceCollection — validate dependency injection registration
 
 > [!info] DI registration testing
+>
 > - Build a `ServiceProvider` and try to resolve every root service
 > - `GetRequiredService<T>()` throws if not registered — catches missing DI at test time
 > - The #1 startup crash in .NET is forgetting `services.AddScoped<IFoo, Foo>()`
 
-> [!warning] Resolve root services (they pull the full dependency graph). Don't register services in tests that aren't in production. Watch lifetime mismatches: Scoped into Singleton throws at runtime.
+> [!warning] Resolve root services (they pull
+>
+> Resolve root services (they pull the full dependency graph). Don't register services in tests that aren't in production. Watch lifetime mismatches: Scoped into Singleton throws at runtime.
 
 ```csharp
 // Register services
@@ -1366,6 +1377,7 @@ Console.WriteLine(workflow);
 #### Testing cheat sheet
 
 > [!abstract]- C# Testing Quick Reference
+>
 > **Framework**
 > | Command | Purpose |
 > |---|---|

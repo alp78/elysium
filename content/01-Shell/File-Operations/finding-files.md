@@ -20,7 +20,9 @@ When a pipeline fails and you need to find the offending file across a directory
 
 #### find -name -type — find by name pattern
 
-> [!info] `-name` matches the filename only (not the path). `-type f` restricts to
+> [!info] find by name and type
+>
+> `-name` matches the filename only (not the path). `-type f` restricts to
 > regular files (`d` = directories, `l` = symlinks). Patterns are shell globs, not regex
 > — quote them to prevent the shell from expanding `*` before `find` sees it.
 
@@ -28,14 +30,17 @@ When a pipeline fails and you need to find the offending file across a directory
 find /data/ -name "*.parquet" -type f
 ```
 
-> [!tip] `-iname` for case-insensitive, `-path` for full path matching
+> [!tip] -iname and -path variants
+>
 > `-name "*.CSV"` misses `.csv` files. Use `-iname "*.csv"` to match regardless of case.
 > To match a directory structure pattern like `/data/*/staging/*.csv`, use `-path` instead
 > of `-name`.
 
 #### find -mtime -mmin — find by modification time
 
-> [!info] `-mtime` measures in 24-hour periods from **right now**, not from midnight.
+> [!info] mtime measures 24-hour periods
+>
+> `-mtime` measures in 24-hour periods from **right now**, not from midnight.
 > `-mtime -7` = modified within the last 168 hours. `-mmin -60` = modified within the
 > last 60 minutes. Use `-daystart` if you need calendar-day boundaries.
 
@@ -43,14 +48,17 @@ find /data/ -name "*.parquet" -type f
 find /var/log/ -name "*.log" -mtime -7
 ```
 
-> [!warning] `-mtime -1` does NOT mean "modified today"
+> [!warning] -mtime -1 is not "today"
+>
 > `-mtime -1` means "modified less than 24 hours ago from this instant." If you run it at
 > 3pm, files modified at 2pm yesterday are included. For "modified today" semantics, use
 > `-daystart -mtime 0`. This distinction matters for log rotation and audit scripts.
 
 #### find -size — find by file size
 
-> [!info] Size suffixes: `c` = bytes, `k` = KiB, `M` = MiB, `G` = GiB. `+` means
+> [!info] find -size suffixes
+>
+> Size suffixes: `c` = bytes, `k` = KiB, `M` = MiB, `G` = GiB. `+` means
 > "greater than," `-` means "less than." Files smaller than 1k are often empty stubs or
 > corrupt outputs from failed pipeline runs.
 
@@ -61,7 +69,9 @@ find /data/ -type f -size -1k
 
 #### find -exec, find -delete — find and execute on results
 
-> [!info] `-exec` runs a command on each found file. `{}` is the placeholder for the
+> [!info] find -exec usage
+>
+> `-exec` runs a command on each found file. `{}` is the placeholder for the
 > filename. `\;` terminates the command (one invocation per file). Schedule cleanup
 > jobs via cron — see [[linux-scheduling]].
 
@@ -69,14 +79,17 @@ find /data/ -type f -size -1k
 find /var/log/pipeline/ -name "*.log" -mtime +30 -exec rm {} \;
 ```
 
-> [!tip] `-exec {} +` is much faster than `-exec {} \;`
+> [!tip] Batch with -exec {} + for speed
+>
 > `\;` spawns one process per file. `+` batches files as arguments to a single process
 > (like `xargs`). For 10,000 files: `\;` = 10,000 `rm` invocations. `+` = ~5 `rm`
 > invocations. Use `+` unless the command can't handle multiple arguments.
 
 #### find -delete — safer alternative to -exec rm
 
-> [!info] `-delete` removes found files directly without spawning `rm`. It's safer because
+> [!info] find -delete safety
+>
+> `-delete` removes found files directly without spawning `rm`. It's safer because
 > there's no argument expansion or shell interpretation. Always `find ... -print` first to
 > review what will be deleted, then change `-print` to `-delete`.
 
@@ -85,14 +98,17 @@ find /var/log/pipeline/ -name "*.log" -mtime +30 -print
 find /var/log/pipeline/ -name "*.log" -mtime +30 -delete
 ```
 
-> [!warning] `-delete` implies `-depth` (depth-first processing)
+> [!warning] -delete implies -depth
+>
 > `find` with `-delete` processes children before parents. This means directories are
 > deleted after their contents — which is correct. But combining `-delete` with `-prune`
 > doesn't work as expected because `-depth` and `-prune` are incompatible.
 
 #### find -empty, find -daystart — empty dirs and today's files
 
-> [!info] Empty directories are commonly left behind after pipeline processing moves
+> [!info] Finding empty directories
+>
+> Empty directories are commonly left behind after pipeline processing moves
 > files out of staging areas. Periodic cleanup prevents directory clutter.
 
 ```bash
@@ -101,7 +117,9 @@ find /data/staging/ -type d -empty
 
 #### find -daystart -mtime 0 — find files modified today
 
-> [!info] `-daystart` shifts the time reference from "now" to "start of today" (midnight).
+> [!info] -daystart for calendar-day matching
+>
+> `-daystart` shifts the time reference from "now" to "start of today" (midnight).
 > Combined with `-mtime 0`, this finds files modified since midnight — useful for checking
 > what a pipeline touched during today's run.
 
@@ -111,7 +129,9 @@ find /data/ -type f -daystart -mtime 0
 
 #### find -size +1G — find large files consuming disk space
 
-> [!info] A key step in the [[sql-server-disk-full]] runbook. Pipe through `head` to avoid
+> [!info] Find large files consuming disk
+>
+> A key step in the [[sql-server-disk-full]] runbook. Pipe through `head` to avoid
 > overwhelming output. `2>/dev/null` suppresses permission-denied errors from system
 > directories you can't read.
 
@@ -121,7 +141,9 @@ find / -type f -size +1G 2>/dev/null | head -20
 
 #### find -print0 | xargs -0 -P — parallel processing of found files
 
-> [!info] `-print0` outputs filenames separated by null bytes instead of newlines,
+> [!info] Null-delimited parallel processing
+>
+> `-print0` outputs filenames separated by null bytes instead of newlines,
 > making it safe for any filename. `xargs -0` reads null-delimited input. `-P 4` runs
 > 4 processes in parallel — scales linearly with cores for CPU-bound tasks like compression.
 
@@ -129,7 +151,8 @@ find / -type f -size +1G 2>/dev/null | head -20
 find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip
 ```
 
-> [!danger] Always use `-print0 | xargs -0` — never pipe raw `find` into `xargs`
+> [!danger] Always use -print0 with xargs -0
+>
 > Without `-print0`, filenames containing spaces or quotes cause `xargs` to split them
 > into multiple arguments. `file with spaces.csv` becomes three arguments: `file`, `with`,
 > `spaces.csv`. This can target wrong files — or worse, delete unintended files.
@@ -137,7 +160,8 @@ find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip
 
 ### find vs fd vs locate — tool comparison
 
-> [!tip] `find` vs `fd` vs `locate`
+> [!tip] find vs fd vs locate
+>
 > - `find` is universal but single-threaded and slow on large trees. Good for: combining with `-exec`, complex predicates.
 > - `fd` (install: `apt install fd-find`) is 5-10x faster, respects `.gitignore`, has a simpler syntax: `fd "\.parquet$" /data/`. Use it for interactive searching.
 > - `locate` uses a pre-built database (updated by `updatedb` cron): `locate "*.parquet"` — instant results but stale by up to 24 hours. Good for: "where did I put that file last week?"
@@ -146,7 +170,9 @@ find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip
 
 #### Get-ChildItem -Filter — find files by name pattern
 
-> [!info] `-Filter` is applied at the filesystem provider level (fast). `-Recurse` searches
+> [!info] Get-ChildItem -Filter
+>
+> `-Filter` is applied at the filesystem provider level (fast). `-Recurse` searches
 > subdirectories. `-File` restricts to files only (`-Directory` for directories).
 
 ```powershell
@@ -155,7 +181,9 @@ Get-ChildItem -Path "C:\data\" -Filter "*.parquet" -Recurse -File
 
 #### Get-ChildItem | Where-Object — find files by size
 
-> [!info] Pipe into `Where-Object` for predicate filtering. PowerShell understands
+> [!info] Filter by size with Where-Object
+>
+> Pipe into `Where-Object` for predicate filtering. PowerShell understands
 > `KB`, `MB`, `GB` literals natively — no conversion math needed.
 
 ```powershell
@@ -165,7 +193,9 @@ Get-ChildItem -Path "C:\data\" -Recurse -File |
 
 #### Get-ChildItem | Where-Object LastWriteTime — find files by modification time
 
-> [!info] `(Get-Date).AddDays(-7)` creates a DateTime object for 7 days ago. Compare
+> [!info] Filter by modification time
+>
+> `(Get-Date).AddDays(-7)` creates a DateTime object for 7 days ago. Compare
 > against `LastWriteTime` for modification time or `CreationTime` for creation date.
 
 ```powershell
@@ -175,7 +205,9 @@ Get-ChildItem -Path "C:\data\" -Recurse -File |
 
 #### Get-ChildItem -Directory — find empty directories
 
-> [!info] PowerShell has no built-in "empty directory" filter. Check each directory's
+> [!info] Find empty directories in PowerShell
+>
+> PowerShell has no built-in "empty directory" filter. Check each directory's
 > child count. Include `-Force` so hidden files are counted — otherwise a directory
 > containing only hidden files appears empty.
 
@@ -186,7 +218,9 @@ Get-ChildItem -Path "C:\data\" -Recurse -Directory |
 
 #### Select-String — search file contents (PowerShell grep)
 
-> [!info] `Select-String` searches file contents by regex and returns structured objects
+> [!info] Select-String searches content
+>
+> `Select-String` searches file contents by regex and returns structured objects
 > with `Filename`, `LineNumber`, and `Line` properties. Use `**\*` glob for recursive
 > search. For the Linux equivalent, see [[grep-and-pattern-matching]].
 

@@ -48,7 +48,9 @@ gcloud monitoring time-series list \
   --format="value(points.value.doubleValue)" | sort -n | tail -5
 ```
 
-> [!tip] Use Metrics for Right-Sizing Decisions
+> [!tip] Metrics for Right-Sizing
+>
+> Use Metrics for Right-Sizing Decisions.
 > Pull CPU utilization data before any VM resize decision. If the top 5 data points (peak values from the last 7 days) are all below 0.30 (30%), the VM is over-provisioned. The `sort -n | tail -5` pipeline extracts the highest recorded values, which represent true peak load. See [[vm-lifecycle]] for the full right-sizing workflow.
 
 ### Key Cloud Monitoring Metrics for Data Engineers

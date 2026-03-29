@@ -68,15 +68,18 @@ To verify the full pipeline (deadlock → metric → monitor → email):
 3. The monitor should trigger and send an email within 1-2 minutes
 4. The Deadlock Count widget on the [[datadog-dashboards|SQL Server DBA dashboard]] should increment
 
-> [!info] Why Change Alert (not Threshold Alert)?
+> [!info] Why change alert
+>
 > `sqlserver.deadlocks.total` is a `monotonic_count` — it resets to 0 each collection cycle when no new deadlocks occur. A **Change Alert** detects when the value increases from 0, which is more reliable than a threshold alert for delta-based metrics.
 
 ---
 
-> [!danger] Monitor Evaluation Delay Can Miss Short-Lived Incidents
+> [!danger] Monitor evaluation delay
+>
 > Datadog evaluates monitors on a fixed interval (typically 60 seconds). A deadlock that occurs and resolves within one evaluation cycle may never trigger the alert. For critical monitors, set the evaluation window to the smallest supported interval and consider enabling `require_full_window: false` so partial data triggers the alert rather than waiting for a full window.
 
-> [!warning] Monitor Notification Flood on Recovery
+> [!warning] Recovery notification flood
+>
 > When a monitor recovers, Datadog sends a recovery notification to all channels. If a flapping metric (e.g., scheduler heartbeat on a slow VM) triggers and recovers repeatedly, the on-call engineer receives dozens of notifications. Use `notify_no_data: true` with `no_data_timeframe: 10` (minutes) instead of a tight threshold to reduce noise for heartbeat-style monitors.
 
 ## Airflow Orchestration Monitors

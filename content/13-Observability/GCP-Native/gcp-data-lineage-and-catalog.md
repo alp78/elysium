@@ -738,7 +738,9 @@ BigQuery captures lineage automatically for every SQL operation that reads from 
 - `bq cp` operations
 - Dataflow jobs writing to BigQuery (via the Dataflow BigQuery connector)
 
-> [!note] What BigQuery Lineage Does NOT Capture Automatically
+> [!note] BigQuery lineage gaps
+>
+> What BigQuery lineage does NOT capture automatically:
 > - Reads via `bq extract` (export to GCS) are not tracked
 > - External table reads are tracked if they are BigQuery external tables, not if the read bypasses BigQuery
 > - Python code that reads BigQuery rows via the Storage Read API and writes to a different system is not tracked
@@ -1670,7 +1672,8 @@ LIMIT 20;
 
 Impact analysis is the discipline of querying lineage before making changes to understand what will break.
 
-> [!warning] Schema Changes Without Impact Analysis Are a Production Incident Waiting to Happen
+> [!warning] Impact analysis before schema changes
+>
 > Renaming a column, changing a data type, or dropping a table without checking downstream lineage has caused production outages at every data team that has not enforced this practice. Make lineage impact analysis a mandatory step in your change management process — equivalent to running tests before deploying code.
 
 ### Pre-Change Impact Analysis Workflow
@@ -1830,7 +1833,8 @@ sys.exit(0 if all_clear else 1)
 
 ## Lineage Gaps — What Is Not Captured
 
-> [!warning] Lineage Is Only as Complete as What You Instrument
+> [!warning] Lineage instrumentation gaps
+>
 > Every team that implements lineage discovers gaps: processing paths that write to BigQuery without going through a tracked process. Maintain an explicit inventory of lineage gaps alongside the lineage you do have.
 
 | Pipeline Path | Auto-Captured? | How to Fill the Gap |

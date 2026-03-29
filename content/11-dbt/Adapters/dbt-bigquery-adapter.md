@@ -141,8 +141,9 @@ from {{ ref('int_esg_scores_validated') }}
 | `month` | Monthly index rebalancing, ESG scores updated monthly | Manageable; good default |
 | `year` | Historical archives queried by year | Very few partitions; less pruning benefit |
 
-> [!warning] `require_partition_filter = true`
-> Enabling this on mart tables prevents accidental full-table scans from BI tools. Any query that does not include a filter on the partition column will be rejected with an error. Set this on all mart tables. Do not set it on staging tables — dbt internal queries (e.g., `is_incremental()` checks) may not include partition filters.
+> [!warning] Require partition filter on marts
+>
+> Enabling `require_partition_filter = true` on mart tables prevents accidental full-table scans from BI tools. Any query that does not include a filter on the partition column will be rejected with an error. Set this on all mart tables. Do not set it on staging tables — dbt internal queries (e.g., `is_incremental()` checks) may not include partition filters.
 
 ### Integer Range Partitioning
 
@@ -274,7 +275,8 @@ prod:
 - **`interactive`**: queries compete for slots immediately; subject to fair-use limits; higher priority.
 - **`batch`**: queries are queued; start within 24 hours; no slot reservation required. Use for scheduled dbt production runs to avoid slot contention with analysts.
 
-> [!warning] threads is not the same as BigQuery slots
+> [!warning] Threads vs BigQuery slots
+>
 > `threads: 16` means dbt submits 16 queries concurrently. Each of those queries may consume hundreds or thousands of slots. Setting threads too high on a shared project can cause slot exhaustion and query queuing. Start with `threads: 8` and increase after confirming slot availability via the BigQuery Admin Console.
 
 ---

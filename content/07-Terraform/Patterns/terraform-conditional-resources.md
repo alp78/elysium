@@ -151,6 +151,7 @@ output "dataset_ids" {
 | **Refactoring** | Risky — index shift destroys and recreates | Safe — key changes are explicit |
 
 > [!warning] count Index Shift
+>
 > If you use `count = 3` to create 3 instances and then remove the first, Terraform renumbers index `[1]` to `[0]` and `[2]` to `[1]`, causing TWO resources to be destroyed and recreated. Use `for_each` with a map whenever the instances have distinct identities.
 
 ---

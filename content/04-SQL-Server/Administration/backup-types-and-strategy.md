@@ -93,6 +93,7 @@ WITH CHECKSUM;
 ```
 
 > [!warning] Always Verify
+>
 > An unverified backup is not a backup. Run `RESTORE VERIFYONLY` after every important backup. Also schedule monthly test restores to verify recoverability end-to-end.
 
 ---
@@ -100,6 +101,7 @@ WITH CHECKSUM;
 ### The 3-2-1 Backup Rule
 
 > [!info] The 3-2-1 Rule
+>
 > - **3** copies of your data (production + 2 backups)
 > - **2** different storage types (local disk + cloud storage)
 > - **1** copy offsite (GCS bucket in a different region)
@@ -121,7 +123,9 @@ gcloud storage cp "${BACKUP_PATH}" gs://analytics-db-backups/daily/
 rm "${BACKUP_PATH}"  # remove local copy after upload
 ```
 
-> [!danger] Test Your Restores, Not Just Your Backups
+> [!danger] Test Your Restores
+>
+> Test Your Restores, Not Just Your Backups.
 > A backup that cannot be restored is worse than no backup -- it gives false confidence. Schedule quarterly restore drills to a separate database. Common failures that only surface during restore: corrupt `.bak` files from disk errors, missing log chain gaps (skipped a log backup), and cross-version incompatibilities when restoring to a different SQL Server edition.
 
 ---
@@ -139,7 +143,9 @@ The recovery model determines how transaction logs are managed and what kind of 
 | **Use when** | User-generated data, financial records, compliance | Reproducible data, idempotent pipelines, dev/test |
 | **Risk if misconfigured** | Unbounded log growth fills disk | Cannot recover recent transactions |
 
-> [!danger] FULL Recovery Without Log Backups Fills Your Disk
+> [!danger] FULL Recovery Needs Log Backups
+>
+> FULL Recovery Without Log Backups Fills Your Disk.
 > Never leave a database in FULL recovery model without regular log backups. The transaction log will grow without bound until it fills the disk, at which point **all writes fail across all databases on the instance**. This is the single most common production outage for SQL Server. If you see the log file growing past 10 GB, check `SELECT log_reuse_wait_desc FROM sys.databases` -- if it says `LOG_BACKUP`, no log backups are running.
 
 ### Switching Recovery Models
@@ -174,7 +180,9 @@ FROM sys.database_files WHERE type = 1;
 DBCC SHRINKFILE(N'mydb_log', 64);
 ```
 
-> [!warning] Never Shrink Data Files as Routine Maintenance
+> [!warning] Never Shrink Data Files Routinely
+>
+> Never Shrink Data Files as Routine Maintenance.
 > `DBCC SHRINKFILE` on data files (`.mdf`) causes massive index fragmentation, forcing expensive rebuilds afterward. Shrinking the log file (`.ldf`) after switching to SIMPLE recovery is fine -- shrinking data files as a regular practice is almost always counterproductive.
 
 ---

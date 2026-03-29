@@ -92,7 +92,9 @@ Cloud Firestore is a fully managed, serverless, document-oriented NoSQL database
 
 Firestore is distinct from traditional relational databases: there is no fixed schema, no SQL, and no joins across collections. Instead, data is organized into **documents** grouped into **collections**, with optional **subcollections** nested under documents.
 
-> [!tip] When to reach for Firestore
+> [!tip] When to Use Firestore
+>
+> When to reach for Firestore.
 > Firestore excels at pipeline state tracking, config stores, feature flags, audit logs, and any use case where you need real-time change propagation without managing infrastructure. For analytics workloads, pair it with [[querying-and-cost-optimization|BigQuery]].
 
 ---
@@ -116,6 +118,7 @@ Firestore has two operating modes. The mode is chosen at database creation time 
 | Server-side aggregation | Yes (`count`, `sum`, `avg`) | No |
 
 > [!warning] Mode is permanent
+>
 > Once a Firestore database is created in Native mode or Datastore mode, it cannot be switched. Plan the mode choice before any data is written. For all new data engineering projects, prefer Native mode.
 
 ---
@@ -156,7 +159,9 @@ Firestore pricing is operation-based, not instance-based. There is no cost when 
 - Deletes: $0.02 per 100,000 documents
 - Storage: $0.18 per GiB per month
 
-> [!warning] Reads are per document returned, not per query
+> [!warning] Reads Charged Per Document
+>
+> Reads are per document returned, not per query.
 > A query that returns 10,000 documents costs 10,000 read operations regardless of how many fields are projected. Design queries to be selective. Use `limit()` and filters aggressively.
 
 ---
@@ -231,6 +236,7 @@ A Firestore document is a set of key-value pairs. Values can be any supported ty
 | Null | `None` | Explicit null field |
 
 > [!warning] Arrays cannot contain arrays
+>
 > Firestore arrays cannot nest other arrays directly. Use a list of maps instead when you need complex array elements.
 
 ---
@@ -250,7 +256,9 @@ print(doc_ref.id)
 doc_ref = db.collection("pipelines").document("daily-ingest")
 ```
 
-> [!warning] Avoid timestamps as document IDs
+> [!warning] Avoid Timestamp Document IDs
+>
+> Avoid timestamps as document IDs.
 > Using timestamps or monotonically increasing integers as IDs creates a "hot spot" — all writes go to the same tablet shard. Firestore throttles hot spots. Use auto-generated IDs or hash-prefixed IDs for high-throughput write scenarios.
 
 ---
@@ -465,7 +473,9 @@ batch.set(audit_ref, {
 batch.commit()
 ```
 
-> [!tip] Batch writes are not transactions
+> [!tip] Batch Writes Not Transactions
+>
+> Batch writes are not transactions.
 > Batch writes are atomic but do not read existing data. Use a transaction when you need to read a value and conditionally write based on it.
 
 ---
@@ -537,10 +547,14 @@ query = (
 )
 ```
 
-> [!warning] Inequality filters on a single field only
+> [!warning] Single-Field Inequality Only
+>
+> Inequality filters on a single field only.
 > Firestore only allows inequality filters (`<`, `<=`, `>`, `>=`, `!=`) on **one field per query**. Filtering on two different fields with inequalities requires a composite index and is not supported as a standard query — restructure your data model or use equality for one field.
 
-> [!warning] No native OR across different fields
+> [!warning] No Cross-Field OR Queries
+>
+> No native OR across different fields.
 > Firestore does not support `field_a == x OR field_b == y`. Use `in` for OR conditions on the same field. For cross-field OR, run two queries and merge results in Python.
 
 ---
@@ -561,7 +575,9 @@ for doc in runs_query.stream():
     print(doc.reference.path, doc.to_dict())
 ```
 
-> [!tip] Collection group queries require a composite index
+> [!tip] Composite Index Required
+>
+> Collection group queries require a composite index.
 > Before running a collection group query with filters or ordering, create a collection group index via the Firestore console or `gcloud`. The console will provide the exact command when a query fails due to a missing index.
 
 ---
@@ -649,7 +665,9 @@ result = avg_query.get()
 avg_duration = result[0][0].value
 ```
 
-> [!tip] Aggregations are billed as a single read
+> [!tip] Aggregations Bill as One Read
+>
+> Aggregations are billed as a single read.
 > A `count()`, `sum()`, or `avg()` aggregation query is billed as one read operation, regardless of the number of documents it scans. This makes aggregations significantly cheaper than fetching all documents.
 
 ---
@@ -820,7 +838,9 @@ gcloud firestore import gs://my-backup-bucket/firestore/2026-03-22 \
 
 See [[gcs-buckets-and-lifecycle]] for GCS bucket setup and [[gcs-object-operations]] for managing backup files. Make sure the Firestore service account has `storage.objects.create` on the destination bucket.
 
-> [!tip] Schedule exports with Cloud Scheduler
+> [!tip] Schedule Exports
+>
+> Schedule exports with Cloud Scheduler.
 > Automate Firestore backups by triggering `gcloud firestore export` from a [[cloud-run-jobs-vs-services|Cloud Run Job]] on a schedule, or use the Firestore managed export via the console. Store exports in a lifecycle-managed GCS bucket to control retention costs.
 
 ---
@@ -873,7 +893,9 @@ service cloud.firestore {
 }
 ```
 
-> [!warning] Security rules do not apply to Admin SDK or service accounts
+> [!warning] Rules Skip Server-Side Access
+>
+> Security rules do not apply to Admin SDK or service accounts.
 > Rules only affect client-side Firebase/Firestore SDKs. All server-side Python (`google-cloud-firestore`) access is governed purely by IAM. Never assume rules protect server-side pipeline data access.
 
 ---
@@ -940,7 +962,9 @@ resource "google_firestore_document" "pipeline_config" {
 }
 ```
 
-> [!tip] Terraform manages index state
+> [!tip] Terraform Manages Index State
+>
+> Terraform manages index state.
 > Use `google_firestore_index` resources to version-control indexes alongside your pipeline code. Avoids the manual index creation step that often breaks deployments in new environments.
 
 ---
@@ -1225,7 +1249,9 @@ gcloud firestore indexes fields update metadata \
 
 Or restructure to store dynamic keys as an array of `{key, value}` objects rather than a flat map.
 
-> [!warning] Large maps can silently inflate costs
+> [!warning] Large Maps Inflate Costs
+>
+> Large maps can silently inflate costs.
 > Monitor write costs if you store variable-key maps (e.g., arbitrary metadata dicts). A document with 100 map keys costs 100+ index write units per document write.
 
 ---

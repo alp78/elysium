@@ -87,8 +87,9 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 
 ## Layer Responsibilities
 
-> [!warning] Bronze Must Be Immutable -- Never UPDATE or DELETE Bronze Rows
-> The entire medallion architecture depends on bronze being a faithful record of what arrived from the source. If you apply corrections or deduplication in bronze, you lose the ability to reprocess silver/gold from scratch. All cleaning, deduplication, and type casting belongs in silver. If source data is genuinely wrong, append a correction row with a later `_ingested_at` timestamp -- do not overwrite the original.
+> [!warning] Bronze must be immutable
+>
+> Never UPDATE or DELETE bronze rows. The entire medallion architecture depends on bronze being a faithful record of what arrived from the source. If you apply corrections or deduplication in bronze, you lose the ability to reprocess silver/gold from scratch. All cleaning, deduplication, and type casting belongs in silver. If source data is genuinely wrong, append a correction row with a later `_ingested_at` timestamp -- do not overwrite the original.
 
 ### Bronze (Raw)
 - 1:1 mapping with source data
@@ -107,7 +108,8 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 - Dashboard-ready format -- no further computation needed
 - See [[gold-transforms]]
 
-> [!danger] Gold Layer Must Be Fully Reproducible from Silver
+> [!danger] Gold must be reproducible from silver
+>
 > If you cannot rebuild gold entirely from silver (and silver from bronze), your medallion architecture is broken. Test this regularly by running a full-refresh of gold in a dev environment. Any gold table that depends on external state (API calls, cached files) outside the silver layer is a hidden dependency that will cause silent failures during reprocessing.
 
 ### Why Medallion Architecture Matters
@@ -120,9 +122,18 @@ The medallion architecture enables [[idempotent-pipeline-design|idempotent pipel
 
 ## Related
 
+**General SQL Server patterns:**
+- [[sql-server-schema-layering]] — Schema organization for multi-layer architectures
+- [[sql-server-loading-patterns]] — Loading methods, benchmarks, minimal logging
+- [[sql-server-change-tracking]] — SCD2, temporal tables, CDC — decision matrix
+- [[sql-server-incremental-transforms]] — Watermark loading, gap-fill, pre-computed aggregations
+
+**Worked implementation (financial index pipeline):**
 - [[bronze-layer-loading]] — How data enters the bronze layer
 - [[silver-transforms]] — Cleaning and deduplication patterns
 - [[gold-transforms]] — Analytics and scoring patterns
+
+**Theory:**
 - [[idempotent-pipeline-design]] — Safe re-run patterns
 - [[etl-vs-elt]] — The medallion pattern is inherently ELT
 - the pipeline steps — project-specific pipeline execution

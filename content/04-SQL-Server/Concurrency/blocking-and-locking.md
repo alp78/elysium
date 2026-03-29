@@ -48,6 +48,7 @@ SQL Server's lock manager tracks all acquired locks in memory and uses a compati
 | **SIX (Shared + Intent Exclusive)** | Read + will write | Aggregation-then-update operations | Heavy |
 
 > [!info] Why Intent Locks Exist
+>
 > SQL Server uses intent locks (IS, IX) at the page and table level to signal that a finer-grained lock exists below. This allows a session wanting to lock the entire table to quickly detect whether any rows are already locked — without scanning every row.
 
 ---
@@ -103,7 +104,9 @@ ORDER BY request_session_id;
 ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE);
 ```
 
-> [!warning] LOCK_ESCALATION = DISABLE Has Risks
+> [!warning] Lock Escalation Disable Risks
+>
+> LOCK_ESCALATION = DISABLE Has Risks.
 > Disabling escalation means SQL Server maintains all row-level locks indefinitely, consuming significant lock manager memory during large batch operations. Only use this when escalation-caused blocking is a confirmed problem, not preemptively.
 
 ---
@@ -162,7 +165,9 @@ FROM sys.databases WHERE name = 'analytics_db';
 ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 ```
 
-> [!warning] RCSI Requires a Maintenance Window
+> [!warning] RCSI Needs Maintenance Window
+>
+> RCSI Requires a Maintenance Window.
 > Enabling RCSI requires that no other connections are active on the database at the time the ALTER DATABASE statement runs. On a production database, run this during a maintenance window. The operation converts all existing transactions to use versioning — it can take seconds to minutes depending on active workload.
 
 #### RCSI version store — TempDB space usage and monitoring
@@ -242,7 +247,9 @@ SQL Server allows explicit lock hints in queries. Use these only when you know e
 | `WITH (PAGLOCK)` | Force page-level locking | Rarely useful — SQL Server usually chooses correctly |
 | `WITH (TABLOCK)` | Lock the entire table | Bulk INSERT with minimal logging (`INSERT ... WITH (TABLOCK)`) |
 
-> [!warning] NOLOCK Is Not a Performance Optimization
+> [!warning] NOLOCK Is Not a Performance Fix
+>
+> NOLOCK Is Not a Performance Optimization.
 > `WITH (NOLOCK)` (also written `READ UNCOMMITTED`) is sometimes used as a "performance hint" but it risks returning incorrect, inconsistent data — including rows that don't exist (from rolled-back transactions) or missing rows. Enable [[#Read Committed Snapshot Isolation (RCSI)|RCSI]] instead — it provides consistent reads without blocking and without dirty reads.
 
 ---

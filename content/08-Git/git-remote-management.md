@@ -36,7 +36,9 @@ upstream  https://github.com/original-org/repo.git (fetch)
 upstream  https://github.com/original-org/repo.git (push)
 ```
 
-> [!info] What "origin" means
+> [!info] What origin Means
+>
+> What "origin" means.
 > `origin` is just the conventional default name Git assigns to the remote you cloned from. It is not special — you can rename it. `upstream` is the community convention for the original repo when working with a fork.
 
 ## Adding a Remote (Fork Workflow)
@@ -66,6 +68,7 @@ When you fork a repository on GitHub, your fork becomes `origin`. The original r
 7. Create feature branches off your updated main and open PRs against `upstream`
 
 > [!tip] Verify after adding
+>
 > Run `git remote -v` after `git remote add` to confirm both `origin` and `upstream` are listed correctly before fetching.
 
 ## Fetching: Download Without Merging
@@ -82,6 +85,7 @@ git fetch origin
 Fetch is always safe. It updates your remote-tracking branches (e.g., `origin/main`) but never changes your local branches or working files. Use it to inspect what's new before deciding to merge or rebase.
 
 > [!info] Fetch vs Pull
+>
 > `git pull` = `git fetch` + `git merge` in one step. Prefer `git fetch` when you want to inspect changes first. Use `git pull` when you trust the incoming changes and want to integrate immediately. See [[git-daily-workflow]] for the full daily workflow.
 
 ## Pruning: Clean Up Deleted Remote Branches
@@ -97,6 +101,7 @@ git fetch --prune
 When teammates delete branches on GitHub (e.g., after merging a PR), those branches linger in your local repo as `origin/feat/old-branch`. `--prune` cleans them up.
 
 > [!tip] Make pruning automatic
+>
 > Configure Git to always prune on fetch:
 > ```bash
 > git config --global fetch.prune true
@@ -115,7 +120,9 @@ git push --force-with-lease
 
 This is the correct way to push a branch after rebasing. Rebasing rewrites commit SHAs, which means a normal `git push` will be rejected (the remote and local histories have diverged). `--force-with-lease` resolves this while protecting teammates.
 
-> [!warning] Never force-push to main or shared branches
+> [!warning] Never Force-Push Shared Branches
+>
+> Never force-push to main or shared branches.
 > `git push --force` and `git push --force-with-lease` overwrite remote history. They are only safe on your own personal feature branches. **Never force-push to `main`, `master`, or any branch other people have checked out.** If `main` needs a commit removed, use `git revert` instead — see [[git-recovery-and-undo]].
 
 ### Difference Between --force and --force-with-lease

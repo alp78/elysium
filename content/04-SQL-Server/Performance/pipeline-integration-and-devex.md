@@ -258,6 +258,7 @@ WHERE is_user_process = 1
 ```
 
 > [!warning] Never Automate Session Kills
+>
 > Automatically killing sleeping sessions can terminate legitimate long-running transactions mid-write, causing data corruption or extended rollback times. Always identify the session and understand why it's sleeping before killing it manually with `KILL <session_id>`.
 
 ---

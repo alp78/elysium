@@ -226,6 +226,7 @@ The log file is the safety net. Every modification follows this sequence:
 ```
 
 > [!info] COMMIT Does Not Mean Disk
+>
 > When a COMMIT returns success, the data might NOT be in the `.mdf` yet. It is guaranteed to be in the `.ldf`. If the server crashes before the checkpoint, recovery replays the log (called **redo** or **roll forward**) to apply committed changes to the `.mdf`. Uncommitted changes found in the log are undone (**undo** or **roll back**).
 
 #### Log record anatomy — LSN, transaction ID, operation, before/after images
@@ -994,6 +995,7 @@ UPDATE/DELETE under Snapshot Isolation (RCSI):
 ```
 
 > [!tip] One tempdb File Per CPU Core
+>
 > Best practice: create one tempdb data file per logical CPU core (up to 8), all equally sized. This reduces **PFS/GAM/SGAM page contention** — a bottleneck where multiple sessions compete for allocation pages. See [[server-configuration]] for the configuration steps.
 
 #### sys.dm_db_file_space_usage — monitor TempDB space by category
@@ -1192,6 +1194,7 @@ Every CRUD operation acquires locks. The lock manager tracks all locks in memory
 ```
 
 > [!warning] Lock Escalation
+>
 > When a single transaction holds >5,000 row/page locks on one table, SQL Server escalates to a table lock to save memory. This can cause unexpected blocking of all other sessions. Watch for this during bulk updates.
 
 #### Lock operations per CRUD — SELECT(S), INSERT(X), UPDATE(U→X), DELETE(X)

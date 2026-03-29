@@ -49,7 +49,9 @@ dbt_run = BashOperator(
 - No per-model retry, duration metrics, or partial re-run from Airflow.
 - Log output is a single stream; hard to isolate failures.
 
-> [!tip] Use for non-critical pipelines or when the dbt project is small (< 20 models).
+> [!tip] When to use single-task approach
+>
+> Use for non-critical pipelines or when the dbt project is small (< 20 models).
 
 ---
 
@@ -112,7 +114,9 @@ esg_dbt_dag = DbtDag(
 - Requires the manifest to be present at parse time; coordinate with CI/CD.
 - Additional dependency (`astronomer-cosmos`) must be pinned and managed.
 
-> [!note] Cosmos supports `LoadMode.DBT_LS` (runtime discovery) and `LoadMode.MANIFEST` (pre-built manifest). Prefer `MANIFEST` in production for parse-time stability.
+> [!note] Cosmos load modes
+>
+> Cosmos supports `LoadMode.DBT_LS` (runtime discovery) and `LoadMode.MANIFEST` (pre-built manifest). Prefer `MANIFEST` in production for parse-time stability.
 
 ---
 
@@ -302,7 +306,9 @@ bash_command=(
 )
 ```
 
-> [!warning] XCom values pulled into `--vars` must be strings or simple scalars. Never pass secrets through XComs; use Airflow Connections or Secret Manager instead.
+> [!warning] XCom variable constraints
+>
+> XCom values pulled into `--vars` must be strings or simple scalars. Never pass secrets through XComs; use Airflow Connections or Secret Manager instead.
 
 ---
 

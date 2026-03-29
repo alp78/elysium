@@ -22,7 +22,9 @@ status: complete
 
 Conditions must be explicit `bool` expressions — no truthy/falsy (unlike Python/JS). `else if` chains evaluate top-down — first match wins.
 
-> [!warning] Always use braces — omitting them leads to bugs when adding statements later. Don't use deep `if`/`else` nesting — extract to methods or use switch expressions.
+> [!warning] Always use braces
+>
+> Always use braces — omitting them leads to bugs when adding statements later. Don't use deep `if`/`else` nesting — extract to methods or use switch expressions.
 
 ```csharp
 #nullable enable
@@ -125,12 +127,15 @@ switch (command)
 #### Switch expression — compact value-returning form with or pattern and _ wildcard
 
 > [!info] Switch expression syntax
+>
 > - `variable switch { pattern => result, _ => default }` — returns a value directly
 > - `or` pattern combines cases
 > - `_` is the discard wildcard
 > - Compiler warns if cases are incomplete
 
-> [!warning] Missing `_` default causes `MatchFailureException` at runtime. Keep switch arms pure — no side effects.
+> [!warning] Missing _ default causes MatchFailureException
+>
+> Missing `_` default causes `MatchFailureException` at runtime. Keep switch arms pure — no side effects.
 
 ```csharp
 string result = command switch
@@ -165,6 +170,7 @@ Console.WriteLine($"Score {score} → Grade {grade}");
 #### Switch expression — type patterns and when guard
 
 > [!info] Type patterns
+>
 > - `int n => ...` — matches integers and binds to `n`
 > - `when` adds a guard: `int n when n < 0 => ...`
 > - Combines type checking and casting in one step — no explicit cast needed
@@ -194,6 +200,7 @@ foreach (var v in values)
 #### Switch expression — property patterns ({ Property: value })
 
 > [!info] Property patterns
+>
 > - `{ PropertyName: value }` — matches when the property equals the value
 > - Nest for multi-property: `{ Month: 12, Day: 25 }`
 > - Combine with relational patterns or `or`
@@ -215,6 +222,7 @@ Console.WriteLine($"{date:yyyy-MM-dd} → {holiday}");
 #### Null-coalescing (??, ??=) and is pattern matching
 
 > [!info] Null-handling operators
+>
 > - `??` — returns left if non-null, else right (replaces `x != null ? x : default`)
 > - `??=` — assigns only when null (one-line lazy init: `_cache ??= LoadData()`)
 > - `is` pattern — extracts and casts in one step: `if (obj is string s)`
@@ -250,11 +258,14 @@ else
 #### for and foreach loops
 
 > [!info] Loop types
+>
 > - `for (init; condition; increment)` — runs while condition is true
 > - `foreach (var item in collection)` — iterates any `IEnumerable<T>`
 > - Prefer `foreach` — cleaner, no off-by-one errors
 
-> [!warning] Don't modify a collection during `foreach` — throws `InvalidOperationException`. Use `for` loop or `ToList()` first.
+> [!warning] Don't modify a collection during foreach
+>
+> Don't modify a collection during `foreach` — throws `InvalidOperationException`. Use `for` loop or `ToList()` first.
 
 ```csharp
 // for — index-based iteration with explicit counter
@@ -292,6 +303,7 @@ Console.WriteLine();
 #### break, continue, goto
 
 > [!info] Loop control
+>
 > - `break` — exits the innermost loop immediately
 > - `continue` — skips to the next iteration
 > - Both work in `for`, `foreach`, `while`, and `do-while`
@@ -366,7 +378,9 @@ Console.WriteLine(FindFirst(m, 3));
 
 A method returning `IEnumerable<T>` with `yield return` pauses execution, returns a value, and resumes on the next `MoveNext()`. The compiler transforms it into a state machine. Values are computed lazily — only when requested. Composable with LINQ.
 
-> [!warning] The method body doesn't run until the first `MoveNext()` — not when the method is called.
+> [!warning] The method body doesn't run
+>
+> The method body doesn't run until the first `MoveNext()` — not when the method is called.
 
 ```csharp
 IEnumerable<int> Countdown(int n)
@@ -517,13 +531,16 @@ Console.WriteLine($"Flatten: [{string.Join(", ", Flatten(nestedArr))}]");
 #### LINQ basics — Select, Where, chaining, and SelectMany
 
 > [!info] Core LINQ methods
+>
 > - `Select` — transforms each element (map)
 > - `Where` — filters elements (filter)
 > - `SelectMany` — flattens nested sequences
 > - Chain fluently: `.Where(...).Select(...).Take(...)`
 > - All lazy — nothing executes until enumeration (`foreach` or `ToList()`)
 
-> [!warning] Don't use `foreach` with `if` + add to list — use `.Where().Select()`. Don't enumerate a deferred query multiple times — materialize with `ToList()`.
+> [!warning] Don't use foreach with if
+>
+> Don't use `foreach` with `if` + add to list — use `.Where().Select()`. Don't enumerate a deferred query multiple times — materialize with `ToList()`.
 
 ```csharp
 // Select — transforms each element (map)
@@ -575,6 +592,7 @@ Console.WriteLine($"Method:   [{string.Join(", ", methodResult)}]");
 #### ToDictionary and ToHashSet
 
 > [!info] Materialization
+>
 > - `ToDictionary(keySelector, valueSelector)` — builds a `Dictionary` (O(1) lookup)
 > - `ToHashSet()` — builds a `HashSet` (O(1) membership)
 > - Both are eager — enumerate immediately
@@ -603,6 +621,7 @@ Console.WriteLine($"Unique lengths: [{string.Join(", ", uniqueLengths)}]");
 #### Aggregate and built-in aggregations (Sum, Max, Any, All)
 
 > [!info] Aggregation
+>
 > - `Aggregate(seed, (acc, x) => ...)` — the general fold
 > - Built-in shortcuts: `Sum()`, `Max()`, `Min()`, `Average()`, `Count()`
 > - `Any(predicate)` / `All(predicate)` — boolean checks; `Any()` short-circuits on first match
@@ -638,6 +657,7 @@ Console.WriteLine($"Average:{nums.Average()}");
 #### Ordering — OrderBy, OrderByDescending with a key selector
 
 > [!info] Ordering
+>
 > - `OrderBy(x => x.Property)` — sorts ascending
 > - `OrderByDescending` — sorts descending
 > - `ThenBy` / `ThenByDescending` — secondary sort
@@ -661,6 +681,7 @@ Console.WriteLine($"By last char:  [{string.Join(", ", names.OrderBy(n => n[^1])
 #### Deferred execution — chained LINQ pipeline materialized by ToList()
 
 > [!info] Deferred execution
+>
 > - Each LINQ method returns a lazy `IEnumerable`
 > - Chain declaratively: `.Where().Select().OrderBy().Take()`
 > - Nothing executes until `foreach` or `ToList()`
@@ -684,11 +705,14 @@ Console.WriteLine($"Chained: [{string.Join(", ", result)}]");
 #### Infinite generator and common sequence methods
 
 > [!info] Infinite sequences
+>
 > - `while(true)` with `yield return` produces an infinite sequence
 > - Callers control consumption with `Take()`, `First()`, `TakeWhile()`
 > - Common methods: `Take`, `Skip`, `Distinct`, `Zip`, `Chunk`, `Concat`
 
-> [!danger] Never call `ToList()`, `Count()`, or `foreach` without `break` on infinite sequences — hangs or OOM.
+> [!danger] Infinite sequences cause OOM
+>
+> Never call `ToList()`, `Count()`, or `foreach` without `break` on infinite sequences — hangs or OOM.
 
 ```csharp
 IEnumerable<int> Naturals(int start = 0)

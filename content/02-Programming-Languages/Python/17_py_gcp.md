@@ -427,7 +427,9 @@ if pulse_count == 0:
 
 The `on_snapshot()` callback fires every time any document in the collection changes — this is how dashboards get push updates without polling. The `pulse_scheduler.py` writes to `pulse_live` every 60 seconds, and this listener catches each update as it happens. C# equivalent: `FirestoreDb.Collection().Listen()`.
 
-> [!tip] Run `pulse_scheduler.py` in a separate terminal first
+> [!tip] Run pulse_scheduler.py in a separate
+>
+> Run `pulse_scheduler.py` in a separate terminal first
 > `python pulse_scheduler.py --minutes 5`
 
 ```python
@@ -689,6 +691,7 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
 ## Summary
 
 > [!abstract]- GCP Python Quick Reference
+>
 > | Service | Pattern | Description |
 > |---|---|---|
 > | **Auth** | `os.environ['GOOGLE_APPLICATION_CREDENTIALS']` | Service account key |

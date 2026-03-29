@@ -46,6 +46,7 @@ process and has been chosen as the deadlock victim. Rerun the transaction.
 | Index maintenance + queries | A query locks data pages while an index rebuild locks index pages, and they cross |
 
 > [!tip] Blocking vs Deadlock
+>
 > **Blocking**: Session A holds a lock, Session B waits. One-way wait. B eventually proceeds when A commits. This is normal and expected.
 > **Deadlock**: Session A waits for B, and B waits for A. Circular wait. Neither can ever proceed. SQL Server must intervene and kill one.
 
@@ -62,7 +63,9 @@ WHERE counter_name = 'Number of Deadlocks/sec'
 
 ### Recent Deadlocks via system_health Session
 
-> [!warning] system_health Ring Buffer Has Limited Capacity
+> [!warning] Ring Buffer Limited Capacity
+>
+> system_health Ring Buffer Has Limited Capacity.
 > The `system_health` ring buffer holds only a few MB of events. Under heavy deadlock activity, older reports are silently evicted. If you investigate a deadlock reported hours ago, the graph may already be gone. Set up a persistent Extended Events session (below) for any database that has ever had a production deadlock.
 
 SQL Server's built-in `system_health` Extended Events session captures deadlock reports automatically:
@@ -151,9 +154,11 @@ ORDER BY deadlock_time DESC;
 | **Retry on error 1205** | Catch the deadlock error in application code and retry the transaction | **Safety net** — doesn't prevent, but handles gracefully |
 
 > [!tip] Related pattern: Airflow task retries
+>
 > When deadlocks occur during orchestrated pipeline runs, [[airflow-troubleshooting]] covers configuring Airflow task-level retries with exponential back-off for transient database errors like 1205.
 
 > [!tip] The Single Most Effective Prevention
+>
 > Enable [[server-configuration|Read Committed Snapshot Isolation (RCSI)]]. With RCSI, the dashboard (reader) never competes with the pipeline (writer) for locks:
 > ```sql
 > ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
@@ -204,7 +209,9 @@ public class DbConnectionFactory
 
 This ensures: transparent recovery, incremental back-off, bounded retries (no infinite loops), and fresh connection per retry.
 
-> [!warning] Retry Logic Must Re-execute the Entire Transaction
+> [!warning] Retry Must Re-execute Entire Transaction
+>
+> Retry Logic Must Re-execute the Entire Transaction.
 > A deadlock rolls back the entire transaction, not just the last statement. If your retry logic only re-executes the failed statement, the preceding statements in the transaction are lost and the data ends up inconsistent. Always wrap the complete BEGIN TRAN...COMMIT sequence inside the retry loop.
 
 ## Reproducing a Deadlock for Testing
@@ -240,9 +247,11 @@ COMMIT
 SQL Server detects the circular wait within 5 seconds and kills one session.
 
 > [!warning] RCSI and Deadlock Testing
+>
 > If RCSI is enabled, reader/writer deadlocks cannot be reproduced because readers use row-version snapshots. The writer/writer pattern above still works regardless of isolation level.
 
 > [!danger] RCSI Has a Hidden tempdb Cost
+>
 > Enabling RCSI stores row versions in `tempdb`. Under heavy write load (bulk inserts, MERGE operations), `tempdb` can grow dramatically and become the new bottleneck. Monitor `tempdb` size and I/O after enabling RCSI -- especially during pipeline runs that INSERT/UPDATE millions of rows. If `tempdb` runs out of space, all transactions across all databases on the instance fail.
 
 #### DROP TABLE — cleanup deadlock test tables

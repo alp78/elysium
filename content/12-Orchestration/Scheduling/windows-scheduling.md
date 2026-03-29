@@ -603,7 +603,8 @@ Register-ScheduledTask `
 
 PSScheduledJob (`Register-ScheduledJob`) is a PowerShell-centric alternative that integrates with the PowerShell job infrastructure (`Get-Job`, `Receive-Job`). It stores job results locally and allows you to retrieve script output long after the job completes — useful for debugging pipelines.
 
-> [!info] When to Use PSScheduledJob vs ScheduledTask
+> [!info] PSScheduledJob vs ScheduledTask
+>
 > Use `Register-ScheduledJob` when you need to inspect rich PowerShell output objects (not just exit codes) after the job runs. Use `Register-ScheduledTask` for everything else — it is more configurable and runs any executable, not just PowerShell scripts.
 
 ### Register-ScheduledJob
@@ -808,7 +809,8 @@ Register-ScheduledTask -TaskName "FileWatcher-DataDrop" -TaskPath "\DataEngineer
     -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
 ```
 
-> [!warning] FileSystemWatcher and Network Shares
+> [!warning] FileSystemWatcher and network shares
+>
 > `FileSystemWatcher` does not reliably detect changes on UNC paths or mapped drives. For network share monitoring, poll the directory with `Get-ChildItem` on a scheduled interval instead.
 
 ### Trigger on Service Failure
@@ -864,7 +866,8 @@ Register-ScheduledTask -TaskName "SSIS-LoadDimCustomer" -TaskPath "\DataEngineer
     -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
 ```
 
-> [!info] SQL Server Agent vs Task Scheduler for SSIS
+> [!info] SQL Agent vs Task Scheduler for SSIS
+>
 > SQL Server Agent is strongly preferred for SSIS: it captures package execution history, supports SQL Server Agent alerts, and integrates with SSIS Catalog (SSISDB) deployment model. Use Task Scheduler for SSIS only when running DTSX file-system packages on machines without SQL Server Agent.
 
 ### Scheduling Python Pipelines with Virtual Environments
@@ -905,7 +908,8 @@ Register-ScheduledTask -TaskName "Python-ETL-Prod" -TaskPath "\DataEngineering\"
     -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force
 ```
 
-> [!tip] Use a Wrapper Batch File for Python Tasks
+> [!tip] Wrapper batch file for Python
+>
 > Directly invoking `python.exe` from Task Scheduler works, but a `.bat` wrapper lets you inject environment variables, activate a venv, redirect both stdout and stderr to a log file with a timestamp, and capture the exit code cleanly — all in one place.
 
 ### Logging and Monitoring Scheduled Tasks
@@ -1051,7 +1055,8 @@ Get-ChildItem -Path $archiveDir -Filter "*.log" -File |
 | **Apache Airflow** | DAG-based pipelines with cross-system dependencies; need retry logic, SLAs, rich UI | Simple one-step scripts; low-budget environments without containerization |
 | **PSScheduledJob** | PowerShell scripts where you need to inspect rich output objects post-run | Non-PowerShell executables; high-frequency jobs |
 
-> [!info] SQL Server Agent vs Task Scheduler
+> [!info] SQL Agent vs Task Scheduler
+>
 > SQL Server Agent jobs are stored in `msdb` (the system database), run under SQL Server Agent Service account, support multi-step jobs with conditional logic between steps, and write history queryable via `msdb.dbo.sysjobhistory`. For any SQL-centric workload, Agent is the right choice. Task Scheduler is the fallback for machines without SQL Server or for scheduling non-database processes.
 
 ---
@@ -1094,7 +1099,8 @@ Get-ChildItem -Path $archiveDir -Filter "*.log" -File |
 | `30 9 * * 1-5` | Weekdays at 09:30 | `-Weekly -DaysOfWeek Mon,Tue,Wed,Thu,Fri -At "09:30"` |
 | `0 */4 * * *` | Every 4 hours | Repetition interval PT4H |
 
-> [!tip] systemd Timer vs Task Scheduler
+> [!tip] systemd timers vs Task Scheduler
+>
 > Modern Linux uses `systemd` timers rather than cron for new services. Systemd timers support monotonic intervals (e.g., 30 minutes after boot) and calendar-based triggers with second-level precision — features closer to Task Scheduler's capabilities than traditional cron.
 
 ### Cron-Like Wrapper for Windows (reference pattern)

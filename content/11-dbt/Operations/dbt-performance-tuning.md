@@ -19,7 +19,8 @@ Performance problems in dbt manifest as three distinct symptoms: slow model exec
 
 ---
 
-> [!warning] The Slowest Model Sets Your Pipeline SLA, Not the Average
+> [!warning] Slowest model sets the SLA
+>
 > A dbt project with 50 models where 49 run in 10 seconds and 1 runs in 20 minutes has a pipeline SLA of 20+ minutes. Focus optimization on the single slowest model first -- it dominates total runtime because dbt executes models in dependency order and downstream models wait. Use `run_results.json` to identify the critical path, not just the slowest individual model.
 
 ## Identifying Slow Models from `run_results.json`
@@ -143,7 +144,9 @@ Cluster on the columns most commonly used in `WHERE` and `JOIN`:
 }}
 ```
 
-> [!tip] BigQuery automatically re-clusters tables over time as data is inserted. No manual maintenance is required. Monitor clustering effectiveness with `INFORMATION_SCHEMA.TABLE_STORAGE`.
+> [!tip] Automatic re-clustering
+>
+> BigQuery automatically re-clusters tables over time as data is inserted. No manual maintenance is required. Monitor clustering effectiveness with `INFORMATION_SCHEMA.TABLE_STORAGE`.
 
 ### BigQuery Tuning — Slot Usage and Reservation
 
@@ -269,7 +272,9 @@ financial_indices:
 | Postgres / AlloyDB | 4–8 | Limited by `max_connections` on the server |
 | Snowflake | 4–8 | Bounded by warehouse size; larger warehouse = more threads |
 
-> [!note] Threads apply within a single `dbt run` invocation. If you run multiple DAG branches in parallel via Cosmos, each branch uses the full thread count, which can multiply the warehouse load.
+> [!note] Thread count multiplies with Cosmos
+>
+> Threads apply within a single `dbt run` invocation. If you run multiple DAG branches in parallel via Cosmos, each branch uses the full thread count, which can multiply the warehouse load.
 
 ---
 
@@ -430,7 +435,9 @@ dbt compile --select analyses/audit_fct_index_weights
 bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sql
 ```
 
-> [!warning] Always run `audit_helper` comparisons in a feature branch against the production dataset before merging. For ESG benchmark models, even a 0.0001% deviation in `constituent_weight` can constitute a material change requiring Methodology Committee review.
+> [!warning] Audit helper before merging
+>
+> Always run `audit_helper` comparisons in a feature branch against the production dataset before merging. For ESG benchmark models, even a 0.0001% deviation in `constituent_weight` can constitute a material change requiring Methodology Committee review.
 
 ---
 

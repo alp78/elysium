@@ -26,11 +26,13 @@ Topics covered:
 ## Dependency Injection
 
 > [!tip] Related pattern
+>
 > dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [[dbt-core-concepts]] for details.
 
 A class receives its dependencies (DB connection, API client, logger) through its constructor, NOT by creating them internally. This enables testability (swap real DB for mock), flexibility (swap providers), and single responsibility. In Python, no framework is needed — just pass objects via `__init__`. C# equivalent: `Microsoft.Extensions.DependencyInjection` (`builder.Services.AddXxx`).
 
 > [!warning] Anti-pattern — hardcoded dependencies
+>
 > ```python
 > class PipelineService:
 >     def __init__(self):
@@ -362,6 +364,7 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
 ## Data Validation
 
 > [!info] Pydantic data validation
+>
 > - Define data shape with type hints — validates on construction, raises `ValidationError` if invalid
 > - `Field()` — adds constraints (min, max, regex, default)
 > - `model_validate()` — parses dict → model
@@ -682,6 +685,7 @@ index-pipeline/
 ## Summary
 
 > [!abstract]- Design Patterns Quick Reference
+>
 > | Pattern | Python | Usage |
 > |---|---|---|
 > | **Dependency Injection** | `def __init__(self, repo)` | Inject via constructor; `Service(SqlRepo())` in prod, `Service(MockRepo())` in test |

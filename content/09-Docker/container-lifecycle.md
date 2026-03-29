@@ -61,7 +61,9 @@ docker run -d --name postgres-db2 -p 5433:5432 postgres:16
 docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 ```
 
-> [!danger] `-p 5432:5432` Binds to All Interfaces by Default
+> [!danger] Port Binding Exposes All Interfaces
+>
+> `-p 5432:5432` Binds to All Interfaces by Default.
 > Without specifying a bind address, `-p 5432:5432` exposes the port on `0.0.0.0` -- every network interface, including the public IP. On a cloud VM, this means your database is accessible from the internet. Always use `-p 127.0.0.1:PORT:PORT` for services that should only be reachable locally, or rely on firewall rules to block external access.
 
 #### docker run -v host:container — volume mounts for data persistence
@@ -113,9 +115,12 @@ docker run -d --name my-pipeline \
 ```
 
 > [!tip] .env File Security
+>
 > Never commit `.env` files to git. Add `.env` to `.gitignore`. For CI/CD, inject secrets via the pipeline platform's secret store (GitHub Actions secrets, GitLab CI variables, etc.) and pass them with `--env-file` or `-e` at runtime.
 
-> [!danger] `-e` Flags Expose Secrets in Process Lists
+> [!danger] Env Flags Expose Secrets
+>
+> `-e` Flags Expose Secrets in Process Lists.
 > Environment variables passed with `-e VAR=value` are visible in `docker inspect` output and in `/proc/<pid>/environ` on the host. Anyone with Docker access can read them. For sensitive values (database passwords, API keys), prefer `--env-file` with a file that has restricted permissions (chmod 600), or mount secrets from a secrets manager at runtime.
 
 #### docker run --rm — auto-remove container on exit
@@ -177,6 +182,7 @@ docker inspect my-transform --format='Memory: {{.HostConfig.Memory}}, CPUs: {{.H
 ```
 
 > [!warning] OOM Kills
+>
 > If a container exceeds its `--memory` limit, the Linux kernel kills it with SIGKILL. The exit code will be 137. Always set memory limits on containers running untrusted or unpredictable workloads. See the [[#Exit Code Reference]] table below.
 
 #### docker run --network — attach to a specific Docker network
@@ -346,7 +352,9 @@ docker kill airflow-scheduler
 docker kill --signal SIGHUP nginx-container   # trigger config reload without restart
 ```
 
-> [!warning] Data Loss Risk with `docker kill`
+> [!warning] Data Loss from docker kill
+>
+> Data Loss Risk with `docker kill`.
 > `docker kill` bypasses graceful shutdown. Databases may corrupt write-ahead logs, pipelines may leave partial outputs, and in-flight transactions may be lost. Always prefer `docker stop` with an appropriate `-t` timeout.
 
 ### Pause and Unpause
@@ -362,6 +370,7 @@ docker unpause airflow-scheduler
 ```
 
 > [!info] When to Use Pause
+>
 > Pausing is useful for taking consistent filesystem snapshots (volume backup while the app isn't writing), or temporarily relieving CPU pressure without losing the container's state. It is not a substitute for a proper maintenance window.
 
 ### Wait for a Container to Exit
@@ -434,6 +443,7 @@ wait   # blocks until both are killed (Ctrl+C)
 ```
 
 > [!tip] Log Driver
+>
 > By default, Docker stores logs in JSON files on the host (`/var/lib/docker/containers/<id>/<id>-json.log`). For production, configure a log driver (`--log-driver`) such as `journald`, `fluentd`, or `awslogs` to ship logs to a centralized system.
 
 ---
@@ -510,7 +520,8 @@ docker cp airflow-scheduler:/opt/airflow/logs ./container-logs/
 # - Recover logs from a crashed container before removing it
 ```
 
-> [!tip] `docker cp` on Stopped Containers
+> [!tip] Copy Works on Stopped Containers
+>
 > Unlike `docker exec`, `docker cp` works even on containers that have exited. This makes it the primary tool for extracting artifacts or logs from a container that has already crashed.
 
 ---
@@ -628,14 +639,18 @@ docker rm $(docker ps -aq --filter status=exited)
 docker rm -v my-container        # -v removes volumes created by the container
 ```
 
-> [!warning] Stopped Containers Consume Disk
+> [!warning] Stopped Containers Use Disk
+>
+> Stopped Containers Consume Disk.
 > Docker does not remove containers automatically (unless `--rm` was used at run time). A system running containers for months will accumulate hundreds of stopped containers. Run `docker system df` to see how much space they consume, and `docker container prune` to clean up.
 
 ---
 
 ## Container Debugging Checklist
 
-> [!warning] When a Container Keeps Crashing (Restart Loop)
+> [!warning] Debugging Restart Loops
+>
+> When a Container Keeps Crashing (Restart Loop).
 
 #### docker ps -a --filter status=restarting — identify crash-looping containers
 ```bash
@@ -716,6 +731,7 @@ docker inspect <container> --format='{{json .Mounts}}' | python3 -m json.tool
 | 143 | SIGTERM | Graceful termination | `docker stop` completed within timeout |
 
 > [!tip] Decoding Exit Codes
+>
 > Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. These are the same [[killing-processes|Unix signals]] you send with `kill` on a regular process. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
 
 ```bash

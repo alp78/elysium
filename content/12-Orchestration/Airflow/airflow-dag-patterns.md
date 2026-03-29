@@ -145,7 +145,8 @@ cross_downstream(
 
 Task Groups (introduced in Airflow 2.0, replacing SubDAGs) allow you to visually group related tasks in the UI. They do not change execution semantics.
 
-> [!warning] SubDAGs Are Deprecated
+> [!warning] SubDAGs are deprecated
+>
 > SubDAGs (using `SubDagOperator`) are deprecated as of Airflow 2.0 and removed in later versions. They caused deadlocks, were difficult to debug, and had separate executors. Always use **TaskGroups** instead.
 
 ```python
@@ -208,7 +209,8 @@ with TaskGroup("data_quality") as dq_group:
 
 Dynamic DAG generation creates tasks programmatically — from a config file, database query, or API call — instead of hardcoding them. This is one of Airflow's most powerful features.
 
-> [!warning] Performance: Keep DAG Parsing Fast
+> [!warning] Keep DAG parsing fast
+>
 > DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [[airflow-troubleshooting]] for slow DAG parsing symptoms.
 
 ### Pattern 1: Dynamic Tasks from a Config List
@@ -524,10 +526,12 @@ incremental_load = PythonOperator(
 )
 ```
 
-> [!warning] `depends_on_past` Pitfalls
+> [!warning] depends_on_past pitfalls
+>
 > `depends_on_past=True` is powerful but creates a chain-of-dependency that must be manually broken if the first historical run fails. Never use it without a plan for recovery (use `airflow tasks clear` to reset the chain). Prefer idempotent `MERGE`/`UPSERT` logic in the task itself over `depends_on_past`.
 
-> [!danger] The DELETE + INSERT Without a Transaction Is Not Idempotent -- It Can Lose Data
+> [!danger] Non-transactional DELETE + INSERT
+>
 > If the pipeline crashes between DELETE and INSERT, the partition is empty. Always wrap delete-then-insert in a single transaction. In BigQuery, use scripted transactions (`BEGIN TRANSACTION ... COMMIT`). In SQL Server, use explicit `BEGIN TRAN ... COMMIT`. The MERGE pattern below is inherently atomic and preferred.
 
 ### Idempotent Task Design
@@ -608,7 +612,8 @@ airflow dags backfill \
     --mark-success
 ```
 
-> [!tip] Backfill and `catchup=False`
+> [!tip] Backfill and catchup=False
+>
 > Setting `catchup=False` does NOT prevent `airflow dags backfill` from working. It only prevents the Scheduler from automatically creating historical DAG Runs when a DAG is unpaused. Explicit backfills always work regardless of `catchup`.
 
 ---

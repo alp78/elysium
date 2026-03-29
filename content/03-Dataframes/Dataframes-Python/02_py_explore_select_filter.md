@@ -5875,7 +5875,9 @@ ohlcv_pl.head(3)
 ---
 ## Boolean Indexing (Single Condition)
 
-> [!danger] Chained indexing in Pandas — `df[condition]["col"] = value` silently fails
+> [!danger] Chained indexing in Pandas
+>
+> Chained indexing in Pandas — `df[condition]["col"] = value` silently fails
 > `df[df["close"] > 50]["close"] = 0` looks like it works but modifies a **copy**, not the
 > original DataFrame. Pandas raises `SettingWithCopyWarning` but the change is lost. Always
 > use `.loc[]` for assignment: `df.loc[df["close"] > 50, "close"] = 0`.

@@ -120,7 +120,8 @@ repos:
       - id: flake8
 ```
 
-> [!warning] Secrets Management
+> [!warning] Secrets management
+>
 > Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer [[gcloud-authentication|Workload Identity Federation]] over service account key files.
 
 ## Related

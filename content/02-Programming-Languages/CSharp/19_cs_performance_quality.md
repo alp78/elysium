@@ -19,11 +19,14 @@ status: complete
 #### Stopwatch timing and BenchmarkDotNet
 
 > [!info] Benchmarking tools
+>
 > - `Stopwatch` — high-resolution timing (hardware counters)
 > - `BenchmarkDotNet` — production-grade micro-benchmarks (warm-up, JIT, GC, statistics)
 > - Python equivalent: `time.perf_counter()`, `timeit`
 
-> [!tip] Never optimize without measuring first. Don't use `DateTime.Now` for benchmarks (15ms resolution).
+> [!tip] Never optimize without measuring first.
+>
+> Never optimize without measuring first. Don't use `DateTime.Now` for benchmarks (15ms resolution).
 
 ```csharp
 using System.Diagnostics;
@@ -99,11 +102,14 @@ MeasureTime(() => dataDict.ContainsKey(99_999), "Dict.ContainsKey (O(1))");
 #### GC.GetTotalMemory — measure managed heap allocations
 
 > [!info] Memory measurement
+>
 > - `GC.GetTotalMemory(true)` — returns managed heap size (measure before/after for delta)
 > - Value types (`struct`) live on stack; reference types (`class`) on heap
 > - Boxing (`int` → `object`) allocates
 
-> [!tip] Every `new` is an allocation. Every allocation is future GC pressure.
+> [!tip] Every new is an allocation.
+>
+> Every `new` is an allocation. Every allocation is future GC pressure.
 
 ```csharp
 // Measure allocation impact
@@ -187,6 +193,7 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 #### Span and zero-allocation patterns
 
 > [!info] Span and zero-allocation patterns
+>
 > - `Span<T>` — stack-only view into contiguous memory; slicing creates a view (no copy)
 > - `ReadOnlySpan<char>` — string parsing without `Substring` allocations
 > - `stackalloc` — stack arrays (no GC, ~1MB limit)
@@ -235,7 +242,9 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 | Add front | O(n) | — | — | — | — |
 | Remove | O(n) | — | O(1) | O(1) | O(log n) |
 
-> [!tip] `Dictionary`/`HashSet` for fast lookup. `List` for ordered indexed access. Never use `List.Contains()` on large data.
+> [!tip] Dictionary/HashSet for fast lookup. List
+>
+> `Dictionary`/`HashSet` for fast lookup. `List` for ordered indexed access. Never use `List.Contains()` on large data.
 
 ```csharp
 int n = 100_000;
@@ -262,6 +271,7 @@ MeasureTime(() => sorted.ContainsKey(n - 1), "SortedDict (O(log n))");
 #### Golden rules of C# performance
 
 > [!tip] Golden Rules of C# Performance
+>
 > 1. **Measure first** — BenchmarkDotNet or Stopwatch. Never guess.
 > 2. **Algorithm > micro-optimization** — O(n²) → O(n log n) beats any inlining
 > 3. **Minimize allocations** — every `new` = GC pressure. Use structs, `Span<T>`, `ArrayPool`
@@ -290,7 +300,9 @@ try {
 
 ## Absolute No-Go's
 
-> [!danger] Absolute no-go's — patterns that should never appear in production C#
+> [!danger] Absolute no-go's
+>
+> Absolute no-go's — patterns that should never appear in production C#
 > 1. **String `+=` in a loop** — O(n²). Use `StringBuilder`.
 > 2. **`catch (Exception) { }`** — empty catch swallows all errors. At minimum: `_logger.LogError(ex, "..."); throw;`
 > 3. **`async void`** — exceptions are unobservable and crash the process. Always use `async Task`. Only exception: event handlers.
@@ -319,6 +331,7 @@ try {
 #### Code smells and anti-patterns
 
 > [!warning] Code smells
+>
 > 1. **God class** — 50+ methods. Split by SRP
 > 2. **Primitive obsession** — `string` for email → create `Email` value object
 > 3. **Feature envy** — method uses another class's data more than its own
@@ -365,13 +378,16 @@ try {
 #### Nullable reference types and static analysis
 
 > [!info] Nullable reference types
+>
 > - `#nullable enable` — turns on compiler null analysis
 > - `string?` = nullable, `string` = non-nullable
 > - Catches `NullReferenceException` at compile time
 > - `!` operator (null-forgiving) suppresses warnings — use sparingly
 > - On by default since .NET 6
 
-> [!tip] Enable NRT in all new projects — free bug prevention. Don't ignore nullable warnings or overuse `!`.
+> [!tip] Enable NRT in all new projects
+>
+> Enable NRT in all new projects — free bug prevention. Don't ignore nullable warnings or overuse `!`.
 
 ```csharp
 #nullable enable
@@ -408,6 +424,7 @@ Console.WriteLine($"Chained: {result ?? "(null)"}");
 #### LINQ performance pitfalls
 
 > [!warning] LINQ performance pitfalls
+>
 > - **Multiple enumeration** — `.Where().Count()` then `.Where().ToList()` = 2 passes. Materialize with `ToList()` if reused
 > - **`.Count() > 0`** — use `.Any()` instead (short-circuits)
 > - **`OrderBy().First()`** — sorts everything to get one item. Use `MinBy()`
@@ -464,7 +481,9 @@ MeasureTime(() => {
 
 Key `.editorconfig` rules: `CA1822` (mark members static), `CA2007` (ConfigureAwait), `CA1062` (validate arguments), `IDE0090` (use `new()` shorthand).
 
-> [!tip] Enable `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in `.csproj`. Warnings are bugs waiting to happen — fix them or justify the suppression.
+> [!tip] Enable <TreatWarningsAsErrors>true</TreatWarningsAsErrors> in .csproj. Warnings
+>
+> Enable `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in `.csproj`. Warnings are bugs waiting to happen — fix them or justify the suppression.
 
 ## Summary
 

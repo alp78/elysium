@@ -20,7 +20,8 @@ Resource monitoring tells you whether performance problems are CPU-bound, memory
 
 #### free -h — memory usage and available RAM
 
-> [!warning] "available" is the number that matters, NOT "free"
+> [!warning] Available matters, not free
+>
 > Linux uses free memory as disk cache (`buff/cache`). This is **good** — it speeds up
 > reads. `available` = free + reclaimable cache = how much memory apps can actually use.
 > If `available` < 500MB on a database server, you're in danger of OOM kills.
@@ -32,14 +33,18 @@ free -h
 
 #### lscpu, uptime — CPU info and load average
 
-> [!info] `lscpu` shows cores × threads = total parallel capacity. If `uptime` load
+> [!info] CPU capacity check
+>
+> `lscpu` shows cores × threads = total parallel capacity. If `uptime` load
 > average exceeds this number, the CPU is oversubscribed.
 
 ```bash
 lscpu
 ```
 
-> [!info] Load average = runnable processes averaged over 1, 5, and 15 minutes. Compare
+> [!info] Load average interpretation
+>
+> Load average = runnable processes averaged over 1, 5, and 15 minutes. Compare
 > to CPU count: on a 2-core machine, load 2.0 = 100% utilized, load 4.0 = overloaded.
 > If 1-min > 15-min, load is increasing (getting worse).
 
@@ -49,7 +54,8 @@ uptime
 
 #### vmstat — combined CPU/memory/IO snapshot
 
-> [!info] `vmstat` key columns
+> [!info] vmstat key columns
+>
 > - **r** — processes waiting for CPU (high = CPU-bound)
 > - **b** — processes blocked on I/O (high = I/O-bound)
 > - **si/so** — swap in/out (should be zero — any swap activity = memory pressure)
@@ -62,7 +68,8 @@ vmstat 2 5    # sample every 2 seconds, 5 samples
 
 #### iostat -xz — disk I/O performance and utilization
 
-> [!info] `iostat` key columns
+> [!info] iostat key columns
+>
 > - **r/s, w/s** — reads and writes per second
 > - **rkB/s, wkB/s** — throughput in KB/s
 > - **await** — average I/O wait time in ms (SSD: <5ms normal, >20ms saturated; HDD: 10-20ms normal, >50ms severe)
@@ -77,7 +84,8 @@ sudo iotop -o   # -o = only show processes with active I/O
 
 ### SQL Server memory interpretation — why free -h looks alarming but is normal
 
-> [!tip] Reading Memory on a SQL Server VM
+> [!tip] SQL Server memory behavior
+>
 > SQL Server intentionally grabs as much memory as possible and holds it. This is BY DESIGN -- it's using the RAM as a buffer pool cache. `free -h` will show almost all memory as "used," which looks alarming but is correct behavior. For deeper analysis of buffer pool health, cache hit ratios, and memory grants, see [[memory-and-buffer-pool]].
 >
 > The real question is: "Does SQL Server have ENOUGH memory?" Check Page Life Expectancy (PLE):

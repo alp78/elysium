@@ -24,7 +24,9 @@ This note covers `iam.tf`, `secrets.tf`, and the IAM portions of `ci.tf` — the
 
 A **service account** is a non-human identity that a workload runs as. Each workload gets its own service account with the minimum permissions it needs (**least privilege**). For the underlying GCP IAM concepts -- roles, policies, and the principal hierarchy -- see [[service-accounts-and-iam]]. This is the standard GCP pattern -- one service account per service. The service accounts themselves have **no permissions by default**; they only gain access through explicit IAM bindings.
 
-> [!info] Resource-Level vs Project-Level IAM
+> [!info] Resource vs Project IAM
+>
+> Resource-Level vs Project-Level IAM.
 > `data-pipeline-pipeline` and `data-pipeline-dashboard` appear to have "no roles" in the GCP Console's project IAM page, but they have resource-level bindings on specific secrets (visible under each secret's Permissions tab, not the project-level IAM page). This is intentional and more secure — they can only access their specific secrets, not any other project resources.
 
 ---
@@ -170,6 +172,7 @@ The Datadog service account gets three read-only roles:
 | `roles/cloudasset.viewer` | Read Cloud Asset Inventory (resource discovery across the project). |
 
 > [!info] No Write or Admin Roles
+>
 > The Datadog integration can only observe — it cannot modify any resource. This is the correct least-privilege posture for a monitoring integration.
 
 See [[terraform-conditional-resources]] for the full pattern.
@@ -274,6 +277,7 @@ resource "google_service_account_iam_member" "ci_act_as_pipeline" {
 | `roles/iam.serviceAccountUser` | **Act as** another service account. When GitHub Actions deploys a Cloud Run job, it must specify which service account the job runs as (`data-pipeline-pipeline`). This role allows the CI account to assign that identity without being able to use the pipeline account's permissions directly. The "Act As" bindings are visible in GCP under each target service account → Permissions → "Principals with access to this service account." |
 
 > [!info] Least Privilege Chain
+>
 > The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads.
 
 ---

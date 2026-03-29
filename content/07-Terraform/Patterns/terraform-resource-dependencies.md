@@ -141,6 +141,7 @@ resource "google_project_iam_member" "pipeline_bq_access" {
 - When a resource reads from another indirectly (e.g., via `data` sources)
 
 > [!warning] depends_on Is a Last Resort
+>
 > Overusing `depends_on` creates unnecessary serialization, slowing down your apply. Use resource references wherever possible — they both express the dependency AND give you the attribute value.
 
 ---
@@ -184,6 +185,7 @@ Some changes can be applied in-place (updating an attribute without recreating t
 | Add a new `env` variable to Cloud Run | New revision created (zero-downtime) |
 
 > [!warning] Forced Recreation Propagates
+>
 > If resource A is destroyed and recreated, any resource B that depends on A's ID will also be recreated (because A gets a new ID). This cascade can be surprising — destroying a VPC triggers recreation of all subnets, firewalls, VMs, and Cloud Run services that reference it.
 
 ## Related

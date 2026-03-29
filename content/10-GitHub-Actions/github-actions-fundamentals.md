@@ -156,7 +156,8 @@ on:
       - "src/**"
 ```
 
-> [!note] `pull_request` vs `pull_request_target`
+> [!note] PR trigger security context
+>
 > `pull_request` runs in the fork's context (no access to secrets). `pull_request_target` runs in the base repo's context (has secrets but unsafe with untrusted code).
 
 ### schedule (cron)

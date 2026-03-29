@@ -162,6 +162,7 @@ catch (HttpRequestException ex)
 Three essential patterns for API integrations: **pagination** loops through pages until exhausted, **retry with exponential backoff** handles transient 429/5xx errors (check `Retry-After` header), and **bulk POST** batches records to reduce round trips by 10-100x. These three patterns cover 90% of data pipeline API integrations.
 
 > [!warning] Anti-patterns
+>
 > - **Fetching all pages without a limit** — unbounded loop if API is broken
 > - **Linear retry (no backoff)** — hammers the failing service
 > - **One POST per record** — N round trips instead of 1
@@ -274,6 +275,7 @@ Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty
 Define record DTOs (like Pydantic models), write handler functions that return typed results, and wire them to routes with `app.MapGet`/`MapPost`/`MapDelete`. Each handler is a pure function testable without a running web server. `Results.Ok`/`NotFound`/`Created` map directly to HTTP status codes. For complex APIs with middleware, use full ASP.NET MVC controllers.
 
 > [!warning] Anti-patterns
+>
 > - **Business logic in route handlers** — extract to testable functions
 > - **`Dictionary<string, object>` for API models** — use typed records
 
@@ -795,6 +797,7 @@ Console.WriteLine(@"
 ## Summary
 
 > [!abstract]- Quick Reference
+>
 > **HttpClient**
 > | Pattern | Description |
 > |---|---|

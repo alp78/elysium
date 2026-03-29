@@ -75,6 +75,7 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
 | **Live** | SSMS: Include Live Query Statistics | Real-time animation showing rows flowing as query runs |
 
 > [!tip] Always Use Actual Plans for Diagnosis
+>
 > Estimated plans can mislead when statistics are stale. Always prefer actual plans. Estimated plans are only useful when a query is too slow to complete.
 
 ## Capturing Plans from the Pipeline (Without SSMS)
@@ -161,6 +162,7 @@ Every operator shows an **Estimated Operator Cost** as a percentage of total que
 | 50–100% | Dominant | This operator is the bottleneck — fix this first |
 
 > [!warning] Cost Percentages Are Estimates
+>
 > Costs are based on the optimizer's statistics, not actual execution. If statistics are stale, cost distribution can be completely wrong. Always cross-reference with actual row counts and SET STATISTICS IO output.
 
 #### XML plan nodes //RelOp — extract operator costs programmatically

@@ -55,6 +55,7 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 Parquet stores data **column-by-column** with per-column compression (snappy, gzip, zstd). Schema is embedded in the file footer — self-describing, no separate schema file needed. Supports column pruning (projection pushdown), predicate pushdown, and partitioning. 5-10x smaller than CSV. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB, Athena. Use `pyarrow` for parquet I/O in Python.
 
 > [!warning] When NOT to use Parquet
+>
 > - **Small files** (<1MB) — Parquet overhead exceeds benefit
 > - **Frequent appends** — Parquet is immutable; use Avro/JSONL for streaming
 > - **Simple data exchange** — CSV is more universal
@@ -287,7 +288,9 @@ Binary formats provide schema enforcement, cross-language support, and compact s
 
 **Protocol Buffers (Protobuf)** — binary format with separate `.proto` schema files. `protoc` compiles schemas into Python/Java/Go/C# classes. Standard for gRPC microservices. ~60–80% smaller than JSON.
 
-> [!warning] Why not JSON or pickle at scale?
+> [!warning] Why not JSON or pickle
+>
+> Why not JSON or pickle at scale?
 > - **JSON:** text-based, no schema enforcement, slow to parse at scale
 > - **pickle:** Python-only, insecure (arbitrary code execution), no schema — never use in production
 

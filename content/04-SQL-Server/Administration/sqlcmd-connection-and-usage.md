@@ -24,6 +24,7 @@ Microsoft ships two versions of `sqlcmd`:
 - **go-sqlcmd** (just `sqlcmd` if installed separately): no ODBC dependency, modern features, prompts for password securely
 
 > [!tip] Use go-sqlcmd When Available
+>
 > `go-sqlcmd` is the future. It has the same flag syntax but adds features like `--help` and secure password prompting. Install it if available on your platform.
 
 ---
@@ -45,7 +46,9 @@ The connection command encodes everything: which server, which credentials, whic
   -l 30
 ```
 
-> [!info] `sqlcmd` connection flags
+> [!info] Connection Flags
+>
+> `sqlcmd` connection flags.
 > - `-S` — server (IP,port — note the **comma**, not colon)
 > - `-U` — username | `-P` — password (from env var, not hardcoded)
 > - `-d` — default database (avoids `USE` on every session)
@@ -108,6 +111,7 @@ gcloud compute start-iap-tunnel analytics-sql 1433 --local-host-port=0.0.0.0:143
 ```
 
 > [!warning] Windows Gotcha
+>
 > Use `0.0.0.0:1435` rather than `localhost:1435` or `127.0.0.1:1435`. Using a specific address may bind to only one IP version, causing connection timeouts in sqlcmd/SSMS.
 
 #### sqlcmd -S localhost — Step 2: connect through the IAP tunnel
@@ -178,6 +182,7 @@ rm "${BACKUP_PATH}"  # remove local copy after upload
 | `-h` | Header row interval (-1 = no headers) | `-h -1` |
 
 > [!warning] Never Hardcode Passwords
+>
 > `sqlcmd -S 10.132.0.2 -U sa -P 'MyPassword123'` — the password is visible in the process list.
 > Always use environment variables: `sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"`
 

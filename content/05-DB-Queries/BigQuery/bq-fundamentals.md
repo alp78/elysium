@@ -613,7 +613,9 @@ LIMIT 15
 
 ## Aggregation (GROUP BY)
 
-> [!danger] BigQuery charges per bytes scanned — `SELECT *` on a 1TB table costs ~$5
+> [!danger] BigQuery Bills Per Bytes Scanned
+>
+> BigQuery charges per bytes scanned — `SELECT *` on a 1TB table costs ~$5.
 > Unlike SQL Server (fixed cost), BigQuery bills per query based on columns accessed.
 > Always `SELECT` only the columns you need. A `GROUP BY` that reads all columns before
 > aggregating is expensive. Use `SELECT col1, col2, AGG(col3)` not `SELECT *, AGG(col3)`.
@@ -918,7 +920,9 @@ LIMIT 15
 
 ## JOINs Across Medallion Layers
 
-> [!warning] BigQuery JOINs can produce massive data shuffles across slots
+> [!warning] BigQuery JOINs Cause Data Shuffles
+>
+> BigQuery JOINs can produce massive data shuffles across slots.
 > Unlike SQL Server (indexed seeks), BigQuery distributes both sides of a JOIN across
 > worker nodes. Joining two large tables forces a full data shuffle. For repeated joins,
 > denormalize into a single wide table or use clustering on the join key to reduce shuffle
@@ -2122,6 +2126,7 @@ FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 ## Bronze → Silver → Gold Transforms
 
 > [!tip] Related pattern
+>
 > The transforms below query data that was first ingested through the [[data-loading-and-export]] pipeline. Understanding how data arrives in bronze helps explain the schemas these queries target.
 
 ### Bronze → Silver → Gold Transforms — Daily Returns

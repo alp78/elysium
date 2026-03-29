@@ -58,7 +58,9 @@ import time
 
 ## Eager: Immediate
 
-> [!warning] Eager execution loads ALL data into memory immediately
+> [!warning] Eager execution loads ALL data
+>
+> Eager execution loads ALL data into memory immediately
 > `pl.read_parquet()` and `pd.read_parquet()` load the entire file into RAM. For files
 > larger than available memory, use lazy mode (`pl.scan_parquet()`) or Pandas
 > `read_parquet(columns=[...])` to only load needed columns.
@@ -86,7 +88,9 @@ print(f"Schema: {lf.collect_schema()}")
 
 ## .collect()
 
-> [!danger] Forgetting `.collect()` is the most common Polars mistake
+> [!danger] Forgetting .collect() is the most
+>
+> Forgetting `.collect()` is the most common Polars mistake
 > A LazyFrame does nothing until `.collect()` is called. If you assign `lf.filter(...)` to
 > a variable and never collect, no computation happens. Unlike Pandas (where every
 > operation runs immediately), Polars lazy chains must end with `.collect()` to materialize
@@ -276,7 +280,9 @@ print(f"vectorized (66K): {good:.4f}s")
 
 ## Why apply() Is Slow
 
-> [!danger] `df.apply(axis=1)` is 100-1000x slower than vectorized operations
+> [!danger] apply() is extremely slow
+>
+> `df.apply(axis=1)` is 100-1000x slower than vectorized operations.
 > `apply()` with `axis=1` iterates row by row in Python — bypassing NumPy/C optimizations
 > entirely. The example below shows a **743x** speedup from vectorization. Every
 > `apply(lambda r: ...)` in production code is a performance bug. Rewrite using column

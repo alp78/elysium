@@ -190,7 +190,8 @@ rolling_metrics AS (
 SELECT * FROM rolling_metrics
 ```
 
-> [!info] The `ref()` Function
+> [!info] The ref() function
+>
 > `{{ ref('stg_yahoo_ohlcv') }}` is how dbt builds the dependency graph. dbt automatically determines execution order from `ref()` calls — you never manually specify task order. This is dbt's equivalent of [[airflow-core-concepts|Airflow]]'s `>>` task dependencies.
 
 ### Mart Models (Consumption-Ready, Incremental)

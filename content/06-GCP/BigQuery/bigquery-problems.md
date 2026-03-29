@@ -70,6 +70,7 @@ BigQuery uses columnar storage (Capacitor format) and charges $6.25 per TB scann
 - On-demand budget alerts trigger after the spend, not before
 
 > [!danger] Cost Trigger
+>
 > At $6.25/TB, a 5TB table costs $31.25 per unfiltered scan. A dashboard refreshing every 5 minutes on this table costs $4,500/day or $135,000/month. Always validate query cost before deploying to production dashboards.
 
 **Prevention protocol**
@@ -213,6 +214,7 @@ BigQuery enforces a hard project-level quota of **20 concurrent interactive DML 
 - Audit trail gaps if the failure is not logged with sufficient context for BMR compliance
 
 > [!danger] Quota Hard Limit
+>
 > The 20 concurrent interactive DML limit is project-wide, not per-table or per-dataset. All teams sharing a project compete for the same 20 slots. If another team's ETL is running 15 MERGEs, your pipeline has only 5 slots available.
 
 **Prevention protocol**
@@ -333,6 +335,7 @@ BigQuery executes queries in a distributed shuffle-based execution engine. Large
 - Pressure on engineers to "just make it work" leads to premature slot reservation purchases
 
 > [!warning] Identify the bottleneck
+>
 > Check `totalBytesProcessed` vs `totalBytesBilled` in job metadata. Also check `INFORMATION_SCHEMA.JOBS.query_info.resource_warning` — BigQuery sometimes logs a warning before the failure.
 
 **Prevention protocol**
@@ -450,6 +453,7 @@ BigQuery does not have a confirmation prompt for `DROP TABLE` or `DROP DATASET`.
 - Recovery under time pressure (7-day window) adds operational risk
 
 > [!danger] Irreversible After 7 Days
+>
 > BigQuery time travel defaults to 7 days. After that, deleted data is permanently gone unless you have snapshots or GCS exports. For EU BMR compliance, establish a snapshot routine for all critical reference and history tables.
 
 **Prevention protocol**
@@ -574,7 +578,9 @@ BigQuery has three data ingestion mechanisms with dramatically different cost an
 - Rows recently inserted via streaming cannot be updated or deleted for ~30 minutes, breaking downstream MERGE operations
 - Duplicate rows if the Cloud Run job retries without idempotency checks
 
-> [!danger] Use Load Jobs for Batch Data
+> [!danger] Use Load Jobs for Batch
+>
+> Use Load Jobs for Batch Data.
 > Load jobs from GCS are **free** in BigQuery. There is no per-byte charge for batch loads. For a financial platform moving data from SQL Server → GCS → BigQuery, load jobs should be the default ingestion path. Streaming is for real-time event streams only.
 
 **Prevention protocol**
@@ -689,7 +695,9 @@ Index constituent weights are stored as `FLOAT64` in the `analytics.index_weight
 - EU BMR compliance requires exact reproducibility — FLOAT64 arithmetic is non-deterministic across platforms
 - Comparisons like `weight = 0.0025` silently fail because the stored value is `0.0024999999999999...`
 
-> [!danger] Never Use FLOAT64 for Financial Data
+> [!danger] Never Use FLOAT64 for Money
+>
+> Never Use FLOAT64 for Financial Data.
 > FLOAT64 is appropriate for scientific calculations where approximate values are acceptable. For index weights, prices, returns, and any value that feeds client-published index levels, use NUMERIC or BIGNUMERIC. This is a correctness issue, not just a precision preference.
 
 **Prevention protocol**
@@ -1205,7 +1213,9 @@ SQL's NULL semantics: any arithmetic operation involving NULL returns NULL. Aggr
 - BMR audit trail cannot demonstrate that the calculation used complete data
 - NULLs in weights cause `SUM(weight)` to be less than 1.0 without any warning
 
-> [!danger] Silent NULL Propagation in Financial Calculations
+> [!danger] Silent NULL Propagation
+>
+> Silent NULL Propagation in Financial Calculations.
 > A NULL in a constituent weight silently reduces the effective index weight sum below 100%. The index level appears valid but is calculated on incomplete data. Always assert NULL counts explicitly before aggregation in financial pipelines.
 
 **Prevention protocol**
@@ -2000,6 +2010,7 @@ BigQuery time travel retains all versions of table data for a configurable windo
 - Legal liability if the calculation cannot be demonstrated to be correct
 
 > [!danger] EU BMR Record-Keeping
+>
 > EU BMR requires data and methodology to be retained for a minimum of 5 years. BigQuery's 7-day time travel provides zero regulatory compliance. A dedicated snapshot and archival strategy is mandatory for all tables that feed client-published index levels.
 
 **Prevention protocol**

@@ -352,7 +352,8 @@ select
 from {{ ref('int_portfolio_analytics') }}
 ```
 
-> [!tip] dispatch in `dbt_project.yml`
+> [!tip] Dispatch namespace registration
+>
 > Register custom dispatch namespaces so dbt searches your project before packages:
 > ```yaml
 > dispatch:
@@ -390,7 +391,8 @@ from {{ ref('int_portfolio_analytics') }}
 {% endmacro %}
 ```
 
-> [!warning] `execute` guard is required
+> [!warning] Execute guard required
+>
 > `run_query()` only works during the execution phase, not during parsing. Always wrap in `{% if execute %}` to prevent errors during `dbt parse` or `dbt compile`.
 
 ---
@@ -475,7 +477,8 @@ on-run-end:
 {% endmacro %}
 ```
 
-> [!note] `results` in `on-run-end`
+> [!note] Results variable in on-run-end
+>
 > The `results` variable is available only in `on-run-end`. It is a list of `Result` objects with `.node.name`, `.status`, `.execution_time`, and `.message`. Use it to write per-model run statistics to an audit table.
 
 ---

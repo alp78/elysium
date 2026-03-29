@@ -53,6 +53,7 @@ gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pip
 ```
 
 > [!warning] Key Files Are Permanent Credentials
+>
 > A service account key file (`key.json`) does not expire and grants the same access as the service account itself. A single leak in a git commit — even one later removed from history — can result in permanent unauthorized access. In production on GCP (VMs, Cloud Run), use the metadata server for automatic credentials instead. Key files are only justified for local development against GCP APIs.
 
 ### IAM Bindings — Granting Roles to Service Accounts
@@ -105,6 +106,7 @@ You can also test what a service account can see by impersonating it during `gcl
 ### Minimum IAM Permission Set for a Data Pipeline
 
 > [!tip] Least Privilege Reference
+>
 > The minimum permission set for a data pipeline service account:
 > - BigQuery: `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`
 > - GCS: `roles/storage.objectAdmin` (on specific buckets, not the project)

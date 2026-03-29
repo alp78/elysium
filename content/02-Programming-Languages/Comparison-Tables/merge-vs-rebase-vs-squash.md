@@ -50,6 +50,7 @@ git merge feat/new-feature  # fast-forward merge
 Replays your commits on top of main's latest commit. Creates a linear history without merge commits.
 
 > [!warning] Never Rebase Shared Branches
+>
 > Rebasing rewrites commit hashes. If others have pulled your branch, rebase will cause conflicts. Only rebase local/private branches.
 
 **Use when:** You want a linear history and the branch is private to you.

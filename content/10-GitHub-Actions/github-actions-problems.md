@@ -28,7 +28,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - Supply chain compromise of published packages (npm, PyPI, Docker Hub)
 - Regulatory and compliance exposure if secrets include credentials to financial data systems
 
-> [!danger] UNSAFE Pattern — Do NOT use this
+> [!danger] Unsafe pattern
+>
 > ```yaml
 > # DANGEROUS: runs attacker code with full secrets access
 > on:
@@ -45,7 +46,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >       - run: npm test  # <-- attacker's code runs here with YOUR secrets
 > ```
 
-> [!success] SAFE Pattern — Split into two workflows
+> [!success] Safe pattern — split workflows
+>
 > ```yaml
 > # Workflow 1: pull_request.yml (unprivileged — runs in fork context, no secrets)
 > on:
@@ -123,7 +125,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** YAML string interpolation with `${{ secrets.TOKEN }}` performs substitution before the shell sees the line. Developers accustomed to environment variables (which are harder to accidentally print) are surprised by how easily `${{ }}` expressions leak into visible contexts.
 
-> [!warning] Ways Secrets Leak into Logs
+> [!warning] Secret leak vectors
+>
 > ```yaml
 > # BAD: Direct echo — GitHub may mask, but this is still dangerous practice
 > - run: echo "Token is ${{ secrets.API_TOKEN }}"
@@ -180,7 +183,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub expression interpolation (`${{ }}`) in `run:` steps performs raw string substitution before the shell parses the line. There is no automatic escaping. This is fundamentally different from environment variable expansion, where the shell treats the value as data, not code.
 
-> [!danger] Injection Attack — End-to-End Example
+> [!danger] Injection attack example
+>
 > ```yaml
 > # VULNERABLE: PR title interpolated directly into shell
 > - run: echo "Processing PR: ${{ github.event.pull_request.title }}"
@@ -203,7 +207,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     done
 > ```
 
-> [!success] Safe Patterns
+> [!success] Safe patterns
+>
 > ```yaml
 > # SAFE: Pass user-controlled values via environment variables
 > - name: Process PR title
@@ -390,7 +395,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - `if: failure()` vs `if: always()` confusion leads to cleanup steps not running when they should
 - Matrix exclusion logic errors go undetected until a specific combination is tested
 
-> [!warning] Common YAML Logic Traps
+> [!warning] YAML logic traps
+>
 > ```yaml
 > # TRAP 1: 'if' expression syntax — no quotes needed, but easy to get wrong
 > if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -504,7 +510,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - Cache storage costs accumulate if old caches aren't pruned but hits are rare
 - Minutes consumption increases (10-minute runs become 40-minute runs)
 
-> [!warning] Cache Key Best Practices
+> [!warning] Cache key best practices
+>
 > ```yaml
 > # BAD: Overly broad key — will miss when lockfile changes
 > - uses: actions/cache@v4
@@ -565,7 +572,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** Reusable workflows execute as separate workflow runs with separate contexts. For security, secrets are not automatically passed — callers must explicitly declare `secrets: inherit` or enumerate each secret. This is correct behavior but creates maintenance overhead at scale.
 
-> [!warning] Reusable Workflow Secret Threading
+> [!warning] Reusable workflow secret threading
+>
 > ```yaml
 > # Called workflow: .github/workflows/reusable-deploy.yml
 > on:
@@ -642,7 +650,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - Flaky tests that only fail on specific runner image versions
 - Inconsistency between local dev (macOS/Docker) and CI (Linux runner)
 
-> [!warning] Runner Pinning Examples
+> [!warning] Runner pinning examples
+>
 > ```yaml
 > # BAD: alias that can change without notice
 > runs-on: ubuntu-latest
@@ -694,7 +703,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - Workflows that worked in one repo fail in another due to org-level default permission settings
 - `GITHUB_TOKEN` with write access can be used to push malicious commits if the workflow is compromised
 
-> [!warning] Permission Model Reference
+> [!warning] Permission model reference
+>
 > ```yaml
 > # Available permission scopes:
 > # actions, checks, contents, deployments, discussions, id-token,
@@ -759,7 +769,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - Teams self-throttle CI by removing tests to save minutes — a counterproductive outcome
 - Slow builds that accumulate minutes for reasons unrelated to actual CI value
 
-> [!warning] Cost Optimization Checklist
+> [!warning] Cost optimization checklist
+>
 > ```yaml
 > # 1. Add path filters to avoid running on irrelevant changes
 > on:
@@ -914,7 +925,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** `actions/download-artifact` defaults to downloading from the current run. But when a job is manually re-run in isolation, the "current run" may not have produced new artifacts — so GitHub falls back to the most recent artifact with that name from any run, which may be stale.
 
-> [!warning] Artifact Staleness Pattern
+> [!warning] Artifact staleness pattern
+>
 > ```yaml
 > # PROBLEM: Rerunning just the deploy job downloads a stale artifact
 > jobs:
@@ -1017,7 +1029,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** GitHub Actions has no built-in deploy locking or queueing model. The `concurrency:` key either cancels running instances or queues them, but "queue" mode (`cancel-in-progress: false`) can accumulate a large backlog. For deploy workflows, neither "cancel" nor "queue" is always correct.
 
-> [!warning] Concurrency Strategy Reference
+> [!warning] Concurrency strategy reference
+>
 > ```yaml
 > # For PR validation: cancel superseded runs (safe)
 > concurrency:
@@ -1065,7 +1078,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** Matrix strategies create a job for every combination by default. Adding a third dimension to an existing 2D matrix is a non-obvious multiplicative operation. There's no built-in cost estimate before committing.
 
-> [!warning] Matrix Size Control
+> [!warning] Matrix size control
+>
 > ```yaml
 > # EXPLOSION: 3 × 5 × 4 = 60 jobs
 > strategy:
@@ -1128,7 +1142,8 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 **Root cause:** SHA pinning is the correct security practice but creates a usability tradeoff. Tags are human-readable but mutable (an attacker can move a tag to point to malicious code). SHAs are immutable but opaque. There's no middle ground in GitHub's action reference syntax.
 
-> [!warning] Pinning Strategy with Readable Comments
+> [!warning] Pinning strategy with comments
+>
 > ```yaml
 > steps:
 >   # Pin to SHA, add tag comment for human readability

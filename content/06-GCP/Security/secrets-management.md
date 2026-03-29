@@ -149,6 +149,7 @@ export SQL_CONN_STRING="Server=localhost;Database=analytics_db;User=sa;Password=
 7. Delete local key file: `rm new-key.json`
 
 > [!warning] Prefer Workload Identity
+>
 > Service account keys are a liability. Use Workload Identity Federation (GitHub Actions), attached service accounts (Compute Engine, Cloud Run), or Application Default Credentials wherever possible. Keys should be the last resort.
 
 ### Database Passwords

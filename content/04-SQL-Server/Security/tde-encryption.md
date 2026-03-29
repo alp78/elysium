@@ -214,6 +214,7 @@ ORDER BY db.name;
 ```
 
 > [!info] tempdb is Always Encrypted
+>
 > When TDE is enabled on any database, tempdb is automatically encrypted. This is expected behavior — tempdb holds intermediate results from your encrypted database's queries.
 
 ---
@@ -221,6 +222,7 @@ ORDER BY db.name;
 ## Step 4: CRITICAL — Backup the Certificate and Private Key
 
 > [!warning] Certificate Backup is Mandatory
+>
 > Without the certificate and its private key, encrypted database backups are **completely unrestorable** on another SQL Server instance. This is the single most important step in TDE setup. Treat the certificate backup with the same care as the database backup itself.
 
 #### BACKUP CERTIFICATE TO FILE — export certificate and private key
@@ -330,6 +332,7 @@ WHERE db.name = 'analytics_db';
 ```
 
 > [!warning] Certificate Renewal Alert Threshold
+>
 > Alert when `days_until_cert_expiry < 180`. Rotating the TDE certificate requires creating a new certificate, re-encrypting the DEK, and backing up the new certificate to GCS before the old one expires.
 
 ---
@@ -359,6 +362,7 @@ For backup strategy in an [[high-availability-overview#Backup Strategy with AGs|
 | CPU utilization (pipeline load) | 35% | 37% | +2% |
 
 > [!tip] AES-NI Hardware Acceleration
+>
 > The low overhead is because modern CPUs (including GCP's Cascade Lake / Ice Lake) have AES-NI hardware acceleration. The `aes` flag should appear in `/proc/cpuinfo`. Verify: `grep -c aes /proc/cpuinfo` — should return the number of CPU cores.
 
 ---

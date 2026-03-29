@@ -23,6 +23,7 @@ status: complete
 Wrap risky code in `try { }` and catch specific exception types in `catch (ExceptionType ex) { }`. Unmatched exceptions propagate up the call stack. Use for I/O operations, parsing external data, and network calls — not for expected conditions (use `TryParse`, `if`/`else`, or null checks).
 
 > [!warning] Anti-patterns
+>
 > - **`catch (Exception)` everywhere** — hides bugs, catches too broadly
 > - **Empty catch blocks** — silently swallows errors
 > - **Exceptions for flow control** — slow; use `TryParse`/`if` instead
@@ -44,10 +45,14 @@ catch (IndexOutOfRangeException ex)
 
     Caught: Index was outside the bounds of the array.
 
-> [!danger] `catch (Exception)` with empty body silently hides bugs
+> [!danger] catch (Exception) with empty body
+>
+> `catch (Exception)` with empty body silently hides bugs
 > An empty `catch (Exception) { }` swallows *all* errors including `NullReferenceException`, `StackOverflowException` side effects, and data corruption. At minimum, log the exception. In production, prefer `catch (SpecificException)` and let unexpected errors propagate to global handlers.
 
-> [!warning] `async void` methods — exceptions crash the process
+> [!warning] async void methods
+>
+> `async void` methods — exceptions crash the process
 > Exceptions thrown in `async void` methods cannot be caught by the caller — they propagate to the `SynchronizationContext` and crash the process. Always use `async Task` for async methods. The only acceptable use of `async void` is for event handlers in UI frameworks.
 
 #### Multiple catch blocks
@@ -182,7 +187,9 @@ ProcessWithCleanup(true);
 
 #### throw vs throw ex — preserving the stack trace
 
-> [!danger] `throw ex` resets the stack trace — use `throw` to preserve it
+> [!danger] throw ex resets the stack trace
+>
+> `throw ex` resets the stack trace — use `throw` to preserve it
 > `throw ex;` replaces the original stack trace with the current location, destroying the information needed to find the actual error source. Use bare `throw;` to re-throw with the original trace intact, or `throw new WrapperException("msg", ex)` to wrap with `InnerException`.
 
 ```csharp
@@ -217,6 +224,7 @@ catch (InvalidOperationException ex)
 #### Exception hierarchy — Message, StackTrace, InnerException, Data
 
 > [!info] Exception hierarchy
+>
 > - All exceptions inherit from `Exception`; `SystemException` covers most built-in errors
 > - `Message` — description of the error
 > - `StackTrace` — call chain leading to the error

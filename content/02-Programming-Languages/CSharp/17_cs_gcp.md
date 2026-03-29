@@ -629,6 +629,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 ## Summary
 
 > [!abstract]- GCP C# Quick Reference
+>
 > | Service | Pattern | Description |
 > |---|---|---|
 > | **Auth** | `GoogleCredential.GetApplicationDefault()` | Auto-detect ADC |
