@@ -26,6 +26,7 @@ status: complete
 Create columns, Polars expressions, method chaining.
 
 ```python
+# Imports — Pandas, Polars, NumPy, polars.selectors
 import pandas as pd
 import polars as pl
 import polars.selectors as cs
@@ -58,6 +59,7 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 ## Setup & Data Loading
 
 ```python
+# Verify loaded datasets — shapes and column names
 print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
 print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
 print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
@@ -76,6 +78,7 @@ print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
      ['id', '_index', 'symbol', 'score_date', 'sector', 'pe_zscore', 'pb_zscore', 'ev_ebitda_zscore', 'yield_zscore', 'relative_value_score', 'relative_value_rank', 'relative_strength', 'sma_50_ratio', 'sma_200_ratio', 'dist_from_52w_high', 'momentum_score', 'momentum_rank', 'implied_upside', 'recommendation_mean', 'price_falling_analysts_bullish', 'sentiment_score', 'sentiment_rank', 'composite_score', 'composite_rank', '_scored_at', 'sma_30_close', 'sma_90_close', 'market_cap', 'index_weight', 'short_name', 'country', 'current_price', 'day_change_pct', 'five_day_change_pct', 'ytd_change_pct', 'currency']
 
 ```python
+# Preview Pandas OHLCV DataFrame
 ohlcv_pd.head(3)
 ```
 
@@ -147,16 +150,20 @@ ohlcv_pd.head(3)
 </table>
 
 ```python
+# Preview Polars OHLCV DataFrame
 ohlcv_pl.head(3)
 ```
 
 <div><small>shape: (3, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ---
-## Direct Column Assignment (Pandas)
+### Pandas — Direct Column Assignment with df["col"] = expression
+
+> [!info] `df["col"] = expression` creates a new column in-place on the DataFrame. Fast for simple arithmetic but mutates the original — use `.copy()` first. Each column is a separate statement; no chaining.
+
+> [!warning] Direct assignment mutates the original DataFrame. Always `.copy()` first in pipelines to avoid corrupting shared references.
 
 ```python
-# Simple derived column — Pandas mutates in place
 df = ohlcv_pd.copy()
 df["range"] = df["high"] - df["low"]
 df[["symbol", "date", "high", "low", "range"]].head()
@@ -268,7 +275,9 @@ df[["symbol", "date", "volume"]].head()
 </table>
 
 ---
-## <code style="font-size:0.75em">assign</code> — Chainable Column Creation (Pandas)
+### Pandas assign() — create columns in a chainable pipeline
+
+> [!info] `.assign()` returns a **new** DataFrame with added columns — the original is unchanged. Each keyword argument becomes a column name. Use `lambda d: ...` to reference the DataFrame being built, including columns created earlier in the same call (e.g., `range` is used in `pct_range`). This is the Pandas equivalent of Polars `.with_columns()` — enables method chaining.
 
 ```python
 (ohlcv_pd
@@ -344,9 +353,12 @@ df[["symbol", "date", "volume"]].head()
 </table>
 
 ---
-## <code style="font-size:0.75em">with_columns</code> (Polars)
+### Polars with_columns() — add computed columns with expressions
+
+> [!info] `.with_columns()` adds new columns using Polars expressions. `pl.col("name")` references a column; `.alias("new")` names the result. All original columns are kept. Multiple expressions in one call are computed **in parallel** — unlike Pandas `.assign()` which is sequential.
 
 ```python
+# with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
     (pl.col("high") - pl.col("low")).alias("range"),
     ((pl.col("high") + pl.col("low")) / 2).alias("mid"),
@@ -368,11 +380,12 @@ ohlcv_pl.with_columns(
 <div><small>shape: (5, 16)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>vol_m</th><th>intraday_ret_pct</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>1.513937</td><td>-1.616509</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>1.382722</td><td>0.492091</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>1.370204</td><td>1.397516</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>1.469911</td><td>-0.477164</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>1.428681</td><td>-0.515818</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">select</code> + <code style="font-size:0.75em">alias</code> (Polars)
+### Polars select() + alias() — return only computed columns
 
-`select` returns **only** the listed columns — useful when you want a lean result.
+> [!info] `.select()` returns **only** the listed columns — unlike `.with_columns()` which keeps all originals. Use it when you want a lean result with just the columns you need. Combine with `.alias()` to rename computed expressions.
 
 ```python
+# Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
     "symbol",
     "date",
@@ -384,9 +397,11 @@ ohlcv_pl.select(
 <div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>2.07</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1.23</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1.55</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>0.98</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">apply</code> and <code style="font-size:0.75em">map</code> (Pandas)
+### Pandas apply() and map() — row-level and element-level transforms
 
-> **Prefer vectorised operations** whenever possible. `apply` is a Python-level loop and much slower.
+> [!info] `.map()` applies a function to each **element** of a Series. `.apply()` applies a function to each **row** (axis=1) or **column** (axis=0) of a DataFrame. Both are Python-level loops under the hood.
+
+> [!danger] `apply()` is 10-100x slower than vectorized operations. Use it only when no vectorized alternative exists (e.g., calling an external API per row, complex branching logic). For arithmetic, string, or date operations, always use vectorized methods first.
 
 ```python
 # map — element-wise transformation on a Series
@@ -524,10 +539,11 @@ ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 </table>
 
 ---
-## <code style="font-size:0.75em">map_elements</code> / <code style="font-size:0.75em">map_batches</code> (Polars)
+### Polars map_elements() / map_batches() — custom Python functions on columns
 
-> `map_elements` is analogous to Pandas `apply` — it runs a Python function per element.  
-> `map_batches` receives the whole Series (or column) at once — great for NumPy interop.
+> [!info] `map_elements` runs a Python function **per element** — analogous to Pandas `.apply()`. `map_batches` receives the **whole Series** at once — use it for NumPy interop or batch operations.
+
+> [!warning] `map_elements` breaks Polars' query optimizer and runs in Python, not Rust. Always prefer native expressions. Use `map_elements` only when no expression equivalent exists.
 
 ```python
 # map_elements — per-element Python function (slow, use sparingly)
@@ -548,10 +564,12 @@ ohlcv_pl.with_columns(
 <div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sqrt_close</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>7.563729</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>7.561746</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>7.666159</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>7.641989</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>7.606576</td></tr></tbody></table></div>
 
 ---
-## Conditional Columns — <code style="font-size:0.75em">np.where</code> / <code style="font-size:0.75em">np.select</code> (Pandas)
+### Pandas np.where() / np.select() — conditional column creation
+
+> [!info] `np.where(condition, true_val, false_val)` creates a column from a binary condition (if/else). For multiple conditions, use `np.select([cond1, cond2, ...], [val1, val2, ...], default=...)` — the Pandas equivalent of SQL `CASE WHEN`.
 
 ```python
-# np.where — binary condition
+# np.where — binary condition (if/else)
 df = ohlcv_pd.copy()
 df["direction"] = np.where(df["close"] > df["open"], "up", "down")
 df[["symbol", "date", "open", "close", "direction"]].head()
@@ -720,9 +738,12 @@ df[["symbol", "date", "open", "close", "move"]].head(10)
 </table>
 
 ---
-## <code style="font-size:0.75em">when</code> / <code style="font-size:0.75em">then</code> / <code style="font-size:0.75em">otherwise</code> (Polars)
+### Polars when() / then() / otherwise() — conditional expressions
+
+> [!info] `pl.when(cond).then(val).otherwise(val)` is Polars' native `CASE WHEN` — equivalent to `np.where` in Pandas. Chain multiple `.when().then()` for multi-branch logic (like `np.select`). Runs in Rust, fully optimized.
 
 ```python
+# when/then/otherwise — binary condition (Polars equivalent of np.where)
 ohlcv_pl.with_columns(
     pl.when(pl.col("close") > pl.col("open"))
       .then(pl.lit("up"))
@@ -748,14 +769,14 @@ ohlcv_pl.with_columns(
 <div><small>shape: (10, 5)</small><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>move</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-11</td><td>57.73</td><td>56.61</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-12</td><td>56.7</td><td>56.51</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-13</td><td>56.5</td><td>56.48</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-14</td><td>56.88</td><td>56.96</td><td>&quot;flat&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-15</td><td>56.74</td><td>56.74</td><td>&quot;flat&quot;</td></tr></tbody></table></div>
 
 ---
-## Type Casting
+### Type Casting
 
-### Pandas — <code style="font-size:0.75em">astype</code>
+#### Pandas astype() — cast column types
 
-
-- **Astype**: Convert column to a different data type (Pandas).
+> [!info] `.astype("type")` converts a column to a different dtype. Common casts: `int64` → `float64` (for division), `object` → `category` (for memory), `str` → `datetime64` (for date ops). Returns a new Series — assign it back to the column.
 
 ```python
+# astype — cast volume from int to float for division safety
 df = ohlcv_pd.copy()
 print("Before:", df["volume"].dtype)
 df["volume"] = df["volume"].astype("float64")
@@ -785,15 +806,14 @@ print(df["symbol"].cat.categories[:5].tolist())
     category
     ['ABI.BR', 'AD.AS', 'ADS.DE', 'ADYEN.AS', 'AI.PA']
 
-### Polars — <code style="font-size:0.75em">cast</code>
+#### Polars cast() — cast column types
 
+> [!info] `.cast(pl.Type)` converts a column's dtype within an expression. Use inside `.with_columns()` to cast in place, or `.alias()` to create a new column. Polars types: `pl.Float64`, `pl.Int32`, `pl.Utf8`, `pl.Date`, `pl.Boolean`.
 
-- **Select**: Choose specific columns, optionally transforming them.
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
-- **pl.col**: Reference a column by name. The foundation of all Polars expressions.
-- **Head**: Return the first N rows.
+> [!warning] `.cast(strict=True)` (default) raises an error on invalid values. Use `strict=False` to get nulls instead of errors — useful for dirty data.
 
 ```python
+# cast — convert volume from Int64 to Float64
 ohlcv_pl.with_columns(
     pl.col("volume").cast(pl.Float64).alias("volume_f64"),
 ).select("volume", "volume_f64").head()
@@ -842,15 +862,14 @@ ohlcv_pl.with_columns(
             ('is_filled', Boolean)])
 
 ---
-## <code style="font-size:0.75em">.str</code> Accessor Operations
+### .str Accessor — String Operations on DataFrame Columns
 
-### Pandas .str Accessor — string transforms
+#### Pandas .str Accessor — string transforms
 
-
-- **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
-- **Head**: Return the first N rows.
+> [!info] `.str` gives access to vectorized string methods on a Series: `.str.upper()`, `.str.lower()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. Works on `object` or `string` dtype columns. Much faster than `apply(lambda x: x.upper())`.
 
 ```python
+# .str accessor — vectorized string operations on a column
 df = ohlcv_pd.copy()
 df["symbol_upper"] = df["symbol"].str.upper()
 df["symbol_short"] = df["symbol"].str.split(".").str[0]
@@ -951,15 +970,12 @@ df[["symbol", "clean"]].drop_duplicates().head()
   </tbody>
 </table>
 
-### Polars .str Accessor — string transforms
+#### Polars .str Accessor — string transforms
 
-
-- **Select**: Choose specific columns, optionally transforming them.
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
-- **List Ops**: Access elements inside list columns: .list.len(), .list.first(), .list.contains().
-- **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
+> [!info] Polars `.str` namespace: `.str.to_uppercase()`, `.str.to_lowercase()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. After `.str.split()` the result is a List column — chain `.list.first()`, `.list.last()`, `.list.len()` to extract elements.
 
 ```python
+# .str accessor — string transforms inside Polars expressions
 ohlcv_pl.with_columns(
     pl.col("symbol").str.to_uppercase().alias("symbol_upper"),
     pl.col("symbol").str.split(".").list.first().alias("symbol_short"),
@@ -970,6 +986,7 @@ ohlcv_pl.with_columns(
 <div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>symbol_upper</th><th>symbol_short</th><th>has_de</th></tr><tr><td>str</td><td>str</td><td>str</td><td>bool</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>&quot;ABI.BR&quot;</td><td>&quot;ABI&quot;</td><td>false</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;ABI.BR&quot;</td><td>&quot;ABI&quot;</td><td>false</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;ABI.BR&quot;</td><td>&quot;ABI&quot;</td><td>false</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;ABI.BR&quot;</td><td>&quot;ABI&quot;</td><td>false</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;ABI.BR&quot;</td><td>&quot;ABI&quot;</td><td>false</td></tr></tbody></table></div>
 
 ```python
+# with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
     pl.col("symbol").str.replace(".DE", "").str.strip_chars().alias("clean"),
 ).select("symbol", "clean").unique().head()
@@ -978,16 +995,15 @@ ohlcv_pl.with_columns(
 <div><small>shape: (5, 2)</small><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;NDA-FI.HE&quot;</td><td>&quot;NDA-FI.HE&quot;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>&quot;INGA.AS&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot;MBG.DE&quot;</td><td>&quot;MBG&quot;</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>&quot;PRX.AS&quot;</td></tr></tbody></table></div>
 
 ---
-## <code style="font-size:0.75em">.dt</code> Accessor Operations
+### .dt Accessor — DateTime Operations on DataFrame Columns
 
-### Pandas .dt Accessor — datetime transforms
+#### Pandas .dt Accessor — datetime transforms
 
 
-- **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
-- **Parse Dates**: Convert strings to datetime objects (Pandas).
-- **Head**: Return the first N rows.
+> [!info] `.dt` gives access to datetime components: `.dt.year`, `.dt.month`, `.dt.day`, `.dt.day_name()`, `.dt.quarter`, `.dt.weekday`. The column must be `datetime64` dtype — convert with `pd.to_datetime()` first if it's a string.
 
 ```python
+# .dt accessor — extract date components from a datetime column
 df = ohlcv_pd.copy()
 df["date"] = pd.to_datetime(df["date"])
 df["year"]    = df["date"].dt.year
@@ -1052,15 +1068,14 @@ df[["date", "year", "month", "weekday", "quarter"]].head()
   </tbody>
 </table>
 
-### Polars .dt Accessor — datetime transforms
+#### Polars .dt Accessor — datetime transforms
 
 
 - **Select**: Choose specific columns, optionally transforming them.
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
-- **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
-- **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+> [!info] Polars `.dt` namespace: `.dt.year()`, `.dt.month()`, `.dt.day()`, `.dt.weekday()`, `.dt.quarter()`, `.dt.ordinal_day()`. Note: Polars weekday is 1=Monday (ISO), Pandas is 0=Monday.
 
 ```python
+# .dt accessor — extract date components inside Polars expressions
 ohlcv_pl.with_columns(
     pl.col("date").dt.year().alias("year"),
     pl.col("date").dt.month().alias("month"),
@@ -1082,10 +1097,12 @@ ohlcv_pl.with_columns(
 <div><small>shape: (5, 3)</small><table><thead><tr><th>date</th><th>date_plus_7d</th><th>month_start</th></tr><tr><td>date</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021-01-11</td><td>2021-01-01</td></tr><tr><td>2021-01-05</td><td>2021-01-12</td><td>2021-01-01</td></tr><tr><td>2021-01-06</td><td>2021-01-13</td><td>2021-01-01</td></tr><tr><td>2021-01-07</td><td>2021-01-14</td><td>2021-01-01</td></tr><tr><td>2021-01-08</td><td>2021-01-15</td><td>2021-01-01</td></tr></tbody></table></div>
 
 ---
-## Arithmetic & Math Operations
+### Arithmetic & Math Operations
+
+> [!info] Both Pandas and Polars support element-wise arithmetic (`+`, `-`, `*`, `/`), NumPy functions (`np.log`, `np.sqrt`), and group-level computations (`.pct_change()`, `.cumsum()`). Pandas uses `.groupby("col")["target"].method()` syntax; Polars uses `.method().over("col")` expressions.
 
 ```python
-# Pandas
+# Pandas — arithmetic, log, pct_change, cumsum grouped by symbol
 df = ohlcv_pd.copy()
 df["log_close"]     = np.log(df["close"])
 df["pct_change"]    = df.groupby("symbol")["close"].pct_change()
@@ -1222,20 +1239,17 @@ ohlcv_pl.with_columns(
 <div><small>shape: (5, 6)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_rounded</th><th>close_clipped</th><th>abs_change</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>57.0</td><td>57.21</td><td>0.94</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>57.0</td><td>57.18</td><td>0.28</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>59.0</td><td>58.77</td><td>0.81</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>58.0</td><td>58.4</td><td>0.28</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>58.0</td><td>57.86</td><td>0.3</td></tr></tbody></table></div>
 
 ---
-## The "Tweak Function" Pattern
+### The "Tweak Function" Pattern
 
 Encapsulate all data-prep transformations in a single function that takes a raw DataFrame and returns a clean one.
 This makes pipelines **reproducible** and **testable**.
 
-### Pandas — Tweak Function Pattern (chainable transform)
+#### Pandas — Tweak Function Pattern (chainable transform)
 
-
-- **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
-- **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Parse Dates**: Convert strings to datetime objects (Pandas).
-- **Head**: Return the first N rows.
+> [!info] The "tweak function" pattern wraps all DataFrame transforms in a single function: `def tweak(df) -> df`. Inside, chain `.assign()`, `.rename()`, `.astype()`, `.query()`, `.sort_values()` etc. Call it as `df.pipe(tweak)` to include in a pipeline. This is the idiomatic Pandas approach to composable, testable transforms.
 
 ```python
+# Tweak function — all Pandas transforms in one chainable function
 def tweak_ohlcv_pd(df: pd.DataFrame) -> pd.DataFrame:
     return (
         df
@@ -1380,7 +1394,7 @@ tweak_ohlcv_pd(ohlcv_pd).head()
   </tbody>
 </table>
 
-### Polars — Tweak Function Pattern (chainable transform)
+#### Polars — Tweak Function Pattern (chainable transform)
 
 
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
@@ -1388,7 +1402,10 @@ tweak_ohlcv_pd(ohlcv_pd).head()
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+> [!info] Polars tweak functions use `.with_columns()`, `.filter()`, `.sort()`, `.rename()` chained naturally — no `.pipe()` needed because Polars methods already return new DataFrames (immutable by design).
+
 ```python
+# Tweak function — all Polars transforms in one chainable function
 def tweak_ohlcv_pl(df: pl.DataFrame) -> pl.DataFrame:
     return (
         df
@@ -1407,9 +1424,10 @@ tweak_ohlcv_pl(ohlcv_pl).head()
 <div><small>shape: (5, 17)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>intraday_ret</th><th>volume_m</th><th>symbol_short</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>-0.016165</td><td>1.513937</td><td>&quot;ABI&quot;</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>0.004921</td><td>1.382722</td><td>&quot;ABI&quot;</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>0.013975</td><td>1.370204</td><td>&quot;ABI&quot;</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>-0.004772</td><td>1.469911</td><td>&quot;ABI&quot;</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>-0.005158</td><td>1.428681</td><td>&quot;ABI&quot;</td></tr></tbody></table></div>
 
 ---
-## Transforming <code style="font-size:0.75em">scores_daily</code> — Practical Examples
+## Practical Transform Examples — scores_daily dataset
 
 ```python
+# Preview Pandas scores_daily DataFrame
 scores_pd.head(3)
 ```
 
@@ -1858,6 +1876,7 @@ scores_pl.with_columns(
 ## Comparison Table — Creating & Transforming Columns
 
 ```python
+# Pandas vs Polars comparison table for column creation methods
 comparison = r"""
 | Operation                     | Pandas                                          | Polars                                           |
 |:------------------------------|:-------------------------------------------------|:-------------------------------------------------|
@@ -1911,11 +1930,12 @@ display(Markdown(comparison))
 ---
 # Part 2: Polars Expressions Deep Dive
 
-## What Is an Expression?
+### What Is an Expression?
 
-- **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+> [!info] A Polars expression is a **lazy computation** — it describes *what* to compute, not *how*. `pl.col("close") * 2` creates an `Expr` object. It does nothing until passed into a context (`.select()`, `.with_columns()`, `.filter()`, `.group_by().agg()`). The optimizer then fuses, reorders, and parallelizes all expressions for maximum performance.
 
 ```python
+# An expression is a lazy computation — it's not executed until placed in a context
 expr = pl.col("close") * 2
 print(f"Type: {type(expr)}")
 print(f"Repr: {expr}")
@@ -1924,18 +1944,20 @@ print(f"Repr: {expr}")
     Type: <class 'polars.expr.expr.Expr'>
     Repr: [(col("close")) * (dyn int: 2)]
 
-## Expression Contexts
+### Expression Contexts
 
 - **Select**: Choose specific columns, optionally transforming them.
 - **Head**: Return the first N rows.
 
 ```python
+# select context — return only named columns (drop the rest)
 ohlcv_pl.select("symbol", "date", "close").head(5)
 ```
 
 <div><small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table></div>
 
 ```python
+# Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
     "symbol", "date",
     pl.col("close").round(2).alias("close_rounded"),
@@ -1945,7 +1967,7 @@ ohlcv_pl.select(
 
 <div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close_rounded</th><th>daily_range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>2.07</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1.23</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1.55</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>0.98</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
-### Polars Expression Context — with_columns
+#### Polars Expression Context — with_columns
 
 - **Select**: Choose specific columns, optionally transforming them.
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
@@ -1953,6 +1975,7 @@ ohlcv_pl.select(
 - **Head**: Return the first N rows.
 
 ```python
+# with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
     (pl.col("close") - pl.col("open")).alias("price_change"),
     ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).round(2).alias("pct_change"),
@@ -1961,7 +1984,7 @@ ohlcv_pl.with_columns(
 
 <div><small>shape: (5, 6)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>open</th><th>price_change</th><th>pct_change</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>58.15</td><td>-0.94</td><td>-1.62</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>56.9</td><td>0.28</td><td>0.49</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>57.96</td><td>0.81</td><td>1.4</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>58.68</td><td>-0.28</td><td>-0.48</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>58.16</td><td>-0.3</td><td>-0.52</td></tr></tbody></table></div>
 
-### Polars Expression Context — filter
+#### Polars Expression Context — filter
 
 
 - **Filter**: Keep only rows matching a condition.
@@ -1970,6 +1993,7 @@ ohlcv_pl.with_columns(
 - **Head**: Return the first N rows.
 
 ```python
+# filter context — keep rows matching a boolean expression
 ohlcv_pl.filter(
     (pl.col("symbol") == "ASML.AS") & (pl.col("close") > 900)
 ).select("symbol", "date", "close").head(5)
@@ -1977,7 +2001,7 @@ ohlcv_pl.filter(
 
 <div><small>shape: (5, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2024-03-04</td><td>913.2</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2024-03-06</td><td>912.2</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2024-03-07</td><td>949.2</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2024-03-08</td><td>923.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2024-03-21</td><td>923.3</td></tr></tbody></table></div>
 
-### Polars Expression Context — group_by.agg
+#### Polars Expression Context — group_by.agg
 
 
 - **Group By**: Split rows into groups by one or more columns, then apply aggregate functions to each group independently.
@@ -1986,6 +2010,7 @@ ohlcv_pl.filter(
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
 ```python
+# group_by.agg context — aggregate expressions per group
 ohlcv_pl.group_by("symbol").agg(
     pl.col("close").mean().round(2).alias("avg_close"),
     pl.col("volume").sum().alias("total_volume"),
@@ -1995,7 +2020,7 @@ ohlcv_pl.group_by("symbol").agg(
 
 <div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>last_date</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>date</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td><td>81633862</td><td>2026-03-12</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td><td>110400463</td><td>2026-03-12</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.35</td><td>945070720</td><td>2026-03-12</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.4</td><td>557855567</td><td>2026-03-12</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.66</td><td>308359744</td><td>2026-03-12</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.69</td><td>94592244</td><td>2026-03-12</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.54</td><td>484115375</td><td>2026-03-12</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.66</td><td>398802950</td><td>2026-03-12</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.75</td><td>476686026</td><td>2026-03-12</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.19</td><td>1101960308</td><td>2026-03-12</td></tr></tbody></table></div>
 
-## Column Expressions
+### Column Expressions
 
 
 - **Select**: Choose specific columns, optionally transforming them.
@@ -2003,6 +2028,7 @@ ohlcv_pl.group_by("symbol").agg(
 - **Head**: Return the first N rows.
 
 ```python
+# pl.col with multiple names — select columns by name
 ohlcv_pl.select(pl.col("symbol", "date", "close")).head(3)
 ```
 
@@ -2015,19 +2041,20 @@ ohlcv_pl.select(pl.col("^(open|high|low|close)$")).head(3)
 
 <div><small>shape: (3, 4)</small><table><thead><tr><th>open</th><th>high</th><th>low</th><th>close</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr></tbody></table></div>
 
-### Polars Column Expressions — pl.all, pl.exclude
+#### Polars Column Expressions — pl.all, pl.exclude
 
 
 - **Select**: Choose specific columns, optionally transforming them.
 - **Head**: Return the first N rows.
 
 ```python
+# pl.exclude — select all columns EXCEPT the listed ones
 ohlcv_pl.select(pl.exclude("id", "dividends", "stock_splits", "is_filled")).head(3)
 ```
 
 <div><small>shape: (3, 8)</small><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table></div>
 
-### Polars Column Expressions — pl.lit
+#### Polars Column Expressions — pl.lit
 
 
 - **Select**: Choose specific columns, optionally transforming them.
@@ -2036,24 +2063,26 @@ ohlcv_pl.select(pl.exclude("id", "dividends", "stock_splits", "is_filled")).head
 - **Alias**: Give an expression result a column name (Polars).
 
 ```python
+# pl.lit — inject a constant value as a new column
 ohlcv_pl.select("symbol", "date", pl.lit("EUR").alias("currency"), pl.lit(1.0).alias("weight")).head(3)
 ```
 
 <div><small>shape: (3, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>currency</th><th>weight</th></tr><tr><td>str</td><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>&quot;EUR&quot;</td><td>1.0</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>&quot;EUR&quot;</td><td>1.0</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>&quot;EUR&quot;</td><td>1.0</td></tr></tbody></table></div>
 
-### Polars Column Expressions — pl.first, pl.last
+#### Polars Column Expressions — pl.first, pl.last
 
 
 - **Select**: Choose specific columns, optionally transforming them.
 - **Alias**: Give an expression result a column name (Polars).
 
 ```python
+# pl.first, pl.last — get the first/last value in the column
 ohlcv_pl.select(pl.first("symbol"), pl.first("date").alias("first_date"), pl.last("date").alias("last_date"))
 ```
 
 <div><small>shape: (1, 3)</small><table><thead><tr><th>symbol</th><th>first_date</th><th>last_date</th></tr><tr><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>2026-03-12</td></tr></tbody></table></div>
 
-## Continuing Expressions
+### Continuing Expressions
 
 
 - **Select**: Choose specific columns, optionally transforming them.
@@ -2062,6 +2091,7 @@ ohlcv_pl.select(pl.first("symbol"), pl.first("date").alias("first_date"), pl.las
 - **Head**: Return the first N rows.
 
 ```python
+# Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
     pl.col("close").cast(pl.Float64).round(2).alias("rounded_close"),
     pl.col("symbol").str.to_lowercase().str.replace(".as", "").alias("clean_symbol"),
@@ -2070,7 +2100,7 @@ ohlcv_pl.select(
 
 <div><small>shape: (5, 2)</small><table><thead><tr><th>rounded_close</th><th>clean_symbol</th></tr><tr><td>f64</td><td>str</td></tr></thead><tbody><tr><td>57.21</td><td>&quot;abi.br&quot;</td></tr><tr><td>57.18</td><td>&quot;abi.br&quot;</td></tr><tr><td>58.77</td><td>&quot;abi.br&quot;</td></tr><tr><td>58.4</td><td>&quot;abi.br&quot;</td></tr><tr><td>57.86</td><td>&quot;abi.br&quot;</td></tr></tbody></table></div>
 
-## Horizontal Expressions
+### Horizontal Expressions
 
 
 - **Select**: Choose specific columns, optionally transforming them.
@@ -2079,6 +2109,7 @@ ohlcv_pl.select(
 - **Alias**: Give an expression result a column name (Polars).
 
 ```python
+# Horizontal expression — row-level computation across columns
 scores_pl.select(
     "symbol",
     pl.sum_horizontal("pe_zscore", "pb_zscore").round(4).alias("combined_value"),
@@ -2088,6 +2119,7 @@ scores_pl.select(
 <div><small>shape: (5, 2)</small><table><thead><tr><th>symbol</th><th>combined_value</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>2.1745</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>0.7141</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>1.1466</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>-1.6461</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>1.3182</td></tr></tbody></table></div>
 
 ```python
+# Horizontal expression — row-level computation across columns
 scores_pl.select(
     "symbol",
     pl.mean_horizontal("relative_value_score", "momentum_score", "sentiment_score").round(4).alias("avg_factor"),
@@ -2097,6 +2129,7 @@ scores_pl.select(
 <div><small>shape: (5, 2)</small><table><thead><tr><th>symbol</th><th>avg_factor</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>0.6839</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>0.515</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>0.5122</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>0.4174</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>0.4069</td></tr></tbody></table></div>
 
 ```python
+# Horizontal expression — concatenate strings across columns
 dim_pl.select(
     pl.concat_str("short_name", pl.lit(" ("), "country", pl.lit(")")).alias("display_name"),
 ).head(5)
@@ -2104,15 +2137,14 @@ dim_pl.select(
 
 <div><small>shape: (5, 1)</small><table><thead><tr><th>display_name</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING (Netherlands)&quot;</td></tr><tr><td>&quot;LVMH (France)&quot;</td></tr><tr><td>&quot;HERMES INTL (France)&quot;</td></tr><tr><td>&quot;L&#x27;OREAL (France)&quot;</td></tr><tr><td>&quot;SAP SE (Germany)&quot;</td></tr></tbody></table></div>
 
-## Window Expressions — .over()
+### Polars Window Expressions — .over() for group-level computation
 
 
 - **Window (.over)**: Compute a value per row based on its group, without collapsing rows. Like SQL OVER(PARTITION BY).
-- **Rank**: Assign a rank number to each row within its group, ordered by a column.
-- **Filter**: Keep only rows matching a condition.
-- **Select**: Choose specific columns, optionally transforming them.
+> [!info] `.over("col")` is the Polars equivalent of SQL `PARTITION BY` — it computes an expression **within each group** without collapsing rows. Equivalent to Pandas `groupby("col").transform()`. Chain any expression before `.over()`: `.mean().over()`, `.rank().over()`, `.cum_sum().over()`, `.shift().over()`.
 
 ```python
+# .over("symbol") — window expression: rank and mean within each symbol group
 ohlcv_pl.filter(pl.col("symbol").is_in(["ASML.AS", "MC.PA"])).with_columns(
     pl.col("close").rank(descending=True).over("symbol").alias("price_rank"),
     pl.col("close").mean().over("symbol").round(2).alias("avg_close"),
@@ -2122,6 +2154,7 @@ ohlcv_pl.filter(pl.col("symbol").is_in(["ASML.AS", "MC.PA"])).with_columns(
 <div><small>shape: (10, 5)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>price_rank</th><th>avg_close</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-04</td><td>406.25</td><td>1326.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-05</td><td>406.9</td><td>1325.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-06</td><td>402.85</td><td>1329.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-07</td><td>403.9</td><td>1327.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-08</td><td>416.05</td><td>1319.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-11</td><td>414.9</td><td>1320.5</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-12</td><td>418.95</td><td>1318.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-13</td><td>422.45</td><td>1316.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-14</td><td>447.35</td><td>1288.0</td><td>671.35</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-15</td><td>435.85</td><td>1307.0</td><td>671.35</td></tr></tbody></table></div>
 
 ```python
+# filter context — keep rows matching a boolean expression
 ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").with_columns(
     pl.col("volume").cum_sum().over("symbol").alias("cumulative_volume"),
 ).select("symbol", "date", "volume", "cumulative_volume").tail(10)
@@ -2129,7 +2162,7 @@ ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").with_columns(
 
 <div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>cumulative_volume</th></tr><tr><td>str</td><td>date</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1010698</td><td>938726541</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>871267</td><td>939597808</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>941945</td><td>940539753</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>714587</td><td>941254340</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>778081</td><td>942032421</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table></div>
 
-## Expression Arithmetic
+### Expression Arithmetic
 
 
 - **Select**: Choose specific columns, optionally transforming them.
@@ -2138,6 +2171,7 @@ ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").with_columns(
 - **Alias**: Give an expression result a column name (Polars).
 
 ```python
+# Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
     "symbol", "date",
     ((pl.col("close") + pl.col("open")) / 2).alias("mid_price"),
@@ -2148,7 +2182,7 @@ ohlcv_pl.select(
 
 <div><small>shape: (5, 5)</small><table><thead><tr><th>symbol</th><th>date</th><th>mid_price</th><th>range</th><th>green_candle</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.68</td><td>2.07</td><td>false</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.04</td><td>1.23</td><td>true</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.365</td><td>1.55</td><td>true</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.54</td><td>0.98</td><td>false</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.01</td><td>0.97</td><td>false</td></tr></tbody></table></div>
 
-## Folds
+### Folds
 
 
 - **Select**: Choose specific columns, optionally transforming them.
@@ -2157,6 +2191,7 @@ ohlcv_pl.select(
 - **Fold**: Reduce across columns by applying a function cumulatively.
 
 ```python
+# Horizontal expression — row-level computation across columns
 scores_pl.select(
     "symbol",
     pl.fold(
@@ -2169,26 +2204,29 @@ scores_pl.select(
 
 <div><small>shape: (5, 2)</small><table><thead><tr><th>symbol</th><th>sum_zscores</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>2.174528</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>0.71405</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>1.146613</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>-1.646076</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>1.318159</td></tr></tbody></table></div>
 
-## Selectors (cs module)
+### Polars Selectors (cs module) — select columns by dtype
 
 
 - **Select**: Choose specific columns, optionally transforming them.
 - **Head**: Return the first N rows.
-- **Selector: Numeric**: Select all numeric columns (Polars selectors module).
+> [!info] `import polars.selectors as cs` — select columns by **dtype** instead of name. `cs.numeric()` selects all numeric columns, `cs.float()` only floats, `cs.string()` only strings. Combine with `|` (union), `&` (intersection), `-` (difference). Use `cs.by_name()` to mix name-based and type-based selection.
 
 ```python
+# cs.numeric() — select all numeric columns regardless of name
 scores_pl.select(cs.numeric()).head(3)
 ```
 
 <div><small>shape: (3, 27)</small><table><thead><tr><th>id</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th></tr><tr><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>163</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>1</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>16</td><td>0.153157</td><td>1.84211</td><td>0.052711</td><td>25</td><td>0.683947</td><td>1</td><td>92.085</td><td>81.181889</td><td>99751215104</td><td>0.019525</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td></tr><tr><td>168</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>24</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>8</td><td>0.121212</td><td>1.33333</td><td>0.617835</td><td>10</td><td>0.515005</td><td>2</td><td>30.838</td><td>28.554556</td><td>164294311936</td><td>0.032159</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td></tr><tr><td>174</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>22</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>9</td><td>0.126408</td><td>1.375</td><td>0.579187</td><td>11</td><td>0.512235</td><td>3</td><td>43.480333</td><td>38.855556</td><td>57222533120</td><td>0.011201</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td></tr></tbody></table></div>
 
 ```python
+# Horizontal expression — row-level computation across columns
 scores_pl.select(cs.by_name("symbol", "score_date") | cs.float()).head(3)
 ```
 
 <div><small>shape: (3, 23)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>implied_upside</th><th>recommendation_mean</th><th>sentiment_score</th><th>composite_score</th><th>sma_30_close</th><th>sma_90_close</th><th>index_weight</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>2026-03-04</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>0.153157</td><td>1.84211</td><td>0.052711</td><td>0.683947</td><td>92.085</td><td>81.181889</td><td>0.019525</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>2026-03-04</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>0.121212</td><td>1.33333</td><td>0.617835</td><td>0.515005</td><td>30.838</td><td>28.554556</td><td>0.032159</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>2026-03-04</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>0.126408</td><td>1.375</td><td>0.579187</td><td>0.512235</td><td>43.480333</td><td>38.855556</td><td>0.011201</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td></tr></tbody></table></div>
 
 ```python
+# Horizontal expression — row-level computation across columns
 scores_pl.select(cs.contains("score")).head(3)
 ```
 
@@ -2211,13 +2249,16 @@ scores_pl.select(cs.contains("score")).head(3)
 ---
 # Part 3: Method Chaining & Pipes
 
-## Imperative vs Chained Style
+### Imperative vs Chained Style
 
 Imperative code mutates step by step; chained (declarative) code reads as a pipeline.
 
-### Pandas — unchained imperative style
+#### Pandas — unchained imperative style
+
+> [!warning] Imperative style (separate statements per step) is readable for beginners but creates many intermediate variables, makes it easy to accidentally reuse stale references, and is hard to compose into reusable pipelines. Prefer chained style below.
 
 ```python
+# Imperative: each step is a separate statement, intermediate variable "df" is reused
 df = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].copy()
 df["daily_return"] = (df["close"] - df["open"]) / df["open"] * 100
 df = df.sort_values("date", ascending=False)
@@ -2308,7 +2349,9 @@ display(df[["symbol", "date", "close", "daily_return"]].head(10))
   </tbody>
 </table>
 
-### Pandas — chained declarative style with .pipe()
+#### Pandas — chained declarative style with .pipe()
+
+> [!info] Chained style: start from the DataFrame and chain `.query()`, `.assign()`, `.sort_values()`, `.head()` in one expression. No intermediate variables. Wrap in parentheses `(...)` for multi-line readability. Use `.pipe(func)` to insert custom functions into the chain.
 
 ```python
 result_pd = (
@@ -2407,7 +2450,9 @@ display(result_pd)
 </table>
 </div>
 
-### Polars — natural chaining with expressions
+#### Polars — natural chaining with expressions
+
+> [!info] Polars is designed for chaining — every method returns a new DataFrame. No `.pipe()` needed, no `.copy()` needed. The chain reads top to bottom: filter → compute → sort → limit → select.
 
 ```python
 result_pl = (
@@ -2426,11 +2471,14 @@ display(result_pl)
 <div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr></tbody></table></div>
 
 ---
-## Reusable Functions & Expressions
+### Reusable Functions & Expressions
 
-### Pandas — <code style="font-size:0.75em">.pipe()</code>
+#### Pandas .pipe() — compose reusable transform functions
+
+> [!info] `.pipe(func)` inserts a custom function into a Pandas chain. The function receives the DataFrame as its first argument and must return a DataFrame. This lets you break complex transforms into named, testable, reusable functions.
 
 ```python
+# Reusable transform functions — each takes a DataFrame and returns a DataFrame
 def add_moving_averages(df, windows=[7, 30]):
     for w in windows:
         df = df.assign(**{f"sma_{w}": df["close"].rolling(w).mean()})
@@ -2560,9 +2608,12 @@ display(result_pd)
 </table>
 </div>
 
-### Polars — reusable functions with expression variables
+#### Polars — reusable functions with expression variables
+
+> [!info] In Polars, reuse is achieved by **storing expressions in variables**. An expression is just a Python object — assign it to a name, then pass it into `.with_columns()` or `.select()` anywhere. No `.pipe()` needed.
 
 ```python
+# Reusable expressions — define once, use in any context
 daily_return_expr = ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).round(2).alias("daily_return")
 sma_7_expr = pl.col("close").rolling_mean(7).over("symbol").alias("sma_7")
 sma_30_expr = pl.col("close").rolling_mean(30).over("symbol").alias("sma_30")
@@ -2580,7 +2631,7 @@ display(result_pl)
 
 <div><small>shape: (10, 6)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th><th>sma_7</th><th>sma_30</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>-0.11</td><td>1251.514286</td><td>1201.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>1.48</td><td>1247.542857</td><td>1204.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>-2.09</td><td>1234.142857</td><td>1205.126667</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>2.46</td><td>1227.085714</td><td>1206.626667</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>-1.05</td><td>1216.028571</td><td>1206.946667</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td><td>1195.828571</td><td>1205.906667</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>7.05</td><td>1183.714286</td><td>1204.893333</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>0.98</td><td>1178.942857</td><td>1204.306667</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>0.88</td><td>1177.285714</td><td>1204.453333</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>-0.33</td><td>1181.428571</td><td>1204.413333</td></tr></tbody></table></div>
 
-## Recipe Pipeline: Full Example
+### Recipe Pipeline: Full Example
 
 
 - **Group By**: Split rows into groups by one or more columns, then apply aggregate functions to each group independently.
@@ -2809,7 +2860,7 @@ display(result_pl)
 
 <div><small>shape: (16, 7)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>avg_return</th><th>positive_days</th><th>total_days</th><th>win_rate</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td><td>u32</td><td>u32</td><td>f64</td></tr></thead><tbody><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td><td>0.0897</td><td>702</td><td>1324</td><td>53.0</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>&quot;Siemens Energy AG&quot;</td><td>&quot;Industrials&quot;</td><td>0.0501</td><td>641</td><td>1324</td><td>48.4</td></tr><tr><td>&quot;SIE.DE&quot;</td><td>&quot;SIEMENS AG&quot;</td><td>&quot;Industrials&quot;</td><td>0.041</td><td>687</td><td>1324</td><td>51.9</td></tr><tr><td>&quot;DB1.DE&quot;</td><td>&quot;DEUTSCHE BOERSE AG&quot;</td><td>&quot;Financial Services&quot;</td><td>0.0366</td><td>658</td><td>1324</td><td>49.7</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>0.0338</td><td>640</td><td>1324</td><td>48.3</td></tr><tr><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td></tr><tr><td>&quot;BAS.DE&quot;</td><td>&quot;BASF SE&quot;</td><td>&quot;Basic Materials&quot;</td><td>-0.0176</td><td>635</td><td>1324</td><td>48.0</td></tr><tr><td>&quot;ADS.DE&quot;</td><td>&quot;adidas AG&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>-0.0186</td><td>609</td><td>1324</td><td>46.0</td></tr><tr><td>&quot;BAYN.DE&quot;</td><td>&quot;Bayer AG&quot;</td><td>&quot;Healthcare&quot;</td><td>-0.0276</td><td>636</td><td>1324</td><td>48.0</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>&quot;INFINEON TECHNOLOGIES AG&quot;</td><td>&quot;Technology&quot;</td><td>-0.0548</td><td>622</td><td>1324</td><td>47.0</td></tr><tr><td>&quot;VOW.DE&quot;</td><td>&quot;VOLKSWAGEN AG&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>-0.0639</td><td>599</td><td>1324</td><td>45.2</td></tr></tbody></table></div>
 
-## Clean Code: Breaking Long Chains
+### Clean Code: Breaking Long Chains
 
 
 - **Filter**: Keep only rows matching a condition.
@@ -2818,6 +2869,7 @@ display(result_pl)
 - **Sort**: Reorder rows by column values.
 
 ```python
+# Breaking long chains — assign intermediate steps to named variables
 filtered = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date")
 enriched = filtered.with_columns(
     ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).round(2).alias("daily_return"),
