@@ -81,10 +81,10 @@ sequenceDiagram
     STS->>STS: Validate identity
     STS-->>ADC: OAuth2 access token (1 hour)
     ADC-->>App: Access token
-    App->>API: Request + Authorization: Bearer <token>
+    App->>API: Request with Bearer token
     API->>IAM: Does this identity have this permission?
-    IAM->>IAM: Evaluate: project roles +<br/>resource bindings +<br/>org policies + VPC-SC
-    IAM-->>API: Allow / Deny
+    IAM->>IAM: Evaluate project roles, resource bindings, org policies, VPC-SC
+    IAM-->>API: Allow or Deny
     API-->>App: Response or 403 Forbidden
 ```
 
@@ -153,20 +153,16 @@ For the gcloud reference, see [[gcloud-authentication#The ADC Credential Search 
 
 ```mermaid
 sequenceDiagram
-    participant GH as GitHub Actions Runner
-    participant OIDC as GitHub OIDC Provider
-    participant WIF as GCP WIF Pool/Provider
-    participant STS as Google STS
-    participant SA as GCP Service Account
-    participant API as GCP API (BigQuery, GCS)
+    participant GH as GitHub Runner
+    participant WIF as WIF + STS
+    participant SA as Service Account
+    participant API as GCP API
 
-    GH->>OIDC: Request OIDC token
-    OIDC-->>GH: JWT (audience: WIF provider)
+    GH->>GH: Get OIDC JWT from GitHub
     GH->>WIF: Present JWT
-    WIF->>STS: Validate + exchange
-    STS-->>GH: Federated access token
-    GH->>SA: Impersonate SA with federated token
-    SA-->>GH: Short-lived SA access token
+    WIF-->>GH: Federated token
+    GH->>SA: Impersonate with token
+    SA-->>GH: Short-lived SA token
     GH->>API: API call with SA token
 ```
 
