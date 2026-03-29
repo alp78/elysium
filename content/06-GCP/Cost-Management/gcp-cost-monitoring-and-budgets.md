@@ -125,26 +125,25 @@ Enable **detailed usage cost export** if you want resource-level attribution (e.
 
 ### Key Columns in the Export Table
 
-```sql
--- Schema reference for gcp_billing_export_v1_*
--- billing_account_id       STRING    Billing account
--- service.description      STRING    GCP service name (e.g., "BigQuery", "Compute Engine")
--- sku.description          STRING    SKU name (e.g., "N1 Predefined Instance Core")
--- usage_start_time         TIMESTAMP Start of usage period
--- usage_end_time           TIMESTAMP End of usage period
--- project.id               STRING    Project ID
--- project.name             STRING    Project name
--- labels                   ARRAY     Resource labels as key-value pairs
--- resource.name            STRING    Resource identifier (detailed export only)
--- location.region          STRING    Region (e.g., "us-central1")
--- cost                     FLOAT64   Cost in billing currency after credits
--- credits                  ARRAY     Promotions, SUDs, CUDs applied
--- usage.amount             FLOAT64   Usage quantity
--- usage.unit               STRING    Usage unit (e.g., "byte-seconds", "seconds")
--- currency                 STRING    Billing currency code
--- invoice.month            STRING    Invoice month (YYYYMM)
--- cost_type                STRING    regular | tax | adjustment | rounding_error
-```
+| Column | Type | Description |
+|---|---|---|
+| `billing_account_id` | STRING | Billing account |
+| `service.description` | STRING | GCP service name (e.g., "BigQuery", "Compute Engine") |
+| `sku.description` | STRING | SKU name (e.g., "N1 Predefined Instance Core") |
+| `usage_start_time` | TIMESTAMP | Start of usage period |
+| `usage_end_time` | TIMESTAMP | End of usage period |
+| `project.id` | STRING | Project ID |
+| `project.name` | STRING | Project name |
+| `labels` | ARRAY | Resource labels as key-value pairs |
+| `resource.name` | STRING | Resource identifier (detailed export only) |
+| `location.region` | STRING | Region (e.g., "us-central1") |
+| `cost` | FLOAT64 | Cost in billing currency after credits |
+| `credits` | ARRAY | Promotions, SUDs, CUDs applied |
+| `usage.amount` | FLOAT64 | Usage quantity |
+| `usage.unit` | STRING | Usage unit (e.g., "byte-seconds", "seconds") |
+| `currency` | STRING | Billing currency code |
+| `invoice.month` | STRING | Invoice month (YYYYMM) |
+| `cost_type` | STRING | regular, tax, adjustment, rounding_error |
 
 ### Example Queries
 
@@ -698,15 +697,21 @@ bq update \
 
 #### Dry Run Before Expensive Queries
 
+> [!info] Why dry run matters
+> On-demand BigQuery charges per byte scanned — a single `SELECT *` on a 10 TB table costs ~$50. `--dry_run` validates the query and reports how many bytes it would scan **without executing it**. Wrap this in a script to enforce a byte ceiling: if the estimate exceeds the limit, abort before any cost is incurred.
+
 ```bash
 # Estimate bytes scanned before running
 bq query \
   --dry_run \
   --use_legacy_sql=false \
   'SELECT * FROM `PROJECT_ID.dataset.events` WHERE DATE(event_timestamp) = "2026-01-01"'
-# Output: Query successfully validated. Assuming the tables are not modified,
-# running this query will process 1234567890 bytes of data.
+```
 
+    Query successfully validated. Assuming the tables are not modified,
+    running this query will process 1234567890 bytes of data.
+
+```bash
 # Script to abort if query exceeds a byte limit
 BYTES_LIMIT=10737418240  # 10 GB
 BYTES=$(bq query --dry_run --use_legacy_sql=false "$QUERY" 2>&1 | grep -oP '\d+ bytes')
@@ -718,24 +723,31 @@ fi
 
 #### Set Per-User and Per-Project Byte Quotas
 
+> [!info] Why quotas matter
+> Without quotas, a single analyst running an unfiltered `SELECT *` can scan terabytes and blow the entire team's monthly budget in one query. Per-user byte quotas cap how much data each user can scan per day. Capacity commitments (slot-based pricing) provide a predictable monthly cost instead of pay-per-byte.
+
 ```bash
-# Create a capacity commitment (BigQuery editions)
+# Create a capacity commitment (BigQuery editions — slot-based pricing)
 gcloud alpha bq reservations capacity-commitments create \
   --location=us-central1 \
   --slot-count=100 \
   --plan=FLEX \
   --project=PROJECT_ID
+```
 
-# Set a custom quota for on-demand bytes processed per day (via Quota API)
-# Navigate to: IAM & Admin > Quotas > "Query usage per day per user"
-# Or use the gcloud quotas command (preview):
+Set per-user byte quotas via the console: **IAM & Admin → Quotas → "Query usage per day per user"**.
+
+```bash
+# Check current quota settings
 gcloud quotas info --service=bigquery.googleapis.com --project=PROJECT_ID
 ```
 
 #### Materialized Views for Repeated Queries
 
+> [!info] How materialized views save cost
+> A materialized view pre-computes and caches expensive aggregations. BigQuery automatically rewrites incoming queries to read from the MV instead of scanning the full base table — the user doesn't need to reference the MV explicitly. With `enable_refresh = TRUE`, the cache refreshes on a schedule (e.g., every 60 minutes). You pay for the refresh scan, but all subsequent reads hit the cached result at near-zero cost.
+
 ```sql
--- Create a materialized view to cache expensive aggregations
 CREATE MATERIALIZED VIEW `PROJECT_ID.dataset.daily_revenue_mv`
 PARTITION BY report_date
 OPTIONS (enable_refresh = TRUE, refresh_interval_minutes = 60)
@@ -827,6 +839,12 @@ gcloud storage ls --recursive --long gs://BUCKET_NAME | \
 
 ### Cloud Run
 
+> [!info] Cloud Run cost levers
+> - **Scale to zero** (`--min-instances=0`) — no idle cost; container only runs when triggered
+> - **Right-size CPU/memory** — don't allocate 2 vCPU + 2 GB for a job that peaks at 0.5 vCPU + 256 MB
+> - **CPU allocation mode** — default (throttled) only charges CPU during request processing; always-on (`--no-cpu-throttling`) costs more but keeps background work alive
+> - **Job parallelism** — controls how many task instances run concurrently (more parallelism = faster but higher peak cost)
+
 ```bash
 # Scale to zero for batch jobs (no min instances)
 gcloud run services update SERVICE_NAME \
@@ -844,8 +862,6 @@ gcloud run services update SERVICE_NAME \
 gcloud run services update SERVICE_NAME \
   --no-cpu-throttling=false \
   --region=us-central1
-# Note: --no-cpu-throttling means CPU is only allocated during request processing
-# Default is throttled (cheaper). Always-on (--no-cpu-throttling) costs more.
 
 # For Cloud Run Jobs: set parallelism to control concurrent cost
 gcloud run jobs update JOB_NAME \
@@ -988,14 +1004,16 @@ gcloud compute networks subnets update SUBNET_NAME \
 
 ### Firestore
 
-```bash
-# Firestore cost is primarily driven by reads, writes, and storage
-# Reads: $0.06 per 100K; Writes: $0.18 per 100K; Storage: $0.108/GB/month
+Firestore costs are driven by operation count, not query complexity. Every document read, write, and delete is billed individually. There are no gcloud cost commands — optimization happens in application code.
 
-# No direct gcloud cost commands — optimize in application code
-```
+| Operation | Cost | Optimization |
+|---|---|---|
+| Reads | $0.06 per 100K | Cache frequently-read docs, use `field_paths` to limit returned fields |
+| Writes | $0.18 per 100K | Batch writes (500 ops/batch), avoid write-per-event patterns |
+| Deletes | $0.02 per 100K | Batch deletes, use TTL policies for auto-expiry |
+| Storage | $0.108/GB/month | Delete unused collections, archive to GCS |
 
-#### Application-level optimizations — batch queries, connection pooling, caching
+#### Application-level optimizations — caching, batching, field projection
 
 ```python
 from google.cloud import firestore
@@ -1094,6 +1112,8 @@ A complete set of SQL views for a billing dashboard. Connect these to Looker Stu
 
 ### BigQuery Cost Dashboard — Daily Spend by Service
 
+The foundation view — shows how much each GCP service costs per day, including credits (SUDs, CUDs, promotions). Use for time-series charts to spot trends and spikes.
+
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_daily_spend_by_service` AS
 SELECT
@@ -1109,6 +1129,8 @@ GROUP BY usage_date, service;
 ```
 
 ### BigQuery Cost Dashboard — Month-over-Month Comparison
+
+Compares current month spend to the previous month for each service. The `delta` and `pct_change` columns instantly show which services are growing or shrinking — use for monthly reviews and budget justification.
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_mom_comparison` AS
@@ -1144,6 +1166,8 @@ ORDER BY delta DESC;
 
 ### BigQuery Cost Dashboard — Top 10 Most Expensive Resources
 
+Identifies the individual resources (VMs, disks, datasets) consuming the most budget this month. Requires the **detailed usage cost export** — the standard export does not include `resource.name`. Use for right-sizing decisions and finding forgotten resources.
+
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_top_resources` AS
 SELECT
@@ -1165,6 +1189,8 @@ LIMIT 10;
 
 ### BigQuery Cost Dashboard — Cost per Pipeline (via Labels)
 
+Breaks down cost by the `pipeline` and `env` labels attached to resources. This only works if your Terraform or deployment scripts consistently label every resource — see the Terraform section below for enforcement. The view answers: "How much does the ETL pipeline cost vs. the scoring pipeline vs. the API?"
+
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_cost_per_pipeline` AS
 SELECT
@@ -1182,6 +1208,8 @@ ORDER BY total_cost DESC;
 ```
 
 ### BigQuery Cost Dashboard — Projected Monthly Spend
+
+Extrapolates current month-to-date spend to estimate the full month total. On day 10 with $300 spent, the projection is $300 / 10 × 30 = $900. Use this for the summary scorecard on your dashboard — it answers "are we on track to stay within budget?"
 
 ```sql
 CREATE OR REPLACE VIEW `PROJECT_ID.billing_export.v_monthly_projection` AS
@@ -1219,16 +1247,9 @@ ORDER BY projected_monthly_spend DESC;
 
 ### Looker Studio / Grafana Connection
 
-```bash
-# Looker Studio: connect via BigQuery connector
-# Data source > BigQuery > Project > Dataset > View
-# Use v_daily_spend_by_service for time-series charts
-# Use v_monthly_projection for a summary scorecard
-
-# Grafana: use BigQuery plugin (grafana-bigquery-datasource)
-# Install: grafana-cli plugins install doitintl-bigquery-datasource
-# Configure service account with roles/bigquery.dataViewer on the billing dataset
-```
+> [!info] Connecting dashboards to billing views
+> - **Looker Studio** — Data source → BigQuery → select the billing dataset → choose a view. Use `v_daily_spend_by_service` for time-series charts and `v_monthly_projection` for a summary scorecard.
+> - **Grafana** — Install the BigQuery plugin (`grafana-cli plugins install doitintl-bigquery-datasource`). Configure a service account with `roles/bigquery.dataViewer` on the billing dataset.
 
 ---
 

@@ -70,13 +70,15 @@ gcloud compute instances describe data-pipeline-sql --zone=europe-west1-b --form
 
 ## Server-Side Filtering with `--filter`
 
+> [!info] Filter operators
+> - `=` — exact match
+> - `~` — regex match
+> - `:` — substring match
+> - `AND` / `OR` / `NOT` — logical operators
+> - Faster than piping to `grep` because the API returns only matching results
+
 ```bash
-# Filtering (server-side — faster than client-side grep)
 gcloud compute instances list --filter="status=RUNNING AND name~data-pipeline"
-# --filter = server-side filter expression
-# = for exact match, ~ for regex, : for substring
-# AND/OR/NOT logical operators
-# Faster than piping to grep because the API returns only matching results
 ```
 
 #### --filter + --format — combine filtering and formatting for scripts

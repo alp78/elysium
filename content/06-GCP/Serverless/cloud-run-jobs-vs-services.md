@@ -56,6 +56,8 @@ gcloud run jobs executions logs <execution-name> --region=europe-west1
 
 ### Updating Cloud Run Job Configuration
 
+`--memory` sets the RAM limit (128Mi to 32Gi), `--cpu` sets CPU allocation (0.08 to 8), `--task-timeout` is the max execution time before a forced kill, and `--max-retries` controls automatic retry on failure (0 = no retry).
+
 ```bash
 # Update a job (change image, resources, environment)
 gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
@@ -64,10 +66,6 @@ gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
   --task-timeout=30m \
   --set-env-vars="DB_HOST=10.132.0.2,DB_NAME=data-pipeline,LOG_LEVEL=INFO" \
   --max-retries=1
-# --memory = RAM limit (128Mi to 32Gi)
-# --cpu = CPU allocation (0.08 to 8)
-# --task-timeout = max execution time before forced kill
-# --max-retries = automatic retry on failure (0 = no retry)
 ```
 
 ### Cloud Run Cold Start Mitigation

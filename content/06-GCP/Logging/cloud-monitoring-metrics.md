@@ -55,17 +55,16 @@ gcloud monitoring time-series list \
 
 ### Key Cloud Monitoring Metrics for Data Engineers
 
-```bash
-# Useful metrics for data engineers:
-# compute.googleapis.com/instance/cpu/utilization     — VM CPU %
-# compute.googleapis.com/instance/disk/read_bytes_count — disk read throughput
-# compute.googleapis.com/instance/disk/write_bytes_count — disk write throughput
-# compute.googleapis.com/instance/network/received_bytes_count — network in
-# run.googleapis.com/job/completed_task_attempt_count  — Cloud Run job completions
-# pubsub.googleapis.com/subscription/num_undelivered_messages — Pub/Sub backlog
-# bigquery.googleapis.com/query/count                  — BigQuery query count
-# bigquery.googleapis.com/slots/total_available         — BigQuery slot usage
-```
+| Metric | Description |
+|---|---|
+| `compute.googleapis.com/instance/cpu/utilization` | VM CPU % |
+| `compute.googleapis.com/instance/disk/read_bytes_count` | Disk read throughput |
+| `compute.googleapis.com/instance/disk/write_bytes_count` | Disk write throughput |
+| `compute.googleapis.com/instance/network/received_bytes_count` | Network in |
+| `run.googleapis.com/job/completed_task_attempt_count` | Cloud Run job completions |
+| `pubsub.googleapis.com/subscription/num_undelivered_messages` | Pub/Sub backlog |
+| `bigquery.googleapis.com/query/count` | BigQuery query count |
+| `bigquery.googleapis.com/slots/total_available` | BigQuery slot usage |
 
 ### Metrics vs Logs — When to Use Each
 

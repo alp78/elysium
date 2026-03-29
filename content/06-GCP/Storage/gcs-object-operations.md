@@ -51,16 +51,14 @@ gcloud storage cp -r ./output/ gs://data-pipeline-bucket/pipeline/ --no-user-out
 
 ### Incremental Sync with gcloud storage rsync
 
+`rsync` compares checksums and only uploads new or changed files — critical for incremental pipeline output and large directory syncs. The `-d` flag deletes destination files that do not exist in the source (mirror mode) — double-check the direction before using it.
+
 ```bash
 # Sync (only transfer changed files — like rsync)
 gcloud storage rsync -r ./local_data/ gs://data-pipeline-bucket/data/
-# rsync compares checksums and only uploads new/changed files
-# Critical for: incremental pipeline output, large directory syncs
 
 # Sync with delete (mirror — remove GCS files not in local)
 gcloud storage rsync -r -d ./local_data/ gs://data-pipeline-bucket/data/
-# -d = delete destination files that don't exist in source
-# ⚠️ DANGEROUS: this deletes GCS files. Double-check the direction.
 ```
 
 > [!warning] Sync with Delete is Irreversible
@@ -122,12 +120,11 @@ Object metadata fields useful for data engineering:
 
 ### Common GCS Pipeline Patterns
 
-```bash
-# Bronze landing: local data → GCS staging (Python equivalent: [[22_py_data_transfer]])
-gcloud storage cp ./raw_data/*.parquet gs://data-pipeline-bucket/pipeline/bronze/
+Bronze landing copies local data to GCS staging (Python equivalent: [[22_py_data_transfer]]). Silver processing happens inside a Cloud Run Job via the Python client library. Gold output exports BigQuery results back to GCS for downstream consumers.
 
-# Silver processing: Cloud Run job reads from bronze, writes to silver
-# (done via Python client library in the container)
+```bash
+# Bronze landing: local data → GCS staging
+gcloud storage cp ./raw_data/*.parquet gs://data-pipeline-bucket/pipeline/bronze/
 
 # Gold output: export BigQuery results to GCS for downstream consumers
 bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/pipeline/gold/ohlcv-*.parquet

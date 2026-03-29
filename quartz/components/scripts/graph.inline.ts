@@ -451,8 +451,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
         continue
       }
 
-      if (isConnected) {
-        // Connected nodes: always visible at normal size
+      if (isConnected && depth < 0) {
+        // Connected nodes: show labels only in global graph view
         nr.label.visible = true
         nr.label.alpha = 0.9
         nr.label.scale.set(BASE_LABEL_SCALE)

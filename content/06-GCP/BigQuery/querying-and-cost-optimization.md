@@ -32,13 +32,12 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) AS total_rows FROM `data-platfo
 
 ### BigQuery Dry Run — Estimate Cost Before Executing
 
+A dry run returns the estimated bytes to be scanned (e.g., "Estimated 4.2 GB will be processed" = $0.02 at $5/TB). Without a `WHERE` clause on a partitioned column, the same table might estimate 2.1 TB ($10.50) — add partition filters.
+
 ```bash
-# CRITICAL: Estimate cost BEFORE running (dry run)
+# Estimate cost BEFORE running (dry run)
 bq query --use_legacy_sql=false --dry_run \
   'SELECT * FROM `project_data.large_table` WHERE date >= "2025-01-01"'
-# Output: "Query successfully validated. Estimated 4.2 GB will be processed."
-# At $5/TB: 4.2 GB = $0.02. Acceptable.
-# Without WHERE: "Estimated 2.1 TB" = $10.50. Not acceptable — add partition filters!
 ```
 
 > [!tip] The Dry Run Habit
@@ -47,14 +46,13 @@ bq query --use_legacy_sql=false --dry_run \
 
 ### Saving BigQuery Results to a Destination Table
 
+`--destination_table` writes results to a table. `--replace` overwrites the table if it exists (vs. append). `--allow_large_results` is required for result sets exceeding 128 MB.
+
 ```bash
 # Run a query and save results to a table
 bq query --use_legacy_sql=false --destination_table=project_data.results \
   --replace --allow_large_results \
   'SELECT symbol, AVG(close) as avg_close FROM `project_data.ohlcv` GROUP BY symbol'
-# --destination_table = write results to this table
-# --replace = overwrite if the table exists (vs. append)
-# --allow_large_results = required for results > 128MB
 ```
 
 ### BigQuery Parameterized Queries for Caching and Injection Prevention

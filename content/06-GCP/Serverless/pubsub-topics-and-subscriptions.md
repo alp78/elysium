@@ -46,10 +46,12 @@ gcloud pubsub subscriptions create pipeline-sub \
   --topic=pipeline-events \
   --ack-deadline=60 \
   --message-retention-duration=7d
-# --ack-deadline=60 = consumer has 60 seconds to acknowledge the message
-#   If not ack'd in 60s, Pub/Sub redelivers it (at-least-once delivery)
-# --message-retention-duration=7d = keep messages for 7 days (for replay/debugging)
 ```
+
+> [!info] Subscription Flag Behavior
+>
+> - `--ack-deadline=60` gives the consumer 60 seconds to acknowledge each message. If the message is not acknowledged within that window, Pub/Sub redelivers it (at-least-once delivery).
+> - `--message-retention-duration=7d` keeps messages for 7 days, enabling replay and debugging of past events.
 
 > [!info] At-Least-Once Delivery
 >

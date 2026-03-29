@@ -73,7 +73,7 @@ Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
     // Strip surrounding quotes from Polars string values in HTML
-    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)(.+?)(<|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
         """;

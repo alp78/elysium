@@ -55,13 +55,14 @@ gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
   --resources="projects/123456789" \
   --restricted-services="bigquery.googleapis.com,storage.googleapis.com,compute.googleapis.com" \
   --access-levels="accessPolicies/POLICY_ID/accessLevels/data-pipeline-trusted-engineers"
-
-# What this does:
-# - BigQuery, GCS, and Compute Engine are now inside the perimeter
-# - Data CANNOT be copied/exported outside the project
-# - Even roles/owner cannot exfiltrate data to another project
-# - Only engineers matching the access level can reach services from outside
 ```
+
+> [!info] What the Perimeter Enforces
+>
+> - BigQuery, GCS, and Compute Engine are now inside the perimeter
+> - Data cannot be copied or exported outside the project
+> - Even `roles/owner` cannot exfiltrate data to another project
+> - Only engineers matching the access level can reach services from outside
 
 ### Terraform Pattern for VPC-SC in Production
 
@@ -155,17 +156,17 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 VPC-SC denials appear in [[cloud-logging|Cloud Audit Logs]] with a specific violation type:
 
 ```bash
-# VPC-SC denials appear in Cloud Audit Logs with a specific violation type
 gcloud logging read 'protoPayload.status.code=7 AND
   protoPayload.metadata.@type="type.googleapis.com/google.cloud.audit.VpcServiceControlAuditMetadata"' \
   --project=data-platform-prod \
   --format="table(timestamp, protoPayload.methodName, protoPayload.metadata.violationReason, protoPayload.metadata.resourceNames)" \
   --limit=20
-
-# Common violation reasons:
-# RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER — trying to access a resource outside the perimeter
-# NO_MATCHING_ACCESS_LEVEL — caller doesn't meet access level criteria (wrong IP, no managed device)
 ```
+
+> [!info] Common VPC-SC Violation Reasons
+>
+> - `RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER` -- trying to access a resource outside the perimeter
+> - `NO_MATCHING_ACCESS_LEVEL` -- caller does not meet access level criteria (wrong IP, no managed device)
 
 > [!warning] VPC-SC Is Non-Negotiable
 >

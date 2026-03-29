@@ -114,125 +114,23 @@ pd.DataFrame(rows).sort_values(['dataset', 'table']).reset_index(drop=True)
       <td>19</td>
       <td>0.00</td>
     </tr>
-    <tr>
-      <th>5</th>
-      <td>stoxx_bronze</td>
-      <td>pulse</td>
-      <td>40</td>
-      <td>0.01</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>stoxx_bronze</td>
-      <td>pulse_tickers</td>
-      <td>40</td>
-      <td>0.00</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>stoxx_bronze</td>
-      <td>signals_daily</td>
-      <td>169</td>
-      <td>0.03</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>stoxx_bronze</td>
-      <td>signals_quarterly</td>
-      <td>169</td>
-      <td>0.03</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>stoxx_bronze</td>
-      <td>stoxxasia50_ohlcv</td>
-      <td>50</td>
-      <td>0.00</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>stoxx_bronze</td>
-      <td>stoxxusa50_ohlcv</td>
-      <td>50</td>
-      <td>0.00</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>stoxx_bronze</td>
-      <td>trading_calendar</td>
-      <td>29335</td>
-      <td>1.73</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>stoxx_gold</td>
-      <td>index_performance</td>
-      <td>5281</td>
-      <td>0.46</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>stoxx_gold</td>
-      <td>scores_daily</td>
-      <td>466</td>
-      <td>0.13</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>stoxx_gold</td>
-      <td>scores_quarterly</td>
-      <td>170</td>
-      <td>0.03</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>stoxx_silver</td>
-      <td>eurostoxx50_ohlcv</td>
-      <td>66355</td>
-      <td>5.64</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>stoxx_silver</td>
-      <td>index_dim</td>
-      <td>169</td>
-      <td>0.27</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>stoxx_silver</td>
-      <td>oil20_ohlcv</td>
-      <td>24738</td>
-      <td>2.03</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>stoxx_silver</td>
-      <td>signals_daily</td>
-      <td>466</td>
-      <td>0.07</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>stoxx_silver</td>
-      <td>signals_quarterly</td>
-      <td>177</td>
-      <td>0.03</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>stoxx_silver</td>
-      <td>stoxxasia50_ohlcv</td>
-      <td>64045</td>
-      <td>5.44</td>
-    </tr>
-    <tr>
-      <th>21</th>
-      <td>stoxx_silver</td>
-      <td>stoxxusa50_ohlcv</td>
-      <td>65100</td>
-      <td>5.35</td>
-    </tr>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
   </tbody>
 </table>
 </div>
@@ -292,41 +190,13 @@ ORDER BY ordinal_position
             <td>FLOAT64</td>
             <td>YES</td>
         </tr>
-        <tr>
-            <td>low</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>close</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>adj_close</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>volume</td>
-            <td>INT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>dividends</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>stock_splits</td>
-            <td>FLOAT64</td>
-            <td>YES</td>
-        </tr>
-        <tr>
-            <td>is_filled</td>
-            <td>BOOL</td>
-            <td>YES</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -416,51 +286,11 @@ LIMIT 10
             <td>1147.0</td>
             <td>857271</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1198.6</td>
-            <td>1220.0</td>
-            <td>1183.0</td>
-            <td>1186.0</td>
-            <td>778081</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1171.0</td>
-            <td>1210.8</td>
-            <td>1167.6</td>
-            <td>1199.8</td>
-            <td>714587</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1186.6</td>
-            <td>1187.4</td>
-            <td>1144.0</td>
-            <td>1161.8</td>
-            <td>941945</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1192.8</td>
-            <td>1231.4</td>
-            <td>1180.0</td>
-            <td>1210.4</td>
-            <td>871267</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>1234.8</td>
-            <td>1239.8</td>
-            <td>1201.6</td>
-            <td>1233.4</td>
-            <td>1010698</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -536,76 +366,16 @@ LIMIT 15
             <td>7671987</td>
             <td>-10.81</td>
         </tr>
-        <tr>
-            <td>ENR.DE</td>
-            <td>2025-03-10</td>
-            <td>50.56</td>
-            <td>9304250</td>
-            <td>-10.2</td>
-        </tr>
-        <tr>
-            <td>UCG.MI</td>
-            <td>2025-04-07</td>
-            <td>42.65</td>
-            <td>27894767</td>
-            <td>9.08</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>2025-04-10</td>
-            <td>67.23</td>
-            <td>7709559</td>
-            <td>-8.69</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>2025-10-20</td>
-            <td>69.1</td>
-            <td>13072979</td>
-            <td>-8.63</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-            <td>2025-08-06</td>
-            <td>24.975</td>
-            <td>8866224</td>
-            <td>-8.5</td>
-        </tr>
-        <tr>
-            <td>ISP.MI</td>
-            <td>2025-04-10</td>
-            <td>4.1325</td>
-            <td>142718056</td>
-            <td>-8.17</td>
-        </tr>
-        <tr>
-            <td>SAP.DE</td>
-            <td>2026-01-29</td>
-            <td>164.62</td>
-            <td>15846791</td>
-            <td>-8.03</td>
-        </tr>
-        <tr>
-            <td>DSY.PA</td>
-            <td>2025-07-24</td>
-            <td>29.31</td>
-            <td>6132486</td>
-            <td>-7.97</td>
-        </tr>
-        <tr>
-            <td>BBVA.MC</td>
-            <td>2025-04-04</td>
-            <td>11.36</td>
-            <td>28042404</td>
-            <td>-7.75</td>
-        </tr>
-        <tr>
-            <td>UCG.MI</td>
-            <td>2025-04-04</td>
-            <td>43.865</td>
-            <td>27283463</td>
-            <td>-7.65</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -695,46 +465,11 @@ LIMIT 10
             <td>2021-01-04</td>
             <td>2026-03-12</td>
         </tr>
-        <tr>
-            <td>ENI.MI</td>
-            <td>1321</td>
-            <td>12976208.0</td>
-            <td>13.4</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>INGA.AS</td>
-            <td>1331</td>
-            <td>12803589.0</td>
-            <td>14.04</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>IBE.MC</td>
-            <td>1329</td>
-            <td>12034835.0</td>
-            <td>12.26</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>DTE.DE</td>
-            <td>1324</td>
-            <td>7575084.0</td>
-            <td>22.43</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>NDA-FI.HE</td>
-            <td>1306</td>
-            <td>5375454.0</td>
-            <td>10.85</td>
-            <td>2021-01-04</td>
-            <td>2026-03-12</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -823,96 +558,16 @@ LIMIT 15
             <td>650.18</td>
             <td>13112045</td>
         </tr>
-        <tr>
-            <td>2025</td>
-            <td>6</td>
-            <td>21</td>
-            <td>646.2</td>
-            <td>694.5</td>
-            <td>670.05</td>
-            <td>13292850</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>7</td>
-            <td>23</td>
-            <td>602.4</td>
-            <td>706.1</td>
-            <td>649.36</td>
-            <td>17325416</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>8</td>
-            <td>21</td>
-            <td>592.9</td>
-            <td>660.2</td>
-            <td>630.69</td>
-            <td>10164549</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>9</td>
-            <td>22</td>
-            <td>617.2</td>
-            <td>828.1</td>
-            <td>732.09</td>
-            <td>15510433</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>10</td>
-            <td>23</td>
-            <td>813.9</td>
-            <td>937.5</td>
-            <td>879.78</td>
-            <td>16383868</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>11</td>
-            <td>20</td>
-            <td>834.0</td>
-            <td>926.5</td>
-            <td>885.98</td>
-            <td>12064891</td>
-        </tr>
-        <tr>
-            <td>2025</td>
-            <td>12</td>
-            <td>21</td>
-            <td>874.0</td>
-            <td>963.4</td>
-            <td>924.72</td>
-            <td>10360738</td>
-        </tr>
-        <tr>
-            <td>2026</td>
-            <td>1</td>
-            <td>21</td>
-            <td>986.3</td>
-            <td>1217.6</td>
-            <td>1124.0</td>
-            <td>16549130</td>
-        </tr>
-        <tr>
-            <td>2026</td>
-            <td>2</td>
-            <td>20</td>
-            <td>1140.6</td>
-            <td>1288.4</td>
-            <td>1213.73</td>
-            <td>11528098</td>
-        </tr>
-        <tr>
-            <td>2026</td>
-            <td>3</td>
-            <td>9</td>
-            <td>1147.0</td>
-            <td>1210.4</td>
-            <td>1182.47</td>
-            <td>6344179</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1018,96 +673,16 @@ LIMIT 15
             <td>2026-03-12</td>
             <td>14083</td>
         </tr>
-        <tr>
-            <td>MUV2.DE</td>
-            <td>MUENCHENER RUECKVERS.-GES. AG N</td>
-            <td>Financial Services</td>
-            <td>Germany</td>
-            <td>526.2</td>
-            <td>2026-03-12</td>
-            <td>86783</td>
-        </tr>
-        <tr>
-            <td>MC.PA</td>
-            <td>LVMH</td>
-            <td>Consumer Cyclical</td>
-            <td>France</td>
-            <td>494.35</td>
-            <td>2026-03-12</td>
-            <td>171997</td>
-        </tr>
-        <tr>
-            <td>OR.PA</td>
-            <td>L'OREAL</td>
-            <td>Consumer Defensive</td>
-            <td>France</td>
-            <td>360.8</td>
-            <td>2026-03-12</td>
-            <td>82621</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>Allianz SE</td>
-            <td>Financial Services</td>
-            <td>Germany</td>
-            <td>348.7</td>
-            <td>2026-03-12</td>
-            <td>182426</td>
-        </tr>
-        <tr>
-            <td>SAF.PA</td>
-            <td>SAFRAN</td>
-            <td>Industrials</td>
-            <td>France</td>
-            <td>315.4</td>
-            <td>2026-03-12</td>
-            <td>160065</td>
-        </tr>
-        <tr>
-            <td>RACE.MI</td>
-            <td>FERRARI</td>
-            <td>Consumer Cyclical</td>
-            <td>Italy</td>
-            <td>292.3</td>
-            <td>2026-03-12</td>
-            <td>102906</td>
-        </tr>
-        <tr>
-            <td>SU.PA</td>
-            <td>SCHNEIDER ELECTRIC SE</td>
-            <td>Industrials</td>
-            <td>France</td>
-            <td>254.65</td>
-            <td>2026-03-12</td>
-            <td>279961</td>
-        </tr>
-        <tr>
-            <td>DB1.DE</td>
-            <td>DEUTSCHE BOERSE AG</td>
-            <td>Financial Services</td>
-            <td>Germany</td>
-            <td>237.9</td>
-            <td>2026-03-12</td>
-            <td>130157</td>
-        </tr>
-        <tr>
-            <td>SIE.DE</td>
-            <td>SIEMENS AG</td>
-            <td>Industrials</td>
-            <td>Germany</td>
-            <td>223.75</td>
-            <td>2026-03-12</td>
-            <td>409494</td>
-        </tr>
-        <tr>
-            <td>EL.PA</td>
-            <td>ESSILORLUXOTTICA</td>
-            <td>Healthcare</td>
-            <td>France</td>
-            <td>209.5</td>
-            <td>2026-03-12</td>
-            <td>172944</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1217,126 +792,16 @@ LIMIT 15
             <td>62.76</td>
             <td>2.43</td>
         </tr>
-        <tr>
-            <td>6</td>
-            <td>IFX.DE</td>
-            <td>INFINEON TECHNOLOGIES AG</td>
-            <td>Technology</td>
-            <td>0.3487</td>
-            <td>0.084</td>
-            <td>0.302</td>
-            <td>0.661</td>
-            <td>40.735</td>
-            <td>1.06</td>
-        </tr>
-        <tr>
-            <td>7</td>
-            <td>SAN.MC</td>
-            <td>BANCO SANTANDER S.A.</td>
-            <td>Financial Services</td>
-            <td>0.3106</td>
-            <td>-0.037</td>
-            <td>0.45</td>
-            <td>0.519</td>
-            <td>9.617</td>
-            <td>2.78</td>
-        </tr>
-        <tr>
-            <td>8</td>
-            <td>DG.PA</td>
-            <td>VINCI</td>
-            <td>Industrials</td>
-            <td>0.2928</td>
-            <td>0.957</td>
-            <td>0.489</td>
-            <td>-0.568</td>
-            <td>129.9</td>
-            <td>1.43</td>
-        </tr>
-        <tr>
-            <td>9</td>
-            <td>ISP.MI</td>
-            <td>INTESA SANPAOLO</td>
-            <td>Financial Services</td>
-            <td>0.2852</td>
-            <td>0.553</td>
-            <td>-0.208</td>
-            <td>0.511</td>
-            <td>5.204</td>
-            <td>1.8</td>
-        </tr>
-        <tr>
-            <td>10</td>
-            <td>BAYN.DE</td>
-            <td>Bayer AG</td>
-            <td>Healthcare</td>
-            <td>0.2724</td>
-            <td>0.349</td>
-            <td>0.642</td>
-            <td>-0.174</td>
-            <td>39.475</td>
-            <td>0.77</td>
-        </tr>
-        <tr>
-            <td>11</td>
-            <td>ENI.MI</td>
-            <td>ENI</td>
-            <td>Energy</td>
-            <td>0.2659</td>
-            <td>0.564</td>
-            <td>1.978</td>
-            <td>-1.744</td>
-            <td>21.365</td>
-            <td>1.25</td>
-        </tr>
-        <tr>
-            <td>12</td>
-            <td>SU.PA</td>
-            <td>SCHNEIDER ELECTRIC SE</td>
-            <td>Industrials</td>
-            <td>0.2605</td>
-            <td>-0.224</td>
-            <td>0.563</td>
-            <td>0.443</td>
-            <td>254.85</td>
-            <td>2.85</td>
-        </tr>
-        <tr>
-            <td>13</td>
-            <td>ENR.DE</td>
-            <td>Siemens Energy AG</td>
-            <td>Industrials</td>
-            <td>0.2557</td>
-            <td>-1.323</td>
-            <td>2.04</td>
-            <td>0.05</td>
-            <td>153.55</td>
-            <td>2.61</td>
-        </tr>
-        <tr>
-            <td>14</td>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-            <td>0.2367</td>
-            <td>0.696</td>
-            <td>1.163</td>
-            <td>-1.149</td>
-            <td>41.04</td>
-            <td>0.72</td>
-        </tr>
-        <tr>
-            <td>15</td>
-            <td>SAP.DE</td>
-            <td>SAP SE</td>
-            <td>Technology</td>
-            <td>0.2246</td>
-            <td>0.421</td>
-            <td>-1.209</td>
-            <td>1.461</td>
-            <td>166.58</td>
-            <td>3.87</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1424,76 +889,16 @@ LIMIT 15
             <td>1205.91</td>
             <td>1041.08</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1186.0</td>
-            <td>1206.95</td>
-            <td>1038.42</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1199.8</td>
-            <td>1206.63</td>
-            <td>1035.33</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1161.8</td>
-            <td>1205.13</td>
-            <td>1031.94</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1210.4</td>
-            <td>1204.4</td>
-            <td>1028.89</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>1233.4</td>
-            <td>1201.4</td>
-            <td>1025.11</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-26</td>
-            <td>1232.4</td>
-            <td>1199.19</td>
-            <td>1021.29</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-25</td>
-            <td>1288.4</td>
-            <td>1196.43</td>
-            <td>1017.59</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-24</td>
-            <td>1263.4</td>
-            <td>1189.62</td>
-            <td>1013.0</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-23</td>
-            <td>1249.2</td>
-            <td>1184.26</td>
-            <td>1008.72</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-20</td>
-            <td>1255.6</td>
-            <td>1178.83</td>
-            <td>1004.54</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1585,86 +990,16 @@ LIMIT 15
             <td>-3.29</td>
             <td>1</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1186.0</td>
-            <td>1199.8</td>
-            <td>-1.15</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1199.8</td>
-            <td>1161.8</td>
-            <td>3.27</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1161.8</td>
-            <td>1210.4</td>
-            <td>-4.02</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1210.4</td>
-            <td>1233.4</td>
-            <td>-1.86</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>1233.4</td>
-            <td>1232.4</td>
-            <td>0.08</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-26</td>
-            <td>1232.4</td>
-            <td>1288.4</td>
-            <td>-4.35</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-25</td>
-            <td>1288.4</td>
-            <td>1263.4</td>
-            <td>1.98</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-24</td>
-            <td>1263.4</td>
-            <td>1249.2</td>
-            <td>1.14</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-23</td>
-            <td>1249.2</td>
-            <td>1255.6</td>
-            <td>-0.51</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-20</td>
-            <td>1255.6</td>
-            <td>1238.2</td>
-            <td>1.41</td>
-            <td>1</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1680,33 +1015,37 @@ LIMIT 15
 This is the core of the gold scoring engine — rank stocks by composite score.
 
 
+> [!info] Two-CTE Self-Join Pattern
+>
+> CTE `bounds` computes the year's first and last trading dates in one scan. CTE `ytd` self-joins to get the opening and closing prices for each symbol. The final SELECT ranks by YTD return.
+
 ```sql
--- Rank stocks by YTD return
--- Use self-join on pre-computed boundary dates (no subquery inside aggregate)
+-- CTE 1: year boundary dates (single row)
 WITH bounds AS (
-    -- First and last trading date of the year (single row)
     SELECT
-        MIN(CASE WHEN EXTRACT(YEAR FROM date) = EXTRACT(YEAR FROM CURRENT_DATE()) THEN date END) AS first_date,
+        MIN(CASE WHEN EXTRACT(YEAR FROM date)
+            = EXTRACT(YEAR FROM CURRENT_DATE()) THEN date END) AS first_date,
         MAX(date) AS last_date
     FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 ),
+-- CTE 2: YTD return per symbol via self-join
 ytd AS (
-    SELECT
-        f.symbol,
+    SELECT f.symbol,
         ROUND((l.`close` - f.`close`) / NULLIF(f.`close`, 0), 4) AS ytd_return
     FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv` f
     JOIN `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv` l ON f.symbol = l.symbol
     JOIN bounds b ON f.date = b.first_date AND l.date = b.last_date
 )
-SELECT
-    symbol,
-    ytd_return,
+```
+
+```sql
+-- Final: rank by YTD return with window functions
+SELECT symbol, ytd_return,
     RANK() OVER (ORDER BY ytd_return DESC) AS rank_best,
     RANK() OVER (ORDER BY ytd_return ASC) AS rank_worst,
     NTILE(4) OVER (ORDER BY ytd_return DESC) AS quartile
 FROM ytd
-ORDER BY rank_best
-LIMIT 10
+ORDER BY rank_best LIMIT 10
 ```
 
 10 rows affected.
@@ -1757,41 +1096,11 @@ LIMIT 10
             <td>46</td>
             <td>1</td>
         </tr>
-        <tr>
-            <td>DTE.DE</td>
-            <td>0.17</td>
-            <td>6</td>
-            <td>45</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>0.1537</td>
-            <td>7</td>
-            <td>44</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>DB1.DE</td>
-            <td>0.0868</td>
-            <td>8</td>
-            <td>43</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>SU.PA</td>
-            <td>0.0742</td>
-            <td>9</td>
-            <td>42</td>
-            <td>1</td>
-        </tr>
-        <tr>
-            <td>DG.PA</td>
-            <td>0.0722</td>
-            <td>10</td>
-            <td>41</td>
-            <td>1</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1894,51 +1203,11 @@ ORDER BY avg_score DESC
             <td>8</td>
             <td>43</td>
         </tr>
-        <tr>
-            <td>Financial Services</td>
-            <td>11</td>
-            <td>-0.0095</td>
-            <td>0.0533</td>
-            <td>0.1602</td>
-            <td>1</td>
-            <td>50</td>
-        </tr>
-        <tr>
-            <td>Basic Materials</td>
-            <td>2</td>
-            <td>-0.0106</td>
-            <td>0.0741</td>
-            <td>0.2632</td>
-            <td>24</td>
-            <td>36</td>
-        </tr>
-        <tr>
-            <td>Consumer Defensive</td>
-            <td>4</td>
-            <td>-0.061</td>
-            <td>0.0</td>
-            <td>0.4017</td>
-            <td>5</td>
-            <td>49</td>
-        </tr>
-        <tr>
-            <td>Consumer Cyclical</td>
-            <td>9</td>
-            <td>-0.1013</td>
-            <td>0.0</td>
-            <td>-0.4793</td>
-            <td>2</td>
-            <td>46</td>
-        </tr>
-        <tr>
-            <td>Utilities</td>
-            <td>2</td>
-            <td>-0.1017</td>
-            <td>0.2388</td>
-            <td>0.6935</td>
-            <td>25</td>
-            <td>42</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2046,43 +1315,31 @@ ORDER BY ytd_pct DESC
 Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
 
 
-```sql
--- Data quality: find gaps, nulls, and anomalies
--- Essential for pipeline monitoring
+> [!tip] UNION ALL Quality Gate Pattern
+>
+> Stack multiple checks into one result set. Each check returns a named row with an issue count. Any non-zero value needs investigation before promoting to gold.
 
--- 1. Check for NULL prices (should be zero)
-SELECT 'null_prices' AS check_name,
-       COUNT(*) AS issues
+```sql
+-- Structural checks: NULLs and invalid values
+SELECT 'null_prices' AS check_name, COUNT(*) AS issues
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE `close` IS NULL OR `open` IS NULL
-
 UNION ALL
-
--- 2. Check for negative prices (should be zero)
-SELECT 'negative_prices',
-       COUNT(*)
+SELECT 'negative_prices', COUNT(*)
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE `close` < 0 OR `open` < 0
-
 UNION ALL
-
--- 3. Check for high < low (should be zero)
-SELECT 'high_lt_low',
-       COUNT(*)
+SELECT 'high_lt_low', COUNT(*)
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE high < low
+```
 
-UNION ALL
-
--- 4. Count gap-filled rows
-SELECT 'gap_filled_rows',
-       COUNT(*)
+```sql
+-- Operational checks: gap-fill count and freshness
+SELECT 'gap_filled_rows' AS check_name, COUNT(*) AS issues
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE is_filled = TRUE
-
 UNION ALL
-
--- 5. Check data freshness (days since last update)
 SELECT 'days_since_update',
        DATE_DIFF(CURRENT_DATE(), MAX(date), DAY)
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
@@ -2200,41 +1457,11 @@ LIMIT 10
             <td>-0.0329</td>
             <td>False</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1186.0</td>
-            <td>-0.0115</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1199.8</td>
-            <td>0.0327</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1161.8</td>
-            <td>-0.0402</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1210.4</td>
-            <td>-0.0186</td>
-            <td>False</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>1233.4</td>
-            <td>0.0008</td>
-            <td>False</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2308,36 +1535,11 @@ LIMIT 10
             <td>1.16</td>
             <td>5</td>
         </tr>
-        <tr>
-            <td>IFX.DE</td>
-            <td>0.3487</td>
-            <td>1.05</td>
-            <td>6</td>
-        </tr>
-        <tr>
-            <td>SAN.MC</td>
-            <td>0.3106</td>
-            <td>0.93</td>
-            <td>7</td>
-        </tr>
-        <tr>
-            <td>DG.PA</td>
-            <td>0.2928</td>
-            <td>0.87</td>
-            <td>8</td>
-        </tr>
-        <tr>
-            <td>ISP.MI</td>
-            <td>0.2852</td>
-            <td>0.85</td>
-            <td>9</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-            <td>0.2724</td>
-            <td>0.81</td>
-            <td>10</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 

@@ -76,7 +76,7 @@ Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
     // Strip surrounding quotes from Polars string values in HTML
-    html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)&quot;(.+?)&quot;(&lt;|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)(.+?)(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
         """;
@@ -485,7 +485,7 @@ var endsBR = dfP.Filter(Col("symbol").Str.EndsWith(".BR"))
     .Select(new[] { "symbol" }).Unique();
 
 // Display side by side using raw HTML
-string StripQuotes(string h) => h.Replace("&quot;", "").Replace("\"", "");
+string StripQuotes(string h) => h.Replace("", "").Replace("\"", "");
 var leftHtml = StripQuotes(startsS.ToHtml());
 var rightHtml = StripQuotes(endsBR.ToHtml());
 display(HTML($"<div style='display:flex;gap:40px'><div><b>StartsWith S</b>{leftHtml}</div><div><b>EndsWith .BR</b>{rightHtml}</div></div>"));
@@ -646,7 +646,7 @@ var split = dfP.Select(new[] { "symbol" }).Unique()
 split.Head(10)
 ```
 
-<!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>parts</th></tr></thead><tbody><tr><td>ABI.BR</td><td>[&quot;ABI&quot;, &quot;BR&quot;]</td></tr><tr><td>AD.AS</td><td>[&quot;AD&quot;, &quot;AS&quot;]</td></tr><tr><td>ADS.DE</td><td>[&quot;ADS&quot;, &quot;DE&quot;]</td></tr><tr><td>ADYEN.AS</td><td>[&quot;ADYEN&quot;, &quot;AS&quot;]</td></tr><tr><td>AI.PA</td><td>[&quot;AI&quot;, &quot;PA&quot;]</td></tr><tr><td>AIR.PA</td><td>[&quot;AIR&quot;, &quot;PA&quot;]</td></tr><tr><td>ALV.DE</td><td>[&quot;ALV&quot;, &quot;DE&quot;]</td></tr><tr><td>ARGX.BR</td><td>[&quot;ARGX&quot;, &quot;BR&quot;]</td></tr><tr><td>ASML.AS</td><td>[&quot;ASML&quot;, &quot;AS&quot;]</td></tr><tr><td>BAS.DE</td><td>[&quot;BAS&quot;, &quot;DE&quot;]</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (10 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>parts</th></tr></thead><tbody><tr><td>ABI.BR</td><td>[ABI, BR]</td></tr><tr><td>AD.AS</td><td>[AD, AS]</td></tr><tr><td>ADS.DE</td><td>[ADS, DE]</td></tr><tr><td>ADYEN.AS</td><td>[ADYEN, AS]</td></tr><tr><td>AI.PA</td><td>[AI, PA]</td></tr><tr><td>AIR.PA</td><td>[AIR, PA]</td></tr><tr><td>ALV.DE</td><td>[ALV, DE]</td></tr><tr><td>ARGX.BR</td><td>[ARGX, BR]</td></tr><tr><td>ASML.AS</td><td>[ASML, AS]</td></tr><tr><td>BAS.DE</td><td>[BAS, DE]</td></tr></tbody></table></div>
 
 #### Deedle — Split strings with lambda String.Split()
 

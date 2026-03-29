@@ -18,12 +18,11 @@ status: complete
 
 ### SSH into a Compute Engine VM via IAP
 
+`--tunnel-through-iap` routes SSH traffic through Google's Identity-Aware Proxy into the GCP internal network, so the VM does not need a public IP. This is the secure, production-standard way to access VMs.
+
 ```bash
 # SSH into a VM (through IAP tunnel — no public IP needed)
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
-# --tunnel-through-iap = route through Identity-Aware Proxy
-# IAP tunnel: your SSH traffic goes through Google's proxy → GCP internal network → VM
-# The VM does NOT need a public IP. This is the secure way to access VMs.
 ```
 
 > [!tip] No Public IP Required
@@ -32,25 +31,24 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 ### Running Remote Commands Non-Interactively on a VM
 
+`--command` executes the given string remotely and returns the output without opening an interactive session. Chain multiple commands with `&&` (each runs only if the previous succeeded). Useful for quick health checks.
+
 ```bash
 # Run a command without interactive session
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
   --command="free -h && df -h && sudo docker stats --no-stream"
-# --command = execute this string remotely and return the output
-# Multiple commands with && = only runs next if previous succeeded
-# Use case: quick health check without opening an interactive session
 ```
 
 ### Copying Files To and From VMs with gcloud compute scp
 
 The `scp` and `rsync` patterns here mirror the general [[data-transfer]] commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [[terraform-compute]].
 
+`scp` performs secure copy over SSH. The `hostname:` prefix determines the direction: local to remote or remote to local.
+
 ```bash
 # Copy files to/from a VM
 gcloud compute scp local_file.py data-pipeline-airflow:/tmp/ --zone=europe-west1-b --tunnel-through-iap
 gcloud compute scp data-pipeline-airflow:/tmp/output.csv ./local/ --zone=europe-west1-b --tunnel-through-iap
-# scp = secure copy (over SSH)
-# Direction: local → remote OR remote → local (the hostname: prefix determines direction)
 
 # Copy multiple files
 gcloud compute scp file1.py file2.py data-pipeline-airflow:/tmp/ --zone=europe-west1-b --tunnel-through-iap

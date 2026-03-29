@@ -114,36 +114,11 @@ LIMIT 10
             <td>626.6</td>
             <td>14083</td>
         </tr>
-        <tr>
-            <td>MUV2.DE</td>
-            <td>2026-03-12</td>
-            <td>526.2</td>
-            <td>86783</td>
-        </tr>
-        <tr>
-            <td>MC.PA</td>
-            <td>2026-03-12</td>
-            <td>494.35</td>
-            <td>171997</td>
-        </tr>
-        <tr>
-            <td>OR.PA</td>
-            <td>2026-03-12</td>
-            <td>360.8</td>
-            <td>82621</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>2026-03-12</td>
-            <td>348.7</td>
-            <td>182426</td>
-        </tr>
-        <tr>
-            <td>SAF.PA</td>
-            <td>2026-03-12</td>
-            <td>315.4</td>
-            <td>160065</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -220,76 +195,16 @@ LIMIT 15
             <td>0.082</td>
             <td>0.1</td>
         </tr>
-        <tr>
-            <td>IFX.DE</td>
-            <td>0.3487</td>
-            <td>6</td>
-            <td>0.102</td>
-            <td>0.12</td>
-        </tr>
-        <tr>
-            <td>SAN.MC</td>
-            <td>0.3106</td>
-            <td>7</td>
-            <td>0.122</td>
-            <td>0.14</td>
-        </tr>
-        <tr>
-            <td>DG.PA</td>
-            <td>0.2928</td>
-            <td>8</td>
-            <td>0.143</td>
-            <td>0.16</td>
-        </tr>
-        <tr>
-            <td>ISP.MI</td>
-            <td>0.2852</td>
-            <td>9</td>
-            <td>0.163</td>
-            <td>0.18</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-            <td>0.2724</td>
-            <td>10</td>
-            <td>0.184</td>
-            <td>0.2</td>
-        </tr>
-        <tr>
-            <td>ENI.MI</td>
-            <td>0.2659</td>
-            <td>11</td>
-            <td>0.204</td>
-            <td>0.22</td>
-        </tr>
-        <tr>
-            <td>SU.PA</td>
-            <td>0.2605</td>
-            <td>12</td>
-            <td>0.224</td>
-            <td>0.24</td>
-        </tr>
-        <tr>
-            <td>ENR.DE</td>
-            <td>0.2557</td>
-            <td>13</td>
-            <td>0.245</td>
-            <td>0.26</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>0.2367</td>
-            <td>14</td>
-            <td>0.265</td>
-            <td>0.28</td>
-        </tr>
-        <tr>
-            <td>SAP.DE</td>
-            <td>0.2246</td>
-            <td>15</td>
-            <td>0.286</td>
-            <td>0.3</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -374,76 +289,16 @@ LIMIT 15
             <td>986.3</td>
             <td>16.29</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1186.0</td>
-            <td>986.3</td>
-            <td>20.25</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1199.8</td>
-            <td>986.3</td>
-            <td>21.65</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1161.8</td>
-            <td>986.3</td>
-            <td>17.79</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1210.4</td>
-            <td>986.3</td>
-            <td>22.72</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>1233.4</td>
-            <td>986.3</td>
-            <td>25.05</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-26</td>
-            <td>1232.4</td>
-            <td>986.3</td>
-            <td>24.95</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-25</td>
-            <td>1288.4</td>
-            <td>986.3</td>
-            <td>30.63</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-24</td>
-            <td>1263.4</td>
-            <td>986.3</td>
-            <td>28.09</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-23</td>
-            <td>1249.2</td>
-            <td>986.3</td>
-            <td>26.66</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-20</td>
-            <td>1255.6</td>
-            <td>986.3</td>
-            <td>27.3</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -511,66 +366,16 @@ LIMIT 15
             <td>258272</td>
             <td>181668064</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-22</td>
-            <td>375622</td>
-            <td>181409792</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-19</td>
-            <td>1248215</td>
-            <td>181034170</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-18</td>
-            <td>747507</td>
-            <td>179785955</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-17</td>
-            <td>761812</td>
-            <td>179038448</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-16</td>
-            <td>641634</td>
-            <td>178276636</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-15</td>
-            <td>526973</td>
-            <td>177635002</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-12</td>
-            <td>564160</td>
-            <td>177108029</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-11</td>
-            <td>465132</td>
-            <td>176543869</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-10</td>
-            <td>380308</td>
-            <td>176078737</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2025-12-09</td>
-            <td>333490</td>
-            <td>175698429</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -667,46 +472,11 @@ LIMIT 10
             <td>671.35</td>
             <td>34.79</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1186.0</td>
-            <td>1198.28</td>
-            <td>671.35</td>
-            <td>33.41</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1199.8</td>
-            <td>1207.56</td>
-            <td>671.35</td>
-            <td>33.66</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1161.8</td>
-            <td>1225.28</td>
-            <td>671.35</td>
-            <td>34.96</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1210.4</td>
-            <td>1245.6</td>
-            <td>671.35</td>
-            <td>36.1</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>1233.4</td>
-            <td>1253.36</td>
-            <td>671.35</td>
-            <td>39.19</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -782,66 +552,16 @@ LIMIT 15
             <td>1186.0</td>
             <td>OK</td>
         </tr>
-        <tr>
-            <td>2026-03-06</td>
-            <td>ASML.AS</td>
-            <td>1147.0</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-07</td>
-            <td>None</td>
-            <td>None</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>2026-03-08</td>
-            <td>None</td>
-            <td>None</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>2026-03-09</td>
-            <td>ASML.AS</td>
-            <td>1147.6</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-10</td>
-            <td>ASML.AS</td>
-            <td>1200.0</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-11</td>
-            <td>ASML.AS</td>
-            <td>1198.8</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-12</td>
-            <td>ASML.AS</td>
-            <td>1190.8</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>2026-03-13</td>
-            <td>None</td>
-            <td>None</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>2026-03-14</td>
-            <td>None</td>
-            <td>None</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>2026-03-15</td>
-            <td>None</td>
-            <td>None</td>
-            <td>MISSING</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -913,56 +633,16 @@ LIMIT 15
             <td>2026-03-06</td>
             <td>OK</td>
         </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-09</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-10</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-11</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-12</td>
-            <td>OK</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-13</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-16</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-17</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-18</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-19</td>
-            <td>MISSING</td>
-        </tr>
-        <tr>
-            <td>ABI.BR</td>
-            <td>2026-03-20</td>
-            <td>MISSING</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1038,76 +718,16 @@ LIMIT 15
             <td>10565045</td>
             <td>23.5</td>
         </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>2021-02-17</td>
-            <td>8898178</td>
-            <td>23.04</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>2022-11-04</td>
-            <td>4104049</td>
-            <td>114.04</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>2023-02-10</td>
-            <td>3554497</td>
-            <td>139.26</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>adidas AG</td>
-            <td>2025-07-30</td>
-            <td>3145116</td>
-            <td>174.9</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>2023-08-17</td>
-            <td>922065</td>
-            <td>898.4</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>2023-11-09</td>
-            <td>802956</td>
-            <td>958.8</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>ADYEN</td>
-            <td>2026-02-12</td>
-            <td>758895</td>
-            <td>903.3</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>2023-06-16</td>
-            <td>3921992</td>
-            <td>152.6727</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>2022-06-17</td>
-            <td>2721708</td>
-            <td>117.6364</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>AIR LIQUIDE</td>
-            <td>2021-03-19</td>
-            <td>2564930</td>
-            <td>112.1901</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1190,86 +810,16 @@ LIMIT 15
             <td>5</td>
             <td>2026-03-12</td>
         </tr>
-        <tr>
-            <td>IFX.DE</td>
-            <td>INFINEON TECHNOLOGIES AG</td>
-            <td>Technology</td>
-            <td>0.34870425939827027</td>
-            <td>6</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>SAN.MC</td>
-            <td>BANCO SANTANDER S.A.</td>
-            <td>Financial Services</td>
-            <td>0.31063282435584555</td>
-            <td>7</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>DG.PA</td>
-            <td>VINCI</td>
-            <td>Industrials</td>
-            <td>0.2927510733352998</td>
-            <td>8</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>ISP.MI</td>
-            <td>INTESA SANPAOLO</td>
-            <td>Financial Services</td>
-            <td>0.28518257395318697</td>
-            <td>9</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-            <td>Bayer AG</td>
-            <td>Healthcare</td>
-            <td>0.27238567872715413</td>
-            <td>10</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>ENI.MI</td>
-            <td>ENI</td>
-            <td>Energy</td>
-            <td>0.26585319812965214</td>
-            <td>11</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>SU.PA</td>
-            <td>SCHNEIDER ELECTRIC SE</td>
-            <td>Industrials</td>
-            <td>0.26054541395799025</td>
-            <td>12</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>ENR.DE</td>
-            <td>Siemens Energy AG</td>
-            <td>Industrials</td>
-            <td>0.2557010167774651</td>
-            <td>13</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>KONINKLIJKE AHOLD DELHAIZE N.V.</td>
-            <td>Consumer Defensive</td>
-            <td>0.2366886690741862</td>
-            <td>14</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>SAP.DE</td>
-            <td>SAP SE</td>
-            <td>Technology</td>
-            <td>0.22456076202341446</td>
-            <td>15</td>
-            <td>2026-03-12</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1426,56 +976,16 @@ LIMIT 15
             <td>relative_value_score</td>
             <td>0.6959</td>
         </tr>
-        <tr>
-            <td>AD.AS</td>
-            <td>sentiment_score</td>
-            <td>-1.1487</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>momentum_score</td>
-            <td>-1.1665</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>relative_value_score</td>
-            <td>0.1075</td>
-        </tr>
-        <tr>
-            <td>ADS.DE</td>
-            <td>sentiment_score</td>
-            <td>0.8679</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>momentum_score</td>
-            <td>-1.9782</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>relative_value_score</td>
-            <td>0.2557</td>
-        </tr>
-        <tr>
-            <td>ADYEN.AS</td>
-            <td>sentiment_score</td>
-            <td>1.9606</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>momentum_score</td>
-            <td>0.2252</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>relative_value_score</td>
-            <td>-0.2525</td>
-        </tr>
-        <tr>
-            <td>AI.PA</td>
-            <td>sentiment_score</td>
-            <td>0.2165</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1600,56 +1110,16 @@ LIMIT 15
             <td>AIR LIQUIDE</td>
             <td>Basic Materials</td>
         </tr>
-        <tr>
-            <td>AIR.PA</td>
-            <td>AIRBUS SE</td>
-            <td>Industrials</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>Allianz SE</td>
-            <td>Financial Services</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGENX SE</td>
-            <td>Healthcare</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Technology</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-            <td>BASF SE</td>
-            <td>Basic Materials</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-            <td>Bayer AG</td>
-            <td>Healthcare</td>
-        </tr>
-        <tr>
-            <td>BBVA.MC</td>
-            <td>BANCO BILBAO VIZCAYA ARGENTARIA</td>
-            <td>Financial Services</td>
-        </tr>
-        <tr>
-            <td>BMW.DE</td>
-            <td>BAYERISCHE MOTOREN WERKE AG</td>
-            <td>Consumer Cyclical</td>
-        </tr>
-        <tr>
-            <td>BN.PA</td>
-            <td>DANONE</td>
-            <td>Consumer Defensive</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>Financial Services</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1710,56 +1180,16 @@ LIMIT 15
             <td>AIR LIQUIDE</td>
             <td>Basic Materials</td>
         </tr>
-        <tr>
-            <td>AIR.PA</td>
-            <td>AIRBUS SE</td>
-            <td>Industrials</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>Allianz SE</td>
-            <td>Financial Services</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGENX SE</td>
-            <td>Healthcare</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Technology</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-            <td>BASF SE</td>
-            <td>Basic Materials</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-            <td>Bayer AG</td>
-            <td>Healthcare</td>
-        </tr>
-        <tr>
-            <td>BBVA.MC</td>
-            <td>BANCO BILBAO VIZCAYA ARGENTARIA</td>
-            <td>Financial Services</td>
-        </tr>
-        <tr>
-            <td>BMW.DE</td>
-            <td>BAYERISCHE MOTOREN WERKE AG</td>
-            <td>Consumer Cyclical</td>
-        </tr>
-        <tr>
-            <td>BN.PA</td>
-            <td>DANONE</td>
-            <td>Consumer Defensive</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>BNP PARIBAS ACT.A</td>
-            <td>Financial Services</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1835,66 +1265,16 @@ LIMIT 15
             <td>10</td>
             <td>0.0504</td>
         </tr>
-        <tr>
-            <td>Financial Services</td>
-            <td>(all countries)</td>
-            <td>11</td>
-            <td>-0.0095</td>
-        </tr>
-        <tr>
-            <td>Basic Materials</td>
-            <td>(all countries)</td>
-            <td>2</td>
-            <td>-0.0106</td>
-        </tr>
-        <tr>
-            <td>Consumer Defensive</td>
-            <td>(all countries)</td>
-            <td>4</td>
-            <td>-0.061</td>
-        </tr>
-        <tr>
-            <td>Consumer Cyclical</td>
-            <td>(all countries)</td>
-            <td>9</td>
-            <td>-0.1013</td>
-        </tr>
-        <tr>
-            <td>Utilities</td>
-            <td>(all countries)</td>
-            <td>2</td>
-            <td>-0.1017</td>
-        </tr>
-        <tr>
-            <td>(all sectors)</td>
-            <td>Belgium</td>
-            <td>1</td>
-            <td>0.3852</td>
-        </tr>
-        <tr>
-            <td>(all sectors)</td>
-            <td>Netherlands</td>
-            <td>8</td>
-            <td>0.0753</td>
-        </tr>
-        <tr>
-            <td>(all sectors)</td>
-            <td>Italy</td>
-            <td>5</td>
-            <td>0.0579</td>
-        </tr>
-        <tr>
-            <td>(all sectors)</td>
-            <td>France</td>
-            <td>15</td>
-            <td>-0.0061</td>
-        </tr>
-        <tr>
-            <td>(all sectors)</td>
-            <td>Spain</td>
-            <td>4</td>
-            <td>-0.0125</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1964,42 +1344,12 @@ LIMIT 15
             <td>112568697</td>
             <td>1389737.0</td>
         </tr>
-        <tr>
-            <td>Technology</td>
-            <td>5</td>
-            <td>105864747</td>
-            <td>2352550.0</td>
-        </tr>
-        <tr>
-            <td>Healthcare</td>
-            <td>4</td>
-            <td>69651794</td>
-            <td>1934772.0</td>
-        </tr>
-        <tr>
-            <td>Communication Services</td>
-            <td>1</td>
-            <td>59704910</td>
-            <td>6633879.0</td>
-        </tr>
-        <tr>
-            <td>Consumer Defensive</td>
-            <td>4</td>
-            <td>48013267</td>
-            <td>1333702.0</td>
-        </tr>
-        <tr>
-            <td>Basic Materials</td>
-            <td>2</td>
-            <td>42175147</td>
-            <td>2343064.0</td>
-        </tr>
-        <tr>
-            <td>*** TOTAL ***</td>
-            <td>50</td>
-            <td>2642219590</td>
-            <td>5871599.0</td>
-        </tr>
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2062,31 +1412,11 @@ LIMIT 10
             <td>4</td>
             <td>ABI.BR, AD.AS, BN.PA, OR.PA</td>
         </tr>
-        <tr>
-            <td>Healthcare</td>
-            <td>4</td>
-            <td>ARGX.BR, BAYN.DE, EL.PA, SAN.PA</td>
-        </tr>
-        <tr>
-            <td>Utilities</td>
-            <td>2</td>
-            <td>ENEL.MI, IBE.MC</td>
-        </tr>
-        <tr>
-            <td>Basic Materials</td>
-            <td>2</td>
-            <td>AI.PA, BAS.DE</td>
-        </tr>
-        <tr>
-            <td>Energy</td>
-            <td>2</td>
-            <td>ENI.MI, TTE.PA</td>
-        </tr>
-        <tr>
-            <td>Communication Services</td>
-            <td>1</td>
-            <td>DTE.DE</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2152,36 +1482,11 @@ LIMIT 10
             <td>PA</td>
             <td>Air liquide</td>
         </tr>
-        <tr>
-            <td>AIR.PA</td>
-            <td>AIR</td>
-            <td>PA</td>
-            <td>Airbus se</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>ALV</td>
-            <td>DE</td>
-            <td>Allianz se</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGX</td>
-            <td>BR</td>
-            <td>Argenx se</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML</td>
-            <td>AS</td>
-            <td>Asml holding</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-            <td>BAS</td>
-            <td>DE</td>
-            <td>Basf se</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2274,46 +1579,11 @@ LIMIT 10
             <td>149</td>
             <td>149</td>
         </tr>
-        <tr>
-            <td>MBG.DE</td>
-            <td>6.8814898</td>
-            <td>6.9</td>
-            <td>7.95</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>MBG.DE</td>
-            <td>6.9037566</td>
-            <td>6.9</td>
-            <td>7.93</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-            <td>6.9642887</td>
-            <td>7</td>
-            <td>12.83</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>MBG.DE</td>
-            <td>7.123044</td>
-            <td>7.1</td>
-            <td>7.93</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
-        <tr>
-            <td>BMW.DE</td>
-            <td>7.2557197</td>
-            <td>7.3</td>
-            <td>11.0</td>
-            <td>149</td>
-            <td>149</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2365,36 +1635,16 @@ LIMIT 15
         <tr>
             <td>AI.PA</td>
         </tr>
-        <tr>
-            <td>AIR.PA</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-        </tr>
-        <tr>
-            <td>BAYN.DE</td>
-        </tr>
-        <tr>
-            <td>BBVA.MC</td>
-        </tr>
-        <tr>
-            <td>BMW.DE</td>
-        </tr>
-        <tr>
-            <td>BN.PA</td>
-        </tr>
-        <tr>
-            <td>BNP.PA</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -2464,36 +1714,11 @@ LIMIT 10
             <td>90</td>
             <td>70.0</td>
         </tr>
-        <tr>
-            <td>AMS</td>
-            <td>63</td>
-            <td>90</td>
-            <td>70.0</td>
-        </tr>
-        <tr>
-            <td>ASX</td>
-            <td>62</td>
-            <td>90</td>
-            <td>68.9</td>
-        </tr>
-        <tr>
-            <td>HEL</td>
-            <td>62</td>
-            <td>90</td>
-            <td>68.9</td>
-        </tr>
-        <tr>
-            <td>NMS</td>
-            <td>61</td>
-            <td>90</td>
-            <td>67.8</td>
-        </tr>
-        <tr>
-            <td>NYQ</td>
-            <td>61</td>
-            <td>90</td>
-            <td>67.8</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 

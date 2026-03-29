@@ -40,13 +40,6 @@ gcloud iam service-accounts create data-pipeline-pipeline \
 # Generate a key file (for local development ONLY)
 gcloud iam service-accounts keys create key.json \
   --iam-account=data-pipeline-pipeline@data-platform-prod.iam.gserviceaccount.com
-# ⚠️ KEY FILES ARE DANGEROUS:
-# - They don't expire (unlike user tokens)
-# - They grant full access as the service account
-# - If leaked in a git repo, attackers have permanent access
-# BEST PRACTICE: Use Workload Identity (no key files) in production
-# Use key files ONLY for local development, and rotate them regularly
-
 # Delete a key (rotate keys every 90 days)
 gcloud iam service-accounts keys list --iam-account=data-pipeline-pipeline@...
 gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pipeline@...
@@ -60,14 +53,16 @@ gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pip
 
 For declarative, version-controlled IAM bindings, [[terraform-iam-and-secrets]] provides the Terraform equivalent of these `gcloud` commands.
 
+> [!info] IAM Binding Parameters
+>
+> - `--member` identifies **who** receives the role: `serviceAccount:`, `user:`, or `group:` prefix followed by the email
+> - `--role` identifies **what** they can do: a predefined or custom IAM role
+
 ```bash
 # Grant a role to a service account
 gcloud projects add-iam-policy-binding data-platform-prod \
   --member="serviceAccount:data-pipeline-pipeline@data-platform-prod.iam.gserviceaccount.com" \
   --role="roles/bigquery.dataEditor"
-# --member = who (serviceAccount:, user:, group:)
-# --role = what they can do
-
 # Minimum roles for a typical data pipeline service account:
 gcloud projects add-iam-policy-binding data-platform-prod \
   --member="serviceAccount:data-pipeline-pipeline@data-platform-prod.iam.gserviceaccount.com" \

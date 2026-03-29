@@ -19,14 +19,13 @@ BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parque
 ## Loading Data from GCS
 
 #### bq load --source_format=CSV — load CSV from GCS
+
+Supported source formats: `CSV`, `NEWLINE_DELIMITED_JSON`, `PARQUET`, `AVRO`, `ORC`. The `--skip_leading_rows=1` flag skips the header row, and `--autodetect` infers the schema from data. For production, specify an explicit schema with the `--schema` flag or a `schema.json` file.
+
 ```bash
 # Load CSV from GCS into BigQuery
 bq load --source_format=CSV --skip_leading_rows=1 --autodetect \
   project_data.staging_ohlcv gs://data-pipeline-bucket/exports/ohlcv.csv
-# --source_format = CSV | NEWLINE_DELIMITED_JSON | PARQUET | AVRO | ORC
-# --skip_leading_rows=1 = skip header row
-# --autodetect = infer schema from data
-# For production: specify explicit schema with --schema flag or schema.json
 ```
 
 #### bq load --source_format=PARQUET — load Parquet from GCS (recommended)
@@ -64,11 +63,11 @@ bq load --source_format=PARQUET --hive_partitioning_mode=AUTO \
 
 ### Exporting BigQuery Data to GCS
 
+The `*` wildcard in the destination path causes BigQuery to shard the output across multiple files (parallel export). Supported formats: `PARQUET`, `CSV`, `NEWLINE_DELIMITED_JSON`, `AVRO`.
+
 ```bash
 # Export table to GCS
 bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/export/ohlcv-*.parquet
-# Wildcard * = BigQuery shards the output (parallel export, multiple files)
-# PARQUET | CSV | NEWLINE_DELIMITED_JSON | AVRO
 
 # Export with compression (see [[compression]] for algorithm trade-offs)
 bq extract --destination_format=CSV --compression=GZIP \
@@ -83,13 +82,12 @@ bq extract --destination_format=CSV --compression=GZIP \
 
 BigQuery retains 7 days of historical data for every table. The `FOR SYSTEM_TIME AS OF` clause lets you query the table as it existed at any point within that window — without any snapshots or backups needed.
 
+`FOR SYSTEM_TIME AS OF` queries the table as it existed at a given timestamp. BigQuery retains 7 days of time travel data by default. Typical use case: "The pipeline corrupted data yesterday — how many rows were there before?"
+
 ```bash
 # Time travel — query data as it existed at a past point in time
 bq query --use_legacy_sql=false \
   'SELECT COUNT(*) FROM `project_data.ohlcv` FOR SYSTEM_TIME AS OF TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 3 DAY)'
-# FOR SYSTEM_TIME AS OF = query the table as it existed at that timestamp
-# BigQuery retains 7 days of time travel data by default
-# Use case: "The pipeline corrupted data yesterday — how many rows were there before?"
 ```
 
 ### Restoring a BigQuery Table from Time Travel

@@ -128,11 +128,11 @@ bq query \
    FROM `my-project.analytics.daily_prices`
    WHERE price_date = "2026-03-22"
      AND index_code = "MSCI_WORLD"'
-
-# Output: Query successfully validated. Assuming the tables are not modified,
-# running this query will process 45678901 bytes of data.
-# 45MB = $0.00028 — acceptable
 ```
+
+> [!info] Dry-Run Output
+>
+> The dry run returns a validation message and the total bytes that would be scanned. For example, 45,678,901 bytes (roughly 45 MB) costs approximately $0.00028 at on-demand pricing -- well within acceptable limits for an ad-hoc query.
 
 4. Monitor top-cost queries daily using INFORMATION_SCHEMA:
 
@@ -241,11 +241,9 @@ ORDER BY start_time;
 
 2. Serialize DML per table using Airflow pools. Create a pool with a max concurrency below the quota limit:
 
-```python
-# airflow/pools.py — create via Airflow CLI or UI
-# airflow pools set bigquery_dml_pool 16 "BigQuery DML concurrency limit (max 20 project-wide)"
+Create the pool via the Airflow CLI: `airflow pools set bigquery_dml_pool 16 "BigQuery DML concurrency limit (max 20 project-wide)"`. Then reference it in the DAG:
 
-# In your DAG:
+```python
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 merge_task = BigQueryInsertJobOperator(
@@ -2346,11 +2344,13 @@ bq query --use_legacy_sql=false "
 INSERT INTO analytics.prices_partitioned
 SELECT * FROM \`my-project.analytics.prices_*\`
 "
-
-# Step 3: Validate row counts match
-# Step 4: Update all consumers to reference new table
-# Step 5: Drop sharded tables after validation period
 ```
+
+After running the migration commands, complete the cutover:
+
+3. Validate that row counts match between the sharded tables and the new partitioned table.
+4. Update all consumers (scheduled queries, dbt models, dashboards) to reference the new table.
+5. Drop the sharded tables after a validation period confirms no regressions.
 
 **Fix procedure**
 

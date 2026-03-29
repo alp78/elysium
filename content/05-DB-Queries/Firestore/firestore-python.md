@@ -93,56 +93,51 @@ already exists and waits for it to finish building before returning.
 
 Called automatically before queries that need an index (no manual setup required).
 
-```python
-# ═══════════════════════════════════════════════════════════════
-# Firestore Index Utility
-# ═══════════════════════════════════════════════════════════════
+> [!info] Admin Client Setup
+>
+> The Admin API client creates composite indexes. The database path is the prefix for all index operations.
 
+```python
 from google.cloud import firestore_admin_v1
 import time as _time
 
-# Admin client — used to create composite indexes
 _admin = firestore_admin_v1.FirestoreAdminClient()
-
-# Database path — all index operations need this prefix
 _project_db = "projects/bq-wh-nb/databases/(default)"
+```
 
+> [!info] ensure_index() — Composite Index Creation
+>
+> Routes to the correct index creation method based on field count and scope. Multi-field indexes use the Admin API. Single-field collection group indexes use the REST API field exemption endpoint. The function is idempotent — safe to call multiple times.
 
+```python
 def ensure_index(collection: str, fields: list[dict],
                  scope: str = "COLLECTION") -> None:
-    """Create a Firestore index and wait until READY.
-
-    Args:
-        collection: Collection name (e.g., "stocks", "prices")
-        fields:     List of {field_path, order} dicts
-        scope:      "COLLECTION" (default) or "COLLECTION_GROUP"
-
-    Handles two cases:
-        - Multi-field → Admin API create_index()
-        - Single-field + COLLECTION_GROUP → REST API field exemption
-    """
+    """Create a Firestore index and wait until READY."""
     field_names = " + ".join(f["field_path"] for f in fields)
 
-    # ── Case 1: single-field collection group ──
-    # These need a "field exemption" (opt-in), not a composite index.
-    # Firestore auto-indexes single fields for COLLECTION scope only.
-    # For COLLECTION_GROUP, you must explicitly enable it.
+    # Single-field collection group → field exemption (not composite)
     if scope == "COLLECTION_GROUP" and len(fields) == 1:
         _ensure_field_exemption(collection, fields[0])
         return
 
-    # ── Case 2: composite index (2+ fields) ──
-    # Created via the Admin API. Firestore builds it asynchronously.
+    # Multi-field → Admin API composite index
     parent = f"{_project_db}/collectionGroups/{collection}"
     try:
-        # Request index creation — returns a long-running operation
         op = _admin.create_index(
             parent=parent,
-            index=firestore_admin_v1.Index(query_scope=scope, fields=fields),
+            index=firestore_admin_v1.Index(
+                query_scope=scope, fields=fields),
         )
-        print(f"  Building index: {collection}/{field_names}...", end="", flush=True)
+```
 
+> [!warning] Index Build Is Asynchronous
+>
+> `create_index()` returns a long-running operation. The index is not usable until the operation completes. Queries that need the index will fail with `FAILED_PRECONDITION` until it's ready. The polling loop below waits for completion.
+
+```python
         # Poll until the operation completes
+        print(f"  Building index: {collection}/{field_names}...",
+              end="", flush=True)
         while not op.done():
             print(".", end="", flush=True)
             _time.sleep(5)
@@ -150,109 +145,124 @@ def ensure_index(collection: str, fields: list[dict],
 
     except Exception as e:
         if "already exists" in str(e):
-            # Index exists — but it might still be building
             all_idx = list(_admin.list_indexes(parent=parent))
-            building = [idx for idx in all_idx
-                        if idx.state == firestore_admin_v1.Index.State.CREATING]
+            building = [i for i in all_idx
+                        if i.state == firestore_admin_v1.Index.State.CREATING]
             if building:
-                # Wait for the building index to finish
-                print(f"  Index {collection}/{field_names} building...", end="", flush=True)
+                print(f"  Index {collection}/{field_names} building...",
+                      end="", flush=True)
                 while building:
                     _time.sleep(5)
                     print(".", end="", flush=True)
                     all_idx = list(_admin.list_indexes(parent=parent))
-                    building = [idx for idx in all_idx
-                                if idx.state == firestore_admin_v1.Index.State.CREATING]
+                    building = [i for i in all_idx
+                        if i.state == firestore_admin_v1.Index.State.CREATING]
                 print(" ready!")
             else:
                 print(f"  Index ready: {collection}/{field_names}")
         else:
             print(f"  Index error: {e}")
+```
 
+> [!info] _ensure_field_exemption() — Collection Group Indexes
+>
+> Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries (querying across all subcollections with the same name), you must create a "field exemption" via the REST API. This is separate from composite indexes.
 
+```python
 def _ensure_field_exemption(collection: str, field: dict) -> None:
-    """Create a single-field collection group exemption via Firestore REST API.
-
-    Firestore auto-indexes fields for COLLECTION scope, but for COLLECTION_GROUP
-    you must create a "field exemption" — an opt-in that says:
-    "yes, I want this field indexed across all subcollections with this name."
-    """
-    import requests
+    """Single-field collection group exemption via REST API."""
+    import requests, os
     from google.auth.transport.requests import Request
     from google.oauth2 import service_account
-    import os
 
     field_path = field["field_path"]
 
-    # ── Authenticate via service account ──
+    # Authenticate via service account
     creds = service_account.Credentials.from_service_account_file(
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
         scopes=["https://www.googleapis.com/auth/datastore"],
     )
     creds.refresh(Request())
     headers = {"Authorization": f"Bearer {creds.token}"}
+```
 
-    # ── Check if the exemption already exists ──
-    url = f"https://firestore.googleapis.com/v1/{_project_db}/collectionGroups/{collection}/fields/{field_path}"
+> [!tip] Idempotent Check-Before-Create
+>
+> The function checks whether the exemption already exists before creating it. If it exists but is still building (`state == "CREATING"`), it polls until ready. This makes the function safe to call on every notebook run.
+
+```python
+    # Check if the exemption already exists
+    url = (f"https://firestore.googleapis.com/v1/{_project_db}"
+           f"/collectionGroups/{collection}/fields/{field_path}")
     resp = requests.get(url, headers=headers)
     if resp.ok:
         existing = resp.json().get("indexConfig", {}).get("indexes", [])
-        has_cg = any(idx.get("queryScope") == "COLLECTION_GROUP" for idx in existing)
+        has_cg = any(
+            idx.get("queryScope") == "COLLECTION_GROUP"
+            for idx in existing)
         if has_cg:
-            # Check if still building
             building = [idx for idx in existing
-                        if idx.get("queryScope") == "COLLECTION_GROUP"
-                        and idx.get("state") == "CREATING"]
+                if idx.get("queryScope") == "COLLECTION_GROUP"
+                and idx.get("state") == "CREATING"]
             if building:
-                print(f"  Field exemption building: {collection}/{field_path}...", end="", flush=True)
+                print(f"  Field exemption building: "
+                      f"{collection}/{field_path}...",
+                      end="", flush=True)
                 while building:
                     _time.sleep(5)
                     print(".", end="", flush=True)
                     check = requests.get(url, headers=headers).json()
-                    existing = check.get("indexConfig", {}).get("indexes", [])
+                    existing = check.get("indexConfig", {}).get(
+                        "indexes", [])
                     building = [idx for idx in existing
-                                if idx.get("queryScope") == "COLLECTION_GROUP"
-                                and idx.get("state") == "CREATING"]
+                        if idx.get("queryScope") == "COLLECTION_GROUP"
+                        and idx.get("state") == "CREATING"]
                 print(" ready!")
             else:
-                print(f"  Field exemption ready: {collection}/{field_path} (collection group)")
+                print(f"  Field exemption ready: "
+                      f"{collection}/{field_path} (collection group)")
             return
+```
 
-    # ── Create the exemption ──
-    # Keep existing COLLECTION indexes + add COLLECTION_GROUP ASC and DESC
-    # Fetch current indexes to preserve them
+> [!warning] Preserve Existing COLLECTION Indexes
+>
+> The PATCH request replaces the entire index config for the field. You must include the existing `COLLECTION`-scoped indexes in the body, or they will be deleted. The code below fetches current indexes, strips the `state` field (API rejects it), and appends the new `COLLECTION_GROUP` entries.
+
+```python
+    # Preserve existing COLLECTION indexes + add COLLECTION_GROUP
     current_indexes = []
     if resp.ok:
         current_indexes = [
-            idx for idx in resp.json().get("indexConfig", {}).get("indexes", [])
-            if idx.get("queryScope") == "COLLECTION"
-        ]
-        # Strip state field from existing indexes (API doesn't accept it in PATCH)
+            idx for idx in resp.json().get(
+                "indexConfig", {}).get("indexes", [])
+            if idx.get("queryScope") == "COLLECTION"]
         for idx in current_indexes:
             idx.pop("state", None)
 
-    body = {
-        "indexConfig": {
-            "indexes": current_indexes + [
-                {"queryScope": "COLLECTION_GROUP", "fields": [{"fieldPath": field_path, "order": "ASCENDING"}]},
-                {"queryScope": "COLLECTION_GROUP", "fields": [{"fieldPath": field_path, "order": "DESCENDING"}]},
-            ]
-        }
-    }
-    print(f"  Creating field exemption: {collection}/{field_path} (collection group)...", end="", flush=True)
+    body = {"indexConfig": {"indexes": current_indexes + [
+        {"queryScope": "COLLECTION_GROUP",
+         "fields": [{"fieldPath": field_path, "order": "ASCENDING"}]},
+        {"queryScope": "COLLECTION_GROUP",
+         "fields": [{"fieldPath": field_path, "order": "DESCENDING"}]},
+    ]}}
+
+    print(f"  Creating field exemption: "
+          f"{collection}/{field_path} (collection group)...",
+          end="", flush=True)
     resp = requests.patch(url, headers=headers, json=body)
     if not resp.ok:
         print(f" error: {resp.text[:200]}")
         return
 
-    # ── Wait for the index to become READY ──
+    # Wait for READY (timeout after 5 minutes)
     for _ in range(60):
         _time.sleep(5)
         print(".", end="", flush=True)
         check = requests.get(url, headers=headers).json()
         indexes = check.get("indexConfig", {}).get("indexes", [])
-        cg_indexes = [idx for idx in indexes if idx.get("queryScope") == "COLLECTION_GROUP"]
-        if cg_indexes and all(idx.get("state") != "CREATING" for idx in cg_indexes):
+        cg = [i for i in indexes
+              if i.get("queryScope") == "COLLECTION_GROUP"]
+        if cg and all(i.get("state") != "CREATING" for i in cg):
             print(" ready!")
             return
     print(" timeout (check Firebase Console)")
@@ -339,8 +349,9 @@ This cell:
 2. For each document, extracts `short_name`, `scores.rank`, and `current_price`
 3. Prints a formatted table and counts total documents
 
-**Warning**: `.stream()` downloads every document. Fine for 50 stocks, dangerous for millions.
-For large collections, use pagination (Section 11) or aggregation (Section 9).
+> [!warning] stream() Downloads Everything
+>
+> `.stream()` downloads every document in the collection. Fine for 50 stocks, dangerous for millions. For large collections, use pagination or server-side aggregation.
 
 ```python
 # List all documents in the stocks collection
@@ -485,9 +496,9 @@ This cell:
 1. Filters `stocks` where `country == "France"` AND `current_price < 200`
 2. Returns only French stocks under 200 EUR
 
-**Important**: Firestore evaluates all `.where()` clauses as AND (no OR support in chained filters).
-Each unique field combination may require a **composite index** — Firestore returns an error URL
-to auto-create it on first run.
+> [!warning] No OR in Chained Filters
+>
+> Firestore evaluates all `.where()` clauses as AND only (no OR support in chained filters). Each unique field combination may require a composite index — Firestore returns an error URL to auto-create it on first run.
 
 ```python
 # Compound query needs a composite index — ensure it exists first
@@ -530,7 +541,9 @@ This cell:
 2. Orders by `current_price` descending
 3. Returns stocks from either sector
 
-`in` supports up to **30 values**. For more, split into multiple queries and merge client-side.
+> [!info] IN Operator Limit: 30 Values
+>
+> `in` supports up to 30 values. For more, split into multiple queries and merge client-side. Adding `order_by` on a different field with an IN filter requires a composite index — sort client-side instead for small result sets.
 
 ```python
 # IN filter: specific sectors
@@ -844,8 +857,9 @@ This cell:
 2. **`set(data, merge=True)`**: adds SAP.DE to symbols and updates stock_count — other fields untouched
 3. Verifies by reading the document back
 
-`set()` without merge **overwrites** the entire document. With `merge=True` it's an **upsert** — 
-creates if missing, merges if exists.
+> [!danger] SET Without Merge Overwrites Everything
+>
+> `set(data)` **replaces the entire document** — all fields not in `data` are deleted. Use `set(data, merge=True)` to upsert: creates if missing, updates only specified fields if exists.
 
 ```python
 # SET: create a new document (or overwrite)
@@ -923,8 +937,9 @@ This cell:
 1. Deletes `watchlists/test_watchlist`
 2. Verifies deletion by checking `doc.exists`
 
-**Important**: deleting a document does NOT delete its subcollections.
-You must delete subcollection documents individually (Firestore has no cascading deletes).
+> [!danger] Deletion Does NOT Cascade
+>
+> Deleting a document does NOT delete its subcollections. Subcollection documents become orphans — accessible only if you know their path. You must delete subcollection documents individually.
 
 ```python
 # DELETE: remove a document
@@ -951,8 +966,9 @@ This cell:
 3. Calls `batch.commit()` — all 3 writes happen atomically (all succeed or all fail)
 4. Cleans up by deleting the 3 test documents
 
-Batch limit: **500 operations** per batch. For more, split into multiple batches.
-Batches are faster than individual writes because they use a single network round-trip.
+> [!info] Batch Limit Is 500 Operations
+>
+> Maximum 500 operations per batch. For more, split into multiple batches. Batches are faster than individual writes because they use a single network round-trip.
 
 ```python
 # BATCH: atomic multi-document write
@@ -995,9 +1011,9 @@ This cell:
 4. **If true**: skip the write (prevent double-acknowledgment)
 5. **Reset** back to `false` so the demo can be re-run
 
-**Why a transaction?** Without one, two clients could both read `acknowledged = false`
-at the same time, and both write `true` — duplicating the work.
-The transaction guarantees only one client wins; the other retries automatically.
+> [!tip] Transactions Prevent Lost Updates
+>
+> Without a transaction, two clients could both read `acknowledged = false` simultaneously and both write `true` — duplicating the work. The transaction guarantees only one client wins; the other retries automatically.
 
 ```python
 # TRANSACTION: read-modify-write with consistency

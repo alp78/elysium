@@ -68,7 +68,7 @@ using Microsoft.DotNet.Interactive.Formatting;
 Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
-    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)(.+?)(<|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
         """;
@@ -334,7 +334,7 @@ using (var conn = new DuckDBConnection("DataSource=:memory:"))
 result
 ```
 
-<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>main.list_value(&quot;close&quot;)</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>04-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>05-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>06-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>07-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>08-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1428681</td></tr><tr><td>ABI.BR</td><td>11-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1518079</td></tr><tr><td>ABI.BR</td><td>12-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1649991</td></tr><tr><td>ABI.BR</td><td>13-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1090806</td></tr><tr><td>ABI.BR</td><td>14-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1523045</td></tr><tr><td>ABI.BR</td><td>15-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1769988</td></tr></tbody></table></div>
+<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>main.list_value(close)</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>04-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>05-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>06-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>07-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>08-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1428681</td></tr><tr><td>ABI.BR</td><td>11-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1518079</td></tr><tr><td>ABI.BR</td><td>12-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1649991</td></tr><tr><td>ABI.BR</td><td>13-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1090806</td></tr><tr><td>ABI.BR</td><td>14-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1523045</td></tr><tr><td>ABI.BR</td><td>15-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1769988</td></tr></tbody></table></div>
 
 #### Aggregate Parquet data from DuckDB GROUP BY into Polars DataFrame
 
@@ -680,7 +680,7 @@ try
     string FormatDf(DataFrame df)
     {
         var html = df.ToHtml();
-        html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+        html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)(.+?)(<|<)", @"$1$2$3");
         html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
         var css = @"";
         return css + html;

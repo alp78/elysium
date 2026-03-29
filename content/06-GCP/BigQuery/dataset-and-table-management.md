@@ -30,30 +30,23 @@ bq ls my_dataset
 
 ### Inspecting BigQuery Schema and Metadata
 
+The `--schema` flag displays only column definitions; `--format=prettyjson` renders human-readable JSON instead of the compact default. Without `--schema`, the full metadata is returned — key fields include `numRows` (row count), `numBytes` (uncompressed size), `type` (`TABLE` | `VIEW` | `MATERIALIZED_VIEW`), `timePartitioning` (partition column and granularity), and `clustering` (clustering columns).
+
 ```bash
 # Show table schema (column names and types)
 bq show --schema --format=prettyjson my_dataset.my_table
-# --schema = display only column definitions
-# --format=prettyjson = human-readable JSON (vs. compact default)
 
 # Show table metadata (size, rows, creation time, partitioning, clustering)
 bq show --format=prettyjson my_dataset.my_table
-# KEY FIELDS:
-# numRows = row count
-# numBytes = uncompressed size
-# type = TABLE | VIEW | MATERIALIZED_VIEW
-# timePartitioning = partition column and type (DAY, MONTH, YEAR)
-# clustering = clustering columns
 ```
 
 ### Creating BigQuery Datasets
 
+The `--location` flag sets data residency (`EU`, `US`, `asia-northeast1`, etc.). Location cannot be changed after creation, and all tables within a dataset must be in the same location as the dataset.
+
 ```bash
 # Create a dataset
 bq mk --dataset --location=EU --description="data pipeline data" project_data
-# --location = data residency (EU, US, asia-northeast1, etc.)
-# Location CANNOT be changed after creation
-# Tables within a dataset must be in the same location as the dataset
 ```
 
 > [!warning] Dataset Location Is Permanent
@@ -63,24 +56,23 @@ bq mk --dataset --location=EU --description="data pipeline data" project_data
 ## Creating Tables
 
 #### bq mk --table — create table with inline schema
+
+Inline schema uses `column_name:TYPE` pairs. Supported types: `STRING`, `INTEGER`, `FLOAT`, `NUMERIC`, `BOOLEAN`, `DATE`, `DATETIME`, `TIMESTAMP`, `BYTES`, `GEOGRAPHY`.
+
 ```bash
 # Create a table with schema
 bq mk --table project_data.ohlcv symbol:STRING,date:DATE,open:FLOAT,high:FLOAT,low:FLOAT,close:FLOAT,volume:INTEGER
-# Inline schema: column_name:TYPE pairs
-# Types: STRING, INTEGER, FLOAT, NUMERIC, BOOLEAN, DATE, DATETIME, TIMESTAMP, BYTES, GEOGRAPHY
 ```
 
 #### bq mk --time_partitioning_field --clustering_fields — partitioned and clustered table
+
+`--time_partitioning_field` sets the partition column (`DATE` or `TIMESTAMP`), and `--time_partitioning_type` controls granularity (`DAY` | `MONTH` | `YEAR`). `--clustering_fields` accepts up to 4 columns for within-partition sorting. A query filtering on `date` scans only the matching partitions, and clustering on `symbol` further narrows reads to the relevant data blocks.
+
 ```bash
 # Create a partitioned + clustered table (the optimal layout)
 bq mk --table --time_partitioning_field=date --time_partitioning_type=DAY \
   --clustering_fields=symbol,_index \
   project_data.ohlcv schema.json
-# --time_partitioning_field = partition column (DATE or TIMESTAMP)
-# --time_partitioning_type = DAY | MONTH | YEAR (granularity of partitions)
-# --clustering_fields = up to 4 columns for within-partition sorting
-# WHY: A query filtering on date scans only the matching partition(s)
-#       Then clustering on symbol further narrows to only the relevant data blocks
 ```
 
 > [!tip] Partition and Cluster by Default
@@ -90,15 +82,14 @@ bq mk --table --time_partitioning_field=date --time_partitioning_type=DAY \
 
 ### Deleting BigQuery Tables and Datasets
 
+The `-f` flag forces deletion without a confirmation prompt. Table deletion is not reversible unless you use time travel (see [[data-loading-and-export]]). The `-r` flag enables recursive deletion, removing all tables within the dataset first.
+
 ```bash
 # Delete a table
 bq rm -f my_dataset.my_table
-# -f = force (no confirmation prompt)
-# ⚠️ This is NOT reversible (unless you use time travel — see data-loading-and-export)
 
 # Delete a dataset and all its tables
 bq rm -r -f my_dataset
-# -r = recursive (delete all tables first)
 ```
 
 ### BigQuery Column Types Reference

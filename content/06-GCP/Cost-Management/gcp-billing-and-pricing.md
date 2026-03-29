@@ -82,7 +82,7 @@ related:
   - "[[gcp-projects-and-apis]]"
   - "[[service-accounts-and-iam]]"
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-03-29
 status: complete
 ---
 
@@ -128,17 +128,14 @@ gcloud billing projects describe PROJECT_ID
 
 ### Billing Export to BigQuery (Essential)
 
-Enable detailed billing export so you can query your actual spend with SQL. This is the foundation of all serious cost analysis.
-
-```bash
-# Enable the billing export API (done once per billing account, in the console)
-# Navigate: Billing → Billing Export → BigQuery Export → Edit Settings
-# Dataset: billing_export  (create it first)
-# Table prefix: gcp_billing_export_v1
-
-# The resulting table:
-# billing_export.gcp_billing_export_v1_XXXXXXXX (X = billing account digits)
-```
+> [!tip] Foundation of All Cost Analysis
+>
+> Enable detailed billing export so you can query your actual spend with SQL. This is a one-time console setup per billing account:
+>
+> 1. Navigate: **Billing → Billing Export → BigQuery Export → Edit Settings**
+> 2. Create a dataset first: `billing_export`
+> 3. Set table prefix: `gcp_billing_export_v1`
+> 4. Resulting table: `billing_export.gcp_billing_export_v1_XXXXXXXX` (X = billing account digits)
 
 Key columns in the billing export table:
 
@@ -241,7 +238,7 @@ Monthly cost =
   ( vCPU_count × vCPU_rate/hr
   + RAM_GB    × RAM_rate/hr  ) × hours_running
   + disk_GB   × disk_rate/GB/month
-  + snapshot_GB × $0.026/GB/month
+  + snapshot_GB × $0.050/GB/month (regional)
   + unattached_static_IPs × $0.01/hr
 ```
 
@@ -265,20 +262,24 @@ Monthly cost =
 | pd-extreme | $0.125 + IOPS charge | Very High | Needs explicit IOPS provisioning |
 | hyperdisk-balanced | varies | High | Newer generation |
 
-Snapshots: **$0.026/GB/month** (compressed, stored in Cloud Storage)
+Snapshots: **$0.050/GB/month** (regional) or **$0.065/GB/month** (multi-regional)
 
 #### Discount Mechanisms
 
 **Sustained Use Discounts (SUD)** — fully automatic, no commitment required:
 
-| Usage in month | Discount applied |
-|----------------|-----------------|
-| 0–25% | Base rate (0% off) |
-| 25–50% | 20% off |
-| 50–75% | 40% off |
-| 75–100% | 30% off effective (net ~30% if run all month) |
+> [!warning] SUD Varies by Machine Family
+>
+> N1 and M1/M2 series get up to ~30% SUD. N2, N2D, and C2 series get up to ~20% SUD. **E2 machines do NOT qualify for SUDs at all.** The table below shows the N1/M1/M2 tiers; N2/N2D/C2 tiers are lower.
 
-Running a VM 24/7 for a full month yields ~30% off the base rate automatically.
+| Usage in month | Discount (N1/M1/M2) | Discount (N2/N2D/C2) |
+|----------------|---------------------|----------------------|
+| 0–25% | 0% | 0% |
+| 25–50% | 20% off | Up to 10% off |
+| 50–75% | 40% off | Up to 15% off |
+| 75–100% | Net ~30% for full month | Net ~20% for full month |
+
+Running an N1 VM 24/7 for a full month yields ~30% off automatically. N2/C2 yields ~20%. E2 yields zero SUD.
 
 **Committed Use Discounts (CUD)** — requires a 1- or 3-year resource commitment:
 
@@ -419,7 +420,7 @@ Partitioned tables get long-term pricing applied per-partition, so old partition
 
 #### Streaming Inserts Pricing
 
-- **$0.012 per 200 MB** inserted via the legacy streaming API
+- **$0.010 per 200 MB** inserted via the legacy streaming API
 - Each row is rounded up to 1 KB minimum
 - Prefer batch loads (free) or the Storage Write API where possible
 
@@ -887,7 +888,7 @@ See [[firestore-data-model-and-operations]] and [[real-time-nosql-pipelines]] fo
 | Worker memory | $0.003557/GB/hour | $0.004390/GB/hour |
 | Worker disk (HDD) | $0.000054/GB/hour | $0.000054/GB/hour |
 | Worker disk (SSD) | $0.000298/GB/hour | $0.000298/GB/hour |
-| Dataflow Shuffle (batch) | $0.011/GB shuffled | — |
+| Dataflow Shuffle (batch) | $0.008/GB shuffled | — |
 | Streaming Engine | — | $0.018/GB shuffled |
 
 Streaming jobs: 22–25% more expensive than batch due to persistent worker overhead and streaming engine.
@@ -898,7 +899,7 @@ Streaming jobs: 22–25% more expensive than batch due to persistent worker over
 Batch job cost =
   workers × duration_hours × (vCPUs_per_worker × $0.056 + RAM_GB × $0.003557)
   + disk_GB × duration_hours × $0.000054
-  + shuffle_GB × $0.011
+  + shuffle_GB × $0.008
 ```
 
 Example: 10-worker batch job, 2 hours, n1-standard-4 equivalent (4 vCPU, 15 GB), 250 GB disk, 100 GB shuffle:
@@ -911,9 +912,9 @@ Compute = 10 × 2 × (4 × $0.056 + 15 × $0.003557)
 
 Disk    = 10 × 250 × 2 × $0.000054 = $0.27
 
-Shuffle = 100 × $0.011 = $1.10
+Shuffle = 100 × $0.008 = $0.80
 
-Total   ≈ $6.92
+Total   ≈ $6.62
 ```
 
 > [!warning] Over-Provisioned Workers
@@ -979,8 +980,8 @@ gcloud scheduler jobs delete JOB_NAME --location=us-central1
 | Dimension | Rate | Free tier/month |
 |-----------|------|-----------------|
 | Invocations | $0.40/million | First 2 million |
-| Compute (CPU) | $0.00002400/vCPU-second | First 400,000 GB-seconds |
-| Compute (memory) | $0.00000250/GB-second | First 400,000 GB-seconds |
+| Compute (CPU) | $0.00002400/vCPU-second | First 180,000 vCPU-seconds |
+| Compute (memory) | $0.00000250/GB-second | First 360,000 GiB-seconds |
 | Networking egress | $0.12/GB | First 5 GB |
 
 Cloud Functions Gen 2 runs on Cloud Run under the hood, so pricing is identical to Cloud Run services. The free tier is generous enough that low-volume event-driven functions cost nothing.
@@ -1120,13 +1121,13 @@ gcloud artifacts repositories set-cleanup-policies REPO_NAME \
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
-| NAT gateway uptime | $0.044/hour (~$32/month per gateway) | None |
+| NAT gateway (Public NAT) | $0.0014/hr per VM (max $0.044/hr at 32+ VMs) | None |
+| NAT gateway (Private NAT) | $0.045/hour flat | None |
 | Data processed | $0.045/GB | None |
 
 > [!warning] Hidden Cloud NAT Cost
 >
-> Hidden Cost: Cloud NAT Gateway.
-> A Cloud NAT gateway costs $32/month just for existing, even with zero traffic. If you have NAT gateways in multiple regions "just in case," that adds up fast. Disable NAT in regions where VMs do not need internet access.
+> Public NAT costs $0.0014/hr per VM using the gateway, capping at $0.044/hr (~$32/month) for 32+ VMs. Even with zero traffic, the per-VM charge applies while the gateway exists. If you have NAT gateways in multiple regions "just in case," that adds up. Disable NAT in regions where VMs do not need internet access.
 
 ```bash
 # List all NAT gateways (check for orphaned ones)
@@ -1182,10 +1183,10 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 | GCS Archive | GB/month | $0.0012 | — | Early deletion charges (<365 days) |
 | Firestore reads | 100K reads | $0.06 | 50K reads/day | Unindexed queries scanning entire collections |
 | Firestore writes | 100K writes | $0.18 | 20K writes/day | Unnecessary document overwrites |
-| Dataflow batch | vCPU-hour | $0.056 | None | Over-provisioned workers + unnecessary shuffle |
+| Dataflow batch | vCPU-hour | $0.056 | None | Over-provisioned workers + shuffle ($0.008/GB) |
 | Dataflow streaming | vCPU-hour | $0.069 | None | Streaming jobs replacing batch-viable workloads |
 | Cloud Logging | GB ingested | $0.50/GB | 50 GB/month | DEBUG-level logging in production |
-| Cloud NAT | Gateway-hour | $0.044 | None | Gateways left on in unused regions |
+| Cloud NAT | Per-VM-hour | $0.0014/VM (max $0.044) | None | Gateways left on in unused regions |
 | Static IP (unused) | IP-hour | $0.01 | None | Forgotten reserved IPs not attached to VMs |
 | Artifact Registry | GB/month | $0.10 | 0.5 GB | Accumulated untagged old image versions |
 | Secret Manager | Version/month | $0.06 | 6 versions | Old secret versions not destroyed |
@@ -1197,7 +1198,7 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 
 | Discount type | Services | Discount | Requirement |
 |--------------|----------|----------|-------------|
-| Sustained Use Discounts (SUD) | Compute Engine N/E/C series | Up to ~30% | Automatic, just run >25% of month |
+| Sustained Use Discounts (SUD) | Compute Engine N1/M1/M2 (~30%), N2/N2D/C2 (~20%). E2 excluded | Up to ~20-30% | Automatic, just run >25% of month |
 | Committed Use Discounts — resource | Compute Engine | 37% (1yr) / 55% (3yr) | Commit to vCPU + RAM for 1 or 3 years |
 | Committed Use Discounts — spend | All GCP services | Negotiated | Large enterprise spend contracts |
 | Spot / Preemptible VMs | Compute Engine | 60–91% | Accept interruption risk |
@@ -1410,7 +1411,7 @@ ORDER BY ts.size_bytes DESC
 | Pub/Sub | 10 GB/month | Message volume |
 | GCS | 5 GB Standard, 5K Class A, 50K Class B ops | Per billing account |
 | Firestore | 50K reads, 20K writes, 20K deletes, 1 GB storage | Per day, not per month |
-| Cloud Functions | 2M invocations, 400K GB-s/month | Gen 1 and Gen 2 |
+| Cloud Functions | 2M invocations, 180K vCPU-s, 360K GiB-s/month | Gen 2 uses Cloud Run pricing |
 | Cloud Logging | 50 GB ingestion/month | Audit logs always free |
 | Secret Manager | 6 active versions, 10K access ops/month | Per billing account |
 | Cloud Scheduler | 3 jobs | Per billing account |

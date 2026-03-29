@@ -174,51 +174,11 @@ LIMIT 10
             <td>626.6</td>
             <td>14083</td>
         </tr>
-        <tr>
-            <td>MUV2.DE</td>
-            <td>2026-03-12</td>
-            <td>524.4</td>
-            <td>528.8</td>
-            <td>523.6</td>
-            <td>526.2</td>
-            <td>86783</td>
-        </tr>
-        <tr>
-            <td>MC.PA</td>
-            <td>2026-03-12</td>
-            <td>495.3</td>
-            <td>497.4</td>
-            <td>491.6</td>
-            <td>494.35</td>
-            <td>171997</td>
-        </tr>
-        <tr>
-            <td>OR.PA</td>
-            <td>2026-03-12</td>
-            <td>361.1</td>
-            <td>362.3</td>
-            <td>357.8</td>
-            <td>360.8</td>
-            <td>82621</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>2026-03-12</td>
-            <td>349.6</td>
-            <td>351.6</td>
-            <td>347.9</td>
-            <td>348.7</td>
-            <td>182426</td>
-        </tr>
-        <tr>
-            <td>SAF.PA</td>
-            <td>2026-03-12</td>
-            <td>319.3</td>
-            <td>320.2</td>
-            <td>314.9</td>
-            <td>315.4</td>
-            <td>160065</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -372,76 +332,11 @@ LIMIT 10
             <td>euro_stoxx_50</td>
             <td>2026-03-12</td>
         </tr>
-        <tr>
-            <td>6</td>
-            <td>IFX.DE</td>
-            <td>INFINEON TECHNOLOGIES AG</td>
-            <td>Technology</td>
-            <td>Germany</td>
-            <td>40.735</td>
-            <td>0.3487</td>
-            <td>0.084</td>
-            <td>0.302</td>
-            <td>1.06</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>7</td>
-            <td>SAN.MC</td>
-            <td>BANCO SANTANDER S.A.</td>
-            <td>Financial Services</td>
-            <td>Spain</td>
-            <td>9.617</td>
-            <td>0.3106</td>
-            <td>-0.037</td>
-            <td>0.45</td>
-            <td>2.78</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>8</td>
-            <td>DG.PA</td>
-            <td>VINCI</td>
-            <td>Industrials</td>
-            <td>France</td>
-            <td>129.9</td>
-            <td>0.2928</td>
-            <td>0.957</td>
-            <td>0.489</td>
-            <td>1.43</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>9</td>
-            <td>ISP.MI</td>
-            <td>INTESA SANPAOLO</td>
-            <td>Financial Services</td>
-            <td>Italy</td>
-            <td>5.204</td>
-            <td>0.2852</td>
-            <td>0.553</td>
-            <td>-0.208</td>
-            <td>1.8</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
-        <tr>
-            <td>10</td>
-            <td>BAYN.DE</td>
-            <td>Bayer AG</td>
-            <td>Healthcare</td>
-            <td>Germany</td>
-            <td>39.475</td>
-            <td>0.2724</td>
-            <td>0.349</td>
-            <td>0.642</td>
-            <td>0.77</td>
-            <td>euro_stoxx_50</td>
-            <td>2026-03-12</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -538,29 +433,24 @@ Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
 If anything fails, the entire operation rolls back — no partial loads.
 
 
+> [!info] BEGIN...EXCEPTION...END Pattern
+>
+> BigQuery uses `BEGIN...EXCEPTION...END` for error handling (not TRY/CATCH like SQL Server). Transactions wrap the DML so failures roll back the entire operation — no partial loads.
+
 ```sql
 -- BigQuery scripting: transaction + error handling
--- BigQuery uses BEGIN...EXCEPTION...END (not TRY/CATCH)
--- Transactions are supported on multi-statement queries
 DECLARE index_key STRING DEFAULT 'euro_stoxx_50';
 DECLARE rows_loaded INT64 DEFAULT 0;
 
 BEGIN
     BEGIN TRANSACTION;
-
-    -- Count rows that would be processed
     SET rows_loaded = (
         SELECT COUNT(*)
         FROM `bq-wh-nb.stoxx_gold.scores_daily`
-        WHERE _index = index_key
-    );
-
+        WHERE _index = index_key);
     COMMIT TRANSACTION;
-
-    SELECT
-        CONCAT('Load completed: ', CAST(rows_loaded AS STRING), ' rows') AS status,
-        rows_loaded;
-
+    SELECT CONCAT('Load completed: ',
+        CAST(rows_loaded AS STRING), ' rows') AS status;
 EXCEPTION WHEN ERROR THEN
     ROLLBACK TRANSACTION;
     SELECT @@error.message AS error_message;
@@ -686,42 +576,10 @@ LIMIT 15
             <td>1147.0</td>
             <td>857271</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>1198.6</td>
-            <td>1220.0</td>
-            <td>1183.0</td>
-            <td>1186.0</td>
-            <td>778081</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>1171.0</td>
-            <td>1210.8</td>
-            <td>1167.6</td>
-            <td>1199.8</td>
-            <td>714587</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>1186.6</td>
-            <td>1187.4</td>
-            <td>1144.0</td>
-            <td>1161.8</td>
-            <td>941945</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>1192.8</td>
-            <td>1231.4</td>
-            <td>1180.0</td>
-            <td>1210.4</td>
-            <td>871267</td>
-        </tr>
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -790,41 +648,13 @@ LIMIT 15
             <td>None</td>
             <td>high</td>
         </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>low</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>close</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>adj_close</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>volume</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>dividends</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>stock_splits</td>
-        </tr>
-        <tr>
-            <td>eurostoxx50_ohlcv</td>
-            <td>None</td>
-            <td>is_filled</td>
-        </tr>
+        
+        
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -917,41 +747,11 @@ LIMIT 10
             <td>Basic Materials</td>
             <td>unchanged</td>
         </tr>
-        <tr>
-            <td>AIR.PA</td>
-            <td>AIRBUS SE</td>
-            <td>Industrials</td>
-            <td>Industrials</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>Allianz SE</td>
-            <td>Financial Services</td>
-            <td>Financial Services</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGENX SE</td>
-            <td>Healthcare</td>
-            <td>Healthcare</td>
-            <td>unchanged</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Technology</td>
-            <td>Information Technology</td>
-            <td>OVERWRITTEN</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-            <td>BASF SE</td>
-            <td>Basic Materials</td>
-            <td>Basic Materials</td>
-            <td>unchanged</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1031,46 +831,11 @@ LIMIT 10
             <td>2026-03-04</td>
             <td>None</td>
         </tr>
-        <tr>
-            <td>AIR.PA</td>
-            <td>AIRBUS SE</td>
-            <td>Industrials</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ALV.DE</td>
-            <td>Allianz SE</td>
-            <td>Financial Services</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ARGX.BR</td>
-            <td>ARGENX SE</td>
-            <td>Healthcare</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>ASML HOLDING</td>
-            <td>Technology</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
-        <tr>
-            <td>BAS.DE</td>
-            <td>BASF SE</td>
-            <td>Basic Materials</td>
-            <td>True</td>
-            <td>2026-03-04</td>
-            <td>None</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 
@@ -1147,41 +912,11 @@ LIMIT 10
             <td>1</td>
             <td>normal</td>
         </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-05</td>
-            <td>2026-03-04</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-04</td>
-            <td>2026-03-03</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-03</td>
-            <td>2026-03-02</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-03-02</td>
-            <td>2026-02-27</td>
-            <td>3</td>
-            <td>normal</td>
-        </tr>
-        <tr>
-            <td>ASML.AS</td>
-            <td>2026-02-27</td>
-            <td>2026-02-26</td>
-            <td>1</td>
-            <td>normal</td>
-        </tr>
+        
+        
+        
+        
+        
     </tbody>
 </table>
 

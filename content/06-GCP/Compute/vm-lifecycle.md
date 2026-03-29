@@ -18,29 +18,25 @@ Compute Engine VMs host self-managed services — SQL Server, Airflow, monitorin
 
 ### Listing and Describing Compute Engine VMs
 
+`instances list` shows NAME, ZONE, MACHINE_TYPE, INTERNAL_IP, EXTERNAL_IP, and STATUS (`RUNNING`, `STOPPED`, `TERMINATED`, `STAGING`, `SUSPENDED`). `instances describe` returns complete YAML/JSON with machine type, disks, network interfaces, service account, labels, metadata, scheduling options, and creation timestamp. Use `--format` to extract specific fields.
+
 ```bash
 # List all VMs (quick inventory)
 gcloud compute instances list
-# Shows: NAME, ZONE, MACHINE_TYPE, INTERNAL_IP, EXTERNAL_IP, STATUS
-# STATUS: RUNNING, STOPPED, TERMINATED, STAGING, SUSPENDED
 
 # Describe a specific VM (full detail including disk, network, metadata)
 gcloud compute instances describe data-pipeline-sql --zone=europe-west1-b
-# Returns: complete YAML/JSON with machine type, disks, network interfaces,
-#   service account, labels, metadata, scheduling options, creation timestamp
-# Use --format to extract specific fields
 ```
 
 ### VM Start, Stop, and Reset Operations
+
+`start`/`stop` are graceful operations (ACPI signal, like pressing the power button). `reset` is a hard reboot (like pulling the power cord) — use only when the VM is unresponsive. Stopped VMs do not incur compute charges, but disk charges continue.
 
 ```bash
 # Start / stop / reset
 gcloud compute instances start data-pipeline-sql --zone=europe-west1-b
 gcloud compute instances stop data-pipeline-sql --zone=europe-west1-b
 gcloud compute instances reset data-pipeline-sql --zone=europe-west1-b
-# start/stop = graceful (ACPI signal, like pressing the power button)
-# reset = hard reboot (like pulling the power cord — use only when the VM is unresponsive)
-# COST: stopped VMs don't incur compute charges, but disk charges continue
 ```
 
 > [!warning] Disk Charges Continue When Stopped
@@ -49,18 +45,13 @@ gcloud compute instances reset data-pipeline-sql --zone=europe-west1-b
 
 ### Resizing a VM by Changing Machine Type
 
+The VM must be stopped before changing machine type — you cannot resize a running VM. Machine type families: `e2-*` (cost-optimized, burstable — dev/small workloads), `n2-*` (balanced — production), `c2-*` (compute-optimized — CPU-intensive transforms), `m2-*` (memory-optimized — large databases), or custom sizing with `--custom-cpu=4 --custom-memory=16GB`.
+
 ```bash
 # Resize a VM (change CPU/memory)
 gcloud compute instances stop data-pipeline-sql --zone=europe-west1-b
 gcloud compute instances set-machine-type data-pipeline-sql --zone=europe-west1-b --machine-type=e2-standard-4
 gcloud compute instances start data-pipeline-sql --zone=europe-west1-b
-# MUST stop first — cannot resize a running VM
-# Machine type families:
-#   e2-*       = cost-optimized, burstable (shared CPU) — best for dev/small workloads
-#   n2-*       = balanced — best for production workloads
-#   c2-*       = compute-optimized — best for CPU-intensive transforms
-#   m2-*       = memory-optimized — best for large databases
-#   Custom:    --custom-cpu=4 --custom-memory=16GB (exact sizing)
 ```
 
 ### Right-Sizing VMs with Cloud Monitoring Data

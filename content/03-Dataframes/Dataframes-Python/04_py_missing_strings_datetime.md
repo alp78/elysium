@@ -260,7 +260,7 @@ display(signals_pd[["symbol", "forward_pe"]].fillna({"forward_pe": 0.0}).head(5)
 display(signals_pl.select("symbol", pl.col("forward_pe").fill_null(0.0)).head(5))
 ```
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>forward_pe</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>32.141113</td></tr><tr><td>&quot;MC.PA&quot;</td><td>18.85428</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>36.034904</td></tr><tr><td>&quot;OR.PA&quot;</td><td>25.504032</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>19.631992</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>forward_pe</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>32.141113</td></tr><tr><td>MC.PA</td><td>18.85428</td></tr><tr><td>RMS.PA</td><td>36.034904</td></tr><tr><td>OR.PA</td><td>25.504032</td></tr><tr><td>SAP.DE</td><td>19.631992</td></tr></tbody></table></div>
 
 ### Forward / Backward Fill
 
@@ -426,7 +426,7 @@ display(signals_pl.select(
 ).head(5))
 ```
 
-<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>forward_pe</th><th>pe_mean_filled</th><th>pe_median_filled</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>32.141113</td><td>32.141113</td><td>32.141113</td></tr><tr><td>&quot;MC.PA&quot;</td><td>18.85428</td><td>18.85428</td><td>18.85428</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>36.034904</td><td>36.034904</td><td>36.034904</td></tr><tr><td>&quot;OR.PA&quot;</td><td>25.504032</td><td>25.504032</td><td>25.504032</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>19.631992</td><td>19.631992</td><td>19.631992</td></tr></tbody></table></div>
+<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>forward_pe</th><th>pe_mean_filled</th><th>pe_median_filled</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>32.141113</td><td>32.141113</td><td>32.141113</td></tr><tr><td>MC.PA</td><td>18.85428</td><td>18.85428</td><td>18.85428</td></tr><tr><td>RMS.PA</td><td>36.034904</td><td>36.034904</td><td>36.034904</td></tr><tr><td>OR.PA</td><td>25.504032</td><td>25.504032</td><td>25.504032</td></tr><tr><td>SAP.DE</td><td>19.631992</td><td>19.631992</td><td>19.631992</td></tr></tbody></table></div>
 
 ### fill_nan vs fill_null (Polars)
 
@@ -652,7 +652,7 @@ display(dim_pl.select(
 ).head(5))
 ```
 
-<div><!-- shape: (5, 4) --><table><thead><tr><th>short_name</th><th>sector</th><th>name_upper</th><th>sector_lower</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING&quot;</td><td>&quot;Technology&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;technology&quot;</td></tr><tr><td>&quot;LVMH&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;LVMH&quot;</td><td>&quot;consumer cyclical&quot;</td></tr><tr><td>&quot;HERMES INTL&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;HERMES INTL&quot;</td><td>&quot;consumer cyclical&quot;</td></tr><tr><td>&quot;L&#x27;OREAL&quot;</td><td>&quot;Consumer Defensive&quot;</td><td>&quot;L&#x27;OREAL&quot;</td><td>&quot;consumer defensive&quot;</td></tr><tr><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;technology&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 4) --><table><thead><tr><th>short_name</th><th>sector</th><th>name_upper</th><th>sector_lower</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML HOLDING</td><td>Technology</td><td>ASML HOLDING</td><td>technology</td></tr><tr><td>LVMH</td><td>Consumer Cyclical</td><td>LVMH</td><td>consumer cyclical</td></tr><tr><td>HERMES INTL</td><td>Consumer Cyclical</td><td>HERMES INTL</td><td>consumer cyclical</td></tr><tr><td>L&#x27;OREAL</td><td>Consumer Defensive</td><td>L&#x27;OREAL</td><td>consumer defensive</td></tr><tr><td>SAP SE</td><td>Technology</td><td>SAP SE</td><td>technology</td></tr></tbody></table></div>
 
 ## Contains / Starts With / Ends With
 
@@ -838,14 +838,14 @@ display(dim_pd[dim_pd["sector"].str.contains("Tech", na=False)][["symbol", "shor
 display(dim_pl.filter(pl.col("sector").str.contains("Tech")).select("symbol", "short_name", "sector"))
 ```
 
-<div><!-- shape: (26, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP SE&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>&quot;INFINEON TECHNOLOGIES AG&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>&quot;ADYEN&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6758.T&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6861.T&quot;</td><td>&quot;KEYENCE CORP&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;8035.T&quot;</td><td>&quot;TOKYO ELECTRON&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;6702.T&quot;</td><td>&quot;FUJITSU&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;1810.HK&quot;</td><td>&quot;XIAOMI-W&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;NVDA&quot;</td><td>&quot;NVIDIA Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AAPL&quot;</td><td>&quot;Apple Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MSFT&quot;</td><td>&quot;Microsoft Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AVGO&quot;</td><td>&quot;Broadcom Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;ORCL&quot;</td><td>&quot;Oracle Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;PLTR&quot;</td><td>&quot;Palantir Technologies Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AMD&quot;</td><td>&quot;Advanced Micro Devices, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;CSCO&quot;</td><td>&quot;Cisco Systems, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;AMAT&quot;</td><td>&quot;Applied Materials, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;LRCX&quot;</td><td>&quot;Lam Research Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;INTC&quot;</td><td>&quot;Intel Corporation&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;IBM&quot;</td><td>&quot;International Business Machine…</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;DSY.PA&quot;</td><td>&quot;DASSAULT SYSTEMES&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;CRM&quot;</td><td>&quot;Salesforce, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr><tr><td>&quot;UBER&quot;</td><td>&quot;Uber Technologies, Inc.&quot;</td><td>&quot;Technology&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (26, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML.AS</td><td>ASML HOLDING</td><td>Technology</td></tr><tr><td>SAP.DE</td><td>SAP SE</td><td>Technology</td></tr><tr><td>IFX.DE</td><td>INFINEON TECHNOLOGIES AG</td><td>Technology</td></tr><tr><td>ADYEN.AS</td><td>ADYEN</td><td>Technology</td></tr><tr><td>6758.T</td><td>SONY GROUP CORPORATION</td><td>Technology</td></tr><tr><td>6861.T</td><td>KEYENCE CORP</td><td>Technology</td></tr><tr><td>8035.T</td><td>TOKYO ELECTRON</td><td>Technology</td></tr><tr><td>6981.T</td><td>MURATA MANUFACTURING CO</td><td>Technology</td></tr><tr><td>6702.T</td><td>FUJITSU</td><td>Technology</td></tr><tr><td>1810.HK</td><td>XIAOMI-W</td><td>Technology</td></tr><tr><td>NVDA</td><td>NVIDIA Corporation</td><td>Technology</td></tr><tr><td>AAPL</td><td>Apple Inc.</td><td>Technology</td></tr><tr><td>MSFT</td><td>Microsoft Corporation</td><td>Technology</td></tr><tr><td>AVGO</td><td>Broadcom Inc.</td><td>Technology</td></tr><tr><td>MU</td><td>Micron Technology, Inc.</td><td>Technology</td></tr><tr><td>ORCL</td><td>Oracle Corporation</td><td>Technology</td></tr><tr><td>PLTR</td><td>Palantir Technologies Inc.</td><td>Technology</td></tr><tr><td>AMD</td><td>Advanced Micro Devices, Inc.</td><td>Technology</td></tr><tr><td>CSCO</td><td>Cisco Systems, Inc.</td><td>Technology</td></tr><tr><td>AMAT</td><td>Applied Materials, Inc.</td><td>Technology</td></tr><tr><td>LRCX</td><td>Lam Research Corporation</td><td>Technology</td></tr><tr><td>INTC</td><td>Intel Corporation</td><td>Technology</td></tr><tr><td>IBM</td><td>International Business Machine…</td><td>Technology</td></tr><tr><td>DSY.PA</td><td>DASSAULT SYSTEMES</td><td>Technology</td></tr><tr><td>CRM</td><td>Salesforce, Inc.</td><td>Technology</td></tr><tr><td>UBER</td><td>Uber Technologies, Inc.</td><td>Technology</td></tr></tbody></table></div>
 
 ```python
 # Ends with
 display(dim_pl.filter(pl.col("symbol").str.ends_with(".AS")).select("symbol", "short_name", "country"))
 ```
 
-<div><!-- shape: (6, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>country</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML HOLDING&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>&quot;PROSUS&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;INGA.AS&quot;</td><td>&quot;ING GROEP N.V.&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;AD.AS&quot;</td><td>&quot;KONINKLIJKE AHOLD DELHAIZE N.V…</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>&quot;ADYEN&quot;</td><td>&quot;Netherlands&quot;</td></tr><tr><td>&quot;WKL.AS&quot;</td><td>&quot;WOLTERS KLUWER&quot;</td><td>&quot;Netherlands&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (6, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>country</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML.AS</td><td>ASML HOLDING</td><td>Netherlands</td></tr><tr><td>PRX.AS</td><td>PROSUS</td><td>Netherlands</td></tr><tr><td>INGA.AS</td><td>ING GROEP N.V.</td><td>Netherlands</td></tr><tr><td>AD.AS</td><td>KONINKLIJKE AHOLD DELHAIZE N.V…</td><td>Netherlands</td></tr><tr><td>ADYEN.AS</td><td>ADYEN</td><td>Netherlands</td></tr><tr><td>WKL.AS</td><td>WOLTERS KLUWER</td><td>Netherlands</td></tr></tbody></table></div>
 
 ## Extract and Split
 
@@ -943,7 +943,7 @@ display(dim_pl.select(
 ).head(10))
 ```
 
-<div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>exchange_code</th><th>ticker_only</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;AS&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;MC&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;RMS&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;OR&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot;SIE.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;SIE&quot;</td></tr><tr><td>&quot;ITX.MC&quot;</td><td>&quot;MC&quot;</td><td>&quot;ITX&quot;</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>&quot;DE&quot;</td><td>&quot;DTE&quot;</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>&quot;MC&quot;</td><td>&quot;SAN&quot;</td></tr><tr><td>&quot;SU.PA&quot;</td><td>&quot;PA&quot;</td><td>&quot;SU&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>exchange_code</th><th>ticker_only</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML.AS</td><td>AS</td><td>ASML</td></tr><tr><td>MC.PA</td><td>PA</td><td>MC</td></tr><tr><td>RMS.PA</td><td>PA</td><td>RMS</td></tr><tr><td>OR.PA</td><td>PA</td><td>OR</td></tr><tr><td>SAP.DE</td><td>DE</td><td>SAP</td></tr><tr><td>SIE.DE</td><td>DE</td><td>SIE</td></tr><tr><td>ITX.MC</td><td>MC</td><td>ITX</td></tr><tr><td>DTE.DE</td><td>DE</td><td>DTE</td></tr><tr><td>SAN.MC</td><td>MC</td><td>SAN</td></tr><tr><td>SU.PA</td><td>PA</td><td>SU</td></tr></tbody></table></div>
 
 ## Replace
 
@@ -959,7 +959,7 @@ display(dim_pl.select(
 ).head(5))
 ```
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;MC&quot;</td></tr><tr><td>&quot;RMS.PA&quot;</td><td>&quot;RMS&quot;</td></tr><tr><td>&quot;OR.PA&quot;</td><td>&quot;OR&quot;</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>&quot;SAP&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML.AS</td><td>ASML</td></tr><tr><td>MC.PA</td><td>MC</td></tr><tr><td>RMS.PA</td><td>RMS</td></tr><tr><td>OR.PA</td><td>OR</td></tr><tr><td>SAP.DE</td><td>SAP</td></tr></tbody></table></div>
 
 ## String Length and Slicing
 
@@ -975,7 +975,7 @@ dim_pl.select(
 ).head(10)
 ```
 
-<div><!-- shape: (10, 3) --><table><thead><tr><th>short_name</th><th>length</th><th>first_5</th></tr><tr><td>str</td><td>u32</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING&quot;</td><td>12</td><td>&quot;ASML &quot;</td></tr><tr><td>&quot;LVMH&quot;</td><td>4</td><td>&quot;LVMH&quot;</td></tr><tr><td>&quot;HERMES INTL&quot;</td><td>11</td><td>&quot;HERME&quot;</td></tr><tr><td>&quot;L&#x27;OREAL&quot;</td><td>7</td><td>&quot;L&#x27;ORE&quot;</td></tr><tr><td>&quot;SAP SE&quot;</td><td>6</td><td>&quot;SAP S&quot;</td></tr><tr><td>&quot;SIEMENS AG&quot;</td><td>10</td><td>&quot;SIEME&quot;</td></tr><tr><td>&quot;INDUSTRIA DE DISE...O TEXTIL S…</td><td>31</td><td>&quot;INDUS&quot;</td></tr><tr><td>&quot;DEUTSCHE TELEKOM AG&quot;</td><td>19</td><td>&quot;DEUTS&quot;</td></tr><tr><td>&quot;BANCO SANTANDER S.A.&quot;</td><td>20</td><td>&quot;BANCO&quot;</td></tr><tr><td>&quot;SCHNEIDER ELECTRIC SE&quot;</td><td>21</td><td>&quot;SCHNE&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (10, 3) --><table><thead><tr><th>short_name</th><th>length</th><th>first_5</th></tr><tr><td>str</td><td>u32</td><td>str</td></tr></thead><tbody><tr><td>ASML HOLDING</td><td>12</td><td>ASML </td></tr><tr><td>LVMH</td><td>4</td><td>LVMH</td></tr><tr><td>HERMES INTL</td><td>11</td><td>HERME</td></tr><tr><td>L&#x27;OREAL</td><td>7</td><td>L&#x27;ORE</td></tr><tr><td>SAP SE</td><td>6</td><td>SAP S</td></tr><tr><td>SIEMENS AG</td><td>10</td><td>SIEME</td></tr><tr><td>INDUSTRIA DE DISE...O TEXTIL S…</td><td>31</td><td>INDUS</td></tr><tr><td>DEUTSCHE TELEKOM AG</td><td>19</td><td>DEUTS</td></tr><tr><td>BANCO SANTANDER S.A.</td><td>20</td><td>BANCO</td></tr><tr><td>SCHNEIDER ELECTRIC SE</td><td>21</td><td>SCHNE</td></tr></tbody></table></div>
 
 ## Concatenating Strings
 
@@ -1039,7 +1039,7 @@ display(dim_pl.select(
 ).head(5))
 ```
 
-<div><!-- shape: (5, 1) --><table><thead><tr><th>display_name</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>&quot;ASML HOLDING (Netherlands)&quot;</td></tr><tr><td>&quot;LVMH (France)&quot;</td></tr><tr><td>&quot;HERMES INTL (France)&quot;</td></tr><tr><td>&quot;L&#x27;OREAL (France)&quot;</td></tr><tr><td>&quot;SAP SE (Germany)&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (5, 1) --><table><thead><tr><th>display_name</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>ASML HOLDING (Netherlands)</td></tr><tr><td>LVMH (France)</td></tr><tr><td>HERMES INTL (France)</td></tr><tr><td>L&#x27;OREAL (France)</td></tr><tr><td>SAP SE (Germany)</td></tr></tbody></table></div>
 
 ## Stripping and Padding
 
@@ -1056,7 +1056,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>stripped</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;&nbsp;&nbsp;ASML&nbsp;&nbsp;&quot;</td><td>&quot;ASML&quot;</td></tr><tr><td>&quot;&nbsp;&nbsp;SAP &quot;</td><td>&quot;SAP&quot;</td></tr><tr><td>&quot; MC&quot;</td><td>&quot;MC&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>stripped</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&nbsp;&nbsp;ASML&nbsp;&nbsp;</td><td>ASML</td></tr><tr><td>&nbsp;&nbsp;SAP </td><td>SAP</td></tr><tr><td> MC</td><td>MC</td></tr></tbody></table></div>
 
 ```python
 df = pl.DataFrame({"code": ["A", "AB", "ABC", "ABCD"]})
@@ -1065,7 +1065,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><!-- shape: (4, 2) --><table><thead><tr><th>code</th><th>padded</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>&quot;00000A&quot;</td></tr><tr><td>&quot;AB&quot;</td><td>&quot;0000AB&quot;</td></tr><tr><td>&quot;ABC&quot;</td><td>&quot;000ABC&quot;</td></tr><tr><td>&quot;ABCD&quot;</td><td>&quot;00ABCD&quot;</td></tr></tbody></table></div>
+<div><!-- shape: (4, 2) --><table><thead><tr><th>code</th><th>padded</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>A</td><td>00000A</td></tr><tr><td>AB</td><td>0000AB</td></tr><tr><td>ABC</td><td>000ABC</td></tr><tr><td>ABCD</td><td>00ABCD</td></tr></tbody></table></div>
 
 ## Regex: Extract All
 
@@ -1083,7 +1083,7 @@ display(df.with_columns(
 ))
 ```
 
-<div><!-- shape: (3, 3) --><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr><tr><td>str</td><td>list[str]</td><td>u32</td></tr></thead><tbody><tr><td>&quot;ASML closed at 900.5 up from 8…</td><td>[&quot;900.5&quot;, &quot;895.2&quot;]</td><td>4</td></tr><tr><td>&quot;No numbers&quot;</td><td>[]</td><td>0</td></tr><tr><td>&quot;PE: 45.3, PB: 12.1&quot;</td><td>[&quot;45.3&quot;, &quot;12.1&quot;]</td><td>4</td></tr></tbody></table></div>
+<div><!-- shape: (3, 3) --><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr><tr><td>str</td><td>list[str]</td><td>u32</td></tr></thead><tbody><tr><td>ASML closed at 900.5 up from 8…</td><td>[900.5, 895.2]</td><td>4</td></tr><tr><td>No numbers</td><td>[]</td><td>0</td></tr><tr><td>PE: 45.3, PB: 12.1</td><td>[45.3, 12.1]</td><td>4</td></tr></tbody></table></div>
 
 ## Summary
 

@@ -45,7 +45,7 @@ using the `Google.Cloud.Firestore` C# SDK and REST API.
 11. Pagination & Cursors
 12. Maintenance & Monitoring
 
-```C#
+```csharp
 // Suppress CS1701 assembly version warnings (.NET 10 + NuGet packages)
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -74,10 +74,11 @@ This cell:
 3. Creates a `FirestoreDb` client and an HTTP client with OAuth2 token for REST API calls
 4. Defines a `RestQuery()` helper that sends structured queries to the Firestore REST API
 
-**Note**: On .NET 10, SDK reads fail due to a missing assembly. Writes work fine.
-For reads, we use the Firestore REST API as a workaround.
+> [!warning] .NET 10 SDK Read Failure
+>
+> On .NET 10, Firestore SDK reads fail due to a missing `AsyncInterfaces` assembly. Writes work fine. For reads, we use the Firestore REST API as a workaround.
 
-```C#
+```csharp
 #r "nuget: Google.Cloud.Firestore"
 #r "nuget: Microsoft.Bcl.AsyncInterfaces"
 
@@ -133,7 +134,7 @@ This cell:
 
 Used by all filter/query cells below.
 
-```C#
+```csharp
 // ── RestQuery: send a structured query and return parsed documents ──
 // Input:  JSON string with a "structuredQuery" object
 // Output: List of JsonElement, each representing one Firestore document
@@ -178,7 +179,7 @@ Firestore REST API wraps every field value in a type envelope:
 These helpers unwrap the type envelope and return the native C# value.
 Without them, every field access would need 2 levels of `TryGetProperty()`.
 
-```C#
+```csharp
 // ── GetStr: extract a string field ──
 // Firestore REST: { "fieldName": { "stringValue": "..." } }
 string GetStr(JsonElement fields, string key) =>
@@ -225,47 +226,62 @@ This utility:
 
 Called automatically before queries that need an index.
 
-```C#
-// ═══════════════════════════════════════════════════════════════
-// Firestore Index Utility
-// ═══════════════════════════════════════════════════════════════
+> [!info] Admin REST API Setup
+>
+> All index operations use the Firestore REST Admin API. The base URL encodes the project and database.
 
-var adminBaseUrl = "https://firestore.googleapis.com/v1/projects/bq-wh-nb/databases/(default)";
+```csharp
+var adminBaseUrl = "https://firestore.googleapis.com/v1/"
+    + "projects/bq-wh-nb/databases/(default)";
+```
 
-/// Create a composite index and wait until READY.
-/// For single-field COLLECTION_GROUP, creates a field exemption instead.
-async Task EnsureIndex(string collection, (string fieldPath, string order)[] fields,
+> [!info] EnsureIndex() — Composite Index Creation
+>
+> Routes to the correct method based on field count and scope. Multi-field indexes use POST to the indexes endpoint. Single-field collection group indexes use the field exemption PATCH endpoint. Idempotent — safe to call multiple times.
+
+```csharp
+async Task EnsureIndex(string collection,
+    (string fieldPath, string order)[] fields,
     string scope = "COLLECTION")
 {
-    var fieldNames = string.Join(" + ", fields.Select(f => f.fieldPath));
+    var fieldNames = string.Join(" + ",
+        fields.Select(f => f.fieldPath));
 
-    // ── Case 1: single-field collection group → field exemption ──
+    // Single-field collection group → field exemption
     if (scope == "COLLECTION_GROUP" && fields.Length == 1)
     {
-        await EnsureFieldExemption(collection, fields[0].fieldPath, fields[0].order);
+        await EnsureFieldExemption(
+            collection, fields[0].fieldPath, fields[0].order);
         return;
     }
 
-    // ── Case 2: composite index via Admin API ──
+    // Multi-field → POST to Admin API indexes endpoint
     var parent = $"{adminBaseUrl}/collectionGroups/{collection}";
-    var fieldsArr = fields.Select(f => "{" + $"\"fieldPath\": \"{f.fieldPath}\", \"order\": \"{f.order}\"" + "}");
-    var body = "{\"queryScope\": \"" + scope + "\", \"fields\": [" + string.Join(",", fieldsArr) + "]}";
+    var fieldsArr = fields.Select(f =>
+        "{" + $"\"fieldPath\": \"{f.fieldPath}\", "
+            + $"\"order\": \"{f.order}\"" + "}");
+    var body = "{\"queryScope\": \"" + scope
+        + "\", \"fields\": ["
+        + string.Join(",", fieldsArr) + "]}";
+```
 
+> [!warning] Index Build Is Asynchronous
+>
+> `create_index` returns immediately. The index is not usable until it reaches `READY` state. The polling loop checks every 5 seconds for up to 2.5 minutes.
+
+```csharp
     var resp = await http.PostAsync($"{parent}/indexes",
         new StringContent(body, Encoding.UTF8, "application/json"));
     var respText = await resp.Content.ReadAsStringAsync();
 
     if (resp.IsSuccessStatusCode)
-    {
         Console.Write($"  Building index: {collection}/{fieldNames}...");
-    }
     else if (respText.Contains("already exists"))
-    {
         Console.Write($"  Index exists: {collection}/{fieldNames}...");
-    }
     else
     {
-        Console.WriteLine($"  Index error: {respText[..Math.Min(150, respText.Length)]}");
+        Console.WriteLine($"  Index error: "
+            + respText[..Math.Min(150, respText.Length)]);
         return;
     }
 
@@ -277,91 +293,107 @@ async Task EnsureIndex(string collection, (string fieldPath, string order)[] fie
         var listResp = await http.GetAsync($"{parent}/indexes");
         var listText = await listResp.Content.ReadAsStringAsync();
         if (!listText.Contains("CREATING"))
-        {
-            Console.WriteLine(" ready!");
-            return;
-        }
+            { Console.WriteLine(" ready!"); return; }
     }
     Console.WriteLine(" timeout");
 }
+```
 
-/// Create a single-field collection group exemption via REST API.
-async Task EnsureFieldExemption(string collection, string fieldPath, string order)
+> [!info] EnsureFieldExemption() — Collection Group Indexes
+>
+> Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries, you must create a field exemption via PATCH. The function checks if the exemption already exists and waits if it's still building.
+
+```csharp
+async Task EnsureFieldExemption(
+    string collection, string fieldPath, string order)
 {
-    var url = $"{adminBaseUrl}/collectionGroups/{collection}/fields/{fieldPath}";
+    var url = $"{adminBaseUrl}/collectionGroups/"
+        + $"{collection}/fields/{fieldPath}";
 
-    // ── Check if exemption already exists ──
+    // Check if exemption already exists
     var getResp = await http.GetAsync(url);
     var getText = await getResp.Content.ReadAsStringAsync();
     if (getText.Contains("COLLECTION_GROUP"))
     {
         if (getText.Contains("CREATING"))
         {
-            Console.Write($"  Field exemption building: {collection}/{fieldPath}...");
+            Console.Write($"  Field exemption building: "
+                + $"{collection}/{fieldPath}...");
             for (int i = 0; i < 30; i++)
             {
                 await Task.Delay(5000);
                 Console.Write(".");
-                var check = await (await http.GetAsync(url)).Content.ReadAsStringAsync();
-                if (!check.Contains("CREATING")) { Console.WriteLine(" ready!"); return; }
+                var check = await (await http.GetAsync(url))
+                    .Content.ReadAsStringAsync();
+                if (!check.Contains("CREATING"))
+                    { Console.WriteLine(" ready!"); return; }
             }
             Console.WriteLine(" timeout");
         }
         else
-        {
-            Console.WriteLine($"  Field exemption ready: {collection}/{fieldPath}");
-        }
+            Console.WriteLine($"  Field exemption ready: "
+                + $"{collection}/{fieldPath}");
         return;
     }
+```
 
-    // ── Preserve existing COLLECTION indexes ──
+> [!warning] Preserve Existing COLLECTION Indexes
+>
+> The PATCH request replaces the entire index config for the field. Existing `COLLECTION`-scoped indexes must be included in the body or they will be deleted.
+
+```csharp
+    // Preserve existing COLLECTION indexes
     var existing = new List<string>();
     if (getResp.IsSuccessStatusCode)
     {
         var doc = JsonDocument.Parse(getText);
         if (doc.RootElement.TryGetProperty("indexConfig", out var ic)
             && ic.TryGetProperty("indexes", out var idxArr))
-        {
             foreach (var idx in idxArr.EnumerateArray())
-            {
-                if (idx.TryGetProperty("queryScope", out var qs) && qs.GetString() == "COLLECTION")
-                {
+                if (idx.TryGetProperty("queryScope", out var qs)
+                    && qs.GetString() == "COLLECTION")
                     existing.Add(idx.GetRawText());
-                }
-            }
-        }
     }
+```
 
-    // ── Build PATCH body: keep COLLECTION + add COLLECTION_GROUP ──
-    var cgAsc = $"{{\"queryScope\": \"COLLECTION_GROUP\", \"fields\": [{{\"fieldPath\": \"{fieldPath}\", \"order\": \"ASCENDING\"}}]}}";
-    var cgDesc = $"{{\"queryScope\": \"COLLECTION_GROUP\", \"fields\": [{{\"fieldPath\": \"{fieldPath}\", \"order\": \"DESCENDING\"}}]}}";
-    var allIndexes = string.Join(",", existing.Concat(new[] { cgAsc, cgDesc }));
-    var patchBody = $"{{\"indexConfig\": {{\"indexes\": [{allIndexes}]}}}}";
+```csharp
+    // Build PATCH body: keep COLLECTION + add COLLECTION_GROUP
+    var cgAsc = "{\"queryScope\": \"COLLECTION_GROUP\", "
+        + $"\"fields\": [{{\"fieldPath\": \"{fieldPath}\", "
+        + "\"order\": \"ASCENDING\"}]}";
+    var cgDesc = "{\"queryScope\": \"COLLECTION_GROUP\", "
+        + $"\"fields\": [{{\"fieldPath\": \"{fieldPath}\", "
+        + "\"order\": \"DESCENDING\"}]}";
+    var allIndexes = string.Join(",",
+        existing.Concat(new[] { cgAsc, cgDesc }));
+    var patchBody = $"{{\"indexConfig\": {{\"indexes\": "
+        + $"[{allIndexes}]}}}}";
 
-    Console.Write($"  Creating field exemption: {collection}/{fieldPath}...");
+    Console.Write($"  Creating field exemption: "
+        + $"{collection}/{fieldPath}...");
     var req = new HttpRequestMessage(HttpMethod.Patch, url)
     {
-        Content = new StringContent(patchBody, Encoding.UTF8, "application/json")
+        Content = new StringContent(
+            patchBody, Encoding.UTF8, "application/json")
     };
     var patchResp = await http.SendAsync(req);
     if (!patchResp.IsSuccessStatusCode)
     {
         var err = await patchResp.Content.ReadAsStringAsync();
-        Console.WriteLine($" error: {err[..Math.Min(150, err.Length)]}");
+        Console.WriteLine($" error: "
+            + err[..Math.Min(150, err.Length)]);
         return;
     }
 
-    // ── Poll until READY ──
+    // Poll until READY (timeout 2.5 minutes)
     for (int i = 0; i < 30; i++)
     {
-        await Task.Delay(5000);
-        Console.Write(".");
-        var check = await (await http.GetAsync(url)).Content.ReadAsStringAsync();
-        if (check.Contains("COLLECTION_GROUP") && !check.Contains("CREATING"))
-        {
-            Console.WriteLine(" ready!");
-            return;
-        }
+        await Task.Delay(5000); Console.Write(".");
+        var check = await (await http.GetAsync(url))
+            .Content.ReadAsStringAsync();
+        if (check.Contains("COLLECTION_GROUP")
+            && !check.Contains("CREATING"))
+            { Console.WriteLine(" ready!"); return; }
     }
     Console.WriteLine(" timeout");
 }
@@ -382,7 +414,7 @@ This cell:
 
 Run this after setup to confirm the connection works and data is populated.
 
-```C#
+```csharp
 // Verify connection: list all collections and document counts
 Console.WriteLine("=== Firestore Collections ===");
 foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "watchlists", "config" })
@@ -414,7 +446,7 @@ This cell:
 3. Extracts nested map: `scores` with `composite`, `momentum`, `rank`
 4. Extracts array: `tags`
 
-```C#
+```csharp
 // Get a single document by ID (SDK — single-doc reads work on .NET 10)
 var doc = await db.Collection("stocks").Document("ASML.AS").GetSnapshotAsync();
 
@@ -451,7 +483,7 @@ This cell:
 2. Parses JSON response, extracts symbol, short_name, price from each document
 3. Prints a formatted table
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var snapshot = await db.Collection("stocks").Limit(10).GetSnapshotAsync();
 //   foreach (var doc in snapshot.Documents) { ... }
@@ -492,11 +524,11 @@ This cell:
 1. Fetches 3 specific stocks (ASML, MC, SAP) in separate SDK calls
 2. Prints name and price for each
 
-**Note**: Unlike Python's `db.get_all()` (one round-trip), the C# SDK
-requires individual `GetSnapshotAsync()` calls. In production, use
-`db.GetAllSnapshotsAsync()` on .NET 8/9.
+> [!info] C# Requires Individual Fetch Calls
+>
+> Unlike Python's `db.get_all()` (one round-trip), the C# SDK requires individual `GetSnapshotAsync()` calls. In production on .NET 8/9, use `db.GetAllSnapshotsAsync()` for batch reads.
 
-```C#
+```csharp
 // Get multiple documents by ID
 Console.WriteLine("=== Multiple Documents ===");
 foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
@@ -522,7 +554,7 @@ This cell:
 1. Sends a structured query to the REST API filtering `country == "Germany"`
 2. Returns only German stocks with their sector
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .WhereEqualTo("country", "Germany")
@@ -577,7 +609,7 @@ This cell:
 1. Filters stocks where `current_price > 500`
 2. Orders by `current_price` descending
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .WhereGreaterThan("current_price", 500)
@@ -626,7 +658,7 @@ This cell:
 2. Uses `compositeFilter` with `AND` operator
 3. Requires a composite index (same as Python)
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .WhereEqualTo("country", "France")
@@ -685,7 +717,7 @@ This cell:
 1. Filters stocks where the `tags` array contains `"germany"`
 2. Uses `ARRAY_CONTAINS` operator in the REST API
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .WhereArrayContains("tags", "germany")
@@ -741,7 +773,7 @@ This cell:
 2. Uses `ARRAY_CONTAINS_ANY` operator
 3. Returns French OR Dutch stocks
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .WhereArrayContainsAny("tags", new[] { "france", "netherlands" })
@@ -796,7 +828,7 @@ This cell:
 1. Orders stocks by `scores.composite` descending (nested field, dot notation)
 2. Takes top 5
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .OrderByDescending("scores.composite")
@@ -843,7 +875,7 @@ This cell:
 1. Filters stocks where `scores.momentum > 0.05` (dot notation)
 2. Orders by `scores.momentum` descending
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks")
 //       .WhereGreaterThan("scores.momentum", 0.05)
@@ -901,7 +933,7 @@ This cell:
 2. Orders by `date` descending, takes top 5
 3. Prints OHLCV data for each day
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks").Document("ASML.AS")
 //       .Collection("prices")
@@ -949,7 +981,7 @@ This cell:
 2. Orders by `close` descending
 3. Only searches ASML's prices — not other stocks
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("stocks").Document("ASML.AS")
 //       .Collection("prices")
@@ -1011,7 +1043,11 @@ This cell:
 2. **Update**: adds MC.PA to symbols via `FieldValue.ArrayUnion` (atomic, no read needed)
 3. **Delete**: removes the document
 
-```C#
+> [!danger] SetAsync Overwrites Everything
+>
+> `SetAsync(data)` **replaces the entire document** — all fields not in `data` are deleted. Use `SetAsync(data, SetOptions.MergeAll)` to upsert: creates if missing, updates only specified fields if exists.
+
+```csharp
 // SET: create a document
 var testRef = db.Collection("watchlists").Document("test_cs");
 await testRef.SetAsync(new Dictionary<string, object>
@@ -1053,7 +1089,7 @@ This cell:
 4. `FieldValue.ServerTimestamp` — server-side timestamp
 5. Reads back to verify, then deletes
 
-```C#
+```csharp
 // Create a test doc first
 var updRef = db.Collection("watchlists").Document("test_update_cs");
 await updRef.SetAsync(new Dictionary<string, object>
@@ -1100,10 +1136,11 @@ This cell:
 2. Deletes it with `DeleteAsync()`
 3. Verifies deletion by checking `Exists`
 
-**Important**: deleting a document does NOT delete its subcollections.
-You must delete subcollection documents individually (Firestore has no cascading deletes).
+> [!danger] Deletion Does NOT Cascade
+>
+> Deleting a document does NOT delete its subcollections. Subcollection documents become orphans — accessible only if you know their path. You must delete subcollection documents individually.
 
-```C#
+```csharp
 // DELETE: remove a document
 var delRef = db.Collection("watchlists").Document("test_delete_cs");
 
@@ -1139,7 +1176,7 @@ This cell:
 2. `CommitAsync()` — all 3 writes happen atomically (all or nothing)
 3. Cleans up the test documents
 
-```C#
+```csharp
 // BATCH: atomic multi-write (max 500 operations)
 var batch = db.StartBatch();
 for (int i = 0; i < 3; i++)
@@ -1179,7 +1216,7 @@ This cell:
 
 The transaction retries automatically if another client modifies the document mid-read.
 
-```C#
+```csharp
 // TRANSACTION: read-modify-write
 var alertRef = db.Collection("alerts").Document("alert_001");
 
@@ -1214,8 +1251,9 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
 
 ### Real-Time Listeners — Firestore C# on_snapshot Push Notifications
 
-**Note**: Firestore C# SDK's `Listen()` method fails on .NET 10 due to the same
-`AsyncInterfaces` assembly issue that affects collection reads.
+> [!warning] .NET 10 Listeners Fail
+>
+> Firestore C# SDK's `Listen()` method fails on .NET 10 due to the same `AsyncInterfaces` assembly issue that affects collection reads.
 
 In a real .NET 8/9 project:
 
@@ -1235,8 +1273,9 @@ or run the Python listener instead.
 
 ### Aggregation Queries — Firestore C# Count Sum Avg
 
-**Note**: Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) also fail
-on .NET 10 due to the `AsyncInterfaces` issue.
+> [!warning] .NET 10 Aggregations Fail
+>
+> Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) also fail on .NET 10 due to the `AsyncInterfaces` assembly issue.
 
 In a real .NET 8/9 project:
 
@@ -1264,7 +1303,7 @@ This cell:
 **Prerequisite**: field exemption for `close` on `prices` collection group
 (created from the Python notebook's `ensure_index()`).
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.CollectionGroup("prices")
 //       .OrderByDescending("close")
@@ -1322,7 +1361,7 @@ This cell:
 3. Orders by `close` descending, limits to 10
 4. Prints cross-stock closing prices for that day
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.CollectionGroup("prices")
 //       .WhereEqualTo("date", targetDate)
@@ -1400,7 +1439,7 @@ This cell:
 2. Follows `nextPageToken` from each response to get the next page
 3. Stops after 2 pages (demo limit)
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var query = db.Collection("stocks").OrderBy("symbol").Limit(5);
 //   QuerySnapshot snapshot = await query.GetSnapshotAsync();
@@ -1463,7 +1502,7 @@ This cell:
 2. Counts documents in each via REST
 3. Prints a summary table
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   foreach (var coll in db.ListRootCollectionsAsync())
 //   {
@@ -1498,7 +1537,7 @@ This cell:
 1. Lists subcollections under `stocks/ASML.AS` via REST API
 2. Prints the subcollection name and a sample document
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var subCollections = db.Collection("stocks").Document("ASML.AS")
 //       .ListCollectionsAsync();
@@ -1533,7 +1572,7 @@ This cell:
 2. Uses `LESS_THAN` filter on `started_at` timestamp field
 3. Prints stale runs for freshness monitoring
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var cutoff = Timestamp.FromDateTime(DateTime.UtcNow.AddHours(-48));
 //   var docs = await db.Collection("pipeline_runs")
@@ -1581,7 +1620,7 @@ This cell:
 1. Queries `pipeline_runs` where `status == "FAILED"`
 2. Inspects the `steps` array to find which step failed
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("pipeline_runs")
 //       .WhereEqualTo("status", "FAILED")
@@ -1625,7 +1664,7 @@ This cell:
 1. Compound filter: `severity == "HIGH"` AND `acknowledged == false`
 2. Returns alerts needing immediate attention
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var docs = await db.Collection("alerts")
 //       .WhereEqualTo("severity", "HIGH")
@@ -1681,7 +1720,7 @@ This cell:
 1. Reads `config/pipeline` — fetch interval, retries, thresholds
 2. Prints all key-value pairs
 
-```C#
+```csharp
 // SDK equivalent (.NET 8/9):
 //   var doc = await db.Collection("config").Document("pipeline").GetSnapshotAsync();
 //   var dict = doc.ToDictionary();

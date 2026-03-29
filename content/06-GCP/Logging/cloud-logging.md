@@ -72,9 +72,7 @@ gcloud logging read '
 ```bash
 # Tail logs in real-time (live stream)
 gcloud logging tail 'resource.type="cloud_run_job" AND severity>=ERROR'
-# Like tail -f for cloud logs — new entries appear as they're written
 # Ctrl+C to stop
-# Use case: watch pipeline execution in real-time
 ```
 
 > [!tip] Use Logging Tail for Incidents

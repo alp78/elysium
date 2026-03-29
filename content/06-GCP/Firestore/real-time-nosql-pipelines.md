@@ -370,11 +370,10 @@ unsubscribe = col_ref.on_snapshot(on_change)
 
 ## Implementation: Complete Pipeline State Store
 
+The module below writes and queries pipeline execution state in Firestore. It has no project-specific dependencies and is configured entirely via environment variables.
+
 ```python
 # pipeline_state.py
-# Write and query pipeline execution state in Firestore.
-# No project-specific dependencies — configure via environment variables.
-
 from __future__ import annotations
 
 import logging
@@ -744,11 +743,10 @@ gcloud functions deploy process-firestore-event \
 
 ## Implementation: Apache Beam Pipeline (Pub/Sub → Firestore + BigQuery)
 
+Apache Beam streaming pipeline that reads from Pub/Sub and writes to Firestore (hot path) and BigQuery (cold path) in parallel.
+
 ```python
 # streaming_pipeline.py
-# Apache Beam streaming pipeline: reads from Pub/Sub, writes to
-# Firestore (hot) and BigQuery (cold) in parallel.
-
 import argparse
 import json
 import logging

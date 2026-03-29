@@ -86,19 +86,18 @@ db_password = get_secret("db-password", "data-platform-prod")
 
 ### Airflow Connections Backed by Secret Manager
 
-```python
-# In airflow.cfg or docker-compose environment:
-# AIRFLOW__SECRETS__BACKEND=airflow.providers.google.cloud.secrets.secret_manager.CloudSecretManagerBackend
-# AIRFLOW__SECRETS__BACKEND_KWARGS={"project_id": "data-platform-prod", "connections_prefix": "airflow-conn", "variables_prefix": "airflow-var"}
+Airflow can resolve connections and variables directly from Secret Manager — no secrets stored in the metadata database or environment variables.
 
-# Then in Secret Manager, create:
-# airflow-conn-sql-server → connection URI
-# airflow-var-calc-date → variable value
+> [!info] Configuration
+> Set these environment variables in `airflow.cfg` or `docker-compose.yml`:
+> - `AIRFLOW__SECRETS__BACKEND` = `airflow.providers.google.cloud.secrets.secret_manager.CloudSecretManagerBackend`
+> - `AIRFLOW__SECRETS__BACKEND_KWARGS` = `{"project_id": "data-platform-prod", "connections_prefix": "airflow-conn", "variables_prefix": "airflow-var"}`
 
-# Airflow automatically resolves these when you reference:
-# Variable.get("calc-date")
-# BaseHook.get_connection("sql-server")
-```
+Then create secrets in Secret Manager with the matching prefix:
+- `airflow-conn-sql-server` → connection URI
+- `airflow-var-calc-date` → variable value
+
+Airflow automatically resolves these when you reference `Variable.get("calc-date")` or `BaseHook.get_connection("sql-server")` — no code changes needed.
 
 ## GitHub Actions
 

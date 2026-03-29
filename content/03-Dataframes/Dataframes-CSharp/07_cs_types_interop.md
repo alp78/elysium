@@ -73,7 +73,7 @@ System.Runtime.Loader.AssemblyLoadContext.Default.Resolving += (ctx, name) =>
 Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
-    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)(.+?)(<|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
         """;

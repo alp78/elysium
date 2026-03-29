@@ -106,16 +106,16 @@ Firestore has two operating modes. The mode is chosen at database creation time 
 | Dimension | Native Mode | Datastore Mode |
 |---|---|---|
 | Data model | Documents, collections, subcollections | Entities, kinds, namespaces |
-| Real-time listeners | Yes (`on_snapshot`) | No |
-| Offline support (mobile/web) | Yes | No |
-| Transactions | Yes (cross-document) | Yes (cross-entity) |
-| Strong consistency | Yes (all queries) | Yes |
-| Multi-region | Yes | Yes |
+| Real-time listeners | ✅ `on_snapshot` | ❌ |
+| Offline support (mobile/web) | ✅ | ❌ |
+| Transactions | ✅ cross-document | ✅ cross-entity |
+| Strong consistency | ✅ all queries | ✅ |
+| Multi-region | ✅ | ✅ |
 | Python client library | `google-cloud-firestore` | `google-cloud-datastore` |
 | Console UI | Firestore console | Datastore console |
 | Best for | New projects, real-time, mobile/web backends | Legacy Datastore migrations |
-| Collection group queries | Yes | No |
-| Server-side aggregation | Yes (`count`, `sum`, `avg`) | No |
+| Collection group queries | ✅ | ❌ |
+| Server-side aggregation | ✅ `count`, `sum`, `avg` | ❌ |
 
 > [!warning] Mode is permanent
 >
@@ -130,8 +130,8 @@ Firestore has two operating modes. The mode is chosen at database creation time 
 | Primary workload | OLTP — real-time reads/writes | OLAP — analytical queries | OLTP — relational transactions |
 | Latency | <10 ms | Seconds to minutes | <10 ms |
 | Schema | Flexible (schemaless) | Fixed (typed columns) | Fixed (DDL schema) |
-| Real-time updates | Yes (listeners) | No | No |
-| Joins | No | Yes (SQL) | Yes (SQL) |
+| Real-time updates | ✅ listeners | ❌ | ❌ |
+| Joins | ❌ | ✅ SQL | ✅ SQL |
 | Indexing | Auto per-field + composite | Partitioning + clustering | B-tree indexes |
 | Max record size | 1 MB per document | No row limit per se | Row size depends on engine |
 | Scaling model | Fully auto | Fully auto | Manual instance sizing |
@@ -756,10 +756,9 @@ else:
 **Event-driven triggers via Cloud Functions**
 A Firestore trigger fires a [[cloud-run-jobs-vs-services|Cloud Function]] whenever a document is created or updated. Useful for fan-out patterns: a pipeline writes a "job request" document; a Cloud Function picks it up and triggers downstream processing.
 
+A Cloud Function triggered by Firestore document creation can be deployed via Firebase Functions or Cloud Functions 2nd gen using a `functions_framework` handler.
+
 ```python
-# Cloud Function triggered by Firestore document creation
-# (deployed via Firebase Functions or Cloud Functions 2nd gen)
-# functions_framework handler:
 @functions_framework.cloud_event
 def on_job_request(cloud_event):
     data = cloud_event.data
@@ -1273,13 +1272,13 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 | Primary use case | Real-time state, config, flags | Analytics and reporting | Relational OLTP | Time-series at scale |
 | Typical latency | <10 ms | Seconds to minutes | <10 ms | <10 ms |
 | Schema model | Flexible (schemaless) | Fixed (typed columns) | Fixed (DDL schema) | Column families |
-| Real-time listeners | Yes (`on_snapshot`) | No | No | No |
-| SQL support | No | Yes (Standard SQL) | Yes (PostgreSQL/MySQL) | No |
-| Joins | No | Yes | Yes | No |
-| Transactions | Yes (cross-document) | No (DML is not ACID cross-row) | Yes (ACID) | Row-level only |
+| Real-time listeners | ✅ `on_snapshot` | ❌ | ❌ | ❌ |
+| SQL support | ❌ | ✅ Standard SQL | ✅ PostgreSQL/MySQL | ❌ |
+| Joins | ❌ | ✅ | ✅ | ❌ |
+| Transactions | ✅ cross-document | ❌ DML is not ACID cross-row | ✅ ACID | Row-level only |
 | Auto-scaling | Fully serverless | Fully serverless | Manual instance sizing | Manual node scaling |
 | Cost model | Per read/write/delete | Per bytes scanned | Per instance-hour | Per node-hour |
-| Free tier | Yes (generous) | Yes (1 TB scan/month) | No | No |
+| Free tier | ✅ generous | ✅ 1 TB scan/month | ❌ | ❌ |
 | Max record size | 1 MiB | No practical limit | Row-level limits | 10 MB per row |
 | Best for DE | Pipeline state, config | Analytics queries | Structured transactional data | IoT, time-series, wide rows |
 | Companion service | BigQuery (analytics) | Firestore (hot path) | — | BigQuery (export) |

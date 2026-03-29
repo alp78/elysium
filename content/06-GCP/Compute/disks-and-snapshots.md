@@ -25,12 +25,12 @@ gcloud compute disks list
 
 ### Creating Disk Snapshots Before Risky Changes
 
+Always snapshot before OS upgrades, SQL Server updates, schema migrations, or disk resizing. Snapshots are incremental — only changed blocks are stored, making them fast and cheap.
+
 ```bash
 # Create a snapshot before risky changes (your undo button)
 gcloud compute disks snapshot data-pipeline-sql-disk --zone=europe-west1-b \
   --snapshot-names=data-pipeline-sql-before-upgrade-$(date +%Y%m%d)
-# ALWAYS snapshot before: OS upgrades, SQL Server updates, schema migrations, disk resizing
-# Snapshots are incremental — only changed blocks are stored (fast and cheap)
 
 # List snapshots
 gcloud compute snapshots list
@@ -55,12 +55,11 @@ gcloud compute disks create data-pipeline-sql-restored --zone=europe-west1-b \
 
 GCS persistent disks can only grow, never shrink. The disk resize itself is online (no downtime), but the filesystem inside the VM must be manually expanded after the disk grows.
 
+The disk resize itself is online (no downtime), but the filesystem inside the VM does not auto-expand. After resizing, SSH in and run `sudo resize2fs /dev/sda1` (ext4) or `sudo xfs_growfs /` (xfs).
+
 ```bash
 # Resize a disk (grow only — cannot shrink)
 gcloud compute disks resize data-pipeline-sql-disk --zone=europe-west1-b --size=100GB
-# The disk grows online — no downtime needed
-# But the filesystem inside doesn't auto-expand:
-# SSH in and run: sudo resize2fs /dev/sda1 (ext4) or sudo xfs_growfs / (xfs)
 ```
 
 > [!warning] Expand Filesystem After Resize

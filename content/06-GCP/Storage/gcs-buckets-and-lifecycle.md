@@ -34,14 +34,7 @@ gcloud storage buckets create gs://data-pipeline-pipeline-data \
 
 ### GCS Storage Classes and Cost Trade-offs
 
-```bash
-# Storage classes and cost trade-offs:
-# STANDARD  = $0.020/GB/month — frequently accessed data (pipeline input/output)
-# NEARLINE  = $0.010/GB/month — accessed <1x/month (weekly reports, staging)
-# COLDLINE  = $0.004/GB/month — accessed <1x/quarter (backups, compliance archives)
-# ARCHIVE   = $0.001/GB/month — accessed <1x/year (legal hold, long-term archival)
-# Lower storage cost = higher retrieval cost. Match class to access pattern.
-```
+Lower storage cost = higher retrieval cost. Match class to access pattern — a single class change on a multi-TB bucket can save thousands per month.
 
 | Class | Storage cost | Min storage duration | Retrieval cost | Best for |
 |---|---|---|---|---|

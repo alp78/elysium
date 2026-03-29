@@ -51,18 +51,17 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 
 ### Common GCP APIs for Data Engineering
 
-```bash
-# Common APIs for data engineering:
-# bigquery.googleapis.com         — BigQuery
-# run.googleapis.com              — Cloud Run
-# pubsub.googleapis.com           — Pub/Sub
-# compute.googleapis.com          — Compute Engine
-# storage.googleapis.com          — Cloud Storage (usually enabled by default)
-# logging.googleapis.com          — Cloud Logging
-# monitoring.googleapis.com       — Cloud Monitoring
-# secretmanager.googleapis.com    — Secret Manager
-# artifactregistry.googleapis.com — Artifact Registry (Docker images)
-```
+| API | Service |
+|---|---|
+| `bigquery.googleapis.com` | BigQuery |
+| `run.googleapis.com` | Cloud Run |
+| `pubsub.googleapis.com` | Pub/Sub |
+| `compute.googleapis.com` | Compute Engine |
+| `storage.googleapis.com` | Cloud Storage (usually enabled by default) |
+| `logging.googleapis.com` | Cloud Logging |
+| `monitoring.googleapis.com` | Cloud Monitoring |
+| `secretmanager.googleapis.com` | Secret Manager |
+| `artifactregistry.googleapis.com` | Artifact Registry (Docker images) |
 
 > [!tip] Enable All APIs at Once
 >

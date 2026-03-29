@@ -24,34 +24,30 @@ There are three authentication flows: interactive login for humans, Application 
 
 #### gcloud auth login — interactive authentication for human users
 
+Opens a browser for Google account login. The OAuth token is stored in `~/.config/gcloud/` and refreshed automatically. Use for interactive work (debugging, ad-hoc queries, infrastructure changes).
+
 ```bash
-# Interactive login (you, the human)
 gcloud auth login
-# Opens a browser → you log in with your Google account → gcloud receives an OAuth token
-# This token is stored in ~/.config/gcloud/ and refreshed automatically
-# Use for: interactive work (debugging, ad-hoc queries, infrastructure changes)
 ```
 
 #### gcloud auth application-default login — ADC for application code
 
+> [!warning] ADC is different from `gcloud auth login`
+> - `gcloud auth login` = credentials for the **gcloud CLI** itself
+> - `application-default login` = credentials for **client libraries** (Python `google-cloud-*`, Go, Java)
+> - Your pipeline code calls BigQuery via the Python SDK, which reads ADC
+> - If you only run `gcloud auth login`, your pipeline still gets "permission denied"
+
 ```bash
-# Application Default Credentials (ADC) — what your CODE uses
 gcloud auth application-default login
-# DIFFERENT from gcloud auth login!
-# gcloud auth login = credentials for the gcloud CLI itself
-# application-default login = credentials for client libraries (Python google-cloud-*, Go, Java)
-# Your pipeline code calls BigQuery via the Python SDK, which reads ADC
-# If you only run gcloud auth login, your pipeline still gets "permission denied"
 ```
 
 #### gcloud auth activate-service-account — SA key for production and CI/CD
 
+Authenticates as a service account using a JSON key file. Use for CI/CD pipelines, automated scripts, and non-interactive environments. In production, prefer Workload Identity (no key files) over key files.
+
 ```bash
-# Service account authentication (for production VMs and containers)
 gcloud auth activate-service-account --key-file=key.json
-# Authenticates as a service account using a JSON key file
-# Use for: CI/CD pipelines, automated scripts, non-interactive environments
-# In production: prefer Workload Identity (no key files) over key files
 ```
 
 For creating and managing the service accounts referenced here, see [[service-accounts-and-iam]]. In GitHub Actions, [[github-actions-workflows|Workload Identity Federation]] eliminates key files entirely for CI/CD authentication.

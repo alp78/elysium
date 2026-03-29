@@ -78,7 +78,7 @@ Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
     // Strip surrounding quotes from Polars string values in HTML
-    html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)&quot;(.+?)&quot;(&lt;|<)", @"$1$2$3");
+    html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)(.+?)(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     // Override Polars default CSS to work with VS Code dark/light themes
     var css = """
@@ -89,7 +89,7 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 {
     var sdf = DataFrame.FromSeries(s);
     var shtml = sdf.ToHtml();
-    shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
+    shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @"(>|>)(.+?)(<|<)", @"$1$2$3");
     shtml = System.Text.RegularExpressions.Regex.Replace(shtml, @">""(.+?)""<", @">$1<");
     var scss = @"";
     writer.Write(scss + shtml);

@@ -265,8 +265,9 @@ gcloud compute instances list --configuration=prod
 
 ### Projects
 
+List, describe, create, and delete GCP projects.
+
 ```bash
-# List all projects accessible to your account
 gcloud projects list
 gcloud projects list --format="table(projectId,name,projectNumber)"
 
@@ -287,8 +288,9 @@ gcloud projects describe fin-prod-project --format="value(projectNumber)"
 
 ### Services (APIs)
 
+Enable, disable, and list GCP service APIs for a project.
+
 ```bash
-# List enabled APIs
 gcloud services list --enabled
 
 # List all available APIs (very long)
@@ -315,8 +317,9 @@ gcloud services list --enabled --filter="name:run.googleapis.com"
 
 ### Project-level IAM bindings
 
+Grant and revoke IAM roles to users, groups, and service accounts at the project level.
+
 ```bash
-# Grant a role to a service account at project level
 gcloud projects add-iam-policy-binding fin-prod-project \
   --member="serviceAccount:pipeline-sa@fin-prod-project.iam.gserviceaccount.com" \
   --role="roles/bigquery.dataEditor"
@@ -449,8 +452,9 @@ gcloud compute instances create batch-spot-vm \
 
 ### Instances: lifecycle commands
 
+List, describe, start, stop, delete, resize, and label Compute Engine instances.
+
 ```bash
-# List instances
 gcloud compute instances list
 gcloud compute instances list --filter="zone:europe-west1 AND status=RUNNING"
 gcloud compute instances list --format="table(name,zone,machineType,status,networkInterfaces[0].accessConfigs[0].natIP)"
@@ -501,8 +505,9 @@ gcloud compute instances add-metadata prices-etl-vm \
 
 ### SSH and SCP
 
+SSH into instances (optionally via IAP tunnel) and copy files with SCP.
+
 ```bash
-# Basic SSH
 gcloud compute ssh prices-etl-vm --zone=europe-west1-b
 
 # SSH via IAP (no external IP needed — tunnels through Google's infra)
@@ -547,8 +552,9 @@ gcloud compute scp prices-etl-vm:/home/user/output.csv ./output.csv \
 
 ### IAP Tunnels (non-SSH)
 
+Open TCP tunnels through IAP to reach internal VM ports (databases, web UIs) without an external IP.
+
 ```bash
-# Open a tunnel to Cloud SQL Proxy port (PostgreSQL on 5432)
 gcloud compute start-iap-tunnel sql-proxy-vm 5432 \
   --local-host-port=localhost:5432 \
   --zone=europe-west1-b
@@ -573,8 +579,9 @@ gcloud compute start-iap-tunnel airflow-vm 8080 \
 
 ### Disks
 
+List, create, attach, detach, resize, snapshot, and delete persistent disks.
+
 ```bash
-# List disks
 gcloud compute disks list
 gcloud compute disks list --filter="zone:europe-west1-b"
 
@@ -624,8 +631,9 @@ gcloud compute disks snapshot prices-etl-vm \
 
 ### Snapshots
 
+List, describe, and delete disk snapshots.
+
 ```bash
-# List snapshots
 gcloud compute snapshots list
 gcloud compute snapshots list --filter="name~prices-etl"
 
@@ -640,8 +648,9 @@ gcloud compute snapshots delete prices-etl-snap-20260323 --quiet
 
 ### Firewall Rules
 
+List, create, update, and delete VPC firewall rules.
+
 ```bash
-# List firewall rules
 gcloud compute firewall-rules list
 gcloud compute firewall-rules list --filter="network=fin-vpc"
 gcloud compute firewall-rules list --format="table(name,network,direction,priority,sourceRanges,allowed)"
@@ -690,8 +699,9 @@ gcloud compute firewall-rules delete allow-iap-ssh --quiet
 
 ### Static Addresses
 
+Reserve, list, describe, and release static external IPs (regional and global).
+
 ```bash
-# Reserve a regional static external IP
 gcloud compute addresses create prices-api-ip \
   --region=europe-west1 \
   --description="Static IP for prices API load balancer"
@@ -963,8 +973,9 @@ bq extract \
 
 ### BigQuery Datasets — bq mk, bq ls, bq show
 
+List, create, describe, update, and delete BigQuery datasets.
+
 ```bash
-# List datasets in the active project
 bq ls
 bq ls --project_id=fin-prod-project
 bq ls --all  # Include hidden datasets
@@ -1008,8 +1019,9 @@ bq update --source /tmp/dataset.json fin-prod-project:market_data
 
 ### BigQuery Tables — bq mk, bq show, bq head, bq rm
 
+List, create, preview, copy, update, and delete BigQuery tables.
+
 ```bash
-# List tables in a dataset
 bq ls fin-prod-project:market_data
 bq ls --max_results=100 fin-prod-project:market_data
 
@@ -1072,8 +1084,9 @@ bq rm -f --table fin-staging-project:market_data.old_table  # Skip confirmation
 
 ### BigQuery Jobs — bq ls -j, bq show, bq cancel
 
+List, inspect, and cancel BigQuery jobs.
+
 ```bash
-# List recent jobs
 bq ls -j
 bq ls -j --max_results=20
 bq ls -j --all  # Include other users' jobs (requires project-level access)
@@ -1158,8 +1171,9 @@ gcloud run services update-traffic prices-api \
 
 ### Services: management commands
 
+List, describe, update, and delete Cloud Run services and their revisions.
+
 ```bash
-# List services
 gcloud run services list --region=europe-west1
 gcloud run services list --platform=managed
 
@@ -1377,8 +1391,9 @@ gcloud storage rsync \
 
 ### Other object operations
 
+List, move, delete, cat, hash, and measure disk usage of GCS objects.
+
 ```bash
-# List objects
 gcloud storage ls gs://fin-landing-bucket/
 gcloud storage ls 'gs://fin-landing-bucket/prices/**'
 gcloud storage ls -l gs://fin-landing-bucket/prices/2026-03-23/  # With size/date
@@ -1412,8 +1427,9 @@ gcloud storage du --readable-sizes gs://fin-datalake-bucket/  # Human-readable
 
 ### Buckets
 
+Create, describe, update, delete, and manage IAM on GCS buckets.
+
 ```bash
-# List all buckets in the project
 gcloud storage buckets list
 gcloud storage buckets list --project=fin-prod-project
 gcloud storage buckets list --format="table(name,location,storageClass)"
@@ -1544,8 +1560,9 @@ gcloud pubsub subscriptions create equity-trades-sub \
 
 ### Topics
 
+Create, describe, publish to, and delete Pub/Sub topics.
+
 ```bash
-# List topics
 gcloud pubsub topics list
 gcloud pubsub topics list --format="table(name)"
 
@@ -1586,8 +1603,9 @@ gcloud pubsub topics add-iam-policy-binding trades-topic \
 
 ### Subscriptions: management and consumption
 
+List, describe, pull, ack, seek (replay), update, and delete Pub/Sub subscriptions.
+
 ```bash
-# List subscriptions
 gcloud pubsub subscriptions list
 gcloud pubsub subscriptions list --format="table(name,topic,ackDeadlineSeconds)"
 
@@ -1654,8 +1672,9 @@ gcloud iam service-accounts create pipeline-sa \
 
 ### Service Accounts: management
 
+List, describe, enable/disable, delete, update, and manage impersonation for IAM service accounts.
+
 ```bash
-# List service accounts
 gcloud iam service-accounts list
 gcloud iam service-accounts list --project=fin-prod-project
 gcloud iam service-accounts list --format="table(email,displayName,disabled)"
@@ -1743,8 +1762,9 @@ kubectl annotate serviceaccount KSA_NAME \
 
 ### Roles
 
+List and describe predefined roles, and create or update custom roles.
+
 ```bash
-# List predefined roles (filter by service)
 gcloud iam roles list --filter="name:roles/bigquery"
 gcloud iam roles list --filter="name:roles/run"
 
@@ -1789,6 +1809,8 @@ gcloud logging read FILTER [FLAGS]
 | `--resource-names` | Specific log names or resource names | — |
 
 #### Cloud Logging filter syntax — resource.type, severity, textPayload
+
+Examples covering severity, resource type, resource labels, log names, text and JSON payload search, time ranges, and compound filters.
 
 ```bash
 # --- By severity ---
@@ -1869,6 +1891,8 @@ gcloud logging read \
 ---
 
 ### Logging: tail, write, and sinks
+
+Stream logs in real time with `gcloud logging tail`, write test entries, and create sinks to route logs to BigQuery, GCS, or Pub/Sub.
 
 ```bash
 # Real-time log tail (streaming)
@@ -1993,6 +2017,8 @@ gcloud scheduler jobs delete daily-pnl-trigger --location=europe-west1 --quiet
 
 ### Anatomy: gcloud secrets create / versions add / versions access
 
+Create secrets, add and access versions, manage lifecycle (disable/destroy), delete secrets, and grant IAM access.
+
 ```bash
 # --- Create a new secret (empty, no version yet) ---
 gcloud secrets create bloomberg-api-key \
@@ -2088,8 +2114,9 @@ gcloud secrets update bloomberg-api-key \
 
 ### Firestore Databases — gcloud firestore databases list, create, delete
 
+List, describe, create (Native or Datastore mode), and delete Firestore databases.
+
 ```bash
-# List Firestore databases in a project
 gcloud firestore databases list --project=fin-prod-project
 
 # Describe a database
@@ -2121,8 +2148,9 @@ gcloud firestore databases delete \
 
 ### Firestore Indexes — gcloud firestore indexes composite list, create
 
+List, create, describe, and delete composite indexes and field-level index exemptions.
+
 ```bash
-# List composite indexes
 gcloud firestore indexes composite list \
   --project=fin-prod-project \
   --database=fin-events-db
@@ -2194,6 +2222,8 @@ gcloud firestore operations describe OPERATION_NAME --project=fin-prod-project
 ---
 
 ### Quick Reference: Useful gcloud One-Liners
+
+Handy compound commands for daily GCP operations -- project info, failed job lookup, IAM auditing, BigQuery slot usage, storage inspection, and more.
 
 ```bash
 # Get your current project, account, and active config
