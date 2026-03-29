@@ -149,33 +149,273 @@ ALTER TABLE staging.signals_daily
 
 ---
 
-## Incremental Append
+## Watermarks — The Foundation of Incremental Loading
 
-Insert only rows newer than the last loaded row. Used for append-only data like logs, events, and OHLCV prices.
+A watermark is a **persisted bookmark** that records how far a pipeline has processed. It answers the question: "where did I leave off last time?" Every incremental loading strategy — append, upsert, partition-based — depends on a reliable watermark. Without one, the pipeline either reprocesses everything (wasteful) or guesses where to start (dangerous). For the architectural theory behind idempotent incremental pipelines, see [[idempotent-pipeline-design]]. For how Airflow orchestrates watermark-driven loads, see [[airflow-dag-patterns]].
 
-### High-Water Mark — load new data only
+### What a Watermark Is — definition and types
 
-> [!info] Watermark Pattern
+> [!info] Watermark Definition
 >
-> Store the maximum loaded value (date, ID, or timestamp) after each run. Next run starts from there. See [[idempotent-pipeline-design]] for the theory behind idempotent incremental loads.
+> A watermark is a single value — a date, timestamp, integer ID, or LSN (Log Sequence Number) — that marks the boundary between "already processed" and "not yet processed" data. The pipeline reads only data **after** the watermark, processes it, then **advances** the watermark to the new boundary.
+
+| Watermark Type | Column Example | Best For | Gotchas |
+|----------------|----------------|----------|---------|
+| **Date** | `signal_date`, `trade_date` | Daily batch pipelines, date-partitioned data | Late-arriving data below the date boundary |
+| **Timestamp** | `_ingested_at`, `modified_at` | Near-real-time pipelines, event streams | Clock skew between source and destination |
+| **Monotonic ID** | `IDENTITY`, `BIGINT` sequence | Append-only tables with no updates | Gaps after rollbacks, resets after TRUNCATE |
+| **LSN** | `sys.fn_cdc_get_max_lsn()` | CDC-based change capture | Binary format, not human-readable |
+
+**The watermark contract:** data at or before the watermark has been processed. Data after the watermark has not. The pipeline must advance the watermark only after a successful commit — never before.
+
+### Where Watermarks Are Stored — four approaches
+
+> [!tip] Storage Decision
+>
+> Choose based on transactional guarantees, visibility, and who owns the pipeline.
+
+#### Control Table in the Database — transactional with the load
+
+The most robust approach. The watermark update and the data INSERT happen in the same transaction — if the load fails, the watermark doesn't advance.
 
 ```sql
--- Step 1: Get the watermark (last loaded date)
-DECLARE @watermark DATE = (
-    SELECT MAX(date) FROM silver.index_europe_ohlcv
-    WHERE is_filled = 0    -- only real data, not forward-filled
+-- Control table DDL
+CREATE TABLE meta.watermarks (
+    pipeline_name   VARCHAR(100)  NOT NULL PRIMARY KEY,
+    watermark_value VARCHAR(50)   NOT NULL,   -- stores date, timestamp, or ID as string
+    watermark_type  VARCHAR(20)   NOT NULL,   -- 'date', 'timestamp', 'identity', 'lsn'
+    updated_at      DATETIME2     NOT NULL DEFAULT SYSUTCDATETIME(),
+    updated_by      VARCHAR(100)  NOT NULL DEFAULT SYSTEM_USER
+);
+```
+
+```sql
+-- Usage: read watermark, load data, advance watermark — all in one transaction
+BEGIN TRANSACTION;
+
+DECLARE @wm DATE = (
+    SELECT CAST(watermark_value AS DATE)
+    FROM meta.watermarks
+    WHERE pipeline_name = 'ohlcv_europe'
 );
 
--- Step 2: Load everything newer
 INSERT INTO silver.index_europe_ohlcv (symbol, date, ...)
 SELECT symbol, date, ...
 FROM bronze.index_europe_ohlcv
-WHERE date > @watermark;
+WHERE date > @wm
+  AND NOT EXISTS (
+      SELECT 1 FROM silver.index_europe_ohlcv t
+      WHERE t.symbol = b.symbol AND t.date = b.date
+  );
+
+-- Advance watermark only after successful insert
+UPDATE meta.watermarks
+SET watermark_value = CONVERT(VARCHAR(10), GETDATE(), 120),
+    updated_at = SYSUTCDATETIME()
+WHERE pipeline_name = 'ohlcv_europe';
+
+COMMIT;
 ```
+
+#### Derived from Target Table — no storage, computed each run
+
+The simplest approach. Query `MAX(date)` from the target table. No extra table to maintain, but requires a scan of the target each run.
+
+```sql
+-- Derived watermark — no control table needed
+DECLARE @wm DATE = (
+    SELECT MAX(date) FROM silver.index_europe_ohlcv
+    WHERE is_filled = 0   -- only real data, not forward-filled rows
+);
+```
+
+> [!warning] Derived Watermark Limitations
+>
+> If the target table is empty (first run, or after a truncate), `MAX()` returns `NULL`. Always handle the NULL case: `ISNULL(@wm, '1900-01-01')`. Also: if the target has millions of rows without a clustered index on the watermark column, the `MAX()` scan is expensive. Add a covering index.
+
+#### Airflow Variable — orchestrator-managed
+
+Store the watermark in Airflow's metadata database. Visible and editable in the Airflow UI. Good for pipelines where reprocessing means manually changing the variable.
+
+```python
+from airflow.models import Variable
+
+# Read watermark
+wm = Variable.get("ohlcv_europe_watermark", default_var="1900-01-01")
+
+# ... load data where date > wm ...
+
+# Advance watermark after successful load
+Variable.set("ohlcv_europe_watermark", str(new_max_date))
+```
+
+> [!warning] Airflow Variable is not transactional
+>
+> `Variable.set()` commits immediately to Airflow's metadata DB. If the data load fails AFTER the variable is set, the watermark has advanced past data that was never loaded — causing a gap. Set the variable only after the database transaction commits.
+
+#### Pipeline Output File — simple but fragile
+
+Write the watermark to a file on disk or in GCS. Used in simple scripts that don't have access to a database or orchestrator.
+
+```python
+# Read watermark from file
+with open("/opt/pipeline/watermarks/ohlcv_europe.txt") as f:
+    wm = f.read().strip()
+
+# ... load data ...
+
+# Write new watermark
+with open("/opt/pipeline/watermarks/ohlcv_europe.txt", "w") as f:
+    f.write(str(new_max_date))
+```
+
+> [!danger] File-Based Watermarks Are Fragile
+>
+> Files can be accidentally deleted, are not transactional, don't survive VM reimaging, and have no audit trail. Use only for throwaway scripts. For anything running in production, use a control table or Airflow Variable.
+
+### Watermark Lifecycle — from first run to steady state
+
+> [!info] Watermark State Machine
+>
+> A watermark goes through a predictable lifecycle. Understanding each state prevents the most common watermark bugs.
+
+| Phase | Watermark State | What Happens |
+|-------|----------------|--------------|
+| **First run** | NULL or seed value (`1900-01-01`) | Full load — everything from source is loaded. Watermark set to `MAX(date)` of loaded data |
+| **Steady state** | Valid date/timestamp | Incremental load — only data after the watermark. Watermark advances after each successful run |
+| **Backfill** | Manually reset to past date | Reprocesses historical data from the reset point. Must handle deduplication (UNIQUE constraint or `NOT EXISTS`) |
+| **Recovery after failure** | Unchanged (load failed, watermark didn't advance) | Pipeline retries from the same watermark. Idempotent if target has UNIQUE constraint |
+| **Table rebuild** | Must be reset or re-derived | After TRUNCATE or full rebuild, reset watermark to match the new state or let derived `MAX()` handle it |
+
+#### Seed value for first run — handling NULL watermarks
+
+```sql
+-- Always handle the NULL case on first run
+DECLARE @wm DATE = ISNULL(
+    (SELECT CAST(watermark_value AS DATE)
+     FROM meta.watermarks
+     WHERE pipeline_name = 'ohlcv_europe'),
+    '1900-01-01'   -- seed: load everything on first run
+);
+```
+
+### Late-Arriving Data — the overlap window pattern
 
 > [!warning] Late-Arriving Data
 >
-> Data that arrives after the watermark has advanced will be missed. Mitigation: subtract an overlap window from the watermark (e.g., `@watermark - 1 day`) and deduplicate on load using `NOT EXISTS` or a `UNIQUE` constraint.
+> Data that arrives after the watermark has advanced is silently missed. This is the most common watermark bug. Sources that cause this: timezone-shifted batch files, retroactive corrections, API responses with stale timestamps, and source systems that backfill data.
+
+```sql
+-- Mitigation: subtract an overlap window from the watermark
+DECLARE @safe_wm DATE = DATEADD(DAY, -1, @wm);
+
+-- Load with overlap, then deduplicate via NOT EXISTS
+INSERT INTO silver.index_europe_ohlcv (symbol, date, ...)
+SELECT symbol, date, ...
+FROM bronze.index_europe_ohlcv b
+WHERE b.date > @safe_wm
+  AND NOT EXISTS (
+      SELECT 1 FROM silver.index_europe_ohlcv t
+      WHERE t.symbol = b.symbol AND t.date = b.date
+  );
+```
+
+> [!tip] Choosing the overlap window size
+>
+> The overlap should match the maximum expected lateness of your source data. For daily yfinance fetches, 1 day is sufficient. For sources with weekly corrections (e.g., revised economic indicators), use 7 days. For sources with monthly restatements, use 35 days. Wider overlap = more rows re-checked each run, but the `NOT EXISTS` or `UNIQUE` constraint prevents duplicates.
+
+### Watermark Maintenance — keeping them healthy
+
+> [!info] Watermark Hygiene
+>
+> Watermarks are persistent state. Like any state, they can become stale, corrupted, or out of sync with reality. These maintenance practices prevent watermark-related incidents.
+
+- **Audit trail:** the `updated_at` and `updated_by` columns in the control table show when the watermark last advanced and who/what changed it. Query this when debugging stale pipelines
+- **Monitoring:** alert when a watermark hasn't advanced in longer than the expected pipeline frequency. A watermark stuck for 24 hours on a pipeline that runs every 6 hours means something is broken
+
+#### SELECT stale watermarks — monitoring query
+
+```sql
+-- Watermarks that haven't advanced in 24+ hours
+SELECT pipeline_name,
+       watermark_value,
+       updated_at,
+       DATEDIFF(HOUR, updated_at, SYSUTCDATETIME()) AS hours_stale
+FROM meta.watermarks
+WHERE DATEDIFF(HOUR, updated_at, SYSUTCDATETIME()) > 24
+ORDER BY hours_stale DESC;
+```
+
+- **Manual reset for backfill:** to reprocess historical data, UPDATE the watermark to a past date. The next pipeline run loads everything from that point forward. The target table's UNIQUE constraint prevents duplicates
+
+#### UPDATE watermark — manual reset for backfill
+
+```sql
+-- Reset watermark to reprocess from March 1st
+UPDATE meta.watermarks
+SET watermark_value = '2025-03-01',
+    updated_at = SYSUTCDATETIME(),
+    updated_by = 'manual-backfill'
+WHERE pipeline_name = 'ohlcv_europe';
+```
+
+- **Cleanup after table rebuild:** if you TRUNCATE or rebuild a target table, the watermark and the table are out of sync. Either reset the watermark to match (derive from `MAX(date)` in the rebuilt table) or delete the watermark row and let the next run do a full load
+- **Version watermarks alongside schema:** when a schema migration changes the watermark column (e.g., renaming `date` to `trade_date`), the watermark query breaks. Include watermark maintenance in migration scripts
+
+### Watermark Anti-Patterns
+
+### Advancing watermark before committing the load — data gaps
+
+> [!danger] Watermark Before Commit = Data Loss
+>
+> If you advance the watermark, then the INSERT fails, the watermark points past data that was never loaded. The next run skips that data forever. Always advance the watermark INSIDE the same transaction as the load, or AFTER the load transaction commits.
+
+### No deduplication with overlap windows — duplicate rows
+
+If you use an overlap window (subtract N days from watermark) but the target table has no UNIQUE constraint and the INSERT has no `NOT EXISTS` check, every overlapping row is inserted again on every run. Within a week, you have 7 copies of each row in the overlap window.
+
+### Using IDENTITY as watermark on a truncate-reload table — broken contract
+
+`IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [[sql-server-pipeline-anti-patterns#IDENTITY as a Business Key]].
+
+### No NULL handling on first run — pipeline crashes on empty table
+
+`SELECT MAX(date)` on an empty table returns `NULL`. If the pipeline uses `WHERE date > @wm` without handling NULL, the comparison `date > NULL` is always FALSE — zero rows loaded, forever. Always wrap in `ISNULL(@wm, '1900-01-01')`.
+
+### Watermark stored outside the load transaction — silent drift
+
+An Airflow Variable, a file, or a separate database write is not transactional with the load. If the load succeeds but the watermark write fails (or vice versa), the watermark and the actual data drift apart. Prefer a control table in the same database as the target, updated in the same transaction.
+
+---
+
+## Incremental Append
+
+Insert only rows newer than the last loaded row. Used for append-only data like logs, events, and OHLCV prices. Depends on a reliable watermark (defined above).
+
+### High-Water Mark Load — append new data only
+
+> [!info] Append Pattern
+>
+> Read the watermark, load everything after it, advance the watermark. The target table's UNIQUE constraint is the safety net against duplicates.
+
+```sql
+-- Step 1: Get the watermark (last loaded date)
+DECLARE @wm DATE = ISNULL(
+    (SELECT MAX(date) FROM silver.index_europe_ohlcv
+     WHERE is_filled = 0),
+    '1900-01-01'
+);
+
+-- Step 2: Load everything newer, deduplicate
+INSERT INTO silver.index_europe_ohlcv (symbol, date, ...)
+SELECT symbol, date, ...
+FROM bronze.index_europe_ohlcv b
+WHERE b.date > @wm
+  AND NOT EXISTS (
+      SELECT 1 FROM silver.index_europe_ohlcv t
+      WHERE t.symbol = b.symbol AND t.date = b.date
+  );
+```
 
 ---
 

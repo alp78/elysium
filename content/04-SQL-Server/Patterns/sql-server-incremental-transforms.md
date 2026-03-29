@@ -29,13 +29,13 @@ Full-table recomputation is fine at 10K rows. At 100M rows it takes hours and co
 
 ## Watermark-Based Incremental Loading
 
-The most common incremental pattern: store the maximum processed value after each run, start the next run from there.
+The most common incremental pattern: store the maximum processed value after each run, start the next run from there. For a full definition of watermarks — what they are, where to store them, their lifecycle, and anti-patterns — see [[sql-server-loading-patterns#Watermarks — The Foundation of Incremental Loading]].
 
 ### High-Water Mark — load only new data
 
 > [!info] Watermark Pattern
 >
-> The watermark is the last successfully processed value — a date, ID, or timestamp. Each run reads only data newer than the watermark. Store the watermark in a control table, pipeline metadata, or an Airflow Variable.
+> The watermark is the last successfully processed value — a date, ID, or timestamp. Each run reads only data newer than the watermark. Store the watermark in a control table, pipeline metadata, or an Airflow Variable. See [[sql-server-loading-patterns#Where Watermarks Are Stored]] for trade-offs of each storage approach.
 
 ```sql
 -- Step 1: Read current watermark
