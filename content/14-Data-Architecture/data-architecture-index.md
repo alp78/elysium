@@ -55,6 +55,8 @@ Reusable design patterns for building reliable data pipelines.
 | [[error-handling-and-retry-patterns]] | Error classification, retry strategies (backoff, circuit breaker, DLQ), failure propagation, alerting thresholds, retry budgets |
 | [[environment-management-strategy]] | Dev/staging/prod topology, tool-by-tool environment separation, promotion workflow, cost model |
 | [[data-pipeline-testing-strategy]] | Testing pyramid for data engineering: unit, integration, contract, quality, and regression testing across medallion layers |
+| [[data-contracts]] | Schema contracts between producers and consumers — specification, versioning, CI enforcement, breaking-change classification |
+| [[functional-pipeline-architecture]] | Five architectural principles — functional core/imperative shell, contract validation, quality gates, data provenance, immutable value objects |
 
 ## APIs and Protocols
 
