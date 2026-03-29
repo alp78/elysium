@@ -92,29 +92,29 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 
 ### Cloud Logging Filter Language Reference
 
-| Filter | What it matches |
-|---|---|
-| `resource.type="cloud_run_job"` | All Cloud Run job logs |
-| `resource.type="gce_instance"` | All VM logs |
-| `severity>=ERROR` | ERROR, CRITICAL, ALERT, EMERGENCY |
-| `severity=WARNING` | Exactly WARNING severity |
-| `textPayload:"search term"` | Log messages containing this substring |
-| `jsonPayload.message:"search"` | Structured JSON log messages containing this substring |
-| `resource.labels.job_name="name"` | Logs from a specific Cloud Run job |
-| `resource.labels.instance_id="id"` | Logs from a specific VM |
-| `timestamp>="2026-03-22T00:00:00Z"` | Logs after this UTC timestamp |
-| `protoPayload.status.code=7` | Permission denied errors (VPC-SC violations use code 7) |
+> [!info]- Filter Language Quick Reference
+>
+> - `resource.type="cloud_run_job"` — all Cloud Run job logs
+> - `resource.type="gce_instance"` — all VM logs
+> - `severity>=ERROR` — ERROR, CRITICAL, ALERT, EMERGENCY
+> - `severity=WARNING` — exactly WARNING severity
+> - `textPayload:"search term"` — log messages containing this substring
+> - `jsonPayload.message:"search"` — structured JSON log messages containing this substring
+> - `resource.labels.job_name="name"` — logs from a specific Cloud Run job
+> - `resource.labels.instance_id="id"` — logs from a specific VM
+> - `timestamp>="2026-03-22T00:00:00Z"` — logs after this UTC timestamp
+> - `protoPayload.status.code=7` — permission denied errors (VPC-SC violations use code 7)
 
 ### Common Cloud Logging Resource Types for Data Engineering
 
-| Resource type | What it covers |
-|---|---|
-| `cloud_run_job` | Cloud Run Jobs |
-| `cloud_run_revision` | Cloud Run Services |
-| `gce_instance` | Compute Engine VMs |
-| `bigquery_resource` | BigQuery operations |
-| `pubsub_subscription` | Pub/Sub delivery events |
-| `k8s_container` | Kubernetes/GKE containers |
+> [!info]- Resource Types Quick Reference
+>
+> - `cloud_run_job` — Cloud Run Jobs
+> - `cloud_run_revision` — Cloud Run Services
+> - `gce_instance` — Compute Engine VMs
+> - `bigquery_resource` — BigQuery operations
+> - `pubsub_subscription` — Pub/Sub delivery events
+> - `k8s_container` — Kubernetes/GKE containers
 
 > [!tip] Related pattern
 >
