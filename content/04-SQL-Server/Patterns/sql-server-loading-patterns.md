@@ -47,6 +47,27 @@ Loading is the most performance-sensitive part of any pipeline. The wrong method
 
 *bcp uses `TABLOCK` for minimal logging — not transactional in the traditional sense.
 
+### Which Loading Method for Which Scenario
+
+> [!tip] Scenario-based selection
+>
+> The benchmark table shows throughput. Here is which method to choose based on your actual pipeline requirements.
+
+**Daily batch pipeline (100K-1M rows, Python orchestrated):**
+→ `pyodbc fast_executemany`. Already in your language, transactional, good enough throughput. Only switch to bcp if profiling shows loading as the bottleneck.
+
+**Initial historical backfill (10M+ rows, one-time):**
+→ `bcp` with format file. Fastest path. Accept the trade-offs (no transactions, encoding quirks) because you're running this once.
+
+**Real-time micro-batches (1K rows every 5 minutes):**
+→ `pyodbc fast_executemany` with small batch size. The overhead of spawning bcp for 1K rows exceeds the throughput gain.
+
+**C# service writing to SQL Server:**
+→ `SqlBulkCopy`. Native .NET, transactional, comparable to bcp throughput. Never use `SqlCommand.ExecuteNonQuery` in a loop.
+
+**Cross-database load (BigQuery → SQL Server):**
+→ Export from BigQuery to GCS as CSV/Parquet → `gcloud storage cp` to VM → `bcp` or `BULK INSERT`. There is no direct connector between BigQuery and SQL Server.
+
 ---
 
 ## Truncate-and-Reload
@@ -174,6 +195,12 @@ When source data contains both new rows and updates to existing rows. Three appr
 | MERGE | Fast | Medium (has gotchas) | Medium | Single-statement atomicity |
 | Staging + separate INSERT/UPDATE | Fast | Highest | Higher | Large volumes, full control |
 
+**Choose DELETE + INSERT when:** the target table is small (<1M rows), the logic is simple (one partition key), and you want maximum readability. This is what the Medallion-Project bronze loaders use.
+
+**Choose MERGE when:** you need a single atomic statement that handles insert/update/delete in one pass, and you understand the locking gotchas (see [[merge-and-upsert]]). Best for medium-volume tables with a clear natural key.
+
+**Choose Staging + separate INSERT/UPDATE when:** the volume is large (>1M rows), you want to separate insert and update logic for debugging, or you need to validate before committing. Most production pipelines at scale land here.
+
 ### DELETE + INSERT — simplest upsert
 
 ```sql
@@ -289,6 +316,44 @@ bcp bronze.signals_daily in signals.csv \
 
 ---
 
+## SqlBulkCopy — C# Bulk Loading
+
+The C# equivalent of bcp — high throughput with full transaction support. For detailed C# ingestion benchmarks, see [[23_cs_data_ingestion]].
+
+### SqlBulkCopy WriteToServer — .NET bulk load with transaction
+
+> [!info] C# bulk loading
+>
+> `SqlBulkCopy` uses the same TDS bulk-load protocol as bcp. Use `SqlBulkCopyOptions.TableLock` for minimal logging on heaps. Wrap in a transaction for atomicity.
+
+```csharp
+using var connection = new SqlConnection(connectionString);
+connection.Open();
+using var transaction = connection.BeginTransaction();
+
+using var bulkCopy = new SqlBulkCopy(
+    connection, SqlBulkCopyOptions.TableLock, transaction)
+{
+    DestinationTableName = "bronze.signals_daily",
+    BatchSize = 10_000,
+    BulkCopyTimeout = 600   // seconds
+};
+
+// Map source columns to destination columns explicitly
+bulkCopy.ColumnMappings.Add("Symbol", "symbol");
+bulkCopy.ColumnMappings.Add("Date", "signal_date");
+bulkCopy.ColumnMappings.Add("Price", "current_price");
+
+bulkCopy.WriteToServer(dataTable);   // DataTable, IDataReader, or DataRow[]
+transaction.Commit();
+```
+
+> [!warning] SqlBulkCopy silent truncation
+>
+> Like bcp, `SqlBulkCopy` silently truncates strings exceeding the destination column width. A 250-character company name loaded into `NVARCHAR(200)` is silently cut to 200 characters — no error, no warning. Validate string lengths before loading or set `bulkCopy.EnableStreaming = true` with a validating `IDataReader` wrapper.
+
+---
+
 ## BULK INSERT — T-SQL Native Bulk Load
 
 Same engine as `bcp` but called from T-SQL. Useful when the load is orchestrated by a stored procedure.
@@ -338,6 +403,53 @@ Minimal logging skips detailed transaction log writes for bulk operations, givin
 > [!warning] BULK_LOGGED Recovery Trade-off
 >
 > `BULK_LOGGED` allows minimal logging without losing transactional safety for non-bulk operations. However, if a log backup runs during the bulk operation, that backup contains the bulk-changed data extents — making it larger and non-restorable to a point within the bulk operation.
+
+---
+
+## Schema Migration CI/CD with GitHub Actions
+
+### Automated SQL Server migration — IAP tunnel + sqlcmd
+
+> [!info] Automated SQL Server schema deployment
+>
+> Run migration scripts against SQL Server as part of your CI/CD pipeline. The IAP tunnel connects GitHub Actions to your private GCP Compute Engine VM. See [[github-actions-data-engineering]] for more GCP CI/CD patterns.
+
+```yaml
+# .github/workflows/migrate-sql.yml
+name: SQL Server Schema Migration
+on:
+  push:
+    paths: ['db/migrations/**']
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Open IAP tunnel to SQL Server VM
+        run: |
+          gcloud compute start-iap-tunnel sql-vm 1433 \
+            --local-host-port=127.0.0.1:1433 \
+            --zone=europe-west1-b &
+          sleep 5
+
+      - name: Run migrations
+        run: |
+          for f in db/migrations/*.sql; do
+            sqlcmd -S 127.0.0.1,1433 \
+              -U sa -P "${{ secrets.SA_PASSWORD }}" \
+              -d analytics_db -i "$f" -b
+          done
+```
+
+> [!warning] Migration ordering
+>
+> `for f in db/migrations/*.sql` relies on lexicographic ordering. Prefix migration files with timestamps: `20260329_001_add_column.sql`. The `-b` flag tells `sqlcmd` to abort on error — without it, a failing migration continues silently and subsequent scripts may break on missing objects.
 
 ---
 

@@ -65,6 +65,12 @@ WHERE _index = @key
 | Pipeline output file | Simple, no DB dependency | Fragile, easy to lose |
 | Derived from target (`MAX(date)`) | No storage needed | Requires target scan each run |
 
+**Choose control table when:** you want the watermark transactional with the load (update watermark and insert data in the same transaction — if the load fails, the watermark doesn't advance). Best for SQL-driven pipelines.
+
+**Choose Airflow Variable when:** Airflow is the orchestrator and you want watermarks visible/editable in the Airflow UI. Use `Variable.get()` / `Variable.set()` in your Python operator. Good for pipelines where reprocessing means changing the variable.
+
+**Choose derived `MAX(date)` when:** the target table has a reliable date column and is small enough for the `MAX()` scan to be cheap (<10M rows). Simplest approach — no extra state to maintain. This is what the Medallion-Project uses for most transforms.
+
 ### Late-Arriving Data — overlap window mitigation
 
 > [!warning] Late-Arriving Data
@@ -342,6 +348,12 @@ CREATE UNIQUE CLUSTERED INDEX IX_vw_daily_avg
 | DML overhead | On every source write | None until refresh |
 | Flexibility | Restricted (no OUTER JOIN, no subqueries) | Unlimited SQL |
 | Best for | Small, stable, frequently queried | Large, complex, batch-refreshed |
+
+**Choose indexed views when:** the aggregation is simple (COUNT, SUM, AVG with GROUP BY), the source table has low write volume, and the dashboard needs zero-staleness. Example: daily count of stocks per sector — small result set, rarely changes mid-day.
+
+**Choose aggregation tables when:** the aggregation involves OUTER JOINs, subqueries, window functions, or complex business logic that indexed views can't express. Also when the source is high-write (staging tables, bronze loads) — the DML overhead of maintaining an indexed view during bulk loads is prohibitive. The Medallion-Project's `gold.index_performance` and `gold.scores_daily` are aggregation tables refreshed by [[airflow-dag-patterns|Airflow]].
+
+**Choose neither when:** the query is already fast enough on the base table with a covering index. Pre-compute only when profiling shows the aggregation query as a bottleneck — premature materialization adds maintenance cost for no gain.
 
 ---
 

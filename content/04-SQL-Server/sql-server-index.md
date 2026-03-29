@@ -26,6 +26,7 @@ Day-to-day operations, connection management, backup strategy, and cost optimiza
 - [[restore-and-recovery]] — Full restore, point-in-time recovery
 - [[server-configuration]] — Max memory, RCSI, TempDB, recovery models
 - [[finops-cost-optimization]] — GCP disk snapshots, committed use discounts, right-sizing
+- [[sql-server-agent-jobs]] — Agent on Linux, job scheduling, CDC/backup agents, Airflow vs Agent vs cron decision guide
 
 ### T-SQL
 

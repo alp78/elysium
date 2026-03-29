@@ -220,6 +220,29 @@ DENY SELECT ON SCHEMA::silver TO dashboard_reader;
 
 ---
 
+## Which Schema Strategy — Scenario-Based Decision
+
+> [!tip] Schema strategy decision
+>
+> Most teams should start with schema-per-layer. Only move to separate databases or domain schemas when a specific operational need demands it.
+
+**Single team, single pipeline, single database (most common):**
+→ Schema-per-layer (`bronze`, `silver`, `gold`). Simple, clear permissions, no cross-database complexity. This is what the Medallion-Project uses.
+
+**Different backup/recovery needs per layer:**
+→ Separate databases. Bronze on `SIMPLE` recovery (re-fetchable), silver on `FULL` (history must be point-in-time recoverable), gold on `SIMPLE` (rebuildable from silver).
+
+**Multiple teams with independent pipelines:**
+→ Schema-per-domain (`finance`, `operations`, `marketing`). Each team owns their schemas end-to-end. Combine with layer naming conventions: `finance.bronze_trades`.
+
+**Many external sources with different refresh schedules:**
+→ Schema-per-source for staging (`stg_yfinance`, `stg_bloomberg`), then a unified `bronze` schema. The staging schemas isolate source-specific quirks.
+
+**Starting a new project and unsure:**
+→ Schema-per-layer. You can always add source-specific staging schemas later. Moving from `dbo` to proper schemas is painful; moving from schema-per-layer to domain schemas is straightforward.
+
+---
+
 ## Anti-Patterns
 
 ### Everything in dbo — no isolation, no permissions, no clarity

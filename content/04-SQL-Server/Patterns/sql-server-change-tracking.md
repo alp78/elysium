@@ -194,6 +194,70 @@ ORDER BY valid_from;
 | Custom logic | Full control (e.g., only track sector changes) | All-or-nothing on the table |
 | Performance overhead | Only on your transform runs | On every UPDATE/DELETE (small) |
 
+### When to Choose Manual SCD2 vs Temporal Tables — Real-World Scenarios
+
+> [!tip] The practical decision
+>
+> The comparison table above lists features. Here is how the choice actually plays out in production.
+
+**Choose Manual SCD2 when:**
+- You only care about changes to SPECIFIC columns (e.g., sector, country) while ignoring noisy columns (e.g., last_updated timestamp) — temporal tables track ALL columns, generating history rows for irrelevant changes
+- Your pipeline already runs in Python/C# and you want detection logic in application code where it can be unit-tested
+- You need to control WHEN history is captured (only on pipeline runs, not on every ad-hoc UPDATE by a DBA fixing data)
+- You run SQL Server 2014 or earlier (temporal tables require 2016+)
+- Schema changes are frequent — temporal tables require `SYSTEM_VERSIONING = OFF` before any `ALTER TABLE`, which is operationally painful in CI/CD pipelines
+
+**Choose Temporal Tables when:**
+- Regulatory/compliance requirements demand tracking EVERY column change with tamper-proof timestamps (auditors love `FOR SYSTEM_TIME AS OF`)
+- You need to answer "what was the state at time X?" frequently — temporal tables have native query syntax; manual SCD2 requires complex self-joins
+- Multiple applications write to the same table and you can't guarantee all of them will call your SCD2 logic — temporal tables capture changes regardless of the writer
+- You want minimal application code — temporal tables are set-and-forget (minus retention management)
+
+**The hybrid approach (common in practice):**
+Use temporal tables on core reference/audit tables (e.g., customer master, regulatory filings) where you need complete history. Use manual SCD2 on pipeline-driven dimensions (e.g., stock metadata, product catalog) where you control the refresh cycle and want selective change detection.
+
+> [!warning] Schema migration with temporal tables
+>
+> Every `ALTER TABLE ADD COLUMN` migration requires:
+> 1. `ALTER TABLE ... SET (SYSTEM_VERSIONING = OFF)`
+> 2. Apply the schema change to BOTH the current and history tables
+> 3. `ALTER TABLE ... SET (SYSTEM_VERSIONING = ON)`
+>
+> In a GitHub Actions pipeline, this means your migration scripts must handle the OFF/ON dance. Forgetting step 3 leaves the table without history tracking — silently. Add a post-migration check:
+> ```sql
+> SELECT temporal_type_desc FROM sys.tables WHERE name = 'index_dim';
+> -- Must return 'SYSTEM_VERSIONED_TEMPORAL_TABLE', not 'NON_TEMPORAL_TABLE'
+> ```
+
+### SCD2 Change Detection in Python — the comparison engine
+
+> [!info] Python-driven SCD2
+>
+> The T-SQL above handles the close/insert. This Python code drives the comparison logic — reading both bronze and silver, comparing row by row, and executing the appropriate SQL for each case.
+
+```python
+TRACKED_COLUMNS = ["sector", "industry", "country", "long_name", "short_name"]
+
+def detect_scd2_changes(bronze_rows: dict, silver_rows: dict) -> tuple[list, list, list]:
+    """Compare bronze snapshot against active silver rows.
+    Returns (new_symbols, changed_symbols, removed_symbols)."""
+    new, changed, removed = [], [], []
+
+    for key, bronze_row in bronze_rows.items():
+        if key not in silver_rows:
+            new.append(bronze_row)
+        else:
+            silver_row = silver_rows[key]
+            if any(bronze_row.get(col) != silver_row.get(col) for col in TRACKED_COLUMNS):
+                changed.append(bronze_row)
+
+    for key in silver_rows:
+        if key not in bronze_rows:
+            removed.append(silver_rows[key])
+
+    return new, changed, removed
+```
+
 ---
 
 ## Change Data Capture (CDC)
@@ -238,9 +302,102 @@ FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
 >
 > CDC is not "set and forget." The log reader agent must be running, change tables grow unbounded without cleanup, and schema changes can break the capture instance.
 
-- **Log reader agent must be running:** CDC depends on SQL Server Agent. If the agent stops, changes accumulate in the transaction log, potentially filling it
+- **Log reader agent must be running:** CDC depends on SQL Server Agent (see [[sql-server-agent-jobs]] for Agent on Linux). If the agent stops, changes accumulate in the transaction log, potentially filling it
 - **Cleanup:** CDC change tables grow until you configure retention: `EXEC sys.sp_cdc_change_job @job_type = 'cleanup', @retention = 4320;` (minutes)
 - **Schema changes break CDC:** adding or dropping a column requires disabling and re-enabling CDC on that table — the capture instance must match the current schema
+
+### CDC → Pub/Sub — streaming changes to GCP
+
+> [!info] SQL Server CDC to Pub/Sub pipeline
+>
+> In the broader ecosystem, teams use Kafka/Debezium for CDC streaming. In this GCP stack, the equivalent is Pub/Sub. This Python script polls CDC change tables and publishes each change as a Pub/Sub message. Run it as an [[airflow-dag-patterns|Airflow task]] or a Cloud Run job on a schedule (e.g., every 5 minutes).
+
+```python
+import pyodbc, json
+from google.cloud import pubsub_v1
+
+publisher = pubsub_v1.PublisherClient()
+topic_path = publisher.topic_path("my-project", "sql-server-changes")
+
+conn = pyodbc.connect(conn_str)
+cursor = conn.cursor()
+
+# Read CDC changes since last processed LSN
+cursor.execute("""
+    DECLARE @from_lsn BINARY(10) = sys.fn_cdc_get_min_lsn('bronze_signals_daily');
+    DECLARE @to_lsn   BINARY(10) = sys.fn_cdc_get_max_lsn();
+    SELECT __$operation, symbol, signal_date, current_price
+    FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
+        @from_lsn, @to_lsn, 'all update old'
+    );
+""")
+```
+
+```python
+# Publish each change as a Pub/Sub message
+OP_MAP = {1: "DELETE", 2: "INSERT", 3: "UPDATE_OLD", 4: "UPDATE_NEW"}
+
+for row in cursor.fetchall():
+    message = json.dumps({
+        "operation": OP_MAP.get(row[0], "UNKNOWN"),
+        "symbol": row[1],
+        "signal_date": str(row[2]),
+        "current_price": row[3]
+    }).encode("utf-8")
+    publisher.publish(topic_path, message, source="sql-server-cdc")
+```
+
+### CDC → BigQuery — replicate changes to the warehouse
+
+> [!info] CDC to BigQuery replication
+>
+> Read CDC changes, transform to BigQuery-compatible rows, and stream them using the BigQuery streaming insert API. This is the pattern for near-real-time replication without a dedicated CDC tool like Debezium.
+
+```python
+from google.cloud import bigquery
+from datetime import datetime
+
+bq_client = bigquery.Client()
+table_ref = bq_client.dataset("silver").table("signals_daily")
+
+# Transform CDC rows to BigQuery format (INSERT and UPDATE_NEW only)
+rows_to_insert = [
+    {
+        "symbol": row.symbol,
+        "signal_date": str(row.signal_date),
+        "current_price": row.current_price,
+        "_cdc_operation": "UPSERT",
+        "_cdc_timestamp": datetime.utcnow().isoformat()
+    }
+    for row in cdc_changes
+    if row.operation in (2, 4)   # INSERT or UPDATE_NEW only
+]
+
+errors = bq_client.insert_rows_json(table_ref, rows_to_insert)
+if errors:
+    raise RuntimeError(f"BigQuery insert failed: {errors}")
+```
+
+### CDC → Firestore — push dimension changes to real-time store
+
+> [!info] CDC to Firestore for real-time updates
+>
+> When stock metadata changes (sector reclassification, name change), push the update to Firestore so dashboards and APIs see it immediately without polling SQL Server.
+
+```python
+from google.cloud import firestore
+
+db = firestore.Client()
+
+for change in dimension_changes:
+    doc_ref = db.collection("stocks").document(change.symbol)
+    doc_ref.set({
+        "symbol": change.symbol,
+        "sector": change.new_sector,
+        "long_name": change.new_name,
+        "updated_at": firestore.SERVER_TIMESTAMP
+    }, merge=True)   # merge=True preserves fields not in this update
+```
 
 ---
 
