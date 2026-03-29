@@ -736,3 +736,7 @@ When using MERGE or staging-based upsert, the join between staging and target be
 > ```
 >
 > OHLCV uses an application-side merge: read existing keys into a dict, partition incoming rows into inserts vs updates, execute each batch separately. See [[bronze-layer-loading]] for the full implementation.
+
+
+## Related
+- [[data-flow-architecture]] — complete data movement topology and transfer method decision matrix

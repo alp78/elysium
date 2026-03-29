@@ -1310,3 +1310,4 @@ jobs:
 - [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, core concepts
 - [[github-actions-data-engineering]] — data pipeline CI/CD, dbt, Workload Identity
 - [[terraform-plan-apply-destroy]] — Terraform workflow details
+- [[environment-management-strategy]] — How GitHub Actions environments fit into the full promotion workflow

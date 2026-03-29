@@ -262,6 +262,7 @@ DROP TABLE IF EXISTS dbo.deadlock_test_b
 
 ### Related
 
+- [[error-handling-and-retry-patterns]] — Where deadlock retry fits in the broader error classification and retry strategy framework
 - [[race-conditions]] — When concurrent access produces wrong data (not stuck processes)
 - [[server-configuration]] — RCSI and other server settings that prevent deadlocks
 - [[wait-stats-analysis]] — LCK_M wait types indicate lock contention

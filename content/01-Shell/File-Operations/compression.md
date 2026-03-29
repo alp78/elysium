@@ -209,6 +209,7 @@ $gz.Write($input, 0, $input.Length); $gz.Close()
 When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports -- see [[data-loading-and-export]] for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost -- see [[gcs-buckets-and-lifecycle]] for lifecycle policies that transition objects between storage classes.
 
 ## Related
+- [[data-flow-architecture]] — format and compression selection by pipeline scenario
 - [[file-manipulation]] — moving and copying the resulting archives
 - [[data-transfer]] — compression during rsync transfers (`-z` flag)
 - [[navigation-and-listing]] — checking disk usage before and after compression

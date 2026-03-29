@@ -154,6 +154,9 @@ Compression is orthogonal to format — most formats support multiple codecs. Ch
 - [[date-and-time-handling]] — Date formats and ISO 8601 for file naming conventions
 - [[sql-python-csharp-transforms]] — Where to transform: SQL vs Python vs C#
 
+## Related
+- [[data-flow-architecture]] — format selection matrix by pipeline scenario and data movement topology
+
 ## References
 
 - [Apache Parquet format](https://parquet.apache.org/)

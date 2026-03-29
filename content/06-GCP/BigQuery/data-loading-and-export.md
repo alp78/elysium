@@ -133,6 +133,9 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 - [[gcs-object-operations]] — Managing the GCS objects that feed BigQuery loads
 - [[gcs-buckets-and-lifecycle]] — Lifecycle rules to auto-expire staging data after loading
 
+## Related
+- [[data-flow-architecture]] — complete data movement topology showing how bq load/extract fits into the stack
+
 ## References
 
 - [Loading data into BigQuery](https://cloud.google.com/bigquery/docs/loading-data)

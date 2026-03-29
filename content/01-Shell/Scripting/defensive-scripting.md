@@ -145,6 +145,7 @@ log "Pipeline complete"
 
 ## Related
 
+- [[error-handling-and-retry-patterns]] — Cross-cutting error classification, retry strategies, and failure propagation theory
 - [[command-chaining]] — How `&&`, `||`, and `;` use exit codes
 - [[io-redirection]] — Redirecting errors for logging
 - [[environment-variables]] — Handling required vs optional configuration

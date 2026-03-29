@@ -12,6 +12,7 @@ related:
   - datadog-sql-server-integration
   - datadog-agent-airflow-vm
   - essential-dba-queries
+  - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

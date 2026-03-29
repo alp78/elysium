@@ -67,6 +67,7 @@ related:
   - "[[cloud-run-jobs-vs-services|Cloud Run]]"
   - "[[observability-index]]"
   - "[[observability-deep-dive|Datadog vs GCP native]]"
+  - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

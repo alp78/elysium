@@ -12,6 +12,7 @@ related:
   - "[[datadog-architecture-overview]]"
   - "[[backup-types-and-strategy]]"
   - "[[service-accounts-and-iam]]"
+  - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

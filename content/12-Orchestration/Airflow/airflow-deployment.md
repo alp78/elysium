@@ -939,3 +939,6 @@ Approximate monthly costs for running Airflow at small/medium scale (us-central1
 - [Airflow Helm Chart](https://airflow.apache.org/docs/helm-chart/stable/index.html)
 - [Airflow Configuration Reference](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html)
 - [GCP Secret Manager backend](https://airflow.apache.org/docs/apache-airflow-providers-google/stable/secrets-backends/google-cloud-secret-manager-backend.html)
+
+## Related
+- [[environment-management-strategy]] — How Airflow connections and deployment fit into the full dev/staging/prod strategy

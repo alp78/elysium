@@ -96,6 +96,7 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 
 ## Related
 
+- [[error-handling-and-retry-patterns]] — Idempotency is a prerequisite for safe retries — the error handling framework depends on it
 - [[medallion-architecture]] — The bronze/silver/gold pattern relies on idempotent transforms at each layer
 - [[merge-and-upsert]] — T-SQL MERGE statement for upsert operations
 - [[silver-transforms]] — Silver layer cleaning and deduplication patterns

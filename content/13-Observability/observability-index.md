@@ -18,6 +18,12 @@ status: complete
 
 You cannot fix what you cannot see. Every system needs metrics (how much), logs (what happened), and traces (where did time go). See [[five-pillars-of-data-engineering|Pillar 2: Observability]].
 
+### Strategy
+
+| Note | Description |
+|------|-------------|
+| [[observability-strategy-matrix]] | **Start here** — what to monitor for every component: metrics, logs, alerts, dashboards, severity framework, deployment checklist |
+
 ### Datadog Notes
 
 | Note | Description |

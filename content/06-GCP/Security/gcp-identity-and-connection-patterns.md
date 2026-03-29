@@ -69,23 +69,18 @@ When Python code calls BigQuery, this is the full sequence of events behind the 
 
 ```mermaid
 sequenceDiagram
-    participant App as Python/C# Code
-    participant ADC as ADC Credential Source
-    participant STS as Google Security Token Service
-    participant API as Target API (BigQuery, GCS, etc.)
-    participant IAM as Cloud IAM
+    participant App as Your Code
+    participant Auth as Google Auth + IAM
+    participant API as GCP API
 
-    App->>ADC: Request credentials
-    Note over ADC: Key file, metadata server,<br/>or WIF token exchange
-    ADC->>STS: Present credentials
-    STS->>STS: Validate identity
-    STS-->>ADC: OAuth2 access token (1 hour)
-    ADC-->>App: Access token
-    App->>API: Request with Bearer token
-    API->>IAM: Does this identity have this permission?
-    IAM->>IAM: Evaluate project roles, resource bindings, org policies, VPC-SC
-    IAM-->>API: Allow or Deny
-    API-->>App: Response or 403 Forbidden
+    App->>Auth: Present credentials
+    Note over Auth: Key file, metadata server, or WIF
+    Auth->>Auth: Validate identity
+    Auth-->>App: OAuth2 access token (1h)
+    App->>API: Request + Bearer token
+    API->>Auth: Check IAM permissions
+    Auth-->>API: Allow or Deny
+    API-->>App: Response or 403
 ```
 
 - **Step 1-3:** Authentication — "who are you?" The credential source proves identity to Google STS

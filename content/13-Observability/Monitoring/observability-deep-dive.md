@@ -13,6 +13,7 @@ related:
   - "[[idempotent-pipeline-design]]"
   - "[[open-table-formats]]"
   - "[[five-pillars-of-data-engineering]]"
+  - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

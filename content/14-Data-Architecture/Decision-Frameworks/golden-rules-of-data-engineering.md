@@ -606,3 +606,4 @@ The golden rules do not eliminate trade-offs. They give you a framework for navi
 - [[medallion-architecture]] — The architectural pattern that embodies Rule 5's raw data preservation
 - [[context-and-metadata-architecture]] — The metadata layer that supports Rule 10's observability requirements
 - [[data-warehouse-architecture]] — The structural decisions (grain, dimensions, facts) where Rule 4's one-way door framework matters most
+- [[environment-management-strategy]] — Dev/staging/prod separation strategy that implements Rule 9 (Automate Everything)

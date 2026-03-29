@@ -180,3 +180,4 @@ export SQL_CONN_STRING="Server=localhost;Database=analytics_db;User=sa;Password=
 - [[github-actions-data-engineering]] — Workload Identity Federation setup
 - [[airflow-deployment]] — Airflow configuration and connections
 - [[golden-rules-of-data-engineering]] — Rule 9: Automate Everything
+- [[environment-management-strategy]] — How secrets differ between dev, staging, and prod

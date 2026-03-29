@@ -1427,3 +1427,4 @@ jobs:
 - [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, GITHUB_TOKEN
 - [[github-actions-patterns]] — matrix builds, reusable workflows, deployment patterns
 - [[dbt-transformation-layer]] — dbt project structure and development workflow
+- [[data-pipeline-testing-strategy]] — Which tests to run at each CI/CD stage

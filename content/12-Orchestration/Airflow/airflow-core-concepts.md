@@ -809,6 +809,7 @@ Airflow uses Jinja2 templating in `template_fields` of Operators. Common templat
 
 ## Related Notes
 
+- [[error-handling-and-retry-patterns]] — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
 - [[airflow-dag-patterns]] — Task dependencies, dynamic DAGs, branching, trigger rules
 - [[airflow-deployment]] — Docker Compose, Cloud Composer, CI/CD for DAGs
 - [[airflow-troubleshooting]] — Common errors, debugging CLI commands, log locations

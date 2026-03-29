@@ -1,14 +1,44 @@
 ---
-tags: [data-architecture, architecture, pipeline, data-contracts, python, github-actions]
+title: "Data Contracts"
 type: concept
-technology: [python, github-actions, protobuf]
-status: stable
-updated: 2026-03-23
+category: data-architecture
+technology: [python, github-actions, protobuf, avro, dbt]
+tags:
+  - data-architecture
+  - architecture
+  - pipeline
+  - data-contracts
+  - python
+  - github-actions
+  - schema
+  - sla
+  - data-quality
+  - ci-cd
+  - protobuf
+  - avro
+  - dbt
+aliases:
+  - "Schema Contracts"
+  - "Data Contract"
+keywords: [data contract, schema, SLA, semver, breaking change, producer, consumer, ownership, validation, CI, JSON Schema, Protobuf, Avro, dbt contract, deprecation, enum, primary key]
+description: "Formal agreements between data producers and consumers — schema, SLAs, semantics, ownership, versioning — with YAML examples, CI enforcement, and breaking-change classification."
+related:
+  - "[[data-quality-framework]]"
+  - "[[serialization-formats]]"
+  - "[[streaming-architecture]]"
+  - "[[dbt-transformation-layer]]"
+  - "[[data-pipeline-testing-strategy]]"
+  - "[[rest-api-design-and-consumption]]"
+  - "[[error-handling-and-retry-patterns]]"
+status: complete
+created: 2026-03-23
+updated: 2026-03-29
 ---
 
 # Data Contracts
 
 > [!abstract] When You Need This
+>
 > A data contract is a formal agreement between a data producer and its consumers specifying the schema, SLAs, semantics, and ownership of a dataset. Without contracts, schema changes break downstream pipelines silently.
 
 ### What a Data Contract Contains
@@ -55,14 +85,21 @@ graph LR
 
 ### Example Contract: ESG Score Feed
 
+> [!info] Contract Header and Schema
+>
+> The contract header identifies the dataset, owner, and version. The schema section defines every column with type, nullability, and business description.
+
 ```yaml
-# contracts/esg-scores-v2.yaml
+# contracts/esg-scores-v2.yaml — header and metadata
 contract:
   name: esg-scores
   version: 2.0.0
   owner: esg-data-team
-  description: "Normalized ESG scores from multiple vendors, 0-100 scale (higher = better)"
+  description: "Normalized ESG scores, 0-100 scale (higher = better)"
+```
 
+```yaml
+# contracts/esg-scores-v2.yaml — schema definition
 schema:
   columns:
     - name: instrument_isin
@@ -79,20 +116,22 @@ schema:
       precision: 5
       scale: 2
       nullable: true
-      description: "Score normalized to 0-100, higher = better"
-      constraints:
-        min: 0
-        max: 100
+      constraints: { min: 0, max: 100 }
     - name: score_date
       type: date
       nullable: false
     - name: loaded_at
       type: timestamp
       nullable: false
-
   primary_key: [instrument_isin, vendor_code, score_date]
-  unique_constraints: []
+```
 
+> [!info] SLA and Change Classification
+>
+> The SLA section defines freshness, availability, and quality thresholds. Breaking vs non-breaking changes follow semver: breaking = major version bump with migration period.
+
+```yaml
+# contracts/esg-scores-v2.yaml — SLA and change rules
 sla:
   freshness: "Updated weekly by Monday 08:00 UTC"
   availability: "99.9%"
@@ -114,7 +153,12 @@ non_breaking_changes:
 
 ### Example Contract: Index Constituent Feed
 
+> [!info] Constituent Schema with SCD2-Style Dates
+>
+> `effective_date` / `expiry_date` pattern enables point-in-time queries. `weight_pct` must sum to 1.0 per index per date — a circuit-breaker quality check.
+
 ```yaml
+# contracts/index-constituents-v1.yaml — schema
 contract:
   name: index-constituents
   version: 1.0.0
@@ -122,43 +166,30 @@ contract:
 
 schema:
   columns:
-    - name: index_code
-      type: string
-      nullable: false
-    - name: instrument_isin
-      type: string
-      length: 12
-      nullable: false
-    - name: effective_date
-      type: date
-      nullable: false
-    - name: expiry_date
-      type: date
-      nullable: false
-      default: "9999-12-31"
-    - name: weight_pct
-      type: decimal
-      precision: 18
-      scale: 10
-      nullable: false
-      constraints:
-        min: 0
-        max: 1
-    - name: change_reason
-      type: string
-      nullable: true
-      enum: [REBALANCE, IPO_ADD, MERGER_REMOVE, DELIST, SPIN_OFF_ADD]
-
+    - { name: index_code, type: string, nullable: false }
+    - { name: instrument_isin, type: string, length: 12, nullable: false }
+    - { name: effective_date, type: date, nullable: false }
+    - { name: expiry_date, type: date, nullable: false, default: "9999-12-31" }
+    - { name: weight_pct, type: decimal, nullable: false, constraints: { min: 0, max: 1 } }
+    - { name: change_reason, type: string, nullable: true,
+        enum: [REBALANCE, IPO_ADD, MERGER_REMOVE, DELIST, SPIN_OFF_ADD] }
   primary_key: [index_code, instrument_isin, effective_date]
+```
 
+```yaml
+# contracts/index-constituents-v1.yaml — SLA
 sla:
-  freshness: "Updated at each quarterly rebalancing and on corporate action events"
+  freshness: "Updated at quarterly rebalancing and on corporate actions"
   quality:
-    weight_sum: "SUM(weight_pct) = 1.00000000 for each index_code + date"
-    completeness: "Exactly N constituents where N = target count for the index"
+    weight_sum: "SUM(weight_pct) = 1.00000000 per index_code + date"
+    completeness: "Exactly N constituents where N = target count"
 ```
 
 ### Contract Testing in CI
+
+> [!info] Automated Contract Enforcement
+>
+> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [[github-actions-patterns]] for reusable workflow patterns.
 
 ```yaml
 # .github/workflows/contract-test.yml
@@ -166,19 +197,14 @@ name: Data Contract Validation
 on:
   push:
     paths: ['contracts/**', 'models/**']
-
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate contract schemas
-        run: |
-          pip install jsonschema pyyaml
-          python scripts/validate_contracts.py contracts/
-      - name: Run dbt contract tests
-        run: |
-          dbt build --select tag:contract_test --target ci
+      - run: pip install jsonschema pyyaml
+      - run: python scripts/validate_contracts.py contracts/
+      - run: dbt build --select tag:contract_test --target ci
 ```
 
 ### Breaking vs Non-Breaking Contract Changes
@@ -218,8 +244,10 @@ jobs:
 
 ## Related
 
-- [[data-quality-framework]] — Quality gates that enforce contract SLAs
-- [[data-mesh-architecture]] — Data products and federated governance
-- [[dbt-transformation-layer]] — dbt model contracts with enforced schemas
-- [[serialization-formats]] — Schema formats (Protobuf, Avro, JSON Schema)
-- [[streaming-architecture]] — Schema registries for event contracts
+- [[data-quality-framework]] — Quality gates that enforce contract SLAs at each medallion layer
+- [[data-pipeline-testing-strategy]] — How contract tests fit in the data engineering testing pyramid
+- [[serialization-formats]] — Schema formats (Protobuf, Avro, JSON Schema) and their evolution support
+- [[dbt-transformation-layer]] — dbt model contracts with enforced schemas at build time
+- [[streaming-architecture]] — Schema registries for event contracts in Pub/Sub and Kafka
+- [[rest-api-design-and-consumption]] — API contracts parallel data contracts: versioning, backward compatibility
+- [[error-handling-and-retry-patterns]] — What happens when contract validation fails: quarantine, DLQ, alerting

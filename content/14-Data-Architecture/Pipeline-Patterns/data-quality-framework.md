@@ -98,3 +98,4 @@ Use `ShortCircuitOperator` as a quality gate task. If critical checks fail, the 
 - [[esg-data-ingestion-framework]] — Circuit breaker pattern
 - [[pit-integrity-logic]] — Weight normalization and validation
 - [[idempotent-pipeline-design]] — Safe re-run patterns
+- [[data-pipeline-testing-strategy]] — The testing pyramid that coordinates quality checks with unit, integration, and contract tests

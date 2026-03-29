@@ -669,6 +669,7 @@ Once data lands in GCS, you can load it directly into BigQuery with `bq load` --
 > Rule: for any transfer over 1 GB, use a tool with resume support (rsync, gcloud storage, or gsutil).
 
 ## Related
+- [[data-flow-architecture]] — complete data movement topology and tool selection framework
 - [[iap-tunneling]] — opening IAP tunnels for rsync and scp to GCE VMs
 - [[compression]] — compress data before or during transfer
 - [[connecting-to-gcp-resources]] — complete GCP connection guide including GCS

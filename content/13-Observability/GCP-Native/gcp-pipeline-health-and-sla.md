@@ -60,6 +60,7 @@ related:
   - "[[cloud-run-jobs-vs-services|Cloud Run Jobs]]"
   - "[[gcp-cost-monitoring-and-budgets|BigQuery cost monitoring]]"
   - "[[observability-index]]"
+  - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1561,6 +1562,14 @@ Use this checklist when onboarding a new data pipeline to the monitoring stack.
 - [ ] Idempotent pipeline design verified (safe to rerun without duplicating data)
 - [ ] Retry configured (Cloud Run `--max-retries` or Airflow `retries`)
 - [ ] Auto-remediation function deployed for deterministic failure modes (optional)
+
+## Related
+
+- [[error-handling-and-retry-patterns]] — Error classification, retry strategies, circuit breakers, and alerting thresholds that this monitoring enforces
+- [[idempotent-pipeline-design]] — Idempotency enables safe retries and reruns
+- [[airflow-dag-patterns]] — Airflow retry configuration and SLA callbacks
+- [[sql-server-pipeline-anti-patterns]] — Pipeline mistakes that monitoring should detect
+- [[data-pipeline-testing-strategy]] — How production monitoring complements pre-deployment testing
 - [ ] Scheduled health check job running every 15 minutes
 
 > [!tip] Checklist in practice

@@ -51,6 +51,10 @@ Reusable design patterns for building reliable data pipelines.
 | [[dbt-transformation-layer]] | dbt Core vs Cloud, project structure, testing, macros, incremental models, Airflow integration |
 | [[migration-idempotency-backfills]] | Migration strategies (strangler fig), backfill chunking, schema evolution, data contracts |
 | [[serialization-formats]] | JSON/YAML/CSV/Protobuf/Avro/Parquet/Pickle comparison and compression codecs |
+| [[data-flow-architecture]] | Complete data movement topology, transfer method selection, format decisions, push/pull/staged patterns, cross-database join strategies |
+| [[error-handling-and-retry-patterns]] | Error classification, retry strategies (backoff, circuit breaker, DLQ), failure propagation, alerting thresholds, retry budgets |
+| [[environment-management-strategy]] | Dev/staging/prod topology, tool-by-tool environment separation, promotion workflow, cost model |
+| [[data-pipeline-testing-strategy]] | Testing pyramid for data engineering: unit, integration, contract, quality, and regression testing across medallion layers |
 
 ## APIs and Protocols
 
