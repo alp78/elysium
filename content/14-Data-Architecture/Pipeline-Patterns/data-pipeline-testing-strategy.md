@@ -40,31 +40,21 @@ Every page in this vault covers *how* to use a testing tool — pytest fixtures,
 
 ## The Data Engineering Testing Pyramid
 
-> [!danger] E2E Pipeline Validation
->
-> Full bronze → silver → gold on test data. **Slowest, fewest tests — run nightly.**
+```mermaid
+block-beta
+    columns 7
+    space:2 E2E["E2E\nNightly"]:3 space:2
+    space:1 INT["Integration\nOn merge"]:5 space:1
+    CONTRACT["Contract + Quality\nEvery PR and every load"]:7
+    UNIT["Unit Tests\nEvery PR"]:7
 
-> [!warning] Integration Tests
->
-> Real connections, test database. **Minutes per run — run on merge to main.**
+    style E2E fill:#cc4125,stroke:#cc4125,color:#fff
+    style INT fill:#e8b84d,stroke:#e8b84d,color:#1a1a2e
+    style CONTRACT fill:#4285f4,stroke:#4285f4,color:#fff
+    style UNIT fill:#34a853,stroke:#34a853,color:#fff
+```
 
-> [!example] Contract + Quality Assertions
->
-> Schema conformance, row counts, nulls, ranges, freshness. **Seconds — every PR + every load.**
-
-> [!success] Unit Tests — The Foundation
->
-> Transform logic, SQL expressions, dbt generic tests. **Fastest, cheapest, most tests — every PR.**
-
-The pyramid reads bottom-to-top: the base (unit tests) runs the most tests at the lowest cost, while the peak (E2E) runs the fewest tests at the highest cost. Each layer catches a different class of failure. The **Skip It And...** column shows what breaks in production when that layer is missing — this is the business case for each test type.
-
-| Layer | What It Tests | Speed | When It Runs | Skip It And... |
-|---|---|---|---|---|
-| **Unit** | Transform logic, functions, SQL expressions | Seconds | Every PR | Broken transforms reach production — wrong scores, wrong aggregations |
-| **Quality** | Data properties — nulls, counts, ranges, uniqueness | Seconds | Every pipeline run | Silent data degradation — 50% NULLs in gold, nobody notices for weeks |
-| **Contract** | Schema conformance — column names, types, value sets | Seconds | Every PR + on ingestion | Upstream API change silently loads NULLs into your bronze layer |
-| **Integration** | Cross-system flow with real connections | Minutes | On merge to main | "Works in dev, breaks in prod" — the #1 pipeline failure mode |
-| **E2E** | Full bronze → silver → gold pipeline on test data | Minutes-hours | Nightly / weekly | Multi-step regressions — a silver bug that only surfaces in gold output |
+The pyramid reads bottom-to-top: the base (unit tests) runs the most tests at the lowest cost, while the peak (E2E) runs the fewest tests at the highest cost. Each layer catches a different class of failure that the layers below cannot.
 
 > [!tip] Where to Invest First
 >
@@ -75,7 +65,109 @@ The pyramid reads bottom-to-top: the base (unit tests) runs the most tests at th
 
 ---
 
+## Pyramid Layers — Detailed Breakdown
+
+### Unit Tests — transform logic
+
+Unit tests validate individual functions, SQL transforms, and dbt models in isolation. They are the fastest, cheapest, and most numerous tests in the pyramid.
+
+> [!info] How Unit Tests Work
+>
+> Feed a known input DataFrame or SQL result into a transform function and assert the output matches expected values. No database, no network, no external dependencies. Pure logic verification.
+>
+> - **Python:** pytest with sample DataFrames as fixtures — see [[10_py_testing_migration]]
+> - **C#:** xUnit with test DataFrames — see [[10_cs_testing_migration]]
+> - **dbt:** schema tests in `schema.yml` — `unique`, `not_null`, `accepted_values`, `relationships` — see [[dbt-testing-framework#dbt Built-in Generic Tests]]
+> - **When:** every PR, every commit — seconds to run
+
+> [!danger] Skip Unit Tests And...
+>
+> Broken transforms reach production. A z-score function that divides by the wrong column, a deduplication query that keeps the wrong row, an aggregation that double-counts — all of these produce **silently wrong data** that the dashboard displays with full confidence. Nobody notices until a business user challenges a number weeks later.
+
+---
+
+### Data Quality Assertions — data properties
+
+Quality assertions validate data properties at layer boundaries: nulls, counts, ranges, uniqueness, and freshness. They run after every pipeline execution, not just in CI.
+
+> [!info] How Quality Assertions Work
+>
+> After each pipeline stage writes its output, run a set of checks against the result:
+>
+> - Row count > 0 (table not empty after load)
+> - Row count ± 20% of yesterday (no explosion from bad join, no loss from filter bug)
+> - Null percentage < threshold per column
+> - Value ranges (no negative prices, no future dates)
+> - Uniqueness on business keys (no duplicates from failed dedup)
+> - Freshness (latest date within SLA window)
+>
+> Tools: dbt generic tests, `dbt-expectations`, custom Python/SQL assertions. See [[data-quality-framework#Data Quality Dimensions]].
+> When: every pipeline run in production + every PR in CI.
+
+> [!danger] Skip Quality Assertions And...
+>
+> Silent data degradation. A source API starts returning NULLs for a field — your pipeline loads them without error. Over weeks, 50% of your gold table is NULL. Nobody notices because there's no row count drop, no schema change, no error in the logs. The dashboard just gradually becomes wrong.
+
+---
+
+### Contract Tests — schema conformance
+
+Contract tests verify that source data matches the expected schema before any transform runs. They are the only defense against upstream changes.
+
+> [!info] How Contract Tests Work
+>
+> Define the expected schema (column names, types, nullability, value ranges) in a contract file or dbt source YAML. On every ingestion, validate the incoming data against the contract. If a column is missing, renamed, or has a new type, the test fails before the data enters bronze.
+>
+> - Define contracts: [[data-contracts#What a Data Contract Contains]]
+> - dbt contracts: [[dbt-data-contracts-implementation]]
+> - Schema drift detection: [[context-and-metadata-architecture]]
+> - When: every PR (schema changes in code) + every ingestion (schema changes in source data)
+
+> [!danger] Skip Contract Tests And...
+>
+> An upstream API renames `price` to `current_price`. Your pipeline loads NULLs into the `price` column — every row, every day. The pipeline reports success, row counts match, no errors in logs. Nobody notices until a business user asks why the dashboard shows zero for everything. This is the #1 silent pipeline killer.
+
+---
+
+### Integration Tests — cross-system flow
+
+Integration tests run the pipeline end-to-end with real connections but test data. They catch the "works in dev, breaks in prod" failures that unit tests cannot.
+
+> [!info] How Integration Tests Work
+>
+> Spin up a real database (Docker SQL Server in GitHub Actions), load test fixtures (100-1000 rows of known data), run the full bronze → silver → gold flow, and assert the output shape and values.
+>
+> - GitHub Actions: [[github-actions-data-engineering#Full Python Lint + Test Workflow]]
+> - dbt in CI: [[github-actions-data-engineering#dbt Build Against Dev Schema]]
+> - When: on merge to main — too slow for every PR, too important to skip
+
+> [!danger] Skip Integration Tests And...
+>
+> "Works in dev, breaks in prod" — the #1 pipeline failure mode. Your SQL runs perfectly against your local Docker database but fails on the production SQL Server because of a different collation, a missing index, or a permission issue. Mocking the database doesn't test your SQL against a real query engine.
+
+---
+
+### E2E Pipeline Validation — full flow
+
+E2E tests validate the complete pipeline from data fetch through gold output, including orchestration, quality gates, and export. They catch multi-step regressions that no single-layer test can detect.
+
+> [!info] How E2E Tests Work
+>
+> Run the full pipeline (or a representative subset) on a fixed test dataset. Compare the gold output against a "golden file" — a known-correct reference output. Flag any difference above a tolerance threshold (exact match for integers, ±0.01 for floats).
+>
+> - Use a dedicated test database/dataset with seeded fixture data
+> - Run nightly or weekly — too slow and expensive for every PR
+> - Compare: `pd.testing.assert_frame_equal()` with `atol` for numeric tolerance, or dbt custom tests against a seeded reference table
+
+> [!danger] Skip E2E Tests And...
+>
+> Multi-step regressions go undetected. A subtle change in a silver transform produces correct-looking silver data, but when gold aggregates it, the composite scores shift by 5%. Unit tests pass (the function works). Quality tests pass (no nulls, no duplicates). Only the full end-to-end comparison catches the drift — because it checks the final answer, not intermediate steps.
+
+---
+
 ## What to Test at Each Pipeline Layer
+
+This table maps testing to the **medallion architecture** — what specific checks apply at each data layer, which tool runs them, and where the implementation lives in the vault.
 
 | Pipeline Layer | What to Test | Primary Tool | Vault Reference |
 |---|---|---|---|
