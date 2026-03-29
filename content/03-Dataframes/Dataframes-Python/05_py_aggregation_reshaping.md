@@ -73,9 +73,9 @@ display(
 )
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>avg_close</th>
@@ -171,14 +171,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>trading_days</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td><td>81633862</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td><td>110400463</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.35</td><td>945070720</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.4</td><td>557855567</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.66</td><td>308359744</td><td>1324</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.69</td><td>94592244</td><td>1331</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.54</td><td>484115375</td><td>1331</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.66</td><td>398802950</td><td>1324</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.75</td><td>476686026</td><td>1321</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.19</td><td>1101960308</td><td>1324</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>trading_days</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td><td>81633862</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td><td>110400463</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.35</td><td>945070720</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.4</td><td>557855567</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.66</td><td>308359744</td><td>1324</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.69</td><td>94592244</td><td>1331</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.54</td><td>484115375</td><td>1331</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.66</td><td>398802950</td><td>1324</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.75</td><td>476686026</td><td>1321</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.19</td><td>1101960308</td><td>1324</td></tr></tbody></table></div>
 
 ## Multiple Grouping Columns
 
@@ -199,9 +192,9 @@ display(
 )
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>year</th>
@@ -263,14 +256,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>year</th><th>avg_close</th><th>max_close</th></tr><tr><td>str</td><td>i32</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026</td><td>1170.42</td><td>1288.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2025</td><td>724.61</td><td>963.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2024</td><td>799.26</td><td>1002.2</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2023</td><td>611.33</td><td>694.7</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2022</td><td>531.58</td><td>701.7</td></tr></tbody></table></div>
+<div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>year</th><th>avg_close</th><th>max_close</th></tr><tr><td>str</td><td>i32</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026</td><td>1170.42</td><td>1288.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2025</td><td>724.61</td><td>963.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2024</td><td>799.26</td><td>1002.2</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2023</td><td>611.33</td><td>694.7</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2022</td><td>531.58</td><td>701.7</td></tr></tbody></table></div>
 
 ## Multiple Aggregation Functions
 
@@ -294,9 +280,9 @@ display(
 )
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>mean_close</th>
@@ -425,14 +411,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 7)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>mean_close</th><th>std_close</th><th>min_close</th><th>max_close</th><th>first_date</th><th>last_date</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td><td>481.32</td><td>842.6</td><td>2839.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td><td>417.81</td><td>630.8</td><td>2766.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.35</td><td>162.75</td><td>397.45</td><td>1288.4</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.4</td><td>103.5</td><td>437.55</td><td>902.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.66</td><td>586.08</td><td>77.0</td><td>1988.5</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.69</td><td>142.73</td><td>208.8</td><td>803.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.54</td><td>37.18</td><td>290.1</td><td>456.9</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.66</td><td>123.05</td><td>209.15</td><td>610.6</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.75</td><td>94.85</td><td>154.7</td><td>487.9</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.19</td><td>62.47</td><td>159.62</td><td>392.7</td><td>2021-01-04</td><td>2026-03-12</td></tr></tbody></table></div>
+<div><small>shape: (10, 7)</small><table><thead><tr><th>symbol</th><th>mean_close</th><th>std_close</th><th>min_close</th><th>max_close</th><th>first_date</th><th>last_date</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td><td>481.32</td><td>842.6</td><td>2839.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td><td>417.81</td><td>630.8</td><td>2766.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.35</td><td>162.75</td><td>397.45</td><td>1288.4</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.4</td><td>103.5</td><td>437.55</td><td>902.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.66</td><td>586.08</td><td>77.0</td><td>1988.5</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.69</td><td>142.73</td><td>208.8</td><td>803.0</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.54</td><td>37.18</td><td>290.1</td><td>456.9</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.66</td><td>123.05</td><td>209.15</td><td>610.6</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.75</td><td>94.85</td><td>154.7</td><td>487.9</td><td>2021-01-04</td><td>2026-03-12</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.19</td><td>62.47</td><td>159.62</td><td>392.7</td><td>2021-01-04</td><td>2026-03-12</td></tr></tbody></table></div>
 
 ## Transform: Same-Length Output
 
@@ -448,9 +427,9 @@ asml_pd["vs_avg"] = ((asml_pd["close"] - asml_pd["group_avg"]) / asml_pd["group_
 display(asml_pd[["symbol", "date", "close", "group_avg", "vs_avg"]].tail(10))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -566,14 +545,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 5)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>group_avg</th><th>vs_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>671.35</td><td>83.72</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>671.35</td><td>80.29</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>671.35</td><td>73.05</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>671.35</td><td>78.71</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>671.35</td><td>76.66</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>671.35</td><td>70.85</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>671.35</td><td>70.94</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>671.35</td><td>78.74</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>671.35</td><td>78.57</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>671.35</td><td>77.37</td></tr></tbody></table></div>
+<div><small>shape: (10, 5)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>group_avg</th><th>vs_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>671.35</td><td>83.72</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>671.35</td><td>80.29</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>671.35</td><td>73.05</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>671.35</td><td>78.71</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>671.35</td><td>76.66</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>671.35</td><td>70.85</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>671.35</td><td>70.94</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>671.35</td><td>78.74</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>671.35</td><td>78.57</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>671.35</td><td>77.37</td></tr></tbody></table></div>
 
 ## Sector Analysis with Scores
 
@@ -594,9 +566,9 @@ display(
 )
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>sector</th>
       <th>stocks</th>
@@ -701,14 +673,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 5)</small><table border="1" class="dataframe"><thead><tr><th>sector</th><th>stocks</th><th>avg_composite</th><th>avg_momentum</th><th>total_weight</th></tr><tr><td>str</td><td>u32</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Technology&quot;</td><td>75</td><td>0.154</td><td>-0.1971</td><td>2.1478</td></tr><tr><td>&quot;Energy&quot;</td><td>34</td><td>0.1057</td><td>0.5028</td><td>1.1997</td></tr><tr><td>&quot;Industrials&quot;</td><td>66</td><td>0.0874</td><td>0.3035</td><td>1.3159</td></tr><tr><td>&quot;Communication Services&quot;</td><td>36</td><td>0.0494</td><td>-0.1825</td><td>1.0214</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>18</td><td>0.043</td><td>0.4475</td><td>0.1854</td></tr><tr><td>&quot;Healthcare&quot;</td><td>45</td><td>0.0191</td><td>-0.2097</td><td>0.5436</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>36</td><td>-0.0753</td><td>0.2477</td><td>0.4731</td></tr><tr><td>&quot;Financial Services&quot;</td><td>96</td><td>-0.09</td><td>-0.0565</td><td>1.4682</td></tr><tr><td>&quot;Utilities&quot;</td><td>6</td><td>-0.0994</td><td>0.7253</td><td>0.1337</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>54</td><td>-0.1374</td><td>-0.4132</td><td>1.4235</td></tr></tbody></table></div>
+<div><small>shape: (10, 5)</small><table><thead><tr><th>sector</th><th>stocks</th><th>avg_composite</th><th>avg_momentum</th><th>total_weight</th></tr><tr><td>str</td><td>u32</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Technology&quot;</td><td>75</td><td>0.154</td><td>-0.1971</td><td>2.1478</td></tr><tr><td>&quot;Energy&quot;</td><td>34</td><td>0.1057</td><td>0.5028</td><td>1.1997</td></tr><tr><td>&quot;Industrials&quot;</td><td>66</td><td>0.0874</td><td>0.3035</td><td>1.3159</td></tr><tr><td>&quot;Communication Services&quot;</td><td>36</td><td>0.0494</td><td>-0.1825</td><td>1.0214</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>18</td><td>0.043</td><td>0.4475</td><td>0.1854</td></tr><tr><td>&quot;Healthcare&quot;</td><td>45</td><td>0.0191</td><td>-0.2097</td><td>0.5436</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>36</td><td>-0.0753</td><td>0.2477</td><td>0.4731</td></tr><tr><td>&quot;Financial Services&quot;</td><td>96</td><td>-0.09</td><td>-0.0565</td><td>1.4682</td></tr><tr><td>&quot;Utilities&quot;</td><td>6</td><td>-0.0994</td><td>0.7253</td><td>0.1337</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>54</td><td>-0.1374</td><td>-0.4132</td><td>1.4235</td></tr></tbody></table></div>
 
 ## Group By + Sort Pattern
 
@@ -730,14 +695,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (30, 4)</small><table border="1" class="dataframe"><thead><tr><th>sector</th><th>symbol</th><th>composite_score</th><th>composite_rank</th></tr><tr><td>str</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.344008</td><td>7</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.24484</td><td>11</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.245728</td><td>12</td></tr><tr><td>&quot;Communication Services&quot;</td><td>&quot;DTE.DE&quot;</td><td>0.515005</td><td>2</td></tr><tr><td>&quot;Communication Services&quot;</td><td>&quot;DTE.DE&quot;</td><td>0.521442</td><td>2</td></tr><tr><td>&quot;Communication Services&quot;</td><td>&quot;DTE.DE&quot;</td><td>0.487049</td><td>3</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>&quot;VOW.DE&quot;</td><td>0.57561</td><td>2</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>&quot;VOW.DE&quot;</td><td>0.463323</td><td>3</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>&quot;7203.T&quot;</td><td>0.429936</td><td>3</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>&quot;ABI.BR&quot;</td><td>0.42094</td><td>4</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>&quot;ABI.BR&quot;</td><td>0.38521</td><td>5</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>&quot;ABI.BR&quot;</td><td>0.406873</td><td>5</td></tr><tr><td>&quot;Energy&quot;</td><td>&quot;DVN&quot;</td><td>0.665507</td><td>1</td></tr><tr><td>&quot;Energy&quot;</td><td>&quot;VLO&quot;</td><td>0.49009</td><td>2</td></tr><tr><td>&quot;Energy&quot;</td><td>&quot;WDS.AX&quot;</td><td>0.490654</td><td>2</td></tr><tr><td>&quot;Financial Services&quot;</td><td>&quot;BNP.PA&quot;</td><td>0.679599</td><td>1</td></tr><tr><td>&quot;Financial Services&quot;</td><td>&quot;BNP.PA&quot;</td><td>0.663971</td><td>1</td></tr><tr><td>&quot;Financial Services&quot;</td><td>&quot;BNP.PA&quot;</td><td>0.683947</td><td>1</td></tr><tr><td>&quot;Healthcare&quot;</td><td>&quot;2269.HK&quot;</td><td>0.357499</td><td>5</td></tr><tr><td>&quot;Healthcare&quot;</td><td>&quot;4568.T&quot;</td><td>0.355843</td><td>6</td></tr><tr><td>&quot;Healthcare&quot;</td><td>&quot;4568.T&quot;</td><td>0.377455</td><td>6</td></tr><tr><td>&quot;Industrials&quot;</td><td>&quot;8001.T&quot;</td><td>0.478444</td><td>1</td></tr><tr><td>&quot;Industrials&quot;</td><td>&quot;8031.T&quot;</td><td>0.48932</td><td>2</td></tr><tr><td>&quot;Industrials&quot;</td><td>&quot;8001.T&quot;</td><td>0.46616</td><td>3</td></tr><tr><td>&quot;Technology&quot;</td><td>&quot;6981.T&quot;</td><td>0.494602</td><td>1</td></tr><tr><td>&quot;Technology&quot;</td><td>&quot;6981.T&quot;</td><td>0.546581</td><td>1</td></tr><tr><td>&quot;Technology&quot;</td><td>&quot;MU&quot;</td><td>0.925838</td><td>1</td></tr><tr><td>&quot;Utilities&quot;</td><td>&quot;ENEL.MI&quot;</td><td>0.039337</td><td>25</td></tr><tr><td>&quot;Utilities&quot;</td><td>&quot;ENEL.MI&quot;</td><td>0.018668</td><td>26</td></tr><tr><td>&quot;Utilities&quot;</td><td>&quot;ENEL.MI&quot;</td><td>0.002435</td><td>27</td></tr></tbody></table></div>
+<div><small>shape: (30, 4)</small><table><thead><tr><th>sector</th><th>symbol</th><th>composite_score</th><th>composite_rank</th></tr><tr><td>str</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.344008</td><td>7</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.24484</td><td>11</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.245728</td><td>12</td></tr><tr><td>&quot;Communication Services&quot;</td><td>&quot;DTE.DE&quot;</td><td>0.515005</td><td>2</td></tr><tr><td>&quot;Communication Services&quot;</td><td>&quot;DTE.DE&quot;</td><td>0.521442</td><td>2</td></tr><tr><td>&quot;Communication Services&quot;</td><td>&quot;DTE.DE&quot;</td><td>0.487049</td><td>3</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>&quot;VOW.DE&quot;</td><td>0.57561</td><td>2</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>&quot;VOW.DE&quot;</td><td>0.463323</td><td>3</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>&quot;7203.T&quot;</td><td>0.429936</td><td>3</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>&quot;ABI.BR&quot;</td><td>0.42094</td><td>4</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>&quot;ABI.BR&quot;</td><td>0.38521</td><td>5</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>&quot;ABI.BR&quot;</td><td>0.406873</td><td>5</td></tr><tr><td>&quot;Energy&quot;</td><td>&quot;DVN&quot;</td><td>0.665507</td><td>1</td></tr><tr><td>&quot;Energy&quot;</td><td>&quot;VLO&quot;</td><td>0.49009</td><td>2</td></tr><tr><td>&quot;Energy&quot;</td><td>&quot;WDS.AX&quot;</td><td>0.490654</td><td>2</td></tr><tr><td>&quot;Financial Services&quot;</td><td>&quot;BNP.PA&quot;</td><td>0.679599</td><td>1</td></tr><tr><td>&quot;Financial Services&quot;</td><td>&quot;BNP.PA&quot;</td><td>0.663971</td><td>1</td></tr><tr><td>&quot;Financial Services&quot;</td><td>&quot;BNP.PA&quot;</td><td>0.683947</td><td>1</td></tr><tr><td>&quot;Healthcare&quot;</td><td>&quot;2269.HK&quot;</td><td>0.357499</td><td>5</td></tr><tr><td>&quot;Healthcare&quot;</td><td>&quot;4568.T&quot;</td><td>0.355843</td><td>6</td></tr><tr><td>&quot;Healthcare&quot;</td><td>&quot;4568.T&quot;</td><td>0.377455</td><td>6</td></tr><tr><td>&quot;Industrials&quot;</td><td>&quot;8001.T&quot;</td><td>0.478444</td><td>1</td></tr><tr><td>&quot;Industrials&quot;</td><td>&quot;8031.T&quot;</td><td>0.48932</td><td>2</td></tr><tr><td>&quot;Industrials&quot;</td><td>&quot;8001.T&quot;</td><td>0.46616</td><td>3</td></tr><tr><td>&quot;Technology&quot;</td><td>&quot;6981.T&quot;</td><td>0.494602</td><td>1</td></tr><tr><td>&quot;Technology&quot;</td><td>&quot;6981.T&quot;</td><td>0.546581</td><td>1</td></tr><tr><td>&quot;Technology&quot;</td><td>&quot;MU&quot;</td><td>0.925838</td><td>1</td></tr><tr><td>&quot;Utilities&quot;</td><td>&quot;ENEL.MI&quot;</td><td>0.039337</td><td>25</td></tr><tr><td>&quot;Utilities&quot;</td><td>&quot;ENEL.MI&quot;</td><td>0.018668</td><td>26</td></tr><tr><td>&quot;Utilities&quot;</td><td>&quot;ENEL.MI&quot;</td><td>0.002435</td><td>27</td></tr></tbody></table></div>
 
 ## Summary
 
@@ -766,9 +724,9 @@ asml["rank"]=asml["close"].rank(ascending=False)
 display(asml[["date","close","avg_close","rank"]].tail(10))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -862,14 +820,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>avg_close</th><th>rank</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>671.35</td><td>7.0</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>671.35</td><td>12.0</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>671.35</td><td>33.0</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>671.35</td><td>16.0</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>671.35</td><td>27.0</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>671.35</td><td>38.0</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>671.35</td><td>37.0</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>671.35</td><td>15.0</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>671.35</td><td>18.0</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>671.35</td><td>24.0</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>date</th><th>close</th><th>avg_close</th><th>rank</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>671.35</td><td>7.0</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>671.35</td><td>12.0</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>671.35</td><td>33.0</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>671.35</td><td>16.0</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>671.35</td><td>27.0</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>671.35</td><td>38.0</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>671.35</td><td>37.0</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>671.35</td><td>15.0</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>671.35</td><td>18.0</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>671.35</td><td>24.0</td></tr></tbody></table></div>
 
 ## Rolling Windows
 
@@ -887,9 +838,9 @@ display(asml_s.assign(
 )[["date","close","sma_7","rolling_max"]].tail(10))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -981,14 +932,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>rolling_max</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td><td>1288.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td><td>1288.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td><td>1288.4</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td><td>1288.4</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td><td>1288.4</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td><td>1288.4</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td><td>1288.4</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td><td>1288.4</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td><td>1288.4</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td><td>1288.4</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>rolling_max</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td><td>1288.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td><td>1288.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td><td>1288.4</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td><td>1288.4</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td><td>1288.4</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td><td>1288.4</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td><td>1288.4</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td><td>1288.4</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td><td>1288.4</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td><td>1288.4</td></tr></tbody></table></div>
 
 ## Cumulative
 
@@ -1008,14 +952,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 5)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_vol</th><th>run_high</th></tr><tr><td>date</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>778081</td><td>942032421</td><td>1288.4</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>857271</td><td>942889692</td><td>1288.4</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>689086</td><td>943578778</td><td>1288.4</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>800815</td><td>944379593</td><td>1288.4</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>562904</td><td>944942497</td><td>1288.4</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>128223</td><td>945070720</td><td>1288.4</td></tr></tbody></table></div>
+<div><small>shape: (10, 5)</small><table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_vol</th><th>run_high</th></tr><tr><td>date</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>778081</td><td>942032421</td><td>1288.4</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>857271</td><td>942889692</td><td>1288.4</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>689086</td><td>943578778</td><td>1288.4</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>800815</td><td>944379593</td><td>1288.4</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>562904</td><td>944942497</td><td>1288.4</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>128223</td><td>945070720</td><td>1288.4</td></tr></tbody></table></div>
 
 ## Rank Within Groups
 
@@ -1034,14 +971,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (15, 4)</small><table border="1" class="dataframe"><thead><tr><th>sector</th><th>symbol</th><th>composite_score</th><th>sector_rank</th></tr><tr><td>str</td><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.344008</td><td>1.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.245728</td><td>2.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.24484</td><td>3.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;AI.PA&quot;</td><td>0.097187</td><td>4.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;AI.PA&quot;</td><td>0.088726</td><td>5.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;LIN&quot;</td><td>0.072093</td><td>6.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;AI.PA&quot;</td><td>0.063075</td><td>7.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;LIN&quot;</td><td>0.056958</td><td>8.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;RIO.AX&quot;</td><td>0.04482</td><td>9.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;BHP.AX&quot;</td><td>0.026917</td><td>10.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;LIN&quot;</td><td>0.023257</td><td>11.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;RIO.AX&quot;</td><td>-0.017276</td><td>12.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;BHP.AX&quot;</td><td>-0.032021</td><td>13.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;RIO.AX&quot;</td><td>-0.068535</td><td>14.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;BAS.DE&quot;</td><td>-0.084199</td><td>15.0</td></tr></tbody></table></div>
+<div><small>shape: (15, 4)</small><table><thead><tr><th>sector</th><th>symbol</th><th>composite_score</th><th>sector_rank</th></tr><tr><td>str</td><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.344008</td><td>1.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.245728</td><td>2.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;4063.T&quot;</td><td>0.24484</td><td>3.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;AI.PA&quot;</td><td>0.097187</td><td>4.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;AI.PA&quot;</td><td>0.088726</td><td>5.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;LIN&quot;</td><td>0.072093</td><td>6.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;AI.PA&quot;</td><td>0.063075</td><td>7.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;LIN&quot;</td><td>0.056958</td><td>8.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;RIO.AX&quot;</td><td>0.04482</td><td>9.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;BHP.AX&quot;</td><td>0.026917</td><td>10.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;LIN&quot;</td><td>0.023257</td><td>11.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;RIO.AX&quot;</td><td>-0.017276</td><td>12.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;BHP.AX&quot;</td><td>-0.032021</td><td>13.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;RIO.AX&quot;</td><td>-0.068535</td><td>14.0</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>&quot;BAS.DE&quot;</td><td>-0.084199</td><td>15.0</td></tr></tbody></table></div>
 
 ## Lead / Lag
 
@@ -1061,14 +991,7 @@ display(
 )
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>next_close</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1232.4</td><td>1210.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1233.4</td><td>1161.8</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1210.4</td><td>1199.8</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1161.8</td><td>1186.0</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1199.8</td><td>1147.0</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>1147.6</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>1200.0</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>1198.8</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>1190.8</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>null</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>next_close</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1232.4</td><td>1210.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1233.4</td><td>1161.8</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1210.4</td><td>1199.8</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1161.8</td><td>1186.0</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>1199.8</td><td>1147.0</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>1147.6</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>1200.0</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>1198.8</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>1190.8</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>null</td></tr></tbody></table></div>
 
 ## Summary
 
@@ -1110,9 +1033,9 @@ display(result_pd[["symbol", "short_name", "date", "close", "sector"]].head(5))
 
     Pandas inner: 66355
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>short_name</th>
@@ -1174,14 +1097,7 @@ display(result_pl.select("symbol", "short_name", "date", "close", "sector").head
 
     Polars inner: 66355
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 5)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>short_name</th><th>date</th><th>close</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>date</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-04</td><td>57.21</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-05</td><td>57.18</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-06</td><td>58.77</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-07</td><td>58.4</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-08</td><td>57.86</td><td>&quot;Consumer Defensive&quot;</td></tr></tbody></table></div>
+<div><small>shape: (5, 5)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>date</th><th>close</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>date</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-04</td><td>57.21</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-05</td><td>57.18</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-06</td><td>58.77</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-07</td><td>58.4</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-08</td><td>57.86</td><td>&quot;Consumer Defensive&quot;</td></tr></tbody></table></div>
 
 ## Left Join
 
@@ -1195,9 +1111,9 @@ result_pd = ohlcv_pd.merge(scores_pd[["symbol", "composite_score", "composite_ra
 display(result_pd[["symbol", "date", "close", "composite_score"]].head(5))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1250,14 +1166,7 @@ result_pl = ohlcv_pl.join(scores_pl.select("symbol", "composite_score", "composi
 display(result_pl.select("symbol", "date", "close", "composite_score").head(5))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>composite_score</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>0.406873</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>0.42094</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>0.38521</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>0.406873</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>0.42094</td></tr></tbody></table></div>
+<div><small>shape: (5, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>composite_score</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>0.406873</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>0.42094</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>0.38521</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>0.406873</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>0.42094</td></tr></tbody></table></div>
 
 ## Anti Join
 
@@ -1275,14 +1184,7 @@ display(result)
 
     Symbols without scores: 0
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (0, 1)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th></tr><tr><td>str</td></tr></thead><tbody></tbody></table></div>
+<div><small>shape: (0, 1)</small><table><thead><tr><th>symbol</th></tr><tr><td>str</td></tr></thead><tbody></tbody></table></div>
 
 ## Semi Join
 
@@ -1309,14 +1211,7 @@ dts = pl.DataFrame({"date": ["2026-03-01", "2026-03-02"]})
 display(syms.join(dts, how="cross"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (4, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;2026-03-01&quot;</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>&quot;2026-03-02&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;2026-03-01&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;2026-03-02&quot;</td></tr></tbody></table></div>
+<div><small>shape: (4, 2)</small><table><thead><tr><th>symbol</th><th>date</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;2026-03-01&quot;</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>&quot;2026-03-02&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;2026-03-01&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;2026-03-02&quot;</td></tr></tbody></table></div>
 
 ## Vertical Concat
 
@@ -1330,9 +1225,9 @@ combined_pd = pd.concat([ohlcv_pd.head(3), usa_pd.head(3)], ignore_index=True)
 display(combined_pd[["symbol", "date", "close"]])
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1385,14 +1280,7 @@ combined_pl = pl.concat([ohlcv_pl.head(3), usa_pl.head(3)])
 display(combined_pl.select("symbol", "date", "close"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (6, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>&quot;AAPL&quot;</td><td>2021-01-04</td><td>129.41</td></tr><tr><td>&quot;AAPL&quot;</td><td>2021-01-05</td><td>131.01</td></tr><tr><td>&quot;AAPL&quot;</td><td>2021-01-06</td><td>126.6</td></tr></tbody></table></div>
+<div><small>shape: (6, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>&quot;AAPL&quot;</td><td>2021-01-04</td><td>129.41</td></tr><tr><td>&quot;AAPL&quot;</td><td>2021-01-05</td><td>131.01</td></tr><tr><td>&quot;AAPL&quot;</td><td>2021-01-06</td><td>126.6</td></tr></tbody></table></div>
 
 ## Horizontal Concat
 
@@ -1405,14 +1293,7 @@ right = pl.DataFrame({"sector": ["Tech", "Luxury"]})
 display(pl.concat([left, right], how="horizontal"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>price</th><th>sector</th></tr><tr><td>str</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>100</td><td>&quot;Tech&quot;</td></tr><tr><td>&quot;B&quot;</td><td>200</td><td>&quot;Luxury&quot;</td></tr></tbody></table></div>
+<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>price</th><th>sector</th></tr><tr><td>str</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>100</td><td>&quot;Tech&quot;</td></tr><tr><td>&quot;B&quot;</td><td>200</td><td>&quot;Luxury&quot;</td></tr></tbody></table></div>
 
 ## Diagonal Concat (Polars Only)
 
@@ -1425,14 +1306,7 @@ b = pl.DataFrame({"symbol": ["B"], "volume": [999]})
 display(pl.concat([a, b], how="diagonal"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>100.0</td><td>null</td></tr><tr><td>&quot;B&quot;</td><td>null</td><td>999</td></tr></tbody></table></div>
+<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;A&quot;</td><td>100.0</td><td>null</td></tr><tr><td>&quot;B&quot;</td><td>null</td><td>999</td></tr></tbody></table></div>
 
 ## Summary
 
@@ -1461,9 +1335,9 @@ asml_pd = ohlcv_pd[ohlcv_pd["symbol"]=="ASML.AS"][["date","open","high","low","c
 display(asml_pd.melt(id_vars="date", var_name="price_type", value_name="price"))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>price_type</th>
@@ -1552,14 +1426,7 @@ asml_pl = ohlcv_pl.filter(pl.col("symbol")=="ASML.AS").select("date","open","hig
 display(asml_pl.unpivot(index="date", variable_name="price_type", value_name="price"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (12, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>price_type</th><th>price</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-10</td><td>&quot;open&quot;</td><td>1188.4</td></tr><tr><td>2026-03-11</td><td>&quot;open&quot;</td><td>1188.4</td></tr><tr><td>2026-03-12</td><td>&quot;open&quot;</td><td>1194.8</td></tr><tr><td>2026-03-10</td><td>&quot;high&quot;</td><td>1208.4</td></tr><tr><td>2026-03-11</td><td>&quot;high&quot;</td><td>1210.8</td></tr><tr><td>2026-03-12</td><td>&quot;high&quot;</td><td>1202.2</td></tr><tr><td>2026-03-10</td><td>&quot;low&quot;</td><td>1172.2</td></tr><tr><td>2026-03-11</td><td>&quot;low&quot;</td><td>1174.0</td></tr><tr><td>2026-03-12</td><td>&quot;low&quot;</td><td>1187.8</td></tr><tr><td>2026-03-10</td><td>&quot;close&quot;</td><td>1200.0</td></tr><tr><td>2026-03-11</td><td>&quot;close&quot;</td><td>1198.8</td></tr><tr><td>2026-03-12</td><td>&quot;close&quot;</td><td>1190.8</td></tr></tbody></table></div>
+<div><small>shape: (12, 3)</small><table><thead><tr><th>date</th><th>price_type</th><th>price</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-10</td><td>&quot;open&quot;</td><td>1188.4</td></tr><tr><td>2026-03-11</td><td>&quot;open&quot;</td><td>1188.4</td></tr><tr><td>2026-03-12</td><td>&quot;open&quot;</td><td>1194.8</td></tr><tr><td>2026-03-10</td><td>&quot;high&quot;</td><td>1208.4</td></tr><tr><td>2026-03-11</td><td>&quot;high&quot;</td><td>1210.8</td></tr><tr><td>2026-03-12</td><td>&quot;high&quot;</td><td>1202.2</td></tr><tr><td>2026-03-10</td><td>&quot;low&quot;</td><td>1172.2</td></tr><tr><td>2026-03-11</td><td>&quot;low&quot;</td><td>1174.0</td></tr><tr><td>2026-03-12</td><td>&quot;low&quot;</td><td>1187.8</td></tr><tr><td>2026-03-10</td><td>&quot;close&quot;</td><td>1200.0</td></tr><tr><td>2026-03-11</td><td>&quot;close&quot;</td><td>1198.8</td></tr><tr><td>2026-03-12</td><td>&quot;close&quot;</td><td>1190.8</td></tr></tbody></table></div>
 
 ## Long to Wide: pivot
 
@@ -1580,14 +1447,7 @@ pivoted = (
 display(pivoted)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 7)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>2024</th><th>2021</th><th>2026</th><th>2023</th><th>2022</th><th>2025</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>799.26</td><td>593.61</td><td>1170.42</td><td>611.33</td><td>531.58</td><td>724.61</td></tr><tr><td>&quot;MC.PA&quot;</td><td>705.65</td><td>630.22</td><td>560.63</td><td>788.14</td><td>645.6</td><td>562.7</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>188.51</td><td>116.57</td><td>182.11</td><td>122.43</td><td>96.91</td><td>243.04</td></tr></tbody></table></div>
+<div><small>shape: (3, 7)</small><table><thead><tr><th>symbol</th><th>2024</th><th>2021</th><th>2026</th><th>2023</th><th>2022</th><th>2025</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>799.26</td><td>593.61</td><td>1170.42</td><td>611.33</td><td>531.58</td><td>724.61</td></tr><tr><td>&quot;MC.PA&quot;</td><td>705.65</td><td>630.22</td><td>560.63</td><td>788.14</td><td>645.6</td><td>562.7</td></tr><tr><td>&quot;SAP.DE&quot;</td><td>188.51</td><td>116.57</td><td>182.11</td><td>122.43</td><td>96.91</td><td>243.04</td></tr></tbody></table></div>
 
 ## Explode
 
@@ -1599,14 +1459,7 @@ df = pl.DataFrame({"symbol": ["ASML.AS","MC.PA"], "tags": [["tech","nl"],["luxur
 display(df.explode("tags"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (4, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>tags</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;tech&quot;</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>&quot;nl&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;luxury&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;fr&quot;</td></tr></tbody></table></div>
+<div><small>shape: (4, 2)</small><table><thead><tr><th>symbol</th><th>tags</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>&quot;tech&quot;</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>&quot;nl&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;luxury&quot;</td></tr><tr><td>&quot;MC.PA&quot;</td><td>&quot;fr&quot;</td></tr></tbody></table></div>
 
 ## Implode
 
@@ -1620,14 +1473,7 @@ display(df.explode("tags"))
 display(scores_pl.group_by("sector").agg(pl.col("symbol").implode()).sort("sector").head(5))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 2)</small><table border="1" class="dataframe"><thead><tr><th>sector</th><th>symbol</th></tr><tr><td>str</td><td>list[str]</td></tr></thead><tbody><tr><td>&quot;Basic Materials&quot;</td><td>[&quot;AI.PA&quot;, &quot;BAS.DE&quot;, … &quot;LIN&quot;]</td></tr><tr><td>&quot;Communication Services&quot;</td><td>[&quot;DTE.DE&quot;, &quot;DTE.DE&quot;, … &quot;NFLX&quot;]</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>[&quot;VOW.DE&quot;, &quot;ADS.DE&quot;, … &quot;TSLA&quot;]</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>[&quot;ABI.BR&quot;, &quot;AD.AS&quot;, … &quot;COST&quot;]</td></tr><tr><td>&quot;Energy&quot;</td><td>[&quot;TTE.PA&quot;, &quot;ENI.MI&quot;, … &quot;XOM&quot;]</td></tr></tbody></table></div>
+<div><small>shape: (5, 2)</small><table><thead><tr><th>sector</th><th>symbol</th></tr><tr><td>str</td><td>list[str]</td></tr></thead><tbody><tr><td>&quot;Basic Materials&quot;</td><td>[&quot;AI.PA&quot;, &quot;BAS.DE&quot;, … &quot;LIN&quot;]</td></tr><tr><td>&quot;Communication Services&quot;</td><td>[&quot;DTE.DE&quot;, &quot;DTE.DE&quot;, … &quot;NFLX&quot;]</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>[&quot;VOW.DE&quot;, &quot;ADS.DE&quot;, … &quot;TSLA&quot;]</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>[&quot;ABI.BR&quot;, &quot;AD.AS&quot;, … &quot;COST&quot;]</td></tr><tr><td>&quot;Energy&quot;</td><td>[&quot;TTE.PA&quot;, &quot;ENI.MI&quot;, … &quot;XOM&quot;]</td></tr></tbody></table></div>
 
 ## Transpose
 
@@ -1650,23 +1496,9 @@ display(small)
 display(small.transpose(include_header=True, column_names="symbol"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>composite_score</th><th>momentum_score</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>0.176104</td><td>1.470134</td></tr><tr><td>&quot;MC.PA&quot;</td><td>-0.203769</td><td>-0.70792</td></tr></tbody></table></div>
+<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>composite_score</th><th>momentum_score</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>0.176104</td><td>1.470134</td></tr><tr><td>&quot;MC.PA&quot;</td><td>-0.203769</td><td>-0.70792</td></tr></tbody></table></div>
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>column</th><th>ASML.AS</th><th>MC.PA</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;composite_score&quot;</td><td>0.176104</td><td>-0.203769</td></tr><tr><td>&quot;momentum_score&quot;</td><td>1.470134</td><td>-0.70792</td></tr></tbody></table></div>
+<div><small>shape: (2, 3)</small><table><thead><tr><th>column</th><th>ASML.AS</th><th>MC.PA</th></tr><tr><td>str</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;composite_score&quot;</td><td>0.176104</td><td>-0.203769</td></tr><tr><td>&quot;momentum_score&quot;</td><td>1.470134</td><td>-0.70792</td></tr></tbody></table></div>
 
 ## One-Hot Encoding
 
@@ -1678,14 +1510,7 @@ df = pl.DataFrame({"sector": ["Tech","Luxury","Tech","Energy"]})
 display(df.to_dummies())
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (4, 3)</small><table border="1" class="dataframe"><thead><tr><th>sector_Energy</th><th>sector_Luxury</th><th>sector_Tech</th></tr><tr><td>u8</td><td>u8</td><td>u8</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>1</td></tr><tr><td>0</td><td>1</td><td>0</td></tr><tr><td>0</td><td>0</td><td>1</td></tr><tr><td>1</td><td>0</td><td>0</td></tr></tbody></table></div>
+<div><small>shape: (4, 3)</small><table><thead><tr><th>sector_Energy</th><th>sector_Luxury</th><th>sector_Tech</th></tr><tr><td>u8</td><td>u8</td><td>u8</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>1</td></tr><tr><td>0</td><td>1</td><td>0</td></tr><tr><td>0</td><td>0</td><td>1</td></tr><tr><td>1</td><td>0</td><td>0</td></tr></tbody></table></div>
 
 ## Summary
 

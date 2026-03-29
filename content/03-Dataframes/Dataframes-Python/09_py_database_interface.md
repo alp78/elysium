@@ -75,14 +75,7 @@ ctx=pl.SQLContext(ohlcv=ohlcv_pl, dim=dim_pl, scores=scores_pl)
 display(ctx.execute("SELECT * FROM ohlcv LIMIT 5").collect())
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 ```python
 display(ctx.execute("""
@@ -94,14 +87,7 @@ display(ctx.execute("""
 """).collect())
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_close</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>1324</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.691961</td><td>1331</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.544365</td><td>1331</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.659932</td><td>1324</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.753823</td><td>1321</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.193731</td><td>1324</td></tr></tbody></table></div>
+<div><small>shape: (10, 3)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>1324</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>413.691961</td><td>1331</td></tr><tr><td>&quot;OR.PA&quot;</td><td>377.544365</td><td>1331</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>374.659932</td><td>1324</td></tr><tr><td>&quot;RACE.MI&quot;</td><td>289.753823</td><td>1321</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>252.193731</td><td>1324</td></tr></tbody></table></div>
 
 ```python
 display(ctx.execute("""
@@ -114,14 +100,7 @@ display(ctx.execute("""
 """).collect())
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>close</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1986.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1960.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1951.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1950.0</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>close</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1988.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1986.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1978.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1962.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1960.5</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1951.0</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>&quot;RHEINMETALL AG&quot;</td><td>&quot;Industrials&quot;</td><td>1950.0</td></tr></tbody></table></div>
 
 ## Window Functions in SQL
 
@@ -160,23 +139,9 @@ sma_result = (
 display(sma_result)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sma_7</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sma_7</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td></tr></tbody></table></div>
 
 ## DuckDB — Embedded Analytical Database
 
@@ -217,9 +182,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -316,9 +281,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>days</th>
@@ -425,9 +390,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>short_name</th>
@@ -544,9 +509,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>avg_close</th>
@@ -591,9 +556,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>sector</th>
       <th>stocks</th>
@@ -671,9 +636,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>sector</th>
@@ -875,9 +840,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -1043,9 +1008,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>avg_close</th>
@@ -1207,9 +1172,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>sector</th>
@@ -1316,9 +1281,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>dt</th>
       <th>day_name</th>
@@ -1391,9 +1356,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1443,9 +1408,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>_index</th>
@@ -1692,9 +1657,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>total_rows</th>
       <th>earliest</th>
@@ -1828,9 +1793,9 @@ db.execute("""
 display(db.execute("SELECT * FROM v_stock_summary ORDER BY avg_close DESC LIMIT 5").df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>short_name</th>
@@ -1915,9 +1880,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -2014,9 +1979,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>json_row</th>
       <th>extracted</th>
@@ -2067,9 +2032,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>ticker</th>
@@ -2190,9 +2155,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>yr</th>
@@ -2324,9 +2289,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>sector</th>
       <th>2021</th>
@@ -2459,9 +2424,9 @@ result = db.execute(
 display(result)
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>symbol</th>
@@ -2556,9 +2521,9 @@ display(result)
   </tbody>
 </table>
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>symbol</th>
@@ -2679,9 +2644,9 @@ if row:
 db.execute("DROP TABLE _test")
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>name</th>
@@ -2710,9 +2675,9 @@ db.execute("DROP TABLE _test")
   </tbody>
 </table>
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>name</th>
@@ -2804,9 +2769,9 @@ display(db.execute("""
 """).df())
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>name</th>
     </tr>
@@ -2831,9 +2796,9 @@ display(db.execute("""
   </tbody>
 </table>
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>column_name</th>
       <th>column_type</th>
@@ -2955,9 +2920,9 @@ display(db.execute("""
   </tbody>
 </table>
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>table_name</th>
       <th>estimated_size</th>
@@ -3085,9 +3050,9 @@ display(df)
 print(f"dtypes:\n{df.dtypes}")
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>_ingested_at</th>
@@ -3209,9 +3174,9 @@ display(df.head(10))
 print(f"Shape: {df.shape}")
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>date</th>
       <th>close</th>
@@ -3252,14 +3217,7 @@ display(df)
 print(f"Schema: {df.schema}")
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 12)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>_ingested_at</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr><tr><td>i64</td><td>datetime[μs]</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>66728</td><td>2026-03-12 12:45:00.017366</td><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1194.8</td><td>1202.2</td><td>1187.8</td><td>1190.8</td><td>1190.8</td><td>128223</td><td>0.0</td><td>0.0</td></tr><tr><td>66732</td><td>2026-03-12 12:45:00.017366</td><td>&quot;MC.PA&quot;</td><td>2026-03-12</td><td>495.3</td><td>497.4</td><td>491.6</td><td>494.35</td><td>494.35</td><td>171997</td><td>0.0</td><td>0.0</td></tr><tr><td>66736</td><td>2026-03-12 12:45:00.017366</td><td>&quot;RMS.PA&quot;</td><td>2026-03-12</td><td>1900.0</td><td>1918.5</td><td>1894.0</td><td>1906.0</td><td>1906.0</td><td>18681</td><td>0.0</td><td>0.0</td></tr><tr><td>66740</td><td>2026-03-12 12:45:00.017366</td><td>&quot;OR.PA&quot;</td><td>2026-03-12</td><td>361.1</td><td>362.3</td><td>357.8</td><td>360.8</td><td>360.8</td><td>82621</td><td>0.0</td><td>0.0</td></tr><tr><td>66744</td><td>2026-03-12 12:45:00.017366</td><td>&quot;SAP.DE&quot;</td><td>2026-03-12</td><td>163.0</td><td>166.74</td><td>162.8</td><td>166.52</td><td>166.52</td><td>806722</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
+<div><small>shape: (5, 12)</small><table><thead><tr><th>id</th><th>_ingested_at</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr><tr><td>i64</td><td>datetime[μs]</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>66728</td><td>2026-03-12 12:45:00.017366</td><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1194.8</td><td>1202.2</td><td>1187.8</td><td>1190.8</td><td>1190.8</td><td>128223</td><td>0.0</td><td>0.0</td></tr><tr><td>66732</td><td>2026-03-12 12:45:00.017366</td><td>&quot;MC.PA&quot;</td><td>2026-03-12</td><td>495.3</td><td>497.4</td><td>491.6</td><td>494.35</td><td>494.35</td><td>171997</td><td>0.0</td><td>0.0</td></tr><tr><td>66736</td><td>2026-03-12 12:45:00.017366</td><td>&quot;RMS.PA&quot;</td><td>2026-03-12</td><td>1900.0</td><td>1918.5</td><td>1894.0</td><td>1906.0</td><td>1906.0</td><td>18681</td><td>0.0</td><td>0.0</td></tr><tr><td>66740</td><td>2026-03-12 12:45:00.017366</td><td>&quot;OR.PA&quot;</td><td>2026-03-12</td><td>361.1</td><td>362.3</td><td>357.8</td><td>360.8</td><td>360.8</td><td>82621</td><td>0.0</td><td>0.0</td></tr><tr><td>66744</td><td>2026-03-12 12:45:00.017366</td><td>&quot;SAP.DE&quot;</td><td>2026-03-12</td><td>163.0</td><td>166.74</td><td>162.8</td><td>166.52</td><td>166.52</td><td>806722</td><td>0.0</td><td>0.0</td></tr></tbody></table></div>
 
     Schema: Schema({'id': Int64, '_ingested_at': Datetime(time_unit='us', time_zone=None), 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64})
 
@@ -3273,14 +3231,7 @@ display(df.head(10))
 print(f"Shape: {df.shape}")
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (1, 4)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>&quot;ASML.AS&quot;</td><td>1190.8</td><td>128223</td></tr></tbody></table></div>
+<div><small>shape: (1, 4)</small><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>&quot;ASML.AS&quot;</td><td>1190.8</td><td>128223</td></tr></tbody></table></div>
 
     Shape: (1, 4)
 
@@ -3290,14 +3241,7 @@ df = pl.read_database("SELECT TOP 5 * FROM bronze.index_dim", connection=ENGINE)
 display(df)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 24)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>long_business_summary</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th></tr><tr><td>i64</td><td>str</td><td>datetime[μs]</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>198</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;7203.T&quot;</td><td>&quot;Toyota Motor Corporation&quot;</td><td>&quot;TOYOTA MOTOR CORP&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;consumer-cyclical&quot;</td><td>&quot;Auto Manufacturers&quot;</td><td>&quot;auto-manufacturers&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Toyota&quot;</td><td>&quot;https://global.toyota/en&quot;</td><td>&quot;Toyota Motor Corporation desig…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>1999-05-06</td><td>2021-01-01</td></tr><tr><td>199</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;BHP.AX&quot;</td><td>&quot;BHP Group Limited&quot;</td><td>&quot;BHP GROUP FPO [BHP]&quot;</td><td>&quot;Basic Materials&quot;</td><td>&quot;basic-materials&quot;</td><td>&quot;Other Industrial Metals &amp; Mini…</td><td>&quot;other-industrial-metals-mining&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Melbourne&quot;</td><td>&quot;https://www.bhp.com&quot;</td><td>&quot;BHP Group Limited operates as …</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1988-01-28</td><td>2021-01-01</td></tr><tr><td>200</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;6758.T&quot;</td><td>&quot;Sony Group Corporation&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td><td>&quot;technology&quot;</td><td>&quot;Consumer Electronics&quot;</td><td>&quot;consumer-electronics&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;https://www.sony.com&quot;</td><td>&quot;Sony Group Corporation designs…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>2000-01-04</td><td>2021-01-01</td></tr><tr><td>201</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;1299.HK&quot;</td><td>&quot;AIA Group Limited&quot;</td><td>&quot;AIA&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Insurance - Life&quot;</td><td>&quot;insurance-life&quot;</td><td>&quot;Hong Kong&quot;</td><td>&quot;Central&quot;</td><td>&quot;https://www.aia.com&quot;</td><td>&quot;AIA Group Limited, together wi…</td><td>&quot;HKG&quot;</td><td>&quot;HKSE&quot;</td><td>&quot;Asia/Hong_Kong&quot;</td><td>&quot;HKT&quot;</td><td>&quot;HKD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;hk_market&quot;</td><td>2010-10-29</td><td>2021-01-01</td></tr><tr><td>202</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;CBA.AX&quot;</td><td>&quot;Commonwealth Bank of Australia&quot;</td><td>&quot;CWLTH BANK FPO [CBA]&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Banks - Diversified&quot;</td><td>&quot;banks-diversified&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Sydney&quot;</td><td>&quot;https://www.commbank.com.au&quot;</td><td>&quot;Commonwealth Bank of Australia…</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;AUD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1991-09-30</td><td>2021-01-01</td></tr></tbody></table></div>
+<div><small>shape: (5, 24)</small><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>long_business_summary</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th></tr><tr><td>i64</td><td>str</td><td>datetime[μs]</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>198</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;7203.T&quot;</td><td>&quot;Toyota Motor Corporation&quot;</td><td>&quot;TOYOTA MOTOR CORP&quot;</td><td>&quot;Consumer Cyclical&quot;</td><td>&quot;consumer-cyclical&quot;</td><td>&quot;Auto Manufacturers&quot;</td><td>&quot;auto-manufacturers&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Toyota&quot;</td><td>&quot;https://global.toyota/en&quot;</td><td>&quot;Toyota Motor Corporation desig…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>1999-05-06</td><td>2021-01-01</td></tr><tr><td>199</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;BHP.AX&quot;</td><td>&quot;BHP Group Limited&quot;</td><td>&quot;BHP GROUP FPO [BHP]&quot;</td><td>&quot;Basic Materials&quot;</td><td>&quot;basic-materials&quot;</td><td>&quot;Other Industrial Metals &amp; Mini…</td><td>&quot;other-industrial-metals-mining&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Melbourne&quot;</td><td>&quot;https://www.bhp.com&quot;</td><td>&quot;BHP Group Limited operates as …</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1988-01-28</td><td>2021-01-01</td></tr><tr><td>200</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;6758.T&quot;</td><td>&quot;Sony Group Corporation&quot;</td><td>&quot;SONY GROUP CORPORATION&quot;</td><td>&quot;Technology&quot;</td><td>&quot;technology&quot;</td><td>&quot;Consumer Electronics&quot;</td><td>&quot;consumer-electronics&quot;</td><td>&quot;Japan&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;https://www.sony.com&quot;</td><td>&quot;Sony Group Corporation designs…</td><td>&quot;JPX&quot;</td><td>&quot;Tokyo&quot;</td><td>&quot;Asia/Tokyo&quot;</td><td>&quot;JST&quot;</td><td>&quot;JPY&quot;</td><td>&quot;JPY&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;jp_market&quot;</td><td>2000-01-04</td><td>2021-01-01</td></tr><tr><td>201</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;1299.HK&quot;</td><td>&quot;AIA Group Limited&quot;</td><td>&quot;AIA&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Insurance - Life&quot;</td><td>&quot;insurance-life&quot;</td><td>&quot;Hong Kong&quot;</td><td>&quot;Central&quot;</td><td>&quot;https://www.aia.com&quot;</td><td>&quot;AIA Group Limited, together wi…</td><td>&quot;HKG&quot;</td><td>&quot;HKSE&quot;</td><td>&quot;Asia/Hong_Kong&quot;</td><td>&quot;HKT&quot;</td><td>&quot;HKD&quot;</td><td>&quot;USD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;hk_market&quot;</td><td>2010-10-29</td><td>2021-01-01</td></tr><tr><td>202</td><td>&quot;stoxx_asia_50&quot;</td><td>2026-03-04 22:21:55.384964</td><td>&quot;CBA.AX&quot;</td><td>&quot;Commonwealth Bank of Australia&quot;</td><td>&quot;CWLTH BANK FPO [CBA]&quot;</td><td>&quot;Financial Services&quot;</td><td>&quot;financial-services&quot;</td><td>&quot;Banks - Diversified&quot;</td><td>&quot;banks-diversified&quot;</td><td>&quot;Australia&quot;</td><td>&quot;Sydney&quot;</td><td>&quot;https://www.commbank.com.au&quot;</td><td>&quot;Commonwealth Bank of Australia…</td><td>&quot;ASX&quot;</td><td>&quot;ASX&quot;</td><td>&quot;Australia/Sydney&quot;</td><td>&quot;AEDT&quot;</td><td>&quot;AUD&quot;</td><td>&quot;AUD&quot;</td><td>&quot;EQUITY&quot;</td><td>&quot;au_market&quot;</td><td>1991-09-30</td><td>2021-01-01</td></tr></tbody></table></div>
 
 ## Chunked Reading (Large Tables)
 
@@ -3349,9 +3293,9 @@ display(pd.read_sql("SELECT * FROM dbo._test_pandas", ENGINE))
 
     Written to _test_pandas
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>score</th>
@@ -3414,9 +3358,9 @@ new_rows.to_sql("_test_pandas", ENGINE, if_exists="append", index=False)
 display(pd.read_sql("SELECT * FROM dbo._test_pandas", ENGINE))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>score</th>
@@ -3468,14 +3412,7 @@ display(pl.read_database("SELECT * FROM dbo._test_polars", connection=ENGINE))
 
     Polars → Pandas → SQL Server
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>score</th><th>date</th></tr><tr><td>str</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>&quot;2024-01-01&quot;</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>&quot;2024-01-02&quot;</td></tr></tbody></table></div>
+<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>score</th><th>date</th></tr><tr><td>str</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>&quot;2024-01-01&quot;</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>&quot;2024-01-02&quot;</td></tr></tbody></table></div>
 
 ```python
 # For bulk inserts: use pyodbc executemany with fast_executemany
@@ -3499,14 +3436,7 @@ display(pl.read_database("SELECT * FROM dbo._test_bulk", connection=ENGINE))
 
     Bulk inserted 2 rows
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>score</th><th>dt</th></tr><tr><td>str</td><td>f64</td><td>date</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
+<div><small>shape: (2, 3)</small><table><thead><tr><th>symbol</th><th>score</th><th>dt</th></tr><tr><td>str</td><td>f64</td><td>date</td></tr></thead><tbody><tr><td>&quot;PL_TEST.XX&quot;</td><td>0.88</td><td>2024-01-01</td></tr><tr><td>&quot;PL_TEST.YY&quot;</td><td>0.91</td><td>2024-01-02</td></tr></tbody></table></div>
 
 ## Executing SQL Statements
 
@@ -3528,9 +3458,9 @@ with ENGINE.begin() as conn:
 display(pd.read_sql("SELECT * FROM dbo._test_exec", ENGINE))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>name</th>
@@ -3602,9 +3532,9 @@ display(df)
 
 #### Top 10 stocks by avg close (stored procedure)
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>avg_close</th>
@@ -3680,9 +3610,9 @@ ORDER BY p.rows DESC
 display(pd.read_sql(query, ENGINE))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>TABLE_NAME</th>
       <th>row_count</th>
@@ -3843,9 +3773,9 @@ ORDER BY ORDINAL_POSITION
 display(pd.read_sql(query, ENGINE))
 ```
 
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>COLUMN_NAME</th>
       <th>DATA_TYPE</th>

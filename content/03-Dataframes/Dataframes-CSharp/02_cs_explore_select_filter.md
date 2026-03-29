@@ -78,21 +78,6 @@ Formatter.Register<DataFrame>((df, writer) =>
     html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)&quot;(.+?)&quot;(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
-        <style>
-        .pl-dataframe, .pl-dataframe * {
-            background: transparent !important;
-            background-color: transparent !important;
-            color: var(--vscode-editor-foreground, inherit) !important;
-        }
-        .pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-        .pl-dataframe td, .pl-dataframe th {
-            padding: 6px 12px !important;
-            text-align: left;
-            border: 1px solid var(--vscode-panel-border, #555) !important;
-        }
-        .pl-dataframe th { font-weight: bold; }
-        .pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-        </style>
         """;
     writer.Write(css + html);
 }, "text/html");
@@ -128,7 +113,7 @@ display($"OHLCV: {dfD.RowCount} x {dfD.ColumnCount}  |  DimCountry: {dimD.RowCou
 ---
 ## Data Exploration
 
-#### Polars.NET — Preview first and last rows with Head and Tail
+#### Polars.NET — Data Exploration: preview first and last rows with Head and Tail
 
 ```csharp
 // Polars.NET — Head / Tail
@@ -140,59 +125,11 @@ dfP.Tail(5)
 
     Head(5):
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
     Tail(5):
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>64828</td><td>WKL.AS</td><td>2026-03-06</td><td>69.02</td><td>69.36</td><td>67.82</td><td>68.52</td><td>68.52</td><td>1143729</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66875</td><td>WKL.AS</td><td>2026-03-09</td><td>68.78</td><td>69.16</td><td>67.64</td><td>68.64</td><td>68.64</td><td>841503</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66876</td><td>WKL.AS</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>64828</td><td>WKL.AS</td><td>2026-03-06</td><td>69.02</td><td>69.36</td><td>67.82</td><td>68.52</td><td>68.52</td><td>1143729</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66875</td><td>WKL.AS</td><td>2026-03-09</td><td>68.78</td><td>69.16</td><td>67.64</td><td>68.64</td><td>68.64</td><td>841503</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66876</td><td>WKL.AS</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Preview first and last rows with GetRowsAt
 
@@ -208,35 +145,7 @@ dfD.Rows[Enumerable.Range(dfD.RowCount - 5, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
 
@@ -252,35 +161,7 @@ dfD.Rows[Enumerable.Range(dfD.RowCount - 5, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
 
@@ -299,31 +180,7 @@ dfD.Rows[Enumerable.Range(dfD.RowCount - 5, 5)]
 dfP.Sample(5)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>48632</td><td>BMW.DE</td><td>2025-03-21</td><td>79.5</td><td>80.1</td><td>77.94</td><td>79.16</td><td>75.1068</td><td>3215296</td><td>0</td><td>0</td><td>false</td></tr><tr><td>13368</td><td>ALV.DE</td><td>2021-07-26</td><td>209.15</td><td>211.15</td><td>207.8</td><td>211.15</td><td>173.0352</td><td>475414</td><td>0</td><td>0</td><td>false</td></tr><tr><td>54306</td><td>SGO.PA</td><td>2021-08-10</td><td>63.93</td><td>64.31</td><td>63.86</td><td>64.26</td><td>57.3201</td><td>700160</td><td>0</td><td>0</td><td>false</td></tr><tr><td>20409</td><td>IBE.MC</td><td>2023-03-24</td><td>11.085</td><td>11.085</td><td>10.96</td><td>11.07</td><td>9.7173</td><td>12976210</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5092</td><td>OR.PA</td><td>2025-05-13</td><td>394.15</td><td>394.25</td><td>385</td><td>385.15</td><td>385.15</td><td>318152</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>48632</td><td>BMW.DE</td><td>2025-03-21</td><td>79.5</td><td>80.1</td><td>77.94</td><td>79.16</td><td>75.1068</td><td>3215296</td><td>0</td><td>0</td><td>false</td></tr><tr><td>13368</td><td>ALV.DE</td><td>2021-07-26</td><td>209.15</td><td>211.15</td><td>207.8</td><td>211.15</td><td>173.0352</td><td>475414</td><td>0</td><td>0</td><td>false</td></tr><tr><td>54306</td><td>SGO.PA</td><td>2021-08-10</td><td>63.93</td><td>64.31</td><td>63.86</td><td>64.26</td><td>57.3201</td><td>700160</td><td>0</td><td>0</td><td>false</td></tr><tr><td>20409</td><td>IBE.MC</td><td>2023-03-24</td><td>11.085</td><td>11.085</td><td>10.96</td><td>11.07</td><td>9.7173</td><td>12976210</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5092</td><td>OR.PA</td><td>2025-05-13</td><td>394.15</td><td>394.25</td><td>385</td><td>385.15</td><td>385.15</td><td>318152</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Random sample via manual shuffling (no built-in Sample)
 
@@ -339,35 +196,7 @@ dfD.Rows[sampleIndices]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
 
@@ -434,31 +263,7 @@ foreach (var (name, type) in dfD.ColumnKeys.Zip(dfD.ColumnTypes))
 dfP.Describe()
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(9 rows, 10 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>statistic<span class='pl-dtype'>utf8view</span></th><th>id<span class='pl-dtype'>double</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>double</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>25%</td><td>16590</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991</td><td>0</td><td>0</td></tr><tr><td>50%</td><td>33178</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td></tr><tr><td>75%</td><td>49767</td><td>186</td><td>188</td><td>184</td><td>186.1</td><td>175.2609</td><td>4089463</td><td>0</td><td>0</td></tr><tr><td>max</td><td>66930</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td></tr></tbody></table></div>
+<small>Polars DataFrame: (9 rows, 10 columns)</small><table><thead><tr><th>statistic</th><th>id</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>25%</td><td>16590</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991</td><td>0</td><td>0</td></tr><tr><td>50%</td><td>33178</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td></tr><tr><td>75%</td><td>49767</td><td>186</td><td>188</td><td>184</td><td>186.1</td><td>175.2609</td><td>4089463</td><td>0</td><td>0</td></tr><tr><td>max</td><td>66930</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td></tr></tbody></table></div>
 
 #### Deedle — Summary statistics computed manually per numeric column
 
@@ -552,31 +357,7 @@ foreach (var col in scD2.ColumnKeys)
 dfP.Column("symbol").ValueCounts()
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(50 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>count<span class='pl-dtype'>uint32</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>1331</td></tr><tr><td>AD.AS</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1331</td></tr><tr><td>AI.PA</td><td>1331</td></tr><tr><td>AIR.PA</td><td>1331</td></tr><tr><td>ARGX.BR</td><td>1331</td></tr><tr><td>ASML.AS</td><td>1331</td></tr><tr><td>BN.PA</td><td>1331</td></tr><tr><td>BNP.PA</td><td>1331</td></tr><tr><td>CS.PA</td><td>1331</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 40 more rows ...</td></tr></tbody></table></div>
+<small>Polars DataFrame: (50 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>count</th></tr></thead><tbody><tr><td>ABI.BR</td><td>1331</td></tr><tr><td>AD.AS</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1331</td></tr><tr><td>AI.PA</td><td>1331</td></tr><tr><td>AIR.PA</td><td>1331</td></tr><tr><td>ARGX.BR</td><td>1331</td></tr><tr><td>ASML.AS</td><td>1331</td></tr><tr><td>BN.PA</td><td>1331</td></tr><tr><td>BNP.PA</td><td>1331</td></tr><tr><td>CS.PA</td><td>1331</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 40 more rows ...</td></tr></tbody></table></div>
 
 #### Deedle — Frequency distribution via GroupBy and counting
 
@@ -590,29 +371,7 @@ valueCounts
 
 <div>
 
-<style scoped>,
-
-  .series tbody tr th:only-of-type {
-
-vertical-align: middle;
-
-  }
-
-  .series tbody tr {,
-
-vertical-align: top
-
-  }
-
-  .no-wrap {
-
-white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='series'>
+<table>
 
 <tr><td><b>ABI.BR</b></td><td class="no-wrap">-></td><td>1331</td></tr><tr><td><b>AD.AS</b></td><td class="no-wrap">-></td><td>1331</td></tr><tr><td><b>ADS.DE</b></td><td class="no-wrap">-></td><td>1324</td></tr><tr><td><b>ADYEN.AS</b></td><td class="no-wrap">-></td><td>1331</td></tr><tr><td><b>AI.PA</b></td><td class="no-wrap">-></td><td>1331</td></tr><tr><td><b>...</b></td><td class="no-wrap">-></td><td>...</td></tr><tr><td><b>SU.PA</b></td><td class="no-wrap">-></td><td>1331</td></tr><tr><td><b>TTE.PA</b></td><td class="no-wrap">-></td><td>1331</td></tr><tr><td><b>UCG.MI</b></td><td class="no-wrap">-></td><td>1321</td></tr><tr><td><b>VOW.DE</b></td><td class="no-wrap">-></td><td>1324</td></tr><tr><td><b>WKL.AS</b></td><td class="no-wrap">-></td><td>1331</td></tr>
 
@@ -753,64 +512,16 @@ display(ProfilePolars(dimP));
 
     eurostoxx50_ohlcv: (66355, 12)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(12 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>column<span class='pl-dtype'>utf8view</span></th><th>type<span class='pl-dtype'>utf8view</span></th><th>nulls<span class='pl-dtype'>int64</span></th><th>unique<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>id</td><td>i64</td><td>0</td><td>66355</td></tr><tr><td>symbol</td><td>str</td><td>0</td><td>50</td></tr><tr><td>date</td><td>date</td><td>0</td><td>1331</td></tr><tr><td>open</td><td>f64</td><td>0</td><td>29671</td></tr><tr><td>high</td><td>f64</td><td>0</td><td>31651</td></tr><tr><td>low</td><td>f64</td><td>0</td><td>31695</td></tr><tr><td>close</td><td>f64</td><td>0</td><td>31505</td></tr><tr><td>adj_close</td><td>f64</td><td>0</td><td>57739</td></tr><tr><td>volume</td><td>i64</td><td>0</td><td>65199</td></tr><tr><td>dividends</td><td>f64</td><td>0</td><td>216</td></tr><tr><td colspan='4' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 2 more rows ...</td></tr></tbody></table></div>
+<small>Polars DataFrame: (12 rows, 4 columns)</small><table><thead><tr><th>column</th><th>type</th><th>nulls</th><th>unique</th></tr></thead><tbody><tr><td>id</td><td>i64</td><td>0</td><td>66355</td></tr><tr><td>symbol</td><td>str</td><td>0</td><td>50</td></tr><tr><td>date</td><td>date</td><td>0</td><td>1331</td></tr><tr><td>open</td><td>f64</td><td>0</td><td>29671</td></tr><tr><td>high</td><td>f64</td><td>0</td><td>31651</td></tr><tr><td>low</td><td>f64</td><td>0</td><td>31695</td></tr><tr><td>close</td><td>f64</td><td>0</td><td>31505</td></tr><tr><td>adj_close</td><td>f64</td><td>0</td><td>57739</td></tr><tr><td>volume</td><td>i64</td><td>0</td><td>65199</td></tr><tr><td>dividends</td><td>f64</td><td>0</td><td>216</td></tr><tr><td colspan='4' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 2 more rows ...</td></tr></tbody></table></div>
 
     dim_country: (212, 2)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(2 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>column<span class='pl-dtype'>utf8view</span></th><th>type<span class='pl-dtype'>utf8view</span></th><th>nulls<span class='pl-dtype'>int64</span></th><th>unique<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>country_name</td><td>str</td><td>0</td><td>212</td></tr><tr><td>iso_alpha2</td><td>str</td><td>0</td><td>212</td></tr></tbody></table></div>
+<small>Polars DataFrame: (2 rows, 4 columns)</small><table><thead><tr><th>column</th><th>type</th><th>nulls</th><th>unique</th></tr></thead><tbody><tr><td>country_name</td><td>str</td><td>0</td><td>212</td></tr><tr><td>iso_alpha2</td><td>str</td><td>0</td><td>212</td></tr></tbody></table></div>
 
 ---
 ## Column Selection
 
-#### Polars.NET — Select a single column by name with Column
+#### Polars.NET — Column Selection: select a single column by name with Column
 
 ```csharp
 // Polars.NET — single column returns a Series (untyped)
@@ -849,31 +560,7 @@ display($"KeyCount: {symbolSeries.KeyCount}");
 dfP.Select("date", "symbol", "close", "volume").Head(5)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>date<span class='pl-dtype'>date32</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>2021-01-04</td><td>ABI.BR</td><td>57.21</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>ABI.BR</td><td>57.18</td><td>1382722</td></tr><tr><td>2021-01-06</td><td>ABI.BR</td><td>58.77</td><td>1370204</td></tr><tr><td>2021-01-07</td><td>ABI.BR</td><td>58.4</td><td>1469911</td></tr><tr><td>2021-01-08</td><td>ABI.BR</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>2021-01-04</td><td>ABI.BR</td><td>57.21</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>ABI.BR</td><td>57.18</td><td>1382722</td></tr><tr><td>2021-01-06</td><td>ABI.BR</td><td>58.77</td><td>1370204</td></tr><tr><td>2021-01-07</td><td>ABI.BR</td><td>58.4</td><td>1469911</td></tr><tr><td>2021-01-08</td><td>ABI.BR</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
 #### Deedle — Select multiple columns by name with Columns indexer
 
@@ -885,35 +572,7 @@ dfD.Columns[new[] { "date", "symbol", "close", "volume" }]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>date</th><th>symbol</th><th>close</th><th>volume</th></thead><thead><th></th><th></th><th>(DateTime)</th><th>(string)</th><th>(Decimal)</th><th>(int)</th></thead>
 
@@ -936,31 +595,7 @@ dfP.Select(
 ).Head(5)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>price<span class='pl-dtype'>double</span></th><th>range<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>price</th><th>range</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
 #### Deedle — No expression system; compute columns manually
 
@@ -975,35 +610,7 @@ builder.Frame.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>price</th><th>range</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th></thead>
 
@@ -1028,31 +635,7 @@ trimmed.Head(3)
 
     Columns: symbol, date, open, high, low, close, volume
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 7 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>1370204</td></tr></tbody></table></div>
+<small>Polars DataFrame: (3 rows, 7 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>1370204</td></tr></tbody></table></div>
 
 #### Deedle — Exclude columns with DropColumn
 
@@ -1068,35 +651,7 @@ trimmed.Rows[Enumerable.Range(0, 3)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>date</th><th>symbol</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></thead><thead><th></th><th></th><th>(DateTime)</th><th>(string)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th></thead>
 
@@ -1120,31 +675,7 @@ dfP.Select(priceCols).Head(5)
 
     Matched: open, high, low, close
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr><tr><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td></tr><tr><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>open</th><th>high</th><th>low</th><th>close</th></tr></thead><tbody><tr><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr><tr><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td></tr><tr><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td></tr></tbody></table></div>
 
 #### Deedle — Select columns matching a regex pattern via LINQ
 
@@ -1160,35 +691,7 @@ dfD.Columns[priceCols].Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>open</th><th>high</th><th>low</th><th>close</th></thead><thead><th></th><th></th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th></thead>
 
@@ -1217,31 +720,7 @@ renamed.Head(3)
 
     Columns: ticker, price, vol
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>ticker<span class='pl-dtype'>utf8view</span></th><th>price<span class='pl-dtype'>double</span></th><th>vol<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1370204</td></tr></tbody></table></div>
+<small>Polars DataFrame: (3 rows, 3 columns)</small><table><thead><tr><th>ticker</th><th>price</th><th>vol</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1370204</td></tr></tbody></table></div>
 
 #### Deedle — Rename columns with RenameColumns
 
@@ -1266,35 +745,7 @@ renamed.Rows[Enumerable.Range(0, 3)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>ticker</th><th>price</th><th>vol</th></thead><thead><th></th><th></th><th>(string)</th><th>(Decimal)</th><th>(int)</th></thead>
 
@@ -1317,31 +768,7 @@ reordered.Head(3)
 
     Column order: symbol, date, volume, open, high, low, close
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 7 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>1513937</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>1382722</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>1370204</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr></tbody></table></div>
+<small>Polars DataFrame: (3 rows, 7 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>open</th><th>high</th><th>low</th><th>close</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>1513937</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>1382722</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>1370204</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr></tbody></table></div>
 
 #### Deedle — Reorder columns with Columns indexer
 
@@ -1356,35 +783,7 @@ reordered.Rows[Enumerable.Range(0, 3)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>date</th><th>volume</th><th>open</th><th>high</th><th>low</th><th>close</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th></thead>
 
@@ -1410,31 +809,7 @@ expensive.Head(5)
 
     Rows where close > 500: 6155
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>60763</td><td>ADYEN.AS</td><td>2021-01-04</td><td>1900</td><td>1921.5</td><td>1856</td><td>1859.5</td><td>1859.5</td><td>99408</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60764</td><td>ADYEN.AS</td><td>2021-01-05</td><td>1848.5</td><td>1857</td><td>1814</td><td>1829</td><td>1829</td><td>86256</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60765</td><td>ADYEN.AS</td><td>2021-01-06</td><td>1822</td><td>1824</td><td>1706.5</td><td>1733</td><td>1733</td><td>156844</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60766</td><td>ADYEN.AS</td><td>2021-01-07</td><td>1735</td><td>1754</td><td>1708.5</td><td>1714.5</td><td>1714.5</td><td>90183</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60767</td><td>ADYEN.AS</td><td>2021-01-08</td><td>1730</td><td>1764.5</td><td>1715</td><td>1756.5</td><td>1756.5</td><td>97176</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>60763</td><td>ADYEN.AS</td><td>2021-01-04</td><td>1900</td><td>1921.5</td><td>1856</td><td>1859.5</td><td>1859.5</td><td>99408</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60764</td><td>ADYEN.AS</td><td>2021-01-05</td><td>1848.5</td><td>1857</td><td>1814</td><td>1829</td><td>1829</td><td>86256</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60765</td><td>ADYEN.AS</td><td>2021-01-06</td><td>1822</td><td>1824</td><td>1706.5</td><td>1733</td><td>1733</td><td>156844</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60766</td><td>ADYEN.AS</td><td>2021-01-07</td><td>1735</td><td>1754</td><td>1708.5</td><td>1714.5</td><td>1714.5</td><td>90183</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60767</td><td>ADYEN.AS</td><td>2021-01-08</td><td>1730</td><td>1764.5</td><td>1715</td><td>1756.5</td><td>1756.5</td><td>97176</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Boolean filter with Where and row lambda
 
@@ -1449,35 +824,7 @@ expensive.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th></thead><thead><th></th><th></th></thead>
 
@@ -1514,31 +861,7 @@ display($"NOT ASML: {notFilter.Height} rows");
 
     ASML AND close > 600: 840 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>136</td><td>ASML.AS</td><td>2021-07-14</td><td>599.5</td><td>611.8</td><td>597.2</td><td>609.1</td><td>582.9708</td><td>641585</td><td>0</td><td>0</td><td>false</td></tr><tr><td>142</td><td>ASML.AS</td><td>2021-07-22</td><td>610</td><td>625.9</td><td>608.2</td><td>620.8</td><td>594.169</td><td>788099</td><td>0</td><td>0</td><td>false</td></tr><tr><td>143</td><td>ASML.AS</td><td>2021-07-23</td><td>622.9</td><td>639</td><td>617.5</td><td>638.8</td><td>611.3967</td><td>833737</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (3 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>136</td><td>ASML.AS</td><td>2021-07-14</td><td>599.5</td><td>611.8</td><td>597.2</td><td>609.1</td><td>582.9708</td><td>641585</td><td>0</td><td>0</td><td>false</td></tr><tr><td>142</td><td>ASML.AS</td><td>2021-07-22</td><td>610</td><td>625.9</td><td>608.2</td><td>620.8</td><td>594.169</td><td>788099</td><td>0</td><td>0</td><td>false</td></tr><tr><td>143</td><td>ASML.AS</td><td>2021-07-23</td><td>622.9</td><td>639</td><td>617.5</td><td>638.8</td><td>611.3967</td><td>833737</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
     ASML OR SAP: 2655 rows
 
@@ -1582,31 +905,7 @@ techRows.Head(5)
 
     Tech tickers: 3979 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0</td><td>0</td><td>false</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0</td><td>0</td><td>false</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0</td><td>0</td><td>false</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0</td><td>0</td><td>false</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Filter by membership with Contains in Where
 
@@ -1622,35 +921,7 @@ techRows.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th></thead><thead><th></th><th></th></thead>
 
@@ -1673,31 +944,7 @@ midRange.Head(5)
 
     Close between 100 and 200: 12013 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>62387</td><td>ADS.DE</td><td>2022-03-04</td><td>196.5</td><td>197.64</td><td>187</td><td>187</td><td>180.5918</td><td>1319891</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62388</td><td>ADS.DE</td><td>2022-03-07</td><td>177.1</td><td>183.4</td><td>170.08</td><td>176.9</td><td>170.8379</td><td>2345656</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62389</td><td>ADS.DE</td><td>2022-03-08</td><td>172.18</td><td>187.06</td><td>172</td><td>184.94</td><td>178.6024</td><td>1937346</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62391</td><td>ADS.DE</td><td>2022-03-10</td><td>211.35</td><td>211.8</td><td>196.68</td><td>197.08</td><td>190.3264</td><td>1375129</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62415</td><td>ADS.DE</td><td>2022-04-13</td><td>198.52</td><td>199.74</td><td>194.16</td><td>197.76</td><td>190.9831</td><td>755573</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>62387</td><td>ADS.DE</td><td>2022-03-04</td><td>196.5</td><td>197.64</td><td>187</td><td>187</td><td>180.5918</td><td>1319891</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62388</td><td>ADS.DE</td><td>2022-03-07</td><td>177.1</td><td>183.4</td><td>170.08</td><td>176.9</td><td>170.8379</td><td>2345656</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62389</td><td>ADS.DE</td><td>2022-03-08</td><td>172.18</td><td>187.06</td><td>172</td><td>184.94</td><td>178.6024</td><td>1937346</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62391</td><td>ADS.DE</td><td>2022-03-10</td><td>211.35</td><td>211.8</td><td>196.68</td><td>197.08</td><td>190.3264</td><td>1375129</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62415</td><td>ADS.DE</td><td>2022-04-13</td><td>198.52</td><td>199.74</td><td>194.16</td><td>197.76</td><td>190.9831</td><td>755573</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Range filter with compound condition in Where
 
@@ -1716,35 +963,7 @@ midRange.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th></thead><thead><th></th><th></th></thead>
 
@@ -1800,59 +1019,11 @@ containsB.Select("symbol").Unique()
 
     Paris-listed (.PA): 21296 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(16 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr><tr><td>CS.PA</td></tr><tr><td>DG.PA</td></tr><tr><td>DSY.PA</td></tr><tr><td>EL.PA</td></tr><tr><td>MC.PA</td></tr><tr><td>OR.PA</td></tr><tr><td colspan='1' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
+<small>Polars DataFrame: (16 rows, 1 columns)</small><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr><tr><td>CS.PA</td></tr><tr><td>DG.PA</td></tr><tr><td>DSY.PA</td></tr><tr><td>EL.PA</td></tr><tr><td>MC.PA</td></tr><tr><td>OR.PA</td></tr><tr><td colspan='1' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
 
     Symbol contains BN: 2662 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(2 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr></tbody></table></div>
+<small>Polars DataFrame: (2 rows, 1 columns)</small><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr></tbody></table></div>
 
 #### Deedle — String predicates via lambda in Where
 
@@ -1896,31 +1067,7 @@ dateRange.Head(5)
 
     Q1 2024: 3150 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21930</td><td>ABI.BR</td><td>2024-01-02</td><td>58.72</td><td>58.95</td><td>58.17</td><td>58.77</td><td>56.7582</td><td>1049145</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21931</td><td>ABI.BR</td><td>2024-01-03</td><td>58.64</td><td>59.34</td><td>58.24</td><td>58.37</td><td>56.3719</td><td>1247000</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21932</td><td>ABI.BR</td><td>2024-01-04</td><td>58.36</td><td>58.92</td><td>58.3</td><td>58.81</td><td>56.7968</td><td>1009526</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21933</td><td>ABI.BR</td><td>2024-01-05</td><td>58.26</td><td>58.91</td><td>58.16</td><td>58.86</td><td>56.8451</td><td>1236000</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21934</td><td>ABI.BR</td><td>2024-01-08</td><td>58.47</td><td>59.5</td><td>58.39</td><td>59.38</td><td>57.3473</td><td>1033238</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21930</td><td>ABI.BR</td><td>2024-01-02</td><td>58.72</td><td>58.95</td><td>58.17</td><td>58.77</td><td>56.7582</td><td>1049145</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21931</td><td>ABI.BR</td><td>2024-01-03</td><td>58.64</td><td>59.34</td><td>58.24</td><td>58.37</td><td>56.3719</td><td>1247000</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21932</td><td>ABI.BR</td><td>2024-01-04</td><td>58.36</td><td>58.92</td><td>58.3</td><td>58.81</td><td>56.7968</td><td>1009526</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21933</td><td>ABI.BR</td><td>2024-01-05</td><td>58.26</td><td>58.91</td><td>58.16</td><td>58.86</td><td>56.8451</td><td>1236000</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21934</td><td>ABI.BR</td><td>2024-01-08</td><td>58.47</td><td>59.5</td><td>58.39</td><td>59.38</td><td>57.3473</td><td>1033238</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Date predicates via parsing and comparison in Where
 
@@ -1945,35 +1092,7 @@ dateRange.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th></thead><thead><th></th><th></th></thead>
 
@@ -2002,31 +1121,7 @@ display($"Row 0, close:  {dfP.Column("close").GetValue<double>(0)}");
 
     Row 0:
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(1 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (1 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
     Row 0, symbol: ABI.BR
 
@@ -2050,35 +1145,7 @@ display($"Row 0, close:  {firstRow.GetAs<double>("close")}");
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
 
@@ -2094,7 +1161,7 @@ display($"Row 0, close:  {firstRow.GetAs<double>("close")}");
 
     Row 0, close:  57.21
 
-#### Polars.NET — Slice a range of rows with Slice(offset, length)
+#### Polars.NET — Row Slicing: select a range of rows with Slice(offset, length)
 
 ```csharp
 // Polars.NET — Slice(offset, length)
@@ -2104,31 +1171,7 @@ dfP.Slice(100, 5)
 
     Rows 100..104:
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>21260</td><td>ABI.BR</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21261</td><td>ABI.BR</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21262</td><td>ABI.BR</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21263</td><td>ABI.BR</td><td>2021-05-31</td><td>62.27</td><td>62.31</td><td>61.51</td><td>61.56</td><td>58.1412</td><td>851557</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21264</td><td>ABI.BR</td><td>2021-06-01</td><td>62.35</td><td>62.48</td><td>61.98</td><td>62.38</td><td>58.9157</td><td>1171646</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21260</td><td>ABI.BR</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21261</td><td>ABI.BR</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21262</td><td>ABI.BR</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21263</td><td>ABI.BR</td><td>2021-05-31</td><td>62.27</td><td>62.31</td><td>61.51</td><td>61.56</td><td>58.1412</td><td>851557</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21264</td><td>ABI.BR</td><td>2021-06-01</td><td>62.35</td><td>62.48</td><td>61.98</td><td>62.38</td><td>58.9157</td><td>1171646</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Slice a range of rows with GetRowsAt
 
@@ -2142,35 +1185,7 @@ dfD.Rows[Enumerable.Range(100, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
 
@@ -2196,59 +1211,11 @@ dfP.Sort("close", descending: true).Sort("symbol").Head(5)
 
     Top 5 by close (descending):
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>3708</td><td>RMS.PA</td><td>2025-02-14</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>105651</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3707</td><td>RMS.PA</td><td>2025-02-13</td><td>2770</td><td>2816</td><td>2765</td><td>2816</td><td>2780.2302</td><td>80087</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3709</td><td>RMS.PA</td><td>2025-02-17</td><td>2825</td><td>2858</td><td>2803</td><td>2809</td><td>2776.7424</td><td>53852</td><td>3.5</td><td>0</td><td>false</td></tr><tr><td>3710</td><td>RMS.PA</td><td>2025-02-18</td><td>2816</td><td>2827</td><td>2780</td><td>2806</td><td>2773.7771</td><td>65469</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60927</td><td>ADYEN.AS</td><td>2021-08-24</td><td>2725</td><td>2766</td><td>2711.5</td><td>2766</td><td>2766</td><td>61431</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>3708</td><td>RMS.PA</td><td>2025-02-14</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>105651</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3707</td><td>RMS.PA</td><td>2025-02-13</td><td>2770</td><td>2816</td><td>2765</td><td>2816</td><td>2780.2302</td><td>80087</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3709</td><td>RMS.PA</td><td>2025-02-17</td><td>2825</td><td>2858</td><td>2803</td><td>2809</td><td>2776.7424</td><td>53852</td><td>3.5</td><td>0</td><td>false</td></tr><tr><td>3710</td><td>RMS.PA</td><td>2025-02-18</td><td>2816</td><td>2827</td><td>2780</td><td>2806</td><td>2773.7771</td><td>65469</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60927</td><td>ADYEN.AS</td><td>2021-08-24</td><td>2725</td><td>2766</td><td>2711.5</td><td>2766</td><td>2766</td><td>61431</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
     Sort by symbol ASC, then close DESC:
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 12 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>id<span class='pl-dtype'>int64</span></th><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>open<span class='pl-dtype'>double</span></th><th>high<span class='pl-dtype'>double</span></th><th>low<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>adj_close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>dividends<span class='pl-dtype'>double</span></th><th>stock_splits<span class='pl-dtype'>double</span></th><th>is_filled<span class='pl-dtype'>bool</span></th></tr></thead><tbody><tr><td>22481</td><td>ABI.BR</td><td>2026-02-27</td><td>67.34</td><td>68.82</td><td>67.24</td><td>68.82</td><td>68.82</td><td>3482764</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22470</td><td>ABI.BR</td><td>2026-02-12</td><td>65.9</td><td>68.64</td><td>65.52</td><td>68.54</td><td>68.54</td><td>3484641</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22478</td><td>ABI.BR</td><td>2026-02-24</td><td>67.8</td><td>68.32</td><td>67.58</td><td>68.3</td><td>68.3</td><td>1936847</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22477</td><td>ABI.BR</td><td>2026-02-23</td><td>66.52</td><td>67.76</td><td>66.5</td><td>67.76</td><td>67.76</td><td>2207904</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22471</td><td>ABI.BR</td><td>2026-02-13</td><td>67.5</td><td>67.88</td><td>66.58</td><td>67.68</td><td>67.68</td><td>2951731</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 12 columns)</small><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>22481</td><td>ABI.BR</td><td>2026-02-27</td><td>67.34</td><td>68.82</td><td>67.24</td><td>68.82</td><td>68.82</td><td>3482764</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22470</td><td>ABI.BR</td><td>2026-02-12</td><td>65.9</td><td>68.64</td><td>65.52</td><td>68.54</td><td>68.54</td><td>3484641</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22478</td><td>ABI.BR</td><td>2026-02-24</td><td>67.8</td><td>68.32</td><td>67.58</td><td>68.3</td><td>68.3</td><td>1936847</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22477</td><td>ABI.BR</td><td>2026-02-23</td><td>66.52</td><td>67.76</td><td>66.5</td><td>67.76</td><td>67.76</td><td>2207904</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22471</td><td>ABI.BR</td><td>2026-02-13</td><td>67.5</td><td>67.88</td><td>66.58</td><td>67.68</td><td>67.68</td><td>2951731</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 #### Deedle — Sort rows with SortRowsBy
 
@@ -2267,35 +1234,7 @@ dfD.Rows[sorted]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></thead><thead><th></th><th></th><th>(int)</th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Decimal)</th><th>(int)</th><th>(Decimal)</th><th>(Decimal)</th><th>(Boolean)</th></thead>
 
@@ -2318,31 +1257,7 @@ uniqueSymbols.Select("symbol").Head(10)
 
     Unique symbols: 50 (from 66355 total rows)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ABI.BR</td></tr><tr><td>AD.AS</td></tr><tr><td>ADS.DE</td></tr><tr><td>ADYEN.AS</td></tr><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>ALV.DE</td></tr><tr><td>ARGX.BR</td></tr><tr><td>ASML.AS</td></tr><tr><td>BAS.DE</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 1 columns)</small><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>ABI.BR</td></tr><tr><td>AD.AS</td></tr><tr><td>ADS.DE</td></tr><tr><td>ADYEN.AS</td></tr><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>ALV.DE</td></tr><tr><td>ARGX.BR</td></tr><tr><td>ASML.AS</td></tr><tr><td>BAS.DE</td></tr></tbody></table></div>
 
 #### Deedle — Deduplicate rows with GroupBy and FirstValue
 

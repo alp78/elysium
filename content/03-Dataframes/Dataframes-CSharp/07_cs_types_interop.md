@@ -76,21 +76,6 @@ Formatter.Register<DataFrame>((df, writer) =>
     html = System.Text.RegularExpressions.Regex.Replace(html, @"(>|>)&quot;(.+?)&quot;(<|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
-        <style>
-        .pl-dataframe, .pl-dataframe * {
-            background: transparent !important;
-            background-color: transparent !important;
-            color: var(--vscode-editor-foreground, inherit) !important;
-        }
-        .pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-        .pl-dataframe td, .pl-dataframe th {
-            padding: 6px 12px !important;
-            text-align: left;
-            border: 1px solid var(--vscode-panel-border, #555) !important;
-        }
-        .pl-dataframe th { font-weight: bold; }
-        .pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-        </style>
         """;
     writer.Write(css + html);
 }, "text/html");
@@ -198,31 +183,7 @@ aggCat.Head(10)
 
     Aggregation on categorical column: (50, 3)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>dictionary</span></th><th>avg_close<span class='pl-dtype'>double</span></th><th>total_volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td></tr></tbody></table></div>
 
 #### Deedle: no categorical type
 
@@ -426,31 +387,7 @@ dfFromDeedle.Head(5)
 
     Deedle -> Polars conversion: (100, 4)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>open<span class='pl-dtype'>double</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>58.15</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>symbol</th><th>open</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>58.15</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
 #### Polars.NET to Deedle: extract columns and rebuild
 
@@ -482,35 +419,7 @@ dfFromPolars.Rows[Enumerable.Range(0, 5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>open</th><th>close</th><th>volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
 
@@ -586,31 +495,7 @@ dfTsv.Head(5)
     TSV (tab-separated): (212, 2)
     SSV (semicolon-separated): (212, 2)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>country_name<span class='pl-dtype'>utf8view</span></th><th>iso_alpha2<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 2 columns)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
 
 #### CSV read with Deedle: format comparison
 
@@ -636,35 +521,7 @@ dfDTsv.Rows[dfDTsv.RowKeys.Take(5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>country_name</th><th>iso_alpha2</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
 
@@ -799,31 +656,7 @@ catch (Exception ex)
 
     JSON read: (212, 2)
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>country_name<span class='pl-dtype'>utf8view</span></th><th>iso_alpha2<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 2 columns)</small><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
 
     
     JSON written: ..\data\_temp_polars_write.json

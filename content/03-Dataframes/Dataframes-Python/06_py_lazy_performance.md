@@ -103,14 +103,7 @@ result = (
 display(result)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td></tr></tbody></table></div>
+<div><small>shape: (10, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td></tr></tbody></table></div>
 
 ## Query Plan: explain()
 
@@ -215,14 +208,7 @@ result = (
 display(result.head(10))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (7, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_close</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>1230.09</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>696.35</td></tr><tr><td>&quot;MC.PA&quot;</td><td>677.03</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>625.29</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>548.06</td></tr></tbody></table></div>
+<div><small>shape: (7, 2)</small><table><thead><tr><th>symbol</th><th>avg_close</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.56</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.98</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>1230.09</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>696.35</td></tr><tr><td>&quot;MC.PA&quot;</td><td>677.03</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>625.29</td></tr><tr><td>&quot;MUV2.DE&quot;</td><td>548.06</td></tr></tbody></table></div>
 
 ## profile()
 
@@ -244,23 +230,9 @@ display(result_df)
 display(timing_df)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (2, 2)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>avg_ret</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>-0.0162</td></tr><tr><td>&quot;MC.PA&quot;</td><td>-0.0045</td></tr></tbody></table></div>
+<div><small>shape: (2, 2)</small><table><thead><tr><th>symbol</th><th>avg_ret</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>-0.0162</td></tr><tr><td>&quot;MC.PA&quot;</td><td>-0.0045</td></tr></tbody></table></div>
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 3)</small><table border="1" class="dataframe"><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>2054</td></tr><tr><td>&quot;with_column(ret)&quot;</td><td>2054</td><td>2222</td></tr><tr><td>&quot;group_by(symbol)&quot;</td><td>2227</td><td>2566</td></tr></tbody></table></div>
+<div><small>shape: (3, 3)</small><table><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>2054</td></tr><tr><td>&quot;with_column(ret)&quot;</td><td>2054</td><td>2222</td></tr><tr><td>&quot;group_by(symbol)&quot;</td><td>2227</td><td>2566</td></tr></tbody></table></div>
 
 ## Pandas vs Polars Lazy Benchmark
 

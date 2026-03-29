@@ -88,14 +88,7 @@ enriched=ohlcv_pl.join(dim_pl.select("symbol","short_name","sector","country"),o
 display(enriched.select("symbol","short_name","date","close","sector").head(5))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (5, 5)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>short_name</th><th>date</th><th>close</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>date</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-04</td><td>57.21</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-05</td><td>57.18</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-06</td><td>58.77</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-07</td><td>58.4</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-08</td><td>57.86</td><td>&quot;Consumer Defensive&quot;</td></tr></tbody></table></div>
+<div><small>shape: (5, 5)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>date</th><th>close</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>date</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-04</td><td>57.21</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-05</td><td>57.18</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-06</td><td>58.77</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-07</td><td>58.4</td><td>&quot;Consumer Defensive&quot;</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>&quot;AB INBEV&quot;</td><td>2021-01-08</td><td>57.86</td><td>&quot;Consumer Defensive&quot;</td></tr></tbody></table></div>
 
 ## Compute Returns
 
@@ -112,14 +105,7 @@ with_ret=enriched.sort("symbol","date").with_columns(
 display(with_ret.filter(pl.col("symbol")=="ASML.AS").select("symbol","date","close","daily_return").tail(10))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>0.08</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>-1.86</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>-4.02</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>3.27</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>-1.15</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>0.05</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>4.57</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>-0.1</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>-0.67</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2026-02-27</td><td>1233.4</td><td>0.08</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-02</td><td>1210.4</td><td>-1.86</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-03</td><td>1161.8</td><td>-4.02</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-04</td><td>1199.8</td><td>3.27</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-05</td><td>1186.0</td><td>-1.15</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-09</td><td>1147.6</td><td>0.05</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-10</td><td>1200.0</td><td>4.57</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-11</td><td>1198.8</td><td>-0.1</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2026-03-12</td><td>1190.8</td><td>-0.67</td></tr></tbody></table></div>
 
 ## Sector Performance
 
@@ -138,14 +124,7 @@ sector=with_ret.filter(pl.col("daily_return").is_not_null()).group_by("sector").
 display(sector)
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 4)</small><table border="1" class="dataframe"><thead><tr><th>sector</th><th>avg_return</th><th>volatility</th><th>stocks</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;Financial Services&quot;</td><td>0.0914</td><td>1.689</td><td>11</td></tr><tr><td>&quot;Industrials&quot;</td><td>0.0857</td><td>1.9855</td><td>10</td></tr><tr><td>&quot;Energy&quot;</td><td>0.0723</td><td>1.4732</td><td>2</td></tr><tr><td>&quot;Communication Services&quot;</td><td>0.0654</td><td>1.2328</td><td>1</td></tr><tr><td>&quot;Healthcare&quot;</td><td>0.041</td><td>1.9143</td><td>4</td></tr><tr><td>&quot;Technology&quot;</td><td>0.0346</td><td>2.3335</td><td>5</td></tr><tr><td>&quot;Utilities&quot;</td><td>0.0303</td><td>1.2918</td><td>2</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>0.0282</td><td>1.3438</td><td>4</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>0.0267</td><td>1.9485</td><td>9</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>0.0145</td><td>1.4817</td><td>2</td></tr></tbody></table></div>
+<div><small>shape: (10, 4)</small><table><thead><tr><th>sector</th><th>avg_return</th><th>volatility</th><th>stocks</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;Financial Services&quot;</td><td>0.0914</td><td>1.689</td><td>11</td></tr><tr><td>&quot;Industrials&quot;</td><td>0.0857</td><td>1.9855</td><td>10</td></tr><tr><td>&quot;Energy&quot;</td><td>0.0723</td><td>1.4732</td><td>2</td></tr><tr><td>&quot;Communication Services&quot;</td><td>0.0654</td><td>1.2328</td><td>1</td></tr><tr><td>&quot;Healthcare&quot;</td><td>0.041</td><td>1.9143</td><td>4</td></tr><tr><td>&quot;Technology&quot;</td><td>0.0346</td><td>2.3335</td><td>5</td></tr><tr><td>&quot;Utilities&quot;</td><td>0.0303</td><td>1.2918</td><td>2</td></tr><tr><td>&quot;Consumer Defensive&quot;</td><td>0.0282</td><td>1.3438</td><td>4</td></tr><tr><td>&quot;Consumer Cyclical&quot;</td><td>0.0267</td><td>1.9485</td><td>9</td></tr><tr><td>&quot;Basic Materials&quot;</td><td>0.0145</td><td>1.4817</td><td>2</td></tr></tbody></table></div>
 
 ## Top Performers
 
@@ -158,14 +137,7 @@ display(sector)
 display(scores_pl.sort("composite_rank").head(10).select("symbol","short_name","sector","composite_score","composite_rank","current_price"))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 6)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>composite_score</th><th>composite_rank</th><th>current_price</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>&quot;BNP PARIBAS ACT.A&quot;</td><td>&quot;Financial Services&quot;</td><td>0.683947</td><td>1</td><td>89.32</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>&quot;BNP PARIBAS ACT.A&quot;</td><td>&quot;Financial Services&quot;</td><td>0.663971</td><td>1</td><td>86.35</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>&quot;BNP PARIBAS ACT.A&quot;</td><td>&quot;Financial Services&quot;</td><td>0.679599</td><td>1</td><td>87.44</td></tr><tr><td>&quot;DVN&quot;</td><td>&quot;Devon Energy Corporation&quot;</td><td>&quot;Energy&quot;</td><td>0.665507</td><td>1</td><td>45.36</td></tr><tr><td>&quot;8001.T&quot;</td><td>&quot;ITOCHU CORP&quot;</td><td>&quot;Industrials&quot;</td><td>0.478444</td><td>1</td><td>2066.5</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td><td>0.494602</td><td>1</td><td>3783.0</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td><td>0.546581</td><td>1</td><td>3720.0</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td><td>0.925838</td><td>1</td><td>400.77</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td><td>0.862677</td><td>1</td><td>370.3</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td><td>1.287144</td><td>1</td><td>418.69</td></tr></tbody></table></div>
+<div><small>shape: (10, 6)</small><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>composite_score</th><th>composite_rank</th><th>current_price</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>&quot;BNP PARIBAS ACT.A&quot;</td><td>&quot;Financial Services&quot;</td><td>0.683947</td><td>1</td><td>89.32</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>&quot;BNP PARIBAS ACT.A&quot;</td><td>&quot;Financial Services&quot;</td><td>0.663971</td><td>1</td><td>86.35</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>&quot;BNP PARIBAS ACT.A&quot;</td><td>&quot;Financial Services&quot;</td><td>0.679599</td><td>1</td><td>87.44</td></tr><tr><td>&quot;DVN&quot;</td><td>&quot;Devon Energy Corporation&quot;</td><td>&quot;Energy&quot;</td><td>0.665507</td><td>1</td><td>45.36</td></tr><tr><td>&quot;8001.T&quot;</td><td>&quot;ITOCHU CORP&quot;</td><td>&quot;Industrials&quot;</td><td>0.478444</td><td>1</td><td>2066.5</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td><td>0.494602</td><td>1</td><td>3783.0</td></tr><tr><td>&quot;6981.T&quot;</td><td>&quot;MURATA MANUFACTURING CO&quot;</td><td>&quot;Technology&quot;</td><td>0.546581</td><td>1</td><td>3720.0</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td><td>0.925838</td><td>1</td><td>400.77</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td><td>0.862677</td><td>1</td><td>370.3</td></tr><tr><td>&quot;MU&quot;</td><td>&quot;Micron Technology, Inc.&quot;</td><td>&quot;Technology&quot;</td><td>1.287144</td><td>1</td><td>418.69</td></tr></tbody></table></div>
 
 ## Visualize
 
@@ -531,14 +503,7 @@ display(step4)
     After with_columns: (1331, 13), new cols: ['daily_return']
     After select+tail: (10, 3)
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 3)</small><table border="1" class="dataframe"><thead><tr><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr></tbody></table></div>
+<div><small>shape: (10, 3)</small><table><thead><tr><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr></tbody></table></div>
 
 ### Debug with .pipe() (Pandas)
 
@@ -694,14 +659,7 @@ display(timings)
 
     Result: (1331, 13)
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (4, 3)</small><table border="1" class="dataframe"><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>118</td></tr><tr><td>&quot;.filter([(col(&quot;symbol&quot;)) == (&quot;…</td><td>118</td><td>288</td></tr><tr><td>&quot;sort(date)&quot;</td><td>295</td><td>487</td></tr><tr><td>&quot;with_column(sma_7)&quot;</td><td>489</td><td>520</td></tr></tbody></table></div>
+<div><small>shape: (4, 3)</small><table><thead><tr><th>node</th><th>start</th><th>end</th></tr><tr><td>str</td><td>u64</td><td>u64</td></tr></thead><tbody><tr><td>&quot;optimization&quot;</td><td>0</td><td>118</td></tr><tr><td>&quot;.filter([(col(&quot;symbol&quot;)) == (&quot;…</td><td>118</td><td>288</td></tr><tr><td>&quot;sort(date)&quot;</td><td>295</td><td>487</td></tr><tr><td>&quot;with_column(sma_7)&quot;</td><td>489</td><td>520</td></tr></tbody></table></div>
 
 ## Null & Missing Data Audit
 
@@ -735,22 +693,9 @@ if len(result) > 0:
 #### index_dim nulls
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>nulls</th>
       <th>pct</th>
@@ -798,14 +743,7 @@ if result.height > 0:
 
 #### index_dim nulls
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (1, 3)</small><table border="1" class="dataframe"><thead><tr><th>column</th><th>nulls</th><th>pct</th></tr><tr><td>str</td><td>u32</td><td>f64</td></tr></thead><tbody><tr><td>&quot;valid_to&quot;</td><td>169</td><td>100.0</td></tr></tbody></table></div>
+<div><small>shape: (1, 3)</small><table><thead><tr><th>column</th><th>nulls</th><th>pct</th></tr><tr><td>str</td><td>u32</td><td>f64</td></tr></thead><tbody><tr><td>&quot;valid_to&quot;</td><td>169</td><td>100.0</td></tr></tbody></table></div>
 
 ## Duplicate Detection
 
@@ -898,27 +836,13 @@ if symbol_gaps.height > 0:
     display(symbol_gaps.select("symbol", "date", "gap_days").head(10))
 ```
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (1, 8)</small><table border="1" class="dataframe"><thead><tr><th>mean</th><th>std</th><th>min</th><th>max</th><th>p1</th><th>p99</th><th>median</th><th>skew</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>197.0349</td><td>363.052047</td><td>1.6066</td><td>2839.0</td><td>2.477</td><td>2017.0</td><td>70.68</td><td>3.759992</td></tr></tbody></table></div>
+<div><small>shape: (1, 8)</small><table><thead><tr><th>mean</th><th>std</th><th>min</th><th>max</th><th>p1</th><th>p99</th><th>median</th><th>skew</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>197.0349</td><td>363.052047</td><td>1.6066</td><td>2839.0</td><td>2.477</td><td>2017.0</td><td>70.68</td><td>3.759992</td></tr></tbody></table></div>
 
     
     Rows beyond 3 std: 2320 (3.50%)
     Date gaps > 5 days: 22
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (10, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>gap_days</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ADS.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BAS.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BAYN.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BMW.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DB1.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DHL.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ENEL.MI&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ENI.MI&quot;</td><td>2025-12-29</td><td>6</td></tr></tbody></table></div>
+<div><small>shape: (10, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>gap_days</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ADS.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ALV.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BAS.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BAYN.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;BMW.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DB1.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DHL.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ENEL.MI&quot;</td><td>2025-12-29</td><td>6</td></tr><tr><td>&quot;ENI.MI&quot;</td><td>2025-12-29</td><td>6</td></tr></tbody></table></div>
 
 ## Pipeline Assertion Patterns
 
@@ -992,22 +916,9 @@ print(f"Added: {len(added)}, Removed: {len(removed)}, Changed: {len(changed)}, U
 #### Full diff
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>id</th>
       <th>val_old</th>
@@ -1074,14 +985,7 @@ if changed.height > 0:
 
 #### Changed rows
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (1, 3)</small><table border="1" class="dataframe"><thead><tr><th>id</th><th>val</th><th>val_new</th></tr><tr><td>i64</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>2</td><td>20</td><td>25</td></tr></tbody></table></div>
+<div><small>shape: (1, 3)</small><table><thead><tr><th>id</th><th>val</th><th>val_new</th></tr><tr><td>i64</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>2</td><td>20</td><td>25</td></tr></tbody></table></div>
 
 ## Error Handling in Data Pipelines
 
@@ -1146,14 +1050,7 @@ display(small)
 
     Non-strict cast (bad -> null):
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (4, 2)</small><table border="1" class="dataframe"><thead><tr><th>x</th><th>x_int</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;1&quot;</td><td>1</td></tr><tr><td>&quot;2&quot;</td><td>2</td></tr><tr><td>&quot;bad&quot;</td><td>null</td></tr><tr><td>&quot;4&quot;</td><td>4</td></tr></tbody></table></div>
+<div><small>shape: (4, 2)</small><table><thead><tr><th>x</th><th>x_int</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;1&quot;</td><td>1</td></tr><tr><td>&quot;2&quot;</td><td>2</td></tr><tr><td>&quot;bad&quot;</td><td>null</td></tr><tr><td>&quot;4&quot;</td><td>4</td></tr></tbody></table></div>
 
     
     Strict cast error: conversion from `str` to `i64` failed in column 'x' for 1 out of 4 values: ["bad"]
@@ -1164,14 +1061,7 @@ display(small)
     
     Downcast data loss: 0 rows affected
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 2)</small><table border="1" class="dataframe"><thead><tr><th>val</th><th>val_i8</th></tr><tr><td>i64</td><td>i8</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr><tr><td>300</td><td>null</td></tr></tbody></table></div>
+<div><small>shape: (3, 2)</small><table><thead><tr><th>val</th><th>val_i8</th></tr><tr><td>i64</td><td>i8</td></tr></thead><tbody><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr><tr><td>300</td><td>null</td></tr></tbody></table></div>
 
 ## Testing & Debugging Summary
 
@@ -1249,22 +1139,9 @@ display(ohlcv_pl.select(ohlcv_pl.columns[1:4]).head(3))
 ```
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
+<table>
   <thead>
-    <tr style="text-align: right;">
+    <tr>
       <th></th>
       <th>symbol</th>
       <th>date</th>
@@ -1294,14 +1171,7 @@ display(ohlcv_pl.select(ohlcv_pl.columns[1:4]).head(3))
 </table>
 </div>
 
-<div><style>
-.dataframe > thead > tr,
-.dataframe > tbody > tr {
-  text-align: right;
-  white-space: pre-wrap;
-}
-</style>
-<small>shape: (3, 3)</small><table border="1" class="dataframe"><thead><tr><th>symbol</th><th>date</th><th>open</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td></tr></tbody></table></div>
+<div><small>shape: (3, 3)</small><table><thead><tr><th>symbol</th><th>date</th><th>open</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>56.9</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>57.96</td></tr></tbody></table></div>
 
 ## Translation Table
 

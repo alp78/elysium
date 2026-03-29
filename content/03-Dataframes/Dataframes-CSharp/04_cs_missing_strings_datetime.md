@@ -79,21 +79,6 @@ Formatter.Register<DataFrame>((df, writer) =>
     html = System.Text.RegularExpressions.Regex.Replace(html, @"(&gt;|>)&quot;(.+?)&quot;(&lt;|<)", @"$1$2$3");
     html = System.Text.RegularExpressions.Regex.Replace(html, @">""(.+?)""<", @">$1<");
     var css = """
-        <style>
-        .pl-dataframe, .pl-dataframe * {
-            background: transparent !important;
-            background-color: transparent !important;
-            color: var(--vscode-editor-foreground, inherit) !important;
-        }
-        .pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-        .pl-dataframe td, .pl-dataframe th {
-            padding: 6px 12px !important;
-            text-align: left;
-            border: 1px solid var(--vscode-panel-border, #555) !important;
-        }
-        .pl-dataframe th { font-weight: bold; }
-        .pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-        </style>
         """;
     writer.Write(css + html);
 }, "text/html");
@@ -152,31 +137,7 @@ scP.Filter(Col("ev_ebitda_zscore").IsNull()).Head(5)
 
     Rows where ev_ebitda_zscore IS null (first 5):
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th><th>pe_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.9133885393</td></tr><tr><td>SAN.MC</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.4585988913</td></tr><tr><td>ISP.MI</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.3666188825</td></tr><tr><td>UCG.MI</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.45250099</td></tr><tr><td>INGA.AS</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.3799166699</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.9133885393</td></tr><tr><td>SAN.MC</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.4585988913</td></tr><tr><td>ISP.MI</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.3666188825</td></tr><tr><td>UCG.MI</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.45250099</td></tr><tr><td>INGA.AS</td><td>2026-03-04</td><td class='pl-null'>null</td><td>0.3799166699</td></tr></tbody></table></div>
 
 #### Deedle — Detect missing values with series.TryGet and HasValue
 
@@ -257,31 +218,7 @@ scPDropped.Select("symbol", "score_date", "ev_ebitda_zscore", "pe_zscore").Head(
 
     Before: 466 rows  |  After DropNulls: 346 rows
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th><th>pe_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td><td>0.3265870647</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td><td>0.5093979371</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td><td>-0.9027376753</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td><td>0.4740837062</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td><td>0.6911063935</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></tr></thead><tbody><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td><td>0.3265870647</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td><td>0.5093979371</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td><td>-0.9027376753</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td><td>0.4740837062</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td><td>0.6911063935</td></tr></tbody></table></div>
 
 #### Deedle — Drop rows with missing values using DropSparseRows()
 
@@ -296,35 +233,7 @@ scDDropped.Rows[scDDropped.RowKeys.Take(5)].Columns[new[] { "symbol", "score_dat
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th><th>pe_zscore</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(float)</th><th>(Decimal)</th></thead>
 
@@ -349,31 +258,7 @@ scPFilled.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
     Nulls after FillNull(0.0): 0
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
 #### Deedle — Fill missing values with a constant using FillMissing()
 
@@ -402,31 +287,7 @@ scPFfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
     Nulls after ForwardFill: 1
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
 #### Deedle — Forward fill missing values with Direction.Forward
 
@@ -455,31 +316,7 @@ scPBfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
     Nulls after BackwardFill: 0
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
 #### Deedle — Backward fill missing values with Direction.Backward
 
@@ -508,31 +345,7 @@ scPMeanFill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
     Nulls after FillNull(mean): 0
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.03804613962</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.03804613962</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr></tbody></table></div>
 
 #### Deedle — Fill missing values with series mean
 
@@ -563,31 +376,7 @@ scPInterp.Select("symbol", "score_date", "ev_ebitda_zscore").Head(10)
 
     Nulls after Interpolate: 1
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>score_date<span class='pl-dtype'>date32</span></th><th>ev_ebitda_zscore<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr><tr><td>VOW.DE</td><td>2026-03-04</td><td>0.3798301687</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td></tr><tr><td>DG.PA</td><td>2026-03-04</td><td>0.9287967228</td></tr><tr><td>SAN.MC</td><td>2026-03-04</td><td>0.4340322959</td></tr><tr><td>SU.PA</td><td>2026-03-04</td><td>-0.06073213096</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>score_date</th><th>ev_ebitda_zscore</th></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td class='pl-null'>null</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.3795319291</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.6770676017</td></tr><tr><td>ENR.DE</td><td>2026-03-04</td><td>-1.693211811</td></tr><tr><td>ABI.BR</td><td>2026-03-04</td><td>0.5527390806</td></tr><tr><td>VOW.DE</td><td>2026-03-04</td><td>0.3798301687</td></tr><tr><td>TTE.PA</td><td>2026-03-04</td><td>0.4496104876</td></tr><tr><td>DG.PA</td><td>2026-03-04</td><td>0.9287967228</td></tr><tr><td>SAN.MC</td><td>2026-03-04</td><td>0.4340322959</td></tr><tr><td>SU.PA</td><td>2026-03-04</td><td>-0.06073213096</td></tr></tbody></table></div>
 
 #### Deedle — Interpolate missing values with linear interpolation
 
@@ -620,31 +409,7 @@ var caseDemo = symbols.WithColumns(
 caseDemo.Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>upper<span class='pl-dtype'>utf8view</span></th><th>lower<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI.BR</td><td>abi.br</td></tr><tr><td>AD.AS</td><td>AD.AS</td><td>ad.as</td></tr><tr><td>ADS.DE</td><td>ADS.DE</td><td>ads.de</td></tr><tr><td>ADYEN.AS</td><td>ADYEN.AS</td><td>adyen.as</td></tr><tr><td>AI.PA</td><td>AI.PA</td><td>ai.pa</td></tr><tr><td>AIR.PA</td><td>AIR.PA</td><td>air.pa</td></tr><tr><td>ALV.DE</td><td>ALV.DE</td><td>alv.de</td></tr><tr><td>ARGX.BR</td><td>ARGX.BR</td><td>argx.br</td></tr><tr><td>ASML.AS</td><td>ASML.AS</td><td>asml.as</td></tr><tr><td>BAS.DE</td><td>BAS.DE</td><td>bas.de</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>upper</th><th>lower</th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI.BR</td><td>abi.br</td></tr><tr><td>AD.AS</td><td>AD.AS</td><td>ad.as</td></tr><tr><td>ADS.DE</td><td>ADS.DE</td><td>ads.de</td></tr><tr><td>ADYEN.AS</td><td>ADYEN.AS</td><td>adyen.as</td></tr><tr><td>AI.PA</td><td>AI.PA</td><td>ai.pa</td></tr><tr><td>AIR.PA</td><td>AIR.PA</td><td>air.pa</td></tr><tr><td>ALV.DE</td><td>ALV.DE</td><td>alv.de</td></tr><tr><td>ARGX.BR</td><td>ARGX.BR</td><td>argx.br</td></tr><tr><td>ASML.AS</td><td>ASML.AS</td><td>asml.as</td></tr><tr><td>BAS.DE</td><td>BAS.DE</td><td>bas.de</td></tr></tbody></table></div>
 
 #### Deedle — Convert strings to upper/lower case with lambda
 
@@ -667,35 +432,7 @@ builder.Frame
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>upper</th><th>lower</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
 
@@ -720,31 +457,7 @@ germanP
 
     German exchange symbols (.DE):
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(16 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ADS.DE</td></tr><tr><td>ALV.DE</td></tr><tr><td>BAS.DE</td></tr><tr><td>BAYN.DE</td></tr><tr><td>BMW.DE</td></tr><tr><td>DB1.DE</td></tr><tr><td>DHL.DE</td></tr><tr><td>DTE.DE</td></tr><tr><td>ENR.DE</td></tr><tr><td>IFX.DE</td></tr><tr><td colspan='1' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
+<small>Polars DataFrame: (16 rows, 1 columns)</small><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>ADS.DE</td></tr><tr><td>ALV.DE</td></tr><tr><td>BAS.DE</td></tr><tr><td>BAYN.DE</td></tr><tr><td>BMW.DE</td></tr><tr><td>DB1.DE</td></tr><tr><td>DHL.DE</td></tr><tr><td>DTE.DE</td></tr><tr><td>ENR.DE</td></tr><tr><td>IFX.DE</td></tr><tr><td colspan='1' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
 
 #### Deedle — Check if strings contain a substring with lambda
 
@@ -779,26 +492,8 @@ display(HTML($"<div style='display:flex;gap:40px'><div><b>StartsWith S</b>{leftH
 ```
 
 <div style='display:flex;gap:40px'><div><b>StartsWith S</b>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(7 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>SAF.PA</td></tr><tr><td>SAN.MC</td></tr><tr><td>SAN.PA</td></tr><tr><td>SAP.DE</td></tr><tr><td>SGO.PA</td></tr><tr><td>SIE.DE</td></tr><tr><td>SU.PA</td></tr></tbody></table></div></div><div><b>EndsWith .BR</b>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(2 rows, 1 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ABI.BR</td></tr><tr><td>ARGX.BR</td></tr></tbody></table></div></div></div>
+<small>Polars DataFrame: (7 rows, 1 columns)</small><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>SAF.PA</td></tr><tr><td>SAN.MC</td></tr><tr><td>SAN.PA</td></tr><tr><td>SAP.DE</td></tr><tr><td>SGO.PA</td></tr><tr><td>SIE.DE</td></tr><tr><td>SU.PA</td></tr></tbody></table></div></div><div><b>EndsWith .BR</b>
+<small>Polars DataFrame: (2 rows, 1 columns)</small><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>ABI.BR</td></tr><tr><td>ARGX.BR</td></tr></tbody></table></div></div></div>
 
 #### Deedle — Filter with StartsWith and EndsWith using lambda
 
@@ -839,31 +534,7 @@ replaced.Filter(Col("replaced").Str.Contains("_GER"))
 
     Replace '.DE' with '_GER':
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(16 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>replaced<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ADS.DE</td><td>ADS_GER</td></tr><tr><td>ALV.DE</td><td>ALV_GER</td></tr><tr><td>BAS.DE</td><td>BAS_GER</td></tr><tr><td>BAYN.DE</td><td>BAYN_GER</td></tr><tr><td>BMW.DE</td><td>BMW_GER</td></tr><tr><td>DB1.DE</td><td>DB1_GER</td></tr><tr><td>DHL.DE</td><td>DHL_GER</td></tr><tr><td>DTE.DE</td><td>DTE_GER</td></tr><tr><td>ENR.DE</td><td>ENR_GER</td></tr><tr><td>IFX.DE</td><td>IFX_GER</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
+<small>Polars DataFrame: (16 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>replaced</th></tr></thead><tbody><tr><td>ADS.DE</td><td>ADS_GER</td></tr><tr><td>ALV.DE</td><td>ALV_GER</td></tr><tr><td>BAS.DE</td><td>BAS_GER</td></tr><tr><td>BAYN.DE</td><td>BAYN_GER</td></tr><tr><td>BMW.DE</td><td>BMW_GER</td></tr><tr><td>DB1.DE</td><td>DB1_GER</td></tr><tr><td>DHL.DE</td><td>DHL_GER</td></tr><tr><td>DTE.DE</td><td>DTE_GER</td></tr><tr><td>ENR.DE</td><td>ENR_GER</td></tr><tr><td>IFX.DE</td><td>IFX_GER</td></tr><tr><td colspan='2' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 6 more rows ...</td></tr></tbody></table></div>
 
 #### Deedle — Replace substrings with lambda
 
@@ -892,31 +563,7 @@ var lengths = symDf.HStack(lenSeries);
 lengths.Sort("char_len", descending: true).Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>char_len<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>NDA-FI.HE</td><td>9</td></tr><tr><td>ADYEN.AS</td><td>8</td></tr><tr><td>ARGX.BR</td><td>7</td></tr><tr><td>ASML.AS</td><td>7</td></tr><tr><td>BAYN.DE</td><td>7</td></tr><tr><td>BBVA.MC</td><td>7</td></tr><tr><td>ENEL.MI</td><td>7</td></tr><tr><td>INGA.AS</td><td>7</td></tr><tr><td>MUV2.DE</td><td>7</td></tr><tr><td>RACE.MI</td><td>7</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>char_len</th></tr></thead><tbody><tr><td>NDA-FI.HE</td><td>9</td></tr><tr><td>ADYEN.AS</td><td>8</td></tr><tr><td>ARGX.BR</td><td>7</td></tr><tr><td>ASML.AS</td><td>7</td></tr><tr><td>BAYN.DE</td><td>7</td></tr><tr><td>BBVA.MC</td><td>7</td></tr><tr><td>ENEL.MI</td><td>7</td></tr><tr><td>INGA.AS</td><td>7</td></tr><tr><td>MUV2.DE</td><td>7</td></tr><tr><td>RACE.MI</td><td>7</td></tr></tbody></table></div>
 
 #### Deedle — Measure string length with lambda
 
@@ -937,35 +584,7 @@ builder.Frame
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>char_len</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th></thead>
 
@@ -989,31 +608,7 @@ var sliced = dfP.Select(new[] { "symbol" }).Unique()
 sliced.Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>first_3<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>AD.AS</td><td>AD.</td></tr><tr><td>ADS.DE</td><td>ADS</td></tr><tr><td>ADYEN.AS</td><td>ADY</td></tr><tr><td>AI.PA</td><td>AI.</td></tr><tr><td>AIR.PA</td><td>AIR</td></tr><tr><td>ALV.DE</td><td>ALV</td></tr><tr><td>ARGX.BR</td><td>ARG</td></tr><tr><td>ASML.AS</td><td>ASM</td></tr><tr><td>BAS.DE</td><td>BAS</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>first_3</th></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>AD.AS</td><td>AD.</td></tr><tr><td>ADS.DE</td><td>ADS</td></tr><tr><td>ADYEN.AS</td><td>ADY</td></tr><tr><td>AI.PA</td><td>AI.</td></tr><tr><td>AIR.PA</td><td>AIR</td></tr><tr><td>ALV.DE</td><td>ALV</td></tr><tr><td>ARGX.BR</td><td>ARG</td></tr><tr><td>ASML.AS</td><td>ASM</td></tr><tr><td>BAS.DE</td><td>BAS</td></tr></tbody></table></div>
 
 #### Deedle — Extract substrings with lambda Substring()
 
@@ -1028,35 +623,7 @@ builder.Frame
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>first_3</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
 
@@ -1079,31 +646,7 @@ var split = dfP.Select(new[] { "symbol" }).Unique()
 split.Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>parts<span class='pl-dtype'>large_list</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>[&quot;ABI&quot;, &quot;BR&quot;]</td></tr><tr><td>AD.AS</td><td>[&quot;AD&quot;, &quot;AS&quot;]</td></tr><tr><td>ADS.DE</td><td>[&quot;ADS&quot;, &quot;DE&quot;]</td></tr><tr><td>ADYEN.AS</td><td>[&quot;ADYEN&quot;, &quot;AS&quot;]</td></tr><tr><td>AI.PA</td><td>[&quot;AI&quot;, &quot;PA&quot;]</td></tr><tr><td>AIR.PA</td><td>[&quot;AIR&quot;, &quot;PA&quot;]</td></tr><tr><td>ALV.DE</td><td>[&quot;ALV&quot;, &quot;DE&quot;]</td></tr><tr><td>ARGX.BR</td><td>[&quot;ARGX&quot;, &quot;BR&quot;]</td></tr><tr><td>ASML.AS</td><td>[&quot;ASML&quot;, &quot;AS&quot;]</td></tr><tr><td>BAS.DE</td><td>[&quot;BAS&quot;, &quot;DE&quot;]</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>parts</th></tr></thead><tbody><tr><td>ABI.BR</td><td>[&quot;ABI&quot;, &quot;BR&quot;]</td></tr><tr><td>AD.AS</td><td>[&quot;AD&quot;, &quot;AS&quot;]</td></tr><tr><td>ADS.DE</td><td>[&quot;ADS&quot;, &quot;DE&quot;]</td></tr><tr><td>ADYEN.AS</td><td>[&quot;ADYEN&quot;, &quot;AS&quot;]</td></tr><tr><td>AI.PA</td><td>[&quot;AI&quot;, &quot;PA&quot;]</td></tr><tr><td>AIR.PA</td><td>[&quot;AIR&quot;, &quot;PA&quot;]</td></tr><tr><td>ALV.DE</td><td>[&quot;ALV&quot;, &quot;DE&quot;]</td></tr><tr><td>ARGX.BR</td><td>[&quot;ARGX&quot;, &quot;BR&quot;]</td></tr><tr><td>ASML.AS</td><td>[&quot;ASML&quot;, &quot;AS&quot;]</td></tr><tr><td>BAS.DE</td><td>[&quot;BAS&quot;, &quot;DE&quot;]</td></tr></tbody></table></div>
 
 #### Deedle — Split strings with lambda String.Split()
 
@@ -1121,35 +664,7 @@ builder.Frame
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>ticker</th><th>exchange</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead>
 
@@ -1172,31 +687,7 @@ var extracted = dfP.Select(new[] { "symbol" }).Unique()
 extracted.Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>exchange<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>BR</td></tr><tr><td>AD.AS</td><td>AS</td></tr><tr><td>ADS.DE</td><td>DE</td></tr><tr><td>ADYEN.AS</td><td>AS</td></tr><tr><td>AI.PA</td><td>PA</td></tr><tr><td>AIR.PA</td><td>PA</td></tr><tr><td>ALV.DE</td><td>DE</td></tr><tr><td>ARGX.BR</td><td>BR</td></tr><tr><td>ASML.AS</td><td>AS</td></tr><tr><td>BAS.DE</td><td>DE</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>exchange</th></tr></thead><tbody><tr><td>ABI.BR</td><td>BR</td></tr><tr><td>AD.AS</td><td>AS</td></tr><tr><td>ADS.DE</td><td>DE</td></tr><tr><td>ADYEN.AS</td><td>AS</td></tr><tr><td>AI.PA</td><td>PA</td></tr><tr><td>AIR.PA</td><td>PA</td></tr><tr><td>ALV.DE</td><td>DE</td></tr><tr><td>ARGX.BR</td><td>BR</td></tr><tr><td>ASML.AS</td><td>AS</td></tr><tr><td>BAS.DE</td><td>DE</td></tr></tbody></table></div>
 
 #### Deedle — Extract with regex using Regex.Match lambda
 
@@ -1216,35 +707,7 @@ builder.Frame
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>exchange</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
 
@@ -1267,31 +730,7 @@ var paddedSeries = Polars.CSharp.Series.From("padded", paddedArr);
 symDfPad.HStack(paddedSeries).Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 2 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>padded<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>0000ABI.BR</td></tr><tr><td>AD.AS</td><td>00000AD.AS</td></tr><tr><td>ADS.DE</td><td>0000ADS.DE</td></tr><tr><td>ADYEN.AS</td><td>00ADYEN.AS</td></tr><tr><td>AI.PA</td><td>00000AI.PA</td></tr><tr><td>AIR.PA</td><td>0000AIR.PA</td></tr><tr><td>ALV.DE</td><td>0000ALV.DE</td></tr><tr><td>ARGX.BR</td><td>000ARGX.BR</td></tr><tr><td>ASML.AS</td><td>000ASML.AS</td></tr><tr><td>BAS.DE</td><td>0000BAS.DE</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 2 columns)</small><table><thead><tr><th>symbol</th><th>padded</th></tr></thead><tbody><tr><td>ABI.BR</td><td>0000ABI.BR</td></tr><tr><td>AD.AS</td><td>00000AD.AS</td></tr><tr><td>ADS.DE</td><td>0000ADS.DE</td></tr><tr><td>ADYEN.AS</td><td>00ADYEN.AS</td></tr><tr><td>AI.PA</td><td>00000AI.PA</td></tr><tr><td>AIR.PA</td><td>0000AIR.PA</td></tr><tr><td>ALV.DE</td><td>0000ALV.DE</td></tr><tr><td>ARGX.BR</td><td>000ARGX.BR</td></tr><tr><td>ASML.AS</td><td>000ASML.AS</td></tr><tr><td>BAS.DE</td><td>0000BAS.DE</td></tr></tbody></table></div>
 
 #### Deedle — Pad strings with PadLeft lambda
 
@@ -1306,35 +745,7 @@ builder.Frame
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>padded</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
 
@@ -1373,31 +784,7 @@ dfParsed.Select("symbol", "date", "date_str", "date_reparsed").Head(5)
 
     After Str.ToDate: date
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>date_str<span class='pl-dtype'>utf8view</span></th><th>date_reparsed<span class='pl-dtype'>date32</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-04</td><td>2021-01-04</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-05</td><td>2021-01-05</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-06</td><td>2021-01-06</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-07</td><td>2021-01-07</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-08</td><td>2021-01-08</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 4 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>date_str</th><th>date_reparsed</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-04</td><td>2021-01-04</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-05</td><td>2021-01-05</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-06</td><td>2021-01-06</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-07</td><td>2021-01-07</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-08</td><td>2021-01-08</td></tr></tbody></table></div>
 
 #### Deedle — Parse string column to DateTime with DateTime.Parse
 
@@ -1430,31 +817,7 @@ var dateComponents = dfP.WithColumns(
 dateComponents.Select(new[] { "symbol", "date", "year", "month", "weekday" }).Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 5 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>year<span class='pl-dtype'>int32</span></th><th>month<span class='pl-dtype'>int8</span></th><th>weekday<span class='pl-dtype'>int8</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021</td><td>1</td><td>5</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>2021</td><td>1</td><td>5</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 5 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>year</th><th>month</th><th>weekday</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021</td><td>1</td><td>5</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>2021</td><td>1</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>2021</td><td>1</td><td>2</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>2021</td><td>1</td><td>3</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>2021</td><td>1</td><td>4</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>2021</td><td>1</td><td>5</td></tr></tbody></table></div>
 
 #### Deedle — Extract year, month, weekday with DateTime lambda
 
@@ -1474,35 +837,7 @@ builder.Frame.Rows[dateKeys.Take(5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>date</th><th>year</th><th>month</th><th>weekday</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th><th>(float)</th></thead>
 
@@ -1524,31 +859,7 @@ var dfPlus7 = dfP.WithColumns(
 dfPlus7.Select(new[] { "symbol", "date", "date_plus_7" }).Head(5)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>date_plus_7<span class='pl-dtype'>date32</span></th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-11</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-12</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-13</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-14</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-15</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>date_plus_7</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2021-01-11</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>2021-01-12</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>2021-01-13</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>2021-01-14</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>2021-01-15</td></tr></tbody></table></div>
 
 #### Deedle — Duration arithmetic: add days with AddDays lambda
 
@@ -1564,35 +875,7 @@ builder.Frame.Rows[dateKeys.Take(5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>date</th><th>date_plus_7</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th></thead>
 
@@ -1618,31 +901,7 @@ abiShifted.Select(new[] { "date", "close", "prev_close" }).Head(5)
 
     ABI.BR with lagged close (first 5):
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(5 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>prev_close<span class='pl-dtype'>double</span></th></tr></thead><tbody><tr><td>2021-01-04</td><td>57.21</td><td class='pl-null'>null</td></tr><tr><td>2021-01-05</td><td>57.18</td><td>57.21</td></tr><tr><td>2021-01-06</td><td>58.77</td><td>57.18</td></tr><tr><td>2021-01-07</td><td>58.4</td><td>58.77</td></tr><tr><td>2021-01-08</td><td>57.86</td><td>58.4</td></tr></tbody></table></div>
+<small>Polars DataFrame: (5 rows, 3 columns)</small><table><thead><tr><th>date</th><th>close</th><th>prev_close</th></tr></thead><tbody><tr><td>2021-01-04</td><td>57.21</td><td class='pl-null'>null</td></tr><tr><td>2021-01-05</td><td>57.18</td><td>57.21</td></tr><tr><td>2021-01-06</td><td>58.77</td><td>57.18</td></tr><tr><td>2021-01-07</td><td>58.4</td><td>58.77</td></tr><tr><td>2021-01-08</td><td>57.86</td><td>58.4</td></tr></tbody></table></div>
 
 #### Deedle — Shift/lag a series with Shift()
 
@@ -1661,35 +920,7 @@ builder.Frame.Rows[abiDRows.RowKeys.Take(5)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>date</th><th>close</th><th>prev_close</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th></thead>
 
@@ -1711,31 +942,7 @@ var abiCum = abiPrices.WithColumns(
 abiCum.Select(new[] { "date", "volume", "cum_volume" }).Head(10)
 ```
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(10 rows, 3 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>date<span class='pl-dtype'>date32</span></th><th>volume<span class='pl-dtype'>int64</span></th><th>cum_volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>2021-01-04</td><td>1513937</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>1382722</td><td>2896659</td></tr><tr><td>2021-01-06</td><td>1370204</td><td>4266863</td></tr><tr><td>2021-01-07</td><td>1469911</td><td>5736774</td></tr><tr><td>2021-01-08</td><td>1428681</td><td>7165455</td></tr><tr><td>2021-01-11</td><td>1518079</td><td>8683534</td></tr><tr><td>2021-01-12</td><td>1649991</td><td>10333525</td></tr><tr><td>2021-01-13</td><td>1090806</td><td>11424331</td></tr><tr><td>2021-01-14</td><td>1523045</td><td>12947376</td></tr><tr><td>2021-01-15</td><td>1769988</td><td>14717364</td></tr></tbody></table></div>
+<small>Polars DataFrame: (10 rows, 3 columns)</small><table><thead><tr><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td>2021-01-04</td><td>1513937</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>1382722</td><td>2896659</td></tr><tr><td>2021-01-06</td><td>1370204</td><td>4266863</td></tr><tr><td>2021-01-07</td><td>1469911</td><td>5736774</td></tr><tr><td>2021-01-08</td><td>1428681</td><td>7165455</td></tr><tr><td>2021-01-11</td><td>1518079</td><td>8683534</td></tr><tr><td>2021-01-12</td><td>1649991</td><td>10333525</td></tr><tr><td>2021-01-13</td><td>1090806</td><td>11424331</td></tr><tr><td>2021-01-14</td><td>1523045</td><td>12947376</td></tr><tr><td>2021-01-15</td><td>1769988</td><td>14717364</td></tr></tbody></table></div>
 
 #### Deedle — Cumulative sum with manual Scan approach
 
@@ -1760,35 +967,7 @@ builder.Frame.Rows[abiDRows.RowKeys.Take(10)]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>date</th><th>volume</th><th>cum_volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(float)</th><th>(float)</th></thead>
 
@@ -1815,31 +994,7 @@ jan2024.Select(new[] { "symbol", "date", "close", "volume" })
 
     SAP.DE in January 2024:
 
-<style>
-.pl-dataframe, .pl-dataframe * {
-    background: transparent !important;
-    background-color: transparent !important;
-    color: var(--vscode-editor-foreground, inherit) !important;
-}
-.pl-dataframe { font-size: 14px !important; border-collapse: collapse; width: auto; }
-.pl-dataframe td, .pl-dataframe th {
-    padding: 6px 12px !important;
-    text-align: left;
-    border: 1px solid var(--vscode-panel-border, #555) !important;
-}
-.pl-dataframe th { font-weight: bold; }
-.pl-dataframe .pl-dtype { font-size: 11px; opacity: 0.5; }
-</style>
-<style>
-.pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
-.pl-dataframe th { background-color: #f0f0f0; font-weight: bold; text-align: left; padding: 6px 12px; border-bottom: 2px solid #ccc; }
-.pl-dataframe td { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; white-space: pre; color: #333; }
-.pl-dataframe tr:nth-child(even) { background-color: #f9f9f9; }
-.pl-dataframe tr:hover { background-color: #f1f1f1; }
-.pl-dtype { font-size: 10px; color: #999; display: block; margin-top: 2px; font-weight: normal; }
-.pl-null { color: #d0d0d0; font-style: italic; }
-.pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
-</style><div class='pl-dim'>Polars DataFrame: <b>(22 rows, 4 columns)</b></div><div style='overflow-x:auto'><table class='pl-dataframe'><thead><tr><th>symbol<span class='pl-dtype'>utf8view</span></th><th>date<span class='pl-dtype'>date32</span></th><th>close<span class='pl-dtype'>double</span></th><th>volume<span class='pl-dtype'>int64</span></th></tr></thead><tbody><tr><td>SAP.DE</td><td>2024-01-02</td><td>137.34</td><td>1442435</td></tr><tr><td>SAP.DE</td><td>2024-01-03</td><td>137.12</td><td>1311703</td></tr><tr><td>SAP.DE</td><td>2024-01-04</td><td>136.44</td><td>1114133</td></tr><tr><td>SAP.DE</td><td>2024-01-05</td><td>137.08</td><td>1171604</td></tr><tr><td>SAP.DE</td><td>2024-01-08</td><td>138.78</td><td>992579</td></tr><tr><td>SAP.DE</td><td>2024-01-09</td><td>139.28</td><td>1043679</td></tr><tr><td>SAP.DE</td><td>2024-01-10</td><td>142.04</td><td>1619033</td></tr><tr><td>SAP.DE</td><td>2024-01-11</td><td>141.88</td><td>1354264</td></tr><tr><td>SAP.DE</td><td>2024-01-12</td><td>144.86</td><td>1155152</td></tr><tr><td>SAP.DE</td><td>2024-01-15</td><td>144.56</td><td>732435</td></tr><tr><td colspan='4' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 12 more rows ...</td></tr></tbody></table></div>
+<small>Polars DataFrame: (22 rows, 4 columns)</small><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>SAP.DE</td><td>2024-01-02</td><td>137.34</td><td>1442435</td></tr><tr><td>SAP.DE</td><td>2024-01-03</td><td>137.12</td><td>1311703</td></tr><tr><td>SAP.DE</td><td>2024-01-04</td><td>136.44</td><td>1114133</td></tr><tr><td>SAP.DE</td><td>2024-01-05</td><td>137.08</td><td>1171604</td></tr><tr><td>SAP.DE</td><td>2024-01-08</td><td>138.78</td><td>992579</td></tr><tr><td>SAP.DE</td><td>2024-01-09</td><td>139.28</td><td>1043679</td></tr><tr><td>SAP.DE</td><td>2024-01-10</td><td>142.04</td><td>1619033</td></tr><tr><td>SAP.DE</td><td>2024-01-11</td><td>141.88</td><td>1354264</td></tr><tr><td>SAP.DE</td><td>2024-01-12</td><td>144.86</td><td>1155152</td></tr><tr><td>SAP.DE</td><td>2024-01-15</td><td>144.56</td><td>732435</td></tr><tr><td colspan='4' style='text-align:center; font-style:italic; color:#999; padding: 10px'>... 12 more rows ...</td></tr></tbody></table></div>
 
 #### Deedle — Filter by date range using DateTime lambda
 
@@ -1859,35 +1014,7 @@ jan2024D.Columns[new[] { "symbol", "date", "close", "volume" }]
 
 <div>
 
-<style scoped>,
-
-  .dataframe tbody tr th:only-of-type {
-
-    vertical-align: middle;
-
-  }
-
-  .dataframe tbody tr th {,
-
-    vertical-align: top
-
-  }
-
-  .dataframe thead th {
-
-    text-align: right;
-
-  }
-
-  .no-wrap {
-
-    white-space: nowrap;
-
-  }
-
-</style>
-
-<table border='1' class='dataframe'>
+<table>
 
 <thead><th></th><th></th><th>symbol</th><th>date</th><th>close</th><th>volume</th></thead><thead><th></th><th></th><th>(string)</th><th>(DateTime)</th><th>(Decimal)</th><th>(int)</th></thead>
 
