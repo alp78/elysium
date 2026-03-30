@@ -254,6 +254,151 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 >
 > SQL Server 2022 on a 2 GB e2-small VM is critically undersized. The SQL Server engine alone reserves ~700 MB–1 GB, leaving almost nothing for the buffer pool. Any table scan or bulk load will constantly thrash the disk. Minimum production recommendation: 16 GB.
 
+## Buffer Pool Health Queries
+
+SQL Server deliberately consumes as much memory as possible for the buffer pool — caching data pages in RAM to avoid disk reads. This is by design, not a memory leak. The queries below help you determine whether the buffer pool is healthy, whether the right databases are cached, and whether plan cache bloat is wasting memory.
+
+### Page Life Expectancy per NUMA Node — PLE across all buffer nodes
+
+> [!warning] The 300-Second Rule Is Outdated
+>
+> The "300 seconds" rule of thumb dates from servers with 4 GB RAM. On modern servers with 64+ GB, PLE should be in the thousands. A more useful rule: PLE should be at least `(RAM_GB / 4) * 300` seconds. A sudden PLE drop (not a low baseline) indicates memory pressure — typically caused by a large scan flushing the buffer pool.
+
+```sql
+SELECT
+    object_name,
+    counter_name,
+    instance_name,
+    cntr_value AS ple_seconds
+FROM sys.dm_os_performance_counters
+WHERE counter_name = 'Page life expectancy'
+  AND object_name LIKE '%Buffer%'
+ORDER BY object_name;
+```
+
+### Buffer Pool Usage by Database — cached pages, dirty pages, and clean pages
+
+Shows which databases are consuming the buffer pool. If a 50 MB database occupies 80% of the buffer pool while your 200 GB production database has 20%, something is wrong — likely a scan on the small database flushed the production cache.
+
+```sql
+SELECT
+    DB_NAME(bd.database_id)          AS database_name,
+    COUNT(*) * 8.0 / 1024           AS buffer_pool_mb,
+    SUM(CAST(bd.is_modified AS INT))
+        * 8.0 / 1024               AS dirty_pages_mb,
+    COUNT(*)
+        - SUM(CAST(bd.is_modified AS INT))
+                                    AS clean_pages
+FROM sys.dm_os_buffer_descriptors bd
+WHERE bd.database_id <> 32767
+GROUP BY bd.database_id
+ORDER BY buffer_pool_mb DESC;
+```
+
+### Memory Clerks — top memory consumers with virtual memory breakdown
+
+Memory clerks are SQL Server's internal memory allocators. `MEMORYCLERK_SQLBUFFERPOOL` is the data page cache. `CACHESTORE_SQLCP` and `CACHESTORE_OBJCP` are the plan cache. If plan cache grows disproportionately, ad-hoc queries without parameterization are bloating it.
+
+```sql
+SELECT TOP 20
+    type,
+    name,
+    SUM(pages_kb) / 1024.0                    AS pages_mb,
+    SUM(virtual_memory_reserved_kb) / 1024.0   AS vm_reserved_mb,
+    SUM(virtual_memory_committed_kb) / 1024.0  AS vm_committed_mb
+FROM sys.dm_os_memory_clerks
+GROUP BY type, name
+ORDER BY pages_mb DESC;
+```
+
+### Plan Cache Stats — cache size by object type and single-use plan waste
+
+> [!warning] Single-Use Plan Bloat
+>
+> A plan cache with thousands of single-use plans (use_count = 1) is a sign of non-parameterized queries. Each unique query string gets its own cached plan, wasting memory. Enable "optimize for ad hoc workloads" to cache only a stub on first execution.
+
+```sql
+-- Overall cache by object type
+SELECT
+    objtype         AS plan_type,
+    COUNT(*)        AS plan_count,
+    SUM(size_in_bytes) / 1048576.0  AS cache_mb,
+    SUM(usecounts)  AS total_use_count,
+    AVG(usecounts)  AS avg_use_count
+FROM sys.dm_exec_cached_plans
+GROUP BY objtype
+ORDER BY cache_mb DESC;
+```
+
+```sql
+-- Single-use ad hoc plans wasting memory
+SELECT
+    COUNT(*)                        AS single_use_plans,
+    SUM(size_in_bytes) / 1048576.0  AS wasted_mb
+FROM sys.dm_exec_cached_plans
+WHERE usecounts = 1
+  AND objtype = 'Adhoc';
+```
+
+```sql
+-- Top 20 most expensive cached plans by total logical reads
+SELECT TOP 20
+    total_logical_reads / execution_count
+                                    AS avg_logical_reads,
+    total_logical_reads,
+    execution_count,
+    total_elapsed_time / execution_count / 1000.0
+                                    AS avg_elapsed_ms,
+    t.text                          AS sql_text,
+    qp.query_plan
+FROM sys.dm_exec_cached_plans cp
+CROSS APPLY sys.dm_exec_sql_text(cp.plan_handle)  t
+CROSS APPLY sys.dm_exec_query_plan(cp.plan_handle) qp
+WHERE cp.objtype IN ('Proc', 'Adhoc', 'Prepared')
+ORDER BY total_logical_reads DESC;
+```
+
+### Memory Management Commands — flush caches and configure max memory
+
+> [!danger] DBCC FREEPROCCACHE Clears the Entire Plan Cache
+>
+> Clears the ENTIRE plan cache. Every query must be recompiled on next execution, causing a CPU spike. Never run in production without understanding the impact. Use `DBCC FREEPROCCACHE(plan_handle)` to clear a single plan instead.
+
+```sql
+-- Flush entire plan cache (causes full recompilation storm)
+DBCC FREEPROCCACHE;
+```
+
+```sql
+-- Flush a single plan by handle (safe for production)
+DBCC FREEPROCCACHE(<plan_handle>);
+```
+
+```sql
+-- Flush plan cache for a specific database
+DBCC FLUSHPROCINDB(<database_id>);
+```
+
+```sql
+-- Drop clean buffer pool pages (dev/test only — cold cache on prod)
+DBCC DROPCLEANBUFFERS;
+```
+
+```sql
+-- Check current max server memory setting
+SELECT name, value_in_use
+FROM sys.configurations
+WHERE name = 'max server memory (MB)';
+```
+
+```sql
+-- Set max server memory (leave 10-15% for OS)
+EXEC sp_configure 'max server memory (MB)', 28672;
+RECONFIGURE;
+```
+
+---
+
 ### Related
 
 - [[wait-stats-analysis]] — `PAGEIOLATCH_SH` and `RESOURCE_SEMAPHORE` are the wait types indicating buffer pool problems

@@ -45,6 +45,10 @@ JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
 
 #### Fragmentation thresholds — reorganize vs rebuild decision guide
 
+> [!info] Rebuild vs Reorganize Decision
+>
+> Below 10% fragmentation — do nothing. 10-30% — `ALTER INDEX REORGANIZE` (online, no lock). Above 30% — `ALTER INDEX REBUILD` (can be done `ONLINE = ON` in Enterprise edition). The 30% threshold is a guideline, not a rule — for small tables, fragmentation doesn't matter regardless of percentage.
+
 | Fragmentation Level | Action |
 |--------------------|--------|
 | < 5% | Do nothing |
@@ -291,6 +295,135 @@ INCLUDE (symbol, pe_ratio, pb_ratio, dividend_yield, quality_score, governance_s
 CREATE NONCLUSTERED INDEX IX_tickers_active_index
 ON dbo.instrument_tickers (_index, symbol)
 WHERE active = 1;  -- Filtered index for active tickers only
+```
+
+## Index Discovery
+
+### Index Metadata — all indexes with key and included columns
+
+Shows every index on every table with its included columns — essential for understanding what's already indexed before creating new ones.
+
+```sql
+-- All indexes for a table with key and included columns
+SELECT
+    i.index_id,
+    i.name              AS index_name,
+    i.type_desc,
+    i.is_unique,
+    i.is_primary_key,
+    i.is_unique_constraint,
+    i.fill_factor,
+    i.is_disabled,
+    i.allow_page_locks,
+    i.allow_row_locks,
+    i.has_filter,
+    i.filter_definition,
+    STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal)
+        FILTER (WHERE ic.is_included_column = 0)  AS key_columns,
+    STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal)
+        FILTER (WHERE ic.is_included_column = 1)  AS included_columns
+FROM sys.indexes i
+JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+JOIN sys.columns c        ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+WHERE i.object_id = OBJECT_ID('dbo.trades')
+GROUP BY i.index_id, i.name, i.type_desc, i.is_unique, i.is_primary_key,
+         i.is_unique_constraint, i.fill_factor, i.is_disabled,
+         i.allow_page_locks, i.allow_row_locks, i.has_filter, i.filter_definition
+ORDER BY i.index_id;
+```
+
+### Index Usage Stats — seeks, scans, lookups, and updates since last restart
+
+```sql
+-- Index usage: reads vs writes since last SQL Server restart
+SELECT
+    OBJECT_SCHEMA_NAME(ius.object_id)   AS schema_name,
+    OBJECT_NAME(ius.object_id)          AS table_name,
+    i.name                              AS index_name,
+    i.type_desc,
+    ius.user_seeks,
+    ius.user_scans,
+    ius.user_lookups,
+    ius.user_updates,
+    ius.user_seeks + ius.user_scans + ius.user_lookups AS total_reads,
+    ius.last_user_seek,
+    ius.last_user_scan,
+    ius.last_user_update
+FROM sys.dm_db_index_usage_stats ius
+JOIN sys.indexes i ON ius.object_id = i.object_id AND ius.index_id = i.index_id
+WHERE ius.database_id = DB_ID()
+ORDER BY total_reads DESC;
+```
+
+> [!warning] Usage Stats Reset on Restart
+>
+> These stats reset on SQL Server restart or index rebuild. If the server was recently restarted, the data is not representative — wait at least one full business cycle (1 week) before making drop decisions.
+
+### Unused Indexes — indexes with zero reads but ongoing write cost
+
+```sql
+-- Unused indexes: never read, but updated on every DML — pure overhead
+SELECT
+    OBJECT_SCHEMA_NAME(ius.object_id)   AS schema_name,
+    OBJECT_NAME(ius.object_id)          AS table_name,
+    i.name                              AS index_name,
+    ius.user_seeks, ius.user_scans, ius.user_lookups,
+    ius.user_updates                    AS writes_maintaining_index
+FROM sys.dm_db_index_usage_stats ius
+JOIN sys.indexes i ON ius.object_id = i.object_id AND ius.index_id = i.index_id
+WHERE ius.database_id = DB_ID()
+  AND ius.user_seeks = 0
+  AND ius.user_scans = 0
+  AND ius.user_lookups = 0
+  AND i.type_desc <> 'HEAP'
+  AND i.is_primary_key = 0
+  AND i.is_unique = 0
+ORDER BY ius.user_updates DESC;
+```
+
+> [!warning] Verify Full Business Cycle Before Dropping
+>
+> An unused index still costs write performance — every INSERT/UPDATE/DELETE must maintain it. But verify the stats cover a full business cycle. An index used only during month-end reporting shows zero usage for 29 days.
+
+### Missing Index Suggestions — SQL Server's recommended indexes ranked by impact
+
+> [!warning] Never Blindly Create All Suggestions
+>
+> SQL Server's missing index suggestions are based on individual query plans, not workload analysis. They may suggest overlapping indexes, indexes that benefit one query but hurt ten others, or indexes on columns with low selectivity. Always review suggestions — never blindly create all of them.
+
+```sql
+-- Missing indexes ranked by potential impact
+SELECT TOP 20
+    mid.database_id,
+    DB_NAME(mid.database_id)                AS database_name,
+    OBJECT_SCHEMA_NAME(mid.object_id, mid.database_id) AS schema_name,
+    OBJECT_NAME(mid.object_id, mid.database_id)        AS table_name,
+    migs.avg_total_user_cost *
+        migs.avg_user_impact *
+        (migs.user_seeks + migs.user_scans)             AS improvement_measure,
+    migs.unique_compiles,
+    migs.user_seeks,
+    migs.user_scans,
+    migs.avg_total_user_cost                            AS avg_cost_without_index,
+    migs.avg_user_impact,
+    mid.equality_columns,
+    mid.inequality_columns,
+    mid.included_columns,
+    'CREATE INDEX IX_' + OBJECT_NAME(mid.object_id, mid.database_id)
+        + '_' + REPLACE(ISNULL(mid.equality_columns,''), ', ', '_')
+        + ' ON ' + mid.statement
+        + ' (' + ISNULL(mid.equality_columns, '')
+        + CASE WHEN mid.inequality_columns IS NOT NULL
+               THEN CASE WHEN mid.equality_columns IS NOT NULL THEN ', ' ELSE '' END
+                    + mid.inequality_columns ELSE '' END + ')'
+        + CASE WHEN mid.included_columns IS NOT NULL
+               THEN ' INCLUDE (' + mid.included_columns + ')' ELSE '' END
+        AS create_statement
+FROM sys.dm_db_missing_index_details mid
+JOIN sys.dm_db_missing_index_groups mig  ON mid.index_handle = mig.index_handle
+JOIN sys.dm_db_missing_index_group_stats migs ON mig.index_group_handle = migs.group_handle
+WHERE mid.database_id = DB_ID()
+ORDER BY improvement_measure DESC;
 ```
 
 ### Related

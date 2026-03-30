@@ -33,7 +33,6 @@ Everything required to provision, configure, back up, restore, and keep a SQL Se
 
 * [[always-on-availability-groups]] — step-by-step AG deployment, synchronous vs asynchronous commit, RPO/RTO targets, planned and forced failover, certificate authentication, and troubleshooting five common AG issues
 
-* [[sql-server-cheat-sheet]] — single-page copy-paste reference covering sqlcmd, bcp, server info, space/size, sessions, wait stats, memory, indexes, backup/restore, configuration, security, concurrency, and DBCC commands
 
 ## Security & Compliance — Locking Down Access and Meeting Audit Requirements
 

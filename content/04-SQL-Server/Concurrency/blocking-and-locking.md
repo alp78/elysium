@@ -320,6 +320,174 @@ High `LCK_M_*` waits in [[wait-stats-analysis|sys.dm_os_wait_stats]] indicate sy
 
 ---
 
+## Active Session Diagnostics
+
+### Full Running Requests — comprehensive active request snapshot
+
+The first query to run during a "the database is slow" incident. Shows every active request with its SQL text, wait type, blocking status, and execution plan handle. The isolation level mapping decodes the integer stored in `sys.dm_exec_requests` into a human-readable name, and the `CROSS APPLY` to `sys.dm_exec_sql_text` extracts the currently executing statement from the full batch text.
+
+```sql
+SELECT
+    r.session_id,
+    r.status,
+    r.blocking_session_id,
+    r.wait_type,
+    r.wait_time / 1000.0             AS wait_sec,
+    r.total_elapsed_time / 1000.0    AS elapsed_sec,
+    r.cpu_time / 1000.0              AS cpu_sec,
+    r.logical_reads,
+    r.writes,
+    r.granted_query_memory / 128.0   AS granted_mem_mb,
+    r.dop,
+    r.row_count,
+    r.percent_complete,
+    r.estimated_completion_time / 1000.0 AS est_completion_sec,
+    r.command,
+    DB_NAME(r.database_id)           AS database_name,
+    r.open_transaction_count,
+    CASE r.transaction_isolation_level
+        WHEN 0 THEN 'Unspecified'
+        WHEN 1 THEN 'ReadUncommitted'
+        WHEN 2 THEN 'ReadCommitted'
+        WHEN 3 THEN 'Repeatable'
+        WHEN 4 THEN 'Serializable'
+        WHEN 5 THEN 'Snapshot'
+        ELSE 'Unknown'
+    END                              AS isolation_level_name,
+    t.text                           AS sql_text,
+    SUBSTRING(t.text,
+        (r.statement_start_offset/2) + 1,
+        ((CASE r.statement_end_offset
+              WHEN -1 THEN DATALENGTH(t.text)
+              ELSE r.statement_end_offset
+          END - r.statement_start_offset)/2) + 1
+    )                                AS current_statement,
+    qp.query_plan
+FROM sys.dm_exec_requests r
+CROSS APPLY sys.dm_exec_sql_text(r.sql_handle)    t
+CROSS APPLY sys.dm_exec_query_plan(r.plan_handle) qp
+WHERE r.session_id > 50
+  AND r.session_id <> @@SPID
+ORDER BY r.total_elapsed_time DESC;
+```
+
+### Session Details — session-level view from sys.dm_exec_sessions
+
+Use this when you need a session-level view rather than request-level. A request is a single statement currently executing; a session is the connection itself. Sessions that are sleeping (no active request) still consume memory and may hold open transactions with locks. This query shows login, host, program name, and cumulative resource usage across all requests in the session's lifetime.
+
+```sql
+SELECT
+    s.session_id,
+    s.login_name,
+    s.host_name,
+    s.program_name,
+    s.status,
+    s.cpu_time,
+    s.memory_usage * 8              AS memory_kb,
+    s.total_elapsed_time / 1000.0   AS elapsed_sec,
+    s.last_request_start_time,
+    s.last_request_end_time,
+    s.reads,
+    s.writes,
+    s.logical_reads,
+    s.open_transaction_count,
+    s.transaction_isolation_level,
+    s.deadlock_priority,
+    s.row_count,
+    DB_NAME(s.database_id)          AS database_name,
+    s.client_interface_name,
+    s.auth_scheme,
+    s.is_user_process
+FROM sys.dm_exec_sessions s
+WHERE s.is_user_process = 1
+ORDER BY s.cpu_time DESC;
+```
+
+### Blocking Chain Recursive CTE — walk from root blocker to final victim
+
+A recursive CTE that walks the blocking chain from root blocker to final victim, producing a visual tree with depth indentation. The root blocker (depth 0) is the session holding the lock. Each subsequent level is a session blocked by the level above. The anchor member finds sessions that are blocking others but are not themselves blocked (the head blockers), and the recursive member joins each blocked session back to its blocker.
+
+> [!tip] Visual Indentation Makes Chains Readable
+>
+> The `REPLICATE('  ', depth)` creates visual indentation. At depth 3, the output shows `      → 87 (SELECT...)` making the chain immediately readable without any tool.
+
+```sql
+WITH blocking_chain AS (
+    -- Anchor: sessions blocking others but not blocked themselves
+    SELECT
+        r.session_id,
+        r.blocking_session_id,
+        r.wait_type,
+        r.wait_time / 1000.0         AS wait_sec,
+        r.status,
+        t.text                        AS sql_text,
+        CAST(0 AS INT)                AS depth,
+        CAST(r.session_id AS VARCHAR(1000)) AS chain
+    FROM sys.dm_exec_requests r
+    CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+    WHERE r.blocking_session_id = 0
+      AND r.session_id IN (
+          SELECT blocking_session_id
+          FROM sys.dm_exec_requests
+          WHERE blocking_session_id > 0
+      )
+
+    UNION ALL
+
+    -- Recursive: each blocked session
+    SELECT
+        r.session_id,
+        r.blocking_session_id,
+        r.wait_type,
+        r.wait_time / 1000.0,
+        r.status,
+        t.text,
+        bc.depth + 1,
+        CAST(bc.chain + ' -> '
+             + CAST(r.session_id AS VARCHAR(10))
+             AS VARCHAR(1000))
+    FROM sys.dm_exec_requests r
+    CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t
+    JOIN blocking_chain bc
+        ON bc.session_id = r.blocking_session_id
+)
+SELECT
+    REPLICATE('  ', depth)
+        + CAST(session_id AS VARCHAR) AS session_tree,
+    blocking_session_id,
+    wait_type,
+    wait_sec,
+    status,
+    chain,
+    LEFT(sql_text, 200) AS sql_text_snippet
+FROM blocking_chain
+ORDER BY chain;
+```
+
+### KILL session — terminate a blocking session
+
+> [!danger] Never Kill System Sessions
+>
+> Sessions with `session_id <= 50` are SQL Server system processes. Killing them can crash the instance or corrupt TempDB. Always verify the session belongs to a user process before issuing KILL. Use `KILL ... WITH STATUSONLY` to check rollback progress on long-running transactions — the KILL itself may take minutes if a large transaction must roll back.
+
+```sql
+-- Verify the session before killing it
+SELECT session_id, login_name, host_name, program_name, status
+FROM sys.dm_exec_sessions WHERE session_id = 72;
+```
+
+```sql
+-- Kill the session
+KILL 72;
+```
+
+```sql
+-- Check rollback progress (does not kill again)
+KILL 72 WITH STATUSONLY;
+```
+
+---
+
 ### Related
 
 - [[deadlock-detection-and-prevention]] — circular waits, Extended Events capture, retry logic

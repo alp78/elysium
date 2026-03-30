@@ -2,41 +2,318 @@
 type: reference
 category: sql-server
 technology: [sql-server]
-tags: [sql, sql-server, tsql]
+tags: [sql, sql-server, tsql, dba, tempdb, transaction-log, disk-space, index-size, sys-configurations, SERVERPROPERTY]
 aliases: [DBA queries, SQL Server diagnostics, DMV queries, sys.dm_exec_sessions, sys.dm_exec_requests]
-keywords: [DBA queries, DMV, dynamic management views, server version, database size, active connections, running queries, blocking chains, kill session, wait stats, page life expectancy, sys.dm_exec_sessions, sys.dm_exec_requests, sys.dm_os_wait_stats]
-description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, and wait statistics."
-related: [sqlcmd-connection-and-usage, wait-stats-analysis, blocking-and-locking, performance-audit-playbook]
+keywords: [DBA queries, DMV, dynamic management views, server version, database size, active connections, running queries, blocking chains, kill session, wait stats, page life expectancy, sys.dm_exec_sessions, sys.dm_exec_requests, sys.dm_os_wait_stats, SERVERPROPERTY, sys.databases, sys.master_files, sys.configurations, sp_spaceused, sys.dm_db_partition_stats, index sizes, transaction log, VLF, TempDB, disk free space, sys.dm_os_volume_stats]
+description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, wait statistics, space and size analysis, transaction log health, TempDB monitoring, and disk capacity."
+related: [sqlcmd-connection-and-usage, wait-stats-analysis, blocking-and-locking, performance-audit-playbook, sql-server-disk-full]
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-03-30
 status: complete
 ---
 
 # Essential DBA Queries
 
-These T-SQL queries are the diagnostic toolkit for operating SQL Server in production. Keep them in a script you can run in seconds during an incident. They map to Dynamic Management Views (DMVs) — real-time system tables that expose the internals of the running SQL Server instance. For a condensed, printable reference of these and other essential commands, see [[sql-server-cheat-sheet]].
+These T-SQL queries are the diagnostic toolkit for operating SQL Server in production. Keep them in a script you can run in seconds during an incident. They map to Dynamic Management Views (DMVs) — real-time system tables that expose the internals of the running SQL Server instance.
 
 ---
 
-### Server Version and Edition
+## Server Information
+
+These queries answer the first questions on any incident or onboarding: what version is this server, what databases exist, how large are they, and what configuration is in effect. Run them when connecting to an unfamiliar instance or diagnosing capacity issues.
+
+### SERVERPROPERTY() — Version, Edition, and Instance Identity
+
+> [!info] Two Ways to Check Version
+>
+> `@@VERSION` returns a free-text string useful for quick checks. `SERVERPROPERTY` returns structured fields you can compare programmatically — use it when you need to branch logic by edition or build number.
 
 ```sql
--- Server version and edition
 SELECT @@VERSION;
--- Shows: SQL Server 2022 Developer Edition, OS, build number
+```
+
+```sql
+SELECT
+    SERVERPROPERTY('ProductVersion')   AS product_version,
+    SERVERPROPERTY('ProductLevel')     AS product_level,
+    SERVERPROPERTY('ProductUpdateLevel') AS cu_level,
+    SERVERPROPERTY('Edition')          AS edition,
+    SERVERPROPERTY('EngineEdition')    AS engine_edition,
+    SERVERPROPERTY('Collation')        AS collation,
+    SERVERPROPERTY('IsClustered')      AS is_clustered,
+    SERVERPROPERTY('IsHadrEnabled')    AS is_hadr,
+    SERVERPROPERTY('IsFullTextInstalled') AS is_fulltext,
+    SERVERPROPERTY('ServerName')       AS server_name,
+    SERVERPROPERTY('InstanceName')     AS instance_name,
+    SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS physical_host;
+```
+
+> [!tip] Quick Identity Globals
+>
+> These globals are useful in scripts that need to log which server and session they ran on.
+
+```sql
+SELECT @@SERVERNAME AS server_name, @@SERVICENAME AS service_name,
+       @@SPID AS current_spid, @@LANGUAGE AS language,
+       @@MAX_CONNECTIONS AS max_connections;
 ```
 
 ---
 
-### Database Sizes
+### sys.databases — All Databases on the Instance
+
+> [!info] What This Shows
+>
+> Every database on the instance with its recovery model, compatibility level, and key flags. The `log_reuse_wait_desc` column is especially important — it tells you why the transaction log cannot be truncated.
 
 ```sql
--- All database sizes
-SELECT name, size * 8 / 1024 AS size_mb
-FROM sys.master_files
-WHERE type_desc = 'ROWS'
-ORDER BY size DESC;
--- size is in 8KB pages → multiply by 8 and divide by 1024 for MB
+SELECT
+    database_id,
+    name,
+    state_desc,
+    recovery_model_desc,
+    compatibility_level,
+    collation_name,
+    is_read_only,
+    is_auto_shrink_on,
+    is_auto_close_on,
+    is_broker_enabled,
+    is_cdc_enabled,
+    log_reuse_wait_desc,
+    create_date
+FROM sys.databases
+ORDER BY name;
+```
+
+---
+
+### sys.master_files — Database File Locations and Sizes
+
+> [!info] What This Shows
+>
+> Physical file paths, current size, max size, and growth settings for every data and log file across all databases. Use this to verify file placement (data and log on separate drives) and catch unlimited auto-growth settings.
+
+```sql
+SELECT
+    d.name                          AS database_name,
+    mf.file_id,
+    mf.type_desc,
+    mf.name                         AS logical_name,
+    mf.physical_name,
+    mf.state_desc,
+    CAST(mf.size * 8.0 / 1024 AS DECIMAL(12,2))       AS size_mb,
+    CAST(mf.max_size * 8.0 / 1024 AS DECIMAL(12,2))   AS max_size_mb,
+    mf.growth,
+    mf.is_percent_growth
+FROM sys.master_files mf
+JOIN sys.databases d ON d.database_id = mf.database_id
+ORDER BY d.name, mf.file_id;
+```
+
+---
+
+### sys.configurations — Instance Configuration Settings
+
+> [!info] What This Shows
+>
+> Key instance-level settings that control memory allocation, parallelism, and backup behavior. Compare `value` (configured) vs `value_in_use` (active) — a mismatch means a `RECONFIGURE` or restart is pending.
+
+```sql
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+```
+
+```sql
+SELECT name, value, value_in_use, minimum, maximum, description, is_advanced
+FROM sys.configurations
+WHERE name IN (
+    'max server memory (MB)',
+    'min server memory (MB)',
+    'max degree of parallelism',
+    'cost threshold for parallelism',
+    'optimize for ad hoc workloads',
+    'backup compression default',
+    'remote admin connections',
+    'contained database authentication',
+    'default trace enabled'
+)
+ORDER BY name;
+```
+
+---
+
+## Space and Size
+
+### Database Size Summary — Data vs Log Breakdown
+
+> [!info] What This Shows
+>
+> Total allocated size per database, split into data files and log files. This is the first query to run when investigating capacity — it tells you whether data or log growth is consuming space.
+
+```sql
+SELECT
+    d.name                                                          AS database_name,
+    SUM(CASE WHEN mf.type = 0 THEN mf.size END) * 8.0 / 1024      AS data_size_mb,
+    SUM(CASE WHEN mf.type = 1 THEN mf.size END) * 8.0 / 1024      AS log_size_mb,
+    SUM(mf.size) * 8.0 / 1024                                      AS total_size_mb
+FROM sys.databases d
+JOIN sys.master_files mf ON d.database_id = mf.database_id
+GROUP BY d.name
+ORDER BY total_size_mb DESC;
+```
+
+---
+
+### Table Sizes — Current Database
+
+Two approaches: `sp_spaceused` for a quick single-table check, or the DMV query for a ranked view of all tables.
+
+#### sp_spaceused — Quick Single-Table Size Check
+
+```sql
+EXEC sp_spaceused 'dbo.trades';
+```
+
+```sql
+EXEC sp_spaceused;
+```
+
+#### sys.allocation_units — All Tables Ranked by Size
+
+```sql
+SELECT
+    s.name                                              AS schema_name,
+    t.name                                              AS table_name,
+    SUM(a.total_pages)  * 8.0 / 1024                   AS total_mb,
+    SUM(a.used_pages)   * 8.0 / 1024                   AS used_mb,
+    SUM(a.data_pages)   * 8.0 / 1024                   AS data_mb,
+    SUM(p.rows)                                         AS row_count
+FROM sys.tables t
+JOIN sys.schemas s          ON t.schema_id = s.schema_id
+JOIN sys.indexes i          ON t.object_id = i.object_id AND i.index_id IN (0,1)
+JOIN sys.partitions p       ON i.object_id = p.object_id AND i.index_id = p.index_id
+JOIN sys.allocation_units a ON p.partition_id = a.container_id
+GROUP BY s.name, t.name
+ORDER BY total_mb DESC;
+```
+
+---
+
+### dm_db_partition_stats — Fast Row Counts Without Scanning
+
+Faster than `COUNT(*)` — reads metadata instead of scanning data.
+
+```sql
+SELECT
+    OBJECT_SCHEMA_NAME(object_id)   AS schema_name,
+    OBJECT_NAME(object_id)          AS table_name,
+    SUM(row_count)                  AS total_rows
+FROM sys.dm_db_partition_stats
+WHERE index_id IN (0, 1)
+GROUP BY object_id
+ORDER BY total_rows DESC;
+```
+
+---
+
+### Index Sizes — Space Consumed per Index
+
+> [!info] What This Shows
+>
+> Total and used space for every index on every table. Use this to find oversized indexes that waste disk and slow down writes.
+
+```sql
+SELECT
+    OBJECT_SCHEMA_NAME(i.object_id)             AS schema_name,
+    OBJECT_NAME(i.object_id)                    AS table_name,
+    i.name                                      AS index_name,
+    i.type_desc,
+    SUM(a.total_pages) * 8.0 / 1024            AS total_mb,
+    SUM(a.used_pages)  * 8.0 / 1024            AS used_mb
+FROM sys.indexes i
+JOIN sys.partitions p       ON i.object_id = p.object_id AND i.index_id = p.index_id
+JOIN sys.allocation_units a ON p.partition_id = a.container_id
+GROUP BY i.object_id, i.name, i.type_desc
+ORDER BY total_mb DESC;
+```
+
+---
+
+### Transaction Log Space Usage — Log Size and VLF Health
+
+> [!warning] High VLF Count Means Fragmented Log
+>
+> A high VLF (Virtual Log File) count means the transaction log has been grown in many small increments instead of pre-sized. This fragments the log and slows backup/restore operations. If `DBCC LOGINFO` returns hundreds of rows, consider shrinking and pre-sizing the log file. The `log_reuse_wait_desc` column explains why the log can't be truncated — common values: `ACTIVE_TRANSACTION` (long-running query), `LOG_BACKUP` (no log backup taken), `REPLICATION` (replication agent behind).
+
+```sql
+DBCC SQLPERF(LOGSPACE);
+```
+
+```sql
+SELECT name, log_reuse_wait_desc
+FROM sys.databases
+ORDER BY name;
+```
+
+```sql
+DBCC LOGINFO;
+```
+
+---
+
+### TempDB Usage — Space Consumed per Session
+
+> [!warning] TempDB Is a Shared Bottleneck
+>
+> TempDB is shared by all sessions. A single query spilling to TempDB (hash joins, sorts exceeding memory grant) can fill TempDB and block every other query on the server. Monitor TempDB space during large ETL runs. If TempDB runs out of space, SQL Server returns error 1105 and the offending query fails — but other sessions may also fail if they need TempDB space at that moment.
+
+#### dm_db_session_space_usage — TempDB Allocation per Session
+
+```sql
+SELECT
+    s.session_id,
+    s.login_name,
+    s.program_name,
+    t.user_objects_alloc_page_count   * 8.0 / 1024 AS user_obj_mb,
+    t.internal_objects_alloc_page_count * 8.0 / 1024 AS internal_obj_mb,
+    t.user_objects_alloc_page_count + t.internal_objects_alloc_page_count AS total_pages
+FROM sys.dm_db_session_space_usage t
+JOIN sys.dm_exec_sessions s ON t.session_id = s.session_id
+WHERE t.user_objects_alloc_page_count + t.internal_objects_alloc_page_count > 0
+ORDER BY total_pages DESC;
+```
+
+#### TempDB File Sizes and Free Space
+
+```sql
+USE tempdb;
+SELECT
+    name,
+    file_id,
+    CAST(size * 8.0 / 1024 AS DECIMAL(10,2))                        AS size_mb,
+    CAST(FILEPROPERTY(name, 'SpaceUsed') * 8.0 / 1024 AS DECIMAL(10,2)) AS used_mb,
+    CAST((size - FILEPROPERTY(name, 'SpaceUsed')) * 8.0 / 1024 AS DECIMAL(10,2)) AS free_mb
+FROM sys.database_files;
+```
+
+---
+
+### dm_os_volume_stats — Disk Free Space per Volume
+
+> [!danger] Full Disk Halts the Pipeline
+>
+> SQL Server stops accepting writes when the disk is full. The database goes read-only, transactions fail, and the pipeline halts. Monitor disk free space proactively — see [[sql-server-disk-full]] for the full runbook. As a rule of thumb, alert at 85% used, investigate at 90%, and treat 95% as a P1 incident.
+
+```sql
+SELECT DISTINCT
+    vs.volume_mount_point,
+    vs.logical_volume_name,
+    CAST(vs.total_bytes / 1073741824.0 AS DECIMAL(10,2))     AS total_gb,
+    CAST(vs.available_bytes / 1073741824.0 AS DECIMAL(10,2)) AS free_gb,
+    CAST(100.0 * vs.available_bytes / vs.total_bytes AS DECIMAL(5,2)) AS pct_free
+FROM sys.master_files mf
+CROSS APPLY sys.dm_os_volume_stats(mf.database_id, mf.file_id) vs
+ORDER BY vs.volume_mount_point;
 ```
 
 ---
@@ -252,6 +529,7 @@ LEFT JOIN (
 - [[sqlcmd-connection-and-usage]] — running these queries from the command line
 - [[wait-stats-analysis]] — deep dive into wait type interpretation
 - [[blocking-and-locking]] — understanding blocking chains and lock types
-- [[performance-audit-playbook]] — interpreting disk I/O latency metrics
+- [[performance-audit-playbook]] — interpreting disk I/O latency metrics and full structured audit
 - [[memory-and-buffer-pool]] — Page Life Expectancy and buffer pool health
-- [[performance-audit-playbook]] — full structured audit using these queries
+- [[sql-server-disk-full]] — runbook for disk capacity incidents
+- [[index-types-and-strategy]] — clustered key selection and index design

@@ -5,67 +5,213 @@ tags:
   - terraform
   - hcl
   - gcp
+  - infrastructure
 ---
 
 # MOC: Terraform
 
-Terraform manages the entire GCP infrastructure for the data platform as declarative HCL code. This MOC organizes the section into three domains: the HCL language and core workflow, the GCP resources Terraform provisions, and the reusable patterns that keep configurations maintainable across environments.
+Infrastructure as code from HCL syntax to production GCP provisioning —
+19 pages covering language fundamentals, resource configuration, composition
+patterns, and a copy-paste block library. Expand any section to browse contents.
 
-## Language & Workflow — HCL Fundamentals and the Plan/Apply Lifecycle
+```mermaid
+mindmap
+  ((Language and Workflow))
+    (HCL syntax)
+    (variables, outputs)
+    (providers, backend)
+    (state management)
+    (plan, apply, destroy)
+```
 
-The foundation: how HCL is structured, how providers and backends connect Terraform to GCP and remote state, and the full command lifecycle from init through destroy. Start here if you are new to Terraform.
+> [!example]- Language and Workflow
+>
+> > [!abstract]- [[hcl-syntax-basics]]
+> >
+> > - [[hcl-syntax-basics#Blocks and Arguments|Blocks and arguments]]
+> > - [[hcl-syntax-basics#File Naming and Organization|File naming and organization]]
+> > - [[hcl-syntax-basics#Terraform Name vs GCP Name|Terraform name vs GCP name]]
+> > - [[hcl-syntax-basics#Block Types|Block types]]
+> > - [[hcl-syntax-basics#Declarative vs Imperative|Declarative vs imperative]]
+>
+> > [!abstract]- [[terraform-variables-and-outputs]]
+> >
+> > - [[terraform-variables-and-outputs#Input Variables — variables.tf|Input variables]]
+> > - [[terraform-variables-and-outputs#Setting Variable Values|Setting variable values]]
+> > - [[terraform-variables-and-outputs#Locals — Computed Values|Locals and computed values]]
+> > - [[terraform-variables-and-outputs#Output Values — outputs.tf|Output values]]
+> > - [[terraform-variables-and-outputs#Querying Outputs|Querying outputs]]
+>
+> > [!abstract]- [[terraform-providers-and-backend]]
+> >
+> > - [[terraform-providers-and-backend#Provider and Backend Configuration|Provider and backend configuration]]
+> > - [[terraform-providers-and-backend#Why Remote State?|Why remote state]]
+> > - [[terraform-providers-and-backend#The `required_providers` Block|Required providers block]]
+>
+> > [!abstract]- [[terraform-state-management]]
+> >
+> > - [[terraform-state-management#What Is the State File?|What is the state file]]
+> > - [[terraform-state-management#Remote State in GCS|Remote state in GCS]]
+> > - [[terraform-state-management#State Locking|State locking]]
+> > - [[terraform-state-management#Inspecting State|Inspecting state]]
+> > - [[terraform-state-management#Moving Resources in State|Moving resources in state]]
+> > - [[terraform-state-management#State Security|State security]]
+>
+> > [!abstract]- [[terraform-plan-apply-destroy]]
+> >
+> > - [[terraform-plan-apply-destroy#How terraform apply Works|How apply works]]
+> > - [[terraform-plan-apply-destroy#Core Commands|Core commands]]
+> > - [[terraform-plan-apply-destroy#Importing Existing Resources|Importing existing resources]]
+> > - [[terraform-plan-apply-destroy#Common Issues and Fixes|Common issues and fixes]]
 
-* [[hcl-syntax-basics]] — blocks, arguments, resource naming, file organization, and the difference between Terraform-internal and GCP names
+```mermaid
+mindmap
+  ((GCP Resources))
+    (networking)
+    (compute)
+    (IAM, secrets)
+    (Cloud Run)
+    (registry, CI)
+```
 
-* [[terraform-providers-and-backend]] — configuring the Google provider, version constraints, and the GCS remote state backend
+> [!example]- GCP Resources
+>
+> > [!abstract]- [[terraform-networking]]
+> >
+> > - [[terraform-networking#Networking Concepts|Networking concepts]]
+> > - [[terraform-networking#Architecture Overview|Architecture overview]]
+> > - [[terraform-networking#Resource: VPC Network|VPC network]]
+> > - [[terraform-networking#Resource: Cloud NAT|Cloud NAT]]
+> > - [[terraform-networking#Firewall Rules|Firewall rules]]
+>
+> > [!abstract]- [[terraform-compute]]
+> >
+> > - [[terraform-compute#Architecture Context|Architecture context]]
+> > - [[terraform-compute#Resource: Airflow VM|Airflow VM]]
+> > - [[terraform-compute#Boot Disk — Container-Optimized OS|Boot disk and Container-Optimized OS]]
+> > - [[terraform-compute#Resource: SQL Server VM|SQL Server VM]]
+> > - [[terraform-compute#Allow Stopping for Update|Allow stopping for update]]
+>
+> > [!abstract]- [[terraform-iam-and-secrets]]
+> >
+> > - [[terraform-iam-and-secrets#Core Service Accounts|Core service accounts]]
+> > - [[terraform-iam-and-secrets#IAM Bindings|IAM bindings]]
+> > - [[terraform-iam-and-secrets#Secret Manager — secrets.tf|Secret Manager]]
+> > - [[terraform-iam-and-secrets#Conditional Datadog Resources|Conditional Datadog resources]]
+> > - [[terraform-iam-and-secrets#CI/CD Service Account — ci.tf|CI service account]]
+>
+> > [!abstract]- [[terraform-cloud-run]]
+> >
+> > - [[terraform-cloud-run#Resource: Dashboard Service|Dashboard service]]
+> > - [[terraform-cloud-run#VPC Access — Direct Egress|VPC access and direct egress]]
+> > - [[terraform-cloud-run#Resource: Pipeline Job|Pipeline job]]
+> > - [[terraform-cloud-run#Service vs Job Comparison|Service vs job comparison]]
+> > - [[terraform-cloud-run#Double-Nested Template|Double-nested template]]
+>
+> > [!abstract]- [[terraform-registry-and-ci]]
+> >
+> > - [[terraform-registry-and-ci#Artifact Registry — registry.tf|Artifact Registry]]
+> > - [[terraform-registry-and-ci#Cleanup Policies|Cleanup policies]]
+> > - [[terraform-registry-and-ci#CI/CD Service Account — ci.tf|CI service account]]
+> > - [[terraform-registry-and-ci#GitHub Actions Workflow Integration|GitHub Actions integration]]
 
-* [[terraform-variables-and-outputs]] — input variables with types and sensitivity, terraform.tfvars, locals for computed values, and output definitions
+```mermaid
+mindmap
+  ((Patterns and Reference))
+    (conditional resources)
+    (dependencies)
+    (module composition)
+    (cheat sheet)
+    (troubleshooting)
+```
 
-* [[terraform-state-management]] — what the state file tracks, remote state in GCS, state locking, and terraform state subcommands for inspection, moves, and removal
+> [!example]- Patterns and Reference
+>
+> > [!abstract]- [[terraform-conditional-resources]]
+> >
+> > - [[terraform-conditional-resources#count — Conditional Creation|Count conditional creation]]
+> > - [[terraform-conditional-resources#for_each — Multiple Instances from a Collection|for_each multiple instances]]
+> > - [[terraform-conditional-resources#Dynamic Blocks|Dynamic blocks]]
+> > - [[terraform-conditional-resources#Ternary Operator Patterns|Ternary operator patterns]]
+> > - [[terraform-conditional-resources#Referencing Conditional Resources|Referencing conditional resources]]
+>
+> > [!abstract]- [[terraform-resource-dependencies]]
+> >
+> > - [[terraform-resource-dependencies#How the Dependency Graph Works|How the dependency graph works]]
+> > - [[terraform-resource-dependencies#Implicit Dependencies — Resource References|Implicit dependencies]]
+> > - [[terraform-resource-dependencies#Traversing Nested Attributes|Traversing nested attributes]]
+> > - [[terraform-resource-dependencies#Explicit Dependencies — depends_on|Explicit dependencies]]
+> > - [[terraform-resource-dependencies#Circular Dependencies|Circular dependencies]]
+>
+> > [!abstract]- [[terraform-module-composition]]
+> >
+> > - [[terraform-module-composition#Module Basics|Module basics]]
+> > - [[terraform-module-composition#Module Directory Structure|Module directory structure]]
+> > - [[terraform-module-composition#Multi-Environment with Modules|Multi-environment with modules]]
+> > - [[terraform-module-composition#Environment Promotion Pattern|Environment promotion pattern]]
+> > - [[terraform-module-composition#When to Extract a Module|When to extract a module]]
+>
+> > [!abstract]- [[terraform-cheat-sheet]]
+> >
+> > - [[terraform-cheat-sheet#Core Workflow|Core workflow commands]]
+> > - [[terraform-cheat-sheet#State Commands|State commands]]
+> > - [[terraform-cheat-sheet#Resource Targeting|Resource targeting]]
+> > - [[terraform-cheat-sheet#HCL Functions Reference|HCL functions reference]]
+> > - [[terraform-cheat-sheet#Common Patterns|Common patterns]]
+>
+> > [!abstract]- [[terraform-problems]]
+> >
+> > - [[terraform-problems#Critical — Infrastructure Destruction / Data Loss|Critical problems]]
+> > - [[terraform-problems#High — Infrastructure Drift / Team Blocking|High severity drift and blocking]]
+> > - [[terraform-problems#Moderate — Operational Pain|Moderate operational pain]]
+> > - [[terraform-problems#Low — Annoyances / Team Friction|Low severity annoyances]]
 
-* [[terraform-plan-apply-destroy]] — the init/plan/apply/destroy workflow, plan output symbols, targeted applies, importing existing resources, and common error fixes
+```mermaid
+mindmap
+  ((Block Library))
+    (foundation, networking)
+    (compute, storage)
+    (data services)
+    (IAM, secrets, serverless)
+```
 
-* [[terraform-cheat-sheet]] — exhaustive CLI reference for every Terraform command, flag, HCL built-in function, and common coding pattern
-
-## GCP Resource Catalog — Networking, Compute, IAM, and Serverless
-
-How each GCP resource type is declared in Terraform. Each page covers the resource blocks, field-by-field explanations, and gcloud verification commands for a production data engineering project. The Block Library pages provide standalone copy-pasteable snippets for rapid prototyping.
-
-* [[terraform-networking]] — VPC, subnet, Cloud Router, Cloud NAT, and five firewall rules controlling SQL, Airflow UI, APM, IAP SSH, and deny-all ingress
-
-* [[terraform-compute]] — GCE VM instances for Airflow (Container-Optimized OS, ephemeral public IP) and SQL Server (Ubuntu, SSD, no public IP), including startup scripts and shielded instance config
-
-* [[terraform-iam-and-secrets]] — service accounts with least-privilege IAM bindings, resource-level vs project-level roles, Secret Manager two-level structure, and conditional Datadog resources
-
-* [[terraform-cloud-run]] — Cloud Run services (dashboard with session affinity and VPC egress) and jobs (pipeline with double-nested template, secret injection, and retry config)
-
-* [[terraform-registry-and-ci]] — Artifact Registry with cleanup policies, the CI/CD service account for GitHub Actions, and act-as IAM bindings
-
-* [[tf-foundation-and-networking]] — block library of copy-pasteable snippets for provider/backend setup, VPC, subnets, Cloud NAT, firewall rules, static IPs, DNS, VPC peering, and Shared VPC
-
-* [[tf-compute-and-storage]] — block library for GCE instances, disks, snapshots, instance templates, managed instance groups, autoscalers, GCS buckets, and bucket IAM
-
-* [[tf-data-services]] — block library for BigQuery datasets, tables, routines, scheduled queries, Firestore databases, and Dataflow jobs
-
-* [[tf-iam-secrets-serverless]] — block library for service accounts, IAM bindings, Secret Manager, Cloud Run v2, Cloud Functions, Cloud Scheduler, Pub/Sub, and Artifact Registry
-
-## Patterns & Composition — Conditionals, Dependencies, Modules, and Problem Solving
-
-Techniques for writing maintainable Terraform at scale: conditionally creating resources, understanding the dependency graph, extracting reusable modules for multi-environment deployments, and diagnosing production failures.
-
-* [[terraform-conditional-resources]] — count for conditional creation, for_each for multiple instances, dynamic blocks, ternary patterns, and the index notation required for conditional references
-
-* [[terraform-resource-dependencies]] — implicit dependencies from resource references, explicit depends_on, the dependency graph, nested attribute traversal, circular dependency resolution, and forced recreation cascades
-
-* [[terraform-module-composition]] — module basics, directory structure, multi-environment patterns with dev/staging/prod, environment promotion, Terraform Registry modules, and when to extract a module
-
-* [[terraform-problems]] — 25 production problems ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures for data engineering teams on GCP
+> [!example]- Block Library
+>
+> > [!abstract]- [[tf-foundation-and-networking]]
+> >
+> > - [[tf-foundation-and-networking#Foundation Blocks|Foundation blocks]]
+> > - [[tf-foundation-and-networking#Networking Blocks|Networking blocks]]
+> > - [[tf-foundation-and-networking#Firewall Rules|Firewall rules]]
+> > - [[tf-foundation-and-networking#VPC Peering|VPC peering]]
+> > - [[tf-foundation-and-networking#Private Service Connect|Private Service Connect]]
+>
+> > [!abstract]- [[tf-compute-and-storage]]
+> >
+> > - [[tf-compute-and-storage#Compute Engine Blocks|Compute Engine blocks]]
+> > - [[tf-compute-and-storage#Disk Management|Disk management]]
+> > - [[tf-compute-and-storage#Cloud Storage Blocks|Cloud Storage blocks]]
+> > - [[tf-compute-and-storage#Bucket IAM — Grant Access to Members|Bucket IAM]]
+> > - [[tf-compute-and-storage#Bucket Notification — Trigger Pub/Sub on Object Finalize|Bucket notifications]]
+>
+> > [!abstract]- [[tf-data-services]]
+> >
+> > - [[tf-data-services#BigQuery Blocks|BigQuery blocks]]
+> > - [[tf-data-services#Firestore Blocks|Firestore blocks]]
+> > - [[tf-data-services#Dataflow Blocks|Dataflow blocks]]
+> > - [[tf-data-services#Cloud SQL Blocks|Cloud SQL blocks]]
+> > - [[tf-data-services#Monitoring and Logging Blocks|Monitoring and logging blocks]]
+>
+> > [!abstract]- [[tf-iam-secrets-serverless]]
+> >
+> > - [[tf-iam-secrets-serverless#IAM Blocks|IAM blocks]]
+> > - [[tf-iam-secrets-serverless#Secret Manager Blocks|Secret Manager blocks]]
+> > - [[tf-iam-secrets-serverless#Cloud Run Blocks|Cloud Run blocks]]
+> > - [[tf-iam-secrets-serverless#Cloud Functions Blocks|Cloud Functions blocks]]
+> > - [[tf-iam-secrets-serverless#Pub/Sub Blocks|Pub/Sub blocks]]
+> > - [[tf-iam-secrets-serverless#Artifact Registry Blocks|Artifact Registry blocks]]
 
 ## Cross-References
 
-- [[gcp-projects-and-apis]] — Project management and API enablement that Terraform automates
-- [[service-accounts-and-iam]] — Service accounts and IAM roles provisioned by Terraform
-- [[cloud-run-jobs-vs-services]] — Cloud Run resources defined in Terraform configurations
-- [[container-lifecycle]] — Container images referenced in Cloud Run and Artifact Registry
-- [[github-actions-ci-cd]] — CI/CD pipelines that run terraform plan and apply
-- [[datadog-architecture-overview]] — Conditional Datadog resources provisioned by Terraform
+- [[moc-gcp|GCP]] — The GCP services these Terraform configs provision
+- [[moc-github-actions|GitHub Actions]] — CI/CD pipelines that run terraform plan/apply
+- [[moc-data-architecture|Data Architecture]] — Architecture decisions that drive infrastructure choices

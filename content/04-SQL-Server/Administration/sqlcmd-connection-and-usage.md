@@ -197,6 +197,75 @@ Port 1431 is the Dedicated Admin Connection — an emergency-only connection tha
 sqlcmd -S admin:localhost -U sa
 ```
 
+### Complete Flag Reference
+
+Every `sqlcmd` flag in one table. The Flag Quick Reference above covers daily-use flags; this table adds output formatting, security, and scripting flags needed for CI/CD and production automation.
+
+| Flag | Purpose | Example |
+|------|---------|---------|
+| `-S` | Server/instance. Accepts `host`, `host,port`, `host\instance`, `tcp:host,port` | `-S prod-sql01,1433` |
+| `-U` | SQL Server login username | `-U sa` |
+| `-P` | Password (prefer env var `SQLCMDPASSWORD`) | `-P 'P@ss!'` |
+| `-d` | Default database on connect | `-d FinanceDB` |
+| `-Q` | Execute query then exit | `-Q "SELECT @@VERSION"` |
+| `-q` | Execute query, stay in interactive mode | `-q "SELECT TOP 10 * FROM trades"` |
+| `-i` | Input SQL script file | `-i /scripts/etl.sql` |
+| `-o` | Output file for results | `-o /logs/results.txt` |
+| `-s` | Column separator (default: space) | `-s ","` |
+| `-w` | Screen width for output (1–65535) | `-w 300` |
+| `-h` | Header rows interval; -1 = no headers | `-h -1` |
+| `-W` | Remove trailing spaces from columns | `-W` |
+| `-C` | Trust server certificate (bypass TLS validation) | `-C` |
+| `-N` | Encrypt connection | `-N` |
+| `-l` | Login timeout in seconds (default 8) | `-l 30` |
+| `-t` | Query timeout in seconds | `-t 120` |
+| `-b` | Exit with error code on SQL error | `-b` |
+| `-e` | Echo input scripts to stdout | `-e` |
+| `-m` | Error message level (0–24) | `-m 1` |
+| `-v` | Scripting variables `name=value` | `-v env=prod` |
+| `-r` | Redirect error messages to stderr (0 or 1) | `-r 1` |
+| `-E` | Use Windows/AD (trusted) authentication | `-E` |
+| `-A` | Connect via Dedicated Admin Connection (DAC) | `-A` |
+| `-X` | Disable system commands (`!!`, `ED`, `QUIT`) | `-X` |
+| `-k` | Strip/replace control characters in output | `-k 1` |
+| `-y` | Variable-length column display width | `-y 0` |
+| `-Y` | Fixed-length column display width | `-Y 30` |
+
+---
+
+### Scripting Variables
+
+> [!info] sqlcmd -v — passing variables to SQL scripts
+>
+> The `-v` flag passes key-value pairs into a `.sql` script. Inside the script, reference them with `$(VariableName)` syntax. This allows a single script to target different schemas, tables, or environments without modification.
+
+```bash
+# Pass variables to a reindex script
+sqlcmd -S prod-sql01 -E -d FinanceDB \
+       -v Schema=dbo TableName=trades \
+       -i /scripts/reindex_table.sql
+```
+
+```sql
+-- Inside reindex_table.sql: reference variables with $(Name)
+SELECT * FROM $(Schema).$(TableName)
+```
+
+---
+
+### Exit Codes
+
+> [!info] sqlcmd exit codes — interpreting return values in scripts
+>
+> `sqlcmd` returns three exit codes: `0` = success, `1` = failure, `-100` = error before exit value selection. Use the `-b` flag to make `sqlcmd` exit with a non-zero code on SQL error — without `-b`, SQL errors print to stdout but `sqlcmd` still returns `0`. This is essential for CI/CD scripts where a silent failure means deploying broken migrations.
+
+```bash
+# Run a migration and fail the CI job on any SQL error
+sqlcmd -S prod-sql01 -E -d FinanceDB -i /deploy/v2.5.sql -b -o /logs/v2.5.log
+```
+
+---
+
 ### Related
 
 - [[essential-dba-queries]] — queries to run after connecting

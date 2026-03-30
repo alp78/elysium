@@ -5,46 +5,110 @@ tags:
   - sql
   - bigquery
   - sql-server
+  - firestore
 ---
 
 # MOC: Database Queries
 
-Executable query references with rendered cell outputs — every query has been run and its results are shown inline. All SQL notebooks use the same stoxx Euro Stoxx 50 medallion-architecture database, so patterns translate directly between engines. Firestore notebooks cover document-oriented operations in both Python and C#.
+Executable query reference across three databases — SQL Server (T-SQL),
+BigQuery (GoogleSQL), and Firestore (NoSQL). Each notebook preserves cell
+outputs so you see both the query and its result.
 
-## SQL Fundamentals and Advanced Patterns — Querying Data
+```mermaid
+mindmap
+  ((SQL Server))
+    (fundamentals)
+    (advanced patterns)
+    (engineering)
+```
 
-Core SQL through advanced analytical patterns. Fundamentals cover SELECT, JOINs, aggregation, and CTEs. Advanced notebooks add window functions, PIVOT/UNPIVOT, recursive CTEs, MERGE, JSON handling, and set operations.
+> [!example]- SQL Server
+>
+> > [!abstract]- [[sql-fundamentals]]
+> >
+> > - [[sql-fundamentals#Schema Exploration|Schema exploration]]
+> > - [[sql-fundamentals#Aggregation (GROUP BY)|Aggregation and GROUP BY]]
+> > - [[sql-fundamentals#JOINs Across Medallion Layers|JOINs across medallion layers]]
+> > - [[sql-fundamentals#Window Functions|Window functions]]
+> > - [[sql-fundamentals#CTEs & Subqueries|CTEs and subqueries]]
+> > - [[sql-fundamentals#Data Quality Checks|Data quality checks]]
+>
+> > [!abstract]- [[sql-advanced]]
+> >
+> > - [[sql-advanced#Advanced Window Functions|Advanced window functions]]
+> > - [[sql-advanced#Recursive CTEs|Recursive CTEs]]
+> > - [[sql-advanced#PIVOT|Pivot and unpivot]]
+> > - [[sql-advanced#MERGE (Upsert)|MERGE upsert]]
+> > - [[sql-advanced#Grouping Sets, ROLLUP, CUBE|Grouping sets and rollup]]
+> > - [[sql-advanced#NULL Handling Patterns|NULL handling patterns]]
+>
+> > [!abstract]- [[sql-engineering]]
+> >
+> > - [[sql-engineering#Views|Views]]
+> > - [[sql-engineering#Stored Procedures|Stored procedures]]
+> > - [[sql-engineering#Indexes|Indexes]]
+> > - [[sql-engineering#Slowly Changing Dimensions (SCD)|Slowly changing dimensions]]
+> > - [[sql-engineering#Execution Plans & Query Optimization|Execution plans and optimization]]
+> > - [[sql-engineering#Partitioning Strategies|Partitioning strategies]]
 
-* [[sql-fundamentals]] — T-SQL SELECT, filtering, JOINs across medallion layers, basic window functions, CTEs, subqueries, and data quality checks
+```mermaid
+mindmap
+  ((BigQuery))
+    (fundamentals)
+    (advanced patterns)
+    (engineering)
+```
 
-* [[bq-fundamentals]] — BigQuery Standard SQL SELECT, arrays/structs/UNNEST, BigQuery-specific functions (SAFE_CAST, COUNTIF, ANY_VALUE), and medallion-layer JOINs
+> [!example]- BigQuery
+>
+> > [!abstract]- [[bq-fundamentals]]
+> >
+> > - [[bq-fundamentals#Schema Exploration|Schema exploration]]
+> > - [[bq-fundamentals#Aggregation (GROUP BY)|Aggregation and GROUP BY]]
+> > - [[bq-fundamentals#JOINs Across Medallion Layers|JOINs across medallion layers]]
+> > - [[bq-fundamentals#Window Functions|Window functions]]
+> > - [[bq-fundamentals#CTEs & Subqueries|CTEs and subqueries]]
+> > - [[bq-fundamentals#Data Quality Checks|Data quality checks]]
+>
+> > [!abstract]- [[bq-advanced]]
+> >
+> > - [[bq-advanced#Advanced Window Functions|Advanced window functions]]
+> > - [[bq-advanced#Recursive CTEs|Recursive CTEs]]
+> > - [[bq-advanced#PIVOT|Pivot and unpivot]]
+> > - [[bq-advanced#MERGE (Upsert)|MERGE upsert]]
+> > - [[bq-advanced#Grouping Sets, ROLLUP, CUBE|Grouping sets and rollup]]
+> > - [[bq-advanced#NULL Handling Patterns|NULL handling patterns]]
+>
+> > [!abstract]- [[bq-engineering]]
+> >
+> > - [[bq-engineering#Views|Views]]
+> > - [[bq-engineering#Stored Procedures|Stored procedures]]
+> > - [[bq-engineering#Indexes|Indexes]]
+> > - [[bq-engineering#Slowly Changing Dimensions (SCD)|Slowly changing dimensions]]
+> > - [[bq-engineering#Execution Plans & Query Optimization|Execution plans and optimization]]
+> > - [[bq-engineering#Partitioning Strategies|Partitioning strategies]]
 
-* [[sql-advanced]] — T-SQL window frames (PERCENT_RANK, CUME_DIST, running totals), recursive CTEs, CROSS/OUTER APPLY, PIVOT/UNPIVOT, MERGE, grouping sets, and temp table trade-offs
+```mermaid
+mindmap
+  ((Firestore))
+    (document CRUD)
+    (queries, filters)
+    (transactions)
+```
 
-* [[bq-advanced]] — BigQuery window functions, approximate aggregation (HLL_COUNT), scripting with DECLARE/LOOP, JavaScript UDFs, JSON extraction, geospatial queries, and BQML
-
-## Database Engineering — Objects, Performance, and Security
-
-Database objects and operational patterns: views, stored procedures, UDFs, indexing, partitioning, DML quotas, INFORMATION_SCHEMA introspection, and transaction isolation.
-
-* [[sql-engineering]] — T-SQL views, stored procedures, scalar/table-valued UDFs, clustered/columnstore indexes, SCD Type 1 and 2, execution plans, transaction isolation, and bulk loading
-
-* [[bq-engineering]] — BigQuery partitioning and clustering, materialized views, DML quotas, INFORMATION_SCHEMA job/cost analysis, authorized views, row/column-level security, and scripting patterns
-
-## NoSQL — Firestore Document Operations
-
-Firestore CRUD, queries, transactions, batches, real-time listeners, subcollections, pagination, and collection group queries against the stoxx dataset.
-
-* [[firestore-python]] — Python SDK for Firestore reads, writes, filtering, ordering, nested fields, array queries, batch operations, transactions, real-time listeners, and aggregation
-
-* [[firestore-csharp]] — C# SDK and REST API for Firestore CRUD, typed document mapping, batch writes, transactions, snapshots, and the .NET 10 SDK read workaround
+> [!example]- Firestore
+>
+> > [!abstract]- Firestore Queries
+> >
+> > - Read operations — [[firestore-python#Read Operations|py]] · [[firestore-csharp#Read Operations|cs]]
+> > - Filtering and ordering — [[firestore-python#Filtering & Ordering|py]] · [[firestore-csharp#Filtering & Ordering|cs]]
+> > - Subcollections — [[firestore-python#Subcollections|py]] · [[firestore-csharp#Subcollections|cs]]
+> > - Write operations — [[firestore-python#Write Operations|py]] · [[firestore-csharp#Write Operations|cs]]
+> > - Batch operations and transactions — [[firestore-python#Batch Operations & Transactions|py]] · [[firestore-csharp#Batch Operations & Transactions|cs]]
+> > - Collection group queries — [[firestore-python#Collection Group Queries|py]] · [[firestore-csharp#Collection Group Queries|cs]]
 
 ## Cross-References
 
-- [[moc-sql-server|SQL Server]] — Administration, backup, restore, security, and high availability
-- [[gcp-billing-and-pricing]] — Per-TB pricing for BigQuery queries and storage
-- [[dimensional-modeling]] — Star and snowflake schema design patterns
-- [[data-modeling-patterns]] — Reusable schema patterns across engines
-
-- [[data-warehouse-architecture]] — When to use SQL Server vs BigQuery
-- [[16_py_database|Python Database]] — Python connection and query patterns
+- [[moc-sql-server|SQL Server]] — Administration, performance, and pipeline patterns beyond queries
+- [[moc-gcp|GCP]] — BigQuery service configuration and data loading
+- [[moc-programming-languages|Programming Languages]] — Python and C# database access notebooks

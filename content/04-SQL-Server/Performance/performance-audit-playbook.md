@@ -957,6 +957,96 @@ Invoke-Sqlcmd -ServerInstance "localhost,1433" -Username "sa" -Password "EsgDev2
 
 ---
 
+## DBCC and Trace Flag Reference
+
+### DBCC SHRINKDATABASE — reclaim space after one-time data deletion
+
+> [!danger] Shrink Causes Massive Index Fragmentation
+>
+> DBCC SHRINKDATABASE causes massive index fragmentation. After shrinking, every index must be rebuilt — which grows the file again. Only shrink when reclaiming space from a one-time event (large data deletion, log backup catch-up). Never schedule regular shrinks.
+
+```sql
+-- Shrink database (reclaim free space)
+DBCC SHRINKDATABASE ('FinanceDB', 10);    -- 10% free space target
+
+-- Shrink a specific file
+DBCC SHRINKFILE ('FinanceDB_log', 256);   -- shrink log to 256 MB
+DBCC SHRINKFILE ('FinanceDB', 10240);     -- shrink data file to 10 GB
+DBCC SHRINKFILE ('FinanceDB', EMPTYFILE); -- move all data out (for file removal)
+
+-- After shrink: always rebuild indexes to fix fragmentation
+ALTER INDEX ALL ON dbo.trades REBUILD;
+```
+
+### Trace Flags Reference — common flags and version defaults
+
+> [!info] Most Trace Flags Are Obsolete in SQL Server 2016+
+>
+> Most of these trace flags are obsolete in SQL Server 2016+ because their behavior became the default. T1117 (uniform extent allocation) and T1118 (mixed extent removal) are default since 2016. T2371 (dynamic statistics threshold) is default since 2016. Check your version before enabling.
+
+```sql
+-- Enable trace flag globally
+DBCC TRACEON (3226, -1);      -- -1 = global; no -1 = current session only
+
+-- Disable trace flag
+DBCC TRACEOFF (3226, -1);
+
+-- Check active trace flags
+DBCC TRACESTATUS (-1);        -- -1 = all global; omit for session flags
+```
+
+| Flag | Behavior | Notes |
+|------|----------|-------|
+| T1117 | Uniform auto-grow for ALL files in filegroup | Default since 2016 |
+| T1118 | Force uniform extent allocations (eliminate SGAM contention) | Default since 2016 |
+| T1204 | Deadlock information in error log (less verbose) | Older format |
+| T1222 | Deadlock information in error log (verbose XML) | Preferred over T1204 |
+| T2371 | Lower auto-update statistics threshold to `sqrt(1000 * rows)` | Default since 2016 |
+| T3226 | Suppress successful backup messages in error log | Still useful on all versions |
+| T4199 | Enable all query optimizer fixes for current compat level | Recommended for most workloads |
+| T7412 | Lightweight query execution statistics profiling | Enables live query stats |
+| T8048 | Partition memory objects to per-CPU | For high-NUMA, high-concurrency servers |
+| T9481 | Force legacy cardinality estimator (pre-SQL 2014) | Use when CE 120+ causes regressions |
+
+### DBCC PAGE — low-level page inspection for forensics
+
+Low-level page inspection for forensics — rarely needed in daily operations but invaluable when diagnosing corruption or understanding storage internals.
+
+```sql
+-- DBCC PAGE (database_id, file_id, page_id, print_option)
+-- print_option: 0=header only, 1=header+rows, 2=header+buffer, 3=header+full row data
+DBCC TRACEON (3604);   -- redirect output to client (required before DBCC PAGE)
+DBCC PAGE ('FinanceDB', 1, 305, 3);
+DBCC TRACEOFF (3604);
+```
+
+### DMV Quick-Reference — Dynamic Management Views at a glance
+
+The DMVs (Dynamic Management Views) are SQL Server's internal telemetry. They expose real-time data about sessions, queries, waits, memory, indexes, and I/O. All reset on restart unless noted.
+
+| DMV | Purpose |
+|-----|---------|
+| `sys.dm_exec_requests` | Currently executing requests |
+| `sys.dm_exec_sessions` | All connected sessions |
+| `sys.dm_exec_sql_text` | SQL text for a sql_handle |
+| `sys.dm_exec_query_plan` | XML execution plan for a plan_handle |
+| `sys.dm_exec_cached_plans` | Plan cache entries |
+| `sys.dm_os_wait_stats` | Cumulative wait statistics |
+| `sys.dm_os_buffer_descriptors` | Buffer pool pages by database |
+| `sys.dm_os_memory_clerks` | Memory consumers |
+| `sys.dm_os_performance_counters` | PLE, batch requests/sec, etc. |
+| `sys.dm_os_volume_stats` | Disk free space |
+| `sys.dm_io_virtual_file_stats` | I/O per database file |
+| `sys.dm_db_index_physical_stats` | Index fragmentation |
+| `sys.dm_db_index_usage_stats` | Index seeks/scans/lookups/updates |
+| `sys.dm_db_partition_stats` | Row counts and page counts |
+| `sys.dm_db_missing_index_details` | Missing index suggestions |
+| `sys.dm_tran_locks` | Current lock holders and waiters |
+| `sys.dm_tran_active_transactions` | Open transactions |
+| `sys.dm_db_session_space_usage` | TempDB usage per session |
+| `sys.dm_exec_procedure_stats` | Stored proc execution stats |
+| `sys.dm_exec_query_stats` | Query-level execution stats |
+
 ### Related
 
 - [[wait-stats-analysis]] — full wait type catalog and interpretation

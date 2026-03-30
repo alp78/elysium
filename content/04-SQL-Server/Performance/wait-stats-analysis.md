@@ -417,6 +417,23 @@ EXEC sp_query_store_force_plan @query_id = @query_id, @plan_id = @plan_id;
 
 ---
 
+### Common Wait Types — Quick Reference
+
+Quick reference for the most common wait types. For deep analysis of each wait type with resolution steps, see the sections above.
+
+| Wait Type | Meaning | Typical Cause |
+|-----------|---------|---------------|
+| `PAGEIOLATCH_SH/EX` | Waiting for data page read from disk | Missing indexes, I/O bottleneck |
+| `WRITELOG` | Waiting for log buffer flush | Slow log disk, high transaction rate |
+| `LCK_M_*` | Lock contention | Blocking, missing indexes |
+| `CXPACKET` / `CXCONSUMER` | Parallel query skew | MAXDOP, statistics stale |
+| `SOS_SCHEDULER_YIELD` | CPU pressure, context switching | High CPU load |
+| `RESOURCE_SEMAPHORE` | Memory grant waiting | Large sorts/hashes, low server memory |
+| `ASYNC_NETWORK_IO` | Client not consuming results fast enough | Chatty app, slow client |
+| `IO_COMPLETION` | Non-data I/O (sort spills, etc.) | TempDB I/O |
+| `PAGELATCH_EX` | In-memory page latch contention | Hot pages (e.g., last page inserts) |
+| `THREADPOOL` | No free workers | Blocked workers, max worker threads hit |
+
 ### Related
 
 - [[essential-dba-queries]] — quick diagnostic queries run during incidents

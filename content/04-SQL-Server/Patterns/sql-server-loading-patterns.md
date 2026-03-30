@@ -554,6 +554,53 @@ bcp bronze.signals_daily in signals.csv \
 - **First-row skip:** `-F 2` skips the header row in CSVs
 - **TABLOCK:** Add `-h "TABLOCK"` for minimal logging (5-10x faster, but blocks concurrent reads)
 
+### bcp Complete Flag Reference
+
+Every `bcp` flag in one table. The bullet list above covers the most common flags; this table is the full reference for advanced scenarios like format files, Unicode mode, identity preservation, and query hints.
+
+| Flag | Purpose | Example |
+|------|---------|---------|
+| `-S` | Server name or DSN | `-S prod-sql01` |
+| `-d` | Database name | `-d FinanceDB` |
+| `-U` | Username (SQL auth) | `-U sa` |
+| `-P` | Password | `-P 'P@ss!'` |
+| `-T` | Trusted (Windows) auth | `-T` |
+| `-c` | Character mode (text, recommended for portability) | `-c` |
+| `-n` | Native SQL Server data types | `-n` |
+| `-N` | Unicode chars, native for non-char types | `-N` |
+| `-w` | Unicode character mode | `-w` |
+| `-t` | Field terminator | `-t ","` |
+| `-r` | Row terminator | `-r "\n"` |
+| `-F` | First row to import/export (1-based) | `-F 2` |
+| `-L` | Last row to import/export | `-L 1000` |
+| `-b` | Batch size (rows per transaction) | `-b 10000` |
+| `-e` | Error file path | `-e /logs/err.log` |
+| `-m` | Max errors before abort | `-m 10` |
+| `-f` | Format file path | `-f /fmt/trades.fmt` |
+| `-x` | Generate XML format file (with `-f`) | `-x` |
+| `-q` | Quoted identifiers for table/view names | `-q` |
+| `-k` | Keep NULL values instead of defaults | `-k` |
+| `-E` | Keep identity values from data file | `-E` |
+| `-h` | Hints: `TABLOCK`, `ORDER(col)`, `ROWS_PER_BATCH=N` | `-h "TABLOCK"` |
+| `-a` | Packet size (512–65535 bytes) | `-a 65535` |
+| `-l` | Login timeout | `-l 30` |
+
+### Format File Generation
+
+A format file defines the column mapping between a flat file and a SQL Server table. Use it when column order differs, when you need to skip columns, or when importing into a table with an IDENTITY column. Generate once, reuse across loads.
+
+#### bcp format nul — generate non-XML format file
+
+```bash
+bcp FinanceDB.dbo.trades format nul -S prod-sql01 -T -c -t "," -f /fmt/trades.fmt
+```
+
+#### bcp format nul -x — generate XML format file
+
+```bash
+bcp FinanceDB.dbo.trades format nul -S prod-sql01 -T -c -t "," -f /fmt/trades.xml -x
+```
+
 ---
 
 ## SqlBulkCopy — C# Bulk Loading
