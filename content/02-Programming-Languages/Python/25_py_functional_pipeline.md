@@ -36,11 +36,11 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 - **Structural integrity** (vertical) — pure transforms, typed contracts, quality gates, immutable models
 - **Semantic integrity** (horizontal) — column context, business context, temporal markers, lineage tracking
 
-```python
-# All imports for the functional data pipeline
-# Organized by category: stdlib, data, validation, database, serving, viz
+> [!info] Pipeline Dependencies
+>
+> All imports organized by category: stdlib, data, validation, database, serving, visualization.
 
-# Standard library
+```python
 import hashlib
 import importlib.util
 import logging
@@ -102,10 +102,11 @@ individual cells.
 
 #### Python — define pipeline paths, SQL connection, and stock universe
 
-```python
-# Central configuration cell — all downstream cells reference these constants
+> [!info] Central Configuration Cell
+>
+> All downstream cells reference these constants. Change paths, SQL connection, stock universe, and date range here only.
 
-# ── Paths ──
+```python
 DATA_DIR    = Path(r"C:\Users\aperi\DEV\LANG\data")
 EXPORT_DIR  = DATA_DIR / "pipeline"
 LINEAGE_DIR = EXPORT_DIR / "lineage"
@@ -178,12 +179,11 @@ the opposite of data lake Schema-on-Read.
 
 #### Pydantic — define Bronze validation model with `BaseModel` and `Field()`
 
+> [!info] Bronze Contract: RawOHLCV
+>
+> Validates raw yfinance data BEFORE persistence. Enforces positive prices, non-negative volume. Model validator: high >= low (market invariant).
+
 ```python
-# ── Bronze contract: RawOHLCV ──
-# Validates raw yfinance data BEFORE persistence to SQL Server.
-# Enforces: positive prices, non-negative volume, symbol not empty.
-# @model_validator: high >= low (market invariant — any violation = bad data).
-# strict=True: no silent type coercion — int where float expected raises.
 
 class RawOHLCV(BaseModel):
     """Schema for raw OHLCV data from yfinance — Bronze boundary."""
@@ -220,11 +220,11 @@ print(f"RawOHLCV validated: {sample.symbol} {sample.date} close={sample.close}")
 
 #### Pydantic — define Silver validation model with `BaseModel` and `Field()`
 
+> [!info] Silver Contract: CleanOHLCV
+>
+> Extends Bronze with computed fields: daily_return, intraday_range, sma_20. Daily return constrained to [-50%, +50%].
+
 ```python
-# ── Silver contract: CleanOHLCV ──
-# Extends Bronze with three computed fields: daily_return, intraday_range, sma_20.
-# daily_return constrained to [-50%, +50%] — catches extreme calculation errors.
-# batch_id required — every Silver row must trace back to a pipeline run.
 
 class CleanOHLCV(BaseModel):
     """Schema for cleaned OHLCV data — Silver boundary."""
@@ -259,11 +259,11 @@ print(f"CleanOHLCV model defined — {len(CleanOHLCV.model_fields)} fields")
 
 #### Pydantic — define Gold validation models with `BaseModel` and `Field()`
 
+> [!info] Gold Contracts: Two Mart Tables
+>
+> DailySummary: one row per trading day. SymbolProfile: one row per symbol with full-history stats. max_drawdown always <= 0.
+
 ```python
-# ── Gold contracts: DailySummary + SymbolProfile ──
-# DailySummary: one row per trading day — cross-sectional metrics.
-# SymbolProfile: one row per symbol — full-history aggregate stats.
-# max_drawdown constrained to <= 0 (always negative — peak-to-trough decline).
 
 class DailySummary(BaseModel):
     """Daily cross-sectional summary across all symbols — Gold mart."""
@@ -298,12 +298,11 @@ print(f"SymbolProfile: {len(SymbolProfile.model_fields)} fields")
 
 #### Pydantic — define lineage tracking models with `BaseModel` and `Field()`
 
+> [!info] Lineage Model: StageLineage
+>
+> Records what each stage produced: input/output/rejected rows, SHA-256 hash for tamper detection, duration.
+
 ```python
-# ── Lineage model: StageLineage ──
-# Records what a single pipeline stage produced:
-#   input_rows / output_rows / rows_rejected — data flow accounting
-#   output_hash — SHA-256 of the output DataFrame for tamper detection
-#   duration_ms — computed property from started_at/completed_at
 
 class StageLineage(BaseModel):
     """Records what a single pipeline stage produced."""
@@ -333,13 +332,11 @@ auditor who needs to interpret a value without reading the pipeline code.
 
 #### Pydantic — define column semantic metadata model with `BaseModel`
 
+> [!info] Semantic Metadata: ColumnContext
+>
+> Describes WHAT a column means: computation formula, source columns, null semantics, valid range, derived vs raw.
+
 ```python
-# ── Semantic metadata: ColumnContext ──
-# Describes WHAT a column means, not just what type it is.
-# computation: formula used to derive it (e.g., "pct_change(close).over(symbol)")
-# source_columns: upstream columns it depends on (e.g., ["bronze.close"])
-# null_semantics: what NULL means — "insufficient_data" vs "source_missing"
-# is_derived: True = computed by pipeline, False = raw from source
 
 class ColumnContext(BaseModel):
     name: str = Field(..., description="Column name")
@@ -355,12 +352,11 @@ class ColumnContext(BaseModel):
 
 #### Pydantic — define column registries for each medallion layer
 
+> [!info] Column Registries per Layer
+>
+> Each column has a ColumnContext entry. Feeds into data contracts and StageContext for cross-stage propagation.
+
 ```python
-# ── Column semantic registries — one per medallion layer ──
-# Each column in the pipeline has a ColumnContext entry documenting:
-#   what it is, how it was computed, what NULL means, and valid range.
-# These registries feed into data contracts (exported as JSON Schema)
-# and are attached to StageContext for cross-stage propagation.
 
 BRONZE_COLUMNS = [
     ColumnContext(name="symbol", description="Yahoo Finance ticker symbol", unit="identifier", is_business_key=True),
@@ -430,12 +426,11 @@ print(f"Column registries: Bronze={len(BRONZE_COLUMNS)}, Silver={len(SILVER_COLU
 
 #### Pydantic — define business context model with `BaseModel`
 
+> [!info] BusinessContext: Run Trigger
+>
+> Captures WHY this pipeline ran: scheduled, manual, backfill, reprocess, or test. is_correction flags data overwrites.
+
 ```python
-# ── BusinessContext: why this run was triggered ──
-# Captures the business reason behind each pipeline execution.
-# trigger: scheduled | manual | backfill | reprocess | test
-# is_correction: True if overwriting previously published data
-# Enables downstream consumers to distinguish routine runs from corrections.
 
 class BusinessContext(BaseModel):
     trigger: str = Field(..., description="scheduled, manual, backfill, reprocess, test")
@@ -455,12 +450,11 @@ class BusinessContext(BaseModel):
 
 #### Pydantic — define temporal context model with `BaseModel`
 
+> [!info] TemporalContext: Bi-Temporal Markers
+>
+> as_of_date: business date the data represents. knowledge_date: when pipeline ingested it. Critical for backfills.
+
 ```python
-# ── TemporalContext: bi-temporal markers ──
-# as_of_date: the business date the data represents (usually T-1)
-# knowledge_date: when the pipeline ingested the data (auto-set to now)
-# Separates "what date is this data FOR" from "when did we learn about it"
-# — critical for backfills where knowledge_date >> as_of_date.
 
 class TemporalContext(BaseModel):
     as_of_date: Date = Field(..., description="Business date the data represents")
@@ -473,14 +467,11 @@ class TemporalContext(BaseModel):
 
 #### Pydantic — define stage context model for cross-stage propagation with `BaseModel`
 
+> [!info] StageContext: Cross-Stage Propagation
+>
+> Created at stage start, carried forward. Each stage inherits upstream warnings and adds its own.
+
 ```python
-# ── StageContext: metadata that flows THROUGH the pipeline ──
-# Unlike StageLineage (recorded after the fact), StageContext is
-# created at stage start and carried forward via for_next_stage().
-# Each stage inherits upstream warnings + adds its own.
-# By gold, the context carries the full warning chain from all stages.
-# add_warning(): appends a warning and logs it immediately.
-# for_next_stage(): creates context for the next stage, copying all history.
 
 class StageContext(BaseModel):
     batch_id: str = Field(...)
@@ -510,11 +501,11 @@ class StageContext(BaseModel):
 
 #### Pydantic — define pipeline run context model with `BaseModel`
 
+> [!info] RunContext: Execution Envelope
+>
+> Aggregates everything: stages, business context, temporal context, data warnings, contract version.
+
 ```python
-# ── RunContext: complete pipeline execution envelope ──
-# Aggregates everything: stages, business context, temporal context,
-# accumulated warnings, contract version. Persisted as JSON per run.
-# Defined AFTER BusinessContext/TemporalContext so Pydantic resolves types.
 
 class RunContext(BaseModel):
     """Full pipeline execution metadata."""
@@ -534,12 +525,11 @@ class RunContext(BaseModel):
 
 #### Pydantic — define data contract export function with `model_json_schema()`
 
+> [!info] Data Contract Export
+>
+> Generates JSON Schema contracts with x-column-context: descriptions, formulas, units, null semantics.
+
 ```python
-# ── Data contract export: Pydantic → JSON Schema + column semantics ──
-# Generates machine-readable contracts for each pipeline boundary.
-# Each contract includes: Pydantic's structural schema (types, constraints)
-# PLUS x-column-context (descriptions, formulas, units, null semantics).
-# Output: pipeline/contracts/{table}_contract.json
 
 def export_data_contracts(export_dir: Path) -> list[Path]:
     contracts_dir = export_dir / "contracts"
@@ -582,10 +572,11 @@ aggregates all stages into a single JSON artifact per pipeline execution.
 
 #### uuid — generate unique batch ID with `uuid4()`
 
+> [!info] Batch ID: Unique Run Identifier
+>
+> Every row carries this UUID. Trace any disputed value back to its pipeline run in one query.
+
 ```python
-# ── Batch ID: globally unique run identifier ──
-# Every row in bronze/silver/gold carries this ID.
-# Trace any disputed value back to its pipeline run in one query.
 
 def generate_batch_id() -> str:
     """Generate a unique batch identifier for this pipeline run."""
@@ -600,11 +591,11 @@ print(f"Sample batch_id: {demo_batch}")
 
 #### hashlib — compute deterministic DataFrame hash with `sha256()`
 
+> [!info] SHA-256 Hash: Tamper Detection
+>
+> Same data produces the same hash. Modified rows break the hash match.
+
 ```python
-# ── SHA-256 hash: tamper detection ──
-# Same data → same hash, every time. If someone modifies a row in Silver
-# after the pipeline ran, the recomputed hash won't match the recorded one.
-# Serializes DataFrame to sorted CSV bytes before hashing — column order matters.
 
 def compute_hash(df: pl.DataFrame) -> str:
     """SHA-256 hash of DataFrame content for drift detection."""
@@ -620,11 +611,11 @@ print(f"Hash of demo frame: {compute_hash(demo_df)}")
 
 #### Python — define stage start and end tracker with `datetime.now()`
 
+> [!info] Stage Tracking: Start/End Pattern
+>
+> start_stage(): captures timestamp + input count. end_stage(): fills output metrics, computes hash.
+
 ```python
-# ── Stage tracking: start_stage() / end_stage() ──
-# start_stage: captures timestamp and input row count at stage entry
-# end_stage: fills output metrics, computes SHA-256 hash, returns StageLineage
-# StageContext (if provided) flows alongside for semantic metadata propagation
 
 def start_stage(batch_id: str, stage: str, input_rows: int,
                 stage_context: StageContext | None = None) -> dict:
@@ -693,10 +684,11 @@ Every data row carries a `batch_id` linking it to the pipeline run that produced
 
 #### SQL Server — create Bronze OHLCV table with `cursor.execute()`
 
+> [!info] Bronze Table: Raw Source Data
+>
+> Stores raw yfinance output exactly as received. UNIQUE on (symbol, date) enables MERGE upsert.
+
 ```python
-# Stores raw yfinance output exactly as received, no transforms
-# batch_id links every row to the pipeline run that ingested it
-# UNIQUE constraint on (symbol, date) enables MERGE upsert for incremental loads
 
 sql_conn = pyodbc.connect(SQL_CONN_STR)
 cur = sql_conn.cursor()
@@ -855,10 +847,11 @@ print("dim_symbol table ready (SCD Type 2)")
 
 #### SQL Server — create per-exchange trading calendar with `cursor.execute()`
 
+> [!info] Trading Calendar Dimension
+>
+> Per-exchange trading calendar with holiday flags. Composite PK on (date, exchange_code).
+
 ```python
-# Per-exchange trading calendar with holiday flags
-# Composite PK on (date, exchange_code) — one row per date per exchange
-# Aligned with stoxx.bronze.trading_calendar schema
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dim_calendar')
@@ -910,10 +903,11 @@ print("lineage_stages table ready")
 
 #### SQL Server — create quarantine table for rejected rows with `cursor.execute()`
 
+> [!info] Quarantine: Dead Letter Queue
+>
+> Stores every row that failed Pydantic validation with raw data + rejection reason.
+
 ```python
-# Dead letter queue: stores every row that failed Pydantic validation
-# Preserves the raw data + rejection reason for investigation and replay
-# batch_id links back to the pipeline run that rejected it
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'quarantine')
@@ -1021,10 +1015,11 @@ print("persist_lineage() defined — idempotent: deletes before insert")
 
 #### SQLAlchemy — define DataFrame write helper with `to_sql()`
 
+> [!info] DataFrame Write Helper
+>
+> Converts Polars to pandas for SQLAlchemy. chunksize=100 avoids SQL Server 2100 parameter limit.
+
 ```python
-# Converts Polars → pandas for SQLAlchemy to_sql() bridge
-# chunksize=100 avoids SQL Server 2100 parameter limit (rows x cols < 2100)
-# truncate=True wipes the table before insert (used by Gold tables only)
 
 def write_to_sql(df: pl.DataFrame, table: str, truncate: bool = True) -> int:
     """Write a Polars DataFrame to SQL Server. Truncates table first by default."""
@@ -1042,11 +1037,11 @@ print("write_to_sql() defined")
 
 #### SQL Server — define Bronze MERGE upsert with `MERGE INTO`
 
+> [!info] Bronze MERGE Upsert
+>
+> Idempotent: MERGE on (symbol, date). Existing rows updated, new rows inserted. Safe to re-run.
+
 ```python
-# ── Bronze MERGE upsert ──
-# Idempotent: MERGE on (symbol, date) — safe to re-run.
-# Existing rows get updated, new rows get inserted.
-# batch_id and ingested_at are stamped on every write.
 
 def merge_bronze(df: pl.DataFrame, batch_id: str) -> int:
     """MERGE upsert into bronze_ohlcv on (symbol, date)."""
@@ -1085,11 +1080,11 @@ print("merge_bronze() defined")
 
 #### SQL Server — define Silver MERGE upsert with `MERGE INTO`
 
+> [!info] Silver MERGE Upsert
+>
+> Same pattern as Bronze, plus enrichment columns: daily_return, intraday_range, sma_20.
+
 ```python
-# ── Silver MERGE upsert ──
-# Same idempotent pattern as Bronze, but includes enrichment columns.
-# daily_return, intraday_range, sma_20 are persisted alongside raw OHLCV.
-# batch_id links each Silver row to its pipeline run.
 
 def merge_silver(df: pl.DataFrame, batch_id: str) -> int:
     """MERGE upsert into silver_ohlcv on (symbol, date)."""
@@ -1157,10 +1152,11 @@ log.info("quarantine_row() defined \u2014 dead letter queue helper")
 
 #### tenacity — define API retry wrapper with `@retry()` exponential backoff
 
+> [!info] API Retry with Backoff
+>
+> 3 attempts, exponential backoff. Catches network errors without killing the pipeline.
+
 ```python
-# Wraps yfinance API calls with retry logic: 3 attempts, exponential backoff
-# Catches network errors and transient failures without killing the pipeline
-# Uses tenacity library for clean retry semantics
 
 @retry(
     stop=stop_after_attempt(3),
@@ -1308,12 +1304,11 @@ print("dq_check_row_count() defined")
 
 #### Pipeline — run all quality gate assertions with `log.info()`
 
+> [!info] Quality Gate Runner
+>
+> Executes all checks, logs PASS/FAIL. fail_fast=True raises DataQualityError, blocking downstream.
+
 ```python
-# ── Quality gate runner ──
-# Executes all checks for a stage, logs PASS/FAIL for each.
-# fail_fast=True: raises DataQualityError on first failure — blocks downstream.
-# fail_fast=False: logs warnings but continues (used for soft/outlier checks).
-# Returns results as a DataFrame for display in the notebook.
 
 def run_quality_gate(checks: list[tuple[bool, str]], stage: str, fail_fast: bool = True) -> pl.DataFrame:
     """Run all quality checks. Logs results. Raises DataQualityError if any fail."""
@@ -1353,10 +1348,11 @@ vs anomalies — a decision only possible with calendar context.
 
 #### yfinance — fetch symbol metadata to JSON landing zone with `Ticker.info`
 
+> [!info] Fetch Symbol Metadata
+>
+> Fetches company metadata from yfinance. Saves to landing/dim_symbol.json for replay.
+
 ```python
-# Fetches company metadata from yfinance for each symbol in the universe
-# Saves raw API response to landing/dim_symbol.json for audit trail
-# Decoupled from SQL load: can re-run SQL upsert without re-fetching
 
 SCD2_COMPARE_COLS = ["company_name", "sector", "industry", "country", "exchange", "currency"]
 
@@ -1425,11 +1421,11 @@ print("load_symbols_from_landing() defined")
 
 #### SQL Server — define SCD Type 2 upsert for one symbol with `MERGE INTO`
 
+> [!info] SCD Type 2 Dimension Upsert
+>
+> New symbol: INSERT. Unchanged: skip. Changed: close old record, INSERT new version.
+
 ```python
-# SCD Type 2 logic for a single symbol record:
-#   New symbol → INSERT fresh record (is_current=1)
-#   Attributes unchanged → skip (no duplicate)
-#   Attributes changed → close old (valid_to=now, is_current=0), INSERT new
 
 def scd2_upsert_symbol(rec: dict) -> str:
     """SCD Type 2 upsert for one symbol from landed JSON. Returns action taken."""
@@ -1618,10 +1614,11 @@ dim_symbol_df.select("symbol", "longName", "sector", "country", "exchange", "_ac
 
 #### pandas-market-calendars — generate trading calendar with `get_calendar().schedule()`
 
+> [!info] Exchange Calendar Builder
+>
+> Uses pandas-market-calendars for accurate per-exchange trading days with holiday detection.
+
 ```python
-# Uses pandas-market-calendars to get accurate trading days per exchange
-# Each exchange has its own holiday schedule (e.g., XETR has German holidays)
-# Builds a (date, exchange_code) grid with precise is_trading_day flags
 
 def generate_dim_calendar(start: str, end: str, exchange_codes: list[str]) -> pl.DataFrame:
     """Generate a per-exchange calendar using pandas-market-calendars."""
@@ -1894,10 +1891,11 @@ These classifications propagate through silver and gold as context warnings.
 
 #### yfinance — fetch OHLCV to JSON landing zone with `Ticker.history()`
 
+> [!info] Landing Zone: OHLCV Fetch
+>
+> Downloads OHLCV data to landing/ohlcv_{symbol}.json. Each symbol gets its own file.
+
 ```python
-# Downloads OHLCV data from yfinance and saves to landing/ohlcv_{symbol}.json
-# Each symbol gets its own JSON file with raw API response
-# Uses fetch_with_retry() for transient failure handling
 
 def fetch_ohlcv_to_landing(symbol: str, start: str, end: str) -> Path | None:
     """Download OHLCV data from yfinance and save to JSON landing zone."""
@@ -2194,14 +2192,11 @@ valid_df.head(5)
 
 #### Bronze — define incremental ingestion pipeline with landing zone + `MERGE INTO`
 
+> [!info] Bronze Ingestion Pipeline
+>
+> Three-step: land, validate, MERGE upsert. Fetches only new data since last known date per symbol.
+
 ```python
-# ── Bronze ingestion pipeline ──
-# Three-step process: land → validate → MERGE upsert
-# Step 1: Check last known date per symbol in SQL Server (incremental)
-# Step 2: Fetch only new data from yfinance → JSON landing zone
-# Step 3: Validate through Pydantic, quarantine rejects, MERGE valid rows
-# Returns the FULL bronze dataset from SQL for downstream stages,
-# not just the new rows — Silver needs the full history for SMA/returns.
 
 def ingest_bronze(symbols: list[str], start: str, end: str, batch_id: str) -> tuple[pl.DataFrame, StageLineage]:
     """Incrementally fetch to landing zone, validate, and MERGE upsert."""
@@ -2273,12 +2268,11 @@ print("ingest_bronze() defined \u2014 landing zone + incremental MERGE")
 
 #### Bronze — execute incremental ingestion for all symbols
 
+> [!info] Bronze Execution with Context
+>
+> Creates BusinessContext, TemporalContext, StageContext, then runs Bronze ingestion.
+
 ```python
-# ── Pipeline execution: Bronze with context initialization ──
-# Creates BusinessContext (scheduled, T-1) and TemporalContext (CET timezone).
-# Initializes StageContext for bronze with column registry.
-# After ingestion: detects zero-volume anomalies via dim_calendar cross-reference.
-# Context is persisted and propagated to silver via for_next_stage().
 
 batch_id = generate_batch_id()
 
@@ -2566,11 +2560,11 @@ to gold, explaining every null without manual investigation.
 
 #### Polars — compute daily returns with `pct_change().over()`
 
+> [!info] Transform: Daily Returns
+>
+> Close-to-close percentage change per symbol. Pure function: DataFrame in, DataFrame out.
+
 ```python
-# ── Pure transform: daily returns ──
-# close-to-close percentage change, partitioned by symbol.
-# Pure function: DataFrame in → DataFrame out, no side effects.
-# Can be unit-tested with a 10-row hardcoded DataFrame.
 
 def compute_daily_returns(df: pl.DataFrame) -> pl.DataFrame:
     """Add daily_return column: close-to-close percentage change per symbol."""
@@ -2634,10 +2628,11 @@ test_returns.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "clos
 
 #### Polars — compute intraday range with `with_columns()`
 
+> [!info] Transform: Intraday Range
+>
+> (high - low) / close: normalized daily price spread. Higher = more volatile.
+
 ```python
-# ── Pure transform: intraday range ──
-# (high - low) / close — normalized daily price spread.
-# Higher values = more volatile intraday trading.
 
 def compute_intraday_range(df: pl.DataFrame) -> pl.DataFrame:
     """Add intraday_range column: (high - low) / close as percentage."""
@@ -2710,11 +2705,11 @@ test_range.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "high",
 
 #### Polars — compute 20-day moving average with `rolling_mean().over()`
 
+> [!info] Transform: 20-Day SMA
+>
+> Rolling mean of close over 20-day window per symbol. First 19 rows are NULL.
+
 ```python
-# ── Pure transform: 20-day simple moving average ──
-# Rolling mean of close price over 20-day window, per symbol.
-# First 19 rows per symbol → NULL (insufficient history).
-# This is expected and recorded as a context warning at silver stage.
 
 def compute_sma(df: pl.DataFrame, window: int = 20) -> pl.DataFrame:
     """Add sma_20 column: rolling mean of close price per symbol."""
@@ -2777,11 +2772,11 @@ test_sma.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", 
 
 #### Polars — compose all Silver transforms with function chaining
 
+> [!info] Transform Composition Pipeline
+>
+> Chains three pure functions. Each independent and unit-testable. Validates before MERGE.
+
 ```python
-# ── Transform composition: daily_returns → intraday_range → sma_20 ──
-# Chains three pure functions — each is independent and testable.
-# The composition itself is a pure function: Bronze DataFrame → enriched DataFrame.
-# No database calls, no file I/O, no side effects inside the transform chain.
 
 def transform_silver(bronze_df: pl.DataFrame) -> pl.DataFrame:
     """Apply all Silver enrichment transforms in sequence."""
@@ -2843,12 +2838,11 @@ log.info("validate_silver() defined \u2014 rejects go to quarantine")
 
 #### Silver — define enrichment pipeline with transform + `MERGE INTO`
 
+> [!info] Silver Enrichment Pipeline
+>
+> Transform, validate (Pydantic), MERGE (SQL), lineage. Transforms FULL bronze for correct SMA.
+
 ```python
-# ── Silver enrichment pipeline ──
-# Orchestrates: transform (pure) → validate (Pydantic) → MERGE (SQL) → lineage
-# Transforms the FULL bronze dataset — needed for correct SMA/returns calculation.
-# MERGE upserts into silver_ohlcv: existing rows updated, new rows inserted.
-# Returns the FULL silver dataset from SQL for downstream gold aggregation.
 
 def process_silver(bronze_df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame, StageLineage]:
     """Transform, validate, and MERGE upsert Silver data."""
@@ -2887,10 +2881,11 @@ print("process_silver() defined — MERGE upsert, returns full dataset")
 
 #### Silver — execute enrichment on full Bronze data
 
+> [!info] Silver Execution with Context
+>
+> Runs Silver enrichment, records SMA-20 null warnings in StageContext.
+
 ```python
-# ── Pipeline execution: Silver with context propagation ──
-# Runs the silver enrichment, then records SMA-20 null warning in context.
-# Context is persisted and forwarded to gold via for_next_stage().
 
 t0 = time.time()
 silver_df, silver_lineage = process_silver(bronze_df, batch_id)
@@ -3047,12 +3042,11 @@ silver_df.group_by("symbol").agg(
 
 #### Pipeline — run Silver data quality gate with `run_quality_gate()`
 
-```python
-# Data quality assertions on Silver output
-# Hard gate (fail_fast=True): blocks pipeline on structural issues
-# Soft gate (fail_fast=False): logs warnings on statistical outliers
+> [!info] Silver Quality Gate
+>
+> Hard gate: blocks on structural issues. Soft gate: logs warnings on statistical anomalies.
 
-# Hard checks — must pass
+```python
 silver_dq = run_quality_gate([
     dq_check_not_empty(silver_df, "silver"),
     dq_check_no_null_keys(silver_df, ["symbol", "date", "daily_return"], "silver"),
@@ -3179,11 +3173,11 @@ because Gold tables are small (50 symbols × 1 row each).
 
 #### Polars — build daily cross-sectional summary with `group_by().agg()`
 
+> [!info] Aggregation: Daily Summary
+>
+> Groups by date: mean/max/min return, total volume, avg intraday range.
+
 ```python
-# ── Pure aggregation: daily cross-sectional summary ──
-# Groups all symbols by date: mean/max/min return, total volume, avg intraday range.
-# Pure function: Silver DataFrame → DailySummary DataFrame.
-# One row per trading day — feeds the market overview dashboard.
 
 def build_daily_summary(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame:
     """Aggregate Silver data into daily cross-sectional summary."""
@@ -3276,11 +3270,11 @@ daily_summary_df.head(5)
 
 #### Polars — build per-symbol profile with `cum_max()` drawdown
 
+> [!info] Aggregation: Symbol Risk Profile
+>
+> Per-symbol: avg return, volatility, max drawdown, total dividends.
+
 ```python
-# ── Pure aggregation: per-symbol risk profile ──
-# Per-symbol over full history: avg return, volatility (daily σ), max drawdown.
-# Max drawdown = worst peak-to-trough decline using cumulative max of returns.
-# Pure function: Silver DataFrame → SymbolProfile DataFrame.
 
 def build_symbol_profile(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame:
     """Aggregate Silver data into per-symbol summary statistics."""
@@ -3451,11 +3445,11 @@ print(f"Symbol profile validation: {len(valid_profiles)} valid, {rej_profiles} r
 
 #### SQL Server — define Gold persistence function with `TRUNCATE` + `to_sql()`
 
+> [!info] Gold: Truncate and Rebuild
+>
+> Full rebuild from Silver. TRUNCATE both Gold tables, INSERT new aggregations.
+
 ```python
-# ── Gold persistence: truncate + rebuild ──
-# Gold is always a full rebuild from Silver — not incremental.
-# TRUNCATE both Gold tables, then INSERT from validated DataFrames.
-# Acceptable because Gold is small (50 symbols × 1 row + ~500 daily rows).
 
 def persist_gold(daily_df: pl.DataFrame, profile_df: pl.DataFrame, batch_id: str) -> StageLineage:
     """Persist Gold mart tables to SQL Server with lineage tracking."""
@@ -3485,10 +3479,11 @@ print("persist_gold() defined")
 
 #### SQL Server — persist Gold marts with `TRUNCATE` + `to_sql()`
 
+> [!info] Gold Execution with Context
+>
+> Persists Gold marts, checks for missing symbols, records warnings.
+
 ```python
-# ── Pipeline execution: Gold with context propagation ──
-# Persists Gold marts, checks for days with missing symbols,
-# records warnings in context, persists context.
 
 gold_lineage = persist_gold(valid_daily, valid_profiles, batch_id)
 
@@ -3774,11 +3769,11 @@ After all stages complete, the full execution trail is available for review:
 
 #### Pydantic — build and save run context with `RunContext()`
 
+> [!info] Finalize RunContext
+>
+> Combines stage lineage, business context, temporal context, warnings into final record.
+
 ```python
-# ── RunContext: aggregate all stages into final execution record ──
-# Combines: stage lineage, business context, temporal context,
-# accumulated data warnings from all stages, contract version.
-# Persisted as JSON — one file per pipeline run.
 
 run_context = RunContext(
     batch_id=batch_id,
@@ -5023,22 +5018,11 @@ gold_daily_audit
 
 #### SQL Server — query lineage table for pipeline run metadata with `read_database()`
 
-```python
-# Step 5: Trace the disputed data point back to its pipeline run
-#
-# Every row in Bronze carries a batch_id — a UUID stamped at ingestion time.
-# This is the key to the entire lineage chain:
-#   disputed row (symbol + date) → batch_id → lineage_stages → full pipeline audit
-#
-# From the lineage table we get:
-#   - When each stage ran (started_at / completed_at)
-#   - How many rows were processed vs rejected
-#   - The output hash: a SHA-256 fingerprint of the stage output
-#     If anyone modified data after ingestion, the hash would no longer match
-#
-# This is the production equivalent of "show me the chain of custody"
+> [!info] Lineage Chain Trace
+>
+> batch_id traces disputed row to pipeline run. Output hash proves no post-ingestion tampering.
 
-# Look up the batch_id from the disputed row itself
+```python
 batch_from_bronze = pl.read_database(
     "SELECT batch_id FROM bronze_ohlcv WHERE symbol = 'SAP.DE' AND date = '2026-01-29'",
     connection=sql_engine
@@ -5120,15 +5104,11 @@ lineage_audit
 
 #### JSON — verify RunContext execution metadata with `json.loads()`
 
+> [!info] RunContext Execution Proof
+>
+> Proves symbols processed, date range, Polars version, status, zero rejections, output hash.
+
 ```python
-# Step 6: Load RunContext — the pipeline's execution fingerprint
-# This proves:
-#   - Which symbols were processed (no missing/extra symbols)
-#   - The exact date range requested (matches the disputed date)
-#   - The Polars version used (reproducibility)
-#   - Pipeline status = "completed" (no partial/failed run)
-#   - Zero rejected rows (data passed all Pydantic validations)
-#   - Output hash (cryptographic proof the data hasn't been tampered with since)
 
 ctx_files = list(LINEAGE_DIR.glob(f"run_{batch_from_bronze[:8]}*.json"))
 if ctx_files:
@@ -5188,11 +5168,11 @@ else:
 
 #### Polars — display full audit trail summary as DataFrame
 
+> [!info] Audit: Full Chain of Evidence
+>
+> Assembles all audit steps into a summary. Each row is one verification step with evidence.
+
 ```python
-# ── Audit conclusion: full chain of evidence ──
-# Assembles all seven audit steps into a summary DataFrame.
-# Each row is one verification step with its evidence.
-# If every step shows matching values: the data point is authentic.
 
 bronze_close = float(bronze_audit["close"][0])
 silver_row = silver_audit.filter(pl.col("date") == Date.fromisoformat("2026-01-29"))
@@ -5283,12 +5263,11 @@ Silver contains rows with `volume=0`. Without context, each is an
 undifferentiated alert. With the trading calendar cross-reference recorded at
 bronze ingestion, each is classified as 📅 non-trading day or 🔴 genuine anomaly.
 
+> [!info] Context: Zero-Volume Classification
+>
+> Silver rows with volume=0 classified using ColumnContext. Distinguishes real data from quality issues.
+
 ```python
-# ── Context demonstration: zero-volume classification ──
-# 116 Silver rows have volume=0 — are they data quality problems?
-# Cross-reference each with dim_calendar: non-trading days are expected.
-# Only trading-day zeros are genuine anomalies worth investigating.
-# The verdict column IS the decision: 📅 ignore vs 🔴 investigate.
 
 zero_vol = silver_df.filter(pl.col("volume") == 0)
 
@@ -5374,12 +5353,11 @@ else:
 mathematical necessity. Context recorded this at silver stage. If any symbol
 has MORE than 19 nulls, those extras are unexplained and need investigation.
 
+> [!info] Context: SMA-20 Null Accounting
+>
+> sma_20 needs 20 data points. First 19 per symbol are NULL by mathematical necessity.
+
 ```python
-# ── Context demonstration: SMA-20 null accounting ──
-# sma_20 requires 20 data points — first 19 per symbol are NULL by design.
-# 19 × 5 symbols = 95 expected nulls. If actual matches expected → fully explained.
-# If any symbol exceeds 19 → those extras are unexplained data gaps.
-# Context recorded "95 NULL values" at silver stage — verify it matches.
 
 sma_nulls = silver_df.filter(pl.col("sma_20").is_null())
 actual_null_count = len(sma_nulls)
@@ -5479,12 +5457,11 @@ computation formula, source columns, unit, and null semantics for every
 derived column. This is what turns `volatility: 0.0187` into
 "daily σ of close-to-close returns, annualize with √252 → 29.7%".
 
+> [!info] Context: Data Contract Metadata
+>
+> Reads exported JSON Schema and displays x-column-context entries for gold_symbol_profile.
+
 ```python
-# ── Context demonstration: data contract as structured metadata ──
-# Reads the exported JSON Schema for gold_symbol_profile.
-# Extracts derived columns with their computation formula, source lineage,
-# unit, and null semantics. This DataFrame IS the contract —
-# every derived column is self-documenting without reading pipeline code.
 
 contract = json.loads(
     (EXPORT_DIR / "contracts" / "gold_symbol_profile_contract.json").read_text()
@@ -5570,13 +5547,11 @@ pl.DataFrame(derived)
   </tbody>
 </table>
 
+> [!info] Context: Interpreting Gold Values
+>
+> volatility=0.0187 means nothing without context. Contract says: std(daily_return), annualize by sqrt(252).
+
 ```python
-# ── Context demonstration: interpreting a Gold value ──
-# volatility=0.0187 is meaningless without context.
-# The contract says: unit=decimal_ratio, formula=std(daily_return),
-# description says "annualize by multiplying by sqrt(252)".
-# Result: 0.0187 × √252 × 100 = 29.7% annualized volatility.
-# The interpretation column shows the contract-driven calculation.
 
 import math
 

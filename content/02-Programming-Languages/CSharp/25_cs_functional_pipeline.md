@@ -113,9 +113,11 @@ individual cells.
 
 #### C# — define pipeline paths, SQL connection, and stock universe
 
-```csharp
-// Central configuration cell — all downstream cells reference these constants
+> [!info] Central Configuration Cell
+>
+> All downstream cells reference these constants — paths, SQL connection, stock universe, and date range. Change them here, not in individual cells.
 
+```csharp
 // ── Paths ──
 string DATA_DIR    = @"C:\Users\aperi\DEV\LANG\data";
 string EXPORT_DIR  = Path.Combine(DATA_DIR, "pipeline");
@@ -178,13 +180,11 @@ the opposite of data lake Schema-on-Read.
 
 #### record — define Bronze validation model with `record` and properties
 
-```csharp
-// ── Bronze contract: RawOhlcv ──
-// Validates raw Yahoo Finance data BEFORE persistence to SQL Server.
-// Enforces: positive prices, non-negative volume, symbol not empty.
-// FluentValidation: High >= Low (market invariant — any violation = bad data).
-// C# records are immutable by default — no ConfigDict needed.
+> [!info] Bronze Contract: RawOhlcv
+>
+> Validates raw Yahoo Finance data BEFORE persistence to SQL Server. Enforces positive prices, non-negative volume, symbol not empty. FluentValidation adds `High >= Low` (market invariant — any violation = bad data). C# records are immutable by default.
 
+```csharp
 public record RawOhlcv(
     string Symbol,
     DateTime Date,
@@ -225,12 +225,11 @@ Console.WriteLine($"RawOhlcv validated: {sample.Symbol} {sample.Date:yyyy-MM-dd}
 
 #### record — define Silver validation model with `record` and properties
 
-```csharp
-// ── Silver contract: CleanOhlcv ──
-// Extends Bronze with three computed fields: daily_return, intraday_range, sma_20.
-// daily_return constrained to [-50%, +50%] — catches extreme calculation errors.
-// batch_id required — every Silver row must trace back to a pipeline run.
+> [!info] Silver Contract: CleanOhlcv
+>
+> Extends Bronze with three computed fields: `daily_return`, `intraday_range`, `sma_20`. Daily return constrained to [-50%, +50%] to catch extreme calculation errors. `batch_id` required — every Silver row must trace back to a pipeline run.
 
+```csharp
 public record CleanOhlcv(
     string Symbol,
     DateTime Date,
@@ -272,12 +271,11 @@ Console.WriteLine($"CleanOhlcv record defined — 14 fields");
 
 #### record — define Gold validation models with `record` and properties
 
-```csharp
-// ── Gold contracts: DailySummary + SymbolProfile ──
-// DailySummary: one row per trading day — cross-sectional metrics.
-// SymbolProfile: one row per symbol — full-history aggregate stats.
-// max_drawdown constrained to <= 0 (always negative — peak-to-trough decline).
+> [!info] Gold Contracts: Two Mart Tables
+>
+> `DailySummary`: one row per trading day with cross-sectional metrics. `SymbolProfile`: one row per symbol with full-history aggregate stats. `max_drawdown` constrained to <= 0 (always negative — peak-to-trough decline).
 
+```csharp
 public record DailySummary(
     DateTime Date,
     int SymbolsTraded,
@@ -309,13 +307,11 @@ Console.WriteLine($"SymbolProfile: 10 fields");
 
 #### record — define lineage tracking models with `record` and properties
 
-```csharp
-// ── Lineage model: StageLineage ──
-// Records what a single pipeline stage produced:
-//   input_rows / output_rows / rows_rejected — data flow accounting
-//   output_hash — SHA-256 of the output DataTable for tamper detection
-//   DurationMs — computed from StartedAt/CompletedAt
+> [!info] Lineage Model: StageLineage
+>
+> Records what a single pipeline stage produced: `input_rows` / `output_rows` / `rows_rejected` for data flow accounting, `output_hash` (SHA-256) for tamper detection, `DurationMs` computed from timestamps.
 
+```csharp
 public record StageLineage(
     string BatchId,
     string Stage,
@@ -342,14 +338,11 @@ auditor who needs to interpret a value without reading the pipeline code.
 
 #### record — define column semantic metadata model with `record`
 
-```csharp
-// ── Semantic metadata: ColumnContext ──
-// Describes WHAT a column means, not just what type it is.
-// computation: formula used to derive it
-// source_columns: upstream columns it depends on
-// null_semantics: what NULL means — "insufficient_data" vs "source_missing"
-// is_derived: True = computed by pipeline, False = raw from source
+> [!info] Semantic Metadata: ColumnContext
+>
+> Describes WHAT a column means, not just its type. `computation`: formula used to derive it. `source_columns`: upstream dependencies. `null_semantics`: what NULL means ("insufficient_data" vs "source_missing"). `is_derived`: True = computed by pipeline, False = raw from source.
 
+```csharp
 public record ColumnContext(
     string Name,
     string Description,
@@ -367,13 +360,11 @@ public record ColumnContext(
 
 #### C# — define column registries for each medallion layer
 
-```csharp
-// ── Column semantic registries — one per medallion layer ──
-// Each column in the pipeline has a ColumnContext entry documenting:
-//   what it is, how it was computed, what NULL means, and valid range.
-// These registries feed into data contracts (exported as JSON Schema)
-// and are attached to StageContext for cross-stage propagation.
+> [!info] Column Registries per Layer
+>
+> Each column has a `ColumnContext` entry documenting what it is, how it was computed, what NULL means, and its valid range. These registries feed into data contracts (exported as JSON Schema) and attach to `StageContext` for cross-stage propagation.
 
+```csharp
 List<ColumnContext> BRONZE_COLUMNS = new() {
     new("symbol", "Yahoo Finance ticker symbol", "identifier", IsBusinessKey: true),
     new("date", "Trading date (exchange local)", "date", IsBusinessKey: true),
@@ -436,13 +427,11 @@ Console.WriteLine($"Column registries: Bronze={BRONZE_COLUMNS.Count}, Silver={SI
 
 #### record — define business context model with `record`
 
-```csharp
-// ── BusinessContext: why this run was triggered ──
-// Captures the business reason behind each pipeline execution.
-// trigger: scheduled | manual | backfill | reprocess | test
-// is_correction: True if overwriting previously published data
-// Enables downstream consumers to distinguish routine runs from corrections.
+> [!info] BusinessContext: Run Trigger Reason
+>
+> Captures WHY this pipeline execution happened. `trigger`: scheduled, manual, backfill, reprocess, or test. `is_correction`: true if overwriting previously published data. Enables downstream consumers to distinguish routine runs from corrections.
 
+```csharp
 public record BusinessContext
 {
     public string Trigger { get; init; }
@@ -459,13 +448,11 @@ public record BusinessContext
 
 #### record — define temporal context model with `record`
 
-```csharp
-// ── TemporalContext: bi-temporal markers ──
-// as_of_date: the business date the data represents (usually T-1)
-// knowledge_date: when the pipeline ingested the data (auto-set to now)
-// Separates "what date is this data FOR" from "when did we learn about it"
-// — critical for backfills where knowledge_date >> as_of_date.
+> [!info] TemporalContext: Bi-Temporal Markers
+>
+> `as_of_date`: the business date the data represents (usually T-1). `knowledge_date`: when the pipeline ingested it (auto-set to now). Separates "what date is this data FOR" from "when did we learn about it" — critical for backfills where `knowledge_date >> as_of_date`.
 
+```csharp
 public record TemporalContext
 {
     public DateTime AsOfDate { get; init; }
@@ -479,13 +466,11 @@ public record TemporalContext
 
 #### record — define stage context model for cross-stage propagation with `record`
 
-```csharp
-// ── StageContext: metadata that flows THROUGH the pipeline ──
-// Unlike StageLineage (recorded after the fact), StageContext is
-// created at stage start and carried forward via ForNextStage().
-// Each stage inherits upstream warnings + adds its own.
-// By gold, the context carries the full warning chain from all stages.
+> [!info] StageContext: Cross-Stage Propagation
+>
+> Unlike `StageLineage` (recorded after the fact), `StageContext` is created at stage start and carried forward via `ForNextStage()`. Each stage inherits upstream warnings and adds its own. By gold, the context carries the full warning chain from all stages.
 
+```csharp
 public class StageContext
 {
     public string BatchId { get; set; }
@@ -519,9 +504,11 @@ public class StageContext
 
 #### record — define pipeline run context model with `record`
 
-```csharp
-// ── RunContext: complete pipeline execution envelope ──
-// Aggregates everything: stages, business context, temporal context,
+> [!info] RunContext: Execution Envelope
+>
+> Aggregates everything: stages, business context, temporal context, data warnings, and contract version into a single JSON artifact per pipeline execution.
+
+```csharp,
 // accumulated warnings, contract version. Persisted as JSON per run.
 
 public class RunContext
@@ -543,12 +530,11 @@ public class RunContext
 
 #### C# — define data contract export function with `JsonSerializer`
 
-```csharp
-// ── Data contract export: record → JSON Schema + column semantics ──
-// Generates machine-readable contracts for each pipeline boundary.
-// Each contract includes: structural schema (types, constraints)
-// PLUS x-column-context (descriptions, formulas, units, null semantics).
+> [!info] Data Contract Export to JSON Schema
+>
+> Generates machine-readable contracts for each pipeline boundary. Each contract includes structural schema (types, constraints) PLUS `x-column-context` with descriptions, formulas, units, and null semantics.
 
+```csharp
 List<string> ExportDataContracts(string exportDir)
 {
     var contractsDir = Path.Combine(exportDir, "contracts");
@@ -616,11 +602,11 @@ aggregates all stages into a single JSON artifact per pipeline execution.
 
 #### Guid — generate unique batch ID with `Guid.NewGuid()`
 
-```csharp
-// ── Batch ID: globally unique run identifier ──
-// Every row in bronze/silver/gold carries this ID.
-// Trace any disputed value back to its pipeline run in one query.
+> [!info] Batch ID: Unique Run Identifier
+>
+> Every row in bronze/silver/gold carries this UUID. Trace any disputed value back to its pipeline run in one query.
 
+```csharp
 string GenerateBatchId()
 {
     return Guid.NewGuid().ToString();
@@ -635,12 +621,11 @@ Console.WriteLine($"Sample batch_id: {demoBatch}");
 
 #### SHA256 — compute deterministic DataTable hash with `SHA256.HashData()`
 
-```csharp
-// ── SHA-256 hash: tamper detection ──
-// Same data → same hash, every time. If someone modifies a row in Silver
-// after the pipeline ran, the recomputed hash won't match the recorded one.
-// Serializes DataTable to sorted CSV bytes before hashing — column order matters.
+> [!info] SHA-256 Hash: Tamper Detection
+>
+> Same data → same hash, every time. If someone modifies a row after the pipeline ran, the recomputed hash won't match. Serializes DataTable to sorted CSV bytes before hashing.
 
+```csharp
 string ComputeHash(DataTable dt)
 {
     var sb = new StringBuilder();
@@ -665,12 +650,11 @@ Console.WriteLine($"Hash of demo table: {ComputeHash(demoDt)}");
 
 #### C# — define stage start and end tracker with `DateTime.UtcNow`
 
-```csharp
-// ── Stage tracking: StartStage() / EndStage() ──
-// StartStage: captures timestamp and input row count at stage entry
-// EndStage: fills output metrics, computes SHA-256 hash, returns StageLineage
-// StageContext (if provided) flows alongside for semantic metadata propagation
+> [!info] Stage Tracking: Start/End Pattern
+>
+> `StartStage()`: captures timestamp and input row count at entry. `EndStage()`: fills output metrics, computes SHA-256 hash, returns `StageLineage`. `StageContext` (if provided) flows alongside for semantic metadata propagation.
 
+```csharp
 Dictionary<string, object> StartStage(string batchId, string stage, int inputRows,
     StageContext stageContext = null)
 {
@@ -741,11 +725,11 @@ Every data row carries a `batch_id` linking it to the pipeline run that produced
 
 #### SQL Server — create Bronze OHLCV table with `sqlConn.Execute()`
 
-```csharp
-// Stores raw Yahoo Finance output exactly as received, no transforms
-// batch_id links every row to the pipeline run that ingested it
-// UNIQUE constraint on (symbol, date) enables MERGE upsert for incremental loads
+> [!info] Bronze Table: Raw Source Data
+>
+> Stores raw Yahoo Finance output exactly as received. `batch_id` links every row to the pipeline run that ingested it. `UNIQUE` on `(symbol, date)` enables MERGE upsert for incremental loads.
 
+```csharp
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'bronze_ohlcv')
 CREATE TABLE bronze_ohlcv (
@@ -895,10 +879,11 @@ Console.WriteLine("dim_symbol table ready (SCD Type 2)");
 
 #### SQL Server — create per-exchange trading calendar with `sqlConn.Execute()`
 
+> [!info] Trading Calendar Dimension
+>
+> Per-exchange trading calendar with holiday flags. Composite PK on . Aligned with the stoxx.bronze.trading_calendar schema.
+
 ```csharp
-// Per-exchange trading calendar with holiday flags
-// Composite PK on (date, exchange_code) — one row per date per exchange
-// Aligned with stoxx.bronze.trading_calendar schema
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dim_calendar')
@@ -948,10 +933,11 @@ Console.WriteLine("lineage_stages table ready");
 
 #### SQL Server — create quarantine table for rejected rows with `Execute()`
 
+> [!info] Quarantine: Dead Letter Queue
+>
+> Stores every row that failed validation. Preserves the raw data + rejection reason for investigation and replay.
+
 ```csharp
-// Dead letter queue: stores every row that failed validation
-// Preserves the raw data + rejection reason for investigation and replay
-// batch_id links back to the pipeline run that rejected it
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'quarantine')
@@ -1065,10 +1051,11 @@ Console.WriteLine("PersistLineage() defined \u2014 idempotent: deletes before in
 
 #### Dapper — define DataFrame write helper with `Execute()`
 
+> [!info] DataFrame Write Helper
+>
+> Writes a DataTable to SQL Server using Dapper row-by-row.  wipes the table before insert (used by Gold tables only).
+
 ```csharp
-// Writes a DataTable to SQL Server using Dapper row-by-row
-// truncate=true wipes the table before insert (used by Gold tables only)
-// Also defines QueryToTable() helper for reading SQL results into DataTable
 
 DataTable QueryToTable(string sql, object param = null)
 {
@@ -1104,11 +1091,11 @@ Console.WriteLine("QueryToTable() + WriteToCsv() defined");
 
 #### SQL Server — define Bronze MERGE upsert with `MERGE INTO`
 
+> [!info] Bronze MERGE Upsert
+>
+> Idempotent: MERGE on  — safe to re-run. Existing rows get updated, new rows get inserted.
+
 ```csharp
-// \u2500\u2500 Bronze MERGE upsert \u2500\u2500
-// Idempotent: MERGE on (symbol, date) \u2014 safe to re-run.
-// Existing rows get updated, new rows get inserted.
-// batch_id and ingested_at are stamped on every write.
 
 int MergeBronze(DataTable dt, string batchId)
 {
@@ -1150,11 +1137,11 @@ Console.WriteLine("MergeBronze() defined");
 
 #### SQL Server — define Silver MERGE upsert with `MERGE INTO`
 
+> [!info] Silver MERGE Upsert
+>
+> Same idempotent pattern as Bronze, but includes enrichment columns: , , .
+
 ```csharp
-// \u2500\u2500 Silver MERGE upsert \u2500\u2500
-// Same idempotent pattern as Bronze, but includes enrichment columns.
-// daily_return, intraday_range, sma_20 are persisted alongside raw OHLCV.
-// batch_id links each Silver row to its pipeline run.
 
 int MergeSilver(DataTable dt, string batchId)
 {
@@ -1392,10 +1379,11 @@ Console.WriteLine("DqCheckRowCount() defined");
 
 #### Pipeline — run all quality gate assertions with `Console.WriteLine()`
 
+> [!info] Quality Gate Runner
+>
+> Executes all checks for a stage, logs PASS/FAIL for each. : raises exception on first failure, blocking downstream stages.
+
 ```csharp
-// \u2500\u2500 Quality gate runner \u2500\u2500
-// Executes all checks for a stage, logs PASS/FAIL for each.
-// fail_fast=true: raises DataQualityException on first failure.
 
 DataTable RunQualityGate(IEnumerable<(bool Passed, string Message)> checks, string stage, bool failFast = true)
 {
@@ -1439,10 +1427,11 @@ vs anomalies — a decision only possible with calendar context.
 
 #### HttpClient — fetch symbol metadata to JSON landing zone with `GetStringAsync()`
 
+> [!info] Fetch Symbol Metadata
+>
+> Fetches company metadata from Yahoo Finance v8 API for each symbol. Saves raw API response to  for replay.
+
 ```csharp
-// Fetches company metadata from Yahoo Finance v8 API for each symbol
-// Saves raw API response to landing/dim_symbol.json for audit trail
-// Decoupled from SQL load: can re-run SQL upsert without re-fetching
 
 string[] SCD2_COMPARE_COLS = { "company_name", "sector", "industry", "country", "exchange", "currency" };
 
@@ -1537,11 +1526,11 @@ Console.WriteLine("LoadSymbolsFromLanding() defined");
 
 #### SQL Server — define SCD Type 2 upsert for one symbol with `MERGE INTO`
 
+> [!info] SCD Type 2 Dimension Upsert
+>
+> New symbol → INSERT. Unchanged attributes → skip. Changed attributes → close old record, INSERT new version.
+
 ```csharp
-// SCD Type 2 logic for a single symbol record:
-//   New symbol \u2192 INSERT fresh record (is_current=1)
-//   Attributes unchanged \u2192 skip (no duplicate)
-//   Attributes changed \u2192 close old (valid_to=now, is_current=0), INSERT new
 
 string Scd2UpsertSymbol(Dictionary<string, object> rec)
 {
@@ -1756,10 +1745,11 @@ These classifications propagate through silver and gold as context warnings.
 
 #### HttpClient — fetch OHLCV to JSON landing zone with `GetStringAsync()`
 
+> [!info] Landing Zone: OHLCV Fetch
+>
+> Downloads OHLCV data from Yahoo Finance API and saves to . Each symbol gets its own file.
+
 ```csharp
-// Downloads OHLCV data from Yahoo Finance API and saves to landing zone
-// Each symbol gets its own JSON file with raw API response
-// Uses retryPolicy for transient failure handling
 
 HttpClient httpClient = new HttpClient();
 httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
@@ -1939,14 +1929,11 @@ preview
 
 #### Bronze — define incremental ingestion pipeline with landing zone + `MERGE INTO`
 
+> [!info] Bronze Ingestion Pipeline
+>
+> Three-step process: land → validate → MERGE upsert. Checks last known date per symbol, fetches only new data, validates with FluentValidation, MERGE upserts to SQL Server.
+
 ```csharp
-// ── Bronze ingestion pipeline ──
-// Three-step process: land → validate → MERGE upsert
-// Step 1: Check last known date per symbol in SQL Server (incremental)
-// Step 2: Fetch only new data from Yahoo Finance → JSON landing zone
-// Step 3: Validate through FluentValidation, quarantine rejects, MERGE valid rows
-// Returns the FULL bronze dataset from SQL for downstream stages,
-// not just the new rows — Silver needs the full history for SMA/returns.
 
 async Task<(DataTable, StageLineage)> IngestBronze(string[] symbols, string start, string end, string batchId)
 {
@@ -2034,12 +2021,11 @@ Console.WriteLine("IngestBronze() defined — landing zone + incremental MERGE")
 
 #### Bronze — execute incremental ingestion for all symbols
 
+> [!info] Bronze Execution with Context
+>
+> Creates  (scheduled, T-1) and , initializes , then runs the Bronze ingestion pipeline.
+
 ```csharp
-// ── Pipeline execution: Bronze with context initialization ──
-// Creates BusinessContext (scheduled, T-1) and TemporalContext (CET timezone).
-// Initializes StageContext for bronze with column registry.
-// After ingestion: detects zero-volume anomalies via dim_calendar cross-reference.
-// Context is persisted and propagated to silver via ForNextStage().
 
 var batchId = Guid.NewGuid().ToString();
 
@@ -2169,11 +2155,11 @@ to gold, explaining every null without manual investigation.
 
 #### LINQ — compute daily returns with grouped percentage change
 
+> [!info] Transform: Daily Returns
+>
+> Close-to-close percentage change, partitioned by symbol. Pure function: DataTable in → DataTable out.
+
 ```csharp
-// ── Pure transform: daily returns ──
-// close-to-close percentage change, partitioned by symbol.
-// Pure function: DataTable in → DataTable out, no side effects.
-// Can be unit-tested with a 10-row hardcoded DataTable.
 
 DataTable ComputeDailyReturns(DataTable dt)
 {
@@ -2213,10 +2199,11 @@ preview
 
 #### LINQ — compute intraday range with `(high - low) / close`
 
+> [!info] Transform: Intraday Range
+>
+>  — normalized daily price spread. Higher values = more volatile day.
+
 ```csharp
-// ── Pure transform: intraday range ──
-// (high - low) / close — normalized daily price spread.
-// Higher values = more volatile intraday trading.
 
 DataTable ComputeIntradayRange(DataTable dt)
 {
@@ -2247,11 +2234,11 @@ previewRange
 
 #### LINQ — compute 20-day moving average with rolling window
 
+> [!info] Transform: 20-Day SMA
+>
+> Rolling mean of close price over 20-day window, per symbol. First 19 rows per symbol are NULL (insufficient data).
+
 ```csharp
-// ── Pure transform: 20-day simple moving average ──
-// Rolling mean of close price over 20-day window, per symbol.
-// First 19 rows per symbol → NULL (insufficient history).
-// This is expected and recorded as a context warning at silver stage.
 
 DataTable ComputeSma(DataTable dt, int window = 20)
 {
@@ -2293,11 +2280,11 @@ previewSma
 
 #### C# — compose all Silver transforms with function chaining
 
+> [!info] Transform Composition Pipeline
+>
+> Chains three pure functions — each is independent and unit-testable. The composed pipeline validates through FluentValidation before MERGE.
+
 ```csharp
-// ── Transform composition: daily_returns → intraday_range → sma_20 ──
-// Chains three pure functions — each is independent and testable.
-// The composition itself is a pure function: Bronze DataTable → enriched DataTable.
-// No database calls, no file I/O, no side effects inside the transform chain.
 
 DataTable TransformSilver(DataTable bronzeDt)
 {
@@ -2362,12 +2349,11 @@ Console.WriteLine("ValidateSilver() defined \u2014 rejects go to quarantine");
 
 #### Silver — define enrichment pipeline with transform + `MERGE INTO`
 
+> [!info] Silver Enrichment Pipeline
+>
+> Orchestrates: transform (pure) → validate (FluentValidation) → MERGE (SQL) → lineage. Transforms the FULL bronze dataset (needed for correct SMA/returns).
+
 ```csharp
-// ── Silver enrichment pipeline ──
-// Orchestrates: transform (pure) → validate (FluentValidation) → MERGE (SQL) → lineage
-// Transforms the FULL bronze dataset — needed for correct SMA/returns calculation.
-// MERGE upserts into silver_ohlcv: existing rows updated, new rows inserted.
-// Returns the FULL silver dataset from SQL for downstream gold aggregation.
 
 (DataTable, StageLineage) ProcessSilver(DataTable bronzeDt, string batchId)
 {
@@ -2407,10 +2393,11 @@ Console.WriteLine("ProcessSilver() defined — MERGE upsert, returns full datase
 
 #### Silver — execute enrichment on full Bronze data
 
+> [!info] Silver Execution with Context
+>
+> Runs the Silver enrichment, then records SMA-20 null warnings in  for downstream visibility.
+
 ```csharp
-// ── Pipeline execution: Silver with context propagation ──
-// Runs the silver enrichment, then records SMA-20 null warning in context.
-// Context is persisted and forwarded to gold via ForNextStage().
 
 var swSilver = System.Diagnostics.Stopwatch.StartNew();
 var (silverDt, silverLineage) = ProcessSilver(bronzeDt, batchId);
@@ -2459,12 +2446,11 @@ QueryToTable(@"SELECT symbol,
 
 #### Pipeline — run Silver data quality gate with `RunQualityGate()`
 
-```csharp
-// Data quality assertions on Silver output
-// Hard gate: blocks pipeline on structural issues
-// Soft gate: logs warnings on statistical outliers
+> [!info] Silver Quality Gate
+>
+> Hard gate: blocks pipeline on structural issues. Soft gate: logs warnings on statistical anomalies (e.g., return outliers).
 
-// Hard checks — must pass
+```csharp
 var silverDq = RunQualityGate(new[] {
     DqCheckNotEmpty(silverDt, "silver"),
     DqCheckNoNullKeys(silverDt, new[] { "symbol", "date", "daily_return" }, "silver"),
@@ -2527,11 +2513,11 @@ because Gold tables are small (50 symbols × 1 row each).
 
 #### LINQ — build daily cross-sectional summary with `GroupBy()`
 
+> [!info] Aggregation: Daily Summary
+>
+> Groups all symbols by date: mean/max/min return, total volume, avg intraday range. One row per trading day.
+
 ```csharp
-// ── Pure aggregation: daily cross-sectional summary ──
-// Groups all symbols by date: mean/max/min return, total volume, avg intraday range.
-// Pure function: Silver DataTable → DailySummary DataTable.
-// One row per trading day — feeds the market overview dashboard.
 
 DataTable BuildDailySummary(DataTable silverDt, string batchId)
 {
@@ -2582,11 +2568,11 @@ previewDaily
 
 #### LINQ — build per-symbol profile with cumulative max drawdown
 
+> [!info] Aggregation: Symbol Risk Profile
+>
+> Per-symbol over full history: avg return, volatility (daily sigma), max drawdown (peak-to-trough), total dividends.
+
 ```csharp
-// ── Pure aggregation: per-symbol risk profile ──
-// Per-symbol over full history: avg return, volatility (daily σ), max drawdown.
-// Max drawdown = worst peak-to-trough decline using cumulative max of returns.
-// Pure function: Silver DataTable → SymbolProfile DataTable.
 
 DataTable BuildSymbolProfile(DataTable silverDt, string batchId)
 {
@@ -2734,11 +2720,11 @@ Console.WriteLine($"Symbol profile validation: {validProfiles.Rows.Count} valid,
 
 #### SQL Server — define Gold persistence function with `TRUNCATE` + `WriteToCsv()`
 
+> [!info] Gold: Truncate and Rebuild
+>
+> Gold is always a full rebuild from Silver — not incremental. TRUNCATE both Gold tables, then INSERT new aggregations.
+
 ```csharp
-// ── Gold persistence: truncate + rebuild ──
-// Gold is always a full rebuild from Silver — not incremental.
-// TRUNCATE both Gold tables, then INSERT from validated DataTables.
-// Acceptable because Gold is small (50 symbols × 1 row + ~500 daily rows).
 
 StageLineage PersistGold(DataTable dailyDt, DataTable profileDt, string batchId)
 {
@@ -2777,10 +2763,11 @@ Console.WriteLine("PersistGold() defined");
 
 #### SQL Server — persist Gold marts with `TRUNCATE` + `WriteToCsv()`
 
+> [!info] Gold Execution with Context
+>
+> Persists Gold marts, checks for days with missing symbols, records warnings in .
+
 ```csharp
-// ── Pipeline execution: Gold with context propagation ──
-// Persists Gold marts, checks for days with missing symbols,
-// records warnings in context, persists context.
 
 var goldLineage = PersistGold(validDaily, validProfiles, batchId);
 
@@ -3015,11 +3002,11 @@ After all stages complete, the full execution trail is available for review:
 
 #### C# — build and save run context with `RunContext`
 
+> [!info] Finalize RunContext
+>
+> Combines stage lineage, business context, temporal context, and data warnings into the final execution record. Persisted as JSON.
+
 ```csharp
-// ── RunContext: aggregate all stages into final execution record ──
-// Combines: stage lineage, business context, temporal context,
-// accumulated data warnings from all stages, contract version.
-// Persisted as JSON — one file per pipeline run.
 
 var runContext = new RunContext {
     BatchId = batchId,
