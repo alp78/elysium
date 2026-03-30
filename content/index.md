@@ -2,11 +2,7 @@
 title: Elysium
 ---
 
-# Elysium
-
-A data engineering knowledge base covering the full stack — from shell
-commands through cloud infrastructure to pipeline architecture. Browse
-by domain below, or use the graph view to explore connections visually.
+![Elysium](/static/elysium_logo.jpg)
 
 > [!example]- Code and Queries
 >

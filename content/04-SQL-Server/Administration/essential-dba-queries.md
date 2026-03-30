@@ -302,7 +302,7 @@ FROM sys.database_files;
 
 > [!danger] Full Disk Halts the Pipeline
 >
-> SQL Server stops accepting writes when the disk is full. The database goes read-only, transactions fail, and the pipeline halts. Monitor disk free space proactively — see [[sql-server-disk-full]] for the full runbook. As a rule of thumb, alert at 85% used, investigate at 90%, and treat 95% as a P1 incident.
+> SQL Server stops accepting writes when the disk is full. The database goes read-only, transactions fail, and the pipeline halts. Monitor disk free space proactively — see [sql-server-disk-full](/15-Runbooks/sql-server-disk-full) for the full runbook. As a rule of thumb, alert at 85% used, investigate at 90%, and treat 95% as a P1 incident.
 
 ```sql
 SELECT DISTINCT
@@ -539,5 +539,5 @@ LEFT JOIN (
 - [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — understanding blocking chains and lock types
 - [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — interpreting disk I/O latency metrics and full structured audit
 - [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy and buffer pool health
-- [[sql-server-disk-full]] — runbook for disk capacity incidents
+- [sql-server-disk-full](/15-Runbooks/sql-server-disk-full) — runbook for disk capacity incidents
 - [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — clustered key selection and index design
