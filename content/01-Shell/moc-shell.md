@@ -158,7 +158,7 @@ mindmap
 > > - [[command-chaining#AND Operator]]
 > > - [[command-chaining#Semicolon]]
 > > - [[command-chaining#OR Operator]]
-> > - [[command-chaining#AND + OR Combined — The Shell Try/Catch]]
+> > - [[command-chaining#AND + OR Combined]]
 > > - [[command-chaining#Pipe]]
 >
 > > [!abstract]- [[process-substitution]]
@@ -173,7 +173,7 @@ mindmap
 > > - [[brace-expansion-and-globbing#mkdir -p with {brace,expansion} — create directory trees]]
 > > - [[brace-expansion-and-globbing#Globbing — Extended Patterns]]
 > > - [[brace-expansion-and-globbing#shopt -s extglob — exclude patterns with !(glob)]]
-> > - [[brace-expansion-and-globbing#shopt -s globstar — recursive **/ glob patterns]]
+> > - [[brace-expansion-and-globbing#Globbing — Extended Patterns]]
 > > - [[brace-expansion-and-globbing#shopt settings for .bashrc — extglob, globstar, failglob]]
 > > - [[brace-expansion-and-globbing#PowerShell — ForEach-Object loops and Get-ChildItem -Recurse for globbing]]
 >
@@ -182,7 +182,7 @@ mindmap
 > > - [[environment-variables#The Propagation Model]]
 > > - [[environment-variables#Bash Environment Variables]]
 > > - [[environment-variables#export — set and propagate variables to child processes]]
-> > - [[environment-variables#~/.bashrc vs ~/.profile — persisting variables across sessions]]
+> > - [[environment-variables#Bash Environment Variables]]
 > > - [[environment-variables#Secure Credential Handling]]
 > > - [[environment-variables#.env files and source — secure credential handling in scripts]]
 > > - [[environment-variables#PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars]]
@@ -226,10 +226,10 @@ mindmap
 > > - [[system-resources#Linux — free, lscpu, uptime, vmstat, iostat, iotop]]
 > > - [[system-resources#free -h — memory usage and available RAM]]
 > > - [[system-resources#lscpu, uptime — CPU info and load average]]
-> > - [[system-resources#vmstat — combined CPU/memory/IO snapshot]]
-> > - [[system-resources#iostat -xz — disk I/O performance and utilization]]
+> > - [[system-resources#vmstat — combined CPU, memory, IO snapshot]]
+> > - [[system-resources#iostat -xz — disk IO performance and utilization]]
 > > - [[system-resources#SQL Server memory interpretation — why free -h looks alarming but is normal]]
-> > - [[system-resources#PowerShell — Get-CimInstance, Get-Counter for memory, CPU, and disk I/O]]
+> > - [[system-resources#PowerShell — Get-CimInstance, Get-Counter for memory, CPU, and disk IO]]
 >
 > > [!abstract]- [[killing-processes]]
 > >

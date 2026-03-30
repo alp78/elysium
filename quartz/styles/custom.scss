@@ -424,6 +424,8 @@ button.darkmode {
 /* ── Mermaid diagrams ────────────────────────────────────────── */
 .mermaid {
   background-color: transparent !important;
+  display: flex !important;
+  justify-content: center !important;
 }
 
 .mermaid .mindmap-node text {
