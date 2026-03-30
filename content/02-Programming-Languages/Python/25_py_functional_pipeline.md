@@ -658,9 +658,11 @@ print("start_stage() / end_stage() defined")
 
 #### Pydantic — save run context to JSON with `model_dump_json()`
 
+> [!info] Save RunContext to JSON
+>
+> One JSON file per run, named by batch_id prefix. Full audit trail on disk.
+
 ```python
-# Persists full pipeline metadata to disk for audit trail
-# One JSON file per run, named by batch_id
 
 def save_run_context(ctx: RunContext) -> Path:
     """Serialize RunContext to JSON file in lineage directory."""
@@ -735,9 +737,11 @@ print("bronze_ohlcv table ready (with UNIQUE on symbol+date)")
 
 #### SQL Server — create Silver OHLCV table with `cursor.execute()`
 
+> [!info] Silver Table DDL
+>
+> Adds computed columns: daily_return, intraday_range, sma_20. UNIQUE on (symbol, date) enables MERGE upsert.
+
 ```python
-# Adds computed columns: daily_return, intraday_range, sma_20
-# UNIQUE on (symbol, date) enables MERGE upsert for incremental enrichment
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'silver_ohlcv')
@@ -770,9 +774,11 @@ print("silver_ohlcv table ready (with UNIQUE on symbol+date)")
 
 #### SQL Server — create Gold daily summary table with `cursor.execute()`
 
+> [!info] Gold Daily Summary DDL
+>
+> One row per trading day with cross-sectional metrics. Clustered on date for efficient range scans.
+
 ```python
-# Gold daily cross-sectional summary: one row per trading day
-# Clustered on date for efficient date-range scans
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'gold_daily_summary')
@@ -797,9 +803,11 @@ print("gold_daily_summary table ready")
 
 #### SQL Server — create Gold symbol profile table with `cursor.execute()`
 
+> [!info] Gold Symbol Profile DDL
+>
+> One row per symbol with aggregate statistics. Clustered on symbol for efficient lookups.
+
 ```python
-# Gold per-symbol profile: one row per symbol with aggregate statistics
-# Clustered on symbol for efficient symbol lookups
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'gold_symbol_profile')
@@ -826,9 +834,11 @@ print("gold_symbol_profile table ready")
 
 #### SQL Server — create SCD Type 2 symbol dimension with `cursor.execute()`
 
+> [!info] SCD Type 2 Dimension DDL
+>
+> Tracks historical changes in symbol metadata. valid_from/valid_to/is_current enable point-in-time queries.
+
 ```python
-# SCD Type 2 dimension: tracks historical changes in symbol metadata
-# valid_from/valid_to/is_current enable point-in-time queries
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dim_symbol')
@@ -892,9 +902,11 @@ print("dim_calendar table ready (per-exchange)")
 
 #### SQL Server — create lineage tracking table with `cursor.execute()`
 
+> [!info] Lineage Table DDL
+>
+> Persists StageLineage records to SQL Server. Enables querying pipeline history: which batch produced what.
+
 ```python
-# Persists StageLineage records to SQL Server alongside the data
-# Enables querying pipeline history: which batch produced what, when, how many rows
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'lineage_stages')
@@ -1001,9 +1013,11 @@ print("persist_context() defined")
 
 #### SQL Server — define lineage persistence helper with `cursor.execute()`
 
+> [!info] Idempotent Lineage Persistence
+>
+> Inserts a StageLineage into lineage_stages. Deletes any existing record for the same batch+stage first.
+
 ```python
-# Inserts a validated StageLineage into the lineage_stages table
-# Deletes any existing record for the same batch+stage first (idempotent)
 
 def persist_lineage(lineage: StageLineage) -> None:
     """Write a StageLineage record to SQL Server (idempotent)."""
@@ -1142,9 +1156,11 @@ print("merge_silver() defined")
 
 #### SQL Server — define quarantine persistence helper with `cursor.execute()`
 
+> [!info] Quarantine Row Persistence
+>
+> Saves rejected row to quarantine table with its error message.
+
 ```python
-# Persists a rejected row to the quarantine table with its error message
-# Called by validate_bronze() and validate_silver() when Pydantic validation fails
 
 def quarantine_row(batch_id: str, stage: str, row_data: dict, error: str) -> None:
     """Save a rejected row to the quarantine table."""
@@ -1190,9 +1206,11 @@ log.info("fetch_with_retry() defined \u2014 3 attempts, exponential backoff")
 
 #### Python — define custom `Exception` subclass for quality gate failures
 
+> [!info] Quality Gate Exception
+>
+> Raised when a data quality gate fails. Blocks downstream stages from processing bad data.
+
 ```python
-# Custom exception raised when a data quality gate fails
-# Blocks downstream stages from processing bad data
 
 class DataQualityError(Exception):
     """Raised when a data quality gate fails."""
@@ -1205,9 +1223,11 @@ print("DataQualityError defined")
 
 #### Polars — assert DataFrame is not empty with `len()`
 
+> [!info] Assert: Not Empty
+>
+> Verifies the output table/frame is not empty after a stage.
+
 ```python
-# Asserts that a DataFrame is not empty after a stage
-# Returns (passed: bool, message: str)
 
 def dq_check_not_empty(df: pl.DataFrame, stage: str) -> tuple[bool, str]:
     """Assert DataFrame is not empty."""
@@ -1221,9 +1241,11 @@ print("dq_check_not_empty() defined")
 
 #### Polars — assert no nulls in key columns with `null_count()`
 
+> [!info] Assert: No Null Keys
+>
+> Checks each key column individually, reports first failure found.
+
 ```python
-# Asserts no null values in key columns (e.g., symbol, date)
-# Checks each key column individually, reports first failure
 
 def dq_check_no_null_keys(df: pl.DataFrame, keys: list[str], stage: str) -> tuple[bool, str]:
     """Assert no nulls in key columns."""
@@ -1242,9 +1264,11 @@ print("dq_check_no_null_keys() defined")
 
 #### Polars — assert no duplicate rows with `unique()`
 
+> [!info] Assert: No Duplicates
+>
+> Compares total rows vs unique key combinations to detect duplicates.
+
 ```python
-# Asserts no duplicate rows on key columns
-# Compares total rows vs unique rows on the specified keys
 
 def dq_check_no_duplicates(df: pl.DataFrame, keys: list[str], stage: str) -> tuple[bool, str]:
     """Assert no duplicate rows on key columns."""
@@ -1261,9 +1285,11 @@ print("dq_check_no_duplicates() defined")
 
 #### Polars — assert values within range with `filter()`
 
+> [!info] Assert: Value Range
+>
+> Reports count of out-of-range values in the specified column.
+
 ```python
-# Asserts all values in a column fall within [min_val, max_val]
-# Reports count of out-of-range values
 
 def dq_check_range(df: pl.DataFrame, col: str, min_val: float, max_val: float, stage: str) -> tuple[bool, str]:
     """Assert all values in a column fall within [min_val, max_val]."""
@@ -1280,9 +1306,11 @@ print("dq_check_range() defined")
 
 #### Polars — assert data freshness against SLA with `max()`
 
+> [!info] Assert: Data Freshness
+>
+> Detects stale data that missed recent trading days.
+
 ```python
-# Asserts most recent date is within max_age_days of today
-# Detects stale data that missed recent trading days
 
 def dq_check_freshness(df: pl.DataFrame, date_col: str, max_age_days: int, stage: str) -> tuple[bool, str]:
     """Assert most recent date is within max_age_days of today."""
@@ -1303,9 +1331,11 @@ print("dq_check_freshness() defined")
 
 #### Polars — assert minimum row count with `len()`
 
+> [!info] Assert: Minimum Row Count
+>
+> Catches partial loads or missing symbols.
+
 ```python
-# Asserts DataFrame has at least min_rows
-# Catches partial loads or missing symbols
 
 def dq_check_row_count(df: pl.DataFrame, min_rows: int, stage: str) -> tuple[bool, str]:
     """Assert DataFrame has at least min_rows."""
@@ -1418,9 +1448,11 @@ print("fetch_symbols_to_landing() defined")
 
 #### JSON — load symbol metadata from landing zone with `json.loads()`
 
+> [!info] Load Symbols from Landing
+>
+> Reads the JSON landing file and returns records ready for SCD2 upsert.
+
 ```python
-# Reads the raw JSON file produced by fetch_symbols_to_landing()
-# Returns a list of dicts ready for SCD2 upsert
 
 def load_symbols_from_landing() -> list[dict]:
     """Read symbol metadata from JSON landing zone."""
@@ -1520,9 +1552,11 @@ print("scd2_upsert_symbol() defined")
 
 #### SQL Server — orchestrate SCD Type 2 upsert for all symbols with `cursor.execute()`
 
+> [!info] SCD2 Upsert Orchestration
+>
+> Read landing JSON, SCD2 upsert each symbol, log action taken per symbol.
+
 ```python
-# Orchestrates: read landing JSON → SCD2 upsert each symbol → return results
-# Logs action taken for each symbol (INSERT / UNCHANGED / SCD2_UPDATE)
 
 def populate_dim_symbol_from_landing() -> pl.DataFrame:
     """Load from landing JSON and apply SCD Type 2 upsert."""
@@ -1784,9 +1818,11 @@ cal_df.head()
 
 #### SQL Server — persist calendar dimension with `MERGE INTO`
 
+> [!info] Calendar MERGE Upsert
+>
+> MERGE upsert into dim_calendar. Key: (date, exchange_code).
+
 ```python
-# MERGE upsert calendar dates into dim_calendar
-# Key: (date, exchange_code) — one row per date per exchange
 
 def persist_dim_calendar(cal_df: pl.DataFrame) -> int:
     """MERGE upsert calendar dimension into SQL Server."""
@@ -1830,9 +1866,11 @@ persist_dim_calendar(cal_df)
 
 #### Polars — display detected exchange holidays with `filter()`
 
+> [!info] Detected Exchange Holidays
+>
+> Display holidays detected by pandas-market-calendars (weekdays with no trading).
+
 ```python
-# pandas-market-calendars already provides accurate trading/non-trading flags
-# Display the holidays it detected (weekdays marked as non-trading)
 
 holidays = cal_df.filter(
     (pl.col("day_of_week").is_between(1, 5)) &  # weekday
@@ -1940,9 +1978,11 @@ print("fetch_ohlcv_to_landing() defined")
 
 #### Polars — load OHLCV from JSON landing zone with `pl.DataFrame()`
 
+> [!info] Load OHLCV from Landing
+>
+> Reads a symbol JSON landing file into a Polars DataFrame. Casts dates.
+
 ```python
-# Reads a symbol's JSON landing file into a Polars DataFrame
-# Casts date strings to pl.Date for downstream processing
 
 def load_ohlcv_from_landing(symbol: str) -> pl.DataFrame:
     """Read OHLCV data from JSON landing zone into Polars DataFrame."""
@@ -2065,9 +2105,11 @@ test_df.head()
 
 #### Pydantic — validate Bronze rows with `BaseModel()` row-level check
 
+> [!info] Bronze Row-Level Validation
+>
+> Valid rows collected; rejected rows go to quarantine with error details.
+
 ```python
-# Validates each row through RawOHLCV Pydantic model
-# Valid rows are collected; rejected rows go to quarantine table with error details
 
 def validate_bronze(df: pl.DataFrame, batch_id: str = "") -> tuple[pl.DataFrame, int]:
     """Validate each row through RawOHLCV. Quarantines rejected rows."""
@@ -2484,9 +2526,11 @@ bronze_df.group_by("symbol").agg(
 
 #### Pipeline — run Bronze data quality gate with `run_quality_gate()`
 
+> [!info] Bronze Quality Gate
+>
+> All checks must pass before Silver processing begins.
+
 ```python
-# Data quality assertions on Bronze output
-# All checks must pass before Silver processing begins
 
 bronze_dq = run_quality_gate([
     dq_check_not_empty(bronze_df, "bronze"),
@@ -2797,9 +2841,11 @@ print("transform_silver() defined — composes all Silver transforms")
 
 #### Pydantic — validate Silver rows with `BaseModel()` row-level check
 
+> [!info] Silver Row-Level Validation
+>
+> Valid rows collected; rejected rows quarantined with error details.
+
 ```python
-# Validates each row through CleanOHLCV Pydantic model
-# Valid rows collected; rejected rows quarantined with error details
 
 def validate_silver(df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame, int]:
     """Validate each row through CleanOHLCV. Quarantines rejected rows."""
@@ -3658,9 +3704,11 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 
 #### Polars — export daily summary to Parquet with `write_parquet()`
 
+> [!info] Parquet: Pre-Materialized View
+>
+> API reads this file directly. Parquet preserves types without CSV parsing overhead.
+
 ```python
-# Pre-materialized view: API will read this file directly
-# Parquet preserves types (dates, ints) without CSV parsing overhead
 
 daily_path = EXPORT_DIR / "gold_daily_summary.parquet"
 valid_daily.write_parquet(daily_path)
@@ -3685,9 +3733,11 @@ print(f"Exported: {profile_path.name} ({size_kb:.1f} KB, {len(valid_profiles)} r
 
 #### Polars — export Silver data to Parquet with `write_parquet()`
 
+> [!info] Silver Parquet Export
+>
+> Full Silver dataset exported for time-series and per-symbol drill-down endpoints.
+
 ```python
-# Some API endpoints need row-level data (e.g., time series for a symbol)
-# Export the full Silver dataset for these use cases
 
 silver_path = EXPORT_DIR / "silver_ohlcv.parquet"
 silver_df.write_parquet(silver_path)
@@ -3860,9 +3910,11 @@ pl.DataFrame(lineage_records)
 
 #### JSON — read back persisted run context with `json.loads()`
 
+> [!info] Verify RunContext JSON
+>
+> Check the JSON file is complete and parseable. Shows business_context and temporal_context.
+
 ```python
-# Verify the JSON file is complete and parseable
-# Show summary fields + tail to reveal business_context and temporal_context
 
 ctx_json = json.loads(ctx_path.read_text(encoding="utf-8"))
 
@@ -3968,9 +4020,11 @@ lineage_query
 
 #### Polars — review quarantined rows with `read_database()`
 
+> [!info] Review Quarantined Rows
+>
+> Shows rejected rows with error messages for investigation.
+
 ```python
-# Check if any rows were quarantined during this pipeline run
-# Shows rejected rows with their error messages for investigation
 
 quarantine_df = pl.read_database(
     f"SELECT stage, symbol, date, error_message, quarantined_at "
@@ -3992,9 +4046,11 @@ else:
 
 #### Polars — query context log for this batch with `read_database()`
 
+> [!info] Context Audit per Stage
+>
+> Lineage = what happened. Context = what the pipeline knew at each stage.
+
 ```python
-# Context audit — what did the pipeline KNOW at each stage?
-# Lineage = what happened. Context = what the pipeline knew.
 
 context_df = pl.read_database(
     f"SELECT stage, business_date, trigger_type, schema_version, data_warnings "
@@ -4110,9 +4166,11 @@ FastAPI serves the Gold data products by reading pre-materialized Parquet files.
 
 #### Pydantic — define daily summary API response model with `BaseModel`
 
+> [!info] API Response Schema
+>
+> Response model for /daily-summary endpoint. No strict mode for FastAPI compatibility.
+
 ```python
-# Response schema for the /daily-summary endpoint
-# Without strict mode for FastAPI serialization compatibility
 
 class DailySummaryResponse(BaseModel):
     date:             Date
@@ -4276,9 +4334,11 @@ print(f"GET /lineage/{{batch_id}} registered \u2014 {len(app.routes)} total rout
 
 #### uvicorn — start API server in background with `threading.Thread()`
 
+> [!info] Background API Server
+>
+> Port 8099 to avoid conflicts. Background thread allows notebook to continue.
+
 ```python
-# Runs on port 8099 to avoid conflicts with other services
-# Background thread allows the notebook to continue executing
 
 API_PORT = 8099
 
@@ -4843,9 +4903,11 @@ bronze_audit
 
 #### SQL Server — query Silver table for enriched values with `read_database()`
 
+> [!info] Silver Return Verification
+>
+> Verify daily_return = (close - prev_close) / prev_close mathematically.
+
 ```python
-# Step 3: Check Silver — verify the daily_return calculation is correct
-# daily_return should equal (close - prev_close) / prev_close
 
 silver_audit = pl.read_database(
     "SELECT symbol, date, [close] as [close], daily_return, intraday_range, sma_20, "
@@ -5094,9 +5156,11 @@ else:
 
 #### yfinance — corroborate with live API data using `Ticker.history()`
 
+> [!info] Landing Zone File Proof
+>
+> Prove the landing zone file exists and contains the disputed record.
+
 ```python
-# Step 7: Prove the landing zone file exists and contains the record
-# In production, archived files are the ultimate source of truth
 
 landing_file = LANDING_DIR / "ohlcv_SAP_DE.json"
 raw_records = json.loads(landing_file.read_text(encoding="utf-8"))

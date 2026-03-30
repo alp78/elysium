@@ -698,9 +698,11 @@ Console.WriteLine("StartStage() / EndStage() defined");
 
 #### C# — save run context to JSON with `JsonSerializer.Serialize()`
 
+> [!info] Save RunContext to JSON
+>
+> One JSON file per run, named by batch_id prefix. Full audit trail on disk.
+
 ```csharp
-// Persists full pipeline metadata to disk for audit trail
-// One JSON file per run, named by batch_id
 
 string SaveRunContext(RunContext ctx)
 {
@@ -771,9 +773,11 @@ Console.WriteLine("bronze_ohlcv table ready (with UNIQUE on symbol+date)");
 
 #### SQL Server — create Silver OHLCV table with `sqlConn.Execute()`
 
+> [!info] Silver Table DDL
+>
+> Adds computed columns: daily_return, intraday_range, sma_20. UNIQUE on (symbol, date) enables MERGE upsert.
+
 ```csharp
-// Adds computed columns: daily_return, intraday_range, sma_20
-// UNIQUE on (symbol, date) enables MERGE upsert for incremental enrichment
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'silver_ohlcv')
@@ -805,9 +809,11 @@ Console.WriteLine("silver_ohlcv table ready (with UNIQUE on symbol+date)");
 
 #### SQL Server — create Gold daily summary table with `sqlConn.Execute()`
 
+> [!info] Gold Daily Summary DDL
+>
+> One row per trading day with cross-sectional metrics. Clustered on date for efficient range scans.
+
 ```csharp
-// Gold daily cross-sectional summary: one row per trading day
-// Clustered on date for efficient date-range scans
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'gold_daily_summary')
@@ -831,9 +837,11 @@ Console.WriteLine("gold_daily_summary table ready");
 
 #### SQL Server — create Gold symbol profile table with `sqlConn.Execute()`
 
+> [!info] Gold Symbol Profile DDL
+>
+> One row per symbol with aggregate statistics. Clustered on symbol for efficient lookups.
+
 ```csharp
-// Gold per-symbol profile: one row per symbol with aggregate statistics
-// Clustered on symbol for efficient symbol lookups
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'gold_symbol_profile')
@@ -859,9 +867,11 @@ Console.WriteLine("gold_symbol_profile table ready");
 
 #### SQL Server — create SCD Type 2 symbol dimension with `sqlConn.Execute()`
 
+> [!info] SCD Type 2 Dimension DDL
+>
+> Tracks historical changes in symbol metadata. valid_from/valid_to/is_current enable point-in-time queries.
+
 ```csharp
-// SCD Type 2 dimension: tracks historical changes in symbol metadata
-// valid_from/valid_to/is_current enable point-in-time queries
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'dim_symbol')
@@ -923,9 +933,11 @@ Console.WriteLine("dim_calendar table ready (per-exchange)");
 
 #### SQL Server — create lineage tracking table with `Execute()`
 
+> [!info] Lineage Table DDL
+>
+> Persists StageLineage records to SQL Server. Enables querying pipeline history: which batch produced what.
+
 ```csharp
-// Persists StageLineage records to SQL Server alongside the data
-// Enables querying pipeline history: which batch produced what, when, how many rows
 
 sqlConn.Execute(@"
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'lineage_stages')
@@ -1040,9 +1052,11 @@ Console.WriteLine("PersistContext() defined");
 
 #### SQL Server — define lineage persistence helper with `Execute()`
 
+> [!info] Idempotent Lineage Persistence
+>
+> Inserts a StageLineage into lineage_stages. Deletes any existing record for the same batch+stage first.
+
 ```csharp
-// Inserts a validated StageLineage into the lineage_stages table
-// Deletes any existing record for the same batch+stage first (idempotent)
 
 void PersistLineage(StageLineage lineage)
 {
@@ -1228,9 +1242,11 @@ Console.WriteLine("QuarantineRow() defined \u2014 dead letter queue helper");
 
 #### Polly — define API retry wrapper with `WaitAndRetryAsync()` exponential backoff
 
+> [!info] Polly Retry Policy
+>
+> Wraps API calls with 3 attempts and exponential backoff. Catches transient failures.
+
 ```csharp
-// Wraps API calls with retry logic: 3 attempts, exponential backoff
-// Catches network errors and transient failures
 
 AsyncRetryPolicy retryPolicy = Policy
     .Handle<HttpRequestException>()
@@ -1249,9 +1265,11 @@ Console.WriteLine("retryPolicy defined \u2014 3 attempts, exponential backoff");
 
 #### C# — define custom `Exception` subclass for quality gate failures
 
+> [!info] Quality Gate Exception
+>
+> Raised when a data quality gate fails. Blocks downstream stages from processing bad data.
+
 ```csharp
-// Custom exception raised when a data quality gate fails
-// Blocks downstream stages from processing bad data
 
 public class DataQualityException : Exception
 {
@@ -1265,9 +1283,11 @@ Console.WriteLine("DataQualityException defined");
 
 #### C# — assert DataTable is not empty with `Rows.Count`
 
+> [!info] Assert: Not Empty
+>
+> Verifies the output table/frame is not empty after a stage.
+
 ```csharp
-// Asserts that a DataTable is not empty after a stage
-// Returns (Passed, Message)
 
 (bool Passed, string Message) DqCheckNotEmpty(DataTable dt, string stage)
 {
@@ -1282,9 +1302,11 @@ Console.WriteLine("DqCheckNotEmpty() defined");
 
 #### C# — assert no nulls in key columns with `DBNull` check
 
+> [!info] Assert: No Null Keys
+>
+> Checks each key column individually, reports first failure found.
+
 ```csharp
-// Asserts no null values in key columns (e.g., symbol, date)
-// Checks each key column individually, reports first failure
 
 (bool Passed, string Message) DqCheckNoNullKeys(DataTable dt, IEnumerable<string> keys, string stage)
 {
@@ -1306,9 +1328,11 @@ Console.WriteLine("DqCheckNoNullKeys() defined");
 
 #### C# — assert no duplicate rows with `GroupBy()`
 
+> [!info] Assert: No Duplicates
+>
+> Compares total rows vs unique key combinations to detect duplicates.
+
 ```csharp
-// Asserts no duplicate rows on key columns
-// Compares total rows vs unique key combinations
 
 (bool Passed, string Message) DqCheckNoDuplicates(DataTable dt, IEnumerable<string> keys, string stage)
 {
@@ -1328,9 +1352,11 @@ Console.WriteLine("DqCheckNoDuplicates() defined");
 
 #### C# — assert values within range with `Where()`
 
+> [!info] Assert: Value Range
+>
+> Reports count of out-of-range values in the specified column.
+
 ```csharp
-// Asserts all values in a column fall within [minVal, maxVal]
-// Reports count of out-of-range values
 
 (bool Passed, string Message) DqCheckRange(DataTable dt, string col, double minVal, double maxVal, string stage)
 {
@@ -1350,9 +1376,11 @@ Console.WriteLine("DqCheckRange() defined");
 
 #### C# — assert data freshness against SLA with `Max()`
 
+> [!info] Assert: Data Freshness
+>
+> Detects stale data that missed recent trading days.
+
 ```csharp
-// Asserts most recent date is within maxAgeDays of today
-// Detects stale data that missed recent trading days
 
 (bool Passed, string Message) DqCheckFreshness(DataTable dt, string dateCol, int maxAgeDays, string stage)
 {
@@ -1377,9 +1405,11 @@ Console.WriteLine("DqCheckFreshness() defined");
 
 #### C# — assert minimum row count with `Rows.Count`
 
+> [!info] Assert: Minimum Row Count
+>
+> Catches partial loads or missing symbols.
+
 ```csharp
-// Asserts DataTable has at least minRows
-// Catches partial loads or missing symbols
 
 (bool Passed, string Message) DqCheckRowCount(DataTable dt, int minRows, string stage)
 {
@@ -1511,9 +1541,11 @@ Console.WriteLine("FetchSymbolsToLanding() defined");
 
 #### JSON — load symbol metadata from landing zone with `JsonSerializer.Deserialize()`
 
+> [!info] Load Symbols from Landing
+>
+> Reads the JSON landing file and returns records ready for SCD2 upsert.
+
 ```csharp
-// Reads the raw JSON file produced by FetchSymbolsToLanding()
-// Returns a list of dictionaries ready for SCD2 upsert
 
 List<Dictionary<string, object>> LoadSymbolsFromLanding()
 {
@@ -1621,9 +1653,11 @@ Console.WriteLine("Scd2UpsertSymbol() defined");
 
 #### SQL Server — orchestrate SCD Type 2 upsert for all symbols with `Execute()`
 
+> [!info] SCD2 Upsert Orchestration
+>
+> Read landing JSON, SCD2 upsert each symbol, log action taken per symbol.
+
 ```csharp
-// Orchestrates: read landing JSON \u2192 SCD2 upsert each symbol \u2192 return results
-// Logs action taken for each symbol (INSERT / UNCHANGED / SCD2_UPDATE)
 
 DataTable PopulateDimSymbolFromLanding()
 {
@@ -1686,9 +1720,11 @@ dimSymbolDt.AsEnumerable().Take(5).CopyToDataTable()
 
 #### SQL Server — verify trading calendar exists with `QueryToTable()`
 
+> [!info] Read Existing Calendar
+>
+> C# reads dim_calendar populated by the Python notebook rather than regenerating.
+
 ```csharp
-// C# reads the existing dim_calendar table (populated by the Python notebook)
-// rather than regenerating from pandas-market-calendars (no C# equivalent)
 
 DataTable calDt = QueryToTable(
     @"SELECT exchange_code, COUNT(*) as total_days,
@@ -1807,9 +1843,11 @@ Console.WriteLine("FetchOhlcvToLanding() defined");
 
 #### C# — load OHLCV from JSON landing zone with `JsonSerializer.Deserialize()`
 
+> [!info] Load OHLCV from Landing
+>
+> Reads a symbol JSON landing file into a DataTable. Casts date strings to DateTime.
+
 ```csharp
-// Reads a symbol's JSON landing file into a DataTable
-// Casts date strings to DateTime for downstream processing
 
 DataTable LoadOhlcvFromLanding(string symbol)
 {
@@ -1877,9 +1915,11 @@ testDt.AsEnumerable().Take(5).CopyToDataTable()
 
 #### FluentValidation — validate Bronze rows with `Validate()` row-level check
 
+> [!info] Bronze Row-Level Validation
+>
+> Valid rows collected; rejected rows go to quarantine with error details.
+
 ```csharp
-// Validates each row through RawOhlcv + FluentValidation
-// Valid rows are collected; rejected rows go to quarantine table with error details
 
 (DataTable Valid, int Rejected) ValidateBronze(DataTable dt, string batchId = "")
 {
@@ -2117,9 +2157,11 @@ QueryToTable(@"SELECT symbol, COUNT(*) as rows, MIN(date) as first_date, MAX(dat
 
 #### Pipeline — run Bronze data quality gate with `RunQualityGate()`
 
+> [!info] Bronze Quality Gate
+>
+> All checks must pass before Silver processing begins.
+
 ```csharp
-// Data quality assertions on Bronze output
-// All checks must pass before Silver processing begins
 
 var bronzeDq = RunQualityGate(new[] {
     DqCheckNotEmpty(bronzeDt, "bronze"),
@@ -2306,9 +2348,11 @@ Console.WriteLine("TransformSilver() defined \u2014 composes all Silver transfor
 
 #### FluentValidation — validate Silver rows with `Validate()` row-level check
 
+> [!info] Silver Row-Level Validation
+>
+> Valid rows collected; rejected rows quarantined with error details.
+
 ```csharp
-// Validates each row through CleanOhlcv + FluentValidation
-// Valid rows collected; rejected rows quarantined with error details
 
 (DataTable Valid, int Rejected) ValidateSilver(DataTable dt, string batchId)
 {
@@ -2822,9 +2866,11 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 
 #### ParquetSharp — export daily summary to Parquet with `WriteDataTableToParquet()`
 
+> [!info] Parquet: Pre-Materialized View
+>
+> API reads this file directly. Parquet preserves types without CSV parsing overhead.
+
 ```csharp
-// ── Pre-materialized view: API will read this file directly ──
-// Parquet preserves types (dates, ints) without CSV parsing overhead
 
 using ParquetSharp;
 
@@ -2916,9 +2962,11 @@ Console.WriteLine($"Exported: {Path.GetFileName(profilePath)} ({sizeKb:F1} KB, {
 
 #### ParquetSharp — export Silver data to Parquet with `WriteDataTableToParquet()`
 
+> [!info] Silver Parquet Export
+>
+> Full Silver dataset exported for time-series and per-symbol drill-down endpoints.
+
 ```csharp
-// ── Some API endpoints need row-level data (e.g., time series for a symbol) ──
-// Export the full Silver dataset for these use cases
 
 var silverPath = Path.Combine(EXPORT_DIR, "silver_ohlcv.parquet");
 WriteDataTableToParquet(silverDt, silverPath);
@@ -3054,9 +3102,11 @@ lineageDt
 
 #### JSON — read back persisted run context with `JsonSerializer.Deserialize()`
 
+> [!info] Verify RunContext JSON
+>
+> Check the JSON file is complete and parseable. Shows business_context and temporal_context.
+
 ```csharp
-// ── Verify the JSON file is complete and parseable ──
-// Show summary fields + tail to reveal business_context and temporal_context
 
 var ctxJson = JsonSerializer.Deserialize<JsonElement>(File.ReadAllText(ctxPath));
 
@@ -3128,9 +3178,11 @@ lineageQuery
 
 #### SQL Server — review quarantined rows with `QueryToTable()`
 
+> [!info] Review Quarantined Rows
+>
+> Shows rejected rows with error messages for investigation.
+
 ```csharp
-// ── Check if any rows were quarantined during this pipeline run ──
-// Shows rejected rows with their error messages for investigation
 
 var quarantineDt = QueryToTable(
     $"SELECT stage, symbol, date, error_message, quarantined_at FROM quarantine WHERE batch_id = '{batchId}' ORDER BY quarantined_at"
@@ -3151,9 +3203,11 @@ else
 
 #### SQL Server — query context log for this batch with `QueryToTable()`
 
+> [!info] Context Audit per Stage
+>
+> Lineage = what happened. Context = what the pipeline knew at each stage.
+
 ```csharp
-// ── Context audit — what did the pipeline KNOW at each stage? ──
-// Lineage = what happened. Context = what the pipeline knew.
 
 var contextDt = QueryToTable(
     $"SELECT stage, business_date, trigger_type, schema_version, data_warnings FROM context_log WHERE batch_id = '{batchId}' ORDER BY created_at"
@@ -3445,9 +3499,11 @@ Console.WriteLine("GET /lineage/{batch_id} handler defined");
 
 #### HttpListener — start server in background with `Thread()`
 
+> [!info] Background HTTP Server
+>
+> Port 8098 to avoid conflicts. Background thread allows notebook to continue.
+
 ```csharp
-// ── Runs on port 8098 to avoid conflicts with other services ──
-// Background thread allows the notebook to continue executing
 
 int API_PORT = 8098;
 var listener = new HttpListener();
