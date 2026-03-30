@@ -36,8 +36,8 @@ date: 2026-03-28
 this French law told large investors: "You must publicly explain how climate change and environmental issues affect your investment decisions." It paved the way for later EU-wide rules like SFDR and CSRD by proving that mandatory ESG disclosure was workable.
 
 > [!tip] Related Terms
-> - [[esg-frameworks#sfdr|SFDR]] — the EU-wide successor regime for sustainability disclosure
-> - [[esg-frameworks#tcfd|TCFD]] — the voluntary climate disclosure framework that influenced Article 173's reporting expectations
+> - [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#sfdr) — the EU-wide successor regime for sustainability disclosure
+> - [TCFD](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#tcfd) — the voluntary climate disclosure framework that influenced Article 173's reporting expectations
 
 > [!example]- Source excerpts (5)
 >
@@ -91,7 +91,7 @@ An Article 8 fund is not required to have sustainability as its core objective, 
 > [!tip] Related Terms
 > - [[#Article 9 Fund (SFDR)]] — the stricter "dark green" classification
 > - [[#SFDR (Sustainable Finance Disclosure Regulation)]] — the parent regulation
-> - [[esg-frameworks#eu-taxonomy|EU Taxonomy]] — used to measure alignment within Article 8 products
+> - [EU Taxonomy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#eu-taxonomy) — used to measure alignment within Article 8 products
 
 > [!example]- Source excerpts (1)
 >
@@ -221,7 +221,7 @@ A CTB is a stock market index specifically designed to put a portfolio on a path
 > [!tip] Related Terms
 > - [[#PAB (Paris-Aligned Benchmark)]] — the more restrictive climate benchmark category
 > - [[#EU Benchmark Regulation]] — the regulatory home of CTBs
-> - [[esg-frameworks#paris-agreement|Paris Agreement]] — the international climate accord CTBs reference
+> - [Paris Agreement](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#paris-agreement) — the international climate accord CTBs reference
 
 > [!example]- Source excerpts (5)
 >
@@ -273,7 +273,7 @@ a corporate governance code is a country's playbook for how listed companies sho
 
 > [!tip] Related Terms
 > - [[#Stewardship Code]] — the investor-side counterpart to corporate governance codes
-> - [[esg-frameworks#oecd-guidelines|OECD Principles of Corporate Governance]] — the international reference framework for national codes
+> - [OECD Principles of Corporate Governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#oecd-guidelines) — the international reference framework for national codes
 > - [[#CSRD]] — expanded governance disclosure requirements complement code provisions
 
 > [!example]- Source excerpts (5)
@@ -325,7 +325,7 @@ CSRD dramatically increases how many companies in Europe must publish detailed s
 
 > [!tip] Related Terms
 > - [[#NFRD]] — the predecessor directive CSRD replaces
-> - [[esg-frameworks#esrs|ESRS]] — the reporting standards companies must use under CSRD
+> - [ESRS](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#esrs) — the reporting standards companies must use under CSRD
 > - [[#Financial Materiality]] — CSRD uses "double materiality," covering both financial and impact materiality
 
 > [!example]- Source excerpts (5)
@@ -660,9 +660,9 @@ Taxonomy alignment is the gold standard measure of how "green" a company's activ
 Financial materiality asks: "Does this ESG issue affect the company's bottom line?" For example, climate regulation is financially material for an oil company because carbon pricing directly affects its costs. ISS ESG ratings and STOXX index methodologies often rely on financial materiality to determine which ESG factors matter most for a given industry.
 
 > [!tip] Related Terms
-> - [[esg-frameworks#double-materiality|Double Materiality]] — CSRD's approach combining financial and impact materiality
+> - [Double Materiality](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#double-materiality) — CSRD's approach combining financial and impact materiality
 > - [[#CSRD]] — the directive that mandates double materiality assessment
-> - [[esg-frameworks#sasb|SASB]] — a framework historically focused on financial materiality
+> - [SASB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#sasb) — a framework historically focused on financial materiality
 
 > [!example]- Source excerpts (5)
 >
@@ -768,8 +768,8 @@ Minimum safeguards ensure that a "green" activity is not built on labour exploit
 
 > [!tip] Related Terms
 > - [[#EU Taxonomy Alignment]] — minimum safeguards are one of the four alignment conditions
-> - [[esg-frameworks#ungp|UN Guiding Principles]] — one of the referenced international standards
-> - [[esg-frameworks#oecd-guidelines|OECD Guidelines]] — another referenced standard
+> - [UN Guiding Principles](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#ungp) — one of the referenced international standards
+> - [OECD Guidelines](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#oecd-guidelines) — another referenced standard
 
 > [!example]- Source excerpts (3)
 >
@@ -807,7 +807,7 @@ The NFRD was Europe's first attempt at making companies report on sustainability
 
 > [!tip] Related Terms
 > - [[#CSRD]] — the directive that replaces and expands the NFRD
-> - [[esg-frameworks#gri|GRI]] — many NFRD reporters used GRI standards voluntarily
+> - [GRI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#gri) — many NFRD reporters used GRI standards voluntarily
 
 > [!example]- Source excerpts (1)
 >
@@ -939,7 +939,7 @@ PAI indicators are the specific data points investors must collect and report. T
 > [!tip] Related Terms
 > - [[#PAI (Principal Adverse Impact)]] — the overarching concept
 > - [[#SFDR PAI Solution (ISS)]] — ISS's commercial offering for PAI indicator data
-> - [[esg-frameworks#ghg-protocol|GHG Protocol]] — the standard behind the emissions-related PAI indicators
+> - [GHG Protocol](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#ghg-protocol) — the standard behind the emissions-related PAI indicators
 
 > [!example]- Source excerpts (1)
 >
@@ -1043,7 +1043,7 @@ while a corporate governance code tells companies how to govern themselves, a st
 > [!tip] Related Terms
 > - [[#Corporate Governance Code]] — the company-side counterpart to stewardship codes
 > - [[#PAI (Principal Adverse Impact)]] — stewardship activities increasingly focus on PAI-related issues
-> - [[esg-frameworks#pri|PRI]] — the UN-backed Principles for Responsible Investment that overlap with stewardship expectations
+> - [PRI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#pri) — the UN-backed Principles for Responsible Investment that overlap with stewardship expectations
 
 > [!example]- Source excerpts (5)
 >

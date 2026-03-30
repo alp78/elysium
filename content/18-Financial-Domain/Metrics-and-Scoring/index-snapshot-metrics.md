@@ -7,11 +7,11 @@ aliases: [Index Snapshot, Index Aggregates, Dashboard Snapshot]
 keywords: [index snapshot, YTD return, 30d return, 90d return, volatility, P/E ratio, P/B ratio, dividend yield, cap-weighted, return interpretation, trend reversal]
 description: "Cap-weighted index-level aggregate metrics displayed in the financial data platform dashboard snapshot panel, including return periods, volatility, and valuation ratios."
 related:
-  - "[[chart-metrics]]"
-  - "[[scoring-methodology]]"
-  - "[[valuation-ratios]]"
-  - "[[data-sources-and-refresh]]"
-  - "[[data-sources-and-refresh|yfinance pipeline]]"
+  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
+  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
+  - "[valuation-ratios](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/valuation-ratios)"
+  - "[data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
+  - "[yfinance pipeline](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -46,17 +46,17 @@ Comparing the 30-day and 90-day rolling returns reveals the trend direction and 
 | Mixed signs | Potential trend reversal |
 
 > [!tip] Practical Use
-> When 30d and 90d returns show mixed signs, cross-reference with [[technical-indicators]] (RSI, MACD) and [[breadth-and-sentiment-indicators]] to confirm whether a genuine trend reversal is underway.
+> When 30d and 90d returns show mixed signs, cross-reference with [technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators) (RSI, MACD) and [breadth-and-sentiment-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/breadth-and-sentiment-indicators) to confirm whether a genuine trend reversal is underway.
 
 ## Cap-Weighting Formula
 
-All index-level metrics use market-capitalization weighting. See [[scoring-methodology]] for the full formula:
+All index-level metrics use market-capitalization weighting. See [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for the full formula:
 
 $$w_i = \frac{\text{MarketCap}_i}{\sum_{j \in \text{index}} \text{MarketCap}_j}$$
 
 ## Related
 
-- [[chart-metrics]] for time-series visualizations of these metrics
-- [[scoring-methodology]] for how cap-weighted averages are computed
-- [[valuation-ratios]] for additional valuation metrics beyond P/E and P/B
-- [[data-sources-and-refresh]] for data sourcing and refresh schedule
+- [chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics) for time-series visualizations of these metrics
+- [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for how cap-weighted averages are computed
+- [valuation-ratios](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/valuation-ratios) for additional valuation metrics beyond P/E and P/B
+- [data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh) for data sourcing and refresh schedule

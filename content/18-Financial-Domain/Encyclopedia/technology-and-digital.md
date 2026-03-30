@@ -29,7 +29,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A beverage distributor uses AB InBev's BEES platform to place bulk orders for cases of beer to stock in retail stores. The entire transaction — browsing the catalog, placing the order, paying the invoice — happens digitally between two businesses.
 
-**Related terms:** [[technology-and-digital#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[technology-and-digital#E-Commerce|E-Commerce]], [[technology-and-digital#Platform Business Model|Platform Business Model]], [[banking-and-lending#Wholesale Banking|Wholesale Banking]]
+**Related terms:** [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Business-to-Consumer (B2C)), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Platform Business Model), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking)
 
 ---
 
@@ -41,7 +41,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** When you buy a shirt from the UNIQLO website and have it delivered to your home, that is a B2C transaction — the retailer is selling directly to you, the individual consumer.
 
-**Related terms:** [[technology-and-digital#Business-to-Business (B2B)|Business-to-Business (B2B)]], [[technology-and-digital#E-Commerce|E-Commerce]], [[technology-and-digital#Omnichannel|Omnichannel]]
+**Related terms:** [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Business-to-Business (B2B)), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce), [Omnichannel](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Omnichannel)
 
 ---
 
@@ -53,7 +53,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A startup building a mobile app uses AWS to host its backend servers. Instead of buying physical servers costing USD 100,000, the startup pays AWS USD 500/month for compute resources that automatically scale up when millions of users log in simultaneously during a product launch.
 
-**Related terms:** [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#IaaS|IaaS]], [[technology-and-digital#PaaS|PaaS]], [[technology-and-digital#Hybrid Cloud|Hybrid Cloud]], [[technology-and-digital#Digital Transformation|Digital Transformation]]
+**Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [IaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#IaaS), [PaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#PaaS), [Hybrid Cloud](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Hybrid Cloud), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
 
@@ -65,7 +65,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A bank deploys a multi-layered cybersecurity system that includes firewalls to block unauthorized network access, encryption to protect customer data in transit, behavioral analytics powered by AI to detect unusual transaction patterns, and 24/7 security operations center monitoring to respond to threats in real time.
 
-**Related terms:** [[technology-and-digital#Digital Transformation|Digital Transformation]], [[technology-and-digital#Cloud Computing|Cloud Computing]]
+**Related terms:** [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing)
 
 ---
 
@@ -77,7 +77,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A traditional manufacturing company undergoes digital transformation by implementing IoT sensors on its factory floor to monitor equipment in real time, deploying AI algorithms to predict machine failures before they occur, and creating a digital twin of its entire production line to simulate and optimize operations.
 
-**Related terms:** [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#Internet of Things (IoT)|Internet of Things (IoT)]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#Machine Learning / AI|Machine Learning / AI]]
+**Related terms:** [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [Internet of Things (IoT)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Internet of Things (IoT)), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Machine Learning / AI](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Machine Learning / AI)
 
 ---
 
@@ -89,7 +89,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A consumer in Germany uses Amazon's website to browse thousands of products from sellers around the world, compares prices and reviews, purchases a kitchen appliance with one-click checkout, and receives it at home within two days through Amazon's logistics network.
 
-**Related terms:** [[technology-and-digital#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[technology-and-digital#Business-to-Business (B2B)|Business-to-Business (B2B)]], [[technology-and-digital#Omnichannel|Omnichannel]], [[technology-and-digital#Digital Transformation|Digital Transformation]], [[technology-and-digital#Platform Business Model|Platform Business Model]]
+**Related terms:** [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Business-to-Consumer (B2C)), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Business-to-Business (B2B)), [Omnichannel](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Omnichannel), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Platform Business Model)
 
 ---
 
@@ -101,7 +101,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A global consumer goods company implements SAP S/4HANA to replace dozens of legacy systems. Now all of its regional offices use one system for financial reporting, inventory management, procurement, and sales tracking, enabling the CFO to see a consolidated real-time view of the entire company's financial position.
 
-**Related terms:** [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#Digital Transformation|Digital Transformation]], [[technology-and-digital#Cloud Computing|Cloud Computing]]
+**Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing)
 
 ---
 
@@ -113,7 +113,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A fintech company creates a mobile app that allows small business owners in emerging markets to accept digital payments, access working capital loans based on their transaction history, and manage their finances — all without needing a traditional bank account or visiting a bank branch.
 
-**Related terms:** [[banking-and-lending#Digital Banking|Digital Banking]], [[payments-and-settlement#Payments Processing|Payments Processing]]
+**Related terms:** [Digital Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Digital Banking), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
 
 ---
 
@@ -125,7 +125,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A hospital keeps its patient records on private servers within its own data center for HIPAA compliance, but uses AWS public cloud for its patient-facing appointment scheduling app and data analytics workloads. A hybrid cloud management platform links both environments seamlessly.
 
-**Related terms:** [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#IaaS|IaaS]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#Digital Transformation|Digital Transformation]]
+**Related terms:** [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [IaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#IaaS), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
 
@@ -137,7 +137,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A gaming company launches a new multiplayer online game expecting millions of simultaneous players. Instead of buying thousands of servers, the company rents virtual machines from a cloud provider, scaling up to handle the launch-day rush and scaling down afterward, paying only for the compute resources actually used.
 
-**Related terms:** [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#PaaS|PaaS]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#Hybrid Cloud|Hybrid Cloud]]
+**Related terms:** [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [PaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#PaaS), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Hybrid Cloud](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Hybrid Cloud)
 
 ---
 
@@ -149,7 +149,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A farmer installs IoT soil moisture sensors across 500 acres of cropland. The sensors transmit real-time data to a cloud platform that analyzes moisture levels and automatically controls irrigation valves, watering only the areas that need it. This precision agriculture approach reduces water usage by 30% while improving crop yields.
 
-**Related terms:** [[technology-and-digital#Digital Transformation|Digital Transformation]], [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#Machine Learning / AI|Machine Learning / AI]], [[technology-and-digital#Cybersecurity|Cybersecurity]]
+**Related terms:** [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [Machine Learning / AI](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Machine Learning / AI), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity)
 
 ---
 
@@ -161,7 +161,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A bank deploys a machine learning model that analyzes millions of credit card transactions in real time to detect fraud. The model learns normal spending patterns for each customer and flags anomalies — like a card being used in two different countries within an hour — for immediate review by the fraud team.
 
-**Related terms:** [[technology-and-digital#Digital Transformation|Digital Transformation]], [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#Cybersecurity|Cybersecurity]], [[technology-and-digital#Internet of Things (IoT)|Internet of Things (IoT)]]
+**Related terms:** [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity), [Internet of Things (IoT)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Internet of Things (IoT))
 
 ---
 
@@ -173,7 +173,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A customer sees a pair of shoes on a fashion brand's Instagram page, clicks through to the brand's website to check availability, reserves the shoes for in-store pickup, tries them on at the local store, and then receives a follow-up email with styling suggestions based on the purchase. All of these interactions are connected through the brand's omnichannel platform.
 
-**Related terms:** [[technology-and-digital#E-Commerce|E-Commerce]], [[technology-and-digital#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[technology-and-digital#Digital Transformation|Digital Transformation]]
+**Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce), [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Business-to-Consumer (B2C)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
 
@@ -185,7 +185,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A software startup uses a PaaS provider to develop and deploy its mobile application. The PaaS provides a managed database, application hosting, development tools, and automatic scaling, allowing the startup's small team of developers to focus on writing code rather than managing servers and infrastructure.
 
-**Related terms:** [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#IaaS|IaaS]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]]
+**Related terms:** [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [IaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#IaaS), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service))
 
 ---
 
@@ -197,7 +197,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** Uber does not own vehicles but operates a platform that connects riders (consumers) with drivers (producers). The platform handles matching, pricing, payments, and quality assurance. Uber takes a commission on each ride, and as more drivers join, wait times decrease for riders, attracting more riders, which in turn attracts more drivers — a virtuous cycle.
 
-**Related terms:** [[technology-and-digital#E-Commerce|E-Commerce]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#Subscription Model|Subscription Model]], [[technology-and-digital#Fintech|Fintech]]
+**Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Subscription Model), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech)
 
 ---
 
@@ -209,7 +209,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A company subscribes to Salesforce CRM at USD 150 per user per month. Employees access the system through their web browsers to manage customer contacts, track sales opportunities, and generate reports. Salesforce handles all server maintenance, security updates, and feature releases automatically.
 
-**Related terms:** [[technology-and-digital#Cloud Computing|Cloud Computing]], [[technology-and-digital#PaaS|PaaS]], [[technology-and-digital#IaaS|IaaS]], [[technology-and-digital#Subscription Model|Subscription Model]], [[technology-and-digital#Digital Transformation|Digital Transformation]]
+**Related terms:** [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [PaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#PaaS), [IaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#IaaS), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Subscription Model), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
 
@@ -221,4 +221,4 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 **Real-world example:** A software company transitions from selling one-time licenses for USD 500 to offering monthly subscriptions at USD 25/month. While initial revenue per customer decreases, the company builds a stable base of recurring revenue, improves customer retention (since users can always access the latest version), and increases lifetime customer value.
 
-**Related terms:** [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[technology-and-digital#Platform Business Model|Platform Business Model]], [[technology-and-digital#E-Commerce|E-Commerce]]
+**Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Platform Business Model), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce)

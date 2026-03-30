@@ -256,7 +256,7 @@ This breaks down each pipeline step by name and shows how long each took. The st
 
 ## SQL Server DBA Dashboard
 
-A dedicated dashboard for SQL Server database administration — deadlock monitoring, blocking detection, buffer pool health, and connection tracking. Separate from Pipeline Watch. The financial metrics displayed here (such as deadlock counts during index calculation windows) complement the business-level views in [[index-snapshot-metrics]].
+A dedicated dashboard for SQL Server database administration — deadlock monitoring, blocking detection, buffer pool health, and connection tracking. Separate from Pipeline Watch. The financial metrics displayed here (such as deadlock counts during index calculation windows) complement the business-level views in [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics).
 
 ### Create the Dashboard
 

@@ -29,7 +29,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A 60-year-old retiree pays an insurance company EUR 200,000 in exchange for receiving EUR 1,200 per month for the rest of their life, starting at age 65. This guaranteed monthly payment is an annuity.
 
-**Related terms:** [[insurance-and-risk#Endowment Insurance|Endowment Insurance]], [[insurance-and-risk#Insurance (Life)|Insurance (Life)]], [[investment-management#Pension Fund|Pension Fund]], [[insurance-and-risk#Insurance Premium|Insurance Premium]]
+**Related terms:** [Endowment Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Endowment Insurance), [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension Fund), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium)
 
 ---
 
@@ -41,7 +41,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A parent purchases a 20-year endowment policy with a sum assured of EUR 50,000, paying monthly premiums of EUR 200. If the parent dies during the 20 years, the child receives EUR 50,000 immediately. If the parent survives the full term, they receive the accumulated savings plus bonuses, which they can use to fund their child's university education.
 
-**Related terms:** [[insurance-and-risk#Insurance (Life)|Insurance (Life)]], [[insurance-and-risk#Annuity|Annuity]], [[insurance-and-risk#Insurance Premium|Insurance Premium]], [[insurance-and-risk#Unit-Linked Insurance|Unit-Linked Insurance]]
+**Related terms:** [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Annuity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Annuity), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Unit-Linked Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Unit-Linked Insurance)
 
 ---
 
@@ -53,7 +53,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A 35-year-old parent purchases a 25-year term life insurance policy with a death benefit of USD 1 million, paying monthly premiums of USD 75. If the parent dies during the policy term, the insurance company pays USD 1 million to the designated beneficiary, ensuring the family can maintain its standard of living.
 
-**Related terms:** [[insurance-and-risk#Insurance Premium|Insurance Premium]], [[insurance-and-risk#Annuity|Annuity]], [[insurance-and-risk#Endowment Insurance|Endowment Insurance]], [[insurance-and-risk#Unit-Linked Insurance|Unit-Linked Insurance]], [[insurance-and-risk#Reinsurance|Reinsurance]]
+**Related terms:** [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Annuity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Annuity), [Endowment Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Endowment Insurance), [Unit-Linked Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Unit-Linked Insurance), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance)
 
 ---
 
@@ -65,7 +65,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A business owner purchases a commercial property insurance policy that covers the company's warehouse, equipment, and inventory against fire, flood, and theft. When a fire damages the warehouse and destroys EUR 500,000 worth of inventory, the insurance company pays the claim, allowing the business to rebuild and restock.
 
-**Related terms:** [[insurance-and-risk#Insurance Premium|Insurance Premium]], [[insurance-and-risk#Reinsurance|Reinsurance]], [[insurance-and-risk#Risk Management|Risk Management]], [[capital-markets-and-trading#Underwriting|Underwriting]]
+**Related terms:** [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Underwriting)
 
 ---
 
@@ -77,7 +77,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A homeowner pays an annual insurance premium of EUR 1,200 for a policy that covers their house against fire, storm, and theft with a maximum payout of EUR 500,000. The premium is calculated based on the home's value, location, construction type, and the homeowner's claims history.
 
-**Related terms:** [[insurance-and-risk#Insurance (Life)|Insurance (Life)]], [[insurance-and-risk#Insurance (Property-Casualty)|Insurance (Property-Casualty)]], [[capital-markets-and-trading#Underwriting|Underwriting]], [[insurance-and-risk#Reinsurance|Reinsurance]]
+**Related terms:** [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Underwriting), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance)
 
 ---
 
@@ -89,7 +89,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A Caribbean island nation purchases parametric hurricane insurance that pays USD 50 million within 72 hours whenever a Category 4 or higher hurricane passes within 50 miles of the island, regardless of actual damage. This rapid payout enables immediate disaster response without waiting months for traditional claims processing.
 
-**Related terms:** [[insurance-and-risk#Insurance (Property-Casualty)|Insurance (Property-Casualty)]], [[insurance-and-risk#Reinsurance|Reinsurance]], [[insurance-and-risk#Risk Management|Risk Management]]
+**Related terms:** [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
 
 ---
 
@@ -101,7 +101,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** An insurance company in Florida writes USD 10 billion in hurricane insurance policies. To protect itself against a catastrophic hurricane season, it purchases reinsurance that covers losses exceeding USD 2 billion. If a major hurricane causes USD 5 billion in insured losses, the primary insurer pays the first USD 2 billion, and the reinsurer covers the remaining USD 3 billion.
 
-**Related terms:** [[insurance-and-risk#Insurance (Property-Casualty)|Insurance (Property-Casualty)]], [[insurance-and-risk#Insurance Premium|Insurance Premium]], [[capital-markets-and-trading#Underwriting|Underwriting]], [[insurance-and-risk#Risk Management|Risk Management]]
+**Related terms:** [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Underwriting), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
 
 ---
 
@@ -113,7 +113,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A multinational corporation's risk management team identifies that 40% of its revenue comes from countries with volatile currencies. To mitigate this foreign exchange risk, the team implements a hedging program using currency forward contracts and options that lock in exchange rates for the next 12 months, protecting the company from unexpected currency fluctuations.
 
-**Related terms:** [[capital-markets-and-trading#Derivatives|Derivatives]], [[insurance-and-risk#Insurance (Property-Casualty)|Insurance (Property-Casualty)]], [[insurance-and-risk#Reinsurance|Reinsurance]]
+**Related terms:** [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance)
 
 ---
 
@@ -125,4 +125,4 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 **Real-world example:** A 30-year-old professional purchases a unit-linked insurance plan, paying EUR 300/month. Of this, EUR 50 covers life insurance (providing a EUR 200,000 death benefit), and EUR 250 is invested in a balanced fund of equities and bonds. Over 25 years, the investment portion grows based on fund performance. At maturity, the policyholder receives the accumulated investment value.
 
-**Related terms:** [[insurance-and-risk#Insurance (Life)|Insurance (Life)]], [[investment-management#Mutual Funds|Mutual Funds]], [[insurance-and-risk#Endowment Insurance|Endowment Insurance]], [[insurance-and-risk#Annuity|Annuity]]
+**Related terms:** [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Mutual Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Mutual Funds), [Endowment Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Endowment Insurance), [Annuity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Annuity)

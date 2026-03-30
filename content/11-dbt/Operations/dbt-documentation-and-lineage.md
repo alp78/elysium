@@ -188,7 +188,7 @@ exposures:
     description: >
       Automated data feed to the EU BMR reporting system. Sends daily benchmark
       methodology data derived from `fct_index_composition` and `fct_esg_scores`.
-      See [[eu-bmr-benchmark-regulation]] for compliance context.
+      See [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) for compliance context.
     depends_on:
       - ref('fct_index_composition')
       - ref('fct_esg_scores')

@@ -31,7 +31,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** A bank's compliance department monitors all customer transactions above USD 10,000, files Suspicious Activity Reports (SARs) when patterns suggest money laundering, conducts annual anti-money laundering training for all employees, and ensures the bank meets Know Your Customer (KYC) requirements for every new account opened.
 
-**Related terms:** [[compliance-and-risk-management#Regulatory Approval|Regulatory Approval]], [[compliance-and-risk-management#Risk Management|Risk Management]], [[technology-and-digital#Cybersecurity|Cybersecurity]], [[insurance-and-risk#Underwriting|Underwriting]]
+**Related terms:** [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Regulatory Approval), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Risk Management), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Underwriting)
 
 ---
 
@@ -43,7 +43,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** A pharmaceutical company holds a patent on a new diabetes drug, giving it exclusive rights to manufacture and sell the drug for 20 years. During this time, no other company can produce the same drug, allowing the patent holder to charge higher prices and recoup its research and development investment.
 
-**Related terms:** [[compliance-and-risk-management#Patent|Patent]], [[compliance-and-risk-management#Licensing|Licensing]], [[compliance-and-risk-management#Royalties|Royalties]], [[business-models-and-commerce#Franchise|Franchise]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]], [[pharma-and-healthcare#Out-Licensing|Out-Licensing]]
+**Related terms:** [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Patent), [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Royalties), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing)
 
 ---
 
@@ -55,7 +55,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** Ferrari licenses its brand name to a luxury watchmaker, allowing the watchmaker to produce and sell "Ferrari" branded watches. Ferrari receives a royalty on each watch sold without bearing any manufacturing or distribution costs, while the watchmaker benefits from Ferrari's prestigious brand recognition.
 
-**Related terms:** [[compliance-and-risk-management#Royalties|Royalties]], [[compliance-and-risk-management#Intellectual Property (IP)|Intellectual Property (IP)]], [[business-models-and-commerce#Franchise|Franchise]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]], [[compliance-and-risk-management#Patent|Patent]]
+**Related terms:** [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Royalties), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Intellectual Property (IP)), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Patent)
 
 ---
 
@@ -67,7 +67,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** A biotech company invents a new method for delivering medication through the skin using microscopic needles. It files a patent application describing the invention in detail. Once granted, the patent gives the company 20 years of exclusive rights to commercialize the technology, preventing competitors from copying it without a license.
 
-**Related terms:** [[compliance-and-risk-management#Intellectual Property (IP)|Intellectual Property (IP)]], [[compliance-and-risk-management#Licensing|Licensing]], [[pharma-and-healthcare#Generic Drugs|Generic Drugs]], [[compliance-and-risk-management#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#Biosimilars|Biosimilars]]
+**Related terms:** [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Intellectual Property (IP)), [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Generic Drugs](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Generic Drugs), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Regulatory Approval), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars)
 
 ---
 
@@ -79,7 +79,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** A pharmaceutical company submits a New Drug Application to the FDA containing data from clinical trials involving 10,000 patients. FDA scientists review the safety and efficacy data over 10-12 months. If the drug is found to be safe and effective, the FDA issues an approval letter allowing the company to begin selling the drug in the United States.
 
-**Related terms:** [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[compliance-and-risk-management#Patent|Patent]], [[compliance-and-risk-management#Compliance|Compliance]], [[pharma-and-healthcare#FDA Approval|FDA Approval]], [[pharma-and-healthcare#Biosimilars|Biosimilars]]
+**Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Patent), [Compliance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Compliance), [FDA Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#FDA Approval), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars)
 
 ---
 
@@ -91,7 +91,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** A multinational corporation's risk management team identifies that 40% of its revenue comes from countries with volatile currencies. To mitigate this foreign exchange risk, the team implements a hedging program using currency forward contracts and options that lock in exchange rates for the next 12 months, protecting the company from unexpected currency fluctuations.
 
-**Related terms:** [[capital-markets-and-trading#Derivatives|Derivatives]], [[insurance-and-risk#Insurance (Property-Casualty)|Insurance (Property-Casualty)]], [[compliance-and-risk-management#Compliance|Compliance]], [[insurance-and-risk#Reinsurance|Reinsurance]], [[capital-markets-and-trading#Futures and Options|Futures and Options]]
+**Related terms:** [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Compliance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Compliance), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures and Options)
 
 ---
 
@@ -103,4 +103,4 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 **Real-world example:** A fashion house licenses its brand name to a fragrance company that produces and sells perfumes bearing the fashion brand. The fashion house receives a 10% royalty on all perfume sales, earning EUR 50 million annually without any involvement in manufacturing or distribution.
 
-**Related terms:** [[compliance-and-risk-management#Licensing|Licensing]], [[compliance-and-risk-management#Intellectual Property (IP)|Intellectual Property (IP)]], [[business-models-and-commerce#Franchise|Franchise]], [[compliance-and-risk-management#Patent|Patent]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]], [[pharma-and-healthcare#Out-Licensing|Out-Licensing]]
+**Related terms:** [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Intellectual Property (IP)), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Patent), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing)

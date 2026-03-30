@@ -30,7 +30,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A manufacturing company pledges its factory equipment worth USD 5 million as collateral to secure a USD 3.5 million loan from a bank. If the company cannot repay the loan, the bank has the right to seize and sell the equipment.
 
-**Related terms:** [[structured-finance#Structured Finance|Structured Finance]], [[structured-finance#Securitization|Securitization]], [[structured-finance#Warehouse Financing|Warehouse Financing]], [[structured-finance#Collateral|Collateral]]
+**Related terms:** [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Warehouse Financing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Warehouse Financing), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral)
 
 ---
 
@@ -42,7 +42,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A homebuyer takes out a mortgage loan of USD 400,000 from a bank, pledging the purchased house as collateral. If the homebuyer stops making payments, the bank can foreclose on the house and sell it to recover the outstanding loan balance.
 
-**Related terms:** [[structured-finance#Asset-Backed Lending|Asset-Backed Lending]], [[banking-and-lending#Mortgage|Mortgage]], [[structured-finance#Structured Finance|Structured Finance]], [[structured-finance#Securitization|Securitization]]
+**Related terms:** [Asset-Backed Lending](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Asset-Backed Lending), [Mortgage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Mortgage), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization)
 
 ---
 
@@ -54,7 +54,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A Japanese heavy machinery manufacturer sells a fleet of excavators to a construction company in Indonesia. The Japanese export credit agency provides insurance to the manufacturer's bank against the risk that the Indonesian buyer might default on payment, enabling the bank to offer favorable financing terms.
 
-**Related terms:** [[structured-finance#Trade Finance|Trade Finance]], [[structured-finance#Project Finance|Project Finance]], [[structured-finance#Structured Finance|Structured Finance]]
+**Related terms:** [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance)
 
 ---
 
@@ -66,7 +66,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A small clothing manufacturer has EUR 100,000 in outstanding invoices from department stores with 60-day payment terms. It sells these invoices to a factoring company for EUR 97,000 (a 3% discount), receiving immediate cash to pay for raw materials and payroll while the factor waits for the department stores to pay.
 
-**Related terms:** [[banking-and-lending#Working Capital|Working Capital]], [[structured-finance#Trade Finance|Trade Finance]], [[pharma-and-healthcare#Supply Chain|Supply Chain]]
+**Related terms:** [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Working Capital), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain)
 
 ---
 
@@ -78,7 +78,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A telecommunications company needs a USD 5 billion loan to fund a nationwide 5G network rollout. No single bank wants to lend the entire amount, so a lead bank arranges a syndicate of 15 banks, each contributing USD 250 million to USD 500 million. The lead bank earns arrangement fees, and the risk is spread across the syndicate.
 
-**Related terms:** [[structured-finance#Structured Finance|Structured Finance]], [[structured-finance#Project Finance|Project Finance]], [[banking-and-lending#Commercial Banking|Commercial Banking]], [[banking-and-lending#Wholesale Banking|Wholesale Banking]]
+**Related terms:** [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance), [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking)
 
 ---
 
@@ -90,7 +90,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A bank lends EUR 5 million to a hotel developer. When the hotel opens during an economic downturn, occupancy is too low to service the debt. After 90 days of missed payments, the bank classifies the loan as non-performing, provisions for potential losses, and assigns the account to its workout team to negotiate restructuring or arrange an asset sale.
 
-**Related terms:** [[structured-finance#Non-Recourse Loan|Non-Recourse Loan]], [[banking-and-lending#Commercial Banking|Commercial Banking]], [[corporate-finance-and-strategy#Restructuring|Restructuring]]
+**Related terms:** [Non-Recourse Loan](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Non-Recourse Loan), [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring)
 
 ---
 
@@ -102,7 +102,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A consortium of banks provides a USD 2 billion non-recourse loan to a solar power plant SPV. If the plant underperforms and cannot service its debt, the banks can seize the plant's equipment and future electricity revenues -- but they cannot pursue the corporate sponsors' unrelated assets. The sponsors' liability is limited to their equity contribution.
 
-**Related terms:** [[structured-finance#Project Finance|Project Finance]], [[structured-finance#Structured Finance|Structured Finance]], [[structured-finance#Collateral|Collateral]]
+**Related terms:** [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral)
 
 ---
 
@@ -114,7 +114,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A consortium of banks provides USD 4 billion in project finance for a new offshore wind farm. The loan is secured only by the wind farm's assets and future electricity revenues. The project developers (the sponsors) contribute USD 1.5 billion in equity. If the wind farm underperforms, the banks can seize the project assets but cannot go after the sponsors' other businesses.
 
-**Related terms:** [[structured-finance#Structured Finance|Structured Finance]], [[structured-finance#Loan Syndication|Loan Syndication]], [[pharma-and-healthcare#Concessions|Concessions]], [[energy-and-commodities#Renewable Energy|Renewable Energy]]
+**Related terms:** [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Loan Syndication](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Loan Syndication), [Concessions](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Concessions), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy)
 
 ---
 
@@ -126,7 +126,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A bank holds USD 2 billion in residential mortgages on its books. Through securitization, it bundles these mortgages into a pool, creates mortgage-backed securities (MBS), and sells them to institutional investors. The bank receives USD 2 billion in cash (freeing up capital for new lending), and the investors receive monthly payments as homeowners make their mortgage payments.
 
-**Related terms:** [[structured-finance#Asset-Backed Lending|Asset-Backed Lending]], [[banking-and-lending#Mortgage|Mortgage]], [[structured-finance#Structured Finance|Structured Finance]], [[capital-markets-and-trading#Capital Markets|Capital Markets]]
+**Related terms:** [Asset-Backed Lending](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Asset-Backed Lending), [Mortgage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Mortgage), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
 
 ---
 
@@ -138,17 +138,17 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 **Real-world example:** A bank creates a collateralized loan obligation (CLO) by pooling 200 corporate loans totaling USD 1 billion. It then divides the pool into tranches with different risk levels: senior (safest, lowest yield), mezzanine (moderate risk and yield), and equity (highest risk, highest potential return). Each tranche is sold to investors with corresponding risk appetites.
 
-**Related terms:** [[structured-finance#Securitization|Securitization]], [[structured-finance#Asset-Backed Lending|Asset-Backed Lending]], [[structured-finance#Project Finance|Project Finance]], [[capital-markets-and-trading#Derivatives|Derivatives]]
+**Related terms:** [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Asset-Backed Lending](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Asset-Backed Lending), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives)
 
 ---
 
 ## Syndicated Loans
 
-**Definition:** See [[structured-finance#Loan Syndication|Loan Syndication]].
+**Definition:** See [Loan Syndication](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Loan Syndication).
 
 Syndicated loans are loans arranged through the loan syndication process: a group of banks collectively fund a large credit facility for a single borrower. The terms syndicated loans and loan syndication are used interchangeably in market practice, though syndicated loans refers to the financial product while loan syndication refers to the arrangement process.
 
-**Related terms:** [[structured-finance#Loan Syndication|Loan Syndication]], [[structured-finance#Structured Finance|Structured Finance]], [[structured-finance#Project Finance|Project Finance]]
+**Related terms:** [Loan Syndication](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Loan Syndication), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance)
 
 ---
 
@@ -160,7 +160,7 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 
 **Real-world example:** A German manufacturer exports machinery to a buyer in Brazil. The buyer's bank issues a letter of credit guaranteeing payment of EUR 2 million upon proof of shipment. The German manufacturer ships the machinery, presents the shipping documents to its bank, and receives payment. The letter of credit eliminates the risk of non-payment for the exporter and the risk of non-delivery for the importer.
 
-**Related terms:** [[structured-finance#Export Credit Agency Finance|Export Credit Agency Finance]], [[structured-finance#Factoring|Factoring]], [[pharma-and-healthcare#Supply Chain|Supply Chain]], [[banking-and-lending#Working Capital|Working Capital]]
+**Related terms:** [Export Credit Agency Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Export Credit Agency Finance), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Factoring), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Working Capital)
 
 ---
 
@@ -172,4 +172,4 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 
 **Real-world example:** A mortgage company originates USD 200 million in home loans per month. It uses a warehouse credit facility from a large bank to fund these loans temporarily. As the mortgages are completed, the mortgage company bundles them and sells them to investors through securitization, repaying the warehouse line and freeing up capacity to fund new loans.
 
-**Related terms:** [[structured-finance#Securitization|Securitization]], [[structured-finance#Asset-Backed Lending|Asset-Backed Lending]], [[structured-finance#Structured Finance|Structured Finance]]
+**Related terms:** [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Asset-Backed Lending](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Asset-Backed Lending), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance)

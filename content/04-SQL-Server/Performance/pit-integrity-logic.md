@@ -502,5 +502,5 @@ print(f"Reconciliation PASSED: max diff = {max_diff:.10f}")
 - [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) — Star schema design for index data warehouses
 - [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture) — SCD types and temporal modeling patterns
 - [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) — EU BMR lineage and corporate action audit trail
-- [[index-maintenance-and-corporate-actions]] — Corporate action types and their index impact
-- [[scoring-methodology]] — Z-score and composite scoring for index signals
+- [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) — Corporate action types and their index impact
+- [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) — Z-score and composite scoring for index signals

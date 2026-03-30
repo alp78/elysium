@@ -7,10 +7,10 @@ aliases: [Factor Profile, Radar Chart, Index Composition, Donut Chart]
 keywords: [factor profile, radar chart, factor tilt, value, momentum, sentiment, quality, governance, index composition, donut chart, sector allocation, cap-weighted, cube-root scaling]
 description: "Factor profile radar chart and index composition donut chart from the financial data platform dashboard, showing five-axis factor tilts and dual-ring sector/stock weight breakdowns."
 related:
-  - "[[daily-signal-scores]]"
-  - "[[quarterly-signal-scores]]"
-  - "[[scoring-methodology]]"
-  - "[[index-snapshot-metrics]]"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
+  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
+  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -28,11 +28,11 @@ The factor profile radar chart displays the average factor tilt of the selected 
 
 | Axis | Source |
 |------|--------|
-| Value | Daily relative value z-scores (see [[daily-signal-scores]]) |
-| Momentum | Daily momentum z-scores (see [[daily-signal-scores]]) |
-| Sentiment | Daily sentiment z-scores (see [[daily-signal-scores]]) |
-| Quality | Quarterly quality z-scores (see [[quarterly-signal-scores]]) |
-| Governance | Quarterly governance scores (see [[quarterly-signal-scores]]) |
+| Value | Daily relative value z-scores (see [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)) |
+| Momentum | Daily momentum z-scores (see [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)) |
+| Sentiment | Daily sentiment z-scores (see [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)) |
+| Quality | Quarterly quality z-scores (see [quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)) |
+| Governance | Quarterly governance scores (see [quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)) |
 
 **Interpretation**: A larger filled area on the radar chart indicates a stronger overall index profile. Compare across indices to spot factor tilts — for example, one index may skew toward value while another skews toward momentum. This helps identify the dominant investment style embedded in each index.
 
@@ -53,11 +53,11 @@ The index composition donut chart is a dual-ring visualization showing how the i
 Weights are cube-root scaled for display so small-cap constituents remain visible alongside mega-cap names.
 
 > [!info] Weight Calculation
-> Stock weights use daily market capitalization. See [[scoring-methodology]] for the cap-weighting formula and [[index-maintenance-and-corporate-actions|weight capping]] for the free-float methodology and capping rules that constrain maximum weights.
+> Stock weights use daily market capitalization. See [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for the cap-weighting formula and [weight capping](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) for the free-float methodology and capping rules that constrain maximum weights.
 
 ## Related
 
-- [[daily-signal-scores]] for the daily factor components feeding the radar chart
-- [[quarterly-signal-scores]] for the quarterly factor components
-- [[scoring-methodology]] for normalization and weighting formulas
-- [[index-maintenance-and-corporate-actions|weight capping]] for weight capping rules
+- [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) for the daily factor components feeding the radar chart
+- [quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) for the quarterly factor components
+- [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for normalization and weighting formulas
+- [weight capping](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) for weight capping rules

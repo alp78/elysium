@@ -50,11 +50,11 @@ in the broader vault where applicable.
 
 ## Related Vault Sections
 
-- **Market Analysis:** [[index-maintenance-and-corporate-actions]] covers index
+- **Market Analysis:** [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) covers index
   divisor mechanics, corporate actions processing, and reconstitution pipelines
-- **Metrics & Scoring:** [[scoring-methodology]] details the z-score calculation
+- **Metrics & Scoring:** [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) details the z-score calculation
   and composite scoring methodology used in the financial data platform
-- **Regulatory:** [[eu-bmr-benchmark-regulation]] covers EU BMR technical
-  compliance requirements; [[sfdr-data-requirements]] covers SFDR PAI computation
-- **Encyclopedia:** [[esg-and-sustainability]] provides broader ESG context with
+- **Regulatory:** [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) covers EU BMR technical
+  compliance requirements; [sfdr-data-requirements](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/sfdr-data-requirements) covers SFDR PAI computation
+- **Encyclopedia:** [esg-and-sustainability](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability) provides broader ESG context with
   real-world company examples from major equity indices

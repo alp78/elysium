@@ -1213,7 +1213,7 @@ The reproducibility test is executed. The `pipeline_lineage_metadata` row for th
 
 > [!warning] EU BMR regulatory requirement
 >
-> The European Benchmarks Regulation (EU 2016/1011) applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams. For a detailed breakdown of the regulation's scope and applicability, see [[eu-bmr-benchmark-regulation]].
+> The European Benchmarks Regulation (EU 2016/1011) applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams. For a detailed breakdown of the regulation's scope and applicability, see [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation).
 
 ### EU BMR Compliance — Article 11 Input Data Governance
 
@@ -2304,4 +2304,4 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 
 - [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic) — Point-in-time correctness for historical constituent data
 - [dataops-for-indices](https://alp78.github.io/elysium/15-DataOps/dataops-for-indices) — Pipeline orchestration, testing, and deployment
-- [[index-maintenance-and-corporate-actions]] — Operational runbooks for specific action types
+- [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) — Operational runbooks for specific action types

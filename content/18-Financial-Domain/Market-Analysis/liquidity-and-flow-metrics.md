@@ -7,10 +7,10 @@ aliases: [Liquidity and Flow Metrics, liquidity metrics, bid-ask spread, turnove
 keywords: [liquidity metrics, flow metrics, bid-ask spread, turnover ratio, Money Flow Index, MFI, On-Balance Volume, OBV, trading volume, market liquidity, volume analysis, flow indicators]
 description: "Liquidity and flow metrics for equity index analysis — bid-ask spread, turnover ratio, Money Flow Index, and On-Balance Volume with formulas, thresholds, and interpretation."
 related:
-  - "[[breadth-and-sentiment-indicators]]"
-  - "[[technical-indicators]]"
-  - "[[daily-signal-scores]]"
-  - "[[chart-metrics]]"
+  - "[breadth-and-sentiment-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/breadth-and-sentiment-indicators)"
+  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -58,7 +58,7 @@ $$\text{Turnover} = \frac{\text{Daily Volume}}{\text{Shares Outstanding}}$$
 
 ## Money Flow Index (MFI)
 
-A volume-weighted version of [[technical-indicators|RSI]] that incorporates trading volume to measure buying and selling pressure.
+A volume-weighted version of [RSI](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators) that incorporates trading volume to measure buying and selling pressure.
 
 | MFI Level | Interpretation |
 |-----------|----------------|
@@ -84,7 +84,7 @@ $$\text{OBV}_t = \text{OBV}_{t-1} + \begin{cases} +V_t & \text{if } P_t > P_{t-1
 
 ## Related
 
-- [[breadth-and-sentiment-indicators]] — Market breadth and put/call sentiment
-- [[technical-indicators]] — RSI, MACD, and trend indicators
-- [[daily-signal-scores]] — Volume is incorporated into dashboard momentum metrics
-- [[chart-metrics]] — Dashboard chart visualizations
+- [breadth-and-sentiment-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/breadth-and-sentiment-indicators) — Market breadth and put/call sentiment
+- [technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators) — RSI, MACD, and trend indicators
+- [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) — Volume is incorporated into dashboard momentum metrics
+- [chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics) — Dashboard chart visualizations

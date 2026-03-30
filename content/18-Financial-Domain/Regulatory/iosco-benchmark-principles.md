@@ -9,7 +9,7 @@ updated: 2026-03-23
 # IOSCO Benchmark Principles
 
 > [!abstract] When You Need This
-> The 19 IOSCO Principles for Financial Benchmarks are the international standard that [[eu-bmr-benchmark-regulation|EU BMR]] is based on — BMR translates these principles into binding EU law. Most regulators worldwide reference these principles. This note maps each principle to what the data engineering team must provide.
+> The 19 IOSCO Principles for Financial Benchmarks are the international standard that [EU BMR](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) is based on — BMR translates these principles into binding EU law. Most regulators worldwide reference these principles. This note maps each principle to what the data engineering team must provide.
 
 ## The 19 Principles by Theme
 
@@ -21,7 +21,7 @@ updated: 2026-03-23
 | 2 | Oversight of third parties | Vendor SLA monitoring, fallback procedures |
 | 3 | Conflicts of interest | Segregated service accounts (read vs write) |
 | 4 | Control framework | Automated quality gates, circuit breakers |
-| 5 | Internal oversight | Audit logs, pipeline lineage, quarterly reviews — see [[compliance-and-auditability]] for implementation |
+| 5 | Internal oversight | Audit logs, pipeline lineage, quarterly reviews — see [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) for implementation |
 
 ### Quality of the Benchmark (Principles 6-10)
 
@@ -80,8 +80,8 @@ updated: 2026-03-23
 
 ## Related
 
-- [[eu-bmr-benchmark-regulation]] — EU implementation of IOSCO principles
-- [[sfdr-data-requirements]] — ESG disclosure requirements
-- [[compliance-and-auditability]] — Audit trail implementation
-- [[data-quality-framework]] — Quality gates and SLA monitoring
+- [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) — EU implementation of IOSCO principles
+- [sfdr-data-requirements](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/sfdr-data-requirements) — ESG disclosure requirements
+- [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) — Audit trail implementation
+- [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality gates and SLA monitoring
 - [[backup-restore-drill]] — Disaster recovery validation

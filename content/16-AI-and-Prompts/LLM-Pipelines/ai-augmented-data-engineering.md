@@ -23,8 +23,8 @@ LLMs are not replacements for SQL transforms or Airflow DAGs. They are specializ
 
 | Use Case | Input | LLM Task | Output |
 |---|---|---|---|
-| **Corporate actions parsing** | Press release text | Extract: action type, ratio, effective date | Structured corporate action record (see [[index-maintenance-and-corporate-actions]]) |
-| **Regulatory filing classification** | SEC/ESMA filing PDF (including [[sfdr-data-requirements|SFDR disclosures]]) | Classify: material change, routine, amendment | Category tag + confidence score |
+| **Corporate actions parsing** | Press release text | Extract: action type, ratio, effective date | Structured corporate action record (see [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions)) |
+| **Regulatory filing classification** | SEC/ESMA filing PDF (including [SFDR disclosures](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/sfdr-data-requirements)) | Classify: material change, routine, amendment | Category tag + confidence score |
 | **Anomaly explanation** | "SAP dropped 15% today" + news | Generate explanation for data quality alert | Human-readable anomaly report |
 | **Data quality remediation** | Failed validation rules + data sample | Suggest fix: is this a data error or a real event? | Remediation recommendation (augments [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) checks) |
 | **Schema documentation** | Table DDL + sample data | Generate column descriptions | Auto-populated data catalog entries |
@@ -104,7 +104,7 @@ collection.add(
 
 #### Corporate actions extraction from press releases
 
-Corporate actions (splits, dividends, mergers, spinoffs) arrive as unstructured press releases. Manually parsing them takes hours per filing and is error-prone. An LLM extracts structured fields — action type, ratio, effective date, currency — in seconds. The output feeds directly into the [[index-maintenance-and-corporate-actions|corporate actions pipeline]] where adjustment factors are computed.
+Corporate actions (splits, dividends, mergers, spinoffs) arrive as unstructured press releases. Manually parsing them takes hours per filing and is error-prone. An LLM extracts structured fields — action type, ratio, effective date, currency — in seconds. The output feeds directly into the [corporate actions pipeline](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) where adjustment factors are computed.
 
 ```python
 from anthropic import Anthropic

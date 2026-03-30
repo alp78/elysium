@@ -29,7 +29,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A mid-cap technology company hires Goldman Sachs to advise on the acquisition of a smaller competitor. Goldman Sachs values the target company, structures the deal, conducts due diligence, helps negotiate the purchase price, and arranges the financing needed to complete the acquisition.
 
-**Related terms:** [[corporate-finance-and-strategy#Mergers and Acquisitions (M&A)|Mergers and Acquisitions (M&A)]], [[investment-management#Investment Banking|Investment Banking]], [[corporate-finance-and-strategy#Restructuring|Restructuring]], [[corporate-finance-and-strategy#Divestitures|Divestitures]], [[corporate-finance-and-strategy#Spin-Off|Spin-Off]]
+**Related terms:** [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring), [Divestitures](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Divestitures), [Spin-Off](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Spin-Off)
 
 ---
 
@@ -41,7 +41,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A large conglomerate sells its underperforming food division for USD 3 billion to a private equity firm, using the proceeds to pay down debt and invest in its faster-growing technology and healthcare divisions. This divestiture allows the company to focus on its core strengths.
 
-**Related terms:** [[corporate-finance-and-strategy#Mergers and Acquisitions (M&A)|Mergers and Acquisitions (M&A)]], [[corporate-finance-and-strategy#Spin-Off|Spin-Off]], [[corporate-finance-and-strategy#Restructuring|Restructuring]], [[corporate-finance-and-strategy#Corporate Finance Advisory|Corporate Finance Advisory]]
+**Related terms:** [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Spin-Off](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Spin-Off), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring), [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory)
 
 ---
 
@@ -53,7 +53,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A married couple nearing retirement hires a financial advisor to review their savings, pensions, and investments. The advisor creates a comprehensive plan recommending they pay off their mortgage, reallocate their investment portfolio to more conservative assets, and purchase long-term care insurance.
 
-**Related terms:** [[investment-management#Wealth Management|Wealth Management]], [[corporate-finance-and-strategy#Corporate Finance Advisory|Corporate Finance Advisory]], [[investment-management#Investment Banking|Investment Banking]], [[insurance-and-risk#Risk Management|Risk Management]]
+**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
 
 ---
 
@@ -65,7 +65,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** Berkshire Hathaway (BRK-B, a US equity index) is a holding company that owns dozens of subsidiary businesses ranging from insurance (GEICO) to railroads (BNSF) to consumer brands (Dairy Queen). Warren Buffett manages capital allocation from the holding company level while each subsidiary operates independently.
 
-**Related terms:** [[corporate-finance-and-strategy#Subsidiaries|Subsidiaries]], [[banking-and-lending#Bank Holding Company|Bank Holding Company]], [[banking-and-lending#Financial Holding Company|Financial Holding Company]]
+**Related terms:** [Subsidiaries](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Subsidiaries), [Bank Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Bank Holding Company), [Financial Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Financial Holding Company)
 
 ---
 
@@ -77,7 +77,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** Two software engineers decide to turn their partnership into a corporation by filing articles of incorporation with the state of Delaware. Once incorporated, the business becomes a separate legal entity that can raise capital by selling shares, and the engineers' personal assets (homes, savings) are protected if the company faces a lawsuit.
 
-**Related terms:** [[corporate-finance-and-strategy#Subsidiaries|Subsidiaries]], [[corporate-finance-and-strategy#Holding Company|Holding Company]], [[capital-markets-and-trading#Initial Public Offering (IPO)|Initial Public Offering (IPO)]]
+**Related terms:** [Subsidiaries](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Subsidiaries), [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding Company), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO))
 
 ---
 
@@ -89,7 +89,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A European car manufacturer and a Chinese automotive company form a 50-50 joint venture to produce electric vehicles in China. The European company contributes engineering expertise and brand reputation, while the Chinese partner provides manufacturing facilities, local market knowledge, and government relationships.
 
-**Related terms:** [[corporate-finance-and-strategy#Mergers and Acquisitions (M&A)|Mergers and Acquisitions (M&A)]], [[corporate-finance-and-strategy#Subsidiaries|Subsidiaries]]
+**Related terms:** [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Subsidiaries](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Subsidiaries)
 
 ---
 
@@ -101,7 +101,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A global consumer goods company acquires a premium organic food brand for USD 3 billion. The acquirer conducts months of due diligence, obtains antitrust clearance from regulators in multiple countries, secures financing through a combination of cash and bonds, and then integrates the acquired brand into its global distribution network.
 
-**Related terms:** [[corporate-finance-and-strategy#Corporate Finance Advisory|Corporate Finance Advisory]], [[corporate-finance-and-strategy#Divestitures|Divestitures]], [[corporate-finance-and-strategy#Restructuring|Restructuring]], [[corporate-finance-and-strategy#Spin-Off|Spin-Off]], [[investment-management#Investment Banking|Investment Banking]]
+**Related terms:** [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Divestitures](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Divestitures), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring), [Spin-Off](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Spin-Off), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
 
 ---
 
@@ -113,7 +113,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A struggling retail chain hires an investment bank to advise on a financial restructuring. The bank negotiates with creditors to extend loan maturities, convert some debt to equity, and arrange new financing. Simultaneously, the company closes 200 underperforming stores, renegotiates leases, and invests in e-commerce, ultimately returning to profitability.
 
-**Related terms:** [[corporate-finance-and-strategy#Corporate Finance Advisory|Corporate Finance Advisory]], [[corporate-finance-and-strategy#Mergers and Acquisitions (M&A)|Mergers and Acquisitions (M&A)]], [[corporate-finance-and-strategy#Divestitures|Divestitures]]
+**Related terms:** [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Divestitures](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Divestitures)
 
 ---
 
@@ -125,7 +125,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A diversified conglomerate reports its financial results in three segments: Automotive (manufacturing and selling cars), Financial Services (providing leasing and insurance), and Mobility (ride-hailing and car-sharing platforms). Analysts can see that while the Automotive segment generates 70% of revenue, the Financial Services segment generates 60% of profits.
 
-**Related terms:** [[corporate-finance-and-strategy#Subsidiaries|Subsidiaries]], [[corporate-finance-and-strategy#Holding Company|Holding Company]]
+**Related terms:** [Subsidiaries](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Subsidiaries), [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding Company)
 
 ---
 
@@ -137,7 +137,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A large industrial conglomerate spins off its healthcare division into a separate publicly traded company. Existing shareholders receive one share of the new healthcare company for every five shares of the parent. The healthcare company can now focus exclusively on its market, attract healthcare-specialized investors, and make strategic decisions without competing for resources with the parent's other divisions.
 
-**Related terms:** [[corporate-finance-and-strategy#Divestitures|Divestitures]], [[corporate-finance-and-strategy#Restructuring|Restructuring]], [[corporate-finance-and-strategy#Corporate Finance Advisory|Corporate Finance Advisory]], [[corporate-finance-and-strategy#Mergers and Acquisitions (M&A)|Mergers and Acquisitions (M&A)]]
+**Related terms:** [Divestitures](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Divestitures), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring), [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A))
 
 ---
 
@@ -149,4 +149,4 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 **Real-world example:** A Japanese electronics corporation operates through dozens of subsidiaries worldwide: a semiconductor subsidiary in the US, a consumer electronics subsidiary in Europe, and a financial services subsidiary in Singapore. Each subsidiary is a separate legal entity incorporated in its respective country, but the parent coordinates overall strategy and allocates capital across the group.
 
-**Related terms:** [[corporate-finance-and-strategy#Holding Company|Holding Company]], [[corporate-finance-and-strategy#Segments (Business)|Segments (Business)]], [[corporate-finance-and-strategy#Incorporated|Incorporated]]
+**Related terms:** [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding Company), [Segments (Business)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Segments (Business)), [Incorporated](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Incorporated)

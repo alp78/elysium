@@ -29,7 +29,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** When the patent on a blockbuster biologic drug for rheumatoid arthritis expires, other pharmaceutical companies can develop biosimilar versions that are highly similar in efficacy and safety, often priced 20-30% lower, making the treatment more accessible to patients.
 
-**Related terms:** [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#Recombinant Therapies|Recombinant Therapies]], [[pharma-and-healthcare#Generic Drugs|Generic Drugs]]
+**Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Recombinant Therapies](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Recombinant Therapies), [Generic Drugs](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Generic Drugs)
 
 ---
 
@@ -41,7 +41,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A small biotech company discovers a promising antibody therapy but lacks manufacturing capabilities. It contracts with a CDMO like WuXi Biologics to develop the manufacturing process, produce clinical trial materials, and eventually scale up to commercial production.
 
-**Related terms:** [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Biosimilars|Biosimilars]], [[pharma-and-healthcare#Out-Licensing|Out-Licensing]], [[pharma-and-healthcare#Recombinant Therapies|Recombinant Therapies]]
+**Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars), [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing), [Recombinant Therapies](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Recombinant Therapies)
 
 ---
 
@@ -53,7 +53,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A pharmaceutical company enrolls 3,000 patients across 200 hospitals in a Phase III clinical trial for a new diabetes drug. Half the patients receive the new drug, and half receive a placebo. After two years, the results show the new drug significantly lowers blood sugar levels with acceptable side effects, allowing the company to apply for FDA approval.
 
-**Related terms:** [[pharma-and-healthcare#FDA Approval|FDA Approval]], [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#Biosimilars|Biosimilars]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]]
+**Related terms:** [FDA Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#FDA Approval), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement)
 
 ---
 
@@ -65,7 +65,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A pharmaceutical company submits a New Drug Application to the FDA containing data from clinical trials involving 10,000 patients. FDA scientists review the safety and efficacy data over 10-12 months. If the drug is found to be safe and effective, the FDA issues an approval letter allowing the company to begin selling the drug in the United States.
 
-**Related terms:** [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Patent|Patent]]
+**Related terms:** [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent)
 
 ---
 
@@ -77,7 +77,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** When the patent on a blockbuster cholesterol-lowering drug expires, multiple generic manufacturers begin producing the same drug at one-fifth the original price. A patient who previously paid USD 200/month for the brand-name version can now get the same medication for USD 40/month.
 
-**Related terms:** [[pharma-and-healthcare#Biosimilars|Biosimilars]], [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#Patent|Patent]]
+**Related terms:** [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars), [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent)
 
 ---
 
@@ -89,7 +89,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A mid-sized Japanese pharmaceutical company in-licenses a promising cancer therapy from a small US biotech startup. The Japanese company pays USD 50 million upfront, commits to paying up to USD 500 million in development milestones, and agrees to pay 10% royalties on net sales. In return, it obtains exclusive rights to develop and commercialize the drug in Asia.
 
-**Related terms:** [[pharma-and-healthcare#Out-Licensing|Out-Licensing]], [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]], [[pharma-and-healthcare#Patent|Patent]], [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[corporate-finance-and-strategy#Royalties|Royalties]]
+**Related terms:** [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Royalties)
 
 ---
 
@@ -101,7 +101,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A pharmaceutical company holds a patent on a new diabetes drug, giving it exclusive rights to manufacture and sell the drug for 20 years. During this time, no other company can produce the same drug, allowing the patent holder to charge higher prices and recoup its research and development investment.
 
-**Related terms:** [[pharma-and-healthcare#Patent|Patent]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]], [[pharma-and-healthcare#Out-Licensing|Out-Licensing]], [[corporate-finance-and-strategy#Royalties|Royalties]]
+**Related terms:** [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Royalties)
 
 ---
 
@@ -113,7 +113,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A hospital purchases a robotic surgery system from a medical device company. The system enables surgeons to perform minimally invasive procedures with greater precision, smaller incisions, and faster patient recovery. The device costs USD 2 million, and the hospital also pays for instruments and annual maintenance contracts.
 
-**Related terms:** [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#Patent|Patent]]
+**Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent)
 
 ---
 
@@ -125,7 +125,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A Japanese pharmaceutical company develops a promising drug for a rare disease and out-licenses the commercialization rights for North America and Europe to a large US pharmaceutical company. The Japanese company receives USD 100 million upfront, potential milestone payments of USD 300 million, and a 15% royalty on net sales.
 
-**Related terms:** [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]], [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]], [[pharma-and-healthcare#Patent|Patent]], [[corporate-finance-and-strategy#Royalties|Royalties]]
+**Related terms:** [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Royalties)
 
 ---
 
@@ -137,7 +137,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A biotech company invents a new method for delivering medication through the skin using microscopic needles. It files a patent application describing the invention in detail. Once granted, the patent gives the company 20 years of exclusive rights to commercialize the technology, preventing competitors from copying it without a license.
 
-**Related terms:** [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]], [[pharma-and-healthcare#Generic Drugs|Generic Drugs]], [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]]
+**Related terms:** [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Generic Drugs](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Generic Drugs), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement)
 
 ---
 
@@ -149,7 +149,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A patient with hemophilia A receives infusions of recombinant Factor VIII, a clotting protein produced in a laboratory using recombinant DNA technology. Unlike the older approach of extracting the protein from donated blood (which carried risks of contamination), the recombinant version is produced in engineered cells, ensuring consistent quality and safety.
 
-**Related terms:** [[pharma-and-healthcare#Biosimilars|Biosimilars]], [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Patent|Patent]], [[pharma-and-healthcare#CDMO (Contract Development and Manufacturing Organization)|CDMO]]
+**Related terms:** [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars), [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [CDMO](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#CDMO (Contract Development and Manufacturing Organization))
 
 ---
 
@@ -161,7 +161,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A pharmaceutical company submits a New Drug Application to the FDA containing data from clinical trials involving 10,000 patients. FDA scientists review the safety and efficacy data over 10-12 months. If the drug is found to be safe and effective, the FDA issues an approval letter allowing the company to begin selling the drug in the United States.
 
-**Related terms:** [[pharma-and-healthcare#Clinical Trials|Clinical Trials]], [[pharma-and-healthcare#Patent|Patent]], [[pharma-and-healthcare#FDA Approval|FDA Approval]], [[pharma-and-healthcare#Biosimilars|Biosimilars]]
+**Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [FDA Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#FDA Approval), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars)
 
 ---
 
@@ -173,7 +173,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** After purchasing a commercial jet engine, an airline continues to buy replacement turbine blades, lubricants, and scheduled overhaul services from the engine manufacturer for 20-30 years -- this ongoing business is the aftermarket.
 
-**Related terms:** [[pharma-and-healthcare#Maintenance Repair and Overhaul (MRO)|Maintenance Repair and Overhaul (MRO)]], [[pharma-and-healthcare#OEM (Original Equipment Manufacturer)|OEM (Original Equipment Manufacturer)]]
+**Related terms:** [Maintenance Repair and Overhaul (MRO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Maintenance Repair and Overhaul (MRO)), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#OEM (Original Equipment Manufacturer))
 
 ---
 
@@ -185,7 +185,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A bank's compliance department monitors all customer transactions above USD 10,000, files Suspicious Activity Reports (SARs) when patterns suggest money laundering, conducts annual anti-money laundering training for all employees, and ensures the bank meets Know Your Customer (KYC) requirements for every new account opened.
 
-**Related terms:** [[pharma-and-healthcare#Regulatory Approval|Regulatory Approval]], [[insurance-and-risk#Risk Management|Risk Management]]
+**Related terms:** [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
 
 ---
 
@@ -197,7 +197,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A French construction company wins a 40-year concession to operate a 200-kilometer motorway. The company invests EUR 2 billion to build the road, then collects toll revenues from drivers for the concession period. After 40 years, the motorway reverts to the French government.
 
-**Related terms:** [[structured-finance#Project Finance|Project Finance]], [[pharma-and-healthcare#Franchise|Franchise]]
+**Related terms:** [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Franchise)
 
 ---
 
@@ -209,7 +209,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** Coca-Cola does not sell directly to every corner store. Instead, an independent bottler/distributor in a specific region buys concentrated syrup from Coca-Cola, manufactures the finished beverage, and delivers it to thousands of retail stores, restaurants, and vending machines in its territory.
 
-**Related terms:** [[pharma-and-healthcare#Supply Chain|Supply Chain]], [[pharma-and-healthcare#Resellers|Resellers]], [[pharma-and-healthcare#Logistics|Logistics]]
+**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Resellers), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Logistics)
 
 ---
 
@@ -221,7 +221,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A delivery company with 500 vans uses a fleet management platform to track each vehicle's location in real time, optimize delivery routes to reduce fuel consumption, schedule preventive maintenance based on mileage data, and monitor driver behavior to reduce accidents and insurance costs.
 
-**Related terms:** [[banking-and-lending#Leasing|Leasing]], [[pharma-and-healthcare#Logistics|Logistics]]
+**Related terms:** [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Logistics)
 
 ---
 
@@ -233,7 +233,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** An entrepreneur pays McDonald's a franchise fee of USD 45,000 and agrees to pay 4% of monthly sales as royalties. In return, the franchisee receives the right to operate a McDonald's restaurant, access to the brand and marketing materials, training programs, supply chain support, and ongoing operational guidance.
 
-**Related terms:** [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]], [[corporate-finance-and-strategy#Royalties|Royalties]], [[pharma-and-healthcare#Concessions|Concessions]]
+**Related terms:** [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Royalties), [Concessions](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Concessions)
 
 ---
 
@@ -245,7 +245,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A technology company acquires a cloud software startup for USD 2 billion. The startup's identifiable net assets (servers, software, receivables less liabilities) are worth USD 500 million. The remaining USD 1.5 billion paid above fair value is recorded as goodwill, representing the startup's brand, customer base, and engineering talent.
 
-**Related terms:** [[corporate-finance-and-strategy#Mergers and Acquisitions (M&A)|Mergers and Acquisitions (M&A)]], [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]]
+**Related terms:** [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property)
 
 ---
 
@@ -257,7 +257,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** Ferrari licenses its brand name to a luxury watchmaker, allowing the watchmaker to produce and sell "Ferrari" branded watches. Ferrari receives a royalty on each watch sold without bearing any manufacturing or distribution costs, while the watchmaker benefits from Ferrari's prestigious brand recognition.
 
-**Related terms:** [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]], [[pharma-and-healthcare#Franchise|Franchise]], [[pharma-and-healthcare#In-Licensing Agreement|In-Licensing Agreement]], [[pharma-and-healthcare#Patent|Patent]]
+**Related terms:** [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Franchise), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent)
 
 ---
 
@@ -269,7 +269,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** An online retailer uses a logistics company to store products in warehouses near major cities. When a customer places an order, the logistics system automatically selects the nearest warehouse, picks and packs the item, and arranges delivery via the fastest and most cost-effective route, achieving same-day or next-day delivery.
 
-**Related terms:** [[pharma-and-healthcare#Supply Chain|Supply Chain]], [[pharma-and-healthcare#Fleet Management|Fleet Management]], [[pharma-and-healthcare#Procurement|Procurement]]
+**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Fleet Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Fleet Management), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Procurement)
 
 ---
 
@@ -281,7 +281,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** After a commercial jet engine accumulates 20,000 flight hours, the airline sends it to the manufacturer's MRO facility for a scheduled overhaul. Technicians disassemble the engine, inspect every component, replace worn parts, reassemble and test it, and return it to service -- a process that takes about two months and costs several million dollars.
 
-**Related terms:** [[pharma-and-healthcare#Aftermarket|Aftermarket]], [[pharma-and-healthcare#OEM (Original Equipment Manufacturer)|OEM (Original Equipment Manufacturer)]]
+**Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Aftermarket), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#OEM (Original Equipment Manufacturer))
 
 ---
 
@@ -293,7 +293,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** BASF produces paint and coatings that car manufacturers like BMW use to paint their vehicles on the assembly line. BASF is the OEM coatings supplier, and its paint becomes part of the finished BMW vehicle. When the car later needs repainting after an accident, BMW-authorized body shops use BASF's refinish coatings.
 
-**Related terms:** [[pharma-and-healthcare#Aftermarket|Aftermarket]], [[pharma-and-healthcare#Supply Chain|Supply Chain]], [[pharma-and-healthcare#Procurement|Procurement]]
+**Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Aftermarket), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Procurement)
 
 ---
 
@@ -305,7 +305,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** An airline signs an operating lease for 10 Airbus A320s with a 7-year term. At the end of the lease, the airline returns the aircraft to the lessor without any purchase obligation. This lets the airline update its fleet without the capital burden of ownership or the risk of holding aging aircraft on its balance sheet.
 
-**Related terms:** [[banking-and-lending#Leasing|Leasing]], [[pharma-and-healthcare#Fleet Management|Fleet Management]]
+**Related terms:** [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Fleet Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Fleet Management)
 
 ---
 
@@ -317,7 +317,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** An investor purchases 10 ounces of gold at USD 2,000 per ounce as a hedge against inflation and currency depreciation. The gold is stored in a secure vault. Two years later, with gold at USD 2,400 per ounce, the investor sells for a USD 4,000 gain.
 
-**Related terms:** [[energy-and-commodities#Commodity Trading|Commodity Trading]], [[energy-and-commodities#Open-Pit Mining|Open-Pit Mining]]
+**Related terms:** [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Open-Pit Mining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Open-Pit Mining)
 
 ---
 
@@ -329,7 +329,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A hospital uses a procurement platform to source medical supplies. The system sends requests for proposals to approved suppliers, compares bids on price, quality, and delivery time, and automatically generates purchase orders for the winning suppliers. The platform tracks deliveries, manages inventory levels, and processes payments.
 
-**Related terms:** [[pharma-and-healthcare#Supply Chain|Supply Chain]], [[pharma-and-healthcare#Logistics|Logistics]]
+**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Logistics)
 
 ---
 
@@ -341,7 +341,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A technology reseller purchases 500 Dell servers and combines them with networking equipment, storage systems, and management software to create a complete data center solution for a hospital. The reseller installs the equipment, migrates the hospital's data, and provides ongoing technical support.
 
-**Related terms:** [[pharma-and-healthcare#Distributors|Distributors]], [[pharma-and-healthcare#OEM (Original Equipment Manufacturer)|OEM (Original Equipment Manufacturer)]], [[pharma-and-healthcare#Supply Chain|Supply Chain]]
+**Related terms:** [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Distributors), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#OEM (Original Equipment Manufacturer)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain)
 
 ---
 
@@ -353,7 +353,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A fashion house licenses its brand name to a fragrance company that produces and sells perfumes bearing the fashion brand. The fashion house receives a 10% royalty on all perfume sales, earning EUR 50 million annually without any involvement in manufacturing or distribution.
 
-**Related terms:** [[pharma-and-healthcare#Licensing|Licensing]], [[pharma-and-healthcare#Intellectual Property|Intellectual Property (IP)]], [[pharma-and-healthcare#Franchise|Franchise]], [[pharma-and-healthcare#Patent|Patent]]
+**Related terms:** [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Licensing), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Franchise), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent)
 
 ---
 
@@ -365,4 +365,4 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 **Real-world example:** A smartphone manufacturer's supply chain spans dozens of countries: rare earth minerals mined in Africa, semiconductors fabricated in Taiwan, screens manufactured in South Korea, final assembly in China, and distribution to retail stores worldwide. Supply chain management software coordinates all these activities, tracking every component from mine to consumer.
 
-**Related terms:** [[pharma-and-healthcare#Logistics|Logistics]], [[pharma-and-healthcare#Procurement|Procurement]], [[pharma-and-healthcare#OEM (Original Equipment Manufacturer)|OEM (Original Equipment Manufacturer)]], [[structured-finance#Trade Finance|Trade Finance]]
+**Related terms:** [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Logistics), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Procurement), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#OEM (Original Equipment Manufacturer)), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance)

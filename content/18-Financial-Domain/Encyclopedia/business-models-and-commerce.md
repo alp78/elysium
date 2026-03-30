@@ -31,7 +31,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A beverage distributor uses AB InBev's BEES platform to place bulk orders for cases of beer to stock in retail stores. The entire transaction — browsing the catalog, placing the order, paying the invoice — happens digitally between two businesses.
 
-**Related terms:** [[business-models-and-commerce#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[business-models-and-commerce#E-Commerce|E-Commerce]], [[business-models-and-commerce#Platform Business Model|Platform Business Model]], [[banking-and-lending#Wholesale Banking|Wholesale Banking]]
+**Related terms:** [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Consumer (B2C)), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking)
 
 ---
 
@@ -43,7 +43,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** When you buy a shirt from the UNIQLO website and have it delivered to your home, that is a B2C transaction — the retailer is selling directly to you, the individual consumer.
 
-**Related terms:** [[business-models-and-commerce#Business-to-Business (B2B)|Business-to-Business (B2B)]], [[business-models-and-commerce#E-Commerce|E-Commerce]], [[business-models-and-commerce#Omnichannel|Omnichannel]], [[business-models-and-commerce#Subscription Model|Subscription Model]]
+**Related terms:** [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Business (B2B)), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Omnichannel](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Omnichannel), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model)
 
 ---
 
@@ -55,7 +55,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A consumer in Germany uses Amazon's website to browse thousands of products from sellers around the world, compares prices and reviews, purchases a kitchen appliance with one-click checkout, and receives it at home within two days through Amazon's logistics network.
 
-**Related terms:** [[business-models-and-commerce#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[business-models-and-commerce#Business-to-Business (B2B)|Business-to-Business (B2B)]], [[business-models-and-commerce#Omnichannel|Omnichannel]], [[technology-and-digital#Digital Transformation|Digital Transformation]], [[business-models-and-commerce#Platform Business Model|Platform Business Model]], [[business-models-and-commerce#Marketplace|Marketplace]]
+**Related terms:** [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Consumer (B2C)), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Business (B2B)), [Omnichannel](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Omnichannel), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [Marketplace](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Marketplace)
 
 ---
 
@@ -67,7 +67,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** An entrepreneur pays McDonald's a franchise fee of USD 45,000 and agrees to pay 4% of monthly sales as royalties. In return, the franchisee receives the right to operate a McDonald's restaurant, access to the brand and marketing materials, training programs, supply chain support, and ongoing operational guidance.
 
-**Related terms:** [[compliance-and-risk-management#Licensing|Licensing]], [[compliance-and-risk-management#Royalties|Royalties]], [[real-estate-and-industrial#Concessions|Concessions]], [[business-models-and-commerce#Licensing|Licensing]]
+**Related terms:** [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Royalties), [Concessions](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Concessions), [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Licensing)
 
 ---
 
@@ -79,7 +79,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A software company licenses its data analytics platform to 500 enterprise customers under annual subscription agreements. Each customer pays a license fee for the right to use the software, and the licensor earns recurring revenue without shipping physical goods or engaging in manufacturing.
 
-**Related terms:** [[compliance-and-risk-management#Licensing|Licensing]], [[compliance-and-risk-management#Intellectual Property (IP)|Intellectual Property (IP)]], [[compliance-and-risk-management#Royalties|Royalties]], [[business-models-and-commerce#Franchise|Franchise]], [[business-models-and-commerce#Subscription Model|Subscription Model]]
+**Related terms:** [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Intellectual Property (IP)), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Royalties), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model)
 
 ---
 
@@ -91,7 +91,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A mid-sized law firm outsources its entire IT infrastructure to a managed services provider. The provider monitors the firm's servers 24/7, manages cybersecurity defenses, handles helpdesk calls from staff, performs software updates, and ensures backup and disaster recovery — all for a fixed monthly fee of USD 20,000.
 
-**Related terms:** [[business-models-and-commerce#Subscription Model|Subscription Model]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[business-models-and-commerce#White-Label Services|White-Label Services]], [[technology-and-digital#Cloud Computing|Cloud Computing]]
+**Related terms:** [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [White-Label Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#White-Label Services), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing)
 
 ---
 
@@ -103,7 +103,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A small artisan furniture maker lists products on an online marketplace platform. The platform handles discovery, payment processing, and customer service infrastructure, charging the artisan a 12% commission on each sale. The artisan gains access to millions of potential buyers without building its own website or marketing operation.
 
-**Related terms:** [[business-models-and-commerce#Platform Business Model|Platform Business Model]], [[business-models-and-commerce#E-Commerce|E-Commerce]], [[business-models-and-commerce#Business-to-Business (B2B)|Business-to-Business (B2B)]], [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]]
+**Related terms:** [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Business (B2B)), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures))
 
 ---
 
@@ -115,7 +115,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A family pays USD 65 per year for a Costco membership. In exchange, they can buy groceries, electronics, clothing, and gasoline at Costco's deeply discounted prices. Costco sells memberships to millions of households, generating billions in recurring membership fee revenue that is almost pure profit, allowing it to price merchandise near cost.
 
-**Related terms:** [[business-models-and-commerce#Subscription Model|Subscription Model]], [[business-models-and-commerce#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[business-models-and-commerce#Omnichannel|Omnichannel]]
+**Related terms:** [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model), [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Consumer (B2C)), [Omnichannel](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Omnichannel)
 
 ---
 
@@ -127,7 +127,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A customer sees a pair of shoes on a fashion brand's Instagram page, clicks through to the brand's website to check availability, reserves the shoes for in-store pickup, tries them on at the local store, and then receives a follow-up email with styling suggestions based on the purchase. All of these interactions are connected through the brand's omnichannel platform.
 
-**Related terms:** [[business-models-and-commerce#E-Commerce|E-Commerce]], [[business-models-and-commerce#Business-to-Consumer (B2C)|Business-to-Consumer (B2C)]], [[technology-and-digital#Digital Transformation|Digital Transformation]], [[payments-and-settlement#Payments Processing|Payments Processing]]
+**Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Consumer (B2C)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
 
 ---
 
@@ -139,7 +139,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A consumer orders lunch through a food delivery app at 12:15 PM. The platform immediately matches the order with a nearby restaurant and assigns a courier through its algorithm. The food is picked up and delivered to the consumer's office by 12:45 PM. The platform charges the consumer a delivery fee and takes a commission from the restaurant.
 
-**Related terms:** [[business-models-and-commerce#Platform Business Model|Platform Business Model]], [[business-models-and-commerce#Marketplace|Marketplace]], [[real-estate-and-industrial#Logistics|Logistics]], [[business-models-and-commerce#E-Commerce|E-Commerce]]
+**Related terms:** [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [Marketplace](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Marketplace), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce)
 
 ---
 
@@ -151,7 +151,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** Uber does not own vehicles but operates a platform that connects riders (consumers) with drivers (producers). The platform handles matching, pricing, payments, and quality assurance. Uber takes a commission on each ride, and as more drivers join, wait times decrease for riders, attracting more riders, which in turn attracts more drivers — a virtuous cycle.
 
-**Related terms:** [[business-models-and-commerce#E-Commerce|E-Commerce]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[business-models-and-commerce#Marketplace|Marketplace]], [[technology-and-digital#Fintech|Fintech]], [[business-models-and-commerce#Subscription Model|Subscription Model]]
+**Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Marketplace](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Marketplace), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model)
 
 ---
 
@@ -163,7 +163,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A software company transitions from selling one-time licenses for USD 500 to offering monthly subscriptions at USD 25/month. While initial revenue per customer decreases, the company builds a stable base of recurring revenue, improves customer retention (since users can always access the latest version), and increases lifetime customer value.
 
-**Related terms:** [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]], [[business-models-and-commerce#Platform Business Model|Platform Business Model]], [[business-models-and-commerce#E-Commerce|E-Commerce]], [[business-models-and-commerce#Membership Warehouse|Membership Warehouse]]
+**Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Membership Warehouse](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Membership Warehouse)
 
 ---
 
@@ -175,4 +175,4 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 **Real-world example:** A supermarket chain offers its customers a "store-brand" credit card with the supermarket's logo. The card is actually issued and managed entirely by a major bank, which provides the credit scoring, fraud management, payment processing, and customer service infrastructure. The supermarket earns commission on transactions, and the bank acquires card customers under the supermarket's brand.
 
-**Related terms:** [[business-models-and-commerce#Licensing|Licensing]], [[business-models-and-commerce#Managed Services|Managed Services]], [[payments-and-settlement#Issuing (Payments)|Issuing (Payments)]], [[technology-and-digital#SaaS (Software as a Service)|SaaS (Software as a Service)]]
+**Related terms:** [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Licensing), [Managed Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Managed Services), [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing (Payments)), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service))

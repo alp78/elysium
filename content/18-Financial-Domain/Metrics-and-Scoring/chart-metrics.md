@@ -7,10 +7,10 @@ aliases: [Chart Metrics, Dashboard Charts, Time Series Charts]
 keywords: [chart metrics, synthetic portfolio return, rolling return, drawdown, peak to trough, volatility, Sharpe ratio, risk-adjusted return, annualized volatility, bear market, correction]
 description: "Five synchronized time-series charts in the financial data platform dashboard: portfolio return, rolling 30d return, drawdown from peak, annualized volatility, and rolling Sharpe ratio."
 related:
-  - "[[index-snapshot-metrics]]"
-  - "[[risk-and-volatility-metrics]]"
-  - "[[scoring-methodology]]"
-  - "[[data-sources-and-refresh]]"
+  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
+  - "[risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics)"
+  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
+  - "[data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -92,11 +92,11 @@ $$\text{Sharpe}_{30d} = \frac{\text{Rolling30dReturn}}{\text{Rolling30dVolatilit
 | < 0 | Losing money |
 
 > [!info] Cross-Reference
-> For additional risk metrics beyond what the dashboard charts display, see [[risk-and-volatility-metrics]] (Sortino ratio, Calmar ratio, VaR).
+> For additional risk metrics beyond what the dashboard charts display, see [risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics) (Sortino ratio, Calmar ratio, VaR).
 
 ## Related
 
-- [[index-snapshot-metrics]] for the snapshot panel that accompanies these charts
-- [[risk-and-volatility-metrics]] for extended risk measures
-- [[scoring-methodology]] for the mathematical foundations
-- [[data-sources-and-refresh]] for price data sourcing
+- [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) for the snapshot panel that accompanies these charts
+- [risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics) for extended risk measures
+- [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for the mathematical foundations
+- [data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh) for price data sourcing

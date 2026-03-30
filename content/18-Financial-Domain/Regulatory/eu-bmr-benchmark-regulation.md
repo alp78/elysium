@@ -17,12 +17,12 @@ updated: 2026-03-23
 
 - All input data must be **traceable to its source** (vendor file, API call, manual entry)
 - Input data must be **verifiable and auditable** — keep the raw files
-- Procedures for dealing with **errors in input data** must be documented — the [[compliance-and-auditability]] framework provides the audit trail implementation that satisfies this requirement
+- Procedures for dealing with **errors in input data** must be documented — the [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) framework provides the audit trail implementation that satisfies this requirement
 - Internal review at least **annually**
 
 #### What this means for the pipeline
 - Bronze layer in GCS must be immutable (never overwrite raw files)
-- Every pipeline run records source file path and SHA-256 hash in [[pit-integrity-logic|lineage metadata]]
+- Every pipeline run records source file path and SHA-256 hash in [lineage metadata](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic)
 - Quality gates at each medallion layer catch errors before publication
 
 ### Methodology Documentation (Article 12)
@@ -32,7 +32,7 @@ updated: 2026-03-23
 - The methodology document must include: calculation formula, data sources, weighting scheme, rebalancing rules, corporate action treatment
 
 #### What this means for the pipeline
-- Methodology parameters stored as version-controlled YAML (see [[dataops-for-indices|methodology-as-code]])
+- Methodology parameters stored as version-controlled YAML (see [methodology-as-code](https://alp78.github.io/elysium/15-DataOps/dataops-for-indices))
 - Every calculation uses the methodology version that was active on that date
 - Changes tracked via Git history and ADRs
 
@@ -57,7 +57,7 @@ updated: 2026-03-23
 ### Restatement and Cessation (Article 13-14)
 
 - If a published benchmark value is materially incorrect: **restate and notify** — this is a formal Article 13 event requiring a documented correction process
-- Document the error, correction, and notification in the audit trail; [[audit-logging]] in SQL Server provides the evidence chain
+- Document the error, correction, and notification in the audit trail; [audit-logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) in SQL Server provides the evidence chain
 - See [[data-restatement-procedure]] for the operational runbook
 - If cessation is planned: 6-month notice to users
 
@@ -75,15 +75,15 @@ updated: 2026-03-23
 
 ## ISS & STOXX Glossary
 
-- [[regulatory#Benchmark Regulation (EU BMR)|Benchmark Regulation (EU BMR)]] — formal definition and scope
-- [[regulatory#Benchmark Administrator|Benchmark Administrator]] — administrator obligations
-- [[regulatory#Climate Transition Benchmark (CTB)|CTB]] and [[regulatory#PAB (Paris-Aligned Benchmark)|PAB]] — climate benchmark definitions
-- [[index-construction|Index Construction Glossary]] — methodology terms referenced in BMR compliance
+- [Benchmark Regulation (EU BMR)](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark Regulation (EU BMR)) — formal definition and scope
+- [Benchmark Administrator](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark Administrator) — administrator obligations
+- [CTB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Climate Transition Benchmark (CTB)) and [PAB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAB (Paris-Aligned Benchmark)) — climate benchmark definitions
+- [Index Construction Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) — methodology terms referenced in BMR compliance
 
 ## Related
 
-- [[compliance-and-auditability]] — Implementation details for lineage and audit
-- [[pit-integrity-logic]] — Point-in-time data integrity and weight validation
+- [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) — Implementation details for lineage and audit
+- [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic) — Point-in-time data integrity and weight validation
 - [[data-restatement-procedure]] — Restatement runbook
-- [[sfdr-data-requirements]] — SFDR data pipeline requirements
-- [[iosco-benchmark-principles]] — International benchmark standards
+- [sfdr-data-requirements](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/sfdr-data-requirements) — SFDR data pipeline requirements
+- [iosco-benchmark-principles](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/iosco-benchmark-principles) — International benchmark standards

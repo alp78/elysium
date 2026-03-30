@@ -30,7 +30,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** When an investor in Hong Kong buys 1,000 shares of a company listed on the Hong Kong Stock Exchange, the Hong Kong Securities Clearing Company (a subsidiary of HKEX) steps in as the central counterparty, guaranteeing that the buyer receives the shares and the seller receives the payment.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Settlement|Settlement]], [[exchanges-and-market-infrastructure#Securities Clearing|Securities Clearing]], [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]], [[exchanges-and-market-infrastructure#Custodian Services|Custodian Services]], [[payments-and-settlement#Settlement|Settlement]]
+**Related terms:** [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Settlement), [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Securities Clearing), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement)
 
 ---
 
@@ -42,7 +42,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A large pension fund holds USD 50 billion in global equities. A custodian bank safekeeps all these securities, processes dividend payments into the fund's account, provides daily portfolio valuations, handles corporate action notifications (such as stock splits), and generates year-end tax reporting.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Securities Clearing|Securities Clearing]], [[exchanges-and-market-infrastructure#Settlement|Settlement]], [[investment-management#Fiduciary|Fiduciary]], [[exchanges-and-market-infrastructure#Stock Transfer Agency|Stock Transfer Agency]]
+**Related terms:** [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Securities Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Settlement), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary), [Stock Transfer Agency](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Stock Transfer Agency)
 
 ---
 
@@ -54,7 +54,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A South African mining company lists its shares on both the Johannesburg Stock Exchange (its primary market) and the London Stock Exchange. This dual listing allows European institutional investors to buy and sell the shares during London trading hours in British pounds, while South African investors continue to trade in rand during Johannesburg hours, broadening the company's shareholder base and daily liquidity.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Listing|Listing]], [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]], [[capital-markets-and-trading#Capital Markets|Capital Markets]], [[capital-markets-and-trading#Initial Public Offering (IPO)|Initial Public Offering (IPO)]]
+**Related terms:** [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Listing), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO))
 
 ---
 
@@ -66,7 +66,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A retail investor in Hong Kong places an order to buy 500 shares of Tencent through a brokerage app. The order is routed to the Hong Kong Stock Exchange, where it is matched with a sell order at the best available price. The trade is executed electronically in milliseconds, and the details are sent to the clearing house for settlement.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Clearing|Clearing]], [[exchanges-and-market-infrastructure#Settlement|Settlement]], [[exchanges-and-market-infrastructure#Listing|Listing]], [[exchanges-and-market-infrastructure#Market-Making|Market-Making]], [[capital-markets-and-trading#Derivatives|Derivatives]], [[capital-markets-and-trading#Securities|Securities]]
+**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Settlement), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Listing), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Market-Making), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities)
 
 ---
 
@@ -78,7 +78,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A fast-growing technology company in Shenzhen applies to list its shares on the Hong Kong Stock Exchange. After meeting the exchange's requirements for financial reporting, corporate governance, and minimum market capitalization, the company is admitted to trading. Its shares are now available to investors worldwide through the exchange.
 
-**Related terms:** [[capital-markets-and-trading#Initial Public Offering (IPO)|Initial Public Offering (IPO)]], [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]], [[exchanges-and-market-infrastructure#Dual-Listed|Dual-Listed]], [[capital-markets-and-trading#Capital Raising|Capital Raising]]
+**Related terms:** [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO)), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Dual-Listed](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Dual-Listed), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising)
 
 ---
 
@@ -90,7 +90,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A market maker in Apple shares continuously displays a bid of USD 189.95 and an ask of USD 190.05 on the stock exchange. When a seller wants to sell shares, the market maker buys at USD 189.95. When a buyer wants to buy, the market maker sells at USD 190.05. The USD 0.10 spread on each share, multiplied by thousands of daily transactions, generates the market maker's profit.
 
-**Related terms:** [[capital-markets-and-trading#Securities|Securities]], [[capital-markets-and-trading#Equities|Equities]], [[capital-markets-and-trading#Derivatives|Derivatives]], [[exchanges-and-market-infrastructure#Prime Brokerage|Prime Brokerage]], [[capital-markets-and-trading#Capital Markets|Capital Markets]]
+**Related terms:** [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Prime Brokerage), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
 
 ---
 
@@ -102,7 +102,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A hedge fund uses Morgan Stanley as its prime broker. Morgan Stanley lends the fund shares of a company to facilitate short selling, provides margin financing for leveraged positions, holds the fund's portfolio in custody, and generates daily risk reports showing the fund's exposure to various market factors.
 
-**Related terms:** [[investment-management#Hedge Funds|Hedge Funds]], [[exchanges-and-market-infrastructure#Market-Making|Market-Making]], [[capital-markets-and-trading#Securities|Securities]], [[investment-management#Brokerage|Brokerage]], [[exchanges-and-market-infrastructure#Custodian Services|Custodian Services]]
+**Related terms:** [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge Funds), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Market-Making), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Brokerage), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services)
 
 ---
 
@@ -114,7 +114,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** At the end of a trading day, a clearinghouse nets all buy and sell orders across thousands of traders for a given stock. Instead of processing every individual trade separately, netting reduces the total number of settlements required. A broker who bought 10,000 shares and sold 8,000 shares of the same stock on the same day only needs to settle for the net 2,000 shares, reducing systemic risk and operational cost.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Clearing|Clearing]], [[exchanges-and-market-infrastructure#Settlement|Settlement]], [[exchanges-and-market-infrastructure#Custodian Services|Custodian Services]], [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]]
+**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Settlement), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures))
 
 ---
 
@@ -126,7 +126,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** An investor buys 1,000 shares of Toyota on the Tokyo Stock Exchange on Monday. Under T+2 settlement, the actual transfer of shares to the investor's account and the debit of cash from the investor's account occurs on Wednesday. During this two-day window, the clearinghouse ensures both parties fulfill their obligations.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Clearing|Clearing]], [[exchanges-and-market-infrastructure#Securities Clearing|Securities Clearing]], [[exchanges-and-market-infrastructure#Custodian Services|Custodian Services]], [[payments-and-settlement#Authorization|Authorization]]
+**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Clearing), [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Securities Clearing), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization)
 
 ---
 
@@ -138,7 +138,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** A European institutional investor wants to buy shares of a leading Chinese consumer company listed on the Shanghai Stock Exchange. Rather than setting up a QFII account (the traditional complex route), the investor buys the shares through Hong Kong's Stock Connect program via their existing Hong Kong broker, with settlement handled through HKEX's clearing infrastructure.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]], [[exchanges-and-market-infrastructure#Clearing|Clearing]], [[exchanges-and-market-infrastructure#Listing|Listing]], [[capital-markets-and-trading#Capital Markets|Capital Markets]]
+**Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Clearing), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Listing), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
 
 ---
 
@@ -150,4 +150,4 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 **Real-world example:** When a publicly listed company declares a USD 0.50 per share dividend, the stock transfer agent calculates the total payment due to each registered shareholder as of the record date, processes the distribution of funds to millions of individual accounts, issues tax documentation, and maintains updated shareholder records reflecting any share purchases or sales that have occurred.
 
-**Related terms:** [[exchanges-and-market-infrastructure#Custodian Services|Custodian Services]], [[exchanges-and-market-infrastructure#Securities Clearing|Securities Clearing]], [[investment-management#Fiduciary|Fiduciary]], [[exchanges-and-market-infrastructure#Exchange (Stock/Futures)|Exchange (Stock/Futures)]]
+**Related terms:** [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services), [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Securities Clearing), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures))

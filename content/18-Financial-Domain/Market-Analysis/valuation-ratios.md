@@ -7,12 +7,12 @@ aliases: [Valuation Ratios, valuation metrics, PEG ratio, CAPE, Shiller PE, EV/S
 keywords: [valuation ratios, PEG ratio, CAPE, Shiller P/E, EV/Sales, free cash flow yield, FCF yield, earnings yield, price-to-earnings, P/E, price-to-book, EV/EBITDA, forward PE, trailing PE, dividend yield, valuation multiples, undervalued, overvalued]
 description: "Standard equity valuation ratios beyond P/E and P/B — PEG ratio, CAPE/Shiller P/E, EV/Sales, free cash flow yield, and earnings yield with formulas, thresholds, and interpretation guidance."
 related:
-  - "[[index-snapshot-metrics]]"
-  - "[[daily-signal-scores]]"
-  - "[[quarterly-signal-scores]]"
-  - "[[technical-indicators]]"
-  - "[[risk-and-volatility-metrics]]"
-  - "[[scoring-methodology]]"
+  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
+  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
+  - "[risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics)"
+  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +20,7 @@ status: complete
 
 # Valuation Ratios
 
-Standard equity valuation ratios used in index analysis and stock screening, beyond the basic P/E and P/B ratios tracked in [[index-snapshot-metrics]]. These metrics help determine whether individual stocks or entire indices are trading at fair value relative to earnings, growth, sales, and cash generation.
+Standard equity valuation ratios used in index analysis and stock screening, beyond the basic P/E and P/B ratios tracked in [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics). These metrics help determine whether individual stocks or entire indices are trading at fair value relative to earnings, growth, sales, and cash generation.
 
 ## Core Valuation Ratios
 
@@ -77,7 +77,7 @@ $$\text{EV/Sales} = \frac{\text{Market Cap} + \text{Debt} - \text{Cash}}{\text{A
 
 ## Free Cash Flow Yield
 
-Measures the cash return a company generates relative to its market capitalization. More reliable than earnings yield because [[quarterly-signal-scores|free cash flow]] is harder to manipulate than accounting earnings.
+Measures the cash return a company generates relative to its market capitalization. More reliable than earnings yield because [free cash flow](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) is harder to manipulate than accounting earnings.
 
 $$\text{FCF Yield} = \frac{\text{Free Cash Flow}}{\text{Market Cap}} \times 100$$
 
@@ -87,7 +87,7 @@ $$\text{FCF Yield} = \frac{\text{Free Cash Flow}}{\text{Market Cap}} \times 100$
 | 5–8% | Attractive |
 | 2–5% | Average |
 | < 2% | Growth company or low cash generation |
-| Negative | Burning cash — check [[quarterly-signal-scores|health warnings]] |
+| Negative | Burning cash — check [health warnings](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) |
 
 ## Earnings Yield
 
@@ -100,7 +100,7 @@ $$\text{Earnings Yield} = \frac{\text{EPS}}{\text{Price}} = \frac{1}{\text{P/E}}
 
 ## Dashboard Valuation Metrics
 
-The [[index-snapshot-metrics|dashboard]] tracks these cap-weighted index-level valuation metrics daily:
+The [dashboard](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) tracks these cap-weighted index-level valuation metrics daily:
 
 | Metric | Source | Thresholds |
 |--------|--------|------------|
@@ -108,12 +108,12 @@ The [[index-snapshot-metrics|dashboard]] tracks these cap-weighted index-level v
 | **P/B** | yfinance `priceToBook` | < 1.5 value · > 3 growth premium |
 | **Dividend Yield** | yfinance `dividendYield` | > 3% attractive for income |
 
-The [[daily-signal-scores|Relative Value Score]] uses inverted z-scores of Forward P/E, Price/Book, EV/EBITDA, and Dividend Yield to rank constituents by relative cheapness within their index.
+The [Relative Value Score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) uses inverted z-scores of Forward P/E, Price/Book, EV/EBITDA, and Dividend Yield to rank constituents by relative cheapness within their index.
 
 ## Related
 
-- [[index-snapshot-metrics]] — Dashboard-level P/E, P/B, dividend yield
-- [[daily-signal-scores]] — Relative value composite score using valuation z-scores
-- [[quarterly-signal-scores]] — Quality/moat score using fundamental ratios
-- [[technical-indicators]] — Price-based momentum and trend indicators
-- [[scoring-methodology]] — Z-score calculation methodology
+- [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) — Dashboard-level P/E, P/B, dividend yield
+- [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) — Relative value composite score using valuation z-scores
+- [quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) — Quality/moat score using fundamental ratios
+- [technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators) — Price-based momentum and trend indicators
+- [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) — Z-score calculation methodology

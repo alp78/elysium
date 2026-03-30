@@ -7,10 +7,10 @@ aliases: [Quarterly Signals, Quality Score, Moat Score, Health Warnings, Governa
 keywords: [quarterly signals, quality score, moat score, gross margin, ROE, operating margin, leverage, debt-to-equity, FCF yield, free cash flow, health warnings, liquidity flag, leverage flag, cash burn, revenue decline, governance risk, audit risk, board risk, compensation risk, shareholder rights, ISS]
 description: "Quarterly earnings-based scores in the financial data platform dashboard: quality/moat score, binary health warning flags, and ISS-style governance risk score with component breakdowns."
 related:
-  - "[[daily-signal-scores]]"
-  - "[[scoring-methodology]]"
-  - "[[factor-profile-and-composition]]"
-  - "[[data-sources-and-refresh]]"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
+  - "[factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition)"
+  - "[data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +18,7 @@ status: complete
 
 # Quarterly Signal Scores
 
-Quarterly signal scores are updated with earnings reports and use the most recent quarterly financial data from yfinance. Unlike [[daily-signal-scores]], these scores change infrequently and reflect fundamental business health rather than market sentiment.
+Quarterly signal scores are updated with earnings reports and use the most recent quarterly financial data from yfinance. Unlike [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores), these scores change infrequently and reflect fundamental business health rather than market sentiment.
 
 ## Quality / Moat Score
 
@@ -63,7 +63,7 @@ Health warnings are binary flags derived from quarterly balance sheet data. Stoc
 | 3+ | Critical |
 
 > [!warning] Critical Signal
-> Low quality score + many health flags = strong caution signal. Critical-level stocks may face dividend cuts, credit downgrades, or restructuring. Cross-reference with [[daily-signal-scores]] divergence alerts.
+> Low quality score + many health flags = strong caution signal. Critical-level stocks may face dividend cuts, credit downgrades, or restructuring. Cross-reference with [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) divergence alerts.
 
 ## Governance Risk Score
 
@@ -85,11 +85,11 @@ $$\text{GovernanceScore} = 10 - \text{mean}(\text{AuditRisk}, \text{BoardRisk}, 
 **Scale**: 0 (worst governance) – 10 (best governance). Scores below 5 warrant attention.
 
 > [!info] ESG Connection
-> Governance risk is one pillar of ESG evaluation. For broader ESG data integration including environmental and social scores, see  and [[esg-and-sustainability]].
+> Governance risk is one pillar of ESG evaluation. For broader ESG data integration including environmental and social scores, see  and [esg-and-sustainability](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability).
 
 ## Related
 
-- [[daily-signal-scores]] for market-driven daily scores
-- [[scoring-methodology]] for the z-score and ranking mathematics
-- [[factor-profile-and-composition]] for how quarterly scores feed the radar chart
-- [[data-sources-and-refresh]] for quarterly data refresh timing
+- [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) for market-driven daily scores
+- [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for the z-score and ranking mathematics
+- [factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition) for how quarterly scores feed the radar chart
+- [data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh) for quarterly data refresh timing

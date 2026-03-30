@@ -370,7 +370,7 @@ If a backtesting system uses the "corrected" composition, it assumes traders had
 
 **SCD Type 2: The foundation of PIT queries**
 
-PIT queries require [[migration-idempotency-backfills|SCD Type 2]] (Slowly Changing Dimension) tables that track *when* each fact was known, not just what it was. The [[silver-transforms]] layer implements SCD Type 2 for constituent tracking, and [[dbt-snapshots-and-scd]] automates snapshot generation for dimension history:
+PIT queries require [SCD Type 2](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) (Slowly Changing Dimension) tables that track *when* each fact was known, not just what it was. The [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) layer implements SCD Type 2 for constituent tracking, and [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) automates snapshot generation for dimension history:
 
 ```sql
 -- silver.index_constituents — SCD Type 2 design
@@ -493,7 +493,7 @@ pit_data = pit_join(
 ```
 
 > [!warning] EU BMR Compliance Requirement
-> [[eu-bmr-benchmark-regulation|EU BMR]] Article 11 requires benchmark administrators to maintain "adequate records" of all input data and calculations. A regulatory auditor may ask: "Reconstruct the index value for March 5, 2024, using only the data available on that date." If your tables only store the latest version, you cannot answer this question — and that is a compliance violation.
+> [EU BMR](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) Article 11 requires benchmark administrators to maintain "adequate records" of all input data and calculations. A regulatory auditor may ask: "Reconstruct the index value for March 5, 2024, using only the data available on that date." If your tables only store the latest version, you cannot answer this question — and that is a compliance violation.
 
 ## ESG and Sustainability Data: Integrating Unstructured Data into Financial Warehouses
 
@@ -559,7 +559,7 @@ CREATE TABLE silver.esg_controversies (
 );
 ```
 
-#### Ingesting ESG data from unstructured sources (using [[ai-augmented-data-engineering|LLM pipelines]])
+#### Ingesting ESG data from unstructured sources (using [LLM pipelines](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering))
 
 ```python
 from anthropic import Anthropic
@@ -659,19 +659,19 @@ ORDER BY esg_tilted_weight DESC;
 
 For formal definitions of the index construction terms discussed above, see the [[ISS-STOXX/_index|ISS & STOXX Glossary]]:
 
-- [[index-construction#Divisor|Divisor]] and [[index-construction#Divisor Adjustment|Divisor Adjustment]] — formal definition and formula
-- [[index-construction#Free-Float|Free-Float]] and [[index-construction#Free-Float Factor|Free-Float Factor]] — weighting methodology
-- [[index-construction#Capping|Capping]] and [[index-construction#Capping Factor|Capping Factor]] — weight cap mechanics
-- [[index-construction#Reconstitution|Reconstitution]] and [[index-construction#Buffer Rule|Buffer Rule]] — periodic review process
-- [[index-construction#Corporate Action Treatment|Corporate Action Treatment]] — how indices handle splits, mergers, dividends
-- [[index-construction#Total Return Index|Total Return Index]] vs [[index-construction#Net Return Index|Net Return Index]] vs [[index-construction#Price Return Index|Price Return Index]]
-- [[regulatory#Benchmark Regulation (EU BMR)|EU BMR]] and [[regulatory#SFDR (Sustainable Finance Disclosure Regulation)|SFDR]] — regulatory framework details
+- [Divisor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor) and [Divisor Adjustment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor Adjustment) — formal definition and formula
+- [Free-Float](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float) and [Free-Float Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float Factor) — weighting methodology
+- [Capping](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Capping) and [Capping Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Capping Factor) — weight cap mechanics
+- [Reconstitution](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Reconstitution) and [Buffer Rule](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Buffer Rule) — periodic review process
+- [Corporate Action Treatment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Corporate Action Treatment) — how indices handle splits, mergers, dividends
+- [Total Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total Return Index) vs [Net Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Net Return Index) vs [Price Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price Return Index)
+- [EU BMR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark Regulation (EU BMR)) and [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#SFDR (Sustainable Finance Disclosure Regulation)) — regulatory framework details
 
 ## Related
 
-- [[migration-idempotency-backfills]] — Migration patterns, idempotency, and backfill strategies used in financial pipelines
-- [[ai-augmented-data-engineering]] — LLM pipelines for ESG data extraction and anomaly explanation
-- [[leadership-and-collaboration]] — Incident response and post-mortems for financial data incidents
+- [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) — Migration patterns, idempotency, and backfill strategies used in financial pipelines
+- [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — LLM pipelines for ESG data extraction and anomaly explanation
+- [leadership-and-collaboration](https://alp78.github.io/elysium/15-DataOps/leadership-and-collaboration) — Incident response and post-mortems for financial data incidents
 
 ## References
 

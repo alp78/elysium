@@ -9,11 +9,11 @@ description: "Data sources, refresh cadences, and pipeline schedule for the fina
 related:
   - "the pipeline steps"
   - "the Airflow DAGs"
-  - "[[index-snapshot-metrics]]"
-  - "[[daily-signal-scores]]"
-  - "[[quarterly-signal-scores]]"
-  - "[[bronze-layer-loading]]"
-  - "[[medallion-architecture]]"
+  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
+  - "[bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading)"
+  - "[medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +21,7 @@ status: complete
 
 # Data Sources and Refresh
 
-All data for the the project architecture dashboard flows through the [[medallion-architecture|medallion pipeline]] from yfinance API to the gold layer. This note documents every data source, its refresh cadence, and the pipeline schedule.
+All data for the the project architecture dashboard flows through the [medallion pipeline](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) from yfinance API to the gold layer. This note documents every data source, its refresh cadence, and the pipeline schedule.
 
 ## Data Sources
 
@@ -38,7 +38,7 @@ All data for the the project architecture dashboard flows through the [[medallio
 
 ## Pipeline Schedule
 
-The [[airflow-dag-patterns|Airflow DAGs]] orchestrate three daily pipeline runs timed to capture market closes across global regions:
+The [Airflow DAGs](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) orchestrate three daily pipeline runs timed to capture market closes across global regions:
 
 | Run Time (UTC) | Purpose | Markets Captured |
 |----------------|---------|-----------------|
@@ -47,7 +47,7 @@ The [[airflow-dag-patterns|Airflow DAGs]] orchestrate three daily pipeline runs 
 | 22:00 | Evening run | US equity index close |
 
 > [!info] Why Three Runs
-> The three tracked indices — a European equity index, an Asia-Pacific equity index, and a US equity index — close at different times across different time zones. Running the pipeline three times per day ensures each index's closing prices are captured promptly. See [[date-and-time-handling]] for timezone management in the pipeline.
+> The three tracked indices — a European equity index, an Asia-Pacific equity index, and a US equity index — close at different times across different time zones. Running the pipeline three times per day ensures each index's closing prices are captured promptly. See [date-and-time-handling](https://alp78.github.io/elysium/01-Shell/Text-Processing/date-and-time-handling) for timezone management in the pipeline.
 
 ## Data Flow
 
@@ -55,17 +55,17 @@ The [[airflow-dag-patterns|Airflow DAGs]] orchestrate three daily pipeline runs 
 yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scored) → Dashboard
 ```
 
-1. **[[bronze-layer-loading|Bronze]]**: Raw yfinance data lands as-is in `bronze.*` tables — when a vendor file is late or missing, follow the [[vendor-file-late-or-missing]] runbook
-2. **[[silver-transforms|Silver]]**: Deduplication, type casting, gap-filling in `silver.*` tables
-3. **[[gold-transforms|Gold]]**: Z-scores, composite scores, rankings in `gold.*` tables
+1. **[Bronze](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading)**: Raw yfinance data lands as-is in `bronze.*` tables — when a vendor file is late or missing, follow the [[vendor-file-late-or-missing]] runbook
+2. **[Silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms)**: Deduplication, type casting, gap-filling in `silver.*` tables
+3. **[Gold](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)**: Z-scores, composite scores, rankings in `gold.*` tables
 
 ## Refresh Impact on Scoring
 
 | Data Type | Staleness Tolerance | Impact of Stale Data |
 |-----------|--------------------|--------------------|
-| Price/volume | Minutes | [[daily-signal-scores|Momentum scores]] lag, intraday pulse stale |
-| Analyst consensus | Hours | [[daily-signal-scores|Sentiment scores]] slightly off |
-| Quarterly financials | Days | [[quarterly-signal-scores|Quality scores]] use prior quarter |
+| Price/volume | Minutes | [Momentum scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) lag, intraday pulse stale |
+| Analyst consensus | Hours | [Sentiment scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) slightly off |
+| Quarterly financials | Days | [Quality scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) use prior quarter |
 | Governance scores | Weeks | Slow-moving, minimal impact |
 | Index composition | Hours | Wrong constituents if not refreshed |
 
@@ -73,6 +73,6 @@ yfinance API → JSON files → Bronze (raw) → Silver (cleaned) → Gold (scor
 
 - the pipeline steps — Detailed pipeline execution stages
 - the Airflow DAGs — DAG scheduling and configuration
-- [[bronze-layer-loading]] — How raw data enters the pipeline
-- [[medallion-architecture]] — Three-layer data architecture
-- [[index-snapshot-metrics]] — Cap-weighted metrics computed from this data
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — How raw data enters the pipeline
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Three-layer data architecture
+- [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) — Cap-weighted metrics computed from this data

@@ -251,7 +251,7 @@ def safe_backfill(engine, start_date: date, end_date: date,
 
 ### Exactly-Once Processing in Financial Pipelines
 
-In financial data, processing a record twice is as bad as not processing it at all. A dividend reinvested twice inflates the total return index. A [[index-maintenance-and-corporate-actions|corporate action]] applied twice reverses itself (a 1:4 split applied twice becomes a 1:16 split).
+In financial data, processing a record twice is as bad as not processing it at all. A dividend reinvested twice inflates the total return index. A [corporate action](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) applied twice reverses itself (a 1:4 split applied twice becomes a 1:16 split).
 
 **Pattern: Idempotency key tracking**
 

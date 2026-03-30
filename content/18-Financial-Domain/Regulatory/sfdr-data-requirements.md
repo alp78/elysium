@@ -72,20 +72,20 @@ def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:
 | Controversial weapons | MSCI | Sustainalytics | ~98% |
 
 > [!warning] Coverage Gaps
-> Scope 3 emissions and some social indicators have low reported coverage. Vendors fill gaps with estimates. Your pipeline must track whether a value is reported or estimated — SFDR requires disclosure of estimation methodology. [[ai-augmented-data-engineering|LLM extraction pipelines]] can help parse unstructured sustainability reports to fill these gaps with source-attributed data.
+> Scope 3 emissions and some social indicators have low reported coverage. Vendors fill gaps with estimates. Your pipeline must track whether a value is reported or estimated — SFDR requires disclosure of estimation methodology. [LLM extraction pipelines](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) can help parse unstructured sustainability reports to fill these gaps with source-attributed data.
 
 ## ISS & STOXX Glossary
 
-- [[regulatory#SFDR (Sustainable Finance Disclosure Regulation)|SFDR]] — formal regulatory definition and scope
-- [[regulatory#Article 8 Fund (SFDR)|Article 8]] and [[regulatory#Article 9 Fund (SFDR)|Article 9]] — fund classification definitions
-- [[regulatory#PAI (Principal Adverse Impact)|PAI]] and [[regulatory#PAI Indicators|PAI Indicators]] — indicator framework
-- [[sustainability-themes#Weighted Average Carbon Intensity (WACI)|WACI]] — carbon intensity methodology
-- [[sustainability-themes#Emissions Scopes|Emissions Scopes]] — Scope 1, 2, 3 definitions
-- [[esg-ratings#Norm-Based Screening|Norm-Based Screening]] — UNGC violations screening methodology
+- [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#SFDR (Sustainable Finance Disclosure Regulation)) — formal regulatory definition and scope
+- [Article 8](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Article 8 Fund (SFDR)) and [Article 9](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Article 9 Fund (SFDR)) — fund classification definitions
+- [PAI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAI (Principal Adverse Impact)) and [PAI Indicators](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAI Indicators) — indicator framework
+- [WACI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes#Weighted Average Carbon Intensity (WACI)) — carbon intensity methodology
+- [Emissions Scopes](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes#Emissions Scopes) — Scope 1, 2, 3 definitions
+- [Norm-Based Screening](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings#Norm-Based Screening) — UNGC violations screening methodology
 
 ## Related
 
-- [[eu-bmr-benchmark-regulation]] — Benchmark administrator obligations
-- [[iosco-benchmark-principles]] — International standards
-- [[compliance-and-auditability]] — Audit trail for ESG data
-- [[data-quality-framework]] — Quality gates for ESG data completeness
+- [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation) — Benchmark administrator obligations
+- [iosco-benchmark-principles](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/iosco-benchmark-principles) — International standards
+- [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) — Audit trail for ESG data
+- [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality gates for ESG data completeness

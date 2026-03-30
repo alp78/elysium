@@ -384,7 +384,7 @@ group by 1, 2, 3
 
 ## Snapshot of ESG Scores for Audit Trail
 
-ESG ratings change as providers update their models and as companies disclose new data. For funds with ESG mandates, regulators may require evidence of what rating a constituent had at the time of a portfolio decision. This is analogous to how [[index-maintenance-and-corporate-actions]] tracks dimension changes for corporate actions like splits and mergers through SCD Type 2 history.
+ESG ratings change as providers update their models and as companies disclose new data. For funds with ESG mandates, regulators may require evidence of what rating a constituent had at the time of a portfolio decision. This is analogous to how [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/index-maintenance-and-corporate-actions) tracks dimension changes for corporate actions like splits and mergers through SCD Type 2 history.
 
 ```sql
 -- snapshots/snap_esg_scores.sql (production-ready)

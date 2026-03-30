@@ -7,11 +7,11 @@ aliases: [Scoring Methodology, z-score methodology, z-score calculation, composi
 keywords: [scoring methodology, z-score, cross-sectional, composite score, dense rank, cap-weighted, standardization, normalization, ranking, mean, standard deviation, inverted z-score, sign inversion]
 description: "Z-score calculation methodology, composite scoring, dense ranking, and cap-weighting formulas used across all financial data platform dashboard signals and metrics."
 related:
-  - "[[daily-signal-scores]]"
-  - "[[quarterly-signal-scores]]"
-  - "[[index-snapshot-metrics]]"
-  - "[[factor-profile-and-composition]]"
-  - "[[gold-transforms]]"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
+  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
+  - "[factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition)"
+  - "[gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +19,7 @@ status: complete
 
 # Scoring Methodology
 
-All daily and quarterly scores in the [[daily-signal-scores|financial data platform dashboard]] use cross-sectional z-scores to standardize and rank constituents within each index. This note documents the exact methodology for z-score calculation, composite scoring, ranking, and cap-weighting.
+All daily and quarterly scores in the [financial data platform dashboard](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) use cross-sectional z-scores to standardize and rank constituents within each index. This note documents the exact methodology for z-score calculation, composite scoring, ranking, and cap-weighting.
 
 ## Z-Score Calculation
 
@@ -41,9 +41,9 @@ $$\text{Composite} = \frac{1}{n}\sum_{i=1}^{n} z_i$$
 Some components are sign-inverted before averaging (e.g., P/E: lower is better, so −z is used).
 
 #### Sign inversion examples
-- [[daily-signal-scores|Relative Value Score]]: Forward P/E, Price/Book, EV/EBITDA are inverted (−z) because lower valuations are better
-- [[daily-signal-scores|Sentiment Score]]: Recommendation is inverted (−z) because lower numeric rating = more bullish
-- [[quarterly-signal-scores|Quality Score]]: Leverage (debt/equity) is inverted (−z) because lower debt is better
+- [Relative Value Score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores): Forward P/E, Price/Book, EV/EBITDA are inverted (−z) because lower valuations are better
+- [Sentiment Score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores): Recommendation is inverted (−z) because lower numeric rating = more bullish
+- [Quality Score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores): Leverage (debt/equity) is inverted (−z) because lower debt is better
 
 ## Ranking
 
@@ -55,7 +55,7 @@ Dense rank within each index, descending by score:
 
 **Example:** If three stocks have composite scores of 1.5, 1.2, 1.2, 0.8, they are ranked 1, 2, 2, 3 (dense rank — no gap at rank 3).
 
-**SQL implementation** (executed in the [[gold-transforms]] layer):
+**SQL implementation** (executed in the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layer):
 ```sql
 DENSE_RANK() OVER (
     PARTITION BY index_key, trade_date
@@ -69,23 +69,23 @@ Cap-weighted using daily market capitalization:
 
 $$w_i = \frac{\text{MarketCap}_i}{\sum_{j \in \text{index}} \text{MarketCap}_j}$$
 
-Used for P/E, P/B, dividend yield, and other [[index-snapshot-metrics|index-level aggregates]].
+Used for P/E, P/B, dividend yield, and other [index-level aggregates](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics).
 
 > [!tip] Cap-Weighting vs Equal-Weighting
-> Index-level metrics (P/E, volatility) are cap-weighted to reflect the index's actual composition. Individual stock scores (momentum, value, sentiment) are computed on an equal-weighted basis — each stock's z-score has equal influence regardless of market cap. The [[data-quality-framework]] defines the quality gates that validate score outputs before they reach consumers.
+> Index-level metrics (P/E, volatility) are cap-weighted to reflect the index's actual composition. Individual stock scores (momentum, value, sentiment) are computed on an equal-weighted basis — each stock's z-score has equal influence regardless of market cap. The [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) defines the quality gates that validate score outputs before they reach consumers.
 
 ## Sector-Level vs Index-Level Grouping
 
 | Grouping | When Used | Why |
 |----------|-----------|-----|
 | **Index-level** | Default for daily signals | Compares stock to all peers in the index |
-| **Sector-level** | [[quarterly-signal-scores|Quality/moat score]] when ≥ 3 sector peers | Compares within similar business models (more meaningful) |
+| **Sector-level** | [Quality/moat score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) when ≥ 3 sector peers | Compares within similar business models (more meaningful) |
 | **Fallback to index** | When sector has < 3 constituents | Insufficient peers for meaningful sector z-score |
 
 ## Related
 
-- [[daily-signal-scores]] — Momentum, value, sentiment composite scores
-- [[quarterly-signal-scores]] — Quality, health, governance scores
-- [[index-snapshot-metrics]] — Cap-weighted index aggregates
-- [[factor-profile-and-composition]] — Radar chart normalization (z-score → 0-100 scale)
-- [[gold-transforms]] — SQL implementation of scoring in the gold layer
+- [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) — Momentum, value, sentiment composite scores
+- [quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) — Quality, health, governance scores
+- [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics) — Cap-weighted index aggregates
+- [factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition) — Radar chart normalization (z-score → 0-100 scale)
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — SQL implementation of scoring in the gold layer

@@ -7,11 +7,11 @@ aliases: [Breadth and Sentiment Indicators, market breadth, advance decline, put
 keywords: [breadth indicators, sentiment indicators, advance decline ratio, percent above 200 day MA, new highs new lows, put call ratio, short interest ratio, market breadth, market sentiment, contrarian, bullish, bearish]
 description: "Market breadth and sentiment indicators for equity index analysis — advance/decline ratio, percent above 200-day MA, new highs/lows, put/call ratio, and short interest with formulas and interpretation."
 related:
-  - "[[daily-signal-scores]]"
-  - "[[technical-indicators]]"
-  - "[[risk-and-volatility-metrics]]"
-  - "[[liquidity-and-flow-metrics]]"
-  - "[[chart-metrics]]"
+  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
+  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
+  - "[risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics)"
+  - "[liquidity-and-flow-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/liquidity-and-flow-metrics)"
+  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +19,7 @@ status: complete
 
 # Breadth and Sentiment Indicators
 
-Market breadth measures how broadly a market move is supported across constituents, while sentiment indicators gauge investor psychology. These metrics help distinguish between healthy broad-based rallies and narrow, fragile ones. They complement the [[daily-signal-scores|dashboard's sentiment score]] which tracks analyst consensus.
+Market breadth measures how broadly a market move is supported across constituents, while sentiment indicators gauge investor psychology. These metrics help distinguish between healthy broad-based rallies and narrow, fragile ones. They complement the [dashboard's sentiment score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) which tracks analyst consensus.
 
 ## Breadth and Sentiment Metrics
 
@@ -89,7 +89,7 @@ Measures the number of days it would take to cover all short positions at averag
 
 ## Dashboard Sentiment Context
 
-The [[daily-signal-scores|dashboard sentiment score]] measures analyst-derived sentiment:
+The [dashboard sentiment score](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) measures analyst-derived sentiment:
 - **Implied Upside**: (Target price / current) − 1
 - **Recommendation**: Consensus analyst rating (1 = Strong Buy → 5 = Strong Sell)
 
@@ -97,8 +97,8 @@ The breadth and flow indicators described here provide **market-derived** sentim
 
 ## Related
 
-- [[daily-signal-scores]] — Dashboard sentiment composite score
-- [[technical-indicators]] — RSI, MACD momentum indicators
-- [[risk-and-volatility-metrics]] — VIX as a fear gauge
-- [[liquidity-and-flow-metrics]] — Volume-based flow indicators
-- [[chart-metrics]] — Drawdown and volatility visualizations
+- [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) — Dashboard sentiment composite score
+- [technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators) — RSI, MACD momentum indicators
+- [risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics) — VIX as a fear gauge
+- [liquidity-and-flow-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/liquidity-and-flow-metrics) — Volume-based flow indicators
+- [chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics) — Drawdown and volatility visualizations

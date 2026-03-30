@@ -320,7 +320,7 @@ Plotly.NET.CSharp.Chart.Combine(boxTraces)
 
 > [!tip] Related pattern
 >
-> The financial metrics rendered in these charts — daily returns, OHLC spreads, volume — are defined in [[chart-metrics]]. For the dashboard-level KPIs these charts feed into, see [[index-snapshot-metrics]].
+> The financial metrics rendered in these charts — daily returns, OHLC spreads, volume — are defined in [chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics). For the dashboard-level KPIs these charts feed into, see [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics).
 
 #### Candlestick — ASML OHLC
 
