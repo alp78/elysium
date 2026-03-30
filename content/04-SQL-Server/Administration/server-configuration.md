@@ -13,6 +13,10 @@ status: complete
 
 # Server Configuration
 
+> [!quote]
+> "Programming today is a race between software engineers striving to build bigger and better idiot-proof programs, and the Universe trying to produce bigger and better idiots. So far, the Universe is winning."
+> — **Rick Cook**
+
 These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [Terraform](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute), these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
 
 ---

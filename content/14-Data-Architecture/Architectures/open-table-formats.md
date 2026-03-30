@@ -13,6 +13,10 @@ status: complete
 
 # Open Table Formats and Lakehouse Architecture
 
+> [!quote]
+> "Software architecture is those decisions which are both important and hard to change."
+> — **Martin Fowler**
+
 The data lakehouse combines the low-cost storage of a data lake with the transactional guarantees of a data warehouse. At its core are **open table formats** — metadata layers that sit on top of Parquet files and provide ACID transactions, time travel, schema evolution, and partition management. Major index providers are building their next-generation data platforms on Apache Iceberg. This chapter covers Iceberg, Delta Lake, and how they fit into a financial data architecture.
 
 > [!info] Why This Matters in Financial Data Engineering

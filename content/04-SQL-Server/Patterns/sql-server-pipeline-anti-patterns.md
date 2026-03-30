@@ -21,6 +21,10 @@ status: complete
 
 # SQL Server Pipeline Anti-Patterns — Mistakes That Cost Hours
 
+> [!quote]
+> "There is no code so big, twisted, or complex that maintenance can't make it worse."
+> — **Gerald Weinberg**
+
 Every anti-pattern here has been seen in production. Each one looked reasonable at the time. Each one caused an incident, a data quality issue, or a performance crisis.
 
 Each anti-pattern follows the same structure: what it looks like, why people do it, what goes wrong, and the fix.

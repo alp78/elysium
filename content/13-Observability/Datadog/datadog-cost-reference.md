@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Cost Reference
 
+> [!quote]
+> "Monitoring is so important that our monitoring systems need to be more available and scalable than the systems being monitored."
+> — **Gene Kim**
+
 Datadog agents themselves add no GCP compute cost — they run on existing VMs. The only cost is Datadog's SaaS pricing based on host count and observability product usage.
 
 ---

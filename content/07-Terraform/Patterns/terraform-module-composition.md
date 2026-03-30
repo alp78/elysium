@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Module Composition
 
+> [!quote]
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+> — **Martin Fowler**
+
 Terraform modules are the primary mechanism for creating reusable, composable infrastructure. When you manage multiple environments (dev, staging, prod), modules prevent copy-paste between configurations and enable environment promotion.
 
 ### The Core Principle

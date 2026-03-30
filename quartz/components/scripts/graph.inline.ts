@@ -173,33 +173,81 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   const width = graph.offsetWidth
   const height = Math.max(graph.offsetHeight, 250)
 
-  // ========== PHYSICS (loose, organic feel) ==========
+  // ========== NODE TYPE CLASSIFICATION ==========
+  function getNodeTier(id: string): number {
+    if (id.endsWith("index") && !id.includes("/")) return 0  // index = center
+    if (id.includes("moc-")) return 1                         // MOCs = inner ring
+    if (id.includes("domain-")) return 2                      // domains = middle ring
+    return 3                                                   // content = outer petals
+  }
+
+  const cx = width / 2
+  const cy = height / 2
+  const baseRadius = Math.min(width, height) * 0.3
+
+  // ========== PHYSICS (orbital flower layout) ==========
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(nodes)
     .force(
       "charge",
       forceManyBody<NodeData>()
-        .strength(-120)
+        .strength((d) => {
+          const tier = getNodeTier(d.id)
+          if (tier === 0) return -400   // index pushes MOCs outward
+          if (tier === 1) return -200   // MOCs push domains outward
+          if (tier === 2) return -80    // domains push pages outward
+          return -30                     // pages gently repel each other
+        })
         .distanceMin(15)
-        .distanceMax(600)
+        .distanceMax(500)
         .theta(0.9),
     )
     .force(
       "link",
       forceLink<NodeData, LinkData>(graphLinks)
-        .distance(100)
-        .strength(0.08),
+        .distance((l) => {
+          const srcTier = getNodeTier((l.source as NodeData).id)
+          const tgtTier = getNodeTier((l.target as NodeData).id)
+          const minTier = Math.min(srcTier, tgtTier)
+          if (minTier === 0) return 120  // index → MOC spacing
+          if (minTier === 1) return 80   // MOC → domain spacing
+          return 50                       // domain → page spacing
+        })
+        .strength((l) => {
+          const srcTier = getNodeTier((l.source as NodeData).id)
+          const tgtTier = getNodeTier((l.target as NodeData).id)
+          const minTier = Math.min(srcTier, tgtTier)
+          if (minTier === 0) return 0.3  // strong pull: MOCs orbit index
+          if (minTier === 1) return 0.2  // medium pull: domains orbit MOC
+          return 0.15                     // gentle pull: pages orbit domain
+        }),
     )
-    .force("center", forceCenter(width / 2, height / 2).strength(0.01))
+    .force("center", forceCenter(cx, cy).strength(0.005))
     .force(
       "collide",
       forceCollide<NodeData>()
-        .radius((d) => getNodeRadius(d) + 20)
-        .strength(0.4)
-        .iterations(2),
+        .radius((d) => getNodeRadius(d) + 12)
+        .strength(0.5)
+        .iterations(3),
     )
     .force(
       "radial",
-      forceRadial(Math.min(width, height) * 0.35, width / 2, height / 2).strength(0.02),
+      forceRadial<NodeData>(
+        (d) => {
+          const tier = getNodeTier(d.id)
+          if (tier === 0) return 0                  // index at center
+          if (tier === 1) return baseRadius * 0.4   // MOCs: inner ring
+          if (tier === 2) return baseRadius * 0.75  // domains: middle ring
+          return baseRadius * 1.1                    // pages: outer ring
+        },
+        cx,
+        cy,
+      ).strength((d) => {
+        const tier = getNodeTier(d.id)
+        if (tier === 0) return 1.0    // pin index to center
+        if (tier === 1) return 0.15   // MOCs gently held in ring
+        if (tier === 2) return 0.08   // domains loosely held
+        return 0.03                    // pages drift freely
+      }),
     )
     .velocityDecay(0.55)
     .alphaDecay(0.008)

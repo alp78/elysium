@@ -13,6 +13,13 @@ status: complete
 
 # awk Data Processing Reference
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+>
+> "There are 2 hard problems in computer science: cache invalidation, naming things, and off-by-1 errors."
+> — **Leon Bambrick**
+
 awk (also gawk -- GNU awk, mawk -- faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script.
 > [!info] Which awk are you running?
 >

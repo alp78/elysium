@@ -64,6 +64,10 @@ status: complete
 
 # GraphQL for Data Access
 
+> [!quote]
+> "Software is not limited by physics, like buildings are. It is limited by imagination, by design, by organization. In short, it is limited by properties of people, not by properties of the world."
+> — **Martin Fowler**
+
 GraphQL is a query language for APIs and a runtime for executing those queries, developed by Facebook in 2012 and open-sourced in 2015. Unlike REST, where the server defines the shape of every response, GraphQL lets the client declare exactly what data it needs. For data engineers, this matters when building flexible data access layers that serve multiple consumers — dashboards, pipelines, ML feature stores — from a single endpoint.
 
 > [!abstract] Core Idea

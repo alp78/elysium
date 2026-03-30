@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Cloud Run — Services and Jobs
 
+> [!quote]
+> "No code is the best way to write secure and reliable applications. Write nothing; deploy nowhere."
+> — **Kelsey Hightower**
+
 This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.
 
 ### Cloud Run Billing Note

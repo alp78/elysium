@@ -17,6 +17,10 @@ status: complete
 
 # 09 — Database & SQL Interface
 
+> [!quote]
+> "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
+> — **Fred Brooks**
+
 SQL queries against DataFrames (Polars SQLContext, DuckDB) and direct SQL Server connectivity.
 
 ```python

@@ -13,6 +13,10 @@ status: complete
 
 # Blocking and Locking
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 SQL Server uses locks to coordinate concurrent access to data. Every read and write acquires locks automatically based on the isolation level and the type of operation. Understanding lock types, lock granularity, and isolation levels is essential for diagnosing blocking and designing concurrent-safe pipelines.
 
 ---

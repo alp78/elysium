@@ -13,6 +13,10 @@ status: complete
 
 # Airflow Observability — StatsD Metrics and Dashboard
 
+> [!quote]
+> "I think of monitoring as TDD for production. And observability as debugging for production — give Future You the power to answer any question."
+> — **Charity Majors**
+
 The [Airflow VM Datadog agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [Airflow's architecture](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
 
 ---

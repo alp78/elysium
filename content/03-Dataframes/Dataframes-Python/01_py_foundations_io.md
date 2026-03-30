@@ -18,6 +18,10 @@ status: complete
 # 01 — Foundations and Data Structures
 ## Pandas vs Polars: Series, DataFrames, Indexes, and Data Types
 
+> [!quote]
+> "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
+> — **Linus Torvalds**
+
 This notebook provides a side-by-side tour of the **core building blocks** in
 Pandas and Polars.  Every section shows the Pandas way first, then the Polars
 equivalent, and flags gotchas along the way.

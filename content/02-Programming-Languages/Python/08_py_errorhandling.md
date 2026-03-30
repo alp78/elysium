@@ -13,6 +13,10 @@ status: complete
 
 # 08. Error Handling - Python
 
+> [!quote]
+> "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
+> — **Edsger W. Dijkstra**
+
 ## try / except / else / finally
 
 #### Basic try / except

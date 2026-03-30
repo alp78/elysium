@@ -13,6 +13,10 @@ status: complete
 
 # Race Conditions
 
+> [!quote]
+> "Program testing can be a very effective way to show the presence of bugs, but it is hopelessly inadequate for showing their absence."
+> — **Edsger W. Dijkstra**
+
 A race condition occurs when two or more processes access shared data concurrently, and the final result depends on the timing of their execution. Unlike [deadlocks](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) (where processes get stuck), both processes complete — but the data ends up wrong.
 
 ```

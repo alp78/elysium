@@ -71,6 +71,10 @@ status: complete
 
 # GCP Cloud Logging and Cloud Trace for Data Engineers
 
+> [!quote]
+> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
+> — **Brian Kernighan**
+
 > [!abstract] What This Covers
 > The logging and distributed tracing pillars of GCP-native observability for data engineering pipelines. Metrics are covered in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics). This note goes deep on writing structured logs from pipelines, querying them effectively, routing them for cost control and analytics, understanding audit logs, and instrumenting Python pipelines with OpenTelemetry for end-to-end distributed tracing.
 

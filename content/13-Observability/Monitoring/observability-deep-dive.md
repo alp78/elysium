@@ -13,6 +13,13 @@ status: complete
 
 # Observability Deep Dive: DataDog, Lineage, and Data Cataloging
 
+> [!quote]
+> "No complex system is ever fully healthy."
+> — **Cindy Sridharan**
+>
+> "I think of monitoring as TDD for production. And observability as debugging for production — give Future You the power to answer any question."
+> — **Charity Majors**
+
 Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [DataOps philosophy](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
 
 > [!warning] Financial Data Stakes

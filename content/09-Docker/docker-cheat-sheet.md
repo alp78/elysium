@@ -13,6 +13,10 @@ status: stable
 
 # Docker Cheat Sheet
 
+> [!quote]
+> "Docker is very popular, it became popular very fast, and we're not really sure why."
+> — **Solomon Hykes**
+
 ### CLI Anatomy
 
 ```

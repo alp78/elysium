@@ -13,6 +13,10 @@ status: complete
 
 # Memory and the Buffer Pool
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 SQL Server's buffer pool is its primary data cache — it holds database pages (8 KB each) in RAM so they don't need to be read from disk on every query. Memory is the single biggest performance lever on most SQL Server instances: when data fits in the buffer pool, queries run from RAM (nanoseconds); when it doesn't, they read from disk (milliseconds to seconds, 100–1000x slower).
 
 ### Key Terms

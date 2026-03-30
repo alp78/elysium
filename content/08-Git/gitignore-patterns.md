@@ -13,6 +13,10 @@ status: complete
 
 # .gitignore Patterns
 
+> [!quote]
+> "As far as I'm concerned, if the code isn't checked into source control, it doesn't exist."
+> — **Jeff Atwood**
+
 The `.gitignore` file tells Git which files to never track. Critical for keeping secrets, build artifacts, and large files out of your repo. Once a file is committed, `.gitignore` alone does not remove it from history — you must also stop tracking it.
 
 ### Example .gitignore for a Python Data Engineering Project

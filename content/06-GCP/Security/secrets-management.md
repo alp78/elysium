@@ -8,6 +8,10 @@ updated: 2026-03-23
 
 # Secrets Management
 
+> [!quote]
+> "There are two kinds of cryptography in this world: cryptography that will stop your kid sister from reading your files, and cryptography that will stop major governments from reading your files."
+> — **Bruce Schneier**
+
 > [!abstract] When You Need This
 > Every data pipeline needs credentials: database passwords, API keys, service account keys, vendor tokens. This note covers how to store, access, rotate, and audit secrets across the entire stack.
 

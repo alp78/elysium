@@ -13,6 +13,10 @@ status: complete
 
 # SARGable Queries
 
+> [!quote]
+> "The best performance improvement is the transition from the nonworking state to the working state."
+> — **John Ousterhout**
+
 **SARGable** = **S**earch **ARG**ument**able**. A predicate is SARGable if SQL Server can use an index seek to evaluate it. Non-SARGable predicates force SQL Server to scan every row and evaluate the expression per-row — often 10-100x more I/O for the same result.
 
 **The fundamental rule:** Do not apply functions or calculations to the **column** side of a WHERE clause. Apply them to the **value** side instead.

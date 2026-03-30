@@ -59,6 +59,10 @@ status: complete
 
 # How To: Deploy Apache Airflow
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 A practical how-to guide covering every major Airflow deployment option — from a local Docker Compose environment for development to managed cloud services for production. Includes configuration reference, DAG deployment strategies, secrets management, monitoring setup, and cost comparisons.
 
 > [!tip] Prerequisites

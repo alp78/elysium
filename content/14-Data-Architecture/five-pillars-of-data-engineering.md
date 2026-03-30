@@ -13,6 +13,13 @@ status: complete
 
 # The Five Pillars of Senior Data Engineering
 
+> [!quote]
+> "Simplicity is a prerequisite for reliability."
+> — **Edsger W. Dijkstra**
+>
+> "Software architecture is those decisions which are both important and hard to change."
+> — **Martin Fowler**
+
 A junior data engineer learns commands. A senior data engineer understands systems. The difference is not the number of tools you know — it is the depth at which you understand why those tools exist, when each one is the right choice, and what happens underneath when you run them. A senior engineer does not memorize syntax; they internalize patterns.
 
 Every topic in this knowledge base maps to one of these five pillars:

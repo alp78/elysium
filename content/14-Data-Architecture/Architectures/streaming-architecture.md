@@ -13,6 +13,10 @@ status: complete
 
 # Streaming Architecture
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 Streaming architecture is any data system design where data is processed continuously as it arrives — events are consumed and acted upon within milliseconds to seconds, rather than being collected and processed in large batches hours later. It encompasses the message brokers that carry events, the processing engines that transform them, the patterns that govern their semantics (Lambda, Kappa, CQRS, event sourcing), and the windowing strategies that handle the inherent challenges of time-ordered distributed data.
 
 The canonical GCP streaming stack — [Pub/Sub](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) and [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) respectively.

@@ -52,6 +52,10 @@ status: complete
 
 # GitHub Actions for Data Engineering
 
+> [!quote]
+> "Improving daily work is even more important than doing daily work."
+> — **Gene Kim**
+
 > [!abstract] Summary
 > Practical GitHub Actions workflows for data engineering teams. Covers Python pipeline CI, Cloud Run CD, dbt CI, data quality gates, Workload Identity Federation (keyless GCP auth), Airflow DAG validation, and cost monitoring.
 

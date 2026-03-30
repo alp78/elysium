@@ -21,6 +21,10 @@ status: complete
 
 # Bronze Layer Loading
 
+> [!quote]
+> "Data is the new oil. It's valuable, but if unrefined it cannot really be used."
+> — **Clive Humby**
+
 The bronze layer is the raw data landing zone in the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms).
 
 **Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [Silver transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms)

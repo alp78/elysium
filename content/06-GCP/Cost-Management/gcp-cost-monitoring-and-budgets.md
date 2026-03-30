@@ -61,6 +61,10 @@ status: complete
 
 # GCP Cost Monitoring and Budgets
 
+> [!quote]
+> "A budget tells us what we can't afford, but it doesn't keep us from buying it."
+> — **William Feather**
+
 > Operational FinOps for GCP. Covers the full stack: export billing data, alert on budgets, detect anomalies, optimize per service, and automate enforcement.
 
 ---

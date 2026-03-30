@@ -13,6 +13,10 @@ status: complete
 
 # Storage Internals
 
+> [!quote]
+> "Computer Science is no more about computers than astronomy is about telescopes."
+> — **Edsger W. Dijkstra**
+
 SQL Server reads and writes in fixed 8 KB pages — every I/O operation moves exactly one page. Understanding how pages, extents, files, the log, and the buffer pool interact is the foundation for diagnosing every performance problem: slow queries, high I/O, blocked sessions, and slow recovery all trace back to these internals.
 
 ---

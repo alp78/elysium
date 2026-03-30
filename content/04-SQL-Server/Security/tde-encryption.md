@@ -13,6 +13,10 @@ status: complete
 
 # Transparent Data Encryption (TDE) with GCP Cloud KMS
 
+> [!quote]
+> "There are two types of encryption: one that will prevent your sister from reading your diary and one that will prevent your government."
+> — **Bruce Schneier**
+
 Transparent Data Encryption (TDE) encrypts SQL Server database files at rest — protecting `.mdf`, `.ldf`, and `tempdb` files from unauthorized access even if someone obtains the physical disk, a GCS backup file, or a VM disk snapshot.
 
 ### What TDE Does and Does Not Do

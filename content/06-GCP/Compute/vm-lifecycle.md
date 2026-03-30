@@ -13,6 +13,10 @@ status: complete
 
 # VM Lifecycle — Start, Stop, Resize, and Debug
 
+> [!quote]
+> "I remember the days when I built my own gaming PCs. Eventually I sold out and bought an Xbox because I just wanted to play games, not build gaming rigs. Serverless is like that."
+> — **Kelsey Hightower**
+
 Compute Engine VMs host self-managed services — SQL Server, Airflow, monitoring agents, and any workload that doesn't fit the serverless model. Unlike [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) (which is ephemeral), VMs are stateful and persistent, making them your responsibility to maintain, secure, and right-size. Understanding the full lifecycle — including scheduled start/stop and cost-aware right-sizing — is essential for operating VMs economically.
 
 ### Listing and Describing Compute Engine VMs

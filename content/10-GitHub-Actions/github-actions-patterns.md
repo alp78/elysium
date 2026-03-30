@@ -49,6 +49,10 @@ status: complete
 
 # GitHub Actions Patterns
 
+> [!quote]
+> "The third time you do something, it should be done using an automated process."
+> — **Jez Humble**
+
 > [!abstract] Summary
 > Reusable patterns for production-grade GitHub Actions workflows. Covers matrix builds, reusable workflows, deployment strategies, Terraform automation, Docker builds, monorepo CI, and cost optimization. Many shell steps rely on [defensive scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) practices (`set -euo pipefail`, error trapping) to fail fast and surface problems clearly. To practice applying these patterns in realistic scenarios, work through [github-actions-problems](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-problems).
 

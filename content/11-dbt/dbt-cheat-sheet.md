@@ -8,6 +8,10 @@ updated: 2026-03-23
 
 # dbt Cheat Sheet
 
+> [!quote]
+> "Make it work, make it right, make it fast."
+> — **Kent Beck**
+
 ### dbt CLI Anatomy
 
 ```

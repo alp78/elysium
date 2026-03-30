@@ -13,6 +13,10 @@ status: complete
 
 # Point-in-Time Data Integrity
 
+> [!quote]
+> "The most important property of a program is whether it accomplishes the intention of its user."
+> — **Tony Hoare**
+
 > [!danger] Why This Matters
 >
 > A stock index provider must answer: "What were the exact constituents, weights, and ESG scores of Index X on Date Y?" with full audit trail. Getting this wrong means publishing incorrect index levels — a regulatory and reputational catastrophe under EU BMR.

@@ -15,6 +15,10 @@ status: complete
 
 Every GCP resource has different connectivity patterns. This note provides the exact commands for connecting to each resource type you will encounter in data engineering, from both Linux and PowerShell, with the expected output so you can debug when things go wrong.
 
+> [!quote]
+> "The interesting thing about cloud computing is that we've redefined cloud computing to include everything that we already do."
+> — **Larry Ellison**
+
 ## Compute Engine VMs (SSH)
 
 The VM is your most direct resource — you SSH into it, run commands, and transfer files.

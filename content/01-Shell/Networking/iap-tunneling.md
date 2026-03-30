@@ -15,6 +15,10 @@ status: complete
 
 Identity-Aware Proxy (IAP) is Google Cloud's way to let you access VMs that have no public IP. It's the backbone of secure GCE connectivity: your SSH sessions, database connections, and even SSMS all travel through IAP when configured correctly. Understanding how IAP tunneling works at the network level — not just "run this gcloud command" — is what separates debugging in minutes from debugging in hours.
 
+> [!quote]
+> "Security is a process, not a product."
+> — **Bruce Schneier**
+
 ### How IAP tunneling works — the full network path from workstation to VM
 
 ```

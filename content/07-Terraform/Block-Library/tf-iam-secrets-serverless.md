@@ -64,6 +64,10 @@ status: complete
 
 # Terraform Block Library — IAM, Secrets & Serverless (GCP)
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 Atomic, copy-paste Terraform blocks for GCP IAM, Secret Manager, Cloud Run v2, Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Every argument carries an inline comment explaining its purpose. Blocks are generic and meant to be adapted to any project.
 
 ---

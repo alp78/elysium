@@ -9,6 +9,10 @@ description: "Comprehensive catalog of BigQuery production problems for data eng
 
 # BigQuery Production Problems
 
+> [!quote]
+> "Big data is like teenage sex: everyone talks about it, nobody really knows how to do it, everyone thinks everyone else is doing it, so everyone claims they are doing it."
+> — **Dan Ariely**
+
 BigQuery is deceptively simple — write SQL, get results. But in a production data platform serving financial index calculations, the pay-per-scan pricing model, DML concurrency limits, and implicit behaviors around partitioning, data types, and NULL handling create a minefield. A single unfiltered `SELECT *` on a 10TB table costs $62.50. A pipeline that runs 20 concurrent MERGEs hits a hard quota wall. FLOAT64 arithmetic that works in a spreadsheet produces wrong index values in BigQuery. This note catalogs every major problem with actionable prevention and fixes.
 
 **Platform context:** BigQuery serves as the analytics warehouse for a financial index and ESG data provider on GCP. Workloads include: published index level consumption by clients, analytical queries by analysts, dbt transformation targets, scheduled queries for derived tables, materialized views for dashboards, and INFORMATION_SCHEMA for cost monitoring. On-demand pricing is used primarily. Data flows from a SQL Server gold layer into BigQuery via Cloud Run export jobs. The platform is EU BMR regulated — audit trail and reproducibility are non-negotiable.

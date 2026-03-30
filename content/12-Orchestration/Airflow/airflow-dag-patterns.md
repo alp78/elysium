@@ -57,6 +57,10 @@ status: complete
 
 # Airflow DAG Patterns
 
+> [!quote]
+> "Everyone knows that debugging is twice as hard as writing a program in the first place. So if you're as clever as you can be when you write it, how will you ever debug it?"
+> — **Brian Kernighan**
+
 A reference for the most important Apache Airflow DAG authoring patterns used in production data engineering. This note covers how to express complex workflow logic in DAGs: dependencies, grouping, dynamic generation, branching, and scheduling strategies.
 
 > [!tip] Prerequisites

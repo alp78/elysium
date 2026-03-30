@@ -13,6 +13,10 @@ status: complete
 
 # SQL for Data Engineering — Advanced Patterns
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 Advanced SQL techniques using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb
 

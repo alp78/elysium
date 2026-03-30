@@ -13,6 +13,10 @@ status: complete
 
 # GitHub Actions CI/CD Workflows
 
+> [!quote]
+> "Continuous Integration is a software development practice where each member of a team merges their changes into a codebase together with their colleagues' changes at least daily."
+> — **Martin Fowler**
+
 GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [Docker images](https://alp78.github.io/elysium/09-Docker/docker-compose), running pipeline tests, deploying to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) via [Terraform-managed infrastructure](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run), and validating [Terraform changes](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
 
 ### Workflow YAML Structure

@@ -13,6 +13,10 @@ status: complete
 
 # Git History and Inspection
 
+> [!quote]
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+> — **Martin Fowler**
+
 Git's history inspection tools — `git log`, `git diff`, `git blame`, and `git show` — are essential for understanding what changed, when, and by whom. These are the commands you reach for during code review, debugging, and post-incident analysis.
 
 ## git log — The Commit Timeline

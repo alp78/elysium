@@ -17,6 +17,10 @@ status: complete
 
 # 10 — Real-World Project, Testing & Migration
 
+> [!quote]
+> "Program testing can be used to show the presence of bugs, but never to show their absence."
+> — **Edsger Dijkstra**
+
 End-to-end analysis, validation, Pandas-to-Polars.NET guide.
 
 ```csharp

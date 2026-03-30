@@ -71,6 +71,13 @@ status: complete
 
 # API and Protocol Comparison — Decision Framework
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+>
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+> — **Martin Fowler**
+
 > [!abstract] Purpose
 > Data engineers interact with APIs at every stage of a pipeline: pulling from vendor REST endpoints, consuming WebSocket market data feeds, receiving SFTP files from exchanges, publishing to message queues, and exposing data products downstream. This note is the entry point for deciding **which protocol to use and why**. Each protocol section links to a deeper implementation note where one exists.
 

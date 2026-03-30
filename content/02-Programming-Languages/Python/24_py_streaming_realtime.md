@@ -14,6 +14,10 @@ status: complete
 # 24. Streaming & Real-Time Data
 WebSocket, SSE, Pub/Sub, Firestore
 
+> [!quote]
+> "The best way to predict the future is to invent it."
+> — **Alan Kay**
+
 ### Technologies Overview
 
 | Technology | Protocol | Direction | Latency | Use Case |

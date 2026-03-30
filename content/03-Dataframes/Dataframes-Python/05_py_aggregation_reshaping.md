@@ -17,6 +17,10 @@ status: complete
 
 # 05 — Aggregation & Reshaping
 
+> [!quote]
+> "Statistics are like bikinis. What they reveal is suggestive, but what they conceal is vital."
+> — **Aaron Levenstein**
+
 Group-by, aggregation, window functions, joins, concat, pivot, melt.
 
 ```python

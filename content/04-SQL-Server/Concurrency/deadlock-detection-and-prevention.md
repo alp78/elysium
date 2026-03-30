@@ -13,6 +13,10 @@ status: complete
 
 # Deadlock Detection and Prevention
 
+> [!quote]
+> "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
+> — **Tony Hoare**
+
 A deadlock occurs when two or more sessions each hold a lock that the other needs, creating a circular wait. Neither session can proceed because each is waiting for the other to release its lock. SQL Server's background deadlock monitor thread checks every 5 seconds and kills the session with the lowest estimated rollback cost (the "victim"), which receives error 1205.
 
 ### What Is a Deadlock?

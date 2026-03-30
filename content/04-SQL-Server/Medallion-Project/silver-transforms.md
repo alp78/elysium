@@ -21,6 +21,10 @@ status: complete
 
 # Silver Transforms
 
+> [!quote]
+> "The most important motivation for the research work that resulted in the relational model was the objective of providing a sharp and clear boundary between the logical and physical aspects of database management."
+> — **Edgar F. Codd**
+
 The silver layer cleans, deduplicates, and historicizes the raw data from [bronze](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading). Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
 
 **Pipeline flow:** [Bronze](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) → Python transforms → Silver tables → [Gold scoring](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)

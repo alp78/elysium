@@ -13,6 +13,10 @@ status: complete
 
 # Terraform IAM and Secrets
 
+> [!quote]
+> "Give an agent raw cloud access and you get the same thing you get when you hand a developer raw Terraform — well-intentioned decisions made without context."
+> — **Kelsey Hightower**
+
 This note covers `iam.tf`, `secrets.tf`, and the IAM portions of `ci.tf` — the service accounts, IAM bindings, and Secret Manager secrets that implement least-privilege access across the example infrastructure.
 
 ### Design Principle: One Service Account Per Workload

@@ -29,6 +29,10 @@ updated: 2026-03-29
 
 # Data Contracts
 
+> [!quote]
+> "Explicit is better than implicit."
+> — **Tim Peters** (The Zen of Python)
+
 > [!abstract] When You Need This
 >
 > A data contract is a formal agreement between a data producer and its consumers specifying the schema, SLAs, semantics, and ownership of a dataset. Without contracts, schema changes break downstream pipelines silently.

@@ -13,6 +13,10 @@ status: complete
 
 # 20. Security Setup - Python
 
+> [!quote]
+> "There are two kinds of cryptography in this world: cryptography that will stop your kid sister from reading your files, and cryptography that will stop major governments from reading your files."
+> — **Bruce Schneier**
+
 > [!tip] Prerequisite Reading
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).

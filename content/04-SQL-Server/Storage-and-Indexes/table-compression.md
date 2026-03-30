@@ -13,6 +13,10 @@ status: complete
 
 # Table Compression
 
+> [!quote]
+> "Simplicity is prerequisite for reliability."
+> — **Edsger W. Dijkstra**
+
 SQL Server page and row compression reduce the on-disk and in-memory footprint of tables and indexes. For read-heavy tables like the example gold layer, page compression typically saves 60-80% of space on financial time-series data — meaning more data fits in the [buffer pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) without adding RAM.
 
 ---

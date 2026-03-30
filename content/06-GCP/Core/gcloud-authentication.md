@@ -13,6 +13,10 @@ status: complete
 
 # GCP Authentication with gcloud CLI
 
+> [!quote]
+> "Passwords are like underwear: you don't let people see it, you should change it very often, and you shouldn't share it with strangers."
+> — **Chris Pirillo**
+
 GCP uses OAuth 2.0 tokens for authentication. Every gcloud command sends a token that identifies who you are and what you are authorized to do. Understanding the two types of credentials — user credentials and Application Default Credentials (ADC) — prevents the most common "permission denied" errors in pipeline development.
 
 ### How GCP Authentication Works

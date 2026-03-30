@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Networking — VPC, Subnet, NAT, and Firewall Rules
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 This note covers the complete GCP network topology for a production data engineering project defined in `network.tf`. Every resource communicates through this VPC.
 
 ## Networking Concepts

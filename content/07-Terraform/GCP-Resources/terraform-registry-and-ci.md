@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Artifact Registry and CI Service Account
 
+> [!quote]
+> "Winning developers means earning their trust over many years through great software."
+> — **Mitchell Hashimoto**
+
 This note covers `registry.tf` and `ci.tf` — the Docker image registry and the GitHub Actions CI/CD service account that pushes images to it.
 
 ## Artifact Registry — registry.tf

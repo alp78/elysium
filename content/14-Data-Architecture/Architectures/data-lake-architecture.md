@@ -13,6 +13,10 @@ status: complete
 
 # Data Lake Architecture
 
+> [!quote]
+> "Good data architecture serves business requirements with a common, widely reusable set of building blocks while maintaining flexibility and making appropriate trade-offs."
+> — **Joe Reis & Matt Housley**
+
 A **data lake** is a centralized repository that stores raw data at any scale — structured, semi-structured, and unstructured — at a fraction of the cost of a traditional data warehouse. Unlike a warehouse which enforces schema on write (data is transformed into a fixed schema before loading), a data lake applies **schema-on-read**: data is stored in its native format and structure is only imposed when it is queried.
 
 The term was coined by James Dixon (Pentaho) in 2010 as a contrast to the "data mart" concept — a data mart is like a bottle of water (cleaned, packaged, structured for a specific purpose); a data lake is the lake itself (raw, unfiltered, accessible in its native state).

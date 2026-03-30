@@ -21,6 +21,10 @@ Topics covered:
 - DuckDB (embedded analytical SQL)
 - Querying Files — DuckDB vs Polars/Pandas
 
+> [!quote]
+> "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
+> — **Fred Brooks**
+
 ```python
 import sqlite3
 import pyodbc

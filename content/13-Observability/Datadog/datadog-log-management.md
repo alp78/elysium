@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Log Management
 
+> [!quote]
+> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
+> — **Brian Kernighan**
+
 Log collection for the data platform uses two separate mechanisms: **file tailing** for the SQL Server errorlog (on the SQL VM), and **Docker socket autodiscovery** for Airflow container logs (on the Airflow VM).
 
 > [!warning] Logs Require Separate Config

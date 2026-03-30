@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Providers and Backend
 
+> [!quote]
+> "We were seventh to market... no one was a clear winner. It was a warring market."
+> — **Mitchell Hashimoto**
+
 The provider block tells Terraform which cloud platform to manage, and the backend block tells it where to store its state file. Together, they form the foundation of every Terraform configuration.
 
 ## Provider and Backend Configuration

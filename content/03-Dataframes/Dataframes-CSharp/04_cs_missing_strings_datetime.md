@@ -17,6 +17,10 @@ status: complete
 
 # 04 — Missing Data, Strings & DateTime
 
+> [!quote]
+> "Life is dirty. So is your data. Get used to it."
+> — **Oz du Soleil**
+
 Polars.NET vs Deedle: Handle nulls, manipulate strings, time series.
 
 ---

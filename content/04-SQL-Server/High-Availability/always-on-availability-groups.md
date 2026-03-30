@@ -13,6 +13,10 @@ status: complete
 
 # Always On Availability Groups
 
+> [!quote]
+> "Everything fails, all the time, in unexpected ways."
+> — **Werner Vogels**
+
 Always On Availability Groups (AGs) are the primary high-availability mechanism for SQL Server on Linux. An AG replicates a group of databases across 2–9 replicas (1 primary + up to 8 secondaries), with the primary accepting reads and writes while secondaries receive and replay transaction log records automatically.
 
 ---

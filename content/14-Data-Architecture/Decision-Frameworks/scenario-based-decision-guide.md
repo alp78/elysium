@@ -13,6 +13,10 @@ status: complete
 
 # Scenario-Based Decision Guide
 
+> [!quote]
+> "Plan to throw one away; you will, anyhow."
+> — **Fred Brooks**
+
 This is the practical "I have THIS business need, what do I use?" guide. Instead of starting from theory, it starts from **real-world situations** that data engineers face and works backward to the right architecture, technology stack, and design decisions.
 
 Every scenario in this guide has been built from patterns proven in production. They are starting points, not prescriptions. Adjust based on your constraints — team size, budget, timeline, regulatory requirements, and existing infrastructure.

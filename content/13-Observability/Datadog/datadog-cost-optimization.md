@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Cost Optimization
 
+> [!quote]
+> "Monitoring is so important that our monitoring systems need to be more available and scalable than the systems being monitored."
+> — **Gene Kim**
+
 The the data pipeline project Datadog setup runs two agents (Airflow VM and SQL VM) plus a GCP Integration. The agent software itself is free — costs are incurred from Datadog's SaaS based on host count and log/trace volume.
 
 ---

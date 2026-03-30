@@ -13,6 +13,10 @@ status: complete
 
 # BigQuery for Data Engineering - Database Objects & Performance
 
+> [!quote]
+> "Simplicity is prerequisite for reliability."
+> — **Edsger W. Dijkstra**
+
 Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb
 

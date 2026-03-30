@@ -13,6 +13,10 @@ status: complete
 
 # GCP Projects and APIs
 
+> [!quote]
+> "Simplicity is a great virtue but it requires hard work to achieve it and education to appreciate it. And to make matters worse: complexity sells better."
+> — **Edsger W. Dijkstra**
+
 GCP projects are the fundamental organizational unit for resources, billing, and access control. Every resource — VMs, BigQuery datasets, Cloud Run jobs, GCS buckets — lives inside a project. APIs must be explicitly enabled per project before the corresponding services can be used; an `API not enabled` error is always the result of a missing `gcloud services enable` call.
 
 ### Why GCP Projects and APIs Matter

@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Conditional Resources
 
+> [!quote]
+> "Make it work, make it right, make it fast."
+> — **Kent Beck**
+
 Terraform uses `count` for conditional resource creation and `for_each` for creating multiple instances from a collection. These are the primary mechanisms for parameterized, reusable infrastructure configurations.
 
 ## count — Conditional Creation

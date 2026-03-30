@@ -13,6 +13,10 @@ status: complete
 
 # 02. Strings - Python
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 ## String Creation & Basics
 
 #### String (str) - immutable sequence of Unicode characters

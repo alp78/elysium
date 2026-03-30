@@ -13,6 +13,10 @@ status: complete
 
 # Troubleshooting Flowcharts
 
+> [!quote]
+> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
+> — **Brian Kernighan**
+
 Four decision trees for the most common SQL Server problems: slowness, pipeline failures, indexing decisions, and disk space emergencies. Start with the relevant flowchart, then follow references to deeper notes for each resolution path. To practice applying these flowcharts to realistic scenarios, work through [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/sql-server-problems).
 
 ---

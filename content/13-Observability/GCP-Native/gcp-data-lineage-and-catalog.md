@@ -68,6 +68,10 @@ status: complete
 
 # GCP Data Lineage and Catalog — Definitive Reference
 
+> [!quote]
+> "If you can not measure it, you can not improve it."
+> — **Lord Kelvin**
+
 ---
 
 ## Why Lineage and Cataloging Matter for Data Engineers

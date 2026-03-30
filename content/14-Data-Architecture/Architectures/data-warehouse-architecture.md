@@ -13,6 +13,10 @@ status: complete
 
 # Data Warehouse Architecture
 
+> [!quote]
+> "Dimension tables are the soul of the data warehouse."
+> — **Ralph Kimball**
+
 A **data warehouse** (DWH, also called an enterprise data warehouse or EDW) is a subject-oriented, integrated, non-volatile, and time-variant collection of data structured to support management decision-making. Unlike an OLTP database optimized for fast individual row writes, a data warehouse is purpose-built for OLAP — scanning millions of rows, aggregating across large time ranges, and answering complex multi-dimensional analytical questions at speed.
 
 ---

@@ -13,6 +13,10 @@ status: complete
 
 # sqlcmd Connection and Usage
 
+> [!quote]
+> "There are only two industries that call their customers 'users': illegal drugs and software."
+> — **Edward Tufte**
+
 `sqlcmd` is the primary command-line interface for SQL Server, used for connecting, executing ad-hoc queries, running script files, and exporting results. Understanding every flag and output option is essential for scripting production operations and incident response.
 
 ### go-sqlcmd vs Classic sqlcmd

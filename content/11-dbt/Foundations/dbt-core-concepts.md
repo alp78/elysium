@@ -9,6 +9,10 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 
 # dbt Core Concepts
 
+> [!quote]
+> "Data engineering is much closer to software engineering than it is to data science."
+> — **Maxime Beauchemin**
+
 > [!abstract] When You Need This
 > You are setting up dbt for the first time, or onboarding a team member who has never used it. This note explains what dbt is, how it works internally, and the mental model for thinking about dbt projects.
 

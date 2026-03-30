@@ -23,6 +23,10 @@ status: complete
 
 # Error Handling and Retry Patterns
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 Every tool in the vault handles errors in its own way — bash `trap`, Airflow retries, SQL Server deadlock retry, API backoff. This page provides the **universal theory** that cuts across all of them: error classification, retry strategies, failure propagation, circuit breakers, and dead letter queues. Every implementation detail links to the specific page and heading where it already exists.
 
 ---

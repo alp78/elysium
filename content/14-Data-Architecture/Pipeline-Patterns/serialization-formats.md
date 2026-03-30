@@ -13,6 +13,10 @@ status: complete
 
 # Serialization Formats
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 Serialization is the bridge between in-memory data structures and persistent storage or network transmission. This note covers every serialization format a data engineer encounters, from human-readable (JSON, YAML) to high-performance binary (Protobuf, Avro, MessagePack). For detailed JSON and CSV handling, see [CSV processing with awk](https://alp78.github.io/elysium/01-Shell/Text-Processing/awk-data-processing). For Parquet-specific operations, see parquet files.
 
 ### Serialization Format Decision Matrix

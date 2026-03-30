@@ -13,6 +13,13 @@ status: complete
 
 # Observability Strategy Matrix
 
+> [!quote]
+> "Monitoring tells you whether a system is working. Observability lets you ask why it's not working."
+> — **Charity Majors**
+>
+> "No complex system is ever fully healthy."
+> — **Cindy Sridharan**
+
 This page answers **what to monitor** for every component in the Elysium data platform. It does not cover how to configure any tool — every cell in the matrix links to the implementation page that does.
 
 ## The Three Pillars Applied to Data Pipelines

@@ -25,6 +25,13 @@ status: complete
 
 # Data Pipeline Testing Strategy
 
+> [!quote]
+> "Program testing can be used to show the presence of bugs, but never to show their absence."
+> — **Edsger W. Dijkstra**
+>
+> "Write tests until fear is transformed into boredom."
+> — **Kent Beck**
+
 Every page in this vault covers *how* to use a testing tool — pytest fixtures, dbt generic tests, GitHub Actions workflows. This page answers the strategy question: **what should I test, at which layer, with which tool, and when does each test run?**
 
 ---

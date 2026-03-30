@@ -17,6 +17,10 @@ status: complete
 
 # 08 — Visualization
 
+> [!quote]
+> "The greatest value of a picture is when it forces us to notice what we never expected to see."
+> — **John Tukey**
+
 Plotly.NET for interactive charts, ScottPlot for static/performance, OxyPlot for PDF export.
 
 ---

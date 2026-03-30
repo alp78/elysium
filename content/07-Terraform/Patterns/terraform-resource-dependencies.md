@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Resource Dependencies
 
+> [!quote]
+> "Optimism is an occupational hazard of programming; feedback is the treatment."
+> — **Kent Beck**
+
 Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [terraform-problems](https://alp78.github.io/elysium/07-Terraform/terraform-problems).
 
 ## How the Dependency Graph Works

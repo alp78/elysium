@@ -17,6 +17,10 @@ status: complete
 
 # 03 — Transformations, Expressions & Chaining
 
+> [!quote]
+> "If you torture the data long enough, it will confess to anything."
+> — **Ronald Coase**
+
 Polars.NET vs Deedle: Create columns, expressions, method chaining.
 
 ---

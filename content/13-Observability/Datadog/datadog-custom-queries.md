@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Custom SQL Server Metric Queries
 
+> [!quote]
+> "Not everything that counts can be counted, and not everything that can be counted counts."
+> — **William Bruce Cameron**
+
 Custom queries let you track application-specific metrics from SQL Server DMVs. They are defined in `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` under the `custom_queries` key within the instance block.
 
 > [!warning] Metric Name Prefix

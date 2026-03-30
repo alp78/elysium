@@ -13,6 +13,10 @@ status: complete
 
 # Datadog GCP Integration Setup
 
+> [!quote]
+> "No complex system is ever fully healthy."
+> — **Cindy Sridharan**
+
 The GCP Integration enables Datadog to pull metrics from Cloud Run, Compute Engine, and other GCP services via the Cloud Monitoring API. This is how Cloud Run job metrics (CPU, memory, execution count) appear in Datadog — since Cloud Run jobs are ephemeral, no Datadog agent can run inside them.
 
 ---

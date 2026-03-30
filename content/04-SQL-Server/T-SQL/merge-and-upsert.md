@@ -13,6 +13,10 @@ status: complete
 
 # MERGE and Upsert Patterns
 
+> [!quote]
+> "I consider ODBC among the worst interfaces on the planet."
+> — **Michael Stonebraker**
+
 SQL Server offers several strategies for loading data where rows may already exist: truncate-reload, insert-or-update (upsert), MERGE, and SCD Type 2 close-and-insert. The correct choice depends on whether you need history, whether the source is append-only, and whether the operation must be atomic. The data pipeline uses all four patterns across its bronze, silver, and gold layers.
 
 ---

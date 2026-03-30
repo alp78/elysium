@@ -27,6 +27,10 @@ status: complete
 
 # Functional Pipeline Architecture
 
+> [!quote]
+> "I'm not a great programmer; I'm just a good programmer with great habits."
+> — **Kent Beck**
+
 This is a composite architecture combining five named principles from different engineering disciplines. No single established name exists for the combination — each principle has deep literature independently. Their power comes from using them together.
 
 Two reference implementations exist:

@@ -9,6 +9,10 @@ description: "CLI commands, node selection, flags, output interpretation"
 
 # dbt: CLI Reference
 
+> [!quote]
+> "Make it work, make it right, make it fast."
+> — **Kent Beck**
+
 Complete reference for the dbt command-line interface. All examples are oriented toward a financial data platform running index, OHLCV, ESG, and corporate action models. For a condensed quick-reference version, see [dbt-cheat-sheet](https://alp78.github.io/elysium/11-dbt/dbt-cheat-sheet).
 
 ---

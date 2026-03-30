@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Dashboards
 
+> [!quote]
+> "However beautiful the strategy, you should occasionally look at the results."
+> — **Winston Churchill**
+
 Three custom dashboards cover the data platform: **Pipeline Watch** (pipeline run metrics during execution), **SQL Server DBA** (database health and deadlock tracking), and **Airflow Orchestration** (scheduler health, DAG performance, task metrics).
 
 ---

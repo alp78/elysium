@@ -67,6 +67,10 @@ status: complete
 
 # Compliance and Auditability — Financial Index Calculation
 
+> [!quote]
+> "Trust, but verify."
+> — **Ronald Reagan**
+
 This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.
 
 ---

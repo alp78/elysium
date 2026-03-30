@@ -13,6 +13,10 @@ status: complete
 
 # Merge vs Rebase vs Squash
 
+> [!quote]
+> "I'm not a great programmer; I'm just a good programmer with great habits."
+> — **Kent Beck**
+
 Three strategies for integrating changes from one branch into another. Each produces a different commit history shape.
 
 ### Merge vs rebase vs squash — comparison table

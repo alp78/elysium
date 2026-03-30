@@ -15,6 +15,10 @@ status: complete
 
 These features let you treat command output as files and embed multi-line strings directly in your scripts. They eliminate temporary files and make complex data pipeline scripts significantly cleaner.
 
+> [!quote]
+> "Simplicity is a great virtue but it requires hard work to achieve it and education to appreciate it."
+> — **Edsger Dijkstra**
+
 ## Process Substitution
 
 Process substitution creates a virtual file descriptor containing a command's output. No temporary files are created or cleaned up.

@@ -9,6 +9,10 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 
 # dbt: Testing Framework
 
+> [!quote]
+> "All models are wrong, but some are useful."
+> — **George Box**
+
 dbt's testing system is the primary mechanism for asserting data quality, implementing a key layer of the [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework). Tests run against materialised relations in the warehouse, covering structural constraints, business rules, and statistical expectations. When paired with [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts), these tests enforce guarantees that downstream consumers can depend on. This note covers all four test categories: built-in generic, dbt-utils, dbt-expectations, and custom tests.
 
 ---

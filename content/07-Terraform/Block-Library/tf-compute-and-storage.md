@@ -63,6 +63,10 @@ status: complete
 
 # Terraform Block Library — GCP Compute & Storage
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 > Self-contained, heavily commented Terraform blocks for GCP Compute Engine and Cloud Storage.
 > Each section includes a **when-to-use** note followed by the full resource block.
 > Copy, rename, and wire variables — every argument is explained inline.

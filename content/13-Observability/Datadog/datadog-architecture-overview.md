@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Architecture Overview
 
+> [!quote]
+> "No complex system is ever fully healthy."
+> — **Cindy Sridharan**
+
 Datadog monitoring for the data platform uses two agents and one GCP Integration to deliver full observability — metrics, logs, and traces — across every component from the SQL Server VM to ephemeral Cloud Run jobs.
 
 **Datadog Region: EU (`datadoghq.eu`) | GCP Region: europe-west1 | Agents: 2 (Airflow VM + SQL VM)**

@@ -13,6 +13,10 @@ status: complete
 
 # Datadog APM Traces — Pipeline Instrumentation
 
+> [!quote]
+> "Monitoring tells you whether a system is working. Observability lets you ask why it's not working."
+> — **Charity Majors**
+
 The `data-pipeline-pipeline` Cloud Run job uses `ddtrace` for APM instrumentation. No significant code changes are needed — `ddtrace` auto-instruments Python libraries at import time and creates per-step flame graphs showing SQL query durations, HTTP call latency, and overall step timing.
 
 ---

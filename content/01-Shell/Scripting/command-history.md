@@ -15,6 +15,13 @@ status: complete
 
 In an incident at 2 AM, you do not have time to retype a complex pipeline command from memory. Your shell history is a searchable log of every command you have run, and the speed at which you can recall and modify previous commands directly affects your response time.
 
+> [!quote]
+> "Those who cannot remember the past are condemned to repeat it."
+> — **George Santayana**
+>
+> "It's a curious thing about our industry: not only do we not learn from our mistakes, we also don't learn from our successes."
+> — **Keith Braithwaite**
+
 ## Bash History
 
 #### history, Ctrl+R, !!, !$ — search, recall, re-run commands

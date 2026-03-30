@@ -13,6 +13,13 @@ status: complete
 
 # 14. Testing - Python
 
+> [!quote]
+> "Program testing can be used to show the presence of bugs, but never to show their absence."
+> — **Edsger W. Dijkstra**
+>
+> "Make it work, make it right, make it fast."
+> — **Kent Beck**
+
 ## Testing Philosophy
 
 Testing is not about proving code works — it's about **catching bugs before they reach production**.

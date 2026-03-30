@@ -13,6 +13,10 @@ status: complete
 
 # dbt: The Transformation Layer
 
+> [!quote]
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+> — **Martin Fowler**
+
 > For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt).
 
 dbt (Data Build Tool) has become the standard for managing SQL-based transformations in modern data platforms. Leading data platform teams require expertise in dbt for implementing layered transformation flows and managing lakehouse concepts. dbt does not extract or load data — it transforms data that is already in your warehouse, applying software engineering practices (version control, testing, documentation) to SQL.

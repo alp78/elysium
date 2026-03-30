@@ -13,6 +13,10 @@ status: complete
 
 # Compression — Shrinking Data for Transfer and Storage
 
+> [!quote]
+> "There is no compression algorithm for experience."
+> — **Andy Jassy**
+
 When you move data between systems (GCE VM to GCS, pipeline output to archive), compression is not optional — it directly affects transfer time, storage cost, and bandwidth consumption. Choosing the right compression algorithm is an engineering decision, not an aesthetic one.
 
 ## Linux — gzip, zstd, tar

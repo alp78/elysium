@@ -13,6 +13,10 @@ status: complete
 
 # 07. Generics & Functional Data Processing - Python
 
+> [!quote]
+> "All non-trivial abstractions, to some degree, are leaky."
+> — **Joel Spolsky**
+
 ```python
 from typing import TypeVar, Generic, Optional
 from itertools import groupby

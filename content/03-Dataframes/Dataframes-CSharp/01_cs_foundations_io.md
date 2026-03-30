@@ -17,6 +17,10 @@ status: complete
 
 # 01 – Foundations and Data Structures
 
+> [!quote]
+> "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
+> — **Linus Torvalds**
+
 Polars.NET vs Deedle: Series, DataFrames, and Data Types
 
 ---

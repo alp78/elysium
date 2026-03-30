@@ -13,6 +13,13 @@ status: complete
 
 # Date and Time Handling
 
+> [!quote]
+> "Time is an illusion. Lunchtime doubly so."
+> — **Douglas Adams**
+>
+> "There is no problem in computer science that cannot be solved by adding another level of indirection. But that usually will create another problem."
+> — **David Wheeler**
+
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
 This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then SQL Server, Python, and C#. For the Python and C# datetime libraries in more depth, see [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils) and [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils).

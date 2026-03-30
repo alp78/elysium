@@ -24,6 +24,13 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 - **Structural integrity** (vertical) — pure transforms, typed contracts, quality gates, immutable models
 - **Semantic integrity** (horizontal) — column context, business context, temporal markers, lineage tracking
 
+> [!quote]
+> "The object-oriented version of spaghetti code is, of course, 'lasagna code'. Too many layers."
+> — **Roberto Waltman**
+>
+> "Make it work, make it right, make it fast."
+> — **Kent Beck**
+
 > [!abstract] Pipeline Dependencies
 >
 > All imports organized by category: stdlib, data, validation, database, serving, visualization.

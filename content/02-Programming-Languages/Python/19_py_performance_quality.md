@@ -25,6 +25,10 @@ Topics covered:
 - Type Safety & Static Analysis
 - Profiling Real Workloads
 
+> [!quote]
+> "We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil."
+> — **Donald Knuth**
+
 ## Timing & Benchmarking
 
 #### perf_counter and timeit — wall-clock timing

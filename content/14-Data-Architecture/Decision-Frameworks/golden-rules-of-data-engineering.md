@@ -13,6 +13,13 @@ status: complete
 
 # The Golden Rules of Data Engineering
 
+> [!quote]
+> "Simplicity is a prerequisite for reliability."
+> — **Edsger W. Dijkstra**
+>
+> "Adding manpower to a late software project makes it later."
+> — **Fred Brooks**
+
 Every discipline has its load-bearing principles — the handful of truths that, once internalized, make thousands of smaller decisions nearly automatic. Medicine has "first, do no harm." Engineering has "measure twice, cut once." Data engineering has these ten rules.
 
 These are not commandments handed down from a conference keynote. They are patterns distilled from painful production incidents, surprise cloud bills, 3 AM pages, migrations that took three times longer than estimated, and the quiet satisfaction of systems that just work, month after month, without anyone thinking about them. That last part — the not thinking about it — is the goal.

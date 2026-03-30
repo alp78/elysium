@@ -13,6 +13,10 @@ status: stable
 
 # Terraform Cheat Sheet
 
+> [!quote]
+> "We were seventh to market... no one was a clear winner. It was a warring market."
+> — **Mitchell Hashimoto**
+
 Exhaustive CLI reference for Terraform. Every command, flag, HCL built-in function, and common coding pattern is documented here. Follow wikilinks for narrative explanations and deeper dives.
 
 ---

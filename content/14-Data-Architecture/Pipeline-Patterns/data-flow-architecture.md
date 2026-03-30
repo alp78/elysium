@@ -31,6 +31,10 @@ status: complete
 
 # Data Flow Architecture
 
+> [!quote]
+> "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
+> — **Linus Torvalds**
+
 This page is the topology map for the entire stack. Every other page in the vault covers *how* to use a specific tool — this page answers *which* tool, *what format*, and *what pattern* for moving data from any A to any B.
 
 ---

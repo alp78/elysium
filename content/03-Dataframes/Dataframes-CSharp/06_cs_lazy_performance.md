@@ -17,6 +17,13 @@ status: complete
 
 # 06 — Lazy API & Performance
 
+> [!quote]
+> "Premature optimization is the root of all evil."
+> — **Donald Knuth**
+>
+> "The First Rule of Program Optimization: Don't do it. The Second Rule of Program Optimization (for experts only): Don't do it yet."
+> — **Michael A. Jackson**
+
 Polars.NET lazy execution, optimization, benchmarks. Deedle is eager-only.
 
 ---

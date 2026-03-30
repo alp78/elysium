@@ -9,6 +9,10 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 
 # dbt: Project Structure
 
+> [!quote]
+> "There is no reason to tolerate an unstructured approach."
+> — **Ralph Kimball**
+
 A well-organised dbt project is the foundation for maintainability at scale. This note covers the full directory layout, naming conventions, config inheritance, source declarations, and multi-adapter dispatch patterns for a financial data platform handling index constituents, OHLCV prices, ESG scores, and corporate actions.
 
 ---

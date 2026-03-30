@@ -13,6 +13,10 @@ status: complete
 
 # Technology Selection Matrices
 
+> [!quote]
+> "We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil."
+> — **Donald Knuth**
+
 Every technology decision in data engineering is a trade-off. There is no universally "best" language, database, or architecture — only the best fit for a given context of scale, team skill, budget, latency requirements, and operational complexity. This note is the lookup table. When you face a technology decision, find the relevant matrix, check the constraints, and follow the decision rule.
 
 > [!tip] How to Use This Reference

@@ -60,6 +60,13 @@ status: complete
 
 # GCP Pipeline Health and SLA Monitoring
 
+> [!quote]
+> "Nines don't matter if users aren't happy."
+> — **Charity Majors**
+>
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible. SLA monitoring is a core practice within the [DataOps discipline](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), ensuring that pipeline reliability is measured and reported systematically rather than reactively.
 
 ---

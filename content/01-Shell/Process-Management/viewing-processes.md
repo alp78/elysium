@@ -15,6 +15,10 @@ status: complete
 
 When an Airflow VM is slow, a query is hanging, or a runaway process is pinning the CPU — your first move is always to understand what is running. `ps aux` gives you the snapshot; `htop` gives you the real-time picture; `iostat` tells you if the disk is the bottleneck.
 
+> [!quote]
+> "You can have a second computer once you've shown you know how to use the first one."
+> — **Paul Barham**
+
 ## Linux — ps, top, htop, pstree
 
 > [!info] ps aux flags

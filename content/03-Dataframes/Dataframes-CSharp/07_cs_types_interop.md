@@ -17,6 +17,10 @@ status: complete
 
 # 07 — Advanced Types & Interoperability
 
+> [!quote]
+> "The nice thing about standards is that you have so many to choose from."
+> — **Andrew S. Tanenbaum**
+
 Polars.NET vs Deedle: Categoricals, nested types, library conversions, I/O deep dive.
 
 ---

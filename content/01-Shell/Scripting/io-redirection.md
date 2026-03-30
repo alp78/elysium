@@ -15,6 +15,13 @@ status: complete
 
 Every process has three standard file descriptors: fd 0 (stdin) for input, fd 1 (stdout) for normal output, and fd 2 (stderr) for error messages. Redirection lets you reroute these streams to files, other streams, or `/dev/null` (the void). Mastering redirection is essential for logging pipeline runs, suppressing noise, and separating errors from normal output.
 
+> [!quote]
+> "Expect the output of every program to become the input to another, as yet unknown, program."
+> — **Doug McIlroy**
+>
+> "When in doubt, use brute force."
+> — **Ken Thompson**
+
 ## Bash Redirection
 
 #### > operator — redirect stdout to file (overwrite)

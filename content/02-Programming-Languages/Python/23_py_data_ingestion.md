@@ -13,6 +13,10 @@ status: complete
 
 # 23. Data Ingestion — SQL Server, BigQuery, Firestore
 
+> [!quote]
+> "Data is a precious thing and will last longer than the systems themselves."
+> — **Tim Berners-Lee**
+
 ```python
 # Suppress tqdm progress bars globally (pandas_gbq uses tqdm internally)
 import os

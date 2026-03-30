@@ -13,6 +13,10 @@ status: complete
 
 # Index Types and Strategy
 
+> [!quote]
+> "SQL is very far from being the 'perfect' relational language — it suffers from numerous sins of both omission and commission."
+> — **C.J. Date**
+
 Indexes are the single most impactful lever for SQL Server query performance. The right index on the right columns turns a full table scan (thousands of page reads) into a B-tree seek (3-4 page reads). The wrong indexes, or too many indexes, slow down every INSERT, UPDATE, and DELETE. This note covers all index types, how to choose among them, and how to maintain them over time.
 
 ---

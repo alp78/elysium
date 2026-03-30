@@ -62,6 +62,10 @@ status: complete
 
 # Firestore — Data Model and Operations
 
+> [!quote]
+> "Data is a precious thing and will last longer than the systems themselves."
+> — **Tim Berners-Lee**
+
 ### Why Firestore for Data Engineering
 
 Firestore's unbeatable value comes down to one thing no other GCP service does: **real-time push to clients with zero infrastructure.**

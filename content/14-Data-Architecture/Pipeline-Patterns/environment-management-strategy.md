@@ -27,6 +27,10 @@ status: complete
 
 # Environment Management Strategy
 
+> [!quote]
+> "You need to get everything in version control. Not just the code, but everything required to build the environment."
+> — **Gene Kim**
+
 Every tool in the stack — gcloud, Terraform, dbt, Airflow, GitHub Actions, SQL Server, BigQuery — has its own mechanism for separating dev from prod. This page is the unifying strategy that coordinates all of them: how many environments, what differs between them, how changes are promoted, and how each tool switches context.
 
 ---

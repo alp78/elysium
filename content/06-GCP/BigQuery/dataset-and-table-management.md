@@ -13,6 +13,10 @@ status: complete
 
 # BigQuery Dataset and Table Management
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 BigQuery is Google's serverless data warehouse. It can scan petabytes in seconds, charges $5 per TB scanned (on-demand), and requires zero infrastructure management. The `bq` CLI (installed with the gcloud SDK) is the command-line interface for all BigQuery operations — listing resources, inspecting schemas, creating structures, and deleting objects. The most consequential configuration decisions — dataset location, partitioning strategy, and clustering columns — must be made at table creation time and cannot be changed later.
 
 ### Listing BigQuery Datasets and Tables

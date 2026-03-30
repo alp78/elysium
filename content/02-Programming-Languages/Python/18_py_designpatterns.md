@@ -20,6 +20,10 @@ Topics covered:
 - Reflection / Introspection
 - Project Structure & Best Practices
 
+> [!quote]
+> "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
+> — **Paul Graham**
+
 ## Dependency Injection
 
 > [!tip] Related pattern

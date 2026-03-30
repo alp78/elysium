@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Variables and Outputs
 
+> [!quote]
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
+
 Terraform's input variables and output values are the primary mechanism for making infrastructure configurations reusable and parameterized. Variables let callers supply values at runtime; outputs surface resource attributes after apply.
 
 ## Input Variables — variables.tf

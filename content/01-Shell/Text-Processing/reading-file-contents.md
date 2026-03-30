@@ -13,6 +13,13 @@ status: complete
 
 # Reading File Contents — From Quick Glance to Deep Analysis
 
+> [!quote]
+> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
+> — **Brian Kernighan**
+>
+> "Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it."
+> — **Brian Kernighan**
+
 A senior data engineer reads files differently depending on context. Checking a config file means reading the whole thing. Investigating a 50GB log file means surgical extraction. Understanding a Parquet file means reading metadata, not data. Choosing the wrong tool turns a 30-second task into a server-killing operation.
 
 ## Linux — cat, head, tail, grep, awk

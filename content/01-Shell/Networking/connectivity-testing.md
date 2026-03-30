@@ -15,6 +15,10 @@ status: complete
 
 The first question in any network debugging session is: "Can my client reach the server at all?" This seems simple, but there are multiple layers that can fail: DNS resolution, TCP routing, firewall rules, and the service itself. Working through the layers systematically turns a 2-hour debugging session into a 5-minute one.
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+
 ## Linux — nc, dig, traceroute, mtr, ss
 
 #### nc (netcat) — testing port reachability

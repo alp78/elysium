@@ -9,6 +9,10 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 
 # dbt: Troubleshooting
 
+> [!quote]
+> "If you aren't testing in prod you aren't testing in reality -- just a weak dime store knockoff."
+> — **Charity Majors**
+
 Effective dbt troubleshooting follows a consistent pattern: reproduce the error with the smallest possible scope, use `dbt debug` and `dbt compile` to isolate the layer where it originates (Jinja, compilation, or runtime), then fix and verify.
 
 ---

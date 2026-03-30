@@ -13,6 +13,10 @@ status: complete
 
 # gcloud Configurations — Managing Multiple Projects
 
+> [!quote]
+> "The three chief virtues of a programmer are: laziness, impatience, and hubris."
+> — **Larry Wall**
+
 If you work across multiple GCP projects (dev, staging, production), switching `gcloud config set project` back and forth is error-prone. Named configurations solve this — each configuration is a named set of gcloud settings (project, region, zone, account) that you can switch between instantly.
 
 ## Creating and Switching Configurations

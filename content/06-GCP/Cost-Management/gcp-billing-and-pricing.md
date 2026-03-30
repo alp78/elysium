@@ -75,6 +75,13 @@ status: complete
 
 # GCP Billing and Pricing — Data Engineering Reference
 
+> [!quote]
+> "A budget tells us what we can't afford, but it doesn't keep us from buying it."
+> — **William Feather**
+>
+> "Cost awareness is a lost art. We need to regain that art."
+> — **Werner Vogels**
+
 This note is the single source of truth for GCP cost management across every data engineering service. It covers pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and practical gcloud / BigQuery commands for ongoing cost analysis.
 
 > [!important] Prices Are Approximate

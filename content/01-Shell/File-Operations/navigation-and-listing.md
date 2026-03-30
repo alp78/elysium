@@ -13,6 +13,13 @@ status: complete
 
 # Navigation and Listing — Seeing What You Have
 
+> [!quote]
+> "UNIX is basically a simple operating system, but you have to be a genius to understand the simplicity."
+> — **Dennis Ritchie**
+>
+> "I think the major good idea in Unix was its clean and simple interface: open, close, read, and write."
+> — **Ken Thompson**
+
 The `ls` command is your window into the file system. The flags you choose determine whether you see just filenames or a complete picture of sizes, permissions, ownership, and modification times. As a data engineer you regularly deal with directories containing gigabytes of data — the right listing command tells you what changed, what's consuming space, and whether a pipeline produced what it should.
 
 ## Linux — ls, du, df, tree

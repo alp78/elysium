@@ -13,6 +13,10 @@ status: complete
 
 # Terraform Compute — Virtual Machine Instances
 
+> [!quote]
+> "Cloud providers have tricked us into believing that we're all too dumb to operate our own infrastructure, at any scale."
+> — **Mitchell Hashimoto**
+
 This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestrator VM and the SQL Server database VM. These are the two compute instances in the example infrastructure.
 
 ### Architecture Context

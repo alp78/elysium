@@ -13,6 +13,10 @@ status: complete
 
 # Cloud Monitoring — Metrics and Alerts
 
+> [!quote]
+> "Monitoring is for known-unknowns and actionable alerts, observability is for unknown-unknowns and empowering you to ask arbitrary new questions."
+> — **Charity Majors**
+
 Cloud Monitoring captures time-series metrics for every GCP resource. When your VM's CPU spikes, when a Cloud Run job fails repeatedly, or when a Pub/Sub subscription is falling behind — Cloud Monitoring has the data. The `gcloud monitoring` commands let you explore available metrics and read historical data from the command line, without opening the Cloud Console. This is essential for scripted capacity planning and right-sizing decisions.
 
 ### Listing Available Cloud Monitoring Metric Types

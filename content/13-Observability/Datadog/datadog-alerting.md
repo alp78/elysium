@@ -13,6 +13,10 @@ status: complete
 
 # Datadog Alerting — Monitors and Notification Channels
 
+> [!quote]
+> "Nines don't matter if users aren't happy."
+> — **Charity Majors**
+
 Datadog monitors watch metrics over time and trigger notifications when conditions are met. The data platform uses monitors for SQL Server deadlock detection and Airflow scheduler health.
 
 ---

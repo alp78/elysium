@@ -13,6 +13,10 @@ status: complete
 
 # BigQuery Job Management
 
+> [!quote]
+> "Simplicity is prerequisite for reliability."
+> — **Edsger W. Dijkstra**
+
 Every BigQuery operation — query, load, export, copy — creates a job. Jobs are the unit of work in BigQuery. Understanding how to list jobs, inspect their details (including errors and bytes processed), and cancel runaway jobs is essential for incident response and cost governance. The job history is also your primary audit trail for understanding what ran, who ran it, and how much it cost.
 
 ### Listing Recent BigQuery Jobs

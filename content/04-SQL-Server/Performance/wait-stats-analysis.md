@@ -13,6 +13,10 @@ status: complete
 
 # Wait Stats Analysis
 
+> [!quote]
+> "In God we trust. All others must bring data."
+> — **W. Edwards Deming**
+
 Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks. For a structured process that incorporates these queries into a repeatable audit, see [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook).
 
 ---

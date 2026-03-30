@@ -50,6 +50,10 @@ status: complete
 
 # GitHub Actions Fundamentals
 
+> [!quote]
+> "There should be two tasks for a human being to perform to deploy software into a development, test, or production environment: to pick the version and environment and to press the 'deploy' button."
+> — **David Farley**
+
 > [!abstract] Summary
 > GitHub Actions automates software workflows directly in a repository. A **workflow** is a YAML file in `.github/workflows/` that defines when to run (triggers), where to run (runners), and what to run (jobs and steps). Workflows are typically triggered by the [daily Git workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) -- pushes, PRs, and merges fire the events that start CI pipelines.
 

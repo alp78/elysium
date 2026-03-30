@@ -15,6 +15,10 @@ status: complete
 
 The most underused debugging skill in data engineering is reading socket state. When a pipeline fails with "connection refused" or "connection timed out," the answer is almost always visible in the socket table — if you know how to read it. `ss` (socket statistics) is the modern replacement for `netstat` on Linux.
 
+> [!quote]
+> "Data dominates. If you've chosen the right data structures and organized things well, the algorithms will almost always be self-evident."
+> — **Rob Pike**
+
 ## Understanding `ss` Output
 
 `ss` reads directly from kernel data structures (netlink) instead of parsing `/proc/net` files, making it faster on systems with thousands of connections.

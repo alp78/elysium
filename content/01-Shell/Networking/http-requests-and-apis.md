@@ -15,6 +15,13 @@ status: complete
 
 Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For [REST API design patterns](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) including pagination, error handling, and idempotency, see the Data Architecture section.
 
+> [!quote]
+> "I just wanted it to do Internet transfers good, fast and reliably and that's what I worked on making reality."
+> — **Daniel Stenberg** (creator of curl)
+>
+> "Talk is cheap. Show me the code."
+> — **Linus Torvalds**
+
 ## Linux — curl
 
 #### curl — basic GET requests

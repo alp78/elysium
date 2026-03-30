@@ -13,6 +13,10 @@ status: complete
 
 # GitHub Actions CI/CD
 
+> [!quote]
+> "If it hurts, do it more frequently, and bring the pain forward."
+> — **Jez Humble**
+
 GitHub Actions automates workflows (build, test, deploy) triggered by events like pushes, PRs, schedules, or manual triggers. Workflows are defined in YAML files in `.github/workflows/`.
 
 ### How GitHub Actions Connects to Git

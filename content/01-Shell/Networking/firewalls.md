@@ -15,6 +15,13 @@ status: complete
 
 Every production database should be accessible ONLY from authorized sources. A SQL Server port open to the internet is a security incident waiting to happen. Firewalls are your perimeter defense — and relying on only one layer is not enough.
 
+> [!quote]
+> "Complexity is the worst enemy of security, and our systems are getting more complex all the time."
+> — **Bruce Schneier**
+>
+> "You can't trust code that you did not totally create yourself."
+> — **Ken Thompson**
+
 ### ufw — Linux Uncomplicated Firewall for port access control
 
 #### ufw status — check firewall state and rules

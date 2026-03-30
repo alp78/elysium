@@ -13,6 +13,10 @@ status: complete
 
 # Partitioning Strategies
 
+> [!quote]
+> "The key to performance is elegance, not battalions of special cases."
+> — **Jon Bentley and Doug McIlroy**
+
 SQL Server table partitioning divides a large table into smaller horizontal slices based on a partition key column — typically a date. Each partition is a logically independent unit: queries that filter on the partition key can skip entire partitions without scanning them (partition elimination). Partitions also enable fast `SWITCH` operations that move a full partition between tables in milliseconds — the basis for efficient archiving and sliding-window pipeline patterns. BigQuery uses the same partitioning concept for [cost optimization and query performance](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!info] When to Partition

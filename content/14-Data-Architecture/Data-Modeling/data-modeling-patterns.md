@@ -27,6 +27,13 @@ erDiagram
 
 # Data Modeling Patterns
 
+> [!quote]
+> "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
+> — **Tony Hoare**
+>
+> "The grain must be declared before choosing dimensions or facts because every candidate dimension or fact must be consistent with the grain."
+> — **Ralph Kimball**
+
 Data modeling is the discipline of deciding how to structure data for storage, retrieval, and analysis. The choice of model determines query performance, schema flexibility, load complexity, and the kinds of questions you can answer efficiently. Most practitioners default to dimensional modeling (star/snowflake) for analytics — and that is often correct — but it is only one pattern among many. Each model exists because it solves a specific class of problem better than the alternatives.
 
 This note covers the broader landscape: **normalized (3NF)**, **Data Vault 2.0**, **wide/flat (OBT)**, **activity schema**, **document**, **graph**, and **time-series** models. All examples draw from a financial index provider domain — an organization that calculates and publishes market indices, maintains constituent lists, tracks daily valuations, and serves this data to institutional clients.

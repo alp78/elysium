@@ -75,6 +75,10 @@ status: complete
 
 # REST API Design and Consumption
 
+> [!quote]
+> "Talk is cheap. Show me the code."
+> — **Linus Torvalds**
+
 > [!abstract] Purpose
 > This is the definitive reference on REST APIs for data engineering work. It covers two directions: **consuming** external APIs (market data vendors, SaaS platforms, financial data feeds) and **building** internal data APIs that serve processed results to dashboards, downstream systems, and automated consumers. Dense with working code.
 

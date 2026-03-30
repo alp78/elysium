@@ -13,6 +13,10 @@ status: complete
 
 # Linux Task Scheduling — Cron, Systemd Timers, at, and Anacron
 
+> [!quote]
+> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
+> — **Brian Kernighan**
+
 Linux task scheduling encompasses every mechanism for running commands automatically at a specified time or interval: cron for recurring jobs, systemd timers for dependency-aware scheduling, `at` for one-time future execution, and anacron for machines that are not always powered on. This reference covers all four tools plus SSH configuration for remote scheduling, data engineering patterns, and a decision framework for when to use cron vs Airflow vs Cloud Scheduler.
 
 > [!info] Source

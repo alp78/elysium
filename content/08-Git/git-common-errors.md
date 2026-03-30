@@ -62,6 +62,10 @@ status: complete
 
 # Git Common Errors & How to Fix Them
 
+> [!quote]
+> "Make it work, make it right, make it fast."
+> — **Kent Beck**
+
 This note covers 25 common Git and GitHub error messages encountered in day-to-day data engineering work. Each entry explains why the error happens and provides the exact commands to resolve it. Related recovery techniques are in [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo); branch and merge mechanics are in [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging). To practice diagnosing these errors in realistic scenarios, work through [git-problems](https://alp78.github.io/elysium/08-Git/git-problems).
 
 ---

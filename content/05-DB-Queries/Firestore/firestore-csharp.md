@@ -13,6 +13,10 @@ status: complete
 
 # Firestore for Data Engineering — C#
 
+> [!quote]
+> "Data is a precious thing and will last longer than the systems themselves."
+> — **Tim Berners-Lee**
+
 > [!danger] .NET 10 Breaks Firestore SDK Reads
 >
 > On .NET 10, the `Google.Cloud.Firestore` SDK fails on document reads, real-time listeners, and aggregation queries due to a missing `AsyncInterfaces` assembly. Writes work normally. This page uses the Firestore REST API as a workaround for reads. Check for SDK updates before upgrading to .NET 10 in production.

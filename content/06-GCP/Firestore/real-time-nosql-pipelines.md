@@ -66,6 +66,10 @@ status: complete
 
 # Real-Time NoSQL Pipelines on GCP
 
+> [!quote]
+> "There are only two hard problems in distributed systems: 2. Exactly-once delivery 1. Guaranteed order of messages 2. Exactly-once delivery"
+> — **Mathias Verraes**
+
 Firestore is a serverless, fully managed document database that occupies a specific niche in the GCP data stack: low-latency reads and writes, flexible schema, and native real-time listeners that push changes to clients without polling. This note covers how to use Firestore as the connective tissue of data pipelines — tracking state, reacting to events, driving configuration, and acting as a hot-tier store alongside BigQuery and Pub/Sub.
 
 > [!tip] Scope

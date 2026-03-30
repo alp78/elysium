@@ -9,6 +9,13 @@ description: "Comprehensive catalog of Airflow production problems — 25 issues
 
 # Airflow Production Problems
 
+> [!quote]
+> "Everything fails, all the time."
+> — **Werner Vogels**
+>
+> "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
+> — **Edsger Dijkstra**
+
 Airflow is the de facto orchestrator for data pipelines, but its flexibility comes with operational complexity. In a financial index platform where missed SLAs mean regulatory exposure, every problem below has been encountered in production. This note catalogs each one, explains why it happens, and provides actionable prevention and fix protocols. The context throughout is self-hosted Airflow on Docker Compose, with SQL Server and BigQuery as data backends, GCP infrastructure, and strict publication SLAs for financial index and ESG data.
 
 ---

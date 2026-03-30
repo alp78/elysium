@@ -13,6 +13,10 @@ status: complete
 
 # 09. File I/O & Serialization - Python
 
+> [!quote]
+> "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
+> — **Fred Brooks**
+
 ```python
 import os
 import csv

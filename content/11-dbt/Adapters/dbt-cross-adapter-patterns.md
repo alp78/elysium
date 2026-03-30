@@ -9,6 +9,10 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 
 # dbt: Cross-Adapter Patterns
 
+> [!quote]
+> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
+> — **Martin Fowler**
+
 When a dbt project targets more than one database — or when the same codebase must run against dev (SQL Server) and prod (BigQuery) — adapter-specific SQL divergence becomes a maintenance problem. dbt provides two mechanisms to manage this: the **dispatch macro pattern** and **`target.type` conditional logic**. This note explains both, when to use each, and how to test across adapters.
 
 ---

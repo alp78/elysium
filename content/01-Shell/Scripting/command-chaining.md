@@ -15,6 +15,10 @@ status: complete
 
 Command chaining operators use process exit codes to decide what runs next. Every command exits with a numeric code: 0 means success, anything else means failure. Understanding these operators is the difference between a deployment script that stops on the first error and one that silently plows through failures, leaving your system in an inconsistent state.
 
+> [!quote]
+> "This is the Unix philosophy: Write programs that do one thing and do it well. Write programs to work together. Write programs to handle text streams, because that is a universal interface."
+> — **Doug McIlroy**
+
 ## The Four Operators
 
 ### AND Operator (&&) — Fail-Fast Chaining
