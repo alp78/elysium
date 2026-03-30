@@ -85,13 +85,9 @@ How to choose the right technology, architecture, data model, and protocol for a
 |------|-------------|
 | [[five-pillars-of-data-engineering]] | Reliability, observability, efficiency, security, operability — the senior engineering mindset |
 
-## Maps of Content
+## Map of Content
 
-Curated, narrated link collections for cross-cutting themes.
-
-- [[moc-data-pipeline-lifecycle]] — Design → provisioning → ingestion → transformation → orchestration → monitoring
-- [[moc-infrastructure-as-code]] — Terraform foundations → GCP resources → patterns → operations → CI/CD
-- [[moc-patterns]] — Every reusable pattern in the vault, grouped by concern
+* [[moc-data-architecture]] — All 29 pages in this section organized into 6 knowledge domains: system blueprints, data modeling, pipeline construction, pipeline reliability, integration & protocols, and principles & decisions.
 
 ## Key Concepts
 

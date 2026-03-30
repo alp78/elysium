@@ -1,17 +1,10 @@
 ---
-type: index
-category: data-architecture
-technology: [terraform, gcp, github-actions]
-tags: [data-architecture, architecture, terraform, gcp, github-actions]
-aliases: [Infrastructure as Code MOC, IaC MOC, Terraform MOC]
-keywords: [infrastructure as code, iac, terraform, gcp, provisioning, networking, compute, iam, cloud run, ci/cd, deployment]
-description: "Map of Content for Infrastructure as Code — Terraform fundamentals, GCP resource provisioning, patterns, and CI/CD integration."
-related:
-  - "[[index|Elysium]]"
-  - "[[terraform-cheat-sheet]]"
-created: 2026-03-22
-updated: 2026-03-22
-status: complete
+title: "MOC: Infrastructure as Code"
+tags:
+  - moc
+  - terraform
+  - gcp
+  - github-actions
 ---
 
 # MOC: Infrastructure as Code
@@ -44,11 +37,9 @@ Each file in the Terraform configuration manages a specific domain:
 
 ## Operations
 
-- the destroy and rebuild runbook — Terraform destroy and rebuild workflow
-- the fresh project setup runbook — From-scratch GCP project provisioning
-- cost reference — Infrastructure cost breakdown
+- [[environment-management-strategy]] — Dev/staging/prod topology and promotion workflow
 
 ## CI/CD Integration
 
 - [[github-actions-workflows]] — Terraform in CI/CD pipelines
-- [[github-actions-ci-cd]] — project-specific deployment workflows
+- [[github-actions-ci-cd]] — Project-specific deployment workflows
