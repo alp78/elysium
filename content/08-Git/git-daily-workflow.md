@@ -17,7 +17,7 @@ status: complete
 > "As far as I'm concerned, if the code isn't checked into source control, it doesn't exist."
 > — **Jeff Atwood**
 
-Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day. For a condensed quick-reference, see [git-cheat-sheet](https://alp78.github.io/elysium/08-Git/git-cheat-sheet).
+Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day..
 
 ## Step 1: Check What's Changed
 
@@ -301,4 +301,3 @@ See [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — Automated testing and deployment
 - [git-common-errors](https://alp78.github.io/elysium/08-Git/git-common-errors) — 25+ error scenarios with fixes
 - [gitignore-patterns](https://alp78.github.io/elysium/08-Git/gitignore-patterns) — Keeping secrets and junk out of the repo
-- [git-cheat-sheet](https://alp78.github.io/elysium/08-Git/git-cheat-sheet) — One-page quick reference

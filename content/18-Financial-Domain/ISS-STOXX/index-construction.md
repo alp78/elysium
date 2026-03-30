@@ -384,6 +384,10 @@ Buffer rules create a zone of tolerance around the selection threshold. For exam
 
 ## C
 
+> [!quote]
+> "Diversification is the only free lunch in investing."
+> — **Harry Markowitz**
+
 ### Capping
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="898 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 898</span>
@@ -811,6 +815,10 @@ The effective date is the implementation point for all changes disclosed on the 
 
 ---
 
+> [!quote]
+> "The essence of investment management is the management of risks, not the management of returns."
+> — **Benjamin Graham**
+
 ### Eligibility Criteria
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
@@ -861,6 +869,10 @@ Eligibility criteria act as the first filter in the index construction process. 
 >
 
 ---
+
+> [!quote]
+> "The market can stay irrational longer than you can stay solvent."
+> — **John Maynard Keynes**
 
 ### Equal Weighting
 
@@ -1018,6 +1030,10 @@ Fast exit rules protect index integrity by promptly removing securities that no 
 
 ---
 
+> [!quote]
+> "Price is what you pay; value is what you get."
+> — **Warren Buffett**
+
 ### Free-Float
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,168 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,168</span>
@@ -1124,6 +1140,10 @@ Rounded to the nearest 0.05.
 
 ---
 
+> [!quote]
+> "It is not the return on my money that I am concerned about; it is the return of my money."
+> — **Will Rogers**
+
 ### Gross Return Index
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
@@ -1182,6 +1202,10 @@ Where $D_i$ is the gross (pre-tax) dividend per share for constituent $i$ going 
 ---
 
 ## I
+
+> [!quote]
+> "A random walk down Wall Street with its eyes shut would select a portfolio doing just as well as one carefully selected by experts."
+> — **Burton Malkiel**
 
 ### Index Calculation
 
@@ -1428,6 +1452,10 @@ $$
 
 ---
 
+> [!quote]
+> "Wide diversification is only required when investors do not understand what they are doing."
+> — **Warren Buffett**
+
 ### Index Universe
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="360 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 360</span>
@@ -1478,6 +1506,10 @@ The index universe is the starting pool before any eligibility or selection scre
 
 ---
 
+> [!quote]
+> "Liquidity is a coward — it disappears at the first sign of trouble."
+> — **Nassim Nicholas Taleb**
+
 ### Investability
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
@@ -1527,6 +1559,10 @@ Investability is a core design objective for benchmark indices. STOXX ensures in
 ---
 
 ## L
+
+> [!quote]
+> "Don't look for the needle in the haystack — just buy the haystack."
+> — **John C. Bogle**
 
 ### Market Capitalization Weighting
 
@@ -1764,6 +1800,10 @@ $$
 
 ---
 
+> [!quote]
+> "Rebalancing is a discipline that forces you to sell high and buy low."
+> — **William Bernstein**
+
 ### Rebalancing
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
@@ -1812,6 +1852,10 @@ Rebalancing corrects the weight drift that accumulates between review dates as c
 >
 
 ---
+
+> [!quote]
+> "In the short run, the market is a voting machine; in the long run, it is a weighing machine."
+> — **Benjamin Graham**
 
 ### Reconstitution
 
@@ -1891,6 +1935,10 @@ STOXX uses different review frequencies across its index families. The EURO STOX
 >
 
 ---
+
+> [!quote]
+> "The stock market is filled with individuals who know the price of everything, but the value of nothing."
+> — **Philip Fisher**
 
 ### Rules-Based Index
 
@@ -2147,6 +2195,10 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 ## T
 
+> [!quote]
+> "The miracle of compounding returns is overwhelmed by the tyranny of compounding costs."
+> — **John C. Bogle**
+
 ### Total Return Index
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
@@ -2196,6 +2248,10 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 >
 
 ---
+
+> [!quote]
+> "The biggest risk is not volatility but the permanent loss of capital."
+> — **Benjamin Graham**
 
 ### Tracking Error
 
@@ -2253,6 +2309,10 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 
 ---
 
+> [!quote]
+> "The stock market is a no-called-strike game — you don't have to swing at every pitch."
+> — **Warren Buffett**
+
 ### Turnover
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
@@ -2309,6 +2369,10 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 ---
 
 ## W
+
+> [!quote]
+> "If you don't know who you are, the stock market is an expensive place to find out."
+> — **George Goodman**
 
 ### Weighting Scheme
 

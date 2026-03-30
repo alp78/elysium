@@ -37,6 +37,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+> [!quote]
+> "The cheapest energy is the energy you never waste."
+> — **Amory Lovins**
+
 ## Cogeneration
 
 **Definition:** Cogeneration, also known as combined heat and power (CHP), is the simultaneous production of electricity and useful heat from a single fuel source. By capturing and using heat that would otherwise be wasted in conventional power generation, cogeneration plants can achieve total energy efficiencies of 80% or more, compared to about 35-50% for conventional power plants. This technology is widely used in industrial settings where both electricity and steam or hot water are needed.
@@ -48,6 +52,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 **Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage)
 
 ---
+
+> [!quote]
+> "The speculator's chief enemies are ignorance, greed, fear, and hope."
+> — **Jesse Livermore**
 
 ## Commodity Trading
 
@@ -72,6 +80,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 **Related terms:** [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Refining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Refining), [Petrochemicals](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Petrochemicals)
 
 ---
+
+> [!quote]
+> "The holy grail of energy is storage — once we solve storage, we solve renewables."
+> — **Elon Musk**
 
 ## Energy Storage
 
@@ -116,6 +128,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 **Related terms:** [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Pipeline (Energy)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Pipeline (Energy))
 
 ---
+
+> [!quote]
+> "Pipelines are the arteries of the energy system — they keep everything flowing."
+> — **Russell Gold**
 
 ## Midstream
 
@@ -184,6 +200,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 **Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG)
 
 ---
+
+> [!quote]
+> "The meek shall inherit the earth, but not its mineral rights."
+> — **J. Paul Getty**
 
 ## Upstream
 

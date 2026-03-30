@@ -25,6 +25,10 @@ date: 2026-03-28
 
 ## B
 
+> [!quote]
+> "Buy into a company because you want to own it, not because you want the stock to go up."
+> — **Warren Buffett**
+
 ### Blue-Chip Index
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
@@ -82,6 +86,10 @@ a blue-chip index is a list of the biggest, most well-known companies in a marke
 ---
 
 ## D
+
+> [!quote]
+> "The four most dangerous words in investing are: 'This time it's different.'"
+> — **Sir John Templeton**
 
 ### DAX
 
@@ -303,6 +311,10 @@ The eb.rexx indices measure how German government bonds are performing. Unlike m
 
 ---
 
+> [!quote]
+> "Successful investing is about managing risk, not avoiding it."
+> — **Benjamin Graham**
+
 ### EURO STOXX 50
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,242 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,242</span>
@@ -486,6 +498,10 @@ This index is a focused lens on Eurozone banks. If you want to know how the big 
 
 ---
 
+> [!quote]
+> "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
+> — **John D. Rockefeller**
+
 ### EURO STOXX Select Dividend 30
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
@@ -644,6 +660,10 @@ These indices are designed for investors who want their portfolios to account fo
 >
 
 ---
+
+> [!quote]
+> "The greatest threat to our planet is the belief that someone else will save it."
+> — **Robert Swan**
 
 ### ISS STOXX Net Zero Transition Indices
 
@@ -1037,6 +1057,10 @@ These indices cover stock markets in developing economies -- countries like Chin
 
 ---
 
+> [!quote]
+> "The investor's chief problem — and even his worst enemy — is likely to be himself."
+> — **Benjamin Graham**
+
 ### STOXX Europe 600
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="980 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 980</span>
@@ -1250,6 +1274,10 @@ Think of this as the "everything" index for European stocks. While the STOXX Eur
 
 ---
 
+> [!quote]
+> "Investing should be more like watching paint dry or watching grass grow."
+> — **Paul Samuelson**
+
 ### STOXX Global 1800
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="816 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 816</span>
@@ -1369,6 +1397,10 @@ This thematic index tracks companies building or enabling the "metaverse" -- the
 
 ---
 
+> [!quote]
+> "Far more money has been lost by investors trying to anticipate corrections than lost in the corrections themselves."
+> — **Peter Lynch**
+
 ### STOXX Global Select Dividend 100
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -1472,6 +1504,10 @@ These indices extend ESG and sustainability principles into the bond market. Whi
 
 ---
 
+> [!quote]
+> "The capital asset pricing model has been the backbone of modern portfolio theory."
+> — **William Sharpe**
+
 ### STOXX Industry Neutral Ax Factor Indices
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
@@ -1524,6 +1560,10 @@ Factor investing is about targeting specific characteristics -- like buying chea
 >
 
 ---
+
+> [!quote]
+> "The portfolio with the highest return is not necessarily the most desirable one."
+> — **Harry Markowitz**
 
 ### STOXX Minimum Variance Indices
 
@@ -1876,6 +1916,10 @@ The TecDAX is Germany's answer to a technology-focused index. It tracks the 30 b
 
 ## V
 
+> [!quote]
+> "Volatility is not risk — what matters is the permanent impairment of capital."
+> — **Seth Klarman**
+
 ### VSTOXX
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="890 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 890</span>
@@ -2040,6 +2084,10 @@ These are sub-indices of the STOXX Europe 600, each tracking a specific sector -
 >
 
 ---
+
+> [!quote]
+> "Someone's sitting in the shade today because someone planted a tree a long time ago."
+> — **Warren Buffett**
 
 ### STOXX ESG-X Indices
 
@@ -2316,6 +2364,10 @@ Risk control indices are like an autopilot for managing market turbulence. When 
 >
 
 ---
+
+> [!quote]
+> "It takes 20 years to build a reputation and five minutes to ruin it."
+> — **Warren Buffett**
 
 ### STOXX Global ESG Leaders Index
 

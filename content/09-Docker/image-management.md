@@ -668,7 +668,6 @@ In CI/CD, steps 2-5 are handled by [GitHub Actions](https://alp78.github.io/elys
 
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Running containers from images (create, start, exec, logs, stop)
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — Multi-container orchestration with docker-compose.yml
-- [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet) — Quick reference for the most common Docker commands
 - [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) — CI/CD pipelines that build and push images automatically
 - [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry Terraform configuration and Cloud Run job definitions
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Where images are deployed and how cold start time relates to image size

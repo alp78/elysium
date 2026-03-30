@@ -91,6 +91,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+> [!quote]
+> "Do what you do best and outsource the rest."
+> — **Peter Drucker**
+
 ## Managed Services
 
 **Definition:** Managed services is a business model in which a provider takes on ongoing responsibility for managing a defined set of services, systems, or processes on behalf of a client, typically under a contract with defined service levels (SLAs). Common examples include managed IT services (where a provider monitors and maintains a client's IT infrastructure), managed network services, managed security services, and managed payroll processing. The managed services model provides clients with predictable costs, specialist expertise, and freedom to focus on their core business, while providers earn recurring, subscription-like revenue.
@@ -119,6 +123,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+> [!quote]
+> "We are not in the business of selling things — we are in the business of renewing memberships."
+> — **Jim Sinegal**
+
 ## Membership Warehouse
 
 **Definition:** A membership warehouse (also called a membership club or warehouse club) is a retail business model in which customers pay an annual membership fee in exchange for access to a retail store offering a wide range of products at deeply discounted prices. The warehouse format features minimal store decoration, bulk packaging, and limited SKU selection compared to traditional supermarkets. The membership fee creates a predictable, high-margin revenue stream, while the club format drives high customer loyalty and repeat purchases. Costco is the most prominent global example.
@@ -131,6 +139,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+> [!quote]
+> "The customer doesn't care about channels — they just want a seamless experience."
+> — **Brendon Witcher**
+
 ## Omnichannel
 
 **Definition:** Omnichannel is a business strategy that provides customers with a seamless, integrated shopping experience across all channels — physical stores, websites, mobile apps, social media, call centers, and catalogs. Unlike multichannel (where each channel operates independently), omnichannel ensures that customer data, inventory, pricing, and promotions are synchronized across all touchpoints. A customer might browse products on a mobile app, visit a store to try them on, and complete the purchase online, with a consistent experience throughout.
@@ -142,6 +154,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 **Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Consumer (B2C)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
 
 ---
+
+> [!quote]
+> "Speed is the new currency of business."
+> — **Marc Benioff**
 
 ## On-Demand Delivery
 
@@ -186,6 +202,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 **Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Membership Warehouse](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Membership Warehouse)
 
 ---
+
+> [!quote]
+> "A brand for a company is like a reputation for a person — you earn it by doing hard things well."
+> — **Jeff Bezos**
 
 ## White-Label Services
 

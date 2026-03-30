@@ -192,13 +192,13 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       forceManyBody<NodeData>()
         .strength((d) => {
           const tier = getNodeTier(d.id)
-          if (tier === 0) return -400   // index pushes MOCs outward
-          if (tier === 1) return -200   // MOCs push domains outward
-          if (tier === 2) return -80    // domains push pages outward
-          return -30                     // pages gently repel each other
+          if (tier === 0) return -500   // index pushes MOCs outward
+          if (tier === 1) return -250   // MOCs push domains outward
+          if (tier === 2) return -120   // domains push pages outward
+          return -60                     // pages repel each other — spread the fan
         })
         .distanceMin(15)
-        .distanceMax(500)
+        .distanceMax(600)
         .theta(0.9),
     )
     .force(
@@ -208,17 +208,17 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           const srcTier = getNodeTier((l.source as NodeData).id)
           const tgtTier = getNodeTier((l.target as NodeData).id)
           const minTier = Math.min(srcTier, tgtTier)
-          if (minTier === 0) return 150  // index → MOC: wide orbit
-          if (minTier === 1) return 60   // MOC → domain: tight cluster
-          return 35                       // domain → page: compact petal
+          if (minTier === 0) return 180  // index → MOC: wide orbit
+          if (minTier === 1) return 80   // MOC → domain: room to breathe
+          return 60                       // domain → page: loose petal
         })
         .strength((l) => {
           const srcTier = getNodeTier((l.source as NodeData).id)
           const tgtTier = getNodeTier((l.target as NodeData).id)
           const minTier = Math.min(srcTier, tgtTier)
-          if (minTier === 0) return 0.4  // strong: MOCs orbit index
-          if (minTier === 1) return 0.7  // very strong: domains STICK to their MOC
-          return 0.5                      // strong: pages stick to their domain
+          if (minTier === 0) return 0.35 // MOCs orbit index
+          if (minTier === 1) return 0.6  // domains stay near their MOC
+          return 0.25                     // pages loosely orbit domain — fan out
         }),
     )
     .force("center", forceCenter(cx, cy).strength(0.003))

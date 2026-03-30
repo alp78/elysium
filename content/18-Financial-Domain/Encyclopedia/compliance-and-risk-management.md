@@ -55,6 +55,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+> [!quote]
+> "The purpose of licensing is to grant others permission to use what you have created — on your terms."
+> — **Russ Krajec**
+
 ## Licensing
 
 **Definition:** Licensing is a business arrangement in which the owner of intellectual property (IP) — such as a patent, trademark, copyright, or technology — grants permission to another party to use that IP in exchange for compensation, typically in the form of royalties, license fees, or other financial consideration. Licensing enables IP owners to generate revenue from their innovations without having to manufacture or market products themselves, and it allows licensees to access proven technologies, brands, or content without developing them from scratch.
@@ -95,6 +99,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+> [!quote]
+> "Risk comes from not knowing what you are doing."
+> — **Warren Buffett**
+
 ## Risk Management
 
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
@@ -106,6 +114,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 **Related terms:** [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Compliance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Compliance), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures and Options)
 
 ---
+
+> [!quote]
+> "The sweetest income is the income that arrives while you sleep."
+> — **Naval Ravikant**
 
 ## Royalties
 

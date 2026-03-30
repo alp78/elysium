@@ -52,6 +52,10 @@ See  for the full vendor normalization pipeline (when the ESG quality checks fai
 ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR disclosure report
 ```
 
+> [!quote]
+> "Once climate change becomes a defining issue for financial stability, it may already be too late."
+> — **Mark Carney**
+
 ### Key Computation: WACI
 
 ```python

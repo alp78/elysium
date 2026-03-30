@@ -282,6 +282,165 @@ gh pr merge 7 --squash
 - Use branch protection rules on main: require reviews, passing CI, no force-push
 - Tag releases so you can always find what's deployed
 
+---
+
+### GitHub CLI — Issue Commands
+
+```bash
+gh issue list                          # Open issues
+gh issue list --state all --label bug
+gh issue list --author "@me" --assignee "@me"
+gh issue view 99                       # View issue
+gh issue view 99 --web
+
+gh issue create --title "Bug: crash on login" --body "Steps to reproduce..."
+gh issue create --label bug --assignee alice --milestone v2.0
+gh issue create --template bug_report.md
+
+gh issue edit 99 --title "new title"
+gh issue edit 99 --add-label "confirmed" --remove-label "needs-triage"
+gh issue edit 99 --assignee alice
+
+gh issue comment 99 --body "Fixed in #42"
+gh issue close 99 --comment "Closed by #42" --reason completed
+gh issue reopen 99
+gh issue pin 99
+gh issue transfer 99 REPO
+gh issue delete 99 --yes
+```
+
+---
+
+### GitHub CLI — Release Commands
+
+```bash
+gh release list                         # List releases
+gh release view TAG                     # View release details
+gh release view --json tagName,body,assets
+
+gh release create TAG                   # Create release (prompts for details)
+gh release create v1.2.0 --title "v1.2.0" --notes "Release notes"
+gh release create v1.2.0 --notes-file CHANGELOG.md
+gh release create v1.2.0 --draft        # Draft release
+gh release create v1.2.0 --prerelease   # Pre-release
+gh release create v1.2.0 ./dist/*.tar.gz  # Attach assets
+gh release create v1.2.0 ./bin/app#"Linux binary"  # Named asset
+
+gh release edit TAG --title "new title" --notes "new notes"
+gh release edit TAG --draft=false        # Publish draft
+
+gh release upload TAG FILE [FILE...]    # Upload additional assets
+gh release delete TAG --yes             # Delete release
+gh release delete TAG --cleanup-tag --yes  # Also delete the git tag
+```
+
+---
+
+### GitHub CLI — Repo Commands
+
+```bash
+gh repo clone OWNER/REPO               # Clone a repo
+gh repo clone OWNER/REPO -- --depth 1  # With git flags after --
+
+gh repo create NAME --public           # Create public repo
+gh repo create NAME --private --clone  # Private + clone locally
+gh repo create NAME --template OWNER/TEMPLATE
+
+gh repo fork OWNER/REPO                # Fork to your account
+gh repo fork OWNER/REPO --clone        # Fork + clone
+gh repo fork OWNER/REPO --remote       # Add upstream remote
+
+gh repo view                           # View current repo
+gh repo view OWNER/REPO --web          # Open in browser
+
+gh repo sync                           # Sync fork with upstream
+gh repo sync --branch main
+
+gh repo rename NEW_NAME
+gh repo archive                        # Archive repo
+gh repo delete --confirm
+
+gh repo list [OWNER]                   # List your/org repos
+gh repo list --fork --source --archived
+
+gh repo set-default OWNER/REPO         # Set default repo for gh commands
+```
+
+---
+
+### GitHub CLI — Auth Commands
+
+```bash
+gh auth login                          # Interactive login (browser or token)
+gh auth login --with-token < token.txt # Non-interactive with token
+gh auth login --hostname ENTERPRISE_URL  # GitHub Enterprise
+
+gh auth logout                         # Remove stored credentials
+gh auth logout --hostname HOST
+
+gh auth status                         # Show current authentication state
+gh auth status --show-token            # Include token value
+
+gh auth token                          # Print current token
+gh auth refresh                        # Refresh token scopes
+gh auth refresh --scopes repo,read:org
+gh auth setup-git                      # Configure git to use gh as credential helper
+```
+
+---
+
+### gh api — Raw REST and GraphQL
+
+```bash
+# GET request
+gh api repos/OWNER/REPO
+
+# POST request
+gh api repos/OWNER/REPO/issues -f title="Bug" -f body="Description"
+
+# PATCH
+gh api -X PATCH repos/OWNER/REPO -f description="new description"
+
+# DELETE
+gh api -X DELETE repos/OWNER/REPO/issues/comments/COMMENT_ID
+
+# With pagination
+gh api repos/OWNER/REPO/issues --paginate
+
+# JSON output fields
+gh api repos/OWNER/REPO --jq '.stargazers_count'
+gh api repos/OWNER/REPO --jq '[.name, .description]'
+
+# GraphQL
+gh api graphql -f query='
+  query($login: String!) {
+    user(login: $login) {
+      name
+      bio
+      repositories(first: 10, orderBy: {field: UPDATED_AT, direction: DESC}) {
+        nodes { name stargazerCount }
+      }
+    }
+  }
+' -f login=octocat
+
+# Template output
+gh api repos/OWNER/REPO --template '{{.full_name}}: {{.stargazers_count}} stars'
+
+# Flags
+# -H, --header KEY:VAL   Add request header
+# -f, --field KEY=VAL    Add string parameter
+# -F, --raw-field KEY=VAL  Add raw (typed) parameter
+# -q, --jq EXPR          Filter with jq
+# --paginate             Fetch all pages
+# --input FILE           Read JSON body from file
+# --cache DURATION       Cache response
+# --silent               Don't print response
+# --include              Include response headers
+```
+
+---
+
 ## Related
 
 - [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — the daily workflow that feeds into PRs

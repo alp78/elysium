@@ -77,6 +77,10 @@ a benchmark is the yardstick. When a fund manager says "we track the STOXX Europ
 
 ---
 
+> [!quote]
+> "Gentlemen prefer bonds."
+> — **Andrew Mellon**
+
 ### Bond (Fixed Income Security)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="298 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 298</span>
@@ -128,6 +132,10 @@ a bond is an IOU with a schedule. You lend money, receive regular interest, and 
 ---
 
 ## C
+
+> [!quote]
+> "Derivatives are financial weapons of mass destruction."
+> — **Warren Buffett**
 
 ### Call Option
 
@@ -332,6 +340,10 @@ A corporate bond is a loan you make to a company. The company pays you interest 
 
 ---
 
+> [!quote]
+> "The individual investor should act consistently as an investor and not as a speculator."
+> — **Benjamin Graham**
+
 ### Covered Call Strategy
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -470,6 +482,10 @@ Equity means ownership. When you buy a share of stock, you own a small piece of 
 >
 
 ---
+
+> [!quote]
+> "The ETF is the most innovative financial instrument of the last two decades."
+> — **John C. Bogle**
 
 ### ETF (Exchange-Traded Fund)
 
@@ -726,6 +742,10 @@ Eurex futures let you make a binding agreement today to buy or sell the value of
 
 ## F
 
+> [!quote]
+> "Markets can remain irrational longer than you can remain solvent."
+> — **John Maynard Keynes**
+
 ### Futures Contract (Index Futures)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
@@ -778,6 +798,10 @@ an index future is a bet on where the index will be at a specific date. You neve
 ---
 
 ## G
+
+> [!quote]
+> "We do not inherit the earth from our ancestors; we borrow it from our children."
+> — **Chief Seattle**
 
 ### Green Bond (as Instrument)
 
@@ -864,6 +888,10 @@ A high-yield bond pays more interest because the issuer is riskier — it has a 
 ---
 
 ## I
+
+> [!quote]
+> "The index fund is a sensible, serviceable method for obtaining the market's rate of return with absolutely no effort and minimal expense."
+> — **John C. Bogle**
 
 ### Index Fund
 
@@ -1128,6 +1156,10 @@ A municipal bond is a loan to a local government. The city or state uses the mon
 
 ## O
 
+> [!quote]
+> "By periodically investing in an index fund, the know-nothing investor can actually outperform most investment professionals."
+> — **Warren Buffett**
+
 ### Passive Investment
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
@@ -1203,6 +1235,10 @@ Replication is the mechanics behind passive investing. Full replication is the m
 
 ---
 
+> [!quote]
+> "The time to buy is when there's blood in the streets."
+> — **Baron Rothschild**
+
 ### Put Option
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
@@ -1256,6 +1292,10 @@ A put option is the mirror image of a call option. You pay a premium for the rig
 ---
 
 ## R
+
+> [!quote]
+> "Real estate cannot be lost or stolen, nor can it be carried away."
+> — **Franklin D. Roosevelt**
 
 ### REIT (Real Estate Investment Trust)
 
@@ -1395,6 +1435,10 @@ A sovereign bond is a loan to a country. Germany, France, the United States, and
 >
 
 ---
+
+> [!quote]
+> "Never invest in anything you cannot understand."
+> — **Warren Buffett**
 
 ### Structured Product
 
@@ -1570,6 +1614,10 @@ A swap is a private agreement to trade one stream of payments for another. The s
 ---
 
 ## T
+
+> [!quote]
+> "Risk comes from not knowing what you're doing."
+> — **Warren Buffett**
 
 ### Total Return Swap
 

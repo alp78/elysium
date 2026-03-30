@@ -22,6 +22,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "The bond market is the most important market in the world — it finances everything governments and corporations do."
+> — **Bill Gross**
+
 ## Bond Underwriting
 
 **Definition:** Bond underwriting is the process by which an investment bank or a group of banks (a syndicate) purchases a new issuance of bonds from the issuing entity (corporation, municipality, or government) and resells them to investors. The underwriter assumes the risk of distributing the bonds and earns a fee (the underwriting spread) for this service. Bond underwriting is a critical function of capital markets because it helps organizations raise debt capital for various purposes including infrastructure projects, corporate expansion, or refinancing existing debt.
@@ -65,6 +69,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt Capital Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
 
 ---
+
+> [!quote]
+> "The No. 1 reason most people don't get what they want is that they don't know what they want — in business, that means knowing how much capital you need and why."
+> — **T. Harv Eker**
 
 ## Capital Raising
 
@@ -210,6 +218,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "Going public is not the end of the journey — it is just the beginning of a whole new set of responsibilities."
+> — **Mary Jo White**
+
 ## Listing
 
 **Definition:** Listing refers to the process by which a company's shares or securities are admitted to trading on a stock exchange. To become listed, a company must meet the exchange's requirements regarding financial performance, governance, disclosure, and market capitalization. Once listed, the company's shares can be bought and sold by investors on the exchange. Listing provides the company with access to public capital markets, enhances its visibility and credibility, and gives its shares a market price that facilitates valuations and transactions.
@@ -221,6 +233,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO)), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures)), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising)
 
 ---
+
+> [!quote]
+> "Liquidity is the oxygen of financial markets — without it, everything seizes up."
+> — **Mohamed El-Erian**
 
 ## Market-Making
 
@@ -234,6 +250,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "A security is nothing more than a claim on future cash flows — everything else is just the packaging."
+> — **Aswath Damodaran**
+
 ## Securities
 
 **Definition:** Securities are tradable financial instruments that hold monetary value. They are broadly categorized into equity securities (stocks), debt securities (bonds), and derivative securities (options, futures, swaps). Securities represent an investment position in a company (equity), a creditor relationship with a government or corporation (debt), or a right to buy or sell an underlying asset (derivative). Securities are issued by companies and governments to raise capital, and they are traded on exchanges and over-the-counter markets, providing liquidity for investors.
@@ -245,6 +265,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed Income), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
 
 ---
+
+> [!quote]
+> "An underwriter who will not decline risks is not an underwriter — he is merely an order taker."
+> — **John S. Doremus**
 
 ## Underwriting
 

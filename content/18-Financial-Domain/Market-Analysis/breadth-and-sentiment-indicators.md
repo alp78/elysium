@@ -73,6 +73,10 @@ The net number of 52-week new highs vs new lows across index constituents.
 > "Be fearful when others are greedy and greedy when others are fearful."
 > — **Warren Buffett**
 
+> [!quote]
+> "When everybody thinks alike, everyone is likely to be wrong."
+> — **Humphrey Neill**
+
 ## Put/Call Ratio
 
 Options market sentiment indicator. High put volume indicates hedging or bearish bets.

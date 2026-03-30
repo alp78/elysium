@@ -187,6 +187,10 @@ Auctions matter enormously for index funds. The closing auction price on an exch
 
 ## B
 
+> [!quote]
+> "The bear market is the time when you find out who's been swimming naked."
+> — **Warren Buffett**
+
 ### Bear Market
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
@@ -291,6 +295,10 @@ The bid price is what you receive when you sell a stock at market. For highly li
 
 ---
 
+> [!quote]
+> "Transaction costs are the termites of investing."
+> — **John C. Bogle**
+
 ### Bid-Ask Spread
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
@@ -363,6 +371,10 @@ Block trades allow large investors to move sizable positions without disrupting 
 
 ---
 
+> [!quote]
+> "Time is the friend of the wonderful company, the enemy of the mediocre."
+> — **Warren Buffett**
+
 ### Blue Chip
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="600 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 600</span>
@@ -414,6 +426,10 @@ Blue chips are the anchor stocks of major STOXX indices. They tend to have the l
 >
 
 ---
+
+> [!quote]
+> "Bull markets are born on pessimism, grow on skepticism, mature on optimism, and die on euphoria."
+> — **Sir John Templeton**
 
 ### Bull Market
 
@@ -521,6 +537,10 @@ Country classification answers the question "Where does this company belong?" A 
 
 ---
 
+> [!quote]
+> "The market does not run on chance or luck — it runs on supply and demand."
+> — **Jesse Livermore**
+
 ### Circuit Breaker
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -600,6 +620,10 @@ Clearing sits between trade execution and settlement. When a STOXX index futures
 
 ---
 
+> [!quote]
+> "A correction is a euphemism for losing a lot of money rapidly."
+> — **Nassim Nicholas Taleb**
+
 ### Correction
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="130 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 130</span>
@@ -652,6 +676,10 @@ A correction is the market taking a breather. For a STOXX index, a 10-15% pullba
 >
 
 ---
+
+> [!quote]
+> "History doesn't repeat itself, but it often rhymes."
+> — **Mark Twain**
 
 ### Crash
 
@@ -894,6 +922,10 @@ Eurex is where many STOXX index derivatives trade. If an asset manager wants to 
 >
 
 ---
+
+> [!quote]
+> "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway."
+> — **Warren Buffett**
 
 ### Exchange
 
@@ -1416,6 +1448,10 @@ Not every listed stock is investable in a meaningful sense. A company trading th
 
 ## L
 
+> [!quote]
+> "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price."
+> — **Warren Buffett**
+
 ### Large-Cap
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
@@ -1467,6 +1503,10 @@ Large-cap stocks are the household names -- the biggest companies by market valu
 >
 
 ---
+
+> [!quote]
+> "Liquidity is a coward — it disappears at the first sign of trouble."
+> — **Nassim Nicholas Taleb**
 
 ### Liquidity
 
@@ -1595,6 +1635,10 @@ A limit order gives the trader price control at the expense of execution certain
 
 ---
 
+> [!quote]
+> "The secret to investing is to figure out the value of something and then pay a lot less."
+> — **Joel Greenblatt**
+
 ### Long Position
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
@@ -1647,6 +1691,10 @@ A long position is the most basic form of equity exposure. When a fund tracks th
 ---
 
 ## M
+
+> [!quote]
+> "In the business world, the rearview mirror is always clearer than the windshield."
+> — **Warren Buffett**
 
 ### Market Capitalization
 
@@ -1784,6 +1832,10 @@ Mid-cap companies are the "middle children" of the equity market -- large enough
 
 ---
 
+> [!quote]
+> "Markets are never wrong; opinions often are."
+> — **Jesse Livermore**
+
 ### Market Maker
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
@@ -1915,6 +1967,10 @@ The order book is the central nervous system of an exchange. It shows how many s
 >
 
 ---
+
+> [!quote]
+> "The less transparent the market, the more advantage to the professional."
+> — **George Soros**
 
 ### Over-the-Counter (OTC)
 
@@ -2180,6 +2236,10 @@ A regulated market is an exchange that operates under an official regulatory fra
 
 ---
 
+> [!quote]
+> "Be fearful when others are greedy, and greedy when others are fearful."
+> — **Warren Buffett**
+
 ### Rally
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11,382 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 11,382</span>
@@ -2230,6 +2290,10 @@ A rally is a period when the market climbs with conviction. For STOXX indices, a
 ---
 
 ## S
+
+> [!quote]
+> "Know what you own, and know why you own it."
+> — **Peter Lynch**
 
 ### Sector
 
@@ -2387,6 +2451,10 @@ Settlement is the back-office conclusion of a trade. When STOXX schedules an ind
 
 ---
 
+> [!quote]
+> "Big things have small beginnings."
+> — **Peter Senge**
+
 ### Small-Cap
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="210 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 210</span>
@@ -2438,6 +2506,10 @@ Small-cap stocks offer exposure to smaller, often faster-growing companies. They
 
 ---
 
+> [!quote]
+> "He who sells what isn't his'n must buy it back or go to prison."
+> — **Daniel Drew**
+
 ### Short Selling
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2464,6 +2536,10 @@ Short selling allows investors to profit from declining prices. While STOXX indi
 >
 
 ---
+
+> [!quote]
+> "Behind every stock is a company — find out what it's doing."
+> — **Peter Lynch**
 
 ### Stock
 

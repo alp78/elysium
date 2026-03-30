@@ -22,6 +22,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "Distribution is the key to selling insurance — and banks have the best distribution."
+> — **Henri de Castries**
+
 ## Bancassurance
 
 **Definition:** Bancassurance is a partnership arrangement between a bank and an insurance company in which the bank sells the insurance company's products to its existing customers. This model leverages the bank's distribution network — branches, online platforms, and relationship managers — to reach a large customer base for insurance products such as life insurance, home insurance, and health insurance. Bancassurance benefits both parties: the bank earns commission income without developing insurance products, while the insurer gains access to a broad customer base without building its own distribution network.
@@ -61,6 +65,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 **Related terms:** [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
 
 ---
+
+> [!quote]
+> "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
+> — **Charles Dickens**
 
 ## Consumer Finance
 
@@ -130,6 +138,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "Why own when you can lease? The value is in the use, not the possession."
+> — **Thomas J. Watson**
+
 ## Leasing
 
 **Definition:** Leasing is a contractual arrangement in which the owner of an asset (the lessor) grants another party (the lessee) the right to use the asset for a specified period in exchange for regular payments. Leasing is an alternative to purchasing, allowing businesses and individuals to use expensive equipment, vehicles, real estate, or other assets without bearing the full cost of ownership. There are two main types: operating leases (short-term, no ownership transfer) and finance leases (long-term, often with an option to purchase the asset at lease end).
@@ -186,6 +198,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "The branch of the future is in your pocket."
+> — **Brett King**
+
 ## Retail Banking
 
 **Definition:** Retail banking, also known as consumer banking or personal banking, is the provision of financial services directly to individual consumers rather than corporations or institutions. Retail banking products and services include checking and savings accounts, personal loans, mortgages, credit cards, certificates of deposit, and basic investment products. Retail banks serve customers through branch networks, ATMs, online platforms, and mobile applications. Retail banking generates revenue through interest margins (the difference between lending and deposit rates), fees, and cross-selling of financial products.
@@ -198,6 +214,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "The plumbing of global commerce is transaction banking — it moves the money that moves the world."
+> — **Gottfried Leibbrandt**
+
 ## Transaction Banking
 
 **Definition:** Transaction banking is the set of banking services that facilitate commercial transactions and financial flows for corporate and institutional clients. It encompasses cash management, payments, collections, trade finance, foreign exchange, securities services, and supply chain financing. Transaction banking is typically a high-volume, fee-based business that generates stable, recurring revenue for banks. It builds deep client relationships because once a company's treasury operations are integrated with a bank's transaction banking platform, switching costs are high.
@@ -209,6 +229,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 **Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury Services), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
 
 ---
+
+> [!quote]
+> "Never take your eyes off your cash flow because it is the lifeblood of business."
+> — **Richard Branson**
 
 ## Cash Management
 
@@ -250,6 +274,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "Large-scale banking is really nothing more than organized trust."
+> — **Walter Bagehot**
+
 ## Wholesale Banking
 
 **Definition:** Wholesale banking refers to banking services provided to large institutional customers including corporations, government agencies, other banks, pension funds, and institutional investors. Wholesale banking services include large-scale lending (syndicated and bilateral loans), deposit products, trade finance, cash management, foreign exchange, custody services, and capital markets products. Wholesale banking differs from retail banking in the size and sophistication of its client base and the complexity of its product offerings.
@@ -273,6 +301,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 **Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing)
 
 ---
+
+> [!quote]
+> "Revenue is vanity, profit is sanity, but cash is king."
+> — **Alan Miltz**
 
 ## Working Capital
 

@@ -72,6 +72,10 @@ The VIX measures implied volatility from S&P 500 options, often called the "fear
 > "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
 > — **Warren Buffett**
 
+> [!quote]
+> "The most important rule of trading is to play great defense, not great offense."
+> — **Paul Tudor Jones**
+
 ## Maximum Drawdown
 
 The maximum drawdown measures the largest peak-to-trough decline in portfolio value over a given period.

@@ -659,5 +659,4 @@ docker system df -v
 
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Individual container operations (docker run, stop, rm, inspect)
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Building and pushing Docker images
-- [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet) — Full docker CLI quick reference
 - the Airflow DAGs — Airflow runs via Docker Compose on the Airflow VM

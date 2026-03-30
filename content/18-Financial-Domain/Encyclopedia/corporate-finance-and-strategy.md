@@ -21,6 +21,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+> [!quote]
+> "Every deal is a people deal first, a financial deal second."
+> — **Felix Rohatyn**
+
 ## Corporate Finance Advisory
 
 **Definition:** Corporate finance advisory services involve providing strategic financial guidance to companies on major decisions that affect their capital structure, growth, and value. These services include advice on mergers and acquisitions, divestitures, restructurings, spin-offs, leveraged buyouts, joint ventures, strategic alliances, capital raising, and other transformative transactions. Advisory professionals analyze the financial implications of strategic options, conduct valuations, structure transactions, negotiate terms, and help execute deals. Investment banks and advisory boutiques are the primary providers of these services.
@@ -89,6 +93,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+> [!quote]
+> "If you want to go fast, go alone. If you want to go far, go together."
+> — **African proverb**
+
 ## Joint Venture
 
 **Definition:** A joint venture (JV) is a business arrangement in which two or more parties agree to pool resources for a specific task or project while maintaining their separate identities. Each participant contributes assets, shares risks and rewards, and retains ownership of their individual business. Joint ventures are commonly used to enter new markets, share technology or expertise, spread the financial risk of large projects, or comply with local ownership requirements in certain countries. They can be structured as separate legal entities or as contractual agreements.
@@ -116,6 +124,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 **Related terms:** [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Divestitures](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Divestitures), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring), [Spin-Off](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Spin-Off), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
 
 ---
+
+> [!quote]
+> "Sometimes the best path forward is to take a step back and rebuild from a stronger foundation."
+> — **Wilbur Ross**
 
 ## Restructuring
 
@@ -156,6 +168,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 **Related terms:** [Divestitures](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Divestitures), [Restructuring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Restructuring), [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A))
 
 ---
+
+> [!quote]
+> "In a well-run corporate group, each subsidiary should be able to stand on its own two feet."
+> — **Jack Welch**
 
 ## Subsidiaries
 

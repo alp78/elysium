@@ -32,6 +32,10 @@ Standard equity valuation ratios used in index analysis and stock screening, bey
 | **Free Cash Flow Yield** | FCF ÷ Market Cap | Cash return to investors; > 5% is attractive |
 | **Earnings Yield** | EPS ÷ Price (inverse of P/E) | Compare directly to bond yields; > 10yr Treasury = equities attractive |
 
+> [!quote]
+> "The P/E ratio of any company that's fairly priced will equal its growth rate."
+> — **Peter Lynch**
+
 ## PEG Ratio
 
 The PEG ratio adjusts the price-to-earnings ratio by the company's earnings growth rate, providing a growth-adjusted valuation measure.

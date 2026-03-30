@@ -7,7 +7,7 @@ tags:
 
 # Setup and Daily Use
 
-Git fundamentals from initial configuration through the daily commit-push-pull cycle, plus gitignore patterns, history inspection, and a quick-reference cheat sheet.
+Git fundamentals from initial configuration through the daily commit-push-pull cycle, plus gitignore patterns and history inspection.
 
 ```mermaid
 mindmap
@@ -16,7 +16,6 @@ mindmap
     (daily workflow)
     (gitignore patterns)
     (history, inspection)
-    (cheat sheet)
 ```
 
 > [!abstract]- [[git-setup-and-config]]
@@ -48,11 +47,3 @@ mindmap
 > - [[git-history-and-inspection#git blame — Who Changed Each Line|Blame authorship]]
 > - [[git-history-and-inspection#Finding Changes Quickly|Finding changes quickly]]
 
-> [!abstract]- [[git-cheat-sheet]]
->
-> - [[git-cheat-sheet#Staging and Committing|Staging and committing]]
-> - [[git-cheat-sheet#Branching|Branching]]
-> - [[git-cheat-sheet#Merging and Rebasing|Merging and rebasing]]
-> - [[git-cheat-sheet#Remote Operations|Remote operations]]
-> - [[git-cheat-sheet#Undoing and Recovery|Undoing and recovery]]
-> - [[git-cheat-sheet#GitHub CLI|GitHub CLI]]

@@ -14,7 +14,6 @@ mindmap
   ((Containers and Orchestration))
     (container lifecycle)
     (Docker Compose)
-    (cheat sheet)
 ```
 
 > [!abstract]- [[container-lifecycle]]
@@ -33,11 +32,3 @@ mindmap
 > - [[docker-compose#Updating Images (Rolling Updates)|Rolling updates]]
 > - [[docker-compose#Configuration: Validation and Overrides|Config validation and overrides]]
 
-> [!abstract]- [[docker-cheat-sheet]]
->
-> - [[docker-cheat-sheet#Container Lifecycle|Container lifecycle]]
-> - [[docker-cheat-sheet#Image Management|Image management]]
-> - [[docker-cheat-sheet#Docker Compose|Docker Compose]]
-> - [[docker-cheat-sheet#Volume Management|Volume management]]
-> - [[docker-cheat-sheet#Network Management|Network management]]
-> - [[docker-cheat-sheet#Dockerfile Reference|Dockerfile reference]]

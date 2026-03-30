@@ -17,7 +17,7 @@ status: complete
 > "Cattle, not pets — treat your servers like a herd of cattle, not like pets."
 > — **Bill Baker**
 
-Docker containers are the runtime environment for pipeline stages, databases, and monitoring agents. Each step — loader, transform, scorer — runs in a container with its own dependencies, isolated from the host system. This note covers every container operation you need as a data engineer, from launching a one-off job to debugging a crash loop in production. For a condensed quick-reference of all Docker commands, see [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet).
+Docker containers are the runtime environment for pipeline stages, databases, and monitoring agents. Each step — loader, transform, scorer — runs in a container with its own dependencies, isolated from the host system. This note covers every container operation you need as a data engineer, from launching a one-off job to debugging a crash loop in production..
 
 ---
 
@@ -737,5 +737,4 @@ docker inspect <container> --format='{{.State.OOMKilled}}'
 
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — Orchestrating multi-container stacks
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Building, tagging, and pushing images
-- [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet) — Quick reference for all Docker commands
 - [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — Managing long-running service containers

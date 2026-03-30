@@ -80,6 +80,10 @@ $$
 
 ---
 
+> [!quote]
+> "The stock market is filled with individuals who know the price of everything, but the value of nothing."
+> — **Philip Fisher**
+
 ### Alpha
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
@@ -247,6 +251,10 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 
 ---
 
+> [!quote]
+> "In the short run, the market is a voting machine; in the long run, it is a weighing machine."
+> — **Benjamin Graham**
+
 ### Beta
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="194 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 194</span>
@@ -374,6 +382,10 @@ $$
 
 ---
 
+> [!quote]
+> "Compound interest is the eighth wonder of the world."
+> — **Albert Einstein**
+
 ### Compound Annual Growth Rate (CAGR)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
@@ -430,6 +442,10 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 >
 
 ---
+
+> [!quote]
+> "Diversification is protection against ignorance."
+> — **Warren Buffett**
 
 ### Correlation
 
@@ -627,6 +643,10 @@ $$
 
 ---
 
+> [!quote]
+> "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
+> — **John D. Rockefeller**
+
 ### Dividend Yield
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="755 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 755</span>
@@ -737,6 +757,10 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 
 ---
 
+> [!quote]
+> "The first rule of investment is don't lose, and the second rule is don't forget the first rule."
+> — **Warren Buffett**
+
 ### Drawdown
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
@@ -792,6 +816,10 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 ---
 
 ## E
+
+> [!quote]
+> "Earnings can be as pliable as putty when a charlatan heads the company reporting them."
+> — **Warren Buffett**
 
 ### Earnings Per Share (EPS)
 
@@ -1062,6 +1090,10 @@ $$
 
 ---
 
+> [!quote]
+> "The equity premium is the most important number in finance."
+> — **Rajnish Mehra**
+
 ### Equity Risk Premium
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -1148,6 +1180,10 @@ $$
 ---
 
 ## F
+
+> [!quote]
+> "Returns are driven by systematic exposure to compensated risk factors."
+> — **Eugene Fama**
 
 ### Factor Exposure
 
@@ -1458,6 +1494,10 @@ $$
 
 ## I
 
+> [!quote]
+> "The information ratio is the key measure of a portfolio manager's skill."
+> — **Richard Grinold**
+
 ### Information Ratio
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -1546,6 +1586,10 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 
 ## M
 
+> [!quote]
+> "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
+> — **Warren Buffett**
+
 ### Maximum Drawdown
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -1597,6 +1641,10 @@ $$
 >
 
 ---
+
+> [!quote]
+> "The trend is your friend until the end when it bends."
+> — **Ed Seykota**
 
 ### Momentum (Price Momentum)
 
@@ -1824,6 +1872,10 @@ $$
 
 ---
 
+> [!quote]
+> "Buy a stock the way you would buy a house — understand and like it before you put your money in."
+> — **Peter Lynch**
+
 ### Price-to-Earnings Ratio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -1859,6 +1911,10 @@ $$
 ---
 
 ## R
+
+> [!quote]
+> "Volatility is the price of admission for long-term returns."
+> — **Nick Murray**
 
 ### Realized Volatility
 
@@ -1969,6 +2025,10 @@ $$
 
 ---
 
+> [!quote]
+> "A truly great business must have an enduring moat that protects excellent returns on invested capital."
+> — **Warren Buffett**
+
 ### Return on Equity (ROE)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
@@ -2076,6 +2136,10 @@ $$
 >
 
 ---
+
+> [!quote]
+> "The essence of investment management is the management of risks, not the management of returns."
+> — **Benjamin Graham**
 
 ### Risk-Adjusted Return
 
@@ -2188,6 +2252,10 @@ $$
 
 ---
 
+> [!quote]
+> "The reward-to-variability ratio provides a single measure combining both risk and return."
+> — **William Sharpe**
+
 ### Sharpe Ratio
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
@@ -2238,6 +2306,10 @@ $$
 >
 
 ---
+
+> [!quote]
+> "What gets measured gets managed."
+> — **Peter Drucker**
 
 ### Standard Deviation
 
@@ -2509,6 +2581,10 @@ $$
 
 ## V
 
+> [!quote]
+> "The problem with VaR is that it tells you nothing about what happens in the tail."
+> — **Nassim Nicholas Taleb**
+
 ### Value at Risk (VaR)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
@@ -2569,6 +2645,10 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 >
 
 ---
+
+> [!quote]
+> "Uncertainty is the only certainty there is."
+> — **John Allen Paulos**
 
 ### Volatility
 
@@ -2679,6 +2759,10 @@ $$
 ---
 
 ## Y
+
+> [!quote]
+> "Interest rates are to asset prices what gravity is to the apple."
+> — **Warren Buffett**
 
 ### Yield Curve
 
