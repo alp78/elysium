@@ -4,78 +4,308 @@ tags:
   - moc
   - shell
   - bash
-  - linux
+  - cli
 ---
 
 # MOC: Shell
 
-The command line is the data engineer's primary interface to production systems. This map covers everything from reading files and transforming text, through writing production-safe scripts, to monitoring systems and securing network access on GCP infrastructure. Every page covers both bash (Linux/macOS) and PowerShell (Windows) equivalents, so you can work across platforms.
+The command line organized by what you DO with it — process data, write scripts,
+or operate systems. Expand any page below to see its sections, or click through
+to the full content. Every page covers both bash (Linux/macOS) and PowerShell (Windows).
 
-## Data & Files — Find It, Read It, Transform It, Move It
+```mermaid
+mindmap
+  root((Shell))
+    Data & Files
+      navigation & listing
+      reading files
+      grep & regex
+      awk processing
+      sed editing
+      date & time
+      finding files
+      file manipulation
+      compression
+      data transfer
+    Script Engineering
+      command history
+      I/O redirection
+      command chaining
+      process substitution
+      brace expansion
+      environment variables
+      defensive scripting
+    System & Network Ops
+      viewing processes
+      system resources
+      killing processes
+      managing services
+      connectivity testing
+      socket inspection
+      HTTP & APIs
+      firewalls
+      IAP tunneling
+      GCP resources
+```
 
-Navigating filesystems, reading and transforming data with the classic Unix text-processing toolkit, locating files at scale, and moving data between machines and cloud storage.
+> [!example]+ Data & Files — Find it, read it, transform it, move it
+>
+> > [!abstract]- [[navigation-and-listing]]
+> >
+> > - [[navigation-and-listing#Linux — ls, du, df, tree]]
+> > - [[navigation-and-listing#ls -lhrt — the data engineer's default listing]]
+> > - [[navigation-and-listing#du, ls, df — investigating disk space on a database server]]
+> > - [[navigation-and-listing#du vs df discrepancy — why disk usage numbers don't match]]
+> > - [[navigation-and-listing#df -i — check inode usage when disk is "full" but df shows free space]]
+> > - [[navigation-and-listing#PowerShell — Get-ChildItem, Get-PSDrive]]
+>
+> > [!abstract]- [[reading-file-contents]]
+> >
+> > - [[reading-file-contents#Linux — cat, head, tail, grep, awk]]
+> > - [[reading-file-contents#cat, head, tail, less — basic file reading]]
+> > - [[reading-file-contents#tail -f — follow a log file in real-time]]
+> > - [[reading-file-contents#Analyzing a large log file during an incident — grep, awk, sort workflow]]
+> > - [[reading-file-contents#grep performance on large files — -F, -m, ripgrep, LC_ALL=C]]
+> > - [[reading-file-contents#PowerShell — Get-Content -Wait, Select-String for log analysis]]
+>
+> > [!abstract]- [[grep-and-pattern-matching]]
+> >
+> > - [[grep-and-pattern-matching#Basic Pattern Matching]]
+> > - [[grep-and-pattern-matching#Case-insensitive search (`grep -i`)]]
+> > - [[grep-and-pattern-matching#Recursive search (`grep -r` / `grep -R`)]]
+> > - [[grep-and-pattern-matching#Regular Expression Patterns]]
+> > - [[grep-and-pattern-matching#Extended regex (`grep -E` / `egrep`)]]
+> > - [[grep-and-pattern-matching#Common data engineering regex patterns]]
+>
+> > [!abstract]- [[awk-data-processing]]
+> >
+> > - [[awk-data-processing#Record and Field Model]]
+> > - [[awk-data-processing#Setting the Field Separator with -F]]
+> > - [[awk-data-processing#BEGIN and END Blocks]]
+> > - [[awk-data-processing#Field Extraction and Formatting]]
+> > - [[awk-data-processing#Filtering and Conditions]]
+> > - [[awk-data-processing#Data Transformation]]
+> > - [[awk-data-processing#Data Engineering Scenarios]]
+>
+> > [!abstract]- [[sed-stream-editing]]
+> >
+> > - [[sed-stream-editing#Stream Processing Model]]
+> > - [[sed-stream-editing#Basic Substitution]]
+> > - [[sed-stream-editing#In-Place Editing]]
+> > - [[sed-stream-editing#Line Selection and Addressing]]
+> > - [[sed-stream-editing#Deletion, Insertion, and Append]]
+> > - [[sed-stream-editing#Advanced Substitution with Regex]]
+>
+> > [!abstract]- [[date-and-time-handling]]
+> >
+> > - [[date-and-time-handling#ISO 8601 — the only date format you should use in pipelines]]
+> > - [[date-and-time-handling#Date format selection — which format for which context]]
+> > - [[date-and-time-handling#Terminal — Linux (Bash)]]
+> > - [[date-and-time-handling#Terminal — PowerShell]]
+> > - [[date-and-time-handling#SQL Server (T-SQL)]]
+> > - [[date-and-time-handling#Python]]
+>
+> > [!abstract]- [[finding-files]]
+> >
+> > - [[finding-files#Linux — find, fd, locate]]
+> > - [[finding-files#find -mtime -mmin — find by modification time]]
+> > - [[finding-files#find -size — find by file size]]
+> > - [[finding-files#find -exec, find -delete — find and execute on results]]
+> > - [[finding-files#find -print0 | xargs -0 -P — parallel processing of found files]]
+> > - [[finding-files#find vs fd vs locate — tool comparison]]
+> > - [[finding-files#PowerShell — Get-ChildItem, Where-Object, Select-String]]
+>
+> > [!abstract]- [[file-manipulation]]
+> >
+> > - [[file-manipulation#Linux — cp, mv, rm, rsync]]
+> > - [[file-manipulation#cp -a — archive copy preserving all metadata]]
+> > - [[file-manipulation#rm — safe delete pattern with trash directory]]
+> > - [[file-manipulation#chmod — set file permissions with octal or symbolic notation]]
+> > - [[file-manipulation#chown — change file ownership for Docker and multi-user environments]]
+> > - [[file-manipulation#PowerShell — Copy-Item, Move-Item, Remove-Item, New-Item]]
+>
+> > [!abstract]- [[compression]]
+> >
+> > - [[compression#Linux — gzip, zstd, tar]]
+> > - [[compression#gzip — compress and decompress files]]
+> > - [[compression#zstd — modern replacement with better ratio and faster speed]]
+> > - [[compression#tar — archiving and compression for directories]]
+> > - [[compression#Compression strategy matrix — choosing the right algorithm for data pipelines]]
+> > - [[compression#PowerShell — Compress-Archive, 7-Zip, GZipStream]]
+>
+> > [!abstract]- [[data-transfer]]
+> >
+> > - [[data-transfer#rsync — The Gold Standard for File Transfer]]
+> > - [[data-transfer#rsync trailing slash — source path determines copy behavior]]
+> > - [[data-transfer#rsync vs cp — when to use which]]
+> > - [[data-transfer#scp — Simple Remote Copy]]
+> > - [[data-transfer#gcloud compute scp — GCE-Native File Transfer]]
+> > - [[data-transfer#gsutil and gcloud storage — Cloud Storage Transfers]]
 
-* [[navigation-and-listing]] — ls flags for data engineers (-lhrt for recent files last), du for directory-level disk usage, df for filesystem capacity, and the du-vs-df discrepancy explained
+> [!example]+ Script Engineering — Write production-safe automation
+>
+> > [!abstract]- [[command-history]]
+> >
+> > - [[command-history#Bash History]]
+> > - [[command-history#history, Ctrl+R, !!, !$ — search, recall, re-run commands]]
+> > - [[command-history#^old^new — quick substitution in last command]]
+> > - [[command-history#Building Complex Commands Incrementally]]
+> > - [[command-history#HISTSIZE, HISTCONTROL — history configuration for .bashrc]]
+> > - [[command-history#PowerShell — Get-History, PSReadLine predictive IntelliSense]]
+>
+> > [!abstract]- [[io-redirection]]
+> >
+> > - [[io-redirection#Bash Redirection]]
+> > - [[io-redirection#> operator — redirect stdout to file (overwrite)]]
+> > - [[io-redirection#2> operator — redirect stderr to file]]
+> > - [[io-redirection#> /dev/null 2>&1 — discard all output]]
+> > - [[io-redirection#Production Logging Patterns]]
+> > - [[io-redirection#tee -a — output to both file and terminal simultaneously]]
+> > - [[io-redirection#Redirect-before-write gotcha — sort file > file truncates to empty]]
+> > - [[io-redirection#PowerShell — Out-File, *> all streams redirection]]
+>
+> > [!abstract]- [[command-chaining]]
+> >
+> > - [[command-chaining#The Four Operators]]
+> > - [[command-chaining#AND Operator (&&) — Fail-Fast Chaining]]
+> > - [[command-chaining#Semicolon (;) — Sequential with No Error Checking]]
+> > - [[command-chaining#OR Operator (||) — Fallback on Failure]]
+> > - [[command-chaining#AND + OR Combined — The Shell Try/Catch]]
+> > - [[command-chaining#Pipe (|) — Streaming Composition]]
+> > - [[command-chaining#zcat | grep | awk | sort — streaming 50GB log analysis]]
+>
+> > [!abstract]- [[process-substitution]]
+> >
+> > - [[process-substitution#Process Substitution]]
+> > - [[process-substitution#diff <(cmd) <(cmd) — compare command outputs as virtual files]]
+> > - [[process-substitution#diff <(sqlcmd) <(sqlcmd) — compare row counts between databases]]
+> > - [[process-substitution#tee >(gzip) >(wc -l) — write to multiple destinations simultaneously]]
+> > - [[process-substitution#Here Documents]]
+> > - [[process-substitution#<< 'EOF' here document — embed multi-line SQL in a script]]
+> > - [[process-substitution#Here Strings]]
+>
+> > [!abstract]- [[brace-expansion-and-globbing]]
+> >
+> > - [[brace-expansion-and-globbing#Brace Expansion]]
+> > - [[brace-expansion-and-globbing#mkdir -p with {brace,expansion} — create directory trees]]
+> > - [[brace-expansion-and-globbing#Globbing — Extended Patterns]]
+> > - [[brace-expansion-and-globbing#shopt -s extglob — exclude patterns with !(glob)]]
+> > - [[brace-expansion-and-globbing#shopt -s globstar — recursive **/ glob patterns]]
+> > - [[brace-expansion-and-globbing#shopt settings for .bashrc — extglob, globstar, failglob]]
+> > - [[brace-expansion-and-globbing#PowerShell — ForEach-Object loops and Get-ChildItem -Recurse for globbing]]
+>
+> > [!abstract]- [[environment-variables]]
+> >
+> > - [[environment-variables#The Propagation Model]]
+> > - [[environment-variables#Bash Environment Variables]]
+> > - [[environment-variables#export — set and propagate variables to child processes]]
+> > - [[environment-variables#~/.bashrc vs ~/.profile — persisting variables across sessions]]
+> > - [[environment-variables#Secure Credential Handling]]
+> > - [[environment-variables#.env files and source — secure credential handling in scripts]]
+> > - [[environment-variables#PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars]]
+>
+> > [!abstract]- [[defensive-scripting]]
+> >
+> > - [[defensive-scripting#set -euo pipefail — the essential first line of every production script]]
+> > - [[defensive-scripting#set -e — exit immediately on error]]
+> > - [[defensive-scripting#set -u — treat unset variables as errors]]
+> > - [[defensive-scripting#set -o pipefail — propagate pipeline failures]]
+> > - [[defensive-scripting#Production script template — set -euo pipefail with trap cleanup]]
+> > - [[defensive-scripting#trap EXIT — guaranteed cleanup on script exit, error, or signal]]
 
-* [[reading-file-contents]] — cat, head, tail for quick inspection, tail -f for real-time log following during incidents, less for paging large files, wc -l for row counts, and grep performance flags for multi-GB log files
-
-* [[grep-and-pattern-matching]] — Basic and extended regex with grep, case-insensitive and inverted matching, context lines, recursive search, PCRE lookahead/lookbehind, ripgrep for speed, zgrep for compressed files, and PowerShell Select-String equivalents
-
-* [[awk-data-processing]] — Field extraction, delimiter conversion, filtering and pattern-action rules, BEGIN/END blocks, associative arrays for group-by aggregation, printf formatting, multi-file processing, and PowerShell Import-Csv equivalents
-
-* [[sed-stream-editing]] — Substitution with regex capture groups, in-place editing with -i, address ranges for targeted edits, line deletion and insertion, BOM removal, CRLF-to-LF conversion, ANSI stripping, and PII sanitisation patterns
-
-* [[date-and-time-handling]] — ISO 8601 format variants, timezone management and DST pitfalls, naive vs aware datetimes, date arithmetic and parsing across bash, PowerShell, SQL Server T-SQL, Python, and C#
-
-* [[finding-files]] — find by name, size, and modification time, fd for faster interactive search, locate for instant lookups, xargs for parallel processing of results, and PowerShell Get-ChildItem filtering
-
-* [[file-manipulation]] — Safe cp, mv, rm patterns for production, archive copy with metadata preservation, chmod octal notation, chown for Docker and Airflow containers, mkdir -p, and the trash-directory safe-delete pattern
-
-* [[compression]] — gzip for universal compatibility, zstd for high-performance pipelines, tar for directory archiving, compression level trade-offs, and a strategy matrix for choosing algorithms across pipeline intermediates, Parquet, and database backups
-
-* [[data-transfer]] — rsync delta transfers with resume, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and the trailing-slash gotcha that silently changes directory structure
-
-## Script Engineering — Write Production-Safe Automation
-
-Building reliable shell scripts from basic operator mechanics through advanced input patterns to hardened production templates.
-
-* [[command-history]] — Reverse search with Ctrl+R, history grep for past commands, !!/!$ bang shortcuts, HISTSIZE and HISTCONTROL tuning, and PowerShell PSReadLine predictive IntelliSense
-
-* [[io-redirection]] — Stdout, stderr, and stdin redirection to files, the 2>&1 merge pattern, appending vs overwriting, /dev/null for silencing output, tee for logging while watching, and production log-capture patterns
-
-* [[command-chaining]] — How exit codes drive && (fail-fast), || (fallback), ; (unconditional), and | (pipe) operators, with real deployment script examples showing why operator choice prevents silent failures
-
-* [[process-substitution]] — Treating command output as virtual files with <() for diff comparisons, here documents (<<EOF) for embedding multi-line strings, here strings (<<<) for single-line stdin, and eliminating temporary files from scripts
-
-* [[brace-expansion-and-globbing]] — Brace expansion for directory trees and backup copies, glob wildcards, extglob for exclude patterns, globstar for recursive matching, and failglob to prevent dangerous silent no-match behavior
-
-* [[environment-variables]] — The parent-to-child propagation model, export vs shell-only variables, .bashrc vs .profile persistence, secure credential handling patterns, PATH construction, and the "works in terminal but not in cron" debugging checklist
-
-* [[defensive-scripting]] — set -euo pipefail as the mandatory first line, what each flag prevents (silent errors, unset variables, hidden pipe failures), trap for cleanup on exit, and a production script template
-
-## System & Network Operations — Monitor, Diagnose, Secure
-
-Diagnosing performance problems, managing services, and establishing secure network connectivity to GCP infrastructure.
-
-* [[viewing-processes]] — ps aux column meanings (RSS vs VSZ, STAT codes), htop for real-time monitoring, pstree for process hierarchy, the D-state (uninterruptible sleep) that cannot be killed, and docker stats for container resource usage
-
-* [[system-resources]] — free -h and the available-vs-free memory distinction, lscpu and load average interpretation, vmstat for CPU and swap pressure, iostat and iotop for disk I/O saturation, and OOM killer diagnosis
-
-* [[killing-processes]] — The correct escalation sequence (SIGTERM then wait then SIGKILL), pkill -f for pattern-based termination, killing process groups by PGID, strace for diagnosing stuck processes, and lock file cleanup after force kills
-
-* [[managing-services]] — systemctl start/stop/restart/reload/enable for systemd services, journalctl for reading service logs with time filters, diagnosing OOM kills in journal output, and PowerShell Start-Service/Stop-Service equivalents
-
-* [[connectivity-testing]] — Systematic layer-by-layer debugging: DNS with dig, TCP reachability with netcat, traceroute and mtr for path analysis, the "connection refused vs timed out" distinction, and PowerShell Test-NetConnection
-
-* [[socket-inspection]] — Reading ss -tlnp output to diagnose listening ports, ESTABLISHED vs TIME-WAIT states, loopback (127.0.0.1) vs all-interface (0.0.0.0) binding, ephemeral port exhaustion, and connection pool monitoring for SQL Server
-
-* [[http-requests-and-apis]] — curl GET/POST with headers and JSON bodies, bearer token authentication, file downloads with retry and resume, timing breakdown (-w) for latency diagnosis, health-check scripts, and PowerShell Invoke-RestMethod
-
-* [[firewalls]] — ufw for Linux host-level rules, GCP VPC firewall rules with source ranges and target tags, Windows Firewall equivalents, the defense-in-depth model (VPC + OS + auth + no public IP), and the IAP IP range (35.235.240.0/20)
-
-* [[iap-tunneling]] — How Identity-Aware Proxy works at the network level, gcloud start-iap-tunnel for SQL Server and SSH, debugging common IAP failures (403, timeout, slow tunnel), and comparison with Cloud VPN and bastion hosts
-
-* [[connecting-to-gcp-resources]] — Connection commands for every GCP service type: SSH to Compute Engine, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, Datadog agent, and a quick-reference connection matrix
+> [!example]+ System & Network Operations — Monitor systems, diagnose connectivity, secure access
+>
+> > [!abstract]- [[viewing-processes]]
+> >
+> > - [[viewing-processes#Linux — ps, top, htop, pstree]]
+> > - [[viewing-processes#ps aux | grep — find a specific process]]
+> > - [[viewing-processes#pstree -p — show parent-child process relationships]]
+> > - [[viewing-processes#Diagnosing a slow Airflow VM — ps, docker stats, iostat workflow]]
+> > - [[viewing-processes#The D state — uninterruptible sleep processes that cannot be killed]]
+> > - [[viewing-processes#PowerShell — Get-Process, Get-CimInstance for process and system monitoring]]
+>
+> > [!abstract]- [[system-resources]]
+> >
+> > - [[system-resources#Linux — free, lscpu, uptime, vmstat, iostat, iotop]]
+> > - [[system-resources#free -h — memory usage and available RAM]]
+> > - [[system-resources#lscpu, uptime — CPU info and load average]]
+> > - [[system-resources#vmstat — combined CPU/memory/IO snapshot]]
+> > - [[system-resources#iostat -xz — disk I/O performance and utilization]]
+> > - [[system-resources#SQL Server memory interpretation — why free -h looks alarming but is normal]]
+> > - [[system-resources#PowerShell — Get-CimInstance, Get-Counter for memory, CPU, and disk I/O]]
+>
+> > [!abstract]- [[killing-processes]]
+> >
+> > - [[killing-processes#Linux — kill, pkill, killall]]
+> > - [[killing-processes#pkill -f — kill by command line pattern]]
+> > - [[killing-processes#kill -- -PGID — kill a process group (parent and all children)]]
+> > - [[killing-processes#SIGTERM → strace → SIGKILL — the correct kill escalation sequence]]
+> > - [[killing-processes#PowerShell — Stop-Process for graceful and forced termination]]
+>
+> > [!abstract]- [[managing-services]]
+> >
+> > - [[managing-services#systemctl, journalctl — managing systemd services and reading logs]]
+> > - [[managing-services#systemctl start, stop, restart — control service lifecycle]]
+> > - [[managing-services#systemctl enable — start service automatically on boot]]
+> > - [[managing-services#journalctl -u — read service logs]]
+> > - [[managing-services#Diagnosing OOM kills — when services crash with no error in their own logs]]
+> > - [[managing-services#PowerShell — Start-Service, Stop-Service, Set-Service for Windows services]]
+>
+> > [!abstract]- [[connectivity-testing]]
+> >
+> > - [[connectivity-testing#Linux — nc, dig, traceroute, mtr, ss]]
+> > - [[connectivity-testing#nc (netcat) — testing port reachability]]
+> > - [[connectivity-testing#dig — DNS lookup and record queries]]
+> > - [[connectivity-testing#mtr — combines ping + traceroute in real time]]
+> > - [[connectivity-testing#Debugging a failed database connection — systematic network stack walkthrough]]
+> > - [[connectivity-testing#The "it works from my machine" problem — user context, DNS, and connection pools]]
+> > - [[connectivity-testing#PowerShell — Test-NetConnection, Resolve-DnsName]]
+>
+> > [!abstract]- [[socket-inspection]]
+> >
+> > - [[socket-inspection#Understanding `ss` Output]]
+> > - [[socket-inspection#ss -tlnp — listing listening TCP sockets with process info]]
+> > - [[socket-inspection#ss local address — 0.0.0.0 vs 127.0.0.1 determines who can connect]]
+> > - [[socket-inspection#Common services and default ports — SSH, SQL Server, Datadog, PostgreSQL, Airflow]]
+> > - [[socket-inspection#ss -tnp — viewing established connections and reading peer addresses]]
+> > - [[socket-inspection#ss filtering — counting connections, TIME-WAIT, and per-client breakdown]]
+> > - [[socket-inspection#Connection refused vs connection timed out — diagnosing the root cause]]
+> > - [[socket-inspection#PowerShell — Get-NetTCPConnection for socket inspection and connection counts]]
+>
+> > [!abstract]- [[http-requests-and-apis]]
+> >
+> > - [[http-requests-and-apis#Linux — curl]]
+> > - [[http-requests-and-apis#curl -X POST — send JSON body]]
+> > - [[http-requests-and-apis#curl --retry --connect-timeout — download with retry and timeout]]
+> > - [[http-requests-and-apis#curl -w — timing breakdown to diagnose latency]]
+> > - [[http-requests-and-apis#curl vs wget vs Python requests — tool selection]]
+> > - [[http-requests-and-apis#PowerShell — Invoke-RestMethod, Invoke-WebRequest for HTTP requests]]
+>
+> > [!abstract]- [[firewalls]]
+> >
+> > - [[firewalls#ufw — Linux Uncomplicated Firewall for port access control]]
+> > - [[firewalls#ufw default deny — the correct baseline for production servers]]
+> > - [[firewalls#gcloud compute firewall-rules list — check GCP-level firewall]]
+> > - [[firewalls#Defense in depth — layered firewall strategy for production databases]]
+> > - [[firewalls#PowerShell — Windows Firewall with New-NetFirewallRule]]
+>
+> > [!abstract]- [[iap-tunneling]]
+> >
+> > - [[iap-tunneling#How IAP tunneling works — the full network path from workstation to VM]]
+> > - [[iap-tunneling#IAP Tunnel Commands — All Variants]]
+> > - [[iap-tunneling#gcloud compute start-iap-tunnel — port forwarding through IAP]]
+> > - [[iap-tunneling#Debugging IAP tunnels — API, IAM, firewall, and VM state checks]]
+> > - [[iap-tunneling#Verifying the IAP tunnel from both ends — local listener and VM connections]]
+> > - [[iap-tunneling#IAP vs Cloud VPN vs bastion host — choosing the right access method]]
+>
+> > [!abstract]- [[connecting-to-gcp-resources]]
+> >
+> > - [[connecting-to-gcp-resources#Compute Engine VMs (SSH)]]
+> > - [[connecting-to-gcp-resources#SQL Server on Compute Engine (via IAP Tunnel)]]
+> > - [[connecting-to-gcp-resources#BigQuery (Direct API — No Tunnel Needed)]]
+> > - [[connecting-to-gcp-resources#Cloud Run services — HTTPS endpoints with identity token auth]]
+> > - [[connecting-to-gcp-resources#Airflow webserver on Compute Engine — IAP tunnel to port 8080]]
+> > - [[connecting-to-gcp-resources#Connection quick reference matrix — protocol and tunnel requirements by service]]
 
 ## Cross-References
 
