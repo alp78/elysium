@@ -14,41 +14,31 @@ or operate systems. Expand any page below to see its sections, or click through
 to the full content. Every page covers both bash (Linux/macOS) and PowerShell (Windows).
 
 ```mermaid
-mindmap
-  root((Shell))
-    Data & Files
-      navigation & listing
-      reading files
-      grep & regex
-      awk processing
-      sed editing
-      date & time
-      finding files
-      file manipulation
-      compression
-      data transfer
-    Script Engineering
-      command history
-      I/O redirection
-      command chaining
-      process substitution
-      brace expansion
-      environment variables
-      defensive scripting
-    System & Network Ops
-      viewing processes
-      system resources
-      killing processes
-      managing services
-      connectivity testing
-      socket inspection
-      HTTP & APIs
-      firewalls
-      IAP tunneling
-      GCP resources
+flowchart LR
+  D([Data and Files])
+  D --> nav[navigation]
+  D --> read[reading files]
+  D --> grep[grep, regex]
+  D --> awk[awk]
+  D --> sed[sed]
+  D --> date[date, time]
+  D --> find[finding files]
+  D --> file[file manipulation]
+  D --> comp[compression]
+  D --> xfer[data transfer]
+  click nav "./navigation-and-listing"
+  click read "./reading-file-contents"
+  click grep "./grep-and-pattern-matching"
+  click awk "./awk-data-processing"
+  click sed "./sed-stream-editing"
+  click date "./date-and-time-handling"
+  click find "./finding-files"
+  click file "./file-manipulation"
+  click comp "./compression"
+  click xfer "./data-transfer"
 ```
 
-> [!example]+ Data & Files — Find it, read it, transform it, move it
+> [!example]- Data & Files
 >
 > > [!abstract]- [[navigation-and-listing]]
 > >
@@ -71,10 +61,10 @@ mindmap
 > > [!abstract]- [[grep-and-pattern-matching]]
 > >
 > > - [[grep-and-pattern-matching#Basic Pattern Matching]]
-> > - [[grep-and-pattern-matching#Case-insensitive search (`grep -i`)]]
-> > - [[grep-and-pattern-matching#Recursive search (`grep -r` / `grep -R`)]]
+> > - [[grep-and-pattern-matching#Whole-word matching]]
+> > - [[grep-and-pattern-matching#Recursive search]]
 > > - [[grep-and-pattern-matching#Regular Expression Patterns]]
-> > - [[grep-and-pattern-matching#Extended regex (`grep -E` / `egrep`)]]
+> > - [[grep-and-pattern-matching#POSIX character classes]]
 > > - [[grep-and-pattern-matching#Common data engineering regex patterns]]
 >
 > > [!abstract]- [[awk-data-processing]]
@@ -111,7 +101,6 @@ mindmap
 > > - [[finding-files#find -mtime -mmin — find by modification time]]
 > > - [[finding-files#find -size — find by file size]]
 > > - [[finding-files#find -exec, find -delete — find and execute on results]]
-> > - [[finding-files#find -print0 | xargs -0 -P — parallel processing of found files]]
 > > - [[finding-files#find vs fd vs locate — tool comparison]]
 > > - [[finding-files#PowerShell — Get-ChildItem, Where-Object, Select-String]]
 >
@@ -142,7 +131,26 @@ mindmap
 > > - [[data-transfer#gcloud compute scp — GCE-Native File Transfer]]
 > > - [[data-transfer#gsutil and gcloud storage — Cloud Storage Transfers]]
 
-> [!example]+ Script Engineering — Write production-safe automation
+```mermaid
+flowchart LR
+  S([Script Engineering])
+  S --> hist[command history]
+  S --> io[IO redirection]
+  S --> chain[command chaining]
+  S --> proc[process substitution]
+  S --> brace[brace expansion]
+  S --> env[environment variables]
+  S --> def[defensive scripting]
+  click hist "./command-history"
+  click io "./io-redirection"
+  click chain "./command-chaining"
+  click proc "./process-substitution"
+  click brace "./brace-expansion-and-globbing"
+  click env "./environment-variables"
+  click def "./defensive-scripting"
+```
+
+> [!example]- Script Engineering
 >
 > > [!abstract]- [[command-history]]
 > >
@@ -156,32 +164,24 @@ mindmap
 > > [!abstract]- [[io-redirection]]
 > >
 > > - [[io-redirection#Bash Redirection]]
-> > - [[io-redirection#> operator — redirect stdout to file (overwrite)]]
-> > - [[io-redirection#2> operator — redirect stderr to file]]
-> > - [[io-redirection#> /dev/null 2>&1 — discard all output]]
 > > - [[io-redirection#Production Logging Patterns]]
 > > - [[io-redirection#tee -a — output to both file and terminal simultaneously]]
-> > - [[io-redirection#Redirect-before-write gotcha — sort file > file truncates to empty]]
-> > - [[io-redirection#PowerShell — Out-File, *> all streams redirection]]
+> > - [[io-redirection#Redirect-before-write gotcha]]
+> > - [[io-redirection#PowerShell — Out-File]]
 >
 > > [!abstract]- [[command-chaining]]
 > >
 > > - [[command-chaining#The Four Operators]]
-> > - [[command-chaining#AND Operator (&&) — Fail-Fast Chaining]]
-> > - [[command-chaining#Semicolon (;) — Sequential with No Error Checking]]
-> > - [[command-chaining#OR Operator (||) — Fallback on Failure]]
+> > - [[command-chaining#AND Operator]]
+> > - [[command-chaining#Semicolon]]
+> > - [[command-chaining#OR Operator]]
 > > - [[command-chaining#AND + OR Combined — The Shell Try/Catch]]
-> > - [[command-chaining#Pipe (|) — Streaming Composition]]
-> > - [[command-chaining#zcat | grep | awk | sort — streaming 50GB log analysis]]
+> > - [[command-chaining#Pipe]]
 >
 > > [!abstract]- [[process-substitution]]
 > >
 > > - [[process-substitution#Process Substitution]]
-> > - [[process-substitution#diff <(cmd) <(cmd) — compare command outputs as virtual files]]
-> > - [[process-substitution#diff <(sqlcmd) <(sqlcmd) — compare row counts between databases]]
-> > - [[process-substitution#tee >(gzip) >(wc -l) — write to multiple destinations simultaneously]]
 > > - [[process-substitution#Here Documents]]
-> > - [[process-substitution#<< 'EOF' here document — embed multi-line SQL in a script]]
 > > - [[process-substitution#Here Strings]]
 >
 > > [!abstract]- [[brace-expansion-and-globbing]]
@@ -213,12 +213,36 @@ mindmap
 > > - [[defensive-scripting#Production script template — set -euo pipefail with trap cleanup]]
 > > - [[defensive-scripting#trap EXIT — guaranteed cleanup on script exit, error, or signal]]
 
-> [!example]+ System & Network Operations — Monitor systems, diagnose connectivity, secure access
+```mermaid
+flowchart LR
+  N([System and Network])
+  N --> ps[viewing processes]
+  N --> res[system resources]
+  N --> kill[killing processes]
+  N --> svc[managing services]
+  N --> conn[connectivity testing]
+  N --> sock[socket inspection]
+  N --> http[HTTP, APIs]
+  N --> fw[firewalls]
+  N --> iap[IAP tunneling]
+  N --> gcp[GCP resources]
+  click ps "./viewing-processes"
+  click res "./system-resources"
+  click kill "./killing-processes"
+  click svc "./managing-services"
+  click conn "./connectivity-testing"
+  click sock "./socket-inspection"
+  click http "./http-requests-and-apis"
+  click fw "./firewalls"
+  click iap "./iap-tunneling"
+  click gcp "./connecting-to-gcp-resources"
+```
+
+> [!example]- System & Network Operations
 >
 > > [!abstract]- [[viewing-processes]]
 > >
 > > - [[viewing-processes#Linux — ps, top, htop, pstree]]
-> > - [[viewing-processes#ps aux | grep — find a specific process]]
 > > - [[viewing-processes#pstree -p — show parent-child process relationships]]
 > > - [[viewing-processes#Diagnosing a slow Airflow VM — ps, docker stats, iostat workflow]]
 > > - [[viewing-processes#The D state — uninterruptible sleep processes that cannot be killed]]
@@ -263,7 +287,7 @@ mindmap
 >
 > > [!abstract]- [[socket-inspection]]
 > >
-> > - [[socket-inspection#Understanding `ss` Output]]
+> > - [[socket-inspection#ss -tlnp — listing listening TCP sockets with process info]]
 > > - [[socket-inspection#ss -tlnp — listing listening TCP sockets with process info]]
 > > - [[socket-inspection#ss local address — 0.0.0.0 vs 127.0.0.1 determines who can connect]]
 > > - [[socket-inspection#Common services and default ports — SSH, SQL Server, Datadog, PostgreSQL, Airflow]]

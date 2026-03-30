@@ -425,3 +425,22 @@ button.darkmode {
 .mermaid {
   background-color: transparent !important;
 }
+
+/* ── MOC nested callouts — white links inside abstract callouts ── */
+[saved-theme="dark"] .callout[data-callout="example"] .callout[data-callout="abstract"] a {
+  color: #c0caf5 !important;
+  background-color: transparent !important;
+}
+
+[saved-theme="dark"] .callout[data-callout="example"] .callout[data-callout="abstract"] a:hover {
+  color: #bb9af7 !important;
+}
+
+[saved-theme="light"] .callout[data-callout="example"] .callout[data-callout="abstract"] a {
+  color: #3b3950 !important;
+  background-color: transparent !important;
+}
+
+[saved-theme="light"] .callout[data-callout="example"] .callout[data-callout="abstract"] a:hover {
+  color: #5a4fcf !important;
+}
