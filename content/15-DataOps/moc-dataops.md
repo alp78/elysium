@@ -27,3 +27,10 @@ How to structure data teams and operate effectively as a senior engineer within 
 * [[data-team-organization]] — team topologies (centralized, embedded, hub-and-spoke, federated), role definitions, career ladders, RACI matrices, hiring strategies, and on-call rotation models
 
 * [[leadership-and-collaboration]] — the code review as a teaching tool, technical design documents, Architecture Decision Records, stakeholder management, mentoring progression, managing technical debt, and blameless post-mortems with war room procedures
+
+## Cross-References
+
+- [[service-accounts-and-iam]] — GCP IAM and least privilege
+- [[vpc-service-controls]] — data exfiltration prevention
+- [[tde-encryption]] — SQL Server encryption at rest
+- [[sql-server-authentication]] — authentication modes and audit

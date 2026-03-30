@@ -7,7 +7,7 @@ aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 keywords: [Google.Cloud.BigQuery, Google.Cloud.Storage, Google.Cloud.PubSub, service account, GCP, dotnet GCP]
 description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [[17_py_gcp]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[17_py_gcp]]"
 created: 2026-03-22
 updated: 2026-03-22

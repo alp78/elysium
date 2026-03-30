@@ -7,21 +7,21 @@ aliases: [scenario guide, use case guide, reference architecture, solution patte
 keywords: [scenario-based architecture, decision guide, reference architecture, solution patterns, daily batch pipeline, streaming pipeline, data warehouse, multi-source integration, small team data platform, large team data platform, financial index calculation, machine learning feature pipeline, data migration, cost optimization, medallion architecture, star schema, ETL, ELT, BigQuery, SQL Server, Cloud Run, Airflow, Terraform, dbt, Pub/Sub, Dataflow, Firestore, GCS, Cloud Scheduler, Dataplex, data mesh, feature store, strangler fig, cost-optimized pipeline]
 description: "Practical scenario-based decision guide — 'I have THIS business need, what do I use?' — covering ten real-world data engineering scenarios with recommended stacks, Mermaid architecture diagrams, key decisions explained, cost estimates, and links to detailed vault notes."
 related:
-  - "[[data-architecture-index]]"
+  - "[[moc-data-architecture]]"
   - "[[medallion-architecture]]"
   - "[[streaming-architecture]]"
   - "[[data-warehouse-architecture]]"
   - "[[data-mesh-architecture]]"
   - "[[idempotent-pipeline-design]]"
   - "[[dbt-transformation-layer]]"
-  - "[[terraform-index]]"
+  - "[[moc-terraform]]"
   - "[[airflow-core-concepts]]"
-  - "[[gcp-index]]"
+  - "[[moc-gcp]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[moc-data-pipeline-lifecycle]]"
   - "[[etl-vs-elt]]"
   - "[[api-protocols-comparison]]"
-  - "[[observability-index]]"
+  - "[[moc-observability]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1128,7 +1128,7 @@ graph LR
 |---|---|---|---|
 | Store raw files cheaply | GCS (Nearline/Coldline) | Lifecycle policies auto-tier | [[gcs-buckets-and-lifecycle]] |
 | Run ad-hoc SQL on large data | BigQuery | Serverless, pay per query | [[querying-and-cost-optimization]] |
-| Store transactional data with ACID | SQL Server | Row-level transactions, stored procs | [[sql-server-index]] |
+| Store transactional data with ACID | SQL Server | Row-level transactions, stored procs | [[moc-sql-server]] |
 | Serve data to a real-time dashboard | Firestore | Sub-10ms point reads | [[firestore-data-model-and-operations]] |
 | Store time-series at massive scale | Bigtable | Billions of rows, single-digit ms | [[real-time-nosql-pipelines]] |
 | Choose a file format for data exchange | Parquet (analytics) or JSON (APIs) | See format comparison | [[serialization-formats]] |
@@ -1151,7 +1151,7 @@ graph LR
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [[terraform-index]] |
+| Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [[moc-terraform]] |
 | Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [[terraform-cloud-run]] |
 | Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [[terraform-iam-and-secrets]] |
 | Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [[github-actions-workflows]] |
@@ -1320,4 +1320,4 @@ A quick reference for when two technologies seem interchangeable.
 
 *This guide is a living document. As new scenarios emerge or technologies change, add new sections and update existing ones. The goal is that any data engineer can open this note and find a starting point for their next architecture decision.*
 
-**See also:** [[data-architecture-index]] | [[five-pillars-of-data-engineering]] | [[moc-data-pipeline-lifecycle]] | [[etl-vs-elt]]
+**See also:** [[moc-data-architecture]] | [[five-pillars-of-data-engineering]] | [[moc-data-pipeline-lifecycle]] | [[etl-vs-elt]]

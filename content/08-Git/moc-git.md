@@ -47,3 +47,9 @@ When things go wrong, and the tools for investigating what happened. Covers ever
 * [[git-problems]] — 25 Git and GitHub problems in distributed teams ranked by severity, from secrets committed to repository through force-push to main, with root cause analysis and recovery procedures
 
 * [[git-cheat-sheet]] — exhaustive CLI reference for every Git and GitHub CLI command covering config, staging, committing, branching, merging, rebasing, remotes, history, stashing, undo, and tags
+
+## Cross-References
+
+- [[github-actions-workflows]] — Workflow patterns for GitHub Actions in depth
+- [[github-actions-ci-cd]] — Real CI/CD pipelines for data engineering deployments
+- [[leadership-and-collaboration]] — Code review as a leadership and collaboration skill

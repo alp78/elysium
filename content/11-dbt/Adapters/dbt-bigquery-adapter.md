@@ -6,7 +6,7 @@ status: stable
 updated: 2026-03-23
 description: "BigQuery adapter partitioning, clustering, incremental strategies, slot estimation, cost control, and BigQuery-specific SQL patterns."
 related:
-  - "[[gcp-index]]"
+  - "[[moc-gcp]]"
   - "[[querying-and-cost-optimization]]"
   - "[[dbt-performance-tuning]]"
   - "[[dbt-cross-adapter-patterns]]"
@@ -516,7 +516,7 @@ Then define in `sources.yml` and run `dbt run-operation stage_external_sources`.
 
 ## Related
 
-- [[gcp-index]]
+- [[moc-gcp]]
 - [[querying-and-cost-optimization]]
 - [[dbt-performance-tuning]]
 - [[dbt-cross-adapter-patterns]]

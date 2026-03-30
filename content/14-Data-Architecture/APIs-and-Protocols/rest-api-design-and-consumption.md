@@ -70,7 +70,7 @@ description: >
   with httpx, FastAPI for data serving, OpenAPI specifications, and curl workflows.
 related:
   - "fastapi and polars"
-  - "[[data-architecture-index]]"
+  - "[[moc-data-architecture]]"
   - "[[moc-data-pipeline-lifecycle]]"
   - "[[rest-api-design-and-consumption|Python HTTP requests]]"
   - "[[http-requests-and-apis|curl and HTTP]]"

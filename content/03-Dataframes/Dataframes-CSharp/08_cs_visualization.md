@@ -11,8 +11,8 @@ aliases:
 keywords: [plot, bar, line, scatter, histogram, heatmap, Plotly, Plotly.NET, matplotlib, seaborn, visualization]
 description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [[08_py_visualization]] for the Python equivalent."
 related:
-  - "[[dataframes-index]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-dataframes]]"
+  - "[[moc-programming-languages]]"
   - "[[08_py_visualization]]"
   - "[[07_cs_types_interop]]"
   - "[[09_cs_database_interface]]"

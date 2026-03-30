@@ -74,3 +74,28 @@ Running dbt in production: CI with slim builds, Airflow orchestration patterns, 
 * [[dbt-troubleshooting]] — systematic diagnosis of compilation errors, Jinja syntax errors, runtime failures, test failures, incremental drift, snapshot corruption, and a reference table of common errors with causes and fixes
 
 * [[dbt-documentation-and-lineage]] — dbt docs generate and serve, exposures for downstream system lineage, static hosting on GCS, Dataplex and DataHub integration, and regulatory traceability for EU BMR compliance
+
+## When to Use What
+
+| Approach | Best For | Avoid When |
+|----------|---------|------------|
+| **dbt** | SQL transforms, testing, documentation, lineage | Complex Python logic, API calls, ML |
+| **Raw SQL (stored procedures)** | Performance-critical, SQL Server-specific features (MERGE, temporal tables) | Team collaboration, testing, CI/CD |
+| **Python transforms** | Non-SQL logic, API enrichment, ML feature engineering | Simple aggregations that SQL handles |
+| **Stored procedures** | Legacy compatibility, complex transactions, cursor-based processing | New development, cross-warehouse portability |
+
+For a concise code-heavy overview, see [[dbt-transformation-layer]].
+
+## Cross-References
+
+- [[moc-sql-server|SQL Server]] — dbt-sqlserver adapter, T-SQL tuning for dbt models
+- [[moc-gcp|GCP]] — BigQuery adapter, cost optimization, slot management
+- [[moc-orchestration|Orchestration]] — running dbt in Airflow DAGs
+- [[moc-github-actions|GitHub Actions]] — dbt CI/CD workflows
+- [[moc-docker|Docker]] — containerized dbt execution
+- [[moc-observability|Observability]] — monitoring dbt runs in Datadog
+- [[moc-terraform|Terraform]] — infrastructure for warehouses dbt targets
+- [[moc-data-architecture|Data Architecture]] — medallion architecture, data modeling
+- [[financial-domain-index]] — domain context for all dbt model examples
+- [[moc-dataops|DataOps]] — DataOps practices for dbt
+- [[moc-programming-languages|Programming Languages]] — Python for dbt-core and custom Python models

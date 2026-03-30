@@ -7,7 +7,7 @@ aliases: [Security Setup, GCP Security Infrastructure, Workload Identity Setup]
 keywords: [gcloud, service account, KMS, Secret Manager, Cloud SQL, Workload Identity Federation, OIDC, IAM, CMEK, SSH, Artifact Registry, Compute Engine, BigQuery, Firestore, GCS]
 description: "GCP security infrastructure setup — provisions service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and populates demo data. Prerequisite for [[21_py_security_operations]] and [[21_cs_security_operations]]."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[21_py_security_operations]]"
   - "[[21_cs_security_operations]]"
   - "[[17_py_gcp]]"

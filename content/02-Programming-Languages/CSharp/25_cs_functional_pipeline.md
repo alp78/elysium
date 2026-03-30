@@ -7,7 +7,7 @@ aliases: [functional pipeline csharp, medallion pipeline dotnet, data lineage cs
 keywords: [pipeline, medallion, bronze, silver, gold, fluentvalidation, validation, lineage, aspnet, parquet, polly, dapper]
 description: "End-to-end functional data pipeline in C#/.NET with FluentValidation, Polly resilience, lineage tracking, Parquet export, and ASP.NET serving. See [[25_py_functional_pipeline]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[25_py_functional_pipeline]]"
   - "[[functional-pipeline-architecture]]"
   - "[[18_cs_designpatterns]]"

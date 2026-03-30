@@ -68,7 +68,7 @@ related:
   - "[[rest-api-design-and-consumption]]"
   - "[[grpc-for-data-pipelines]]"
   - "[[graphql-for-data-access]]"
-  - "[[data-architecture-index]]"
+  - "[[moc-data-architecture]]"
   - "[[moc-data-pipeline-lifecycle]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -874,5 +874,5 @@ Data Platform Services
 - [[rest-api-design-and-consumption]] — REST deep dive: pagination, rate limiting, retry patterns, Python clients
 - [[grpc-for-data-pipelines]] — gRPC deep dive: .proto files, streaming, Python stubs, Cloud Run deployment
 - [[graphql-for-data-access]] — GraphQL deep dive: schema design, resolvers, Python server, consumer patterns
-- [[data-architecture-index]] — Full data architecture index
+- [[moc-data-architecture]] — Full data architecture index
 - [[moc-data-pipeline-lifecycle]] — Pipeline lifecycle map: where protocols fit in ingestion, transform, and serving stages

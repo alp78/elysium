@@ -65,7 +65,7 @@ related:
   - "[[pubsub-messaging|Pub/Sub]]"
   - "[[querying-and-cost-optimization|BigQuery deep dive]]"
   - "[[cloud-run-jobs-vs-services|Cloud Run]]"
-  - "[[observability-index]]"
+  - "[[moc-observability]]"
   - "[[observability-deep-dive|Datadog vs GCP native]]"
   - "[[observability-strategy-matrix]]"
 created: 2026-03-22

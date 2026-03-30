@@ -11,8 +11,8 @@ aliases:
 keywords: [groupby, agg, window, rolling, join, merge, pivot, melt, unpivot, cross join]
 description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [[05_py_aggregation_reshaping]] for the Python equivalent."
 related:
-  - "[[dataframes-index]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-dataframes]]"
+  - "[[moc-programming-languages]]"
   - "[[05_py_aggregation_reshaping]]"
   - "[[04_cs_missing_strings_datetime]]"
   - "[[06_cs_lazy_performance]]"

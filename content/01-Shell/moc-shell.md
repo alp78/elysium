@@ -9,7 +9,7 @@ tags:
 
 # MOC: Shell
 
-Command-line fluency for data engineers working across Linux and PowerShell. This map covers everything from reading files and transforming text, through writing production-safe scripts, to monitoring systems and securing network access on GCP infrastructure. Each page pairs bash commands with PowerShell equivalents so the same technique works regardless of environment.
+The command line is the data engineer's primary interface to production systems. This map covers everything from reading files and transforming text, through writing production-safe scripts, to monitoring systems and securing network access on GCP infrastructure. Every page covers both bash (Linux/macOS) and PowerShell (Windows) equivalents, so you can work across platforms.
 
 ## Data & Files — Find It, Read It, Transform It, Move It
 
@@ -76,3 +76,10 @@ Diagnosing performance problems, managing services, and establishing secure netw
 * [[iap-tunneling]] — How Identity-Aware Proxy works at the network level, gcloud start-iap-tunnel for SQL Server and SSH, debugging common IAP failures (403, timeout, slow tunnel), and comparison with Cloud VPN and bastion hosts
 
 * [[connecting-to-gcp-resources]] — Connection commands for every GCP service type: SSH to Compute Engine, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, Datadog agent, and a quick-reference connection matrix
+
+## Cross-References
+
+- [[sqlcmd-connection-and-usage]] — SQL Server command-line operations from the shell
+- [[gcloud-authentication]] — GCP authentication underpinning all gcloud CLI work
+- [[container-lifecycle]] — Docker container commands are shell operations
+- [[linux-scheduling|cron and crontab]] — Scheduling shell commands for pipeline automation

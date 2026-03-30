@@ -7,7 +7,7 @@ aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchem
 keywords: [pyodbc, SQLAlchemy, sqlite3, connection string, ORM, query, transaction, pandas, read_sql]
 description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [[16_cs_database]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[16_cs_database]]"
 created: 2026-03-22
 updated: 2026-03-22

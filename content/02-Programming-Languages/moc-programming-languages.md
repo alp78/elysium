@@ -9,7 +9,7 @@ tags:
 
 # MOC: Programming Languages
 
-This map covers the complete Python and C# reference library — 52 pages of executable notebook conversions with cell outputs. Most topics exist as paired notebooks (Python first, then C# equivalent) so you can compare idioms side-by-side. The collection progresses from language fundamentals through data engineering pipelines to cloud-native GCP integration.
+This map covers the complete Python and C# reference library — 52 pages of executable notebook conversions with cell outputs preserved (you see both the code and its result). Most topics exist as paired notebooks (Python first, then C# equivalent) so you can compare idioms side-by-side. The collection progresses from language fundamentals through data engineering pipelines to cloud-native GCP integration.
 
 ## Language Foundations — Syntax, Types, and Core Abstractions
 
@@ -130,3 +130,8 @@ Comparison tables and decision guides that span SQL, Python, and C# — helping 
 * [[etl-vs-elt]] — ETL vs ELT comparison: transform location, compute cost, raw data preservation, debugging trade-offs, and how each maps to the medallion architecture.
 
 * [[merge-vs-rebase-vs-squash]] — Git merge strategies compared: standard merge, rebase, and squash merge — history shape, when to use each, and team workflow implications.
+
+## Cross-References
+
+- [[rest-api-design-and-consumption]] — Language-agnostic REST API patterns
+- [[moc-dbt]] — dbt uses Python for custom models and macros

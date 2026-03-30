@@ -7,7 +7,7 @@ aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 keywords: [serialization, JSON, CSV, Parquet, Avro, protobuf, msgpack, pickle, arrow, feather, data formats, schema evolution, compression]
 description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [[10_cs_serialization_formats]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[10_cs_serialization_formats]]"
   - "[[09_py_fileio_serialization]]"
 created: 2026-03-25

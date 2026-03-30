@@ -9,7 +9,7 @@ description: "Step-by-step guide to enabling Transparent Data Encryption (TDE) o
 related:
   - "[[high-availability-overview]]"
   - "[[sql-server-authentication]]"
-  - "[[sql-server-index]]"
+  - "[[moc-sql-server]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -371,4 +371,4 @@ For backup strategy in an [[high-availability-overview#Backup Strategy with AGs|
 
 - [[high-availability-overview]] — AG backup strategy and how TDE interacts with Always On Availability Groups
 - [[sql-server-authentication]] — Service account hardening, login security, and TLS network encryption
-- [[sql-server-index]] — SQL Server section index
+- [[moc-sql-server]] — SQL Server section index

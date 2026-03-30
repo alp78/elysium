@@ -47,7 +47,7 @@ keywords:
   - snapshot retention cost
 description: Concrete TCO calculations for classic data engineering pipeline architectures on GCP. Covers four reference architectures from small batch (~$100/month) to enterprise scale (~$3,000-10,000/month), with precise per-line-item cost breakdowns, Mermaid architecture diagrams, paused vs. running cost comparisons, multi-cloud comparisons, and a hidden costs checklist.
 related:
-  - "[[gcp-index]]"
+  - "[[moc-gcp]]"
   - "[[gcp-billing-and-pricing|BigQuery cost optimization]]"
   - "[[cloud-run-jobs-vs-services|Cloud Run]]"
   - "[[vm-lifecycle|Compute Engine]]"

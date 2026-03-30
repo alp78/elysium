@@ -7,7 +7,7 @@ aliases: [generics, LINQ, type parameters, generic collections, comprehensions, 
 keywords: [generics, LINQ, where, select, orderby, groupby, IEnumerable, IQueryable, type constraints, variance]
 description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [[07_py_generics_linq]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[07_py_generics_linq]]"
 created: 2026-03-22
 updated: 2026-03-22

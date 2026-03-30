@@ -60,3 +60,12 @@ Techniques for writing maintainable Terraform at scale: conditionally creating r
 * [[terraform-module-composition]] — module basics, directory structure, multi-environment patterns with dev/staging/prod, environment promotion, Terraform Registry modules, and when to extract a module
 
 * [[terraform-problems]] — 25 production problems ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures for data engineering teams on GCP
+
+## Cross-References
+
+- [[gcp-projects-and-apis]] — Project management and API enablement that Terraform automates
+- [[service-accounts-and-iam]] — Service accounts and IAM roles provisioned by Terraform
+- [[cloud-run-jobs-vs-services]] — Cloud Run resources defined in Terraform configurations
+- [[container-lifecycle]] — Container images referenced in Cloud Run and Artifact Registry
+- [[github-actions-ci-cd]] — CI/CD pipelines that run terraform plan and apply
+- [[datadog-architecture-overview]] — Conditional Datadog resources provisioned by Terraform

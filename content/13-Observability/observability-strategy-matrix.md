@@ -7,7 +7,7 @@ aliases: [monitoring strategy, what to monitor, observability matrix]
 keywords: [metrics, logs, traces, alerts, dashboards, freshness, data quality, SLA, dead man switch, on-call]
 description: "What to monitor for every component: metrics, logs, alerts, dashboards — the strategy layer above tool configuration."
 related:
-  - "[[observability-index]]"
+  - "[[moc-observability]]"
   - "[[observability-deep-dive]]"
   - "[[gcp-pipeline-health-and-sla]]"
   - "[[gcp-cloud-monitoring-deep-dive]]"

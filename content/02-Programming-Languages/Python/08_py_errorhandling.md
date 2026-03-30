@@ -7,7 +7,7 @@ aliases: [exceptions, try catch, error handling, custom exceptions, exception hi
 keywords: [try, except, finally, raise, Exception, BaseException, custom exception, logging, contextmanager]
 description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [[08_cs_errorhandling]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[08_cs_errorhandling]]"
 created: 2026-03-22
 updated: 2026-03-22

@@ -11,8 +11,8 @@ aliases:
 keywords: [testing, pytest, xUnit, assert_frame_equal, validation, migration, pandas to polars, best practices]
 description: "Polars.NET / C# DataFrames reference 10/10 — Project, Testing & Migration (end-to-end, validation, migration guide). Executable examples with cell outputs. See [[10_py_testing_migration]] for the Python equivalent."
 related:
-  - "[[dataframes-index]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-dataframes]]"
+  - "[[moc-programming-languages]]"
   - "[[10_py_testing_migration]]"
   - "[[09_cs_database_interface]]"
 created: 2026-03-27

@@ -7,7 +7,7 @@ aliases: [generics, LINQ, type parameters, generic collections, comprehensions, 
 keywords: [generics, TypeVar, Generic, Protocol, map, filter, reduce, itertools, functools, comprehension]
 description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [[07_cs_generics_linq]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[07_cs_generics_linq]]"
 created: 2026-03-22
 updated: 2026-03-22

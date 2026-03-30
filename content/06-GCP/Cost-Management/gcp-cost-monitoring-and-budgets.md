@@ -55,7 +55,7 @@ description: >
   optimization strategies, weekly review checklists, dashboard SQL, and
   Terraform cost controls. No project-specific references.
 related:
-  - "[[gcp-index]]"
+  - "[[moc-gcp]]"
   - "[[dataset-and-table-management|BigQuery]]"
   - "[[cloud-logging]]"
   - "[[service-accounts-and-iam|IAM and security]]"

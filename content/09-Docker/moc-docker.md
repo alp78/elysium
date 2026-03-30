@@ -25,3 +25,9 @@ Day-to-day container management: launching containers, reading logs, debugging c
 * [[docker-compose]] — compose file structure with a full Airflow + PostgreSQL + Redis example, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec, config overrides, and system cleanup
 
 * [[docker-cheat-sheet]] — exhaustive CLI reference for Docker and Docker Compose covering container lifecycle, image management, volumes, networks, Dockerfile instructions, and system cleanup
+
+## Cross-References
+
+- [[terraform-cloud-run]] — Terraform provisions Cloud Run services that run Docker images
+- [[github-actions-ci-cd]] — CI/CD pipelines that build and push Docker images on merge
+- [[datadog-agent-airflow-vm]] — Datadog agent runs as a Docker container on the Airflow VM

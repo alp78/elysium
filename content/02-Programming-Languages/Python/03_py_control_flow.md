@@ -7,7 +7,7 @@ aliases: [if else, loops, for loop, while loop, switch, pattern matching, match 
 keywords: [if, elif, else, for, while, break, continue, pass, match, case, comprehension, generator, yield]
 description: "Python control flow reference with executable examples and cell outputs — covers conditionals, loops, loop control, iterators, generators, and comprehensions. See [[03_cs_control_flow]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[03_cs_control_flow]]"
 created: 2026-03-22
 updated: 2026-03-22

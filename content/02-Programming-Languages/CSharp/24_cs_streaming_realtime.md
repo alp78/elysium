@@ -7,7 +7,7 @@ aliases: [Streaming CSharp, Real-Time Data CSharp, WebSocket, SSE, Pub/Sub]
 keywords: [streaming, real-time, WebSocket, SSE, server-sent events, Pub/Sub, Firestore listener, ClientWebSocket, HttpClient, latency, throughput, MFT, Transfer Service]
 description: "C# streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [[24_py_streaming_realtime]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[24_py_streaming_realtime]]"
   - "[[23_cs_data_ingestion]]"
   - "[[12_cs_asyncconcurrency]]"

@@ -29,3 +29,11 @@ Reusable patterns for production pipelines: matrix builds, composite actions, en
 * [[github-actions-data-engineering]] — Python pipeline CI (lint + test), Cloud Run CD, dbt CI with slim builds, BigQuery dry-run SQL validation, Airflow DAG import checks, data quality gates with Great Expectations, Workload Identity Federation setup, Slack notifications, and cost monitoring
 
 * [[github-actions-problems]] — 20 production problems ranked by severity including supply chain attacks via pull_request_target, secret exposure, workflow injection, YAML untestability, cache misses, runner inconsistencies, matrix explosion, and action pinning strategies
+
+## Cross-References
+
+- [[moc-git|Git]] — branching strategies that feed into CI triggers
+- [[terraform-registry-and-ci]] — provisions the CI service account and Artifact Registry
+- [[image-management]] — Docker build/push steps that Actions automates
+- [[service-accounts-and-iam]] — GCP IAM and Workload Identity Federation for keyless auth
+- [[moc-dataops|DataOps]] — DataOps principles and team practices

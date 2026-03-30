@@ -7,7 +7,7 @@ aliases: [string manipulation, string formatting, regex, f-strings, string inter
 keywords: [str, f-string, format, regex, re, split, join, strip, replace, slice, encode]
 description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [[02_cs_strings]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[02_cs_strings]]"
 created: 2026-03-22
 updated: 2026-03-22

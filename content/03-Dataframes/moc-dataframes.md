@@ -9,7 +9,7 @@ tags:
 
 # MOC: DataFrames
 
-Side-by-side Pandas/Polars (Python) and Polars.NET/Deedle (C#) reference across 10 paired notebooks. Every page uses the same Euro Stoxx 50 financial datasets, so patterns build on each other from foundations through production pipelines. Python pages are listed first, followed by their C# counterpart.
+Side-by-side Pandas/Polars (Python) and Polars.NET/Deedle (C#) reference across 10 paired notebooks, each converted from executed Jupyter notebooks with cell outputs preserved. Every page uses the same Euro Stoxx 50 financial datasets, so patterns build on each other from foundations through production pipelines. Python pages are listed first, followed by their C# counterpart.
 
 ## Core Operations — Building and Shaping DataFrames
 
@@ -62,3 +62,8 @@ Charting, database connectivity, testing, and migration strategies that take Dat
 * [[10_py_testing_migration]] — End-to-end analytical pipeline, assert_frame_equal validation, Pandas-to-Polars migration guide and gotchas
 
 * [[10_cs_testing_migration]] — End-to-end pipeline in C#, xUnit-style validation, Pandas-to-Polars.NET migration patterns
+
+## Cross-References
+
+- [[moc-programming-languages]] — Python and C# paired language references
+- [[sql-python-csharp-transforms]] — Side-by-side data transformations in SQL, Python, and C#

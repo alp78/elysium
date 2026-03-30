@@ -9,7 +9,7 @@ description: "Complete guide to SQL Server 2022 High Availability on Linux GCP V
 related:
   - "[[tde-encryption]]"
   - "[[sql-server-authentication]]"
-  - "[[sql-server-index]]"
+  - "[[moc-sql-server]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1066,4 +1066,4 @@ gcloud compute snapshots list \
 
 - [[tde-encryption]] — Transparent Data Encryption for data-at-rest protection of AG databases
 - [[sql-server-authentication]] — Service account hardening and SQL Server login security
-- [[sql-server-index]] — SQL Server section index
+- [[moc-sql-server]] — SQL Server section index

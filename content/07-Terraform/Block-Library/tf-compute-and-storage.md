@@ -57,7 +57,7 @@ description: >
   policies, VM scheduling, GCS buckets (landing zone, data lake, Terraform state),
   IAM bindings, bucket objects, and Pub/Sub notifications.
 related:
-  - "[[terraform-index]]"
+  - "[[moc-terraform]]"
   - "[[tf-foundation-and-networking|Terraform networking]]"
   - "[[tf-iam-secrets-serverless|Terraform IAM]]"
 created: 2026-03-22

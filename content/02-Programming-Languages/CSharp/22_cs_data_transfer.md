@@ -7,7 +7,7 @@ aliases: [Data Transfer CSharp, GCS Transfer, BigQuery Load]
 keywords: [GCS, Google.Cloud.Storage, Cloud SQL, BigQuery, upload, download, transfer, SCP, SSH, parallel, compression, gzip, tar, benchmark, latency, throughput]
 description: "C# data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [[22_py_data_transfer]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[22_py_data_transfer]]"
   - "[[20_py_security_setup]]"
   - "[[17_cs_gcp]]"

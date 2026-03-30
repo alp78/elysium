@@ -7,7 +7,7 @@ aliases: [Security Operations Python, Encryption and Identity Python]
 keywords: [encryption, KMS, Secret Manager, certificates, Workload Identity, OAuth, JWT, IAM, SSH, paramiko, Cloud SQL, BigQuery, Firestore, GCS, signed URLs, CMEK, CSEK, envelope encryption, IAP tunnel, service account impersonation]
 description: "Python security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [[20_py_security_setup]]. See [[21_cs_security_operations]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[21_cs_security_operations]]"
   - "[[20_py_security_setup]]"
   - "[[17_py_gcp]]"

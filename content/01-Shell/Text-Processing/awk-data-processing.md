@@ -8,7 +8,7 @@ keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, EN
 description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, aggregation, string functions, multi-file processing, advanced patterns, and PowerShell equivalents for every key technique."
 related:
   - "[[reading-file-contents]]"
-  - "[[shell-index]]"
+  - "[[moc-shell]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1184,4 +1184,4 @@ The filtering and aggregation patterns here (pattern-action rules, group-by with
 ## Related Notes
 
 - [[reading-file-contents]] — Reading files in shell (cat, head, tail, less)
-- [[shell-index]] — Shell scripting section index
+- [[moc-shell]] — Shell scripting section index

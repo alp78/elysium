@@ -1824,7 +1824,7 @@ FROM {{ ref('int_index_levels_with_fx') }}
 
 ## Related
 
-- [[dbt-index]] — Full dbt section
+- [[moc-dbt]] — Full dbt section
 - [[dbt-core-concepts]] — What dbt is and how it works
 - [[dbt-cli-reference]] — Detailed CLI reference
 - [[dbt-transformation-layer]] — Foundational overview

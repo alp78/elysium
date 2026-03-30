@@ -7,7 +7,7 @@ aliases: [lambda, closures, decorators, delegates, higher-order functions, gener
 keywords: [def, lambda, closure, decorator, args, kwargs, type hints, functools, scope, LEGB]
 description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [[04_cs_functions]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[04_cs_functions]]"
 created: 2026-03-22
 updated: 2026-03-22

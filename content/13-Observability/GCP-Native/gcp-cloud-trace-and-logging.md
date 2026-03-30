@@ -67,7 +67,7 @@ description: >
 related:
   - "[[cloud-monitoring-metrics|Cloud Monitoring]]"
   - "[[cloud-monitoring-metrics|custom metrics]]"
-  - "[[observability-index]]"
+  - "[[moc-observability]]"
   - "[[firestore-data-model-and-operations|Firestore state store]]"
   - "[[cloud-run-jobs-vs-services|Cloud Run pipelines]]"
 created: 2026-03-22
@@ -1513,4 +1513,4 @@ with tracer.start_as_current_span("my-span", attributes={"key": "value"}) as spa
 
 ---
 
-*See also: [[cloud-monitoring-metrics|Cloud Monitoring]] | [[cloud-monitoring-metrics|custom metrics]] | [[observability-index]] | [[firestore-data-model-and-operations|Firestore state store]]*
+*See also: [[cloud-monitoring-metrics|Cloud Monitoring]] | [[cloud-monitoring-metrics|custom metrics]] | [[moc-observability]] | [[firestore-data-model-and-operations|Firestore state store]]*

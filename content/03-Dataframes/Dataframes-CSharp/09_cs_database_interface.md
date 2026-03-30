@@ -11,8 +11,8 @@ aliases:
 keywords: [SQLContext, DuckDB, SQL Server, database, query, connection, ADO.NET, SQLAlchemy]
 description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [[09_py_database_interface]] for the Python equivalent."
 related:
-  - "[[dataframes-index]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-dataframes]]"
+  - "[[moc-programming-languages]]"
   - "[[09_py_database_interface]]"
   - "[[08_cs_visualization]]"
   - "[[10_cs_testing_migration]]"

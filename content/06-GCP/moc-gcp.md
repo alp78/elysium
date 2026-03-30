@@ -88,3 +88,11 @@ Understanding what you spend and why things break. Billing export, budget alerts
 * [[cloud-logging]] — querying logs with gcloud logging read, filter language for severity, time range, resource type, and full-text content, real-time tailing, structured log entries, audit logs, and diagnosing 3 AM pipeline failures
 
 * [[cloud-monitoring-metrics]] — listing metric descriptors, reading time-series data for CPU, disk, network, Cloud Run completions, Pub/Sub backlog, and BigQuery slot usage, and using historical metrics for capacity planning and right-sizing decisions
+
+## Cross-References
+
+- [[moc-terraform|Terraform]] — Infrastructure-as-code for all GCP resources
+- [[moc-orchestration|Orchestration]] — Airflow DAGs that trigger Cloud Run jobs and query BigQuery
+- [[moc-sql-server|SQL Server]] — SQL Server on Compute Engine VMs, backup to GCS
+- [[moc-observability|Observability]] — Datadog monitoring, dashboards, and alerting
+- [[dbt-bigquery-adapter]] — BigQuery adapter configuration and cost optimization

@@ -40,3 +40,12 @@ Platform-native scheduling tools for recurring jobs that do not require a full o
 A domain-specific ingestion framework for multi-vendor ESG data that combines scheduling, quality gates, and anomaly detection into a production pipeline pattern.
 
 * [[esg-data-ingestion-framework]] — multi-vendor ESG score normalization (MSCI, Sustainalytics, ISS, Bloomberg), the Sustainalytics inversion trap, circuit breaker patterns for anomaly detection, carbon footprint calculation (WACI/SFDR), coverage checks, forward-fill strategies, Terraform IAM for segregated read/write service accounts, and Airflow DAG orchestration for the full ingestion flow
+
+## Cross-References
+
+- [[moc-data-architecture|Data Architecture]] — pipeline patterns that Airflow orchestrates
+- [[docker-compose]] — running Airflow locally via Docker Compose
+- [[cloud-run-jobs-vs-services]] — serverless targets Airflow triggers
+- [[datadog-airflow-observability]] — monitoring Airflow with Datadog
+- [[github-actions-ci-cd]] — deploying DAGs automatically via CI/CD
+- [[dbt-airflow-integration]] — running dbt in Airflow DAGs (BashOperator, Cosmos, Cloud Run)

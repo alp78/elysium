@@ -97,3 +97,12 @@ Foundational principles and decision frameworks for every technology and archite
 * [[technology-selection-matrices]] — Decision tables for every choice: Python vs Bash vs C# vs SQL, SQL Server vs BigQuery, Airflow vs cron, Terraform vs gcloud, data models, APIs, build vs buy. 30+ lookup entries.
 
 * [[scenario-based-decision-guide]] — 10 real-world scenarios with Mermaid architecture diagrams: daily batch pipeline, streaming, data warehouse, multi-source integration, cost optimization. Follow the scenario that matches your situation.
+
+## Cross-References
+
+- [[bronze-layer-loading]], [[silver-transforms]], [[gold-transforms]] — SQL Server implementations of medallion layers
+- [[etl-vs-elt]] — ETL vs ELT comparison table
+- [[airflow-dag-patterns]] — pipeline scheduling patterns for Airflow
+- [[gcp-scheduling]] — Cloud Scheduler to Cloud Run patterns
+- [[moc-dbt|dbt]] — full dbt transformation layer section
+- [[dbt-transformation-layer]] — concise code-heavy dbt overview

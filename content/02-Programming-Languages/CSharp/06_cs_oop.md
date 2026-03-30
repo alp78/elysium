@@ -7,7 +7,7 @@ aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, enca
 keywords: [class, interface, abstract, inheritance, polymorphism, property, record, sealed, virtual, override]
 description: "C# OOP reference with executable examples and cell outputs — covers classes, interfaces, inheritance, polymorphism, properties, records, and encapsulation. See [[06_py_oop]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[06_py_oop]]"
 created: 2026-03-22
 updated: 2026-03-22

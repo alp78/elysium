@@ -11,8 +11,8 @@ aliases:
 keywords: [head, tail, describe, select, filter, where, isin, column selection, row filtering, boolean indexing]
 description: "Polars.NET / C# DataFrames reference 02/10 — Explore, Select & Filter (head/tail, describe, where, isin). Executable examples with cell outputs. See [[02_py_explore_select_filter]] for the Python equivalent."
 related:
-  - "[[dataframes-index]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-dataframes]]"
+  - "[[moc-programming-languages]]"
   - "[[02_py_explore_select_filter]]"
   - "[[01_cs_foundations_io]]"
   - "[[03_cs_transforms_expressions]]"

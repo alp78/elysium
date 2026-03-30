@@ -59,7 +59,7 @@ related:
   - "[[cloud-monitoring-metrics|alerting policies]]"
   - "[[cloud-run-jobs-vs-services|Cloud Run Jobs]]"
   - "[[gcp-cost-monitoring-and-budgets|BigQuery cost monitoring]]"
-  - "[[observability-index]]"
+  - "[[moc-observability]]"
   - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22

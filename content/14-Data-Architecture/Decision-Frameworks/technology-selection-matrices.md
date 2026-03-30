@@ -7,7 +7,7 @@ aliases: [technology selection, decision matrix, when to use, build vs buy, lang
 keywords: [technology selection, decision matrix, language selection, build vs buy, trade-off analysis, Python vs bash, Python vs C#, SQL vs Python, SQL Server vs BigQuery, Airflow vs cron, Terraform vs gcloud, Cloud Run vs Compute Engine, Pub/Sub vs direct calls, GCS vs BigQuery, star schema vs flat, ETL vs ELT, Firestore vs Bigtable, Cloud SQL vs SQL Server, orchestration selection, compute selection, storage selection, database selection, API protocol selection, architecture selection, data model selection, infrastructure as code, cost comparison, latency comparison, scaling comparison, managed vs self-hosted, serverless vs VM, batch vs streaming, Docker vs bare metal, dbt vs custom SQL, Datadog vs Cloud Monitoring, CI/CD selection, testing strategy selection]
 description: "Comprehensive decision-matrix reference for data engineering technology selection — language choice (Python/Bash/PowerShell/C#/SQL), database selection (SQL Server/BigQuery/Cloud SQL/Firestore/Bigtable), GCP component selection (compute/messaging/storage), orchestration (Airflow/cron/Cloud Scheduler/Composer), infrastructure tooling (Terraform/gcloud/Console), data modeling, API protocols, architecture patterns, and build-vs-buy frameworks. Every decision backed by trade-off analysis with specific thresholds and decision rules."
 related:
-  - "[[data-architecture-index]]"
+  - "[[moc-data-architecture]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[moc-data-pipeline-lifecycle]]"
   - "[[moc-infrastructure-as-code]]"
@@ -292,7 +292,7 @@ Follow this top-down. The first "yes" is your answer.
 
 3. Do you need ACID transactions with stored procedures?
    ├── Yes → Do you have existing SQL Server expertise?
-   │         ├── Yes → SQL Server (see [[sql-server-index]])
+   │         ├── Yes → SQL Server (see [[moc-sql-server]])
    │         └── No → Cloud SQL PostgreSQL
    └── No ↓
 
@@ -996,7 +996,7 @@ For rapid lookup when you just need the answer:
 ## Related Notes
 
 #### Architecture and modeling
-- [[data-architecture-index]] — full section index
+- [[moc-data-architecture]] — full section index
 - [[five-pillars-of-data-engineering]] — the principles behind every decision
 - [[moc-data-pipeline-lifecycle]] — end-to-end pipeline patterns
 - [[moc-infrastructure-as-code]] — Terraform and IaC overview

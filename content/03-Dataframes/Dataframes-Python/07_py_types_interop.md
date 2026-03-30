@@ -11,9 +11,9 @@ aliases:
 keywords: [Categorical, Enum, Struct, List, Array, ArrowDtype, to_arrow, from_arrow, zero-copy, PyArrow]
 description: "Pandas/Polars DataFrame reference 07/10 — Advanced Types & Interoperability (categoricals, nested types, Arrow, zero-copy). Side-by-side executable examples with cell outputs."
 related:
-  - "[[dataframes-index]]"
+  - "[[moc-dataframes]]"
   - "[[07_cs_types_interop]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[06_py_lazy_performance]]"
   - "[[08_py_visualization]]"
 created: 2026-03-24

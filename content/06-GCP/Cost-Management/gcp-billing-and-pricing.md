@@ -69,7 +69,7 @@ keywords:
   - long-term storage
 description: Definitive reference on how every GCP data engineering service is billed — pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and gcloud/BigQuery commands for ongoing cost analysis and optimization.
 related:
-  - "[[gcp-index]]"
+  - "[[moc-gcp]]"
   - "[[querying-and-cost-optimization]]"
   - "[[dataset-and-table-management]]"
   - "[[vm-lifecycle]]"
@@ -1420,7 +1420,7 @@ ORDER BY ts.size_bytes DESC
 
 ## Related Notes
 
-- [[gcp-index]] — GCP section overview and navigation
+- [[moc-gcp]] — GCP section overview and navigation
 - [[querying-and-cost-optimization]] — BigQuery query optimization techniques
 - [[dataset-and-table-management]] — Partitioning and clustering setup
 - [[data-loading-and-export]] — Batch loading (free) vs streaming inserts (paid)

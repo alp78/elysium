@@ -112,3 +112,8 @@ How data flows through SQL Server: loading methods, schema organization, change 
 * [[silver-transforms]] — SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, unique index design for deduplication, and the validation gate between bronze and silver
 
 * [[gold-transforms]] — gold table DDL, z-score computation by group, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs (SMA 30/90), composite scoring and ranking, and dashboard-ready consumption queries
+
+## Cross-References
+
+- [[dbt-sqlserver-adapter]] — dbt SQL Server adapter configuration
+- [[dbt-performance-tuning]] — Tuning dbt models on SQL Server

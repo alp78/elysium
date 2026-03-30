@@ -70,3 +70,10 @@ The conceptual layer connecting tool configuration to monitoring philosophy, dat
 * [[observability-deep-dive]] — the three pillars applied to data pipelines, custom DataDog metrics for pipeline health, data freshness tracking, lineage implementation, data catalog tooling, and drift detection
 
 * [[compliance-and-auditability]] — end-to-end audit trails for index calculation, corporate action processing, EU BMR obligations, restatement procedures, and continuous compliance monitoring
+
+## Cross-References
+
+- [[five-pillars-of-data-engineering|Pillar 2: Observability]] — observability as a foundational engineering pillar
+- [[cloud-logging]] — GCP log filter syntax, severity levels, resource filtering, log tailing
+- [[cloud-monitoring-metrics]] — GCP metric types, CPU/disk/network, time-series fundamentals
+- [[dbt-observability]] — monitoring dbt runs in Datadog and the elementary package

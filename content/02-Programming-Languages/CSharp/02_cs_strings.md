@@ -7,7 +7,7 @@ aliases: [string manipulation, string formatting, regex, f-strings, string inter
 keywords: [string, StringBuilder, interpolation, Regex, Split, Join, Trim, Replace, Span, Format]
 description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [[02_py_strings]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[02_py_strings]]"
 created: 2026-03-22
 updated: 2026-03-22

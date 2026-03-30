@@ -7,7 +7,7 @@ aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 keywords: [streaming, real-time, WebSocket, SSE, server-sent events, Pub/Sub, Firestore listener, aiohttp, asyncio, latency, throughput, MFT, Transfer Service]
 description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [[24_cs_streaming_realtime]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[24_cs_streaming_realtime]]"
   - "[[23_py_data_ingestion]]"
   - "[[12_py_asyncconcurrency]]"

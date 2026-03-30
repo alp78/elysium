@@ -11,9 +11,9 @@ aliases:
 keywords: [SQLContext, DuckDB, pyodbc, sqlalchemy, read_database, SQL, register, execute]
 description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
 related:
-  - "[[dataframes-index]]"
+  - "[[moc-dataframes]]"
   - "[[09_cs_database_interface]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[08_py_visualization]]"
   - "[[10_py_testing_migration]]"
 created: 2026-03-24

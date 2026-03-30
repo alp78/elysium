@@ -7,7 +7,7 @@ aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, 
 keywords: [List, Dictionary, HashSet, Queue, Stack, IEnumerable, LINQ, array, SortedDictionary, ConcurrentDictionary]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [[05_py_collections]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[05_py_collections]]"
 created: 2026-03-22
 updated: 2026-03-22

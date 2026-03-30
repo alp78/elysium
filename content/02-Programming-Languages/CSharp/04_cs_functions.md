@@ -7,7 +7,7 @@ aliases: [lambda, closures, decorators, delegates, higher-order functions, gener
 keywords: [method, delegate, Func, Action, lambda, closure, extension method, IEnumerable, yield, nullable]
 description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and iterators. See [[04_py_functions]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[04_py_functions]]"
 created: 2026-03-22
 updated: 2026-03-22

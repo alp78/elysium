@@ -7,7 +7,7 @@ aliases: [async await, concurrency, parallelism, tasks, threads, asyncio, Task]
 keywords: [asyncio, async, await, coroutine, Task, threading, multiprocessing, concurrent.futures, GIL]
 description: "Python async and concurrency reference with executable examples and cell outputs — covers asyncio, async/await, tasks, threading, multiprocessing, and concurrent.futures. See [[12_cs_asyncconcurrency]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[12_cs_asyncconcurrency]]"
 created: 2026-03-22
 updated: 2026-03-22

@@ -11,9 +11,9 @@ aliases:
 keywords: [Series, DataFrame, Index, dtypes, int64, float64, object, category, read_csv, read_parquet, to_csv, to_parquet]
 description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
 related:
-  - "[[dataframes-index]]"
+  - "[[moc-dataframes]]"
   - "[[01_cs_foundations_io]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[02_py_explore_select_filter]]"
 created: 2026-03-24
 updated: 2026-03-24

@@ -6,7 +6,7 @@ status: stable
 updated: 2026-03-23
 description: "Monitoring dbt runs with Datadog custom metrics, the elementary package for anomaly detection, artifact parsing, and Slack alerting for financial data pipelines."
 related:
-  - "[[observability-index]]"
+  - "[[moc-observability]]"
   - "[[datadog-dashboards]]"
   - "[[dbt-packages]]"
   - "[[dbt-airflow-integration]]"
@@ -367,7 +367,7 @@ resource "datadog_dashboard" "dbt_observability" {
 
 ## Related
 
-- [[observability-index]]
+- [[moc-observability]]
 - [[datadog-dashboards]]
 - [[dbt-packages]]
 - [[dbt-airflow-integration]]

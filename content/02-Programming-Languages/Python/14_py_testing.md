@@ -7,7 +7,7 @@ aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, 
 keywords: [pytest, unittest, mock, patch, fixture, parametrize, assert, coverage, TDD]
 description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [[14_cs_testing]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[14_cs_testing]]"
 created: 2026-03-22
 updated: 2026-03-22

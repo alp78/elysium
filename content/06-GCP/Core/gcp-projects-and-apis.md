@@ -82,7 +82,7 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 
 > [!warning] APIs Are Per-Project
 >
-> Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [[terraform-index|Terraform]].
+> Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [[moc-terraform|Terraform]].
 
 ### GCP API Lifecycle States
 

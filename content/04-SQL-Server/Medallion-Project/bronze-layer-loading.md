@@ -16,7 +16,7 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [[sql-server-index#Patterns]]
+> patterns and alternative approaches, see the [[moc-sql-server#Patterns]]
 > section. For the architectural theory behind bronze/silver/gold layering,
 > see [[medallion-architecture]].
 

@@ -7,7 +7,7 @@ aliases: [Data Ingestion CSharp, SQL Server Bulk Insert, BigQuery Load]
 keywords: [ingestion, SqlBulkCopy, BigQuery load, Firestore batch, GCS, CSV, Parquet, ADO.NET, Google.Cloud.BigQuery, benchmark, throughput, latency]
 description: "C# data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [[23_py_data_ingestion]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[23_py_data_ingestion]]"
   - "[[22_cs_data_transfer]]"
   - "[[16_cs_database]]"

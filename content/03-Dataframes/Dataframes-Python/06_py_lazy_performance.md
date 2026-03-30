@@ -11,9 +11,9 @@ aliases:
 keywords: [lazy, collect, scan_parquet, scan_csv, query plan, optimization, predicate pushdown, projection pushdown, benchmark]
 description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
 related:
-  - "[[dataframes-index]]"
+  - "[[moc-dataframes]]"
   - "[[06_cs_lazy_performance]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[05_py_aggregation_reshaping]]"
   - "[[07_py_types_interop]]"
 created: 2026-03-24

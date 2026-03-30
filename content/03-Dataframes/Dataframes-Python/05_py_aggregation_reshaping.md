@@ -11,9 +11,9 @@ aliases:
 keywords: [groupby, agg, over, rolling, shift, join, merge, concat, pivot, melt, explode, window functions]
 description: "Pandas/Polars DataFrame reference 05/10 — Aggregation & Reshaping (groupby, agg, window functions, joins, pivot, melt). Side-by-side executable examples with cell outputs."
 related:
-  - "[[dataframes-index]]"
+  - "[[moc-dataframes]]"
   - "[[05_cs_aggregation_reshaping]]"
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[04_py_missing_strings_datetime]]"
   - "[[06_py_lazy_performance]]"
 created: 2026-03-24

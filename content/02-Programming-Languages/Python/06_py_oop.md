@@ -7,7 +7,7 @@ aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, enca
 keywords: [class, inheritance, polymorphism, encapsulation, property, dunder, dataclass, ABC, abstractmethod, super]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [[06_cs_oop]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[06_cs_oop]]"
 created: 2026-03-22
 updated: 2026-03-22

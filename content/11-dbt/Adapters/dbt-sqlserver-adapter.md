@@ -6,7 +6,7 @@ status: stable
 updated: 2026-03-23
 description: "SQL Server adapter installation, auth, T-SQL differences, incremental strategy, index post-hooks, and known limitations."
 related:
-  - "[[sql-server-index]]"
+  - "[[moc-sql-server]]"
   - "[[dbt-performance-tuning]]"
   - "[[sqlcmd-connection-and-usage]]"
   - "[[dbt-cross-adapter-patterns]]"
@@ -379,7 +379,7 @@ connect_timeout: 60
 
 ## Related
 
-- [[sql-server-index]]
+- [[moc-sql-server]]
 - [[dbt-performance-tuning]]
 - [[sqlcmd-connection-and-usage]]
 - [[dbt-cross-adapter-patterns]]

@@ -7,7 +7,7 @@ aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 keywords: [serialization, JSON, CSV, Parquet, Avro, protobuf, msgpack, System.Text.Json, Newtonsoft, data formats, schema evolution, compression]
 description: "C# serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [[10_py_serialization_formats]] for the Python equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[10_py_serialization_formats]]"
   - "[[09_cs_fileio_serialization]]"
 created: 2026-03-25

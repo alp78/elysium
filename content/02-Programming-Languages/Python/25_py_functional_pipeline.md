@@ -7,7 +7,7 @@ aliases: [functional pipeline, medallion pipeline, data lineage, pydantic valida
 keywords: [pipeline, medallion, bronze, silver, gold, pydantic, validation, lineage, fastapi, streamlit, plotly, airflow, parquet]
 description: "End-to-end functional data pipeline with Pydantic validation, lineage tracking, Parquet export, FastAPI serving, and Plotly visualization. See [[25_cs_functional_pipeline]] for the C# equivalent."
 related:
-  - "[[programming-languages-index]]"
+  - "[[moc-programming-languages]]"
   - "[[25_cs_functional_pipeline]]"
   - "[[functional-pipeline-architecture]]"
   - "[[18_py_designpatterns]]"
