@@ -134,17 +134,11 @@ rsync -avc source_dir/ dest_dir/
 ### rsync trailing slash — source path determines copy behavior
 
 > [!warning] rsync trailing slash gotcha
+> This is the single most common rsync mistake. The trailing slash on the **source** path changes what gets copied:
+> - `rsync -avz /data/bronze/ /backup/bronze/` — copies **contents** of `bronze/` into `/backup/bronze/`
+> - `rsync -avz /data/bronze  /backup/bronze/` — copies the **directory itself**, creating `/backup/bronze/bronze/` (nested!)
 >
-> This is the single most common rsync mistake:
-> ```bash
-> # Scenario: you want to sync /data/bronze/ to /backup/bronze/
->
-> rsync -avz /data/bronze/ /backup/bronze/     # CORRECT: copies CONTENTS into /backup/bronze/
-> rsync -avz /data/bronze  /backup/bronze/      # WRONG: creates /backup/bronze/bronze/ (nested!)
->
-> # Rule: always put a trailing slash on the SOURCE to mean "copy contents, not the directory itself"
-> # If you're ever unsure, use -n (dry run) first
-> ```
+> **Rule:** always put a trailing slash on the source to mean "copy contents, not the directory itself." If you're ever unsure, use `-n` (dry run) first — it shows exactly what would be transferred without doing anything.
 
 #### rsync -avzP over SSH — local to remote and back
 
