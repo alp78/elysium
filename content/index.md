@@ -1,14 +1,46 @@
 ---
 title: Elysium
-type: index
-category: navigation
-technology: []
-tags: []
-aliases: [Home, Main Dashboard, Start Here, Elysium]
-keywords: [dashboard, home, index, navigation, start here, overview, data engineering, knowledge base]
-description: "Elysium data engineering knowledge base."
-related: []
-created: 2026-03-22
-updated: 2026-03-23
-status: complete
 ---
+
+# Elysium
+
+A data engineering knowledge base covering the full stack — from shell
+commands through cloud infrastructure to pipeline architecture. Browse
+by domain below, or use the graph view to explore connections visually.
+
+> [!example]- Code and Queries
+>
+> - [[moc-shell|Shell]] — File processing, scripting, and system operations from the command line
+> - [[moc-programming-languages|Programming Languages]] — Python and C# paired notebooks from language foundations to GCP integration
+> - [[moc-dataframes|DataFrames]] — Pandas and Polars side-by-side: loading, transforming, testing
+> - [[moc-db-queries|Database Queries]] — SQL Server, BigQuery, and Firestore executable query reference
+
+> [!example]- Data Platform
+>
+> - [[moc-sql-server|SQL Server]] — Administration, query optimization, pipeline patterns, and the medallion implementation
+> - [[moc-gcp|GCP]] — Compute, BigQuery, Firestore, GCS, security, identity, and cost management
+> - [[moc-terraform|Terraform]] — Infrastructure as code: HCL fundamentals, GCP resources, patterns, and block library
+> - [[moc-docker|Docker]] — Container lifecycle, image management, and Docker Compose orchestration
+
+> [!example]- Pipeline Engineering
+>
+> - [[moc-dbt|dbt]] — SQL transformation layer: modeling, testing, macros, adapters, and CI/CD
+> - [[moc-orchestration|Orchestration]] — Airflow DAG patterns, scheduling, and data ingestion frameworks
+> - [[moc-data-architecture|Data Architecture]] — System blueprints, pipeline patterns, data modeling, reliability, and decision frameworks
+
+> [!example]- DevOps and CI/CD
+>
+> - [[moc-git|Git]] — Daily workflow, branching, collaboration, and recovery
+> - [[moc-github-actions|GitHub Actions]] — Workflow fundamentals, CI/CD patterns, and data engineering automation
+
+> [!example]- Observability
+>
+> - [[moc-observability|Observability]] — Datadog platform, GCP-native monitoring, and observability strategy
+
+> [!example]- Practice and Leadership
+>
+> - [[moc-dataops|DataOps]] — DataOps principles, team organization, self-service platforms, and engineering leadership
+
+> [!example]- AI and Prompts
+>
+> - [[moc-ai-and-prompts|AI & Prompts]] — Prompt engineering, LLM pipeline integration, output validation, and financial guardrails

@@ -207,28 +207,35 @@ Data lineage tracks the journey of every data point from source to destination. 
 
 ### Column-Level Lineage for an Index Calculation
 
+```mermaid
+flowchart TB
+    API[API close] --> BRZ[Bronze close]
+    BRZ --> SIL[Silver close]
+    SIL --> MOM[Momentum score]
+    SIL --> WGT[Weight]
+    SIL --> IDX[Index value]
+    MOM --> GOLD_M[Gold momentum]
+    WGT --> IDX
+    IDX --> DASH[Dashboard]
+
+    style API fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style BRZ fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style SIL fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style MOM fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style WGT fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style GOLD_M fill:#1a1a2e,stroke:#34a853,color:#fff
+    style IDX fill:#1a1a2e,stroke:#34a853,color:#fff
+    style DASH fill:#1a1a2e,stroke:#bb9af7,color:#fff
 ```
-yahoo_finance_api.close_price (source)
-    │
-    ▼
-bronze.yahoo_ohlcv.close_price (raw load, truncate-reload)
-    │
-    ▼
-silver.daily_ohlcv.close_price (cleaned, validated, SCD2)
-    │
-    ├──▶ silver.daily_signals.momentum_score (30-day return z-score)
-    │       │
-    │       ▼
-    │    gold.composite_scores.momentum_z (aggregated per index)
-    │
-    ├──▶ silver.index_constituents.weight (market cap weighted)
-    │
-    └──▶ gold.index_performance.index_value
-              = SUM(close_price × shares × free_float × cap_factor) / divisor
-              │
-              ▼
-         dashboard (Blazor Server reads from gold layer)
-```
+
+> [!abstract] Column lineage — close price through the medallion layers
+> - **API → Bronze** — raw `close_price` loaded via truncate-reload
+> - **Bronze → Silver** — cleaned, validated, SCD2 applied
+> - **Silver → Gold** — three derivations:
+>   - `momentum_score` (30-day return z-score) → `gold.momentum_z`
+>   - `weight` (market cap weighted)
+>   - `index_value` = SUM(close × shares × free_float × cap_factor) / divisor
+> - **Gold → Dashboard** — Blazor Server reads from gold layer
 
 > [!info] Lineage and dbt
 > [[dbt-transformation-layer|dbt]] automatically generates column-level lineage as part of `dbt docs generate`. For tables outside dbt (bronze loads, custom scripts), you must manually log lineage to a metadata table as shown below.
@@ -631,36 +638,30 @@ CREATE TABLE pipeline.drift_monitor (
 
 ### The Drift Detection Pipeline as a Quality Gate
 
+```mermaid
+flowchart TB
+    BRZ[Bronze Load] -->|check| G1{{Schema Drift}}
+    G1 -->|pass| G2{{Statistical Drift}}
+    G1 -->|critical| HALT1[Halt]
+    G2 -->|pass| G3{{Business Rules}}
+    G2 -->|critical| HALT2[Halt]
+    G3 -->|pass| SIL[Silver Load]
+    G3 -->|fail| HALT3[Halt]
+
+    style BRZ fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style G1 fill:#1a1a2e,stroke:#34a853,color:#fff
+    style G2 fill:#1a1a2e,stroke:#34a853,color:#fff
+    style G3 fill:#1a1a2e,stroke:#34a853,color:#fff
+    style SIL fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style HALT1 fill:#cc4125,stroke:#a33,color:#fff
+    style HALT2 fill:#cc4125,stroke:#a33,color:#fff
+    style HALT3 fill:#cc4125,stroke:#a33,color:#fff
 ```
-Bronze Load Complete
-    │
-    ▼
-┌─────────────────────────────────────┐
-│  GATE 1: Schema Drift Check        │
-│  Compare incoming schema to         │
-│  reference. CRITICAL → halt load.  │
-│  LOW → log and continue.           │
-└──────────────┬──────────────────────┘
-               │ PASS
-               ▼
-┌─────────────────────────────────────┐
-│  GATE 2: Statistical Drift Check   │
-│  Compare today's distributions to   │
-│  30-day baseline.                   │
-│  CRITICAL → halt + page on-call.   │
-│  WARNING → load but flag for review.│
-└──────────────┬──────────────────────┘
-               │ PASS
-               ▼
-┌─────────────────────────────────────┐
-│  GATE 3: Business Rule Validation   │
-│  Great Expectations / SQL checks.   │
-│  FAIL → halt + page on-call.       │
-└──────────────┬──────────────────────┘
-               │ PASS
-               ▼
-       Silver Layer Load
-```
+
+> [!abstract] Three quality gates between Bronze and Silver
+> - **Gate 1 — Schema Drift:** compare incoming schema to reference. Critical drift (missing/renamed columns) halts the load. Low drift (new nullable column) logs and continues.
+> - **Gate 2 — Statistical Drift:** compare today's distributions to 30-day baseline. Critical deviation halts and pages on-call. Warning-level deviation loads but flags for review.
+> - **Gate 3 — Business Rules:** Great Expectations or SQL checks (prices > 0, weights sum to 1.0). Any failure halts and pages on-call.
 
 > [!warning] Drift detection is early warning
 >
