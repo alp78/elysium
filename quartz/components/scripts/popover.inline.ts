@@ -48,6 +48,17 @@ async function mouseEnterHandler(
 
   // dont refetch if there's already a popover
   if (!!document.getElementById(popoverId)) {
+    // scroll to heading for cached popovers
+    if (prevPopoverElement && hash !== "") {
+      const cachedInner = prevPopoverElement.querySelector(".popover-inner") as HTMLElement | null
+      if (cachedInner) {
+        const targetAnchor = `#popover-internal-${hash.slice(1)}`
+        const heading = cachedInner.querySelector(targetAnchor) as HTMLElement | null
+        if (heading) {
+          cachedInner.scroll({ top: heading.offsetTop - 12, behavior: "instant" })
+        }
+      }
+    }
     showPopover(prevPopoverElement as HTMLElement)
     return
   }
