@@ -265,7 +265,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   for (const n of nodes) {
     const isTag = n.id.startsWith("tags/")
     const isCurrent = n.id === slug
-    const isMoc = n.id.includes("moc-") || n.id.includes("domain-") || n.id.endsWith("index")
+    const isMoc = n.id.includes("moc-") || n.id.endsWith("index")
     const baseColor = isCurrent ? 0xffffff : isTag ? 0x6b7280 : isMoc ? 0xffffff : getSectionColor(n.id)
     const r = getNodeRadius(n) * (isCurrent ? 1.3 : 1) * (isTag ? 0.6 : 1)
 
