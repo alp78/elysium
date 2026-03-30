@@ -95,6 +95,10 @@ flowchart TB
     SILVER -.->|batch_id + SHA-256| LINEAGE
     GOLD -.->|batch_id + SHA-256| LINEAGE
 
+    BRONZE -.->|context warnings| CTX_S[Silver Context]
+    CTX_S -.->|accumulated context| CTX_G[Gold Context]
+    CTX_G -.->|x-column-context| CONTRACT[Data Contract]
+
     style FETCH fill:#1a1a2e,stroke:#e8b84d,stroke-width:2px,color:#fff
     style BRONZE_GATE fill:#1a1a2e,stroke:#34a853,stroke-width:2px,color:#fff
     style SILVER_STAGE fill:#1a1a2e,stroke:#4285f4,stroke-width:2px,color:#fff
@@ -105,6 +109,9 @@ flowchart TB
     style DLQ_S fill:#cc4125,stroke:#a33,color:#fff
     style STOP fill:#cc4125,stroke:#a33,color:#fff
     style LINEAGE fill:#669df6,stroke:#4285f4,color:#fff
+    style CTX_S fill:#1a4d2e,stroke:#34a853,color:#fff
+    style CTX_G fill:#1a4d2e,stroke:#34a853,color:#fff
+    style CONTRACT fill:#1a4d2e,stroke:#34a853,color:#fff
 ```
 
 > [!abstract] Diagram legend
@@ -114,6 +121,7 @@ flowchart TB
 > **Green border** — Contract Enforcement (typed validation at boundaries)
 > **Red border** — Quality Gates and failure paths (quarantine, stop)
 > **Blue fill** — Lineage tracking (batch_id, SHA-256 hash at every stage)
+> **Green fill** — Context propagation (warnings accumulate bronze → silver → gold → contract)
 
 ---
 
@@ -310,6 +318,144 @@ See [[error-handling-and-retry-patterns]] for broader error handling theory and 
 
 ---
 
+## Two Dimensions of Data Trustworthiness
+
+The five principles above — functional core, contract validation, quality gates, lineage, immutability — form the **structural** dimension. They ensure data is _correct_: typed, validated, auditable, and reproducible at every stage.
+
+But correct data is not necessarily _useful_ data. A gold table with `volatility: 0.0187` is structurally perfect — it has a type, a hash, a lineage record, and it passed all quality gates. Yet no downstream consumer can interpret it without reading the pipeline source code.
+
+The **semantic** dimension cuts across stages: column registries explain what each field means, business context records why the run happened, temporal context separates data date from load date, and warnings accumulate from bronze to gold. Together the two dimensions make data _trustworthy_.
+
+> [!abstract] The Intersection
+>
+> Structural integrity answers: "Is this data correct?"
+> Semantic integrity answers: "What does this data mean?"
+> A trustworthy pipeline delivers both — verifiably correct AND self-describing.
+
+---
+
+## Context Architecture — Semantic Metadata Layer
+
+Context is metadata that flows THROUGH the pipeline alongside the data, growing richer at each stage. Unlike lineage (recorded after the fact), context is created at stage start and carried forward. By gold, the context contains the accumulated knowledge from every upstream stage.
+
+### ColumnContext — What Each Value Means
+
+Each column carries structured metadata: description, unit, computation formula, source columns, null semantics, and valid range. Without it, `volatility: 0.0187` is an opaque number. With it: "daily σ of close-to-close returns, decimal_ratio, annualize with √252."
+
+> [!danger] Without Semantic Context
+>
+> An AI agent queries `gold_symbol_profile` and sees `volatility: 0.0187`.
+> It doesn't know if that's a percentage or a decimal, daily or annual,
+> what formula produced it, or what NULL would mean. The data contract
+> eliminates this: `unit=decimal_ratio`, `formula=std(daily_return)`,
+> annualize with √252. The number becomes self-describing.
+
+### BusinessContext — Why This Run Happened
+
+Records the trigger (`scheduled`, `manual`, `backfill`, `reprocess`), the `is_correction` flag, and the business date. Without it, two batches covering the same date range are indistinguishable — was the second a correction or a duplicate?
+
+### TemporalContext — Bi-Temporal Markers
+
+Separates `as_of_date` (what date is this data FOR) from `knowledge_date` (when did we learn about it). Without it, a backfill loading 2024 data in 2026 looks like a normal 2026 run. See [[context-and-metadata-architecture#Temporal Context — As of When Is This Data True?]] for the broader theory.
+
+### StageContext — The Propagation Carrier
+
+The carrier that propagates all context through the pipeline via `for_next_stage()`. Each stage inherits upstream warnings and adds its own. By gold, the context contains the full warning chain from every stage.
+
+> [!tip] Warning Accumulation
+>
+> Bronze records "116 zero-volume rows detected." Silver inherits that warning and adds "95 SMA-20 NULLs (first 19 rows × 5 symbols)." Gold inherits both. Any consumer reading gold context sees the full chain without querying intermediate tables.
+
+### Context Persistence
+
+Context is persisted to `context_log` in SQL Server — it survives the Python/C# process exit. Query it for any batch to reconstruct the full semantic state at each stage.
+
+**Implementations:**
+
+| Component | Python | C# |
+|---|---|---|
+| ColumnContext model | [[25_py_functional_pipeline#Pydantic — define column semantic metadata model with `BaseModel`\|py]] | [[25_cs_functional_pipeline#record — define column semantic metadata model with `record`\|cs]] |
+| Column registries | [[25_py_functional_pipeline#Pydantic — define column registries for each medallion layer\|py]] | [[25_cs_functional_pipeline#C# — define column registries for each medallion layer\|cs]] |
+| BusinessContext model | [[25_py_functional_pipeline#Pydantic — define business context model with `BaseModel`\|py]] | [[25_cs_functional_pipeline#record — define business context model with `record`\|cs]] |
+| TemporalContext model | [[25_py_functional_pipeline#Pydantic — define temporal context model with `BaseModel`\|py]] | [[25_cs_functional_pipeline#record — define temporal context model with `record`\|cs]] |
+| StageContext model | [[25_py_functional_pipeline#Pydantic — define stage context model for cross-stage propagation with `BaseModel`\|py]] | [[25_cs_functional_pipeline#record — define stage context model for cross-stage propagation with `record`\|cs]] |
+| Context persistence | [[25_py_functional_pipeline#SQL Server — define context persistence helper with cursor.execute()\|py]] | [[25_cs_functional_pipeline#SQL Server — define context persistence helper with Execute()\|cs]] |
+| context_log DDL | [[25_py_functional_pipeline#SQL Server — create context log table with cursor.execute()\|py]] | (same DDL) |
+
+---
+
+## Data Contracts as Consumer-Facing Output
+
+The [[#Contract-First Validation]] section above covers contracts as INPUT validation — rejecting bad data at boundaries. This section covers contracts as OUTPUT — making gold values self-describing for any consumer.
+
+The pipeline exports a JSON Schema file per gold table, enriched with `x-column-context` — the column registries serialized as structured metadata alongside the schema. Any consumer — a dashboard, another pipeline, an LLM agent — can interpret every value correctly without reading the pipeline source code.
+
+```json
+{
+  "x-column-context": [
+    {
+      "name": "volatility",
+      "description": "Std dev of daily returns — annualize with √252",
+      "unit": "decimal_ratio",
+      "computation": "std(daily_return) per symbol",
+      "source_columns": ["silver.daily_return"],
+      "null_semantics": "insufficient_data"
+    }
+  ]
+}
+```
+
+> [!tip] Contracts Turn Numbers Into Knowledge
+>
+> Without the contract, `volatility: 0.0187` requires reading the pipeline source.
+> With the contract, any consumer reads: unit=decimal_ratio, formula=std(daily_return),
+> annualize with √252 → 29.7% annual volatility. The data is self-describing.
+
+**Implementations:**
+
+| Component | Python | C# |
+|---|---|---|
+| Contract export | [[25_py_functional_pipeline#Pydantic — define data contract export function with `model_json_schema()`\|py]] | [[25_cs_functional_pipeline#C# — define data contract export function with `JsonSerializer`\|cs]] |
+| Contract inspection | [[25_py_functional_pipeline#JSON — inspect exported data contract with `json.loads()`\|py]] | [[25_cs_functional_pipeline#JSON — inspect exported data contract with `JsonSerializer.Deserialize()`\|cs]] |
+
+See [[data-contracts]] for the broader contract specification theory and breaking vs non-breaking change classification.
+
+---
+
+## Context-Driven Decisions — Real Data Proof
+
+Context architecture produces real value through the pipeline's own data — not hypothetical scenarios, but actual output where context answered a question that the data alone couldn't.
+
+### Zero-Volume Classification
+
+116 Silver rows have `volume=0`. Without context, each is an undifferentiated alert. The pipeline cross-referenced each zero-volume date against `dim_calendar` at bronze ingestion and recorded the classification (non-trading day vs genuine anomaly) as a context warning. The warning propagates through silver and gold — consumers know WHY volume is zero without investigating.
+
+### SMA-20 Null Accounting
+
+`sma_20` has 95 NULLs — exactly 19 × 5 symbols (the first 19 rows per symbol lack enough history for a 20-day average). Context recorded "95 NULL values (first 19 rows per symbol)" at silver stage. If any symbol had MORE than 19, those extras would be unexplained. Context draws the line between expected and unexpected NULLs.
+
+### Contract Interpretation
+
+The AI agent scenario: `volatility: 0.0187` is meaningless without the contract. With `x-column-context`, the consumer reads: `unit=decimal_ratio`, `formula=std(daily_return)`, annualize with √252 → 29.7%. No source code reading required.
+
+**Implementations:**
+
+| Demonstration | Python | C# |
+|---|---|---|
+| Zero-volume classification | [[25_py_functional_pipeline#Zero-Volume Classification — Holiday or Anomaly?\|py]] | [[25_cs_functional_pipeline#Zero-Volume Classification — Holiday or Anomaly?\|cs]] |
+| SMA-20 null accounting | [[25_py_functional_pipeline#SMA-20 Null Accounting — Expected vs Unexpected\|py]] | [[25_cs_functional_pipeline#SMA-20 Null Accounting — Expected vs Unexpected\|cs]] |
+| Contract interpretation | [[25_py_functional_pipeline#Data Contract — Column Semantics as Structured Data\|py]] | [[25_cs_functional_pipeline#Data Contract — Column Semantics as Structured Data\|cs]] |
+
+> [!abstract] Context Makes Data Self-Describing
+>
+> Lineage traces data BACKWARD through the pipeline — where did this row come from?
+> Context explains data FORWARD to any consumer — what does this value mean?
+> Together they make data trustworthy: verifiably correct AND self-describing.
+
+See [[ai-augmented-data-engineering]] for how AI agents consume context-enriched data.
+
+---
+
 ## Implementation Comparison
 
 | Concept | Python | C# |
@@ -326,6 +472,11 @@ See [[error-handling-and-retry-patterns]] for broader error handling theory and 
 | **Upsert** | pyodbc `MERGE` statement | Dapper `Execute()` with `MERGE` |
 | **Quality checks** | Custom `dq_check_*` functions | Custom `Dq*` assertion functions |
 | **Dead letter queue** | `quarantine_row()` → SQL Server | `QuarantineRow()` → SQL Server |
+| **Column context** | `ColumnContext(BaseModel)` | `ColumnContext record` |
+| **Business context** | `BusinessContext(BaseModel)` | `BusinessContext record` |
+| **Context propagation** | `StageContext.for_next_stage()` | `StageContext.ForNextStage()` |
+| **Data contract export** | `export_contracts()` → JSON Schema | `ExportContracts()` → JSON |
+| **Context persistence** | `persist_context()` → context_log | `PersistContext()` → context_log |
 
 ---
 
@@ -339,5 +490,6 @@ See [[error-handling-and-retry-patterns]] for broader error handling theory and 
 - [[data-quality-framework]] — Quality dimensions, medallion quality gates, quarantine pattern
 - [[data-pipeline-testing-strategy]] — Where quality gates fit in the testing pyramid
 - [[error-handling-and-retry-patterns]] — Retry strategies, circuit breaker, dead letter queue theory
-- [[context-and-metadata-architecture]] — Schema drift detection, provenance, bi-temporal modeling
+- [[context-and-metadata-architecture]] — The five types of pipeline context, bi-temporal modeling, schema evolution
+- [[ai-augmented-data-engineering]] — AI agents as consumers of context-enriched data
 - [[data-modeling-patterns]] — SCD Type 2 pattern used in dim_symbol

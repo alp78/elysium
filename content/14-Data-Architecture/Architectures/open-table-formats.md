@@ -11,7 +11,6 @@ related:
   - "fastapi and polars"
   - "[[observability-deep-dive]]"
   - "[[idempotent-pipeline-design]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -432,7 +431,6 @@ CREATE TABLE data_catalog.pii_registry (
 - fastapi and polars — Polars for reading Parquet/Iceberg files efficiently
 - [[observability-deep-dive]] — lineage and data quality for lakehouse pipelines
 - [[idempotent-pipeline-design]] — incremental load patterns for bronze/silver/gold layers
-- [[moc-data-pipeline-lifecycle]] — end-to-end pipeline lifecycle in a lakehouse context
 
 ## References
 - [Apache Iceberg documentation](https://iceberg.apache.org/docs/latest/)

@@ -12,7 +12,6 @@ related:
   - "[[dbt-transformation-layer]]"
   - "[[idempotent-pipeline-design]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[serialization-formats]]"
   - "[[querying-and-cost-optimization]]"
   - "[[streaming-architecture]]"
@@ -484,7 +483,6 @@ The lakehouse is primarily a batch analytics architecture, but it increasingly h
 - [[querying-and-cost-optimization]] — BigQuery optimization when querying BigLake tables
 - [[serialization-formats]] — Parquet, ORC, Avro — the file formats underneath the table formats
 - [[five-pillars-of-data-engineering]] — reliability, observability, efficiency, security, operability
-- [[moc-data-pipeline-lifecycle]] — end-to-end pipeline lifecycle map
 
 ## References
 

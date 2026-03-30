@@ -19,7 +19,6 @@ related:
   - "[[service-accounts-and-iam]]"
   - "[[dbt-transformation-layer]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[moc-data-pipeline-lifecycle]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -744,4 +743,3 @@ Before treating a data lake zone as production-ready:
 - [[service-accounts-and-iam]] — GCP IAM for per-zone access control
 - [[dbt-transformation-layer]] — Standard tool for curated zone SQL transforms
 - [[five-pillars-of-data-engineering]] — Reliability, observability, and security principles for lake design
-- [[moc-data-pipeline-lifecycle]] — End-to-end pipeline view linking lake ingestion through analytics

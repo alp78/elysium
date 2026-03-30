@@ -17,7 +17,6 @@ related:
   - "[[data-mesh-architecture]]"
   - "[[open-table-formats]]"
   - "[[cloud-logging]]"
-  - "[[moc-data-pipeline-lifecycle]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -736,7 +735,6 @@ For [[data-mesh-architecture|data mesh]] implementations, each domain's data pro
 - [[cloud-logging]] — GCP observability for streaming pipelines
 - [[cloud-monitoring-metrics]] — pipeline lag, backlog, and throughput metrics
 - [[five-pillars-of-data-engineering]] — reliability and observability for streaming systems
-- [[moc-data-pipeline-lifecycle]] — end-to-end pipeline lifecycle map
 
 ## References
 

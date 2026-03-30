@@ -12,7 +12,6 @@ related:
   - "[[five-pillars-of-data-engineering]]"
   - "[[dbt-transformation-layer]]"
   - "[[open-table-formats]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[service-accounts-and-iam]]"
   - "[[idempotent-pipeline-design]]"
   - "[[streaming-architecture]]"
@@ -396,7 +395,6 @@ The [[dbt-transformation-layer|dbt transformation layer]] within a domain's data
 - [[idempotent-pipeline-design]] — reliability requirement for data product pipelines
 - [[five-pillars-of-data-engineering]] — reliability, observability, efficiency, security, operability
 - [[service-accounts-and-iam]] — GCP IAM as the enforcement layer for data product access control
-- [[moc-data-pipeline-lifecycle]] — full pipeline lifecycle, which each data product must implement
 
 ## References
 

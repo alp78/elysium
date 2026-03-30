@@ -9,7 +9,6 @@ description: "Comprehensive decision-matrix reference for data engineering techn
 related:
   - "[[moc-data-architecture]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[moc-terraform]]"
 
   - "[[medallion-architecture]]"
@@ -997,7 +996,6 @@ For rapid lookup when you just need the answer:
 #### Architecture and modeling
 - [[moc-data-architecture]] — full section index
 - [[five-pillars-of-data-engineering]] — the principles behind every decision
-- [[moc-data-pipeline-lifecycle]] — end-to-end pipeline patterns
 - [[moc-terraform]] — Terraform and IaC overview
 
 #### Comparison references

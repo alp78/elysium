@@ -71,7 +71,6 @@ description: >
 related:
   - "fastapi and polars"
   - "[[moc-data-architecture]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[rest-api-design-and-consumption|Python HTTP requests]]"
   - "[[http-requests-and-apis|curl and HTTP]]"
   - "[[service-accounts-and-iam]]"
@@ -1882,4 +1881,4 @@ If-None-Match: {etag}                X-Request-Id (for support tickets)
 
 ---
 
-*See also: [[error-handling-and-retry-patterns]] | fastapi and polars | [[http-requests-and-apis|curl and HTTP]] | [[service-accounts-and-iam]] | [[moc-data-pipeline-lifecycle]]*
+*See also: [[error-handling-and-retry-patterns]] | fastapi and polars | [[http-requests-and-apis|curl and HTTP]] | [[service-accounts-and-iam]] | *

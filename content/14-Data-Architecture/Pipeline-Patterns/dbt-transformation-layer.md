@@ -11,7 +11,6 @@ related:
   - "[[idempotent-pipeline-design]]"
   - "[[observability-deep-dive]]"
   - "[[open-table-formats]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -495,7 +494,6 @@ jobs:
 - fastapi and polars — the EL layer that feeds the bronze tables dbt transforms
 - [[observability-deep-dive]] — monitoring dbt runs with DataDog
 - [[open-table-formats]] — Iceberg/Delta Lake as storage backends in a lakehouse architecture
-- [[moc-data-pipeline-lifecycle]] — end-to-end pipeline lifecycle context
 
 ## References
 - [dbt Core documentation](https://docs.getdbt.com/)

@@ -15,7 +15,6 @@ related:
   - "[[querying-and-cost-optimization]]"
   - "[[serialization-formats]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[silver-transforms]]"
   - "[[gold-transforms]]"
   - "[[merge-and-upsert]]"

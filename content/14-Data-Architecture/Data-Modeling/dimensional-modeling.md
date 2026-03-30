@@ -71,7 +71,6 @@ related:
   - "[[dbt-staging-models|dbt modeling]]"
   - "[[index-types-and-strategy|columnstore indexes]]"
   - "[[dataset-and-table-management|BigQuery partitioning]]"
-  - "[[moc-data-pipeline-lifecycle|pipeline lifecycle]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[dimensional-modeling|fact design]]"
   - "[[dimensional-modeling|dimension design]]"

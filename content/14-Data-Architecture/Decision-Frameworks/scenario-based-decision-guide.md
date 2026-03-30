@@ -18,7 +18,6 @@ related:
   - "[[airflow-core-concepts]]"
   - "[[moc-gcp]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[moc-data-pipeline-lifecycle]]"
   - "[[api-protocols-comparison]]"
   - "[[moc-observability]]"
 created: 2026-03-22
@@ -1319,4 +1318,4 @@ A quick reference for when two technologies seem interchangeable.
 
 *This guide is a living document. As new scenarios emerge or technologies change, add new sections and update existing ones. The goal is that any data engineer can open this note and find a starting point for their next architecture decision.*
 
-**See also:** [[moc-data-architecture]] | [[five-pillars-of-data-engineering]] | [[moc-data-pipeline-lifecycle]]
+**See also:** [[moc-data-architecture]] | [[five-pillars-of-data-engineering]] | 
