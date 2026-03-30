@@ -158,24 +158,28 @@ print(f"  Date range:  {START_DATE} → {END_DATE}")
 
 ## 2. Pydantic DTOs — Schema Validation at Every Boundary
 
-Every stage boundary enforces a typed contract. Data that doesn't conform
-is rejected before it crosses the boundary — this is **Schema-on-Write**,
-the opposite of data lake Schema-on-Read.
+Every stage boundary has a typed contract — a Pydantic `BaseModel` that defines exactly what data can cross that boundary. Data that doesn't conform is rejected BEFORE it crosses, with the rejection recorded in the quarantine table. This is **Schema-on-Write** (Design by Contract, Bertrand Meyer 1986): the contract is code — it runs at runtime, it's version-controlled, it's unit-testable. The opposite of data lake Schema-on-Read, where bad data enters freely and is discovered months later.
 
-**Boundary models (structural):**
-- `RawOHLCV` — validates yfinance output at Bronze ingestion
-- `CleanOHLCV` — validates enriched data at Silver persistence
-- `DailySummary` / `SymbolProfile` — validates Gold aggregations
+The models divide into three groups along two orthogonal dimensions — **structural integrity** (vertical: is the data correct?) and **semantic integrity** (horizontal: is the data meaningful?):
 
-**Lineage models (operational):**
-- `StageLineage` — what each stage produced (rows, hash, timing)
-- `RunContext` — full pipeline execution envelope
+**Structural models (boundary enforcement):**
+- `RawOHLCV` — first line of defense: validates raw yfinance data at Bronze ingestion
+- `CleanOHLCV` — validates enrichment transforms at Silver boundary
+- `DailySummary` / `SymbolProfile` — validates aggregation output at Gold boundary
 
-**Context models (semantic):**
-- `ColumnContext` — what each column means, its unit, formula, null semantics
-- `BusinessContext` — why this run was triggered, correction flag
+**Operational models (provenance tracking):**
+- `StageLineage` — forensic record: row counts, SHA-256 hash, timing per stage
+- `RunContext` — full pipeline execution envelope with business and temporal context
+
+**Semantic models (self-describing data):**
+- `ColumnContext` — what each column means, its formula, unit, null semantics
+- `BusinessContext` — why this run was triggered (scheduled vs backfill vs correction)
 - `TemporalContext` — as-of date vs knowledge date (bi-temporal)
-- `StageContext` — propagated metadata flowing stage-to-stage
+- `StageContext` — propagated metadata flowing stage-to-stage with accumulated warnings
+
+> [!danger] Without Typed Contracts
+>
+> A renamed API field silently loads NULLs into bronze — every row, every day. A negative volume passes through to silver unchallenged. A NaN daily return poisons the gold aggregation. By the time a dashboard user notices, the damage is three layers deep and every downstream consumer has absorbed corrupt data. Contracts catch bad data at ingestion — one layer, one fix.
 
 #### Pydantic — define Bronze validation model with `BaseModel` and `Field()`
 
@@ -322,13 +326,16 @@ class StageLineage(BaseModel):
 
 ### Context Architecture — Semantic Metadata Layer
 
-The models above track **what happened** (row counts, timing, hashes).
-The models below track **what the data means** — column semantics,
-business context, temporal markers, and cross-stage warnings.
+This is where the two dimensions of the architecture intersect. The structural models above ensure the pipeline produces **correct** data. The semantic models below ensure the data is **meaningful** to any consumer — another pipeline, a dashboard, an LLM agent, an auditor — without reading the pipeline source code.
 
-This is the metadata layer that makes the data self-describing for any
-downstream consumer: another pipeline, a dashboard, an AI agent, or an
-auditor who needs to interpret a value without reading the pipeline code.
+- **ColumnContext** — documents what each column means, how it was derived, what NULL signifies. Without it, `volatility: 0.0187` is an opaque number. With it: unit=decimal_ratio, formula=std(daily_return), annualize with sqrt(252)
+- **BusinessContext** — records WHY this run happened. Without it, two batches covering the same date range are indistinguishable. With it, one is `trigger=scheduled` and the other is `trigger=reprocess, is_correction=true`
+- **TemporalContext** — separates "what date is this data FOR" (as_of_date) from "when did we learn about it" (knowledge_date). Without it, a backfill loading 2024 data in 2026 looks like a normal 2026 run
+- **StageContext** — carries all of the above THROUGH the pipeline. Each stage inherits upstream warnings and adds its own. By gold, the context contains the full warning chain from every stage
+
+> [!danger] Without Semantic Context
+>
+> An AI agent queries gold_symbol_profile and sees `volatility: 0.0187`. It doesn't know if that's a percentage or a decimal, daily or annual, what formula produced it, or what NULL would mean. It guesses — or hallucinates an interpretation. The data contract eliminates this: unit=decimal_ratio, formula=std(daily_return), annualize with sqrt(252). The number becomes self-describing.
 
 #### Pydantic — define column semantic metadata model with `BaseModel`
 
@@ -561,14 +568,16 @@ print("export_data_contracts() defined")
 
 ## 3. Lineage & Context Infrastructure
 
-Pure functions for tracking pipeline execution. The pattern:
-1. `start_stage()` — captures timestamp and input row count
-2. (pipeline stage runs)
-3. `end_stage()` — fills output metrics, computes SHA-256 hash
+These functions implement the ability to trace any data point from Gold back to its raw source with cryptographic proof. `batch_id` is the thread — every row in every table carries the UUID of the pipeline run that created it. `compute_hash()` produces a deterministic SHA-256: same data → same hash. If someone modifies a Silver row after the pipeline ran, the recomputed hash won't match the recorded one. `RunContext` captures the full execution envelope — which symbols, what date range, which library versions, how many rejections.
 
-The hash enables **tamper detection**: if the same inputs produce a
-different hash on re-run, something changed between runs. `RunContext`
-aggregates all stages into a single JSON artifact per pipeline execution.
+> [!danger] Without Lineage Tracking
+>
+> A stakeholder disputes a -16% drop in gold. Without lineage, you spend
+> a day manually checking: was the source data correct? Did the transform
+> produce the right number? Was the data modified after ingestion? With
+> lineage, three queries answer all three questions — batch_id traces the
+> row to its run, the hash proves no tampering, the RunContext shows zero
+> rejections and the exact date range processed.
 
 #### uuid — generate unique batch ID with `uuid4()`
 
@@ -666,7 +675,15 @@ print(f"save_run_context() defined — writes to {LINEAGE_DIR}")
 
 ## 4. SQL Server Schema — Medallion Tables + Lineage
 
-Eight tables implementing the medallion architecture plus operational metadata:
+Nine tables implementing the full architecture — not just data storage but the complete operational infrastructure. Three groups: **medallion tables** (bronze_ohlcv, silver_ohlcv, gold_daily_summary, gold_symbol_profile) store data at three stages of refinement. **Dimension tables** (dim_symbol, dim_calendar) provide business context that enables context-driven decisions. **Operational tables** (lineage_stages, quarantine, context_log) store the metadata that makes the pipeline auditable, recoverable, and self-describing.
+
+> [!warning] Without Operational Tables
+>
+> Without `lineage_stages`: no record of which batch produced which rows.
+> Without `quarantine`: rejected rows disappear — you never know they
+> existed, never know what was wrong with them, can never replay them.
+> Without `context_log`: the pipeline's knowledge about holidays, expected
+> nulls, and business triggers is lost the moment the process exits.
 
 | Table | Purpose | Key |
 |---|---|---|
@@ -679,8 +696,6 @@ Eight tables implementing the medallion architecture plus operational metadata:
 | `lineage_stages` | Stage-level execution metadata | `(batch_id, stage)` |
 | `quarantine` | Dead letter queue for rejected rows | `(batch_id, stage)` |
 | `context_log` | Semantic context per stage per run | `(batch_id, stage)` |
-
-Every data row carries a `batch_id` linking it to the pipeline run that produced it.
 
 #### SQL Server — create Bronze OHLCV table with `cursor.execute()`
 
@@ -1334,17 +1349,15 @@ print("run_quality_gate() defined")
 
 ## 5. Dimension Tables — Symbol Metadata (SCD2) & Trading Calendar
 
-Two reference dimensions that enrich the pipeline and enable context-driven decisions:
+Dimensions are the pipeline's external knowledge — facts about the world that the pipeline needs but doesn't compute. `dim_symbol` uses SCD Type 2 because company metadata changes over time — without historization, a join between gold scores and dim_symbol shows today's sector for historical dates, producing misleading analysis. `dim_calendar` exists because zero-volume doesn't always mean bad data — the calendar tells the pipeline whether an exchange was open, turning undifferentiated zero-volume alerts into classified holidays vs genuine anomalies.
 
-**`dim_symbol`** — company metadata from yfinance with **SCD Type 2** historization.
-When a symbol's sector, industry, or other attribute changes, the current record is
-closed (`valid_to`, `is_current=0`) and a new version is inserted. This enables
-point-in-time queries: "what sector was SAP.DE in on 2024-06-15?"
-
-**`dim_calendar`** — per-exchange trading calendar built from `pandas-market-calendars`.
-Each row is a `(date, exchange_code)` pair with flags: `is_trading_day`, `is_month_end`,
-`is_quarter_end`. Used by the context layer to classify zero-volume days as holidays
-vs anomalies — a decision only possible with calendar context.
+> [!warning] Without Trading Calendar
+>
+> Every zero-volume day triggers an investigation. Good Friday, Christmas,
+> local exchange holidays — all flagged as anomalies. An on-call engineer
+> wastes time cross-referencing exchange schedules. With dim_calendar, the
+> pipeline classifies each zero-volume date at ingestion and records the
+> classification as a context warning.
 
 #### yfinance — fetch symbol metadata to JSON landing zone with `Ticker.info`
 
@@ -1872,22 +1885,15 @@ holidays.head()
 
 ## 6. Bronze Layer — Landing Zone + Incremental Ingestion
 
-Bronze follows the **landing zone pattern** — a three-step process that
-decouples API fetching from database loading:
+Bronze implements two principles. The **landing zone** decouples API fetching from database loading — API calls are unreliable and unrepeatable, so raw responses are saved as JSON files first. If the MERGE fails, data is still on disk. If the pipeline is replayed, it reads from files without re-calling the API. **Contract enforcement** at the bronze boundary is the first line of defense — business rule violations (high < low, negative prices, empty symbols) are caught here, not three stages later. Rejected rows go to the quarantine table with full error context — preserved for investigation and replay, never silently dropped.
 
-1. **Fetch** — download OHLCV from yfinance to `landing/{symbol}.json`
-2. **Validate** — parse each row through Pydantic `RawOHLCV` model
-3. **Load** — MERGE upsert validated rows into `bronze_ohlcv`
-
-**Why landing zone matters:**
-- Re-run the SQL load without re-fetching (replay from JSON files)
-- Audit trail: raw JSON shows exactly what the API returned
-- Incremental: only fetches data after the last known date per symbol
-- Recovery: if MERGE fails, data is still on disk
-
-**Context integration:** After ingestion, bronze cross-references zero-volume
-rows against `dim_calendar` to classify them as holidays or anomalies.
-These classifications propagate through silver and gold as context warnings.
+> [!danger] Without Landing Zone
+>
+> The pipeline calls the API and writes directly to SQL Server. The API
+> changes its response format. The MERGE fails mid-batch. 3 of 5 symbols
+> are loaded, 2 are missing, and there's no way to replay because the API
+> response is gone. With the landing zone, the raw JSON is on disk —
+> fix the parser, re-run the load, no re-fetch needed.
 
 #### yfinance — fetch OHLCV to JSON landing zone with `Ticker.history()`
 
@@ -2545,18 +2551,15 @@ bronze_dq
 
 ## 7. Silver Layer — Cleaning & Enrichment
 
-Silver takes validated Bronze data and adds three computed columns:
-- **daily_return** — close-to-close percentage change, grouped by symbol
-- **intraday_range** — `(high - low) / close`, a volatility proxy
-- **sma_20** — 20-day simple moving average of close price
+Silver is where the **Functional Core** principle (Gary Bernhardt, 'Boundaries' 2012) is most visible. The three transforms (daily_return, intraday_range, sma_20) are pure functions — DataFrame in, DataFrame out, no database calls, no file I/O, no side effects. Pure functions are trivially testable (pass a 10-row hardcoded DataFrame, assert the output), trivially debuggable (the bug is in the formula, not in a network timeout), and trivially parallelizable (no shared state). The imperative shell (MERGE upsert, lineage persistence, context propagation) wraps AROUND the pure transforms, never inside them.
 
-**Functional core principle:** All three transforms are pure functions —
-DataFrame in, DataFrame out, no side effects. They can be unit-tested with
-a hardcoded 10-row DataFrame, no database or network required.
-
-**Context integration:** Silver records that `sma_20` has 19×N expected NULLs
-(first 19 rows per symbol lack sufficient history). This warning propagates
-to gold, explaining every null without manual investigation.
+> [!danger] Without Pure Transforms
+>
+> A transform function that reads from SQL Server mid-computation becomes
+> untestable without a live database. A transform that writes intermediate
+> results to a file fails unpredictably under disk pressure. Keeping
+> transforms pure means the only thing that can go wrong is the formula —
+> and formulas can be verified with a unit test in milliseconds.
 
 #### Polars — compute daily returns with `pct_change().over()`
 
@@ -3157,19 +3160,14 @@ silver_dq
 
 ## 8. Gold Layer — Aggregations & Mart Tables
 
-Gold produces two pre-aggregated mart tables from Silver:
+Gold produces consumption-ready data products from Silver. Two aggregations, both pure functions: `DailySummary` (cross-sectional: all symbols for each date) and `SymbolProfile` (longitudinal: full history for each symbol). Gold is always a full rebuild — truncate and recompute from Silver on every run. This is simpler than incremental and guarantees consistency. Acceptable because Gold tables are small (~50 symbols x 1 row + ~500 daily rows). Both are validated through the typed contracts before persistence.
 
-**`gold_daily_summary`** — one row per trading day: mean return, best/worst
-performer return, total volume, average intraday range. Feeds the market
-overview dashboard.
-
-**`gold_symbol_profile`** — one row per symbol over full history: mean return,
-volatility (daily σ), max drawdown (peak-to-trough using cumulative max),
-total dividends. Feeds the stock comparison view.
-
-**Gold is always a full rebuild** — truncate and recompute from Silver on every
-run. This is simpler than incremental and guarantees consistency. Acceptable
-because Gold tables are small (50 symbols × 1 row each).
+> [!warning] Without Gold Validation
+>
+> An aggregation bug produces max_drawdown = 0.15 (positive). This is
+> mathematically impossible — drawdown is always negative. Without the
+> le=0 constraint, the bad value reaches the dashboard. A portfolio
+> manager sees "positive drawdown" and makes decisions on nonsensical data.
 
 #### Polars — build daily cross-sectional summary with `group_by().agg()`
 
@@ -3649,16 +3647,14 @@ valid_profiles.select(
 
 ## 9. Parquet Export — Pre-Materialized Data Products
 
-The serving layer (FastAPI) reads Parquet files, not SQL Server. This is the
-**pre-materialized views** pattern:
+The serving layer reads Parquet files, not SQL Server. This is the **pre-materialized views** pattern — the pipeline produces finished data products as files, the API is a thin reader with zero database dependency at serving time. Deployment is a file copy, not a migration. Cache invalidation = re-run the pipeline. Data contracts (JSON Schema with column semantics) are exported alongside the Parquet files, making each data product self-describing.
 
-- Pipeline writes Parquet at the end of each run
-- API reads Parquet on each request — zero database dependency at serving time
-- Deployment = file copy, not database migration
-- Cache invalidation = re-run the pipeline
-
-Data contracts (JSON Schema) are exported alongside the Parquet files,
-making each data product self-describing.
+> [!warning] Without Pre-Materialization
+>
+> The API queries SQL Server on every request. A slow query blocks the
+> response. A database restart takes the API down. With Parquet files,
+> the API has no database dependency — it reads a file that the pipeline
+> pre-computed. The API can serve data even if SQL Server is down.
 
 #### Polars — export daily summary to Parquet with `write_parquet()`
 
@@ -3760,12 +3756,7 @@ for p in contract_paths:
 
 ## 10. Lineage Review — Pipeline Execution Audit
 
-After all stages complete, the full execution trail is available for review:
-- **Stage lineage** — timing, row counts, rejection counts, SHA-256 hashes
-- **RunContext** — symbols processed, date range, library versions, status
-- **Context log** — business context, temporal markers, data warnings per stage
-- **Quarantine** — every rejected row with its error message
-- **Data contracts** — machine-readable column semantics as JSON Schema
+After all stages complete, the full execution trail is available for review across five artifacts: **stage lineage** (timing, row counts, hashes), **RunContext JSON** (execution envelope with business and temporal context), **context log** (warnings per stage in SQL Server), **quarantine** (every rejected row with its error), and **data contracts** (column-level semantics as JSON Schema). Together these answer any question about what the pipeline did, why it did it, what it knew, and what it produced.
 
 #### Pydantic — build and save run context with `RunContext()`
 
@@ -4115,18 +4106,7 @@ if contract_path.exists():
 
 ## 11. FastAPI Serving Layer — Pre-Materialized Parquet API
 
-FastAPI serves the Gold data products by reading pre-materialized Parquet files.
-No database connection at runtime — the API is a thin reader over files that
-the pipeline produced.
-
-**Endpoints:**
-- `GET /health` — healthcheck
-- `GET /daily-summary` — cross-sectional daily metrics (optional date filter)
-- `GET /symbol-profile` — per-symbol statistics
-- `GET /symbol/{symbol}/timeseries` — daily OHLCV + enrichment for one symbol
-- `GET /lineage/{batch_id}` — pipeline execution metadata
-
-The server runs in a background thread so the notebook can continue to call it.
+FastAPI serves the Gold data products by reading pre-materialized Parquet files. No database connection at runtime — the API reads files that the pipeline produced. Five endpoints serve different consumer needs: health (operational monitoring), daily-summary (market overview), symbol-profile (stock comparison), timeseries (per-symbol drill-down), and lineage (pipeline execution audit).
 
 #### Pydantic — define daily summary API response model with `BaseModel`
 
@@ -4683,12 +4663,7 @@ pl.DataFrame(data["stages"]).select("stage", "input_rows", "output_rows", "rows_
 
 ## 12. Pipeline Visualization — Charts & Metrics
 
-Visual validation of the pipeline output using Plotly with dark-theme
-compatible transparent backgrounds. Each chart answers a specific question:
-- Daily returns: how volatile is each symbol day-to-day?
-- Cumulative returns: how would a €1 investment have grown?
-- Risk-return scatter: which symbols offer the best return per unit of risk?
-- Stage timing: where does the pipeline spend its time?
+Visual validation of the pipeline output. Each chart answers a specific question about the data: daily return volatility (how noisy is the market?), cumulative investment performance (how would a 1 EUR investment have grown?), risk-return positioning (which stocks offer the best return per unit of risk?), and pipeline execution timing (which stage is the bottleneck?). Charts use dark-theme compatible transparent backgrounds.
 
 #### Plotly — plot daily return time series with `go.Scatter()`
 
@@ -4810,23 +4785,7 @@ fig.show()
 
 ## 13. Audit — Investigating a Disputed Data Point
 
-**Scenario:** A stakeholder challenges the SAP.DE -16% drop on 2026-01-29,
-claiming the pipeline produced bad data.
-
-**Method:** Trace the data point from Gold back to the raw source using the
-pipeline's lineage infrastructure — batch_id, stage hashes, RunContext JSON,
-and landing zone files. Seven steps, each independently verifiable:
-
-1. **Bronze** — raw ingested values with batch_id and timestamp
-2. **Silver** — daily_return verified mathematically from consecutive closes
-3. **Gold** — data point propagated correctly to aggregations
-4. **Lineage** — pipeline run metadata with output hash
-5. **RunContext** — execution fingerprint (symbols, date range, rejections)
-6. **Landing zone** — raw JSON file from yfinance, untouched
-7. **Live API** — yfinance returns the same values today
-
-**Result:** Full chain of evidence with cryptographic proof that nothing was
-altered between source and Gold.
+The audit section demonstrates lineage in action. A stakeholder disputes a specific data point — the pipeline traces it from Gold back to the raw source in seven steps, each independently verifiable: Bronze (raw values as ingested), Silver (computed return verified mathematically), Gold (propagation to aggregation), Lineage (batch metadata with SHA-256 hash), RunContext (execution fingerprint), Landing Zone (raw JSON file on disk), and Live API (corroboration with current source). This is the proof that the architecture's lineage tracking delivers real forensic capability.
 
 #### SQL Server — query Bronze table for raw ingested values with `read_database()`
 
