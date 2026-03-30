@@ -35,28 +35,24 @@ LLMs are not replacements for SQL transforms or Airflow DAGs. They are specializ
 
 RAG is the pattern of combining a retrieval system (search over your own documents/data) with an LLM (generation). It is how you give an LLM access to your internal documentation, pipeline logs, and data catalog without fine-tuning.
 
+```mermaid
+flowchart LR
+    Q[Question] -->|embed| VS[(Vector Store)]
+    VS -->|top-K chunks| LLM[LLM]
+    LLM --> A[Answer]
+
+    style Q fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style VS fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style LLM fill:#1a1a2e,stroke:#34a853,color:#fff
+    style A fill:#1a1a2e,stroke:#34a853,color:#fff
 ```
-┌──────────────┐     ┌───────────────────┐     ┌──────────────┐
-│   User       │     │  RETRIEVAL        │     │  GENERATION  │
-│   Question   │────▶│                   │────▶│              │
-│              │     │  1. Embed query   │     │  4. LLM      │
-│ "Why did the │     │  2. Search vector │     │     combines  │
-│  Euro the data pipeline project  │     │     store for     │     │     retrieved │
-│  50 drop 3%  │     │     relevant docs │     │     context + │
-│  yesterday?" │     │  3. Return top-K  │     │     question  │
-│              │     │     chunks        │     │  5. Generate  │
-└──────────────┘     └───────────────────┘     │     answer    │
-                                                └──────┬───────┘
-                                                       │
-                                                       ▼
-                                               "The Euro market index
-                                                dropped 2.8% due to
-                                                SAP's earnings miss
-                                                (-8.2%) and Deutsche
-                                                Bank downgrade. SAP
-                                                contributes 9.8% of
-                                                the index weight..."
-```
+
+> [!abstract] RAG flow
+> 1. **Embed** the user's question into a vector
+> 2. **Search** the vector store for the most relevant document chunks
+> 3. **Return** the top-K chunks as context
+> 4. **Combine** the retrieved context + original question into a prompt
+> 5. **Generate** a grounded answer using the LLM
 
 #### The data engineering pipeline for RAG
 
@@ -392,24 +388,24 @@ def call_llm_with_budget(text: str) -> str:
 
 The combination of Iceberg (structured data) and vector databases (unstructured data) is the emerging architecture for AI-augmented data platforms:
 
+```mermaid
+flowchart TB
+    ICE[(Structured Data)] -->|SQL| AI[AI Layer]
+    CON[Data Contracts] -->|metadata| AI
+    VEC[(Vector DB)] -->|RAG| AI
+    AI --> OUT[Answer]
+
+    style ICE fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style CON fill:#1a4d2e,stroke:#34a853,color:#fff
+    style VEC fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style AI fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style OUT fill:#1a1a2e,stroke:#34a853,color:#fff
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                  STRUCTURED DATA (Iceberg)                   │
-│  daily_ohlcv │ index_constituents │ corporate_actions        │
-│  ─── SQL queries, window functions, aggregations ───         │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  AI Layer   │
-                    │  (LLM API)  │
-                    └──────┬──────┘
-                           │
-┌──────────────────────────▼──────────────────────────────────┐
-│               UNSTRUCTURED DATA (Vector DB)                  │
-│  press_releases │ earnings_transcripts │ regulatory_filings  │
-│  ─── semantic search, similarity, RAG retrieval ───          │
-└─────────────────────────────────────────────────────────────┘
-```
+
+> [!abstract] Three inputs to the AI layer
+> - **Structured data** (Iceberg / SQL) — index returns, constituent weights, sector breakdown via SQL queries and aggregations
+> - **Data contracts** (JSON Schema) — column metadata (`x-column-context`) for deterministic interpretation of values
+> - **Unstructured data** (Vector DB) — press releases, earnings transcripts, regulatory filings via semantic search and RAG retrieval
 
 A query like "What factors contributed to the Euro market index underperforming the S&P 500 last quarter?" requires:
 1. Structured data: index returns, constituent weights, sector breakdown (SQL on Iceberg)
