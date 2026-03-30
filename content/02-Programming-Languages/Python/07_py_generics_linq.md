@@ -408,7 +408,7 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 <div>
 <!-- shape: (5, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr><tr><td>2021-01-07</td><td>403.9</td></tr><tr><td>2021-01-08</td><td>416.05</td></tr></tbody></table></div>
 
-#### Pandas — Subset multiple rows with iloc[index](/index)
+#### Pandas — Subset multiple rows with iloc index
 
 ```python
 # Pandas: iloc[navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — multiple rows by position
@@ -484,7 +484,7 @@ ohlcv.iloc[[0, 50, 100, 500]]
 </table>
 </div>
 
-#### Polars — Subset multiple rows with [index](/index) index list
+#### Polars — Subset multiple rows with index list
 
 ```python
 # Polars: gather([list]) — multiple rows by position
