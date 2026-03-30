@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 keywords: [string, StringBuilder, interpolation, Regex, Split, Join, Trim, Replace, Span, Format]
-description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [[02_py_strings]] for the Python equivalent."
+description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [02_py_strings](/02-Programming-Languages/Python/02_py_strings) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[02_py_strings]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[02_py_strings](/02-Programming-Languages/Python/02_py_strings)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

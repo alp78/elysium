@@ -66,16 +66,16 @@ description: >
   contracts, schema evolution, and propagation patterns across SQL Server,
   BigQuery, GCS, Firestore, and Python.
 related:
-  - "[[data-warehouse-architecture]]"
-  - "[[data-lake-architecture]]"
-  - "[[lakehouse-architecture]]"
-  - "[[data-mesh-architecture]]"
-  - "[[streaming-architecture]]"
-  - "[[medallion-architecture]]"
+  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
+  - "[data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture)"
+  - "[lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture)"
+  - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
   - "[gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog)"
   - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
   - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
-  - "[[idempotent-pipeline-design]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -867,7 +867,7 @@ WHERE current.close_price <> prior.close_price;
 ```
 
 > [!info] BigQuery Time Travel Limits
-> BigQuery time travel supports querying up to 7 days in the past by default. For longer historical queries, you need snapshot tables, SCD modeling, or open table format time travel (see [[lakehouse-architecture]]).
+> BigQuery time travel supports querying up to 7 days in the past by default. For longer historical queries, you need snapshot tables, SCD modeling, or open table format time travel (see [lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture)).
 
 #### Event Time vs. Processing Time in Fact Tables
 
@@ -2504,13 +2504,13 @@ ORDER BY last_modified ASC;
 
 ## Related Notes
 
-- [[data-warehouse-architecture]] — SCD Type 1/2/3 as the foundation for temporal context in dimension tables
-- [[data-lake-architecture]] — Zone architecture (landing/raw/curated) naturally carries provenance through file organization
-- [[lakehouse-architecture]] — Open table formats (Delta Lake, Iceberg) provide time travel and schema evolution natively
-- [[data-mesh-architecture]] — Data contracts and domain ownership as the organizational model for business context
-- [[streaming-architecture]] — Event time vs processing time, watermarks, late-arriving data handling
-- [[medallion-architecture]] — Context propagation through bronze, silver, and gold layers
+- [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) — SCD Type 1/2/3 as the foundation for temporal context in dimension tables
+- [data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture) — Zone architecture (landing/raw/curated) naturally carries provenance through file organization
+- [lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture) — Open table formats (Delta Lake, Iceberg) provide time travel and schema evolution natively
+- [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — Data contracts and domain ownership as the organizational model for business context
+- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — Event time vs processing time, watermarks, late-arriving data handling
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Context propagation through bronze, silver, and gold layers
 - [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) — Dataplex lineage API, tag templates, and business glossary for centralized context
 - [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — Freshness monitoring, SLA tracking, and alerting built on quality context
 - [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) — Real-time pipeline state storage for operational dashboards
-- [[idempotent-pipeline-design]] — Idempotent reprocessing depends on `_run_id` for safe delete-and-reload patterns
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Idempotent reprocessing depends on `_run_id` for safe delete-and-reload patterns

@@ -5,11 +5,11 @@ technology: [csharp, dotnet]
 tags: [csharp, pipeline]
 aliases: [advanced pipelines, TPL Dataflow, channels, IAsyncEnumerable, cross-process]
 keywords: [TPL Dataflow, TransformBlock, ActionBlock, BatchBlock, Channel, IAsyncEnumerable, SemaphoreSlim, Process, rate limiting, parallel API, concurrent pipeline]
-description: "C# advanced parallel pipelines reference with executable examples and cell outputs — covers TPL Dataflow, Channel-based batching, IAsyncEnumerable for paginated APIs, rate-limited parallel fetch, and cross-process execution. See [[13_py_advancedpipelines]] for the Python equivalent."
+description: "C# advanced parallel pipelines reference with executable examples and cell outputs — covers TPL Dataflow, Channel-based batching, IAsyncEnumerable for paginated APIs, rate-limited parallel fetch, and cross-process execution. See [13_py_advancedpipelines](/02-Programming-Languages/Python/13_py_advancedpipelines) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[13_py_advancedpipelines]]"
-  - "[[12_cs_asyncconcurrency]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[13_py_advancedpipelines](/02-Programming-Languages/Python/13_py_advancedpipelines)"
+  - "[12_cs_asyncconcurrency](/02-Programming-Languages/CSharp/12_cs_asyncconcurrency)"
 created: 2026-03-25
 updated: 2026-03-25
 status: complete

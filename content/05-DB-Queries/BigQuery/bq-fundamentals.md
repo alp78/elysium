@@ -7,8 +7,8 @@ aliases: [BigQuery fundamentals, BigQuery SQL, Standard SQL, BQ queries, BigQuer
 keywords: [bigquery, standard sql, select, join, aggregation, array, struct, unnest, date functions, string functions, cast, safe_cast, ifnull, coalesce, countif, any_value, except, replace]
 description: "BigQuery Standard SQL fundamentals with executable examples and cell outputs — covers querying, data types, arrays, structs, UNNEST, and BigQuery-specific functions."
 related:
-  - "[[bq-advanced]]"
-  - "[[bq-engineering]]"
+  - "[bq-advanced](/05-DB-Queries/BigQuery/bq-advanced)"
+  - "[bq-engineering](/05-DB-Queries/BigQuery/bq-engineering)"
   - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
   - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
 created: 2026-03-22
@@ -19,7 +19,7 @@ status: complete
 # BigQuery for Data Engineering - Fundamentals
 
 Hands-on SQL using the **stoxx** index database (BigQuery).
-Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). Once these fundamentals are solid, [[bq-engineering]] covers the database objects and performance patterns that build on them.
+Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). Once these fundamentals are solid, [bq-engineering](/05-DB-Queries/BigQuery/bq-engineering) covers the database objects and performance patterns that build on them.
 
 Topics covered:
 - Connection & Schema Exploration

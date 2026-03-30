@@ -9,13 +9,13 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - null handling, string operations, datetime, timezones
 keywords: [null, NaN, fillna, dropna, str, dt, timezones, datetime, string methods, missing data]
-description: "Polars.NET / C# DataFrames reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [[04_py_missing_strings_datetime]] for the Python equivalent."
+description: "Polars.NET / C# DataFrames reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [04_py_missing_strings_datetime](/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime) for the Python equivalent."
 related:
-  - "[[moc-dataframes]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[04_py_missing_strings_datetime]]"
-  - "[[03_cs_transforms_expressions]]"
-  - "[[05_cs_aggregation_reshaping]]"
+  - "[04_py_missing_strings_datetime](/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime)"
+  - "[03_cs_transforms_expressions](/03-Dataframes/Dataframes-CSharp/03_cs_transforms_expressions)"
+  - "[05_cs_aggregation_reshaping](/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

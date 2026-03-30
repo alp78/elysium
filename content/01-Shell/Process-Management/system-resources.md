@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell]
 aliases: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory monitoring, disk IO]
 keywords: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory, CPU, disk I/O, buffer cache, swap, available memory, page life expectancy, PLE, SQL Server memory, OOM killer, performance monitoring, Get-Counter]
 description: "Linux and PowerShell commands for monitoring memory, CPU, and disk I/O. Explains the 'available' vs 'free' memory distinction, load average interpretation, and how to read iostat for disk saturation."
-related: ["[[viewing-processes]]", "[[killing-processes]]", "[[managing-services]]" ]
+related: ["[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[killing-processes](/01-Shell/Process-Management/killing-processes)", "[managing-services](/01-Shell/Process-Management/managing-services)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -119,6 +119,6 @@ Get-Counter '\PhysicalDisk(*)\Disk Reads/sec','\PhysicalDisk(*)\Disk Writes/sec'
 For automated monitoring of these same metrics (CPU, memory, disk I/O) with alerting and dashboards, see [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration). To tune SQL Server's memory ceiling and prevent it from starving the OS, see [max server memory configuration](/04-SQL-Server/Administration/server-configuration).
 
 ## Related
-- [[viewing-processes]] — identify which processes are consuming the resources
-- [[killing-processes]] — terminate runaway processes consuming excess resources
-- [[managing-services]] — check if OOM kills are crashing services
+- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — identify which processes are consuming the resources
+- [killing-processes](/01-Shell/Process-Management/killing-processes) — terminate runaway processes consuming excess resources
+- [managing-services](/01-Shell/Process-Management/managing-services) — check if OOM kills are crashing services

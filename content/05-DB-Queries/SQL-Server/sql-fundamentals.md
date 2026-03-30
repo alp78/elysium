@@ -7,8 +7,8 @@ aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROU
 keywords: [sql, t-sql, select, join, inner join, left join, where, group by, having, order by, subquery, union, aggregate, count, sum, avg, distinct, null, like, between, in, case, coalesce]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."
 related:
-  - "[[sql-advanced]]"
-  - "[[sql-engineering]]"
+  - "[sql-advanced](/05-DB-Queries/SQL-Server/sql-advanced)"
+  - "[sql-engineering](/05-DB-Queries/SQL-Server/sql-engineering)"
   - "[sargable-queries](/04-SQL-Server/T-SQL/sargable-queries)"
   - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
 created: 2026-03-22
@@ -19,7 +19,7 @@ status: complete
 # SQL for Data Engineering
 
 Hands-on SQL using the **stoxx** index database (SQL Server).
-Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [[sql-engineering]].
+Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [sql-engineering](/05-DB-Queries/SQL-Server/sql-engineering).
 
 Topics covered:
 - Connection & Schema Exploration

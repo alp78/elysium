@@ -187,7 +187,7 @@ SELECT name, is_read_committed_snapshot_on FROM sys.databases WHERE name = 'anal
 
 > [!warning] RCSI and TempDB
 >
-> RCSI stores row versions in TempDB. Monitor TempDB growth after enabling. On high-throughput pipelines, version store can grow significantly. See [[memory-and-buffer-pool]] for TempDB sizing.
+> RCSI stores row versions in TempDB. Monitor TempDB growth after enabling. On high-throughput pipelines, version store can grow significantly. See [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) for TempDB sizing.
 
 2. Capture deadlock graphs from the `system_health` Extended Events session (always-on):
 ```sql
@@ -2253,14 +2253,14 @@ sudo systemctl restart mssql-server
 
 ### Related
 
-- [[wait-stats-analysis]] — Wait type diagnosis
-- [[memory-and-buffer-pool]] — Memory pressure diagnosis
-- [[execution-plans]] — Reading execution plans
-- [[query-plan-analysis]] — Query Store and plan forcing
-- [[deadlock-detection-and-prevention]] — Deadlock deep dive
-- [[blocking-and-locking]] — Blocking chain analysis
-- [[index-maintenance]] — Fragmentation management
-- [[backup-types-and-strategy]] — Backup configuration
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — Wait type diagnosis
+- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Memory pressure diagnosis
+- [execution-plans](/04-SQL-Server/Performance/execution-plans) — Reading execution plans
+- [query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis) — Query Store and plan forcing
+- [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — Deadlock deep dive
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — Blocking chain analysis
+- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — Fragmentation management
+- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — Backup configuration
 
 ---
 

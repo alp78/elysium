@@ -7,10 +7,10 @@ aliases: [terraform Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_
 keywords: [Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run job, Cloud Run service, session affinity, direct VPC egress, startup probe, secret injection, task_count, max_retries, timeout, scaling, min_instances, PRIVATE_RANGES_ONLY]
 description: "Terraform configuration for Cloud Run services (long-running HTTP endpoints) and Cloud Run jobs (batch run-to-completion), including VPC access, secret injection, session affinity, scaling, and the double-nested job template structure."
 related:
-  - "[[terraform-iam-and-secrets]]"
-  - "[[terraform-networking]]"
-  - "[[terraform-registry-and-ci]]"
-  - "[[terraform-compute]]"
+  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
+  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
+  - "[terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci)"
+  - "[terraform-compute](/07-Terraform/GCP-Resources/terraform-compute)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -317,10 +317,10 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 
 ## Related
 
-- [[terraform-iam-and-secrets]] — service accounts and Secret Manager used here
-- [[terraform-networking]] — the VPC this service connects to via direct egress
-- [[terraform-registry-and-ci]] — Artifact Registry where the Docker images live
-- [[terraform-compute]] — the SQL VM that these services connect to
+- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts and Secret Manager used here
+- [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking) — the VPC this service connects to via direct egress
+- [terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry where the Docker images live
+- [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute) — the SQL VM that these services connect to
 
 ## References
 

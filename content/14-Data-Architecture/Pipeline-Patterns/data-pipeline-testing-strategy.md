@@ -20,13 +20,13 @@ keywords: [testing pyramid, unit test, integration test, contract test, data qua
 description: "The testing pyramid for data engineering: unit, integration, contract, quality, and regression testing across bronze/silver/gold layers."
 related:
   - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
-  - "[[data-quality-framework]]"
-  - "[[data-contracts]]"
+  - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
+  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
   - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
   - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
   - "[10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration)"
-  - "[[idempotent-pipeline-design]]"
-  - "[[environment-management-strategy]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy)"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -101,7 +101,7 @@ Quality assertions validate data properties at layer boundaries: nulls, counts, 
 > - Uniqueness on business keys (no duplicates from failed dedup)
 > - Freshness (latest date within SLA window)
 >
-> Tools: dbt generic tests, `dbt-expectations`, custom Python/SQL assertions. See [[data-quality-framework#Data Quality Dimensions]].
+> Tools: dbt generic tests, `dbt-expectations`, custom Python/SQL assertions. See [data-quality-framework > Data Quality Dimensions](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#data-quality-dimensions).
 > When: every pipeline run in production + every PR in CI.
 
 > [!danger] Skip Quality Assertions And...
@@ -118,9 +118,9 @@ Contract tests verify that source data matches the expected schema before any tr
 >
 > Define the expected schema (column names, types, nullability, value ranges) in a contract file or dbt source YAML. On every ingestion, validate the incoming data against the contract. If a column is missing, renamed, or has a new type, the test fails before the data enters bronze.
 >
-> - Define contracts: [[data-contracts#What a Data Contract Contains]]
+> - Define contracts: [data-contracts > What a Data Contract Contains](/14-Data-Architecture/Pipeline-Patterns/data-contracts#what-a-data-contract-contains)
 > - dbt contracts: [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
-> - Schema drift detection: [[context-and-metadata-architecture]]
+> - Schema drift detection: [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture)
 > - When: every PR (schema changes in code) + every ingestion (schema changes in source data)
 
 > [!danger] Skip Contract Tests And...
@@ -171,10 +171,10 @@ This table maps testing to the **medallion architecture** — what specific chec
 
 | Pipeline Layer | What to Test | Primary Tool | Vault Reference |
 |---|---|---|---|
-| **Bronze** | Schema matches source, row count > 0, no all-NULL columns, source freshness | dbt source tests, Python assertions | [[data-quality-framework#Medallion Bronze Quality Gate — Landing / Raw]] |
+| **Bronze** | Schema matches source, row count > 0, no all-NULL columns, source freshness | dbt source tests, Python assertions | [data-quality-framework > Medallion Bronze Quality Gate — Landing / Raw](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#medallion-bronze-quality-gate--landing--raw) |
 | **Silver** | Business logic correctness, dedup worked, SCD2 integrity, gap-fill completeness | dbt tests, pytest with fixtures | [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests) |
-| **Gold** | Output shape matches expectations, z-scores in bounds, no NaN in scores, ranks are contiguous | dbt tests, pandas assertions | [[data-quality-framework#Medallion Gold Quality Gate -- Consumption / Publication]] |
-| **Cross-layer** | Row count preservation (bronze → silver minus expected dedup), referential integrity | dbt cross-model tests, SQL assertions | [[data-quality-framework#Data Quality Quarantine Pattern]] |
+| **Gold** | Output shape matches expectations, z-scores in bounds, no NaN in scores, ranks are contiguous | dbt tests, pandas assertions | [data-quality-framework > Medallion Gold Quality Gate -- Consumption / Publication](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#medallion-gold-quality-gate----consumption--publication) |
+| **Cross-layer** | Row count preservation (bronze → silver minus expected dedup), referential integrity | dbt cross-model tests, SQL assertions | [data-quality-framework > Data Quality Quarantine Pattern](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#data-quality-quarantine-pattern) |
 
 > [!danger] Gold Quality Is Last Defense
 >
@@ -219,7 +219,7 @@ Validate data properties at layer boundaries. These run after every pipeline exe
 | Uniqueness on business key | Duplicates from failed dedup or bad merge | dbt `unique`, `unique_combination_of_columns` |
 | Freshness | Stale data — source hasn't updated | dbt `source freshness`, custom metric |
 
-See [[data-quality-framework#Data Quality Dimensions]] for the full quality taxonomy and [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation) for production monitoring integration.
+See [data-quality-framework > Data Quality Dimensions](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#data-quality-dimensions) for the full quality taxonomy and [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation) for production monitoring integration.
 
 > [!warning] Quality Checks Need Production Too
 >
@@ -234,8 +234,8 @@ Verify that source data matches the expected schema before any transform runs.
 **The problem:** An upstream API changes a field name from `price` to `current_price`. Your pipeline loads NULLs into the `price` column — every row, every day — until someone notices the dashboard is wrong.
 
 **Implementation:**
-- Define the contract (column names, types, nullability, value ranges): see [[data-contracts#What a Data Contract Contains]]
-- Validate on ingestion with a Python validator or dbt source test: see [[context-and-metadata-architecture#Schema Drift Detection]]
+- Define the contract (column names, types, nullability, value ranges): see [data-contracts > What a Data Contract Contains](/14-Data-Architecture/Pipeline-Patterns/data-contracts#what-a-data-contract-contains)
+- Validate on ingestion with a Python validator or dbt source test: see [context-and-metadata-architecture > Schema Drift Detection](/14-Data-Architecture/Architectures/context-and-metadata-architecture#schema-drift-detection)
 - dbt contracts: see [dbt-data-contracts-implementation > What Is a dbt Data Contract?](/11-dbt/Quality/dbt-data-contracts-implementation#what-is-a-dbt-data-contract)
 
 > [!danger] Schema Changes Kill Silently
@@ -357,7 +357,7 @@ jobs:
 Data quality checks are the exception — they span both worlds. Run them in CI (testing) AND after every production load (monitoring).
 
 - Testing side: [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) + [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)
-- Monitoring side: [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) + [[data-quality-framework#Quality Gate Airflow Integration]]
+- Monitoring side: [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) + [data-quality-framework > Quality Gate Airflow Integration](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#quality-gate-airflow-integration)
 
 ---
 
@@ -381,12 +381,12 @@ Data quality checks are the exception — they span both worlds. Run them in CI 
 ## Related
 
 - [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) — dbt generic tests, custom tests, severity levels, store-failures
-- [[data-quality-framework]] — Quality dimensions, medallion quality gates, quarantine pattern
-- [[data-contracts]] — Contract specification, breaking vs non-breaking changes, CI validation
+- [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality dimensions, medallion quality gates, quarantine pattern
+- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification, breaking vs non-breaking changes, CI validation
 - [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation) — dbt-native contracts, model versions, access control
 - [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — Production monitoring: freshness, row counts, SLA tracking, alerting
 - [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — CI/CD workflows for data pipelines, dbt in CI, WIF auth
-- [[context-and-metadata-architecture]] — Schema drift detection, schema evolution patterns
+- [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) — Schema drift detection, schema evolution patterns
 - [10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration) — pytest patterns for Pandas/Polars DataFrame testing
 - [10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration) — xUnit patterns for Deedle/Polars.NET DataFrame testing
-- [[environment-management-strategy]] — How testing fits into the dev/staging/prod promotion workflow
+- [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How testing fits into the dev/staging/prod promotion workflow

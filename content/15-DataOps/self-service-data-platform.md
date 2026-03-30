@@ -42,8 +42,8 @@ keywords:
   - Looker
 description: "Building self-service data platforms — from data catalogs and quality layers to governed access and data products, enabling non-engineers to use data without filing tickets."
 related:
-  - "[[dataops-principles-and-practices]]"
-  - "[[data-team-organization]]"
+  - "[dataops-principles-and-practices](/15-DataOps/dataops-principles-and-practices)"
+  - "[data-team-organization](/15-DataOps/data-team-organization)"
   - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
   - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 created: 2026-03-22
@@ -624,9 +624,9 @@ Building a self-service platform is a multi-quarter investment. A pragmatic sequ
 
 ## Related Concepts
 
-- [[dataops-principles-and-practices]] — the DataOps practices that the self-service platform operationalizes
-- [[data-team-organization]] — how team structure must evolve to support self-service
+- [dataops-principles-and-practices](/15-DataOps/dataops-principles-and-practices) — the DataOps practices that the self-service platform operationalizes
+- [data-team-organization](/15-DataOps/data-team-organization) — how team structure must evolve to support self-service
 - [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — the federated organizational pattern that self-service platforms enable
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — the transformation and semantic layer that sits at the heart of the platform
-- [[dataops-principles-and-practices|data quality]] — detailed breakdown of quality tools and testing strategies
+- [data quality](/15-DataOps/dataops-principles-and-practices) — detailed breakdown of quality tools and testing strategies
 - [orchestration selection](/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) — orchestration layer that keeps data products fresh

@@ -58,10 +58,10 @@ description: >
   pagination, authentication, federation, and real-world GitHub API examples
   for pipeline automation. Python implementations with Strawberry and Ariadne.
 related:
-  - "[[rest-api-design-and-consumption]]"
-  - "[[serialization-formats]]"
+  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
+  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
   - "fastapi and polars"
-  - "[[streaming-architecture]]"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -134,7 +134,7 @@ query {                  ┌─► IndexResolver ──────────�
 The single query above fetches data from three different storage systems in one round trip. The client specifies exactly which fields it needs — no more, no less.
 
 > [!info] GraphQL Wire Format
-> GraphQL runs over HTTP. Queries are typically sent as `POST /graphql` with a JSON body: `{"query": "...", "variables": {...}}`. Responses are JSON: `{"data": {...}, "errors": [...]}`. Unlike gRPC, there is no binary encoding by default. See [[serialization-formats]] for encoding trade-offs.
+> GraphQL runs over HTTP. Queries are typically sent as `POST /graphql` with a JSON body: `{"query": "...", "variables": {...}}`. Responses are JSON: `{"data": {...}, "errors": [...]}`. Unlike gRPC, there is no binary encoding by default. See [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for encoding trade-offs.
 
 ---
 
@@ -144,7 +144,7 @@ The single query above fetches data from three different storage systems in one 
 A financial analytics platform serves both a trading dashboard (needs real-time prices, risk metrics) and a regulatory reporting pipeline (needs positions, trades, reference data). Rather than building separate REST endpoints for each consumer, one GraphQL API serves both — each client requests only what it needs.
 
 **2. Data mesh API layers**
-In a [[streaming-architecture|data mesh]], each domain exposes its data as a product. GraphQL is well-suited as the product interface because it is self-documenting, introspectable, and flexible enough to serve any consumer without versioning.
+In a [data mesh](/14-Data-Architecture/Architectures/streaming-architecture), each domain exposes its data as a product. GraphQL is well-suited as the product interface because it is self-documenting, introspectable, and flexible enough to serve any consumer without versioning.
 
 **3. Serving multiple consumers from one endpoint**
 Mobile apps, web dashboards, Jupyter notebooks, and pipeline scripts all have different data needs. REST APIs accumulate bespoke endpoints over time. A GraphQL API stays clean — clients compose their own queries.
@@ -575,7 +575,7 @@ subscription WatchPortfolio($portfolioId: ID!) {
 ```
 
 > [!warning] Subscriptions vs. gRPC Streaming
-> GraphQL subscriptions are WebSocket-based and not appropriate for high-throughput data (thousands of events per second). For real-time market data feeds, use [[grpc-for-data-pipelines|gRPC server streaming]] or a message broker from [[streaming-architecture]]. Use GraphQL subscriptions for user-facing real-time updates at human-readable frequencies.
+> GraphQL subscriptions are WebSocket-based and not appropriate for high-throughput data (thousands of events per second). For real-time market data feeds, use [gRPC server streaming](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) or a message broker from [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture). Use GraphQL subscriptions for user-facing real-time updates at human-readable frequencies.
 
 ---
 
@@ -1557,7 +1557,7 @@ async def get_schema_types(base_url: str) -> list[dict]:
 | **Self-documenting** | Yes (introspection) | With OpenAPI |
 
 > [!tip] Decision Rule
-> Use GraphQL when different consumers need different shapes of the same data, or when you want to aggregate multiple data sources into one query. Use REST when responses are stable, caching is important, or the API is public-facing with simple operations. See [[rest-api-design-and-consumption]] for REST patterns.
+> Use GraphQL when different consumers need different shapes of the same data, or when you want to aggregate multiple data sources into one query. Use REST when responses are stable, caching is important, or the API is public-facing with simple operations. See [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) for REST patterns.
 
 ---
 
@@ -1878,7 +1878,7 @@ async def wait_for_ci(owner: str, repo: str, branch: str, timeout: int = 600) ->
 >
 > **Simple CRUD APIs**: If every endpoint returns the same shape every time (list users, get user by ID, update user), REST is simpler. GraphQL's flexibility adds overhead (resolver setup, DataLoader, schema design) that is not justified.
 >
-> **High-throughput data streaming**: GraphQL subscriptions are WebSocket-based and JSON-encoded. For thousands of events per second, use [[grpc-for-data-pipelines|gRPC server streaming]] or Apache Kafka from [[streaming-architecture]]. GraphQL subscriptions are for human-scale real-time updates.
+> **High-throughput data streaming**: GraphQL subscriptions are WebSocket-based and JSON-encoded. For thousands of events per second, use [gRPC server streaming](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) or Apache Kafka from [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture). GraphQL subscriptions are for human-scale real-time updates.
 >
 > **File uploads**: The GraphQL multipart request spec is awkward. Use signed cloud storage URLs (GCS, S3) or a dedicated REST endpoint for uploads.
 >
@@ -1922,7 +1922,7 @@ print(response.json())  # {"data": {"hello": "world"}}
 
 ## Related Notes
 
-- [[rest-api-design-and-consumption]] — REST patterns and comparison with GraphQL
-- [[serialization-formats]] — JSON, protobuf, Avro; encoding trade-offs for API payloads
+- [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — REST patterns and comparison with GraphQL
+- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — JSON, protobuf, Avro; encoding trade-offs for API payloads
 - fastapi and polars — Building the HTTP server that hosts your GraphQL schema
-- [[streaming-architecture]] — When to use streaming (Kafka, gRPC) instead of GraphQL subscriptions
+- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — When to use streaming (Kafka, gRPC) instead of GraphQL subscriptions

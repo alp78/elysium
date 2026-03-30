@@ -167,9 +167,9 @@ command *> all.txt
 
 ## Related
 
-- [[io-redirection]] — Controlling where command output goes
-- [[defensive-scripting]] — Using `set -euo pipefail` to make scripts safe
-- [[process-substitution]] — Treating command output as files
+- [io-redirection](/01-Shell/Scripting/io-redirection) — Controlling where command output goes
+- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Using `set -euo pipefail` to make scripts safe
+- [process-substitution](/01-Shell/Scripting/process-substitution) — Treating command output as files
 
 ## References
 

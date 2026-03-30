@@ -7,8 +7,8 @@ aliases: [BigQuery advanced, BigQuery window functions, BigQuery CTE, BigQuery J
 keywords: [window functions, cte, analytic functions, approximate aggregation, hll_count, approx_quantiles, pivot, unpivot, json_extract, json_value, geospatial, st_geogpoint, bqml, ml.predict, scripting, declare, loop, javascript udf]
 description: "Advanced BigQuery SQL patterns with executable examples — covers window functions, approximate aggregation, scripting, JSON, geospatial, BQML, and JavaScript UDFs."
 related:
-  - "[[bq-fundamentals]]"
-  - "[[bq-engineering]]"
+  - "[bq-fundamentals](/05-DB-Queries/BigQuery/bq-fundamentals)"
+  - "[bq-engineering](/05-DB-Queries/BigQuery/bq-engineering)"
   - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
 created: 2026-03-22
 updated: 2026-03-22

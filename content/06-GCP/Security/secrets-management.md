@@ -173,8 +173,8 @@ export SQL_CONN_STRING="Server=localhost;Database=analytics_db;User=sa;Password=
 
 ## Related
 
-- [[gcp-identity-and-connection-patterns]] — Identity model and connection patterns that determine how secrets are consumed
-- [[service-accounts-and-iam]] — IAM roles and service account design
+- [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Identity model and connection patterns that determine how secrets are consumed
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM roles and service account design
 - [tf-iam-secrets-serverless](/07-Terraform/Block-Library/tf-iam-secrets-serverless) — Terraform blocks for secrets and IAM
 - [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — Workload Identity Federation setup
 - [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Airflow configuration and connections

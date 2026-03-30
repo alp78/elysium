@@ -5,12 +5,12 @@ technology: [python, gcp]
 tags: [python, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
 keywords: [ingestion, bulk insert, bcp, BigQuery load, Firestore batch, GCS, CSV, Parquet, pyodbc, google-cloud-bigquery, benchmark, throughput, latency]
-description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [[23_cs_data_ingestion]] for the C# equivalent."
+description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[23_cs_data_ingestion]]"
-  - "[[22_py_data_transfer]]"
-  - "[[16_py_database]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion)"
+  - "[22_py_data_transfer](/02-Programming-Languages/Python/22_py_data_transfer)"
+  - "[16_py_database](/02-Programming-Languages/Python/16_py_database)"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete

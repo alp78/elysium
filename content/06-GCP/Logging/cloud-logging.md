@@ -120,15 +120,15 @@ gcloud logging write pipeline-events "Manual test entry from CLI" --severity=INF
 
 ### Querying VPC-SC Violations in Cloud Logging
 
-Cloud Audit Logs (a special log type in Cloud Logging) record all VPC Service Controls denials. See [[vpc-service-controls]] for the specific filter pattern.
+Cloud Audit Logs (a special log type in Cloud Logging) record all VPC Service Controls denials. See [vpc-service-controls](/06-GCP/Security/vpc-service-controls) for the specific filter pattern.
 
 ## Related
 
-- [[cloud-monitoring-metrics]] — Metrics tell you *how much*; logs tell you *what happened*
-- [[cloud-run-jobs-vs-services]] — Cloud Run job logs are the most common starting point for pipeline debugging
-- [[vm-lifecycle]] — VM system logs appear under `resource.type="gce_instance"`
-- [[vpc-service-controls]] — VPC-SC violations appear in Cloud Audit Logs
-- [[dataset-and-table-management]] — BigQuery operations appear under `resource.type="bigquery_resource"`
+- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — Metrics tell you *how much*; logs tell you *what happened*
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run job logs are the most common starting point for pipeline debugging
+- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — VM system logs appear under `resource.type="gce_instance"`
+- [vpc-service-controls](/06-GCP/Security/vpc-service-controls) — VPC-SC violations appear in Cloud Audit Logs
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery operations appear under `resource.type="bigquery_resource"`
 
 ## References
 

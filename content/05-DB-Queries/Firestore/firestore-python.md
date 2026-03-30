@@ -7,7 +7,7 @@ aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document dat
 keywords: [firestore, python, google-cloud-firestore, document, collection, query, where, order_by, limit, batch, transaction, real-time, on_snapshot, subcollection, array_contains, composite index]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
 related:
-  - "[[firestore-csharp]]"
+  - "[firestore-csharp](/05-DB-Queries/Firestore/firestore-csharp)"
   - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
   - "[real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines)"
 created: 2026-03-22

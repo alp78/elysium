@@ -29,13 +29,13 @@ Full-table recomputation is fine at 10K rows. At 100M rows it takes hours and co
 
 ## Watermark-Based Incremental Loading
 
-The most common incremental pattern: store the maximum processed value after each run, start the next run from there. For a full definition of watermarks — what they are, where to store them, their lifecycle, and anti-patterns — see [[sql-server-loading-patterns#Watermarks — The Foundation of Incremental Loading]].
+The most common incremental pattern: store the maximum processed value after each run, start the next run from there. For a full definition of watermarks — what they are, where to store them, their lifecycle, and anti-patterns — see [sql-server-loading-patterns > Watermarks — The Foundation of Incremental Loading](/04-SQL-Server/Patterns/sql-server-loading-patterns#watermarks--the-foundation-of-incremental-loading).
 
 ### High-Water Mark — load only new data
 
 > [!info] Watermark Pattern
 >
-> The watermark is the last successfully processed value — a date, ID, or timestamp. Each run reads only data newer than the watermark. Store the watermark in a control table, pipeline metadata, or an Airflow Variable. See [[sql-server-loading-patterns#Where Watermarks Are Stored]] for trade-offs of each storage approach.
+> The watermark is the last successfully processed value — a date, ID, or timestamp. Each run reads only data newer than the watermark. Store the watermark in a control table, pipeline metadata, or an Airflow Variable. See [sql-server-loading-patterns > Where Watermarks Are Stored](/04-SQL-Server/Patterns/sql-server-loading-patterns#where-watermarks-are-stored) for trade-offs of each storage approach.
 
 ```sql
 -- Step 1: Read current watermark
@@ -104,7 +104,7 @@ Process one partition at a time: load staging, validate, `SWITCH` into productio
 
 > [!info] SWITCH Requirements
 >
-> Both tables must have identical schemas, identical indexes, be in the same filegroup, and the staging table must have a `CHECK` constraint matching the target partition boundary. See [[partitioning-strategies]] for partition function and scheme DDL.
+> Both tables must have identical schemas, identical indexes, be in the same filegroup, and the staging table must have a `CHECK` constraint matching the target partition boundary. See [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for partition function and scheme DDL.
 
 ```sql
 -- Step 1: Load into staging (aligned with March 2025 partition)
@@ -389,6 +389,6 @@ Every INSERT into a staging table that feeds an indexed view pays the view maint
 
 > [!example]- Medallion-Project: OHLCV gap-fill and index performance
 >
-> **Gap-fill (silver):** The OHLCV transform joins against `bronze.trading_calendar` to detect missing trading days, then forward-fills from the last real close price. Filled rows are marked `is_filled = 1`. See [[silver-transforms]] for the full gap-fill logic.
+> **Gap-fill (silver):** The OHLCV transform joins against `bronze.trading_calendar` to detect missing trading days, then forward-fills from the last real close price. Filled rows are marked `is_filled = 1`. See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for the full gap-fill logic.
 >
-> **Incremental index performance (gold):** `transform_index_performance.py` is incremental — it finds `MAX(perf_date)` in gold, deletes the last 7 days (for late-arriving signals), then recomputes only the new window. See [[gold-transforms]] for the 7-day refresh window implementation.
+> **Incremental index performance (gold):** `transform_index_performance.py` is incremental — it finds `MAX(perf_date)` in gold, deletes the last 7 days (for late-arriving signals), then recomputes only the new window. See [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) for the 7-day refresh window implementation.

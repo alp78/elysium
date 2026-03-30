@@ -113,10 +113,10 @@ For data residency compliance (GDPR, financial regulations), use a specific regi
 
 ## Related
 
-- [[gcs-object-operations]] — Uploading, syncing, moving, and deleting objects within these buckets
-- [[data-loading-and-export]] — Loading bucket contents into BigQuery; exporting BigQuery to buckets
-- [[service-accounts-and-iam]] — `roles/storage.objectAdmin` on specific buckets (not the project)
-- [[gcp-projects-and-apis]] — `storage.googleapis.com` is usually enabled by default
+- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — Uploading, syncing, moving, and deleting objects within these buckets
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Loading bucket contents into BigQuery; exporting BigQuery to buckets
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/storage.objectAdmin` on specific buckets (not the project)
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `storage.googleapis.com` is usually enabled by default
 
 ## References
 

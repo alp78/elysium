@@ -16,15 +16,15 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [[moc-sql-server#Patterns]]
+> patterns and alternative approaches, see the [moc-sql-server > Patterns](/04-SQL-Server/moc-sql-server#patterns)
 > section. For the architectural theory behind bronze/silver/gold layering,
 > see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Bronze Layer Loading
 
-The bronze layer is the raw data landing zone in the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [[silver-transforms|silver]].
+The bronze layer is the raw data landing zone in the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [silver](/04-SQL-Server/Medallion-Project/silver-transforms).
 
-**Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [[silver-transforms|Silver transforms]]
+**Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [Silver transforms](/04-SQL-Server/Medallion-Project/silver-transforms)
 
 > [!info] Bronze Layer Role
 >
@@ -350,7 +350,7 @@ CREATE INDEX IX_bronze_pulse_tickers_index
 
 ### bronze.trading_calendar — Exchange Schedules
 
-Used to detect gaps in OHLCV data — if the exchange was open but we have no price, that's a gap to forward-fill. See [[silver-transforms]] for the gap-filling logic.
+Used to detect gaps in OHLCV data — if the exchange was open but we have no price, that's a gap to forward-fill. See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for the gap-filling logic.
 
 > [!abstract] Data source
 > - **Source:** `exchange_calendars` Python library
@@ -576,8 +576,8 @@ WHERE symbol = ? AND date = ?
 
 ### Related Notes
 
-- [[silver-transforms]] — next stage: cleaning, deduplication, SCD Type 2, gap-filling
-- [[gold-transforms]] — final stage: pre-computed analytics and scoring
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — next stage: cleaning, deduplication, SCD Type 2, gap-filling
+- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — final stage: pre-computed analytics and scoring
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context for all three layers
 - the data pipeline steps — pipeline steps that drive these loaders
 - data formats and serialization — JSON handling and Python type mapping

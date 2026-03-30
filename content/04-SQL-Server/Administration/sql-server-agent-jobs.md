@@ -142,7 +142,7 @@ EXEC msdb.dbo.sp_add_jobserver
 
 > [!info] Automated Backup Job
 >
-> See [[backup-types-and-strategy]] for backup theory and the 3-2-1 rule. This job automates the nightly full backup.
+> See [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) for backup theory and the 3-2-1 rule. This job automates the nightly full backup.
 
 ```sql
 EXEC msdb.dbo.sp_add_job @job_name = N'Nightly Full Backup';
@@ -214,7 +214,7 @@ EXEC msdb.dbo.sp_help_jobactivity;
 | Log Shipping | Copy job, Restore job | Secondary database falls behind, DR gap grows |
 | Availability Groups | AG health check | AG monitoring goes blind, failover detection delayed |
 
-- **CDC log reader:** reads the transaction log and populates `cdc.*` change tables. See [[sql-server-change-tracking#Change Data Capture (CDC)]] for CDC details
+- **CDC log reader:** reads the transaction log and populates `cdc.*` change tables. See [sql-server-change-tracking > Change Data Capture (CDC)](/04-SQL-Server/Patterns/sql-server-change-tracking#change-data-capture-cdc) for CDC details
 - **CDC cleanup:** purges change table rows older than the configured retention. Without it, change tables grow unbounded
 - **Monitor with:** `SELECT * FROM msdb.dbo.cdc_jobs;` to check CDC job status
 

@@ -5,11 +5,11 @@ technology: [sql-server, bigquery, airflow, python]
 status: stable
 updated: 2026-03-29
 related:
-  - "[[data-pipeline-testing-strategy]]"
-  - "[[data-contracts]]"
-  - "[[error-handling-and-retry-patterns]]"
-  - "[[functional-pipeline-architecture]]"
-  - "[[medallion-architecture]]"
+  - "[data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy)"
+  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
+  - "[error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns)"
+  - "[functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture)"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
   - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
   - "[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline)"
   - "[25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)"
@@ -78,6 +78,14 @@ Timeliness means data is available when downstream consumers need it. Late data 
 - GCP freshness monitoring: [gcp-pipeline-health-and-sla > Data Freshness Monitoring](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#data-freshness-monitoring)
 - Dead man's switch: [gcp-pipeline-health-and-sla > Dead Man's Switch (Heartbeat Monitoring)](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#dead-mans-switch-heartbeat-monitoring)
 
+> [!info] Three Types of Freshness
+>
+> **Source freshness**: when the source system last updated the data.
+> **Pipeline freshness**: when the pipeline last successfully processed
+> the data. **Serving freshness**: when the consumer last received
+> updated data. A pipeline can be "fresh" (ran on time) while serving
+> stale data (the source was late). Monitor all three independently.
+
 ### Accuracy — data values are correct
 
 Accuracy means recorded values match the real-world truth. A price of 150.00 is complete, unique, valid, and timely, but if the actual close was 151.00, it is inaccurate.
@@ -88,7 +96,7 @@ Accuracy means recorded values match the real-world truth. A price of 150.00 is 
 **How to detect:** Cross-reference against independent sources. Statistical anomaly detection (z-score) to flag outliers for manual review. Reconciliation queries between systems.
 
 - Python API corroboration: [25_py_functional_pipeline > yfinance — corroborate with live API data using Ticker.history()](/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--corroborate-with-live-api-data-using-tickerhistory)
-- Regression snapshot comparison: [[data-pipeline-testing-strategy#Regression tests — snapshot comparison]]
+- Regression snapshot comparison: [data-pipeline-testing-strategy > Regression tests — snapshot comparison](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#regression-tests--snapshot-comparison)
 
 ### Consistency — data agrees across systems
 
@@ -105,11 +113,11 @@ Consistency means the same logical entity has the same value in every system tha
 
 ## Quality Gates by Medallion Layer
 
-Each [[medallion-architecture]] layer has different quality priorities. Bronze gates protect ingestion integrity. Silver gates enforce business rules. Gold gates guard publication correctness.
+Each [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layer has different quality priorities. Bronze gates protect ingestion integrity. Silver gates enforce business rules. Gold gates guard publication correctness.
 
 ### Bronze Quality Gate
 
-Bronze ([[medallion-architecture#Bronze (Raw)]]) validates that raw data landed correctly before any transformation.
+Bronze ([medallion-architecture > Bronze (Raw)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#bronze-raw)) validates that raw data landed correctly before any transformation.
 
 > [!danger] Tier 1 — Critical (halt pipeline)
 > - Schema conformance: column names and types match expected contract
@@ -127,12 +135,12 @@ Bronze ([[medallion-architecture#Bronze (Raw)]]) validates that raw data landed 
 > - Column order changed (schema evolution signal)
 
 - Bronze gate implementation: [25_py_functional_pipeline > Pipeline — run Bronze data quality gate with run_quality_gate()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-bronze-data-quality-gate-with-runqualitygate)
-- Quality gate pattern: [[functional-pipeline-architecture#Quality Gate Pattern]]
-- Data quality assertions: [[data-pipeline-testing-strategy#Data quality assertions]]
+- Quality gate pattern: [functional-pipeline-architecture > Quality Gate Pattern](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#quality-gate-pattern)
+- Data quality assertions: [data-pipeline-testing-strategy > Data quality assertions](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#data-quality-assertions)
 
 ### Silver Quality Gate
 
-Silver ([[medallion-architecture#Silver (Cleaned)]]) enforces business rules and referential integrity on cleaned data.
+Silver ([medallion-architecture > Silver (Cleaned)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#silver-cleaned)) enforces business rules and referential integrity on cleaned data.
 
 > [!danger] Tier 1 — Critical (halt pipeline)
 > - Business rule violation on mandatory fields (price <= 0, negative volume)
@@ -149,13 +157,24 @@ Silver ([[medallion-architecture#Silver (Cleaned)]]) enforces business rules and
 > - Minor schema drift (new nullable columns)
 > - Data distribution shift beyond 1 standard deviation
 
+> [!info] What Is Schema Drift?
+>
+> Schema drift occurs when a data source changes its schema without
+> notice — a column is renamed, a type changes, a new field appears,
+> or a field disappears. The pipeline's contract expects the OLD schema.
+> The source delivers the NEW schema. Without detection, the pipeline
+> silently loads NULLs (renamed column), fails mid-transform (type
+> change), or ignores new data (unknown column). Detection methods:
+> compare incoming columns against the contract, hash the schema,
+> alert on mismatch.
+
 - Silver gate implementation: [25_py_functional_pipeline > Pipeline — run Silver data quality gate with run_quality_gate()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-silver-data-quality-gate-with-runqualitygate)
 - Row-level Pydantic validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
 - dbt test severity: [dbt-testing-framework > dbt Test severity: warn vs error](/11-dbt/Quality/dbt-testing-framework#dbt-test-severity-warn-vs-error)
 
 ### Gold Quality Gate
 
-Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense before data reaches clients, regulatory filings, and downstream systems.
+Gold ([medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#gold-analytics)) is the last line of defense before data reaches clients, regulatory filings, and downstream systems.
 
 > [!danger] Gold is publication — treat every Gold check as a circuit breaker
 > If a quality gate at the Gold layer fails and the pipeline continues anyway (e.g., because the check was set to `severity: warn` instead of `error`), incorrect index values reach clients and regulatory filings. Gold-layer checks that affect publication integrity must ALWAYS halt the pipeline. See esg circuit breaker fired for a real incident where this saved us.
@@ -195,7 +214,7 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 
 - Built-in generic tests: [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
 - Statistical tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
-- CI/CD integration: [[data-pipeline-testing-strategy#CI/CD Test Automation]]
+- CI/CD integration: [data-pipeline-testing-strategy > CI/CD Test Automation](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
 
 ### Great Expectations — Python assertion suites with profiling
 
@@ -259,8 +278,8 @@ A quarantine isolates rows that fail quality checks so they can be investigated 
 > [!danger] Never silently drop bad rows
 > Dropping rows that fail validation means you lose evidence of upstream data issues. Quarantined rows are your forensic trail: they tell you what went wrong, when, and how often. Without quarantine, you discover data loss only when a client reports it.
 
-- Quarantine pattern overview: [[functional-pipeline-architecture#The Quarantine Pattern]]
-- Dead letter queue (same concept, different name): [[error-handling-and-retry-patterns#Dead Letter Queue (DLQ) — don't drop, don't retry forever]]
+- Quarantine pattern overview: [functional-pipeline-architecture > The Quarantine Pattern](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#the-quarantine-pattern)
+- Dead letter queue (same concept, different name): [error-handling-and-retry-patterns > Dead Letter Queue (DLQ) — don't drop, don't retry forever](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns#dead-letter-queue-dlq--dont-drop-dont-retry-forever)
 
 ### Quarantine Table Design
 
@@ -357,7 +376,7 @@ Run `dbt test --select state:modified+` on every pull request to catch quality r
 - run: dbt test --select state:modified+ --defer --state prod-manifest/
 ```
 
-- CI/CD test automation: [[data-pipeline-testing-strategy#CI/CD Test Automation]]
+- CI/CD test automation: [data-pipeline-testing-strategy > CI/CD Test Automation](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
 
 ## SLA Definitions by Dataset
 
@@ -374,11 +393,11 @@ Run `dbt test --select state:modified+` on every pull request to catch quality r
 
 ## Related
 
-- [[data-pipeline-testing-strategy]] — Testing pyramid that coordinates quality checks with unit, integration, and contract tests
-- [[data-contracts]] — Schema and SLA agreements between producers and consumers
-- [[error-handling-and-retry-patterns]] — Retry logic, dead letter queues, and circuit breakers
-- [[functional-pipeline-architecture]] — Quality gate and quarantine patterns in functional style
-- [[medallion-architecture]] — Bronze / Silver / Gold layer definitions and responsibilities
+- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Testing pyramid that coordinates quality checks with unit, integration, and contract tests
+- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Schema and SLA agreements between producers and consumers
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Retry logic, dead letter queues, and circuit breakers
+- [functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — Quality gate and quarantine patterns in functional style
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze / Silver / Gold layer definitions and responsibilities
 - [observability-strategy-matrix](/13-Observability/observability-strategy-matrix) — Logging, metrics, and alerting strategy across pipeline layers
 - [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Full Python implementation of quality gates, quarantine, and anomaly detection
 - [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# implementation of the same patterns

@@ -66,7 +66,7 @@ status: complete
 
 # Airflow Troubleshooting Guide
 
-A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [[airflow-problems]].
+A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](/12-Orchestration/Airflow/airflow-problems).
 
 > [!info] Structure
 > Issues are organized by symptom. Use `Ctrl+F` to search for an exact error message. For CLI commands used in debugging, see the [[#CLI Debugging Reference]] section.
@@ -1222,9 +1222,9 @@ Understanding task states is essential for diagnosing stuck or unexpected behavi
 
 ## Related Notes
 
-- [[airflow-core-concepts]] — Architecture, Executors, XCom mechanics, connection setup
-- [[airflow-dag-patterns]] — Dynamic DAG issues, trigger rule bugs, backfill problems
-- [[airflow-deployment]] — Deployment-specific issues: Docker Compose, Cloud Composer, secrets
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, XCom mechanics, connection setup
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAG issues, trigger rule bugs, backfill problems
+- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Deployment-specific issues: Docker Compose, Cloud Composer, secrets
 
 ## References
 

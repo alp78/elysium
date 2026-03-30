@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 keywords: [try, catch, finally, throw, Exception, custom exception, when filter, IDisposable, using, Result]
-description: "C# error handling reference with executable examples and cell outputs — covers try/catch/finally, exception hierarchy, custom exceptions, exception filters, and IDisposable/using. See [[08_py_errorhandling]] for the Python equivalent."
+description: "C# error handling reference with executable examples and cell outputs — covers try/catch/finally, exception hierarchy, custom exceptions, exception filters, and IDisposable/using. See [08_py_errorhandling](/02-Programming-Languages/Python/08_py_errorhandling) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[08_py_errorhandling]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[08_py_errorhandling](/02-Programming-Languages/Python/08_py_errorhandling)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

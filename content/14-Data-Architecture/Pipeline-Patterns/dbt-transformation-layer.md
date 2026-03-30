@@ -8,10 +8,10 @@ keywords: [dbt, data build tool, dbt core, dbt cloud, staging models, intermedia
 description: "dbt (Data Build Tool) is the standard SQL transformation layer for modern data platforms — it implements software engineering practices (version control, testing, documentation, CI/CD) for SQL transforms already inside your warehouse. Covers project structure, staging/intermediate/mart model layers, schema and custom tests, SCD Type 2 snapshots, Jinja macros, Airflow integration, and slim CI builds."
 related:
   - "fastapi and polars"
-  - "[[idempotent-pipeline-design]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
   - "[observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive)"
-  - "[[open-table-formats]]"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -106,7 +106,7 @@ dbt_project/
 ```
 
 > [!info] Medallion Architecture Mapping
-> dbt's `staging/` folder corresponds to the **bronze → silver** transition. `intermediate/` is the **silver layer** business logic. `marts/` is the **gold layer** consumption-ready output. See [[open-table-formats]] for the Iceberg lakehouse equivalent.
+> dbt's `staging/` folder corresponds to the **bronze → silver** transition. `intermediate/` is the **silver layer** business logic. `marts/` is the **gold layer** consumption-ready output. See [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) for the Iceberg lakehouse equivalent.
 
 ---
 
@@ -240,7 +240,7 @@ SELECT * FROM scored
 ```
 
 > [!tip] Incremental Models
-> The `is_incremental()` macro returns `true` when the target table already exists. On first run (or after `dbt run --full-refresh`), the `WHERE` clause is skipped and all data is loaded. This is the same pattern as [[idempotent-pipeline-design]] applied to SQL.
+> The `is_incremental()` macro returns `true` when the target table already exists. On first run (or after `dbt run --full-refresh`), the `WHERE` clause is skipped and all data is loaded. This is the same pattern as [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) applied to SQL.
 
 ---
 
@@ -490,10 +490,10 @@ jobs:
 - **Snapshot `unique_key` must truly be unique:** If the source table has duplicates on the `unique_key`, the snapshot will fail with a merge conflict error. Add a deduplication CTE in the snapshot query.
 
 ## Related
-- [[idempotent-pipeline-design]] — the incremental load patterns dbt implements
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — the incremental load patterns dbt implements
 - fastapi and polars — the EL layer that feeds the bronze tables dbt transforms
 - [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive) — monitoring dbt runs with DataDog
-- [[open-table-formats]] — Iceberg/Delta Lake as storage backends in a lakehouse architecture
+- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Iceberg/Delta Lake as storage backends in a lakehouse architecture
 
 ## References
 - [dbt Core documentation](https://docs.getdbt.com/)

@@ -7,9 +7,9 @@ updated: 2026-03-23
 description: "SQL Server adapter installation, auth, T-SQL differences, incremental strategy, index post-hooks, and known limitations."
 related:
   - "[moc-sql-server](/04-SQL-Server/moc-sql-server)"
-  - "[[dbt-performance-tuning]]"
+  - "[dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)"
   - "[sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage)"
-  - "[[dbt-cross-adapter-patterns]]"
+  - "[dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns)"
 ---
 
 # dbt: SQL Server Adapter
@@ -380,6 +380,6 @@ connect_timeout: 60
 ## Related
 
 - [moc-sql-server](/04-SQL-Server/moc-sql-server)
-- [[dbt-performance-tuning]]
+- [dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)
 - [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage)
-- [[dbt-cross-adapter-patterns]]
+- [dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns)

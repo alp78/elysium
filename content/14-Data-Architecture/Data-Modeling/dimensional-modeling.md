@@ -65,17 +65,17 @@ description: >
   and physical implementation in SQL Server and BigQuery. Every concept is grounded
   in a financial index provider domain with full DDL and concrete SQL examples.
 related:
-  - "[[data-warehouse-architecture]]"
-  - "[[dimensional-modeling|star vs snowflake schema]]"
-  - "[[data-warehouse-architecture|SCD patterns]]"
+  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
+  - "[star vs snowflake schema](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
+  - "[SCD patterns](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
   - "[dbt modeling](/11-dbt/Modeling/dbt-staging-models)"
   - "[columnstore indexes](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy)"
   - "[BigQuery partitioning](/06-GCP/BigQuery/dataset-and-table-management)"
-  - "[[five-pillars-of-data-engineering]]"
-  - "[[dimensional-modeling|fact design]]"
-  - "[[dimensional-modeling|dimension design]]"
-  - "[[dimensional-modeling|bus matrix]]"
-  - "[[dimensional-modeling]]"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
+  - "[fact design](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
+  - "[dimension design](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
+  - "[bus matrix](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
+  - "[dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

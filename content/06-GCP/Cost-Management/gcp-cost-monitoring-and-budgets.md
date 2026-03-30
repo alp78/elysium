@@ -55,13 +55,13 @@ description: >
   optimization strategies, weekly review checklists, dashboard SQL, and
   Terraform cost controls. No project-specific references.
 related:
-  - "[[moc-gcp]]"
-  - "[[dataset-and-table-management|BigQuery]]"
-  - "[[cloud-logging]]"
-  - "[[service-accounts-and-iam|IAM and security]]"
-  - "[[vm-lifecycle|Compute Engine]]"
-  - "[[cloud-run-jobs-vs-services]]"
-  - "[[gcs-buckets-and-lifecycle|Cloud Storage]]"
+  - "[moc-gcp](/06-GCP/moc-gcp)"
+  - "[BigQuery](/06-GCP/BigQuery/dataset-and-table-management)"
+  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
+  - "[IAM and security](/06-GCP/Security/service-accounts-and-iam)"
+  - "[Compute Engine](/06-GCP/Compute/vm-lifecycle)"
+  - "[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
+  - "[Cloud Storage](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

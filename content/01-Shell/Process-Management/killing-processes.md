@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell]
 aliases: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate process]
 keywords: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate, signal, graceful shutdown, force kill, process group, PGID, strace, lock file cleanup, Stop-Process]
 description: "Graceful and forceful process termination in Linux and PowerShell. Covers the correct kill escalation sequence (SIGTERM → strace → SIGKILL), pkill -f for pattern matching, process groups, and cleanup after force kills."
-related: ["[[viewing-processes]]", "[[managing-services]]", "[[system-resources]]" ]
+related: ["[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[managing-services](/01-Shell/Process-Management/managing-services)", "[system-resources](/01-Shell/Process-Management/system-resources)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +20,7 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 
 > [!info] SIGTERM graceful shutdown
 >
-> Docker uses the same SIGTERM→SIGKILL escalation — see [[container-lifecycle]]. The process can:
+> Docker uses the same SIGTERM→SIGKILL escalation — see [container-lifecycle](/09-Docker/container-lifecycle). The process can:
 > 1. Flush buffers and close file handles
 > 2. Commit or rollback database transactions
 > 3. Release locks
@@ -137,6 +137,6 @@ Get-Process -Name "python" | Stop-Process -Confirm
 ```
 
 ## Related
-- [[viewing-processes]] — find the PID before killing
-- [[managing-services]] — use `systemctl stop` for services (cleaner than `kill`)
-- [[system-resources]] — confirm resource is released after killing
+- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — find the PID before killing
+- [managing-services](/01-Shell/Process-Management/managing-services) — use `systemctl stop` for services (cleaner than `kill`)
+- [system-resources](/01-Shell/Process-Management/system-resources) — confirm resource is released after killing

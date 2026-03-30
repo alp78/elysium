@@ -9,13 +9,13 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - with_columns, when/then, apply, transform
 keywords: [with_columns, when, then, otherwise, apply, map, transform, method chaining, expressions]
-description: "Polars.NET / C# DataFrames reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then). Executable examples with cell outputs. See [[03_py_transforms_expressions]] for the Python equivalent."
+description: "Polars.NET / C# DataFrames reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then). Executable examples with cell outputs. See [03_py_transforms_expressions](/03-Dataframes/Dataframes-Python/03_py_transforms_expressions) for the Python equivalent."
 related:
-  - "[[moc-dataframes]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[03_py_transforms_expressions]]"
-  - "[[02_cs_explore_select_filter]]"
-  - "[[04_cs_missing_strings_datetime]]"
+  - "[03_py_transforms_expressions](/03-Dataframes/Dataframes-Python/03_py_transforms_expressions)"
+  - "[02_cs_explore_select_filter](/03-Dataframes/Dataframes-CSharp/02_cs_explore_select_filter)"
+  - "[04_cs_missing_strings_datetime](/03-Dataframes/Dataframes-CSharp/04_cs_missing_strings_datetime)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

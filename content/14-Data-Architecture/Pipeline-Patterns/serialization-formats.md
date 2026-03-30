@@ -39,6 +39,23 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 > - **Internal Python pipelines** → MessagePack (drop-in JSON replacement, 2-5x faster)
 > - **Quick Python object persistence** → Pickle (but NEVER deserialize from untrusted sources)
 
+### Compression Codecs
+
+| Codec | Speed | Ratio | Best For |
+|---|---|---|---|
+| **gzip** | Slow | Best (70-80% reduction) | Archival, cold storage, network transfer |
+| **zstd** | Fast | Very good (65-75% reduction) | Default choice — best speed/ratio trade-off |
+| **snappy** | Fastest | Moderate (50-60% reduction) | Hot data, frequent reads, Parquet default in Spark |
+| **lz4** | Fastest | Moderate (50-60% reduction) | Real-time systems, message queues |
+
+> [!info] Default Codec Recommendation
+>
+> Use **zstd** as the default compression codec for Parquet files and data
+> archives. It compresses nearly as well as gzip but decompresses 5-10x
+> faster. Snappy is faster to decompress but compresses 15-20% less.
+> The only reason to use gzip in 2026 is backward compatibility with
+> systems that don't support zstd (increasingly rare).
+
 ## Format Details
 
 ### JSON
@@ -115,6 +132,15 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 - Used by BigQuery external tables, Spark, Hive, Presto, Snowflake, DuckDB
 - For reading and writing Parquet in Python, see [10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats); for C#, see [10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats); for lower-level file I/O patterns, see [09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization)
 
+> [!warning] Parquet Row Group Sizing
+>
+> Row groups that are too small (1,000 rows) create excessive metadata
+> overhead — each row group has its own statistics, column chunks, and
+> page headers. Row groups that are too large (100M rows) prevent
+> effective predicate pushdown — the query must scan the entire group
+> even if only 1% of rows match the filter. Target 128 MB per row group
+> (Parquet default) or 50K-1M rows for typical financial datasets.
+
 ### Pickle
 
 - **Python-specific binary format**
@@ -124,6 +150,16 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 
 > [!warning] Never Unpickle Untrusted Data
 > `pickle.load()` can execute arbitrary Python code. If an attacker controls a `.pkl` file you load, they own your process. Only use Pickle for Python-to-Python workflows where you control both the writer and the reader and the data never travels over a network or through untrusted storage.
+
+> [!danger] Pickle Arbitrary Code Execution
+>
+> `pickle.loads(untrusted_bytes)` can execute ARBITRARY Python code.
+> A crafted pickle payload can `import os; os.system('rm -rf /')`.
+> This is not a theoretical risk — it is trivially exploitable.
+> NEVER use pickle for: inter-system communication, user-uploaded files,
+> data from external APIs, or any source you don't fully control.
+> Pickle is safe ONLY for Python-to-Python within a single trusted system
+> (e.g., caching intermediate pipeline results on the same machine).
 
 ---
 
@@ -155,7 +191,7 @@ Compression is orthogonal to format — most formats support multiple codecs. Ch
 
 
 ## Related
-- [[data-flow-architecture]] — format selection matrix by pipeline scenario and data movement topology
+- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — format selection matrix by pipeline scenario and data movement topology
 
 ## References
 

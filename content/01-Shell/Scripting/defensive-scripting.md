@@ -146,10 +146,10 @@ log "Pipeline complete"
 ## Related
 
 - [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Cross-cutting error classification, retry strategies, and failure propagation theory
-- [[command-chaining]] — How `&&`, `||`, and `;` use exit codes
-- [[io-redirection]] — Redirecting errors for logging
-- [[environment-variables]] — Handling required vs optional configuration
-- [[process-substitution]] — Advanced I/O patterns for scripts
+- [command-chaining](/01-Shell/Scripting/command-chaining) — How `&&`, `||`, and `;` use exit codes
+- [io-redirection](/01-Shell/Scripting/io-redirection) — Redirecting errors for logging
+- [environment-variables](/01-Shell/Scripting/environment-variables) — Handling required vs optional configuration
+- [process-substitution](/01-Shell/Scripting/process-substitution) — Advanced I/O patterns for scripts
 
 ## References
 

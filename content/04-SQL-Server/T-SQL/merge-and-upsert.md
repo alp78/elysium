@@ -74,7 +74,7 @@ except Exception:
 
 ## Strategy 2: Read-then-INSERT/UPDATE (OHLCV Merge)
 
-OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed. This is the same MERGE pattern used in [[bronze-layer-loading#Strategy 2: Merge (OHLCV Only)|bronze OHLCV loading]].
+OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed. This is the same MERGE pattern used in [bronze OHLCV loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-2-merge-ohlcv-only).
 
 #### SELECT existing rows — build lookup map for merge comparison
 
@@ -292,6 +292,15 @@ USING (SELECT 'ASML' AS symbol) AS source
 WHEN NOT MATCHED THEN
     INSERT (symbol) VALUES (source.symbol);
 ```
+
+> [!danger] MERGE with Non-Deterministic Source
+>
+> If two source rows match the same target row (duplicate business key
+> in the source CTE), MERGE fails with error 8672: "The MERGE statement
+> attempted to UPDATE or DELETE the same row more than once." This
+> happens silently in staging: a double-fetched API response produces
+> two rows with the same `(symbol, date)`. Always deduplicate the source
+> CTE before the MERGE: `WITH src AS (SELECT DISTINCT ... FROM staging)`.
 
 > [!info] MERGE and RCSI Locking
 >
@@ -687,11 +696,11 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 
 ### Related
 
-- [[sargable-queries]] — ensure WHERE clauses on MERGE join keys are SARGable for index seeks
-- [[blocking-and-locking]] — U lock → X lock promotion and RCSI's effect on reader/writer conflicts
-- [[deadlock-detection-and-prevention]] — MERGE deadlock scenarios and prevention strategies
-- [[race-conditions]] — phantom insert prevention with MERGE and serialization strategies
-- [[storage-internals]] — version store mechanics, page splits during MERGE updates
+- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — ensure WHERE clauses on MERGE join keys are SARGable for index seeks
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — U lock → X lock promotion and RCSI's effect on reader/writer conflicts
+- [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — MERGE deadlock scenarios and prevention strategies
+- [race-conditions](/04-SQL-Server/Concurrency/race-conditions) — phantom insert prevention with MERGE and serialization strategies
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — version store mechanics, page splits during MERGE updates
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold schema design context
-- [[silver-transforms]] — full silver transform implementations
-- [[gold-transforms]] — gold scoring and analytics transforms
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — full silver transform implementations
+- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — gold scoring and analytics transforms

@@ -264,7 +264,7 @@ mindmap
 
 ## Cross-References
 
-- [[sqlcmd-connection-and-usage]] — SQL Server command-line operations from the shell
-- [[gcloud-authentication]] — GCP authentication underpinning all gcloud CLI work
-- [[container-lifecycle]] — Docker container commands are shell operations
-- [[linux-scheduling|cron and crontab]] — Scheduling shell commands for pipeline automation
+- [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — SQL Server command-line operations from the shell
+- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — GCP authentication underpinning all gcloud CLI work
+- [container-lifecycle](/09-Docker/container-lifecycle) — Docker container commands are shell operations
+- [cron and crontab](/12-Orchestration/Scheduling/linux-scheduling) — Scheduling shell commands for pipeline automation

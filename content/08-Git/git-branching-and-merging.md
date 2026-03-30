@@ -7,10 +7,10 @@ aliases: [git branch, git merge, git rebase, git checkout, branching strategy, m
 keywords: [git, branch, merge, rebase, checkout, switch, stash, feature branch, branching strategy, merge commit, fast-forward, squash merge]
 description: "Git branching and merging strategies — creating feature branches, switching branches, stashing work, merging, rebasing, and recovery techniques."
 related:
-  - "[[git-daily-workflow]]"
-  - "[[git-recovery-and-undo]]"
-  - "[[merge-vs-rebase-vs-squash]]"
-  - "[[git-cheat-sheet]]"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
+  - "[merge-vs-rebase-vs-squash](/08-Git/merge-vs-rebase-vs-squash)"
+  - "[git-cheat-sheet](/08-Git/git-cheat-sheet)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -52,7 +52,7 @@ git stash apply stash@{2}   # apply a specific stash without removing it
 
 ## Merging Strategies
 
-See [[merge-vs-rebase-vs-squash]] for a detailed comparison of when to use each strategy. Once a branch is merged, [[pull-requests-and-code-review]] covers the PR workflow that typically wraps these merge operations in a review process.
+See [merge-vs-rebase-vs-squash](/08-Git/merge-vs-rebase-vs-squash) for a detailed comparison of when to use each strategy. Once a branch is merged, [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) covers the PR workflow that typically wraps these merge operations in a review process.
 
 ### Standard Merge
 ```bash
@@ -99,10 +99,10 @@ git checkout <hash-from-reflog>
 # Recovers "lost" committed work — survives ~90 days
 ```
 
-See [[git-recovery-and-undo]] for detailed recovery workflows.
+See [git-recovery-and-undo](/08-Git/git-recovery-and-undo) for detailed recovery workflows.
 
 ## Related
 
-- [[git-daily-workflow]] — Status, staging, committing, pushing
-- [[git-recovery-and-undo]] — Detailed recovery techniques
-- [[merge-vs-rebase-vs-squash]] — Comparison table of merge strategies
+- [git-daily-workflow](/08-Git/git-daily-workflow) — Status, staging, committing, pushing
+- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — Detailed recovery techniques
+- [merge-vs-rebase-vs-squash](/08-Git/merge-vs-rebase-vs-squash) — Comparison table of merge strategies

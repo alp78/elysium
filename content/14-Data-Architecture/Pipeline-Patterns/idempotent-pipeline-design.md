@@ -7,10 +7,10 @@ aliases: [idempotent pipelines, idempotency, idempotent loads, safe re-runs, rep
 keywords: [idempotent, idempotency, safe re-run, replay, backfill, data pipeline, atomic load, upsert, MERGE, delete-insert, truncate-reload, exactly-once, at-least-once]
 description: "Idempotent pipeline design ensures running a pipeline multiple times with the same input produces the same result without duplicates or corruption — the foundation of reliable data engineering."
 related:
-  - "[[medallion-architecture]]"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
   - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
   - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
   - "[backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -20,6 +20,14 @@ status: complete
 # Idempotent Pipeline Design
 
 An idempotent pipeline produces the same result whether it runs once or ten times with the same input. This is the single most important property of any production data pipeline — it makes re-runs safe, backfills reliable, and incident recovery straightforward.
+
+> [!info] Formal Definition
+>
+> A function f is idempotent if f(f(x)) = f(x) — applying it twice
+> produces the same result as applying it once. For pipelines: running
+> the same pipeline with the same input data, any number of times,
+> produces the same output rows in the target table. No duplicates,
+> no missing rows, no corrupted state.
 
 ### Why Idempotent Pipeline Design Matters
 
@@ -51,6 +59,14 @@ COMMIT;
 > [!tip] Why DELETE-INSERT over TRUNCATE
 > DELETE with a WHERE clause is partition-scoped — it only affects the target date. TRUNCATE removes ALL data and cannot be rolled back inside a transaction. Use TRUNCATE only for full-reload patterns on small tables.
 
+> [!danger] DELETE-INSERT with Foreign Keys
+>
+> If gold tables have foreign keys referencing silver, a DELETE-INSERT
+> on silver cascades the DELETE to gold — destroying gold data. Either
+> drop FKs before the load (re-create after), disable the FK constraint
+> temporarily (`ALTER TABLE NOCHECK CONSTRAINT`), or use MERGE instead
+> of DELETE-INSERT when FK relationships exist.
+
 ### MERGE (Upsert)
 
 Match on a business key. Update if exists, insert if new. See [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) for the full T-SQL MERGE pattern. In dbt, the [incremental materialization](/11-dbt/Modeling/dbt-materializations) generates a MERGE statement under the hood, providing idempotency declaratively.
@@ -65,6 +81,16 @@ WHEN NOT MATCHED THEN INSERT (index_code, display_name) VALUES (source.index_cod
 
 > [!danger] MERGE Without a Partition Filter Can Full-Scan the Target Table
 > A `MERGE INTO silver.index_dim` without a `WHERE` clause on the source CTE scans every row in both the source and target. On a 100M-row table, this turns a 2-second incremental load into a 30-minute full scan. Always scope the MERGE source to the current partition (e.g., `WHERE trade_date = @trade_date`) and ensure the target has a matching index on the join key.
+
+> [!warning] Idempotency Is Not Exactly-Once
+>
+> Idempotency means "safe to re-run." Exactly-once means "processed
+> exactly one time." A MERGE upsert is idempotent (re-running produces
+> the same result) but executes MORE than once on retry. In streaming
+> systems (Pub/Sub, Kafka), exactly-once requires deduplication at the
+> consumer — the message may be DELIVERED multiple times but must be
+> PROCESSED only once. Idempotent writes make exactly-once achievable:
+> if the write is idempotent, duplicate deliveries don't corrupt state.
 
 ### Staging Table Pattern
 
@@ -96,8 +122,8 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 
 ## Related
 
-- [[error-handling-and-retry-patterns]] — Idempotency is a prerequisite for safe retries — the error handling framework depends on it
-- [[medallion-architecture]] — The bronze/silver/gold pattern relies on idempotent transforms at each layer
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Idempotency is a prerequisite for safe retries — the error handling framework depends on it
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The bronze/silver/gold pattern relies on idempotent transforms at each layer
 - [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — T-SQL MERGE statement for upsert operations
 - [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — Silver layer cleaning and deduplication patterns
-- [[five-pillars-of-data-engineering]] — Idempotency is the foundation of Pillar 1 (Reliability)
+- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — Idempotency is the foundation of Pillar 1 (Reliability)

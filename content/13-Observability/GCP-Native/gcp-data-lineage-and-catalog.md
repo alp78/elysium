@@ -65,9 +65,9 @@ related:
   - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
   - "[data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture)"
   - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
-  - "[[gcp-pipeline-health-and-sla]]"
-  - "[[gcp-cloud-monitoring-deep-dive]]"
-  - "[[gcp-cloud-trace-and-logging]]"
+  - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
+  - "[gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)"
+  - "[gcp-cloud-trace-and-logging](/13-Observability/GCP-Native/gcp-cloud-trace-and-logging)"
   - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
   - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
   - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
@@ -91,7 +91,7 @@ Data engineering builds pipelines. Lineage and cataloging answer the two questio
 
 **"What data do we have, and what does it mean?"** — This is the cataloging question. When a new data scientist joins and needs to find "something about daily trading volume" they should be able to search a catalog and find a well-described, owner-tagged, freshness-SLA'd table in under two minutes. Without a catalog, they spend weeks asking people in Slack and building duplicate datasets from the same raw sources. A well-maintained catalog is a prerequisite for building a genuine [self-service-data-platform](/15-DataOps/self-service-data-platform), where consumers can discover and use data without blocking on engineering support.
 
-Together, lineage and cataloging are the observability layer for your data — the equivalent of distributed tracing and service documentation for your pipelines. See [[gcp-pipeline-health-and-sla]] for the broader observability framework these fit into.
+Together, lineage and cataloging are the observability layer for your data — the equivalent of distributed tracing and service documentation for your pipelines. See [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) for the broader observability framework these fit into.
 
 ### Compliance Drivers
 
@@ -1499,7 +1499,7 @@ gcloud monitoring alert-policies create \
   --documentation-content="A Dataplex data quality scan has reported a score below 95%. Check the scan results in the Dataplex console."
 ```
 
-See [[gcp-cloud-monitoring-deep-dive]] for the full monitoring setup, and [[gcp-pipeline-health-and-sla]] for integrating quality metrics into pipeline SLA dashboards.
+See [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) for the full monitoring setup, and [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) for integrating quality metrics into pipeline SLA dashboards.
 
 ### Custom Quality Checks (Python)
 
@@ -1783,7 +1783,7 @@ gcloud logging read \
   --format="table(timestamp,protoPayload.authenticationInfo.principalEmail)"
 ```
 
-See [[gcp-cloud-trace-and-logging]] for the full audit log query patterns.
+See [gcp-cloud-trace-and-logging](/13-Observability/GCP-Native/gcp-cloud-trace-and-logging) for the full audit log query patterns.
 
 ### Building Impact Analysis into CI/CD
 
@@ -2076,9 +2076,9 @@ gcloud projects get-iam-policy PROJECT_ID \
 - [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) — BigQuery design patterns that the lineage layer governs
 - [data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture) — GCS organization that Dataplex discovery crawls
 - [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — Domain-oriented data products that the catalog makes discoverable
-- [[gcp-pipeline-health-and-sla]] — SLA monitoring that integrates quality scan metrics
-- [[gcp-cloud-monitoring-deep-dive]] — Setting up alerts for quality failures and lineage gaps
-- [[gcp-cloud-trace-and-logging]] — Audit logs for BigQuery access, source of truth for lineage validation
+- [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — SLA monitoring that integrates quality scan metrics
+- [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) — Setting up alerts for quality failures and lineage gaps
+- [gcp-cloud-trace-and-logging](/13-Observability/GCP-Native/gcp-cloud-trace-and-logging) — Audit logs for BigQuery access, source of truth for lineage validation
 - [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM roles for Dataplex, Lineage API, and Data Catalog
 - [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Using catalog tags for cost attribution and slot optimization
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt manifest lineage integration and model tagging

@@ -542,7 +542,7 @@ def load_postgres_to_bq(**context):
 XComs (Cross-Communications) allow tasks to exchange small messages via the Metadata DB. A task **pushes** a value; downstream tasks **pull** it.
 
 > [!warning] XCom Size Limit
-> XComs are stored in the Metadata DB. The default serialization backend (pickle/JSON) has a practical limit of **~48 KB** in most configurations. Do NOT use XComs to pass DataFrames, file contents, or large result sets. Instead, write data to GCS/S3 and pass the **path** as the XCom value. See [[airflow-troubleshooting]] for the "XCom too large" error.
+> XComs are stored in the Metadata DB. The default serialization backend (pickle/JSON) has a practical limit of **~48 KB** in most configurations. Do NOT use XComs to pass DataFrames, file contents, or large result sets. Instead, write data to GCS/S3 and pass the **path** as the XCom value. See [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) for the "XCom too large" error.
 
 ```python
 # --- Pushing XComs ---
@@ -777,10 +777,10 @@ delete_worker_pods = True
 ```
 
 > [!info] Cloud Composer Uses LocalKubernetesExecutor
-> Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [[airflow-deployment]] for Cloud Composer specifics.
+> Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) for Cloud Composer specifics.
 
 > [!tip] Related pattern
-> Most local and self-hosted Airflow deployments use [docker-compose](/09-Docker/docker-compose) to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [[airflow-deployment]] note walks through the full `docker-compose.yaml` setup.
+> Most local and self-hosted Airflow deployments use [docker-compose](/09-Docker/docker-compose) to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) note walks through the full `docker-compose.yaml` setup.
 
 ---
 
@@ -810,9 +810,9 @@ Airflow uses Jinja2 templating in `template_fields` of Operators. Common templat
 ## Related Notes
 
 - [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
-- [[airflow-dag-patterns]] — Task dependencies, dynamic DAGs, branching, trigger rules
-- [[airflow-deployment]] — Docker Compose, Cloud Composer, CI/CD for DAGs
-- [[airflow-troubleshooting]] — Common errors, debugging CLI commands, log locations
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Task dependencies, dynamic DAGs, branching, trigger rules
+- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Docker Compose, Cloud Composer, CI/CD for DAGs
+- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Common errors, debugging CLI commands, log locations
 
 ## References
 

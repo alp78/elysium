@@ -7,13 +7,13 @@ aliases: [DataDog pipeline monitoring, data lineage, data catalog, data quality 
 keywords: [datadog, observability, metrics, logs, traces, APM, statsd, data freshness, data lineage, data catalog, data quality, schema drift, data drift, kolmogorov-smirnov, KS test, great expectations, OpenMetadata, DataHub, Google Data Catalog, Unity Catalog, data entitlement, RBAC, pipeline SLA, monitoring, alerting, completeness, accuracy, uniqueness, validity, consistency, drift detection, pipeline health, SQL Server monitoring]
 description: "Observability deep dive for data engineering: DataDog custom metrics and APM traces for pipeline health, data freshness tracking, data lineage implementation, data catalog tooling, data quality frameworks (Great Expectations + SQL checks), and automated schema and statistical drift detection for financial pipelines."
 related:
-  - "[[datadog-architecture-overview]]"
+  - "[datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview)"
   - "fastapi and polars"
   - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
   - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
   - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
   - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[[observability-strategy-matrix]]"
+  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -52,7 +52,7 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 
 ## DataDog for Data Pipeline Observability
 
-DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [[datadog-architecture-overview]] covers the practical agent setup and infrastructure topology, while [cloud-logging](/06-GCP/Logging/cloud-logging) provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
+DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) covers the practical agent setup and infrastructure topology, while [cloud-logging](/06-GCP/Logging/cloud-logging) provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
 
 ### Custom Metrics for Pipeline Health
 
@@ -800,7 +800,7 @@ flowchart TB
 > dbt generates lineage automatically for dbt models. External processes (Python loaders, SQL Agent jobs) must manually log to `pipeline.lineage`. Without this, your lineage graph has holes — and holes in lineage are invisible until an auditor asks "how was this number calculated?" and you can't trace it back to source.
 
 ## Related
-- [[datadog-architecture-overview]] — DataDog agent setup and infrastructure monitoring
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — DataDog agent setup and infrastructure monitoring
 - fastapi and polars — FastAPI services and Polars pipelines being monitored
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt tests as a complementary data quality layer
 - [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline design patterns that support observability

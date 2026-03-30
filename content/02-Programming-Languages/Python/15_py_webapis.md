@@ -5,10 +5,10 @@ technology: [python]
 tags: [api, python]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
 keywords: [requests, FastAPI, Flask, httpx, REST, HTTP, JSON, authentication, middleware, routing]
-description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [[15_cs_webapis]] for the C# equivalent."
+description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [15_cs_webapis](/02-Programming-Languages/CSharp/15_cs_webapis) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[15_cs_webapis]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[15_cs_webapis](/02-Programming-Languages/CSharp/15_cs_webapis)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -193,7 +193,7 @@ with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
 > `asyncio.gather()` fires ALL tasks concurrently — add a semaphore for rate-limited APIs
 > For 50 tickers, `gather(*tasks)` opens 50 connections simultaneously. Most financial
 > data APIs reject bursts above 5-10 req/s. Use `asyncio.Semaphore(5)` to cap concurrency.
-> See [[13_py_advancedpipelines]] for the full rate-limited pattern.
+> See [13_py_advancedpipelines](/02-Programming-Languages/Python/13_py_advancedpipelines) for the full rate-limited pattern.
 
 ```python
 # Async — fetch multiple tickers concurrently

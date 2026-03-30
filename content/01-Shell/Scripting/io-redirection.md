@@ -118,9 +118,9 @@ command *> $null          # PowerShell equivalent of /dev/null
 
 ## Related
 
-- [[command-chaining]] — Using pipes and operators to connect commands
-- [[defensive-scripting]] — The `set` flags that prevent scripting disasters
-- [[process-substitution]] — Using `<()` and `>()` to treat output as files
+- [command-chaining](/01-Shell/Scripting/command-chaining) — Using pipes and operators to connect commands
+- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — The `set` flags that prevent scripting disasters
+- [process-substitution](/01-Shell/Scripting/process-substitution) — Using `<()` and `>()` to treat output as files
 
 ## References
 

@@ -7,11 +7,11 @@ aliases: [Apache Iceberg, Delta Lake, Apache Hudi, open table format, lakehouse,
 keywords: [iceberg, delta lake, hudi, open table format, lakehouse, parquet, ACID, time travel, snapshot isolation, schema evolution, partition evolution, hidden partitioning, merge-on-read, copy-on-write, compaction, medallion architecture, bronze silver gold, GDPR deletion, right to be forgotten, BigLake Metastore, Nessie catalog, manifest file, snapshot, BigQuery Iceberg, GCS, S3, PII registry, data privacy, Databricks, Spark]
 description: "Open table formats (Apache Iceberg, Delta Lake, Apache Hudi) add a metadata layer on top of Parquet files on cloud storage to provide ACID transactions, snapshot isolation, time travel, schema evolution, and partition evolution. Covers the metadata tree, Iceberg vs Delta Lake vs Hudi comparison, BigQuery/GCP integration, table maintenance, medallion architecture mapping, and GDPR deletion patterns."
 related:
-  - "[[dbt-transformation-layer]]"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
   - "fastapi and polars"
   - "[observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive)"
-  - "[[idempotent-pipeline-design]]"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -271,7 +271,7 @@ CALL data-pipeline.system.rewrite_manifests('silver.daily_ohlcv');
 
 ## The Medallion Architecture on a Lakehouse
 
-The [[medallion-architecture|medallion architecture]] (bronze/silver/gold) maps naturally to a lakehouse:
+The [medallion architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze/silver/gold) maps naturally to a lakehouse:
 
 | Layer | Iceberg Table Properties | Materialization |
 |---|---|---|
@@ -298,7 +298,7 @@ gs://data-pipeline-lakehouse/
 ```
 
 > [!info] dbt + Iceberg
-> [[dbt-transformation-layer|dbt]] can target Iceberg tables directly using the `dbt-spark` or `dbt-trino` adapters. The `materialized='incremental'` config maps to Iceberg's MERGE operation. The `snapshots/` folder maps to Iceberg's snapshot-based SCD2 tracking.
+> [dbt](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) can target Iceberg tables directly using the `dbt-spark` or `dbt-trino` adapters. The `materialized='incremental'` config maps to Iceberg's MERGE operation. The `snapshots/` folder maps to Iceberg's snapshot-based SCD2 tracking.
 
 ---
 
@@ -427,10 +427,10 @@ CREATE TABLE data_catalog.pii_registry (
 - **`VACUUM` with 0 retention:** Vacuuming with 0 hours retention removes all unreferenced files immediately, including files that concurrent readers might be accessing. Only do this during maintenance windows with no active queries.
 
 ## Related
-- [[dbt-transformation-layer]] — dbt as the transformation engine for lakehouse tables
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt as the transformation engine for lakehouse tables
 - fastapi and polars — Polars for reading Parquet/Iceberg files efficiently
 - [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive) — lineage and data quality for lakehouse pipelines
-- [[idempotent-pipeline-design]] — incremental load patterns for bronze/silver/gold layers
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — incremental load patterns for bronze/silver/gold layers
 
 ## References
 - [Apache Iceberg documentation](https://iceberg.apache.org/docs/latest/)

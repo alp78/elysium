@@ -9,13 +9,13 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt
 keywords: [groupby, agg, window, rolling, join, merge, pivot, melt, unpivot, cross join]
-description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [[05_py_aggregation_reshaping]] for the Python equivalent."
+description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) for the Python equivalent."
 related:
-  - "[[moc-dataframes]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[05_py_aggregation_reshaping]]"
-  - "[[04_cs_missing_strings_datetime]]"
-  - "[[06_cs_lazy_performance]]"
+  - "[05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping)"
+  - "[04_cs_missing_strings_datetime](/03-Dataframes/Dataframes-CSharp/04_cs_missing_strings_datetime)"
+  - "[06_cs_lazy_performance](/03-Dataframes/Dataframes-CSharp/06_cs_lazy_performance)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

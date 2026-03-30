@@ -12,7 +12,7 @@ related:
   - datadog-sql-server-integration
   - datadog-agent-airflow-vm
   - essential-dba-queries
-  - "[[observability-strategy-matrix]]"
+  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -67,7 +67,7 @@ To verify the full pipeline (deadlock → metric → monitor → email):
 1. Create a deadlock using the procedure in the SQL Server Tuning Guide, Section 5.8
 2. Wait 15-30 seconds for the Datadog agent to collect the updated counter
 3. The monitor should trigger and send an email within 1-2 minutes
-4. The Deadlock Count widget on the [[datadog-dashboards|SQL Server DBA dashboard]] should increment
+4. The Deadlock Count widget on the [SQL Server DBA dashboard](/13-Observability/Datadog/datadog-dashboards) should increment
 
 > [!info] Why change alert
 >
@@ -107,7 +107,7 @@ Create these in **Monitors → New Monitor → Metric**:
 | P4 (Low) | Queued duration spikes — performance degradation only | Next business day |
 
 > [!info] Airflow Duration Units
-> Airflow emits durations in **microseconds**. The Queued Duration Spike threshold of 60,000,000 equals 60 seconds. Adjust based on your typical DAG run times from the [[datadog-dashboards|Airflow dashboard]].
+> Airflow emits durations in **microseconds**. The Queued Duration Spike threshold of 60,000,000 equals 60 seconds. Adjust based on your typical DAG run times from the [Airflow dashboard](/13-Observability/Datadog/datadog-dashboards).
 
 ---
 
@@ -134,7 +134,7 @@ In addition to monitors (which send notifications), the SQL Server DBA dashboard
 
 ### GCE Host Automuting in Datadog
 
-When GCE Automuting is enabled in the [[datadog-gcp-integration|GCP Integration]], monitors are automatically muted when a VM is stopped in GCP. This prevents false alerts during intentional maintenance or off-hours cost reduction when the SQL or Airflow VM is stopped.
+When GCE Automuting is enabled in the [GCP Integration](/13-Observability/Datadog/datadog-gcp-integration), monitors are automatically muted when a VM is stopped in GCP. This prevents false alerts during intentional maintenance or off-hours cost reduction when the SQL or Airflow VM is stopped.
 
 Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 
@@ -142,8 +142,8 @@ Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 
 ## Related
 
-- [[datadog-dashboards]] — Dashboard widgets with conditional formatting
-- [[datadog-custom-queries]] — `sqlserver.deadlocks.total` metric source
-- [[datadog-agent-airflow-vm]] — StatsD source for Airflow scheduler metrics
-- [[datadog-gcp-integration]] — GCE Automuting for VM stop/start
+- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets with conditional formatting
+- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — `sqlserver.deadlocks.total` metric source
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow scheduler metrics
+- [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration) — GCE Automuting for VM stop/start
 - [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Manual queries to investigate after a deadlock alert

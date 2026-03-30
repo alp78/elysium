@@ -96,7 +96,7 @@ gcloud asset analyze-iam-policy \
   --full-resource-name="//bigquery.googleapis.com/projects/data-platform-prod/datasets/project_data"
 ```
 
-You can also test what a service account can see by impersonating it during `gcloud` commands (see [[gcloud-output-formatting]]).
+You can also test what a service account can see by impersonating it during `gcloud` commands (see [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting)).
 
 ### Minimum IAM Permission Set for a Data Pipeline
 
@@ -125,13 +125,13 @@ On GCE VMs and Cloud Run, credentials are provided automatically by the GCP meta
 
 ## Related
 
-- [[gcp-identity-and-connection-patterns]] — Complete identity model, credential types, connection patterns by scenario
+- [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Complete identity model, credential types, connection patterns by scenario
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — ADC credential search order; when key files vs metadata server applies
-- [[vpc-service-controls]] — VPC-SC restricts what IAM-permitted identities can do with data
-- [[cloud-run-jobs-vs-services]] — Attach the pipeline service account to Cloud Run jobs
-- [[gcs-buckets-and-lifecycle]] — Grant `roles/storage.objectAdmin` on specific buckets only
-- [[dataset-and-table-management]] — BigQuery roles required for table access
-- [[gcp-projects-and-apis]] — IAM policies are project-scoped
+- [vpc-service-controls](/06-GCP/Security/vpc-service-controls) — VPC-SC restricts what IAM-permitted identities can do with data
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Attach the pipeline service account to Cloud Run jobs
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Grant `roles/storage.objectAdmin` on specific buckets only
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery roles required for table access
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — IAM policies are project-scoped
 
 ## References
 

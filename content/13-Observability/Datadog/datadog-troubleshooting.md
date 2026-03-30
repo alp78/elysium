@@ -128,7 +128,7 @@ Expected: `Logs: xx logs sent`. If 0:
 
 In Datadog, use **Logs > Live Tail** (not Log Explorer) to see logs in real time. New accounts may show an onboarding wizard — Live Tail bypasses it.
 
-For SQL Server log collection issues, see [[datadog-sql-server-logs]].
+For SQL Server log collection issues, see [datadog-sql-server-logs](/13-Observability/Datadog/datadog-sql-server-logs).
 
 ---
 
@@ -179,7 +179,7 @@ The Docker-internal PostgreSQL IP (e.g., `172.18.0.3`) also appears as a separat
 
 ### Cloud Run Metrics Not Showing in Datadog
 
-Cloud Run jobs are ephemeral — no Datadog Agent runs inside them. Metrics come from the **GCP Integration** (see [[datadog-gcp-integration]]). If no Cloud Run metrics appear:
+Cloud Run jobs are ephemeral — no Datadog Agent runs inside them. Metrics come from the **GCP Integration** (see [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration)). If no Cloud Run metrics appear:
 
 1. Verify GCP Integration is set up in Datadog (**Integrations > Google Cloud Platform**)
 2. Check the Datadog SA has `monitoring.viewer` role
@@ -266,10 +266,10 @@ One `terraform apply` + one image rebuild cleans up everything.
 
 ## Related Notes
 
-- [[datadog-architecture-overview]] — full observability architecture
-- [[datadog-agent-airflow-vm]] — Airflow VM agent setup
-- [[datadog-agent-sql-vm]] — SQL VM agent setup
-- [[datadog-apm-traces]] — APM trace instrumentation
-- [[datadog-sql-server-logs]] — SQL Server log collection
-- [[datadog-gcp-integration]] — GCP Cloud Run metrics integration
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent setup
+- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent setup
+- [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) — APM trace instrumentation
+- [datadog-sql-server-logs](/13-Observability/Datadog/datadog-sql-server-logs) — SQL Server log collection
+- [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration) — GCP Cloud Run metrics integration
 - common pipeline errors — project-specific error reference including Datadog issues

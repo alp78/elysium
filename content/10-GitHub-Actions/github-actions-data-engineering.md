@@ -46,8 +46,8 @@ keywords:
   - sql server parseonly
 description: "GitHub Actions for data engineering — CI for pipelines, CD for Cloud Run, Terraform automation, dbt CI, data quality gates, and Workload Identity Federation."
 related:
-  - "[[github-actions-fundamentals]]"
-  - "[[github-actions-patterns]]"
+  - "[github-actions-fundamentals](/10-GitHub-Actions/github-actions-fundamentals)"
+  - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
   - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -1424,7 +1424,7 @@ jobs:
 
 ### See Also
 
-- [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, GITHUB_TOKEN
-- [[github-actions-patterns]] — matrix builds, reusable workflows, deployment patterns
+- [github-actions-fundamentals](/10-GitHub-Actions/github-actions-fundamentals) — workflow anatomy, triggers, runners, GITHUB_TOKEN
+- [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) — matrix builds, reusable workflows, deployment patterns
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt project structure and development workflow
 - [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Which tests to run at each CI/CD stage

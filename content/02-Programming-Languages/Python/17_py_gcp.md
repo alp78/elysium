@@ -5,10 +5,10 @@ technology: [python]
 tags: [python]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 keywords: [google-cloud, BigQuery, Cloud Storage, Pub/Sub, GCS, google-auth, service account, gcloud]
-description: "Python GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud Python SDK. See [[17_cs_gcp]] for the C# equivalent."
+description: "Python GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud Python SDK. See [17_cs_gcp](/02-Programming-Languages/CSharp/17_cs_gcp) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[17_cs_gcp]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[17_cs_gcp](/02-Programming-Languages/CSharp/17_cs_gcp)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

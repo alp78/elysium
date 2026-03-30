@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, IServiceCollection, DI container]
-description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [[18_py_designpatterns]] for the Python equivalent."
+description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [18_py_designpatterns](/02-Programming-Languages/Python/18_py_designpatterns) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[18_py_designpatterns]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[18_py_designpatterns](/02-Programming-Languages/Python/18_py_designpatterns)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

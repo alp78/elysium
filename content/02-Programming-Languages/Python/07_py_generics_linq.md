@@ -5,10 +5,10 @@ technology: [python]
 tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 keywords: [generics, TypeVar, Generic, Protocol, map, filter, reduce, itertools, functools, comprehension]
-description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [[07_cs_generics_linq]] for the C# equivalent."
+description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07_cs_generics_linq](/02-Programming-Languages/CSharp/07_cs_generics_linq) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[07_cs_generics_linq]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[07_cs_generics_linq](/02-Programming-Languages/CSharp/07_cs_generics_linq)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -411,7 +411,7 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 <div>
 <!-- shape: (5, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr><tr><td>2021-01-07</td><td>403.9</td></tr><tr><td>2021-01-08</td><td>416.05</td></tr></tbody></table></div>
 
-#### Pandas — Subset multiple rows with iloc[[index]]
+#### Pandas — Subset multiple rows with iloc[index](/index)
 
 ```python
 # Pandas: iloc[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — multiple rows by position
@@ -487,7 +487,7 @@ ohlcv.iloc[[0, 50, 100, 500]]
 </table>
 </div>
 
-#### Polars — Subset multiple rows with [[index]] index list
+#### Polars — Subset multiple rows with [index](/index) index list
 
 ```python
 # Polars: gather([list]) — multiple rows by position

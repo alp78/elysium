@@ -1824,7 +1824,7 @@ FROM {{ ref('int_index_levels_with_fx') }}
 
 ## Related
 
-- [[moc-dbt]] — Full dbt section
-- [[dbt-core-concepts]] — What dbt is and how it works
-- [[dbt-cli-reference]] — Detailed CLI reference
+- [moc-dbt](/11-dbt/moc-dbt) — Full dbt section
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts) — What dbt is and how it works
+- [dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference) — Detailed CLI reference
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Foundational overview

@@ -14,7 +14,7 @@ status: complete
 
 # VM Lifecycle — Start, Stop, Resize, and Debug
 
-Compute Engine VMs host self-managed services — SQL Server, Airflow, monitoring agents, and any workload that doesn't fit the serverless model. Unlike [[cloud-run-jobs-vs-services|Cloud Run]] (which is ephemeral), VMs are stateful and persistent, making them your responsibility to maintain, secure, and right-size. Understanding the full lifecycle — including scheduled start/stop and cost-aware right-sizing — is essential for operating VMs economically.
+Compute Engine VMs host self-managed services — SQL Server, Airflow, monitoring agents, and any workload that doesn't fit the serverless model. Unlike [Cloud Run](/06-GCP/Serverless/cloud-run-jobs-vs-services) (which is ephemeral), VMs are stateful and persistent, making them your responsibility to maintain, secure, and right-size. Understanding the full lifecycle — including scheduled start/stop and cost-aware right-sizing — is essential for operating VMs economically.
 
 ### Listing and Describing Compute Engine VMs
 
@@ -98,11 +98,11 @@ gcloud compute instances add-resource-policies data-pipeline-sql --zone=europe-w
 
 ## Related
 
-- [[vm-ssh-and-file-transfer]] — Accessing VMs after they are running
-- [[disks-and-snapshots]] — Snapshotting before risky resize or upgrade operations
-- [[cloud-monitoring-metrics]] — Reading CPU and memory metrics for right-sizing decisions
-- [[gcloud-configurations]] — Targeting the right project/zone before lifecycle operations
-- [[service-accounts-and-iam]] — Service account attached to the VM controls what it can access
+- [vm-ssh-and-file-transfer](/06-GCP/Compute/vm-ssh-and-file-transfer) — Accessing VMs after they are running
+- [disks-and-snapshots](/06-GCP/Compute/disks-and-snapshots) — Snapshotting before risky resize or upgrade operations
+- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — Reading CPU and memory metrics for right-sizing decisions
+- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Targeting the right project/zone before lifecycle operations
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — Service account attached to the VM controls what it can access
 
 ## References
 

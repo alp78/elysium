@@ -6,14 +6,14 @@ status: stable
 updated: 2026-03-23
 description: "CLI commands, node selection, flags, output interpretation"
 related:
-  - "[[dbt-core-concepts]]"
-  - "[[dbt-project-structure]]"
-  - "[[dbt-testing-framework]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
+  - "[dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)"
+  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
 ---
 
 # dbt: CLI Reference
 
-Complete reference for the dbt command-line interface. All examples are oriented toward a financial data platform running index, OHLCV, ESG, and corporate action models. For a condensed quick-reference version, see [[dbt-cheat-sheet]].
+Complete reference for the dbt command-line interface. All examples are oriented toward a financial data platform running index, OHLCV, ESG, and corporate action models. For a condensed quick-reference version, see [dbt-cheat-sheet](/11-dbt/dbt-cheat-sheet).
 
 ---
 
@@ -448,6 +448,6 @@ Done. PASS=42 WARN=0 ERROR=0 SKIP=0 TOTAL=42
 ---
 
 ## Related
-- [[dbt-core-concepts]]
-- [[dbt-project-structure]]
-- [[dbt-testing-framework]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)

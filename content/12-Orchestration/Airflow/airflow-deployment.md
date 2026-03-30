@@ -66,7 +66,7 @@ status: complete
 A practical how-to guide covering every major Airflow deployment option — from a local Docker Compose environment for development to managed cloud services for production. Includes configuration reference, DAG deployment strategies, secrets management, monitoring setup, and cost comparisons.
 
 > [!tip] Prerequisites
-> Familiarity with [[airflow-core-concepts]] (Executors, Scheduler, Workers, Metadata DB) is assumed. This note focuses on infrastructure — not DAG authoring.
+> Familiarity with [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) (Executors, Scheduler, Workers, Metadata DB) is assumed. This note focuses on infrastructure — not DAG authoring.
 
 ---
 
@@ -928,9 +928,9 @@ Approximate monthly costs for running Airflow at small/medium scale (us-central1
 
 ## Related Notes
 
-- [[airflow-core-concepts]] — Architecture, Executors, DAG structure
-- [[airflow-dag-patterns]] — Dynamic DAGs, idempotency, backfill patterns
-- [[airflow-troubleshooting]] — Debugging deployment issues, health checks, log analysis
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, DAG structure
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAGs, idempotency, backfill patterns
+- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging deployment issues, health checks, log analysis
 
 ## References
 

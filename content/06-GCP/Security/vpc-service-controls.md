@@ -153,7 +153,7 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 
 ### Debugging VPC-SC Denial Errors
 
-VPC-SC denials appear in [[cloud-logging|Cloud Audit Logs]] with a specific violation type:
+VPC-SC denials appear in [Cloud Audit Logs](/06-GCP/Logging/cloud-logging) with a specific violation type:
 
 ```bash
 gcloud logging read 'protoPayload.status.code=7 AND
@@ -191,11 +191,11 @@ gcloud logging read 'protoPayload.status.code=7 AND
 
 ## Related
 
-- [[service-accounts-and-iam]] — IAM is the "who"; VPC-SC is the "where" — both layers work together
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM is the "who"; VPC-SC is the "where" — both layers work together
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Understanding which identity is making requests is essential for debugging VPC-SC
-- [[cloud-logging]] — VPC-SC violations appear in Cloud Audit Logs; query them with `gcloud logging read`
-- [[dataset-and-table-management]] — BigQuery is one of the primary services protected by VPC-SC
-- [[gcs-buckets-and-lifecycle]] — GCS is the other primary service protected by VPC-SC
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — VPC-SC violations appear in Cloud Audit Logs; query them with `gcloud logging read`
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery is one of the primary services protected by VPC-SC
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the other primary service protected by VPC-SC
 
 ## References
 

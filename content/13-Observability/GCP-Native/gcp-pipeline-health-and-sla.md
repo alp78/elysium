@@ -59,8 +59,8 @@ related:
   - "[alerting policies](/06-GCP/Logging/cloud-monitoring-metrics)"
   - "[Cloud Run Jobs](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
   - "[BigQuery cost monitoring](/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets)"
-  - "[[moc-observability]]"
-  - "[[observability-strategy-matrix]]"
+  - "[moc-observability](/13-Observability/moc-observability)"
+  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

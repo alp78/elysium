@@ -31,9 +31,9 @@ keywords:
   - CRLF to LF
 description: "Exhaustive reference for sed (stream editor) covering substitution, deletion, insertion, addressing, regex capture groups, and in-place file editing — with PowerShell equivalents for every command. Includes data engineering scenarios such as CSV header fixes, BOM removal, CRLF conversion, SQL migration edits, PII sanitisation, and ANSI colour stripping."
 related:
-  - "[[reading-file-contents]]"
-  - "[[awk-data-processing]]"
-  - "[[grep-and-pattern-matching]]"
+  - "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)"
+  - "[awk-data-processing](/01-Shell/Text-Processing/awk-data-processing)"
+  - "[grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1207,6 +1207,6 @@ SPECIAL REPLACEMENT TOKENS
 
 ## Related Notes
 
-- [[reading-file-contents]] — Reading files with cat, head, tail, less
-- [[awk-data-processing]] — awk for column-based processing and multi-line operations
-- [[grep-and-pattern-matching]] — grep for pattern searching and filtering
+- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — Reading files with cat, head, tail, less
+- [awk-data-processing](/01-Shell/Text-Processing/awk-data-processing) — awk for column-based processing and multi-line operations
+- [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching) — grep for pattern searching and filtering

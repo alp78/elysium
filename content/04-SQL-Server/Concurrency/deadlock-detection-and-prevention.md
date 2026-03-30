@@ -7,10 +7,10 @@ aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadl
 keywords: [deadlock, detection, prevention, monitoring, error 1205, circular wait, RCSI, read committed snapshot isolation, extended events, blocking, lock, exclusive lock, shared lock, deadlock graph, retry logic, back-off]
 description: "SQL Server deadlock detection, prevention, and monitoring — what causes deadlocks, how to detect them with DMVs and Extended Events, RCSI as the primary prevention, and application-level retry logic."
 related:
-  - "[[race-conditions]]"
-  - "[[blocking-and-locking]]"
-  - "[[server-configuration]]"
-  - "[[wait-stats-analysis]]"
+  - "[race-conditions](/04-SQL-Server/Concurrency/race-conditions)"
+  - "[blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking)"
+  - "[server-configuration](/04-SQL-Server/Administration/server-configuration)"
+  - "[wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -159,7 +159,7 @@ ORDER BY deadlock_time DESC;
 
 > [!tip] The Single Most Effective Prevention
 >
-> Enable [[server-configuration|Read Committed Snapshot Isolation (RCSI)]]. With RCSI, the dashboard (reader) never competes with the pipeline (writer) for locks:
+> Enable [Read Committed Snapshot Isolation (RCSI)](/04-SQL-Server/Administration/server-configuration). With RCSI, the dashboard (reader) never competes with the pipeline (writer) for locks:
 > ```sql
 > ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 > ```
@@ -263,6 +263,6 @@ DROP TABLE IF EXISTS dbo.deadlock_test_b
 ### Related
 
 - [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Where deadlock retry fits in the broader error classification and retry strategy framework
-- [[race-conditions]] — When concurrent access produces wrong data (not stuck processes)
-- [[server-configuration]] — RCSI and other server settings that prevent deadlocks
-- [[wait-stats-analysis]] — LCK_M wait types indicate lock contention
+- [race-conditions](/04-SQL-Server/Concurrency/race-conditions) — When concurrent access produces wrong data (not stuck processes)
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — RCSI and other server settings that prevent deadlocks
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — LCK_M wait types indicate lock contention

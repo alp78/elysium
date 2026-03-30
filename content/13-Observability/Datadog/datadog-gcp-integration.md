@@ -20,7 +20,7 @@ The GCP Integration enables Datadog to pull metrics from Cloud Run, Compute Engi
 
 ### Why the Datadog GCP Integration Is Needed
 
-The [[datadog-agent-airflow-vm|Airflow VM agent]] and [[datadog-agent-sql-vm|SQL VM agent]] cover the GCE VMs. But the `data-pipeline-pipeline` Cloud Run job has no persistent host — each execution runs in a fresh container and exits. The only way to get Cloud Run metrics is via the GCP Integration, which pulls them directly from Google Cloud Monitoring.
+The [Airflow VM agent](/13-Observability/Datadog/datadog-agent-airflow-vm) and [SQL VM agent](/13-Observability/Datadog/datadog-agent-sql-vm) cover the GCE VMs. But the `data-pipeline-pipeline` Cloud Run job has no persistent host — each execution runs in a fresh container and exits. The only way to get Cloud Run metrics is via the GCP Integration, which pulls them directly from Google Cloud Monitoring.
 
 ---
 
@@ -106,8 +106,8 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 
 ## Related Notes
 
-- [[datadog-architecture-overview]] — full observability architecture
-- [[datadog-agent-airflow-vm]] — agent on the Airflow VM
-- [[datadog-agent-sql-vm]] — agent on the SQL VM
-- [[datadog-dashboards]] — Pipeline Watch dashboard using Cloud Run metrics
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — agent on the Airflow VM
+- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — agent on the SQL VM
+- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch dashboard using Cloud Run metrics
 - the GCP resources — GCP resource inventory

@@ -43,8 +43,8 @@ keywords:
   - skip ci
 description: "Advanced GitHub Actions patterns — matrix builds, reusable workflows, composite actions, deployment strategies, Terraform CI/CD, Docker builds, and monorepo patterns."
 related:
-  - "[[github-actions-fundamentals]]"
-  - "[[github-actions-data-engineering]]"
+  - "[github-actions-fundamentals](/10-GitHub-Actions/github-actions-fundamentals)"
+  - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
   - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -54,7 +54,7 @@ status: complete
 # GitHub Actions Patterns
 
 > [!abstract] Summary
-> Reusable patterns for production-grade GitHub Actions workflows. Covers matrix builds, reusable workflows, deployment strategies, Terraform automation, Docker builds, monorepo CI, and cost optimization. Many shell steps rely on [defensive scripting](/01-Shell/Scripting/defensive-scripting) practices (`set -euo pipefail`, error trapping) to fail fast and surface problems clearly. To practice applying these patterns in realistic scenarios, work through [[github-actions-problems]].
+> Reusable patterns for production-grade GitHub Actions workflows. Covers matrix builds, reusable workflows, deployment strategies, Terraform automation, Docker builds, monorepo CI, and cost optimization. Many shell steps rely on [defensive scripting](/01-Shell/Scripting/defensive-scripting) practices (`set -euo pipefail`, error trapping) to fail fast and surface problems clearly. To practice applying these patterns in realistic scenarios, work through [github-actions-problems](/10-GitHub-Actions/github-actions-problems).
 
 ---
 
@@ -1307,7 +1307,7 @@ jobs:
 
 ### See Also
 
-- [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, core concepts
-- [[github-actions-data-engineering]] — data pipeline CI/CD, dbt, Workload Identity
+- [github-actions-fundamentals](/10-GitHub-Actions/github-actions-fundamentals) — workflow anatomy, triggers, runners, core concepts
+- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — data pipeline CI/CD, dbt, Workload Identity
 - [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform workflow details
 - [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How GitHub Actions environments fit into the full promotion workflow

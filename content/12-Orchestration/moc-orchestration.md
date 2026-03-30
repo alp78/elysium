@@ -45,6 +45,6 @@ A domain-specific ingestion framework for multi-vendor ESG data that combines sc
 - [Data Architecture](/14-Data-Architecture/moc-data-architecture) — pipeline patterns that Airflow orchestrates
 - [docker-compose](/09-Docker/docker-compose) — running Airflow locally via Docker Compose
 - [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — serverless targets Airflow triggers
-- [[datadog-airflow-observability]] — monitoring Airflow with Datadog
+- [datadog-airflow-observability](/13-Observability/Datadog/datadog-airflow-observability) — monitoring Airflow with Datadog
 - [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — deploying DAGs automatically via CI/CD
 - [dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration) — running dbt in Airflow DAGs (BashOperator, Cosmos, Cloud Run)

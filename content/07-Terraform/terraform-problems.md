@@ -2139,12 +2139,12 @@ terraform version  # Confirm: Terraform v1.9.8
 
 ## Related
 
-- [[terraform-plan-apply-destroy]] — Core Terraform workflow
-- [[terraform-state-management]] — State backend configuration
-- [[tf-foundation-and-networking]] — Network resource blocks
-- [[tf-compute-and-storage]] — Compute and storage blocks
-- [[tf-iam-secrets-serverless]] — IAM, secrets, serverless blocks
-- [[tf-data-services]] — BigQuery, Firestore, Dataflow blocks
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Core Terraform workflow
+- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — State backend configuration
+- [tf-foundation-and-networking](/07-Terraform/Block-Library/tf-foundation-and-networking) — Network resource blocks
+- [tf-compute-and-storage](/07-Terraform/Block-Library/tf-compute-and-storage) — Compute and storage blocks
+- [tf-iam-secrets-serverless](/07-Terraform/Block-Library/tf-iam-secrets-serverless) — IAM, secrets, serverless blocks
+- [tf-data-services](/07-Terraform/Block-Library/tf-data-services) — BigQuery, Firestore, Dataflow blocks
 - [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — CI/CD for Terraform
 
 ---

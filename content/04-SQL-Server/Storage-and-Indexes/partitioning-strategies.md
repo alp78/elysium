@@ -177,7 +177,7 @@ ORDER BY partition_number;
 >
 > Partition Elimination Requires a SARGable Predicate on the Partition Key.
 > `WHERE trade_date >= '2025-01-01'` — eliminates older partitions. Good.
-> `WHERE YEAR(trade_date) = 2025` — wraps the column in a function. SQL Server may NOT eliminate partitions. Use [[sargable-queries]] patterns: always filter directly on the column.
+> `WHERE YEAR(trade_date) = 2025` — wraps the column in a function. SQL Server may NOT eliminate partitions. Use [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) patterns: always filter directly on the column.
 
 ---
 
@@ -305,7 +305,7 @@ MERGE RANGE ('2021-01-01');
 
 ### Per-Partition Compression
 
-Different partitions can have different compression levels — useful for mixed hot/cold data. See [[table-compression]] for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
+Different partitions can have different compression levels — useful for mixed hot/cold data. See [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
 
 ```sql
 -- Apply PAGE compression to old partitions, NONE to the current-year partition
@@ -367,12 +367,21 @@ JOIN sys.partition_functions pf ON ps.function_id = pf.function_id;
 
 ---
 
+> [!warning] Partitioning Small Tables Adds Overhead
+>
+> Partitioning a table with fewer than 1 million rows often HURTS
+> performance. The partition elimination overhead (checking which
+> partitions to scan) exceeds the cost of scanning the entire table.
+> Partition when: the table exceeds 10M rows, queries consistently
+> filter on the partition key, and maintenance operations (archiving,
+> purging) need to operate on date ranges.
+
 ### Partitioning Decision Tree
 
 ```
 Is the table > 10 million rows?
 ├── NO  → Don't partition. Add covering indexes instead.
-│         See [[index-types-and-strategy]].
+│         See [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy).
 └── YES → Do queries consistently filter by a date column?
           ├── NO  → Partitioning won't help (no partition elimination).
           │         Consider columnstore index instead.
@@ -402,10 +411,10 @@ Is the table > 10 million rows?
 
 ### Related
 
-- [[storage-internals]] — how pages and filegroups interact with partitions at the storage level
-- [[index-types-and-strategy]] — columnstore indexes as an alternative to partitioning for analytics workloads
-- [[table-compression]] — applying per-partition compression to cold historical data
-- [[index-maintenance]] — maintaining fragmentation per partition with `REBUILD PARTITION = N`
-- [[performance-audit-playbook]] — identifying tables over 10M rows that are candidates for partitioning
-- [[blocking-and-locking]] — SWITCH operations take a schema modification lock briefly; plan maintenance windows accordingly
-- [[bronze-layer-loading]] — SWITCH-based staging loads as an alternative to TRUNCATE + INSERT for large bronze tables
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — how pages and filegroups interact with partitions at the storage level
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — columnstore indexes as an alternative to partitioning for analytics workloads
+- [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) — applying per-partition compression to cold historical data
+- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — maintaining fragmentation per partition with `REBUILD PARTITION = N`
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — identifying tables over 10M rows that are candidates for partitioning
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — SWITCH operations take a schema modification lock briefly; plan maintenance windows accordingly
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — SWITCH-based staging loads as an alternative to TRUNCATE + INSERT for large bronze tables

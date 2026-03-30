@@ -18,7 +18,7 @@ GCP projects are the fundamental organizational unit for resources, billing, and
 
 ### Why GCP Projects and APIs Matter
 
-A common failure mode when setting up a new GCP project is running `gcloud run jobs execute` or `bq query` only to receive an error that the API is disabled. Knowing which APIs to enable upfront — and how to verify what is currently enabled — eliminates this class of errors. Projects also serve as the billing boundary and the IAM scope for [[service-accounts-and-iam|service account]] permissions.
+A common failure mode when setting up a new GCP project is running `gcloud run jobs execute` or `bq query` only to receive an error that the API is disabled. Knowing which APIs to enable upfront — and how to verify what is currently enabled — eliminates this class of errors. Projects also serve as the billing boundary and the IAM scope for [service account](/06-GCP/Security/service-accounts-and-iam) permissions.
 
 ### Listing and Describing GCP Projects
 
@@ -91,11 +91,11 @@ A project's `lifecycleState` field (visible in `gcloud projects describe`) indic
 ## Related
 
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Authentication must be established before project and API commands work
-- [[gcloud-configurations]] — Use named configurations to target the right project automatically
-- [[gcloud-output-formatting]] — Use `--format` and `--filter` to extract project IDs into scripts
-- [[service-accounts-and-iam]] — Service accounts live within projects; IAM bindings are project-scoped
-- [[dataset-and-table-management]] — Requires `bigquery.googleapis.com` to be enabled
-- [[cloud-run-jobs-vs-services]] — Requires `run.googleapis.com` to be enabled
+- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Use named configurations to target the right project automatically
+- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — Use `--format` and `--filter` to extract project IDs into scripts
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — Service accounts live within projects; IAM bindings are project-scoped
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Requires `bigquery.googleapis.com` to be enabled
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Requires `run.googleapis.com` to be enabled
 
 ## References
 

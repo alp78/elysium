@@ -609,7 +609,7 @@ WHERE drs.redo_queue_size > 0;
 #### AG sync lag fixes — network, redo bottleneck, log throughput
 - Check secondary disk I/O: `iostat -xz 1` — look for high `%util` or `await`
 - Ensure secondary has enough CPU for redo thread (it's single-threaded per database in most cases)
-- If secondary is also serving read queries, those queries may hold schema locks blocking redo. Use [[blocking-and-locking|RCSI]] on the secondary to avoid this
+- If secondary is also serving read queries, those queries may hold schema locks blocking redo. Use [RCSI](/04-SQL-Server/Concurrency/blocking-and-locking) on the secondary to avoid this
 - Increase secondary VM size if I/O or CPU is the bottleneck
 
 ### Issue 3: Automatic Failover Didn't Happen
@@ -680,8 +680,8 @@ ALTER ENDPOINT [Hadr_endpoint]
 
 ### Related
 
-- [[backup-types-and-strategy]] — FULL recovery model required for AGs; backup strategy with AG
-- [[restore-and-recovery]] — recovery point objectives and how AGs interact with restore scenarios
-- [[server-configuration]] — instance settings (MAXDOP, max server memory) that apply to all replicas
-- [[blocking-and-locking]] — RCSI on secondary replicas to prevent redo thread blocking
-- [[storage-internals]] — WAL and log record flow that underlies AG replication
+- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — FULL recovery model required for AGs; backup strategy with AG
+- [restore-and-recovery](/04-SQL-Server/Administration/restore-and-recovery) — recovery point objectives and how AGs interact with restore scenarios
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — instance settings (MAXDOP, max server memory) that apply to all replicas
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — RCSI on secondary replicas to prevent redo thread blocking
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — WAL and log record flow that underlies AG replication

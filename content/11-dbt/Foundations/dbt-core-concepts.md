@@ -6,8 +6,8 @@ status: stable
 updated: 2026-03-23
 description: "What dbt is, how it compiles, the DAG, materializations, profiles, adapters, and packages."
 related:
-  - "[[dbt-project-structure]]"
-  - "[[dbt-cli-reference]]"
+  - "[dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)"
+  - "[dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)"
   - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
   - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
 ---
@@ -134,7 +134,7 @@ WHERE price_date > (SELECT MAX(price_date) FROM {{ this }})
 {% endif %}
 ```
 
-See [[dbt-materializations]] for the deep dive with decision matrices.
+See [dbt-materializations](/11-dbt/Modeling/dbt-materializations) for the deep dive with decision matrices.
 
 > [!warning] env_var() in profiles.yml Fails Silently with Empty String
 > If `SQL_PASSWORD` is not set, `{{ env_var('SQL_PASSWORD') }}` resolves to an empty string -- dbt will not raise an error at parse time. The connection will then fail at runtime with a misleading authentication error. Always use `{{ env_var('SQL_PASSWORD', 'MISSING') }}` with a sentinel default, or validate environment variables in your CI startup script.
@@ -185,7 +185,7 @@ Switch targets: `dbt run --target prod` or `dbt run --target bigquery`.
 | dbt-bigquery | `pip install dbt-bigquery` | Google BigQuery |
 | dbt-postgres | `pip install dbt-postgres` | PostgreSQL |
 
-Each adapter handles SQL dialect differences. See [[dbt-sqlserver-adapter]] and [[dbt-bigquery-adapter]].
+Each adapter handles SQL dialect differences. See [dbt-sqlserver-adapter](/11-dbt/Adapters/dbt-sqlserver-adapter) and [dbt-bigquery-adapter](/11-dbt/Adapters/dbt-bigquery-adapter).
 
 ### dbt Packages
 
@@ -201,7 +201,7 @@ packages:
     version: ">=0.15.0"
 ```
 
-See [[dbt-packages]] for the full package guide.
+See [dbt-packages](/11-dbt/Advanced/dbt-packages) for the full package guide.
 
 ### The dbt_project.yml
 
@@ -233,7 +233,7 @@ models:
 ```
 
 > [!danger] dbt run --full-refresh on Incremental Models Silently Drops and Rebuilds the Table
-> Running `dbt run --full-refresh` on an incremental model drops the existing table and rebuilds from scratch. If your incremental model filters on `is_incremental()`, the full-refresh path must produce the correct full dataset -- otherwise you lose historical data. Always test `--full-refresh` in a dev target before running it in production. For snapshot tables, `--full-refresh` destroys all SCD2 history permanently (see [[dbt-snapshots-and-scd]]).
+> Running `dbt run --full-refresh` on an incremental model drops the existing table and rebuilds from scratch. If your incremental model filters on `is_incremental()`, the full-refresh path must produce the correct full dataset -- otherwise you lose historical data. Always test `--full-refresh` in a dev target before running it in production. For snapshot tables, `--full-refresh` destroys all SCD2 history permanently (see [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd)).
 
 > [!warning] dbt build vs dbt run -- Use build in CI/CD
 > `dbt run` executes models but does NOT run tests. `dbt build` runs models AND their downstream tests in dependency order. In CI/CD, always use `dbt build` -- otherwise bad data can propagate to the gold layer before tests catch it.
@@ -250,8 +250,8 @@ models:
 
 ## Related
 
-- [[dbt-project-structure]] — Directory layout and naming conventions
-- [[dbt-cli-reference]] — CLI commands and flags
+- [dbt-project-structure](/11-dbt/Foundations/dbt-project-structure) — Directory layout and naming conventions
+- [dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference) — CLI commands and flags
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Code-heavy walkthrough
 - [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — How Airflow orchestrates dbt runs
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — How bronze/silver/gold maps to staging/intermediate/marts

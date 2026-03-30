@@ -131,10 +131,10 @@ Configures the Google provider with default values applied to all resources.
 
 ## Related
 
-- [[hcl-syntax-basics]] — The language these blocks are written in
-- [[terraform-state-management]] — Deep dive on the state file the backend stores
-- [[terraform-variables-and-outputs]] — The variables referenced by `var.project_id` and `var.region`
-- [[terraform-plan-apply-destroy]] — The workflow that uses the provider and backend
+- [hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics) — The language these blocks are written in
+- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — Deep dive on the state file the backend stores
+- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — The variables referenced by `var.project_id` and `var.region`
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — The workflow that uses the provider and backend
 
 ## References
 

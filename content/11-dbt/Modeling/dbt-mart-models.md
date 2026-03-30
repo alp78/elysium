@@ -6,9 +6,9 @@ status: stable
 updated: 2026-03-23
 description: "Consumption-ready facts and dimensions, gold layer"
 related:
-  - "[[dbt-intermediate-models]]"
-  - "[[dbt-materializations]]"
-  - "[[dbt-testing-framework]]"
+  - "[dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models)"
+  - "[dbt-materializations](/11-dbt/Modeling/dbt-materializations)"
+  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
   - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
 ---
 
@@ -523,7 +523,7 @@ exposures:
 ---
 
 ## Related
-- [[dbt-intermediate-models]]
-- [[dbt-materializations]]
-- [[dbt-testing-framework]]
+- [dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models)
+- [dbt-materializations](/11-dbt/Modeling/dbt-materializations)
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)
 - [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)

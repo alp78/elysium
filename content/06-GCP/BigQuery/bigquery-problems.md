@@ -2529,12 +2529,12 @@ JOIN analytics.index_weights USING (instrument_isin);
 
 ## Related
 
-- [[querying-and-cost-optimization]] — BigQuery query patterns and cost control
-- [[dataset-and-table-management]] — Dataset and table administration
-- [[data-loading-and-export]] — Load jobs, streaming, export
-- [[gcp-billing-and-pricing]] — BigQuery pricing model
-- [[gcp-cost-monitoring-and-budgets]] — Cost monitoring and alerts
-- [[gcp-total-cost-of-ownership]] — TCO calculations
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery query patterns and cost control
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Dataset and table administration
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Load jobs, streaming, export
+- [gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing) — BigQuery pricing model
+- [gcp-cost-monitoring-and-budgets](/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets) — Cost monitoring and alerts
+- [gcp-total-cost-of-ownership](/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — TCO calculations
 - [dbt-bigquery-adapter](/11-dbt/Adapters/dbt-bigquery-adapter) — dbt-specific BigQuery configuration
 
 ---

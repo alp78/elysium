@@ -9,7 +9,7 @@ description: "Point-in-Time data integrity patterns for stock index calculation 
 related:
   - "[dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
   - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
-  - "[[silver-transforms]]"
+  - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
   - "[[index-maintenance-and-corporate-actions]]"
   - "[compliance-and-auditability](/13-Observability/Monitoring/compliance-and-auditability)"
 created: 2026-03-22

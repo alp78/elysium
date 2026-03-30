@@ -16,21 +16,21 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [[moc-sql-server#Patterns]]
+> patterns and alternative approaches, see the [moc-sql-server > Patterns](/04-SQL-Server/moc-sql-server#patterns)
 > section. For the architectural theory behind bronze/silver/gold layering,
 > see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Silver Transforms
 
-The silver layer cleans, deduplicates, and historicizes the raw data from [[bronze-layer-loading|bronze]]. Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
+The silver layer cleans, deduplicates, and historicizes the raw data from [bronze](/04-SQL-Server/Medallion-Project/bronze-layer-loading). Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
 
-**Pipeline flow:** [[bronze-layer-loading|Bronze]] → Python transforms → Silver tables → [[gold-transforms|Gold scoring]]
+**Pipeline flow:** [Bronze](/04-SQL-Server/Medallion-Project/bronze-layer-loading) → Python transforms → Silver tables → [Gold scoring](/04-SQL-Server/Medallion-Project/gold-transforms)
 
 Key improvements silver makes over bronze:
 
 - **[SCD Type 2](/14-Data-Architecture/Architectures/data-warehouse-architecture)** on dimensions — tracks attribute changes over time
 - **One row per symbol per date** — deduplication via UNIQUE indexes
-- **Gap-filled OHLCV** — forward-fills missing trading days using the [[bronze-layer-loading#bronze.trading_calendar|trading calendar]]
+- **Gap-filled OHLCV** — forward-fills missing trading days using the [trading calendar](/04-SQL-Server/Medallion-Project/bronze-layer-loading#bronzetradingcalendar)
 - **Validation gates** — a [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) between bronze and silver ensures data integrity before promotion
 - **Full history retained** — silver accumulates across runs; bronze is wiped each run
 
@@ -273,7 +273,7 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 File: `ingestion/transforms/transform_ohlcv.py`
 
-The OHLCV transform uses the [[bronze-layer-loading#bronze.trading_calendar|trading calendar]] to detect gaps — dates where the exchange was open but no price data arrived. These gaps are forward-filled from the previous day's close.
+The OHLCV transform uses the [trading calendar](/04-SQL-Server/Medallion-Project/bronze-layer-loading#bronzetradingcalendar) to detect gaps — dates where the exchange was open but no price data arrived. These gaps are forward-filled from the previous day's close.
 
 #### LEFT JOIN trading_calendar — identify OHLCV data gaps
 
@@ -398,8 +398,8 @@ DELETE FROM silver.index_usa_ohlcv  WHERE date > CAST(GETDATE() AS DATE) AND is_
 
 ### Related Notes
 
-- [[bronze-layer-loading]] — upstream: raw data loading patterns and DDL
-- [[gold-transforms]] — downstream: aggregations, scoring, and dashboard-ready views
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — upstream: raw data loading patterns and DDL
+- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — downstream: aggregations, scoring, and dashboard-ready views
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
 - [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — general idempotent data pipeline patterns including SCD
 - the data pipeline steps — pipeline steps that drive these transforms

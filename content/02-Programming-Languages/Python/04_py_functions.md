@@ -5,10 +5,10 @@ technology: [python]
 tags: [python]
 aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
 keywords: [def, lambda, closure, decorator, args, kwargs, type hints, functools, scope, LEGB]
-description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [[04_cs_functions]] for the C# equivalent."
+description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [04_cs_functions](/02-Programming-Languages/CSharp/04_cs_functions) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[04_cs_functions]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[04_cs_functions](/02-Programming-Languages/CSharp/04_cs_functions)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

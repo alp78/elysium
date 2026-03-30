@@ -454,7 +454,7 @@ ALTER SERVER AUDIT project_audit WITH (STATE = ON);
 
 ### Related
 
-- [[tde-encryption]] — encryption at rest that complements audit logging for compliance
-- [[sql-server-authentication]] — login hardening, TLS, and firewall rules
-- [[server-configuration]] — instance settings including security configurations
-- [[performance-audit-playbook]] — Phase 11 security quick check using sysadmin membership and guest access queries
+- [tde-encryption](/04-SQL-Server/Security/tde-encryption) — encryption at rest that complements audit logging for compliance
+- [sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication) — login hardening, TLS, and firewall rules
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — instance settings including security configurations
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — Phase 11 security quick check using sysadmin membership and guest access queries

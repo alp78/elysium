@@ -6,9 +6,9 @@ status: stable
 updated: 2026-03-23
 description: "Business logic transforms, silver layer"
 related:
-  - "[[dbt-staging-models]]"
-  - "[[dbt-mart-models]]"
-  - "[[dbt-materializations]]"
+  - "[dbt-staging-models](/11-dbt/Modeling/dbt-staging-models)"
+  - "[dbt-mart-models](/11-dbt/Modeling/dbt-mart-models)"
+  - "[dbt-materializations](/11-dbt/Modeling/dbt-materializations)"
 ---
 
 # dbt: Intermediate Models
@@ -509,6 +509,6 @@ from {{ ref('stg_market_data__daily_prices') }}
 ---
 
 ## Related
-- [[dbt-staging-models]]
-- [[dbt-mart-models]]
-- [[dbt-materializations]]
+- [dbt-staging-models](/11-dbt/Modeling/dbt-staging-models)
+- [dbt-mart-models](/11-dbt/Modeling/dbt-mart-models)
+- [dbt-materializations](/11-dbt/Modeling/dbt-materializations)

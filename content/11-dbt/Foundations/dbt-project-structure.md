@@ -6,8 +6,8 @@ status: stable
 updated: 2026-03-23
 description: "Project layout, naming conventions, config inheritance, multi-adapter"
 related:
-  - "[[dbt-core-concepts]]"
-  - "[[dbt-cli-reference]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
+  - "[dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)"
   - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
   - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 ---
@@ -386,7 +386,7 @@ financial_platform:
 ---
 
 ## Related
-- [[dbt-core-concepts]]
-- [[dbt-cli-reference]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)
 - [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)

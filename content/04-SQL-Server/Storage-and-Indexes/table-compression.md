@@ -14,13 +14,13 @@ status: complete
 
 # Table Compression
 
-SQL Server page and row compression reduce the on-disk and in-memory footprint of tables and indexes. For read-heavy tables like the example gold layer, page compression typically saves 60-80% of space on financial time-series data — meaning more data fits in the [[memory-and-buffer-pool|buffer pool]] without adding RAM.
+SQL Server page and row compression reduce the on-disk and in-memory footprint of tables and indexes. For read-heavy tables like the example gold layer, page compression typically saves 60-80% of space on financial time-series data — meaning more data fits in the [buffer pool](/04-SQL-Server/Performance/memory-and-buffer-pool) without adding RAM.
 
 ---
 
 ### Why Compression Matters for the Buffer Pool
 
-SQL Server's [[storage-internals|buffer pool]] is an in-memory cache of 8 KB pages. When a query reads data, SQL Server loads pages from disk into the buffer pool. If the table is large, the working set of pages can exceed available RAM, causing pages to be evicted and re-read — generating [[wait-stats-analysis|PAGEIOLATCH_SH]] waits.
+SQL Server's [buffer pool](/04-SQL-Server/Storage-and-Indexes/storage-internals) is an in-memory cache of 8 KB pages. When a query reads data, SQL Server loads pages from disk into the buffer pool. If the table is large, the working set of pages can exceed available RAM, causing pages to be evicted and re-read — generating [PAGEIOLATCH_SH](/04-SQL-Server/Performance/wait-stats-analysis) waits.
 
 Page compression shrinks the on-disk page footprint, which has two effects:
 
@@ -138,7 +138,7 @@ REBUILD WITH (
 > [!warning] Enterprise Edition Required
 >
 > ONLINE = ON Requires Enterprise Edition.
-> Online index rebuilds are not available in Standard Edition. On Standard Edition, an index rebuild takes a schema modification (Sch-M) lock on the table — blocking all reads and writes for the duration. Schedule Standard Edition rebuilds during maintenance windows. See [[blocking-and-locking]] for lock type details.
+> Online index rebuilds are not available in Standard Edition. On Standard Edition, an index rebuild takes a schema modification (Sch-M) lock on the table — blocking all reads and writes for the duration. Schedule Standard Edition rebuilds during maintenance windows. See [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) for lock type details.
 
 #### CREATE TABLE WITH DATA_COMPRESSION = PAGE — apply at creation time
 
@@ -247,7 +247,7 @@ ORDER BY buffer_mb DESC;
 
 ### Compression and Columnstore Indexes
 
-[[index-types-and-strategy|Columnstore indexes]] use their own compression (delta stores + column segments with ~10x compression ratio). If a table has a clustered columnstore index (CCI), the `DATA_COMPRESSION` setting applies to the delta store (recently loaded rows not yet compressed into segments), not the main columnstore storage.
+[Columnstore indexes](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) use their own compression (delta stores + column segments with ~10x compression ratio). If a table has a clustered columnstore index (CCI), the `DATA_COMPRESSION` setting applies to the delta store (recently loaded rows not yet compressed into segments), not the main columnstore storage.
 
 For tables with a CCI, do not apply PAGE or ROW compression — the columnstore compression is already far more aggressive than page compression.
 
@@ -269,9 +269,9 @@ The read improvements dominate for dashboard and reporting workloads. The write 
 
 ### Related
 
-- [[storage-internals]] — how SQL Server pages, buffer pool, and the 8 KB page structure work
-- [[index-types-and-strategy]] — columnstore indexes and when they provide better compression than page compression
-- [[index-maintenance]] — compression state is reset to NONE if you rebuild without specifying DATA_COMPRESSION
-- [[performance-audit-playbook]] — Phase 10 (database sizes) includes compression as a space-reduction technique
-- [[blocking-and-locking]] — ONLINE vs. offline rebuild and the lock types each acquires
-- [[partitioning-strategies]] — compression can be applied per-partition, enabling different compression levels for recent vs. historical data
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — how SQL Server pages, buffer pool, and the 8 KB page structure work
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — columnstore indexes and when they provide better compression than page compression
+- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — compression state is reset to NONE if you rebuild without specifying DATA_COMPRESSION
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — Phase 10 (database sizes) includes compression as a space-reduction technique
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — ONLINE vs. offline rebuild and the lock types each acquires
+- [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) — compression can be applied per-partition, enabling different compression levels for recent vs. historical data

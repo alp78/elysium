@@ -63,7 +63,7 @@ gcloud pubsub subscriptions describe pipeline-sub \
 # This is how you detect pipeline lag
 ```
 
-A growing backlog is the primary indicator of pipeline lag. If messages arrive faster than they are consumed, the backlog grows, increasing end-to-end latency. The backlog metric is also available in [[cloud-monitoring-metrics|Cloud Monitoring]] at `pubsub.googleapis.com/subscription/num_undelivered_messages`.
+A growing backlog is the primary indicator of pipeline lag. If messages arrive faster than they are consumed, the backlog grows, increasing end-to-end latency. The backlog metric is also available in [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) at `pubsub.googleapis.com/subscription/num_undelivered_messages`.
 
 ### Pub/Sub Ordering Keys and Exactly-Once Delivery
 
@@ -104,10 +104,10 @@ Keep messages small (under 10 KB). For large payloads, store the data in GCS and
 
 ## Related
 
-- [[pubsub-topics-and-subscriptions]] — Creating topics, subscriptions, and dead letter queues
-- [[cloud-run-jobs-vs-services]] — Cloud Run Services often serve as push subscription endpoints
-- [[cloud-monitoring-metrics]] — Monitor `pubsub.googleapis.com/subscription/num_undelivered_messages`
-- [[querying-and-cost-optimization]] — Using MERGE (upsert) to maintain idempotency when writing to BigQuery
+- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Creating topics, subscriptions, and dead letter queues
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services often serve as push subscription endpoints
+- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — Monitor `pubsub.googleapis.com/subscription/num_undelivered_messages`
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Using MERGE (upsert) to maintain idempotency when writing to BigQuery
 
 ## References
 

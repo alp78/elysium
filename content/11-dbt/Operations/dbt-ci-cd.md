@@ -8,9 +8,9 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 related:
   - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
   - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
-  - "[[dbt-core-concepts]]"
-  - "[[dbt-airflow-integration]]"
-  - "[[dbt-observability]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
+  - "[dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration)"
+  - "[dbt-observability](/11-dbt/Operations/dbt-observability)"
 ---
 
 # dbt: CI/CD
@@ -393,6 +393,6 @@ This is the preferred pattern for regulated environments: every production run i
 
 - [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)
 - [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)
-- [[dbt-core-concepts]]
-- [[dbt-airflow-integration]]
-- [[dbt-observability]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration)
+- [dbt-observability](/11-dbt/Operations/dbt-observability)

@@ -23,13 +23,13 @@ aliases:
 keywords: [data contract, schema, SLA, semver, breaking change, producer, consumer, ownership, validation, CI, JSON Schema, Protobuf, Avro, dbt contract, deprecation, enum, primary key]
 description: "Formal agreements between data producers and consumers — schema, SLAs, semantics, ownership, versioning — with YAML examples, CI enforcement, and breaking-change classification."
 related:
-  - "[[data-quality-framework]]"
-  - "[[serialization-formats]]"
-  - "[[streaming-architecture]]"
-  - "[[dbt-transformation-layer]]"
-  - "[[data-pipeline-testing-strategy]]"
-  - "[[rest-api-design-and-consumption]]"
-  - "[[error-handling-and-retry-patterns]]"
+  - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
+  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
+  - "[data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy)"
+  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
+  - "[error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns)"
 status: complete
 created: 2026-03-23
 updated: 2026-03-29
@@ -51,11 +51,21 @@ updated: 2026-03-29
 | **Ownership** | Who produces, who maintains, who to contact | "Market Data Team owns, Index Ops consumes" |
 | **Versioning** | How changes are communicated and rolled out | "Semver: breaking = major, additive = minor" |
 
-The contract concept parallels [[rest-api-design-and-consumption|API contracts]] in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
+The contract concept parallels [API contracts](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
 
 > [!warning] Enforce contracts in CI
 >
 > Writing a contract YAML file that nobody validates in CI provides a false sense of safety. The contract must be checked automatically on every pipeline run -- schema validation in CI, SLA checks in Airflow, and freshness monitors in Datadog. If the enforcement step is missing, the contract will drift from reality within weeks, and downstream consumers will still break on schema changes.
+
+> [!danger] Contract Without Enforcement
+>
+> A contract YAML file that nobody validates in CI provides a false sense
+> of safety. The contract will drift from reality within weeks: a column
+> gets renamed, a type changes, an SLA shortens. Downstream consumers
+> still break on schema changes — but now they're SURPRISED because
+> the contract said it wouldn't happen. Enforce contracts automatically:
+> Pydantic at ingestion, dbt tests at transform, CI checks at deployment.
+> A contract that isn't tested is a lie.
 
 ### Contract-First Development Workflow
 
@@ -82,6 +92,18 @@ graph LR
 | **Avro** | Schema evolution built-in, compact binary | Kafka/Pub/Sub messages |
 | **[dbt YAML](/11-dbt/Quality/dbt-data-contracts-implementation)** | Native to dbt, enforced at build time | Warehouse transforms |
 | **SQL DDL** | Universal, everyone reads SQL | Database tables |
+
+### Data Contracts in Practice — Exported from Code
+
+The contract examples above use YAML — a design-time format. The functional
+pipeline takes a different approach: contracts are GENERATED from code at
+runtime. Pydantic models define the schema, ColumnContext registries define
+the semantics, and `export_contracts()` serializes both into a JSON Schema
+file — a machine-readable contract that any consumer (including AI agents)
+can parse.
+
+See [functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) for the architecture and
+[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) for the implementation.
 
 ### Example Contract: ESG Score Feed
 
@@ -221,6 +243,16 @@ jobs:
 | Relax constraint | No | Minor version bump |
 | Change SLA | Depends | Communicate to all consumers |
 
+> [!warning] Additive Changes Are Not Always Safe
+>
+> "Adding a nullable column is non-breaking" is true for schema-aware
+> consumers. But a consumer that does `SELECT *` and feeds the result
+> to a fixed-width parser, a strict Avro schema, or a Pydantic model
+> with `model_config = ConfigDict(extra='forbid')` will BREAK on the
+> new column. Additive changes are safe only when ALL consumers handle
+> unknown fields gracefully. In practice, announce additive changes
+> and give consumers a release window, even if they're "non-breaking."
+
 ### Producer and Consumer Responsibilities
 
 | Responsibility | Producer | Consumer |
@@ -237,17 +269,17 @@ jobs:
 | Anti-Pattern | Problem | Better Approach |
 |-------------|---------|----------------|
 | No contract exists | Schema changes break consumers silently | Define contracts before building |
-| Contract not enforced | Contract exists but nobody checks | Automate validation in CI and pipeline (see [[data-quality-framework]]) |
+| Contract not enforced | Contract exists but nobody checks | Automate validation in CI and pipeline (see [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)) |
 | Verbal agreements | "We agreed in a meeting" is not auditable | Version-controlled YAML contracts |
 | Producer ignores consumer needs | Schema designed for producer convenience | Joint schema design sessions |
 | No deprecation period | Old version removed immediately | Minimum 30-day deprecation window |
 
 ## Related
 
-- [[data-quality-framework]] — Quality gates that enforce contract SLAs at each medallion layer
-- [[data-pipeline-testing-strategy]] — How contract tests fit in the data engineering testing pyramid
-- [[serialization-formats]] — Schema formats (Protobuf, Avro, JSON Schema) and their evolution support
-- [[dbt-transformation-layer]] — dbt model contracts with enforced schemas at build time
-- [[streaming-architecture]] — Schema registries for event contracts in Pub/Sub and Kafka
-- [[rest-api-design-and-consumption]] — API contracts parallel data contracts: versioning, backward compatibility
-- [[error-handling-and-retry-patterns]] — What happens when contract validation fails: quarantine, DLQ, alerting
+- [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality gates that enforce contract SLAs at each medallion layer
+- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How contract tests fit in the data engineering testing pyramid
+- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Schema formats (Protobuf, Avro, JSON Schema) and their evolution support
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt model contracts with enforced schemas at build time
+- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — Schema registries for event contracts in Pub/Sub and Kafka
+- [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — API contracts parallel data contracts: versioning, backward compatibility
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — What happens when contract validation fails: quarantine, DLQ, alerting

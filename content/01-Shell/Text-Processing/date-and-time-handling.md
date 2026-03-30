@@ -977,7 +977,7 @@ Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezone
 
 ## Related Notes
 
-- [[grep-and-pattern-matching|text processing tools]] — JSON and CSV parsing in Bash, jq, Python, PowerShell
+- [text processing tools](/01-Shell/Text-Processing/grep-and-pattern-matching) — JSON and CSV parsing in Bash, jq, Python, PowerShell
 - [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Full format comparison: JSON, YAML, CSV, Parquet, Avro, Protobuf, MessagePack
 
 - [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Pipeline design that handles date boundaries correctly

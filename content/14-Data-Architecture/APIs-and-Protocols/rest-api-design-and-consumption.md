@@ -70,8 +70,8 @@ description: >
   with httpx, FastAPI for data serving, OpenAPI specifications, and curl workflows.
 related:
   - "fastapi and polars"
-  - "[[moc-data-architecture]]"
-  - "[[rest-api-design-and-consumption|Python HTTP requests]]"
+  - "[moc-data-architecture](/14-Data-Architecture/moc-data-architecture)"
+  - "[Python HTTP requests](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
   - "[curl and HTTP](/01-Shell/Networking/http-requests-and-apis)"
   - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
 created: 2026-03-22
@@ -1659,7 +1659,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | Webhook   | Event notifications, push-based       | Event-driven | JSON                | Push-based         |
 | FTP/SFTP  | Bulk file transfers, legacy data      | High         | Files               | No                 |
 
-For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [[api-protocols-comparison]].
+For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
 
 #### Use REST when
 - Consuming a third-party API (it will almost certainly be REST)
@@ -1881,4 +1881,4 @@ If-None-Match: {etag}                X-Request-Id (for support tickets)
 
 ---
 
-*See also: [[error-handling-and-retry-patterns]] | fastapi and polars | [curl and HTTP](/01-Shell/Networking/http-requests-and-apis) | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) | *
+*See also: [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) | fastapi and polars | [curl and HTTP](/01-Shell/Networking/http-requests-and-apis) | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) | *

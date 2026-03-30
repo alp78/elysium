@@ -8,9 +8,9 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 related:
   - "[query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis)"
   - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[[dbt-materializations]]"
-  - "[[dbt-troubleshooting]]"
-  - "[[dbt-observability]]"
+  - "[dbt-materializations](/11-dbt/Modeling/dbt-materializations)"
+  - "[dbt-troubleshooting](/11-dbt/Operations/dbt-troubleshooting)"
+  - "[dbt-observability](/11-dbt/Operations/dbt-observability)"
 ---
 
 # dbt: Performance Tuning
@@ -445,6 +445,6 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 
 - [query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis)
 - [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)
-- [[dbt-materializations]]
-- [[dbt-troubleshooting]]
-- [[dbt-observability]]
+- [dbt-materializations](/11-dbt/Modeling/dbt-materializations)
+- [dbt-troubleshooting](/11-dbt/Operations/dbt-troubleshooting)
+- [dbt-observability](/11-dbt/Operations/dbt-observability)

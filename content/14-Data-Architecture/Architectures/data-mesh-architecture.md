@@ -7,14 +7,14 @@ aliases: [data mesh, domain-driven data, data products, federated governance, da
 keywords: [data mesh, data product, domain ownership, federated governance, self-serve platform, Zhamak Dehghani, domain-oriented, decentralized, data as a product, discoverability, addressability, trustworthiness, self-describing, interoperable, secure, data contract, schema registry, data catalog, DataHub, Amundsen, OpenMetadata, Kafka, centralized data team, data platform, data engineering, organizational design, data governance, medallion architecture, data mesh vs data lake, data mesh vs warehouse, data quality, data lineage, data steward, domain team, platform team, mesh topology]
 description: "Data mesh is an organizational and architectural approach (Zhamak Dehghani, 2019) that decentralizes data ownership to domain teams, treats data as a product, provides a self-serve infrastructure platform, and enforces governance through federation rather than central control. It is primarily an organizational design pattern, not a technology."
 related:
-  - "[[lakehouse-architecture]]"
-  - "[[medallion-architecture]]"
-  - "[[five-pillars-of-data-engineering]]"
-  - "[[dbt-transformation-layer]]"
-  - "[[open-table-formats]]"
+  - "[lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture)"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
+  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
   - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
-  - "[[idempotent-pipeline-design]]"
-  - "[[streaming-architecture]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -304,7 +304,7 @@ A data catalog in a data mesh context must support:
 
 ### Open Table Formats as Data Product Storage
 
-[[open-table-formats|Apache Iceberg]] tables on object storage are the natural storage layer for data products in a mesh:
+[Apache Iceberg](/14-Data-Architecture/Architectures/open-table-formats) tables on object storage are the natural storage layer for data products in a mesh:
 - Engine-independent: any domain's consumers can read the table with Spark, DuckDB, BigQuery, or Trino.
 - Schema is embedded in the table metadata — self-describing.
 - Access control is at the catalog and storage level, not embedded in any single compute engine.
@@ -358,7 +358,7 @@ Domains declare data products "done" when the pipeline runs. A data product is d
 
 ### Data Mesh and Medallion Architecture: How They Coexist
 
-[[medallion-architecture|Medallion architecture]] (bronze/silver/gold) is not incompatible with data mesh — it operates at a different level of abstraction.
+[Medallion architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze/silver/gold) is not incompatible with data mesh — it operates at a different level of abstraction.
 
 **Within a single data product**, the domain team may implement a medallion pattern:
 
@@ -381,19 +381,19 @@ orders_completed_v1       ─────►  finance_revenue_recognition_v1
 customer_profiles_v3      ─────►
 ```
 
-The [[dbt-transformation-layer|dbt transformation layer]] within a domain's data product pipeline implements the silver-to-gold transforms that make data consumer-ready.
+The [dbt transformation layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) within a domain's data product pipeline implements the silver-to-gold transforms that make data consumer-ready.
 
 ---
 
 ## Related Notes
 
-- [[lakehouse-architecture]] — the technical storage foundation for data products in a mesh
-- [[open-table-formats]] — Iceberg/Delta as the interoperable storage format for data products
-- [[medallion-architecture]] — bronze/silver/gold within a single data product
-- [[streaming-architecture]] — Kafka as the event backbone for domain data products
-- [[dbt-transformation-layer]] — SQL transformation within domain data products
-- [[idempotent-pipeline-design]] — reliability requirement for data product pipelines
-- [[five-pillars-of-data-engineering]] — reliability, observability, efficiency, security, operability
+- [lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture) — the technical storage foundation for data products in a mesh
+- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Iceberg/Delta as the interoperable storage format for data products
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold within a single data product
+- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — Kafka as the event backbone for domain data products
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — SQL transformation within domain data products
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — reliability requirement for data product pipelines
+- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
 - [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — GCP IAM as the enforcement layer for data product access control
 
 ## References

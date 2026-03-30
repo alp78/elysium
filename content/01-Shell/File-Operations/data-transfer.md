@@ -6,7 +6,7 @@ tags: [shell, bash, gcp, linux, powershell, sql-server]
 aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, file transfer, data movement]
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run]
 description: "Complete guide to data transfer tools for data engineering: rsync for local and remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd for query-based export."
-related: ["[[iap-tunneling]]", "[[connecting-to-gcp-resources]]", "[[compression]]", "[[file-manipulation]]" ]
+related: ["[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources)", "[compression](/01-Shell/File-Operations/compression)", "[file-manipulation](/01-Shell/File-Operations/file-manipulation)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -177,7 +177,7 @@ rsync -avzP -e "ssh -p 2222" /data/ user@server:/data/
 > Open an IAP tunnel to port 22 (SSH) on the VM, then point rsync at the
 > local tunnel endpoint. The tunnel runs in the background (`&`). For simpler
 > one-off transfers, use `gcloud compute scp` instead. For IAP tunnel details, see
-> [[iap-tunneling]].
+> [iap-tunneling](/01-Shell/Networking/iap-tunneling).
 
 ```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 22 \
@@ -633,7 +633,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 | VM → VM (no local relay) | SSH + rsync | SSH into source VM, rsync directly to dest VM |
 | Database backup → GCS | `bcp` + `gsutil` | Export with bcp, then `gsutil cp backup.bak gs://bucket/` |
 
-Once data lands in GCS, you can load it directly into BigQuery with `bq load` -- see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron -- see [[linux-scheduling]] for crontab patterns.
+Once data lands in GCS, you can load it directly into BigQuery with `bq load` -- see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron -- see [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) for crontab patterns.
 
 ### Compression trade-offs — when to use -z during transfers
 
@@ -667,7 +667,7 @@ Once data lands in GCS, you can load it directly into BigQuery with `bq load` --
 
 ## Related
 - [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and tool selection framework
-- [[iap-tunneling]] — opening IAP tunnels for rsync and scp to GCE VMs
-- [[compression]] — compress data before or during transfer
-- [[connecting-to-gcp-resources]] — complete GCP connection guide including GCS
-- [[file-manipulation]] — local file operations before transfer
+- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — opening IAP tunnels for rsync and scp to GCE VMs
+- [compression](/01-Shell/File-Operations/compression) — compress data before or during transfer
+- [connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources) — complete GCP connection guide including GCS
+- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — local file operations before transfer

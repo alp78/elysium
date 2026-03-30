@@ -25,10 +25,10 @@ related:
   - "[secrets-management](/06-GCP/Security/secrets-management)"
   - "[airflow-deployment](/12-Orchestration/Airflow/airflow-deployment)"
   - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
-  - "[[golden-rules-of-data-engineering]]"
+  - "[golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering)"
   - "[gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing)"
   - "[gcp-total-cost-of-ownership](/06-GCP/Cost-Management/gcp-total-cost-of-ownership)"
-  - "[[data-flow-architecture]]"
+  - "[data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture)"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -342,11 +342,11 @@ What each environment actually costs per month. For full per-service pricing det
 
 ## Related
 
-- [[data-flow-architecture]] — how data moves between all systems in the stack
+- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — how data moves between all systems in the stack
 - [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — named configurations for multi-project safety
 - [secrets-management](/06-GCP/Security/secrets-management) — Secret Manager, Airflow connections, GitHub Actions secrets
 - [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Airflow installation and configuration per environment
 - [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) — CI/CD workflows with environment gates
-- [[golden-rules-of-data-engineering]] — foundational principles including "choose boring technology"
+- [golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — foundational principles including "choose boring technology"
 - [gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing) — per-service pricing detail
 - [gcp-total-cost-of-ownership](/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — complete architecture cost breakdowns

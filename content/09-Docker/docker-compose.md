@@ -8,8 +8,8 @@ keywords: [docker compose, up, down, build, restart, logs, pull, prune, multi-co
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
 related:
   - "[container-lifecycle](/09-Docker/container-lifecycle)"
-  - "[[image-management]]"
-  - "[[docker-cheat-sheet]]"
+  - "[image-management](/09-Docker/image-management)"
+  - "[docker-cheat-sheet](/09-Docker/docker-cheat-sheet)"
   - "the Airflow DAGs"
 created: 2026-03-22
 updated: 2026-03-22
@@ -664,6 +664,6 @@ docker system df -v
 ## Related
 
 - [container-lifecycle](/09-Docker/container-lifecycle) — Individual container operations (docker run, stop, rm, inspect)
-- [[image-management]] — Building and pushing Docker images
-- [[docker-cheat-sheet]] — Full docker CLI quick reference
+- [image-management](/09-Docker/image-management) — Building and pushing Docker images
+- [docker-cheat-sheet](/09-Docker/docker-cheat-sheet) — Full docker CLI quick reference
 - the Airflow DAGs — Airflow runs via Docker Compose on the Airflow VM

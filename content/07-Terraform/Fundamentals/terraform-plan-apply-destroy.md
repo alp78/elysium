@@ -7,10 +7,10 @@ aliases: [terraform workflow, terraform apply, terraform plan, terraform destroy
 keywords: [terraform init, terraform plan, terraform apply, terraform destroy, terraform import, terraform state, tfplan, plan output, apply workflow, infrastructure deployment, terraform -chdir]
 description: "The core Terraform workflow: init, plan, apply, destroy, and importing existing resources into state. Includes the -chdir flag, targeted applies, and state inspection commands."
 related:
-  - "[[terraform-state-management]]"
-  - "[[terraform-variables-and-outputs]]"
-  - "[[hcl-syntax-basics]]"
-  - "[[terraform-providers-and-backend]]"
+  - "[terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management)"
+  - "[terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)"
+  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
+  - "[terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +18,7 @@ status: complete
 
 # Terraform Plan, Apply, and Destroy
 
-The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management. For a condensed quick-reference of all Terraform commands, see [[terraform-cheat-sheet]].
+The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management. For a condensed quick-reference of all Terraform commands, see [terraform-cheat-sheet](/07-Terraform/terraform-cheat-sheet).
 
 ## How terraform apply Works
 
@@ -205,7 +205,7 @@ module "pipeline_env" {
 
 Each module encapsulates Pub/Sub topics, BigQuery datasets, service accounts, and IAM bindings for one environment. Promote from dev → staging → prod by applying the same module with different variables. Never copy-paste `.tf` files between environments.
 
-See [[terraform-module-composition]] for module design patterns.
+See [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) for module design patterns.
 
 ---
 
@@ -346,11 +346,11 @@ variable "region" {
 
 ## Related
 
-- [[terraform-state-management]] — remote state, locking, and state manipulation commands
-- [[terraform-variables-and-outputs]] — how variables are defined and consumed
-- [[terraform-module-composition]] — multi-environment module patterns
-- [[terraform-providers-and-backend]] — the backend "gcs" configuration
-- [[terraform-resource-dependencies]] — how Terraform orders resource creation
+- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — remote state, locking, and state manipulation commands
+- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — how variables are defined and consumed
+- [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) — multi-environment module patterns
+- [terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend) — the backend "gcs" configuration
+- [terraform-resource-dependencies](/07-Terraform/Patterns/terraform-resource-dependencies) — how Terraform orders resource creation
 
 ## References
 

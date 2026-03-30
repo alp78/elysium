@@ -67,7 +67,7 @@ description: >
 related:
   - "[Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics)"
   - "[custom metrics](/06-GCP/Logging/cloud-monitoring-metrics)"
-  - "[[moc-observability]]"
+  - "[moc-observability](/13-Observability/moc-observability)"
   - "[Firestore state store](/06-GCP/Firestore/firestore-data-model-and-operations)"
   - "[Cloud Run pipelines](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
 created: 2026-03-22
@@ -1513,4 +1513,4 @@ with tracer.start_as_current_span("my-span", attributes={"key": "value"}) as spa
 
 ---
 
-*See also: [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) | [custom metrics](/06-GCP/Logging/cloud-monitoring-metrics) | [[moc-observability]] | [Firestore state store](/06-GCP/Firestore/firestore-data-model-and-operations)*
+*See also: [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) | [custom metrics](/06-GCP/Logging/cloud-monitoring-metrics) | [moc-observability](/13-Observability/moc-observability) | [Firestore state store](/06-GCP/Firestore/firestore-data-model-and-operations)*

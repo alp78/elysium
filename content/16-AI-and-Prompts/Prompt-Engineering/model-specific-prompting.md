@@ -14,7 +14,7 @@ status: complete
 
 # Model-Specific Prompting: Claude, GPT-4, Gemini, Grok, and Perplexity
 
-Different models respond differently to the same prompt. Understanding these tendencies avoids wasted iterations and lets you write prompts that either target a specific model's strengths or travel well across models. This note documents the behavioral profiles, preferred formats, and distinctive traits of the five major AI models as of 2026. For structural foundations common to all models, see [[prompt-foundations]] and [[prompt-architecture]].
+Different models respond differently to the same prompt. Understanding these tendencies avoids wasted iterations and lets you write prompts that either target a specific model's strengths or travel well across models. This note documents the behavioral profiles, preferred formats, and distinctive traits of the five major AI models as of 2026. For structural foundations common to all models, see [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
 
 ---
 
@@ -195,16 +195,16 @@ A robust prompt should produce acceptable output across multiple models. If it o
 | Interpretation | Do all models interpret ambiguous instructions the same way? |
 | Constraints | Do all models respect every constraint? |
 
-If any dimension fails, the prompt needs tightening in that area — not model-specific tuning. See [[prompt-debugging#4.4 Testing Across Models and Measuring Consistency|testing across models]] for the full protocol.
+If any dimension fails, the prompt needs tightening in that area — not model-specific tuning. See [testing across models](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#44-testing-across-models-and-measuring-consistency) for the full protocol.
 
 ---
 
 ## Related Notes
 
-- [[prompt-architecture]] — The 4-layer structural template that works as a base for all models
-- [[prompt-foundations]] — Core axioms that apply across all models
-- [[applied-prompting]] — Model-specific tips applied to real workflows (research, code, data analysis)
-- [[prompt-debugging]] — Diagnosing which part of a cross-model failure is prompt-dependent vs. model-dependent
+- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer structural template that works as a base for all models
+- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — Core axioms that apply across all models
+- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Model-specific tips applied to real workflows (research, code, data analysis)
+- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Diagnosing which part of a cross-model failure is prompt-dependent vs. model-dependent
 
 ## References
 

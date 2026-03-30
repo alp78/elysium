@@ -125,11 +125,11 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 
 ## Related
 
-- [[dataset-and-table-management]] — Tables must exist (or use `--autodetect`) before loading
-- [[querying-and-cost-optimization]] — Querying tables after data is loaded
-- [[job-management]] — Load and export operations create BQ jobs; monitor and cancel them
-- [[gcs-object-operations]] — Managing the GCS objects that feed BigQuery loads
-- [[gcs-buckets-and-lifecycle]] — Lifecycle rules to auto-expire staging data after loading
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Tables must exist (or use `--autodetect`) before loading
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Querying tables after data is loaded
+- [job-management](/06-GCP/BigQuery/job-management) — Load and export operations create BQ jobs; monitor and cancel them
+- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — Managing the GCS objects that feed BigQuery loads
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Lifecycle rules to auto-expire staging data after loading
 
 ## Related
 - [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology showing how bq load/extract fits into the stack

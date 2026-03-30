@@ -95,8 +95,8 @@ Without named configurations, switching projects requires remembering to set pro
 ## Related
 
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Authentication context per configuration
-- [[gcp-projects-and-apis]] — Project metadata and API management
-- [[gcloud-output-formatting]] — Extract configuration details programmatically
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — Project metadata and API management
+- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — Extract configuration details programmatically
 - [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How gcloud configurations fit into the full dev/staging/prod strategy
 
 ## References

@@ -143,7 +143,7 @@ WHERE command LIKE '%RECOVERY%';
 
 ### Related
 
-- [[backup-types-and-strategy]] — understanding backup types and the 3-2-1 rule
-- [[server-configuration]] — recovery model configuration
-- [[essential-dba-queries]] — monitoring active queries and blocking
-- [[storage-internals]] — how WAL and checkpoints work at the page level
+- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — understanding backup types and the 3-2-1 rule
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — recovery model configuration
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — monitoring active queries and blocking
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — how WAL and checkpoints work at the page level

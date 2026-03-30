@@ -7,7 +7,7 @@ aliases: [GitHub Actions, CI/CD pipelines, continuous integration, continuous de
 keywords: [github actions, ci/cd, workflow, pipeline, matrix testing, deployment, docker build, artifact registry, cloud run, automated testing, pre-commit hooks]
 description: "GitHub Actions CI/CD workflow patterns for data engineering — building Docker images, running tests, deploying to Cloud Run, and managing infrastructure with Terraform."
 related:
-  - "[[github-actions-ci-cd]]"
+  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
   - "[docker-compose](/09-Docker/docker-compose)"
   - "[image-management](/09-Docker/image-management)"
   - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
@@ -126,7 +126,7 @@ repos:
 
 ## Related
 
-- [[github-actions-ci-cd]] — data pipeline project-specific workflow configurations
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — data pipeline project-specific workflow configurations
 - [git-daily-workflow](/08-Git/git-daily-workflow) — Git workflow that feeds into CI/CD
 - [image-management](/09-Docker/image-management) — Docker image build and push patterns
 - [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform in CI/CD pipelines

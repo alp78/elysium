@@ -14,7 +14,7 @@ status: complete
 
 # Wait Stats Analysis
 
-Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks. For a structured process that incorporates these queries into a repeatable audit, see [[performance-audit-playbook]].
+Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks. For a structured process that incorporates these queries into a repeatable audit, see [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook).
 
 ---
 
@@ -436,9 +436,9 @@ Quick reference for the most common wait types. For deep analysis of each wait t
 
 ### Related
 
-- [[essential-dba-queries]] — quick diagnostic queries run during incidents
-- [[memory-and-buffer-pool]] — Page Life Expectancy, buffer pool pressure details
-- [[performance-audit-playbook]] — full structured audit including disk I/O metrics
-- [[blocking-and-locking]] — `LCK_M_*` wait type analysis
-- [[execution-plans]] — reading plans to find the root cause of high waits
-- [[performance-audit-playbook]] — structured process using these wait stat queries
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — quick diagnostic queries run during incidents
+- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy, buffer pool pressure details
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — full structured audit including disk I/O metrics
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — `LCK_M_*` wait type analysis
+- [execution-plans](/04-SQL-Server/Performance/execution-plans) — reading plans to find the root cause of high waits
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured process using these wait stat queries

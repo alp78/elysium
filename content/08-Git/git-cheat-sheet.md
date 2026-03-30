@@ -7,14 +7,14 @@ aliases: [Git cheat sheet, git quick reference]
 keywords: [git, cheat sheet, quick reference, status, add, commit, push, pull, branch, merge, rebase, stash, reset, revert, log, diff, blame, cherry-pick, reflog, tag, gh, github cli]
 description: "Exhaustive CLI reference for Git and GitHub CLI — config, staging, committing, branching, merging, rebasing, remotes, history, stashing, undo, tags, and gh commands."
 related:
-  - "[[git-daily-workflow]]"
-  - "[[git-branching-and-merging]]"
-  - "[[git-recovery-and-undo]]"
-  - "[[pull-requests-and-code-review]]"
-  - "[[git-common-errors]]"
-  - "[[git-setup-and-config]]"
-  - "[[git-remote-management]]"
-  - "[[git-tagging-and-releases]]"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
+  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
+  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
+  - "[git-common-errors](/08-Git/git-common-errors)"
+  - "[git-setup-and-config](/08-Git/git-setup-and-config)"
+  - "[git-remote-management](/08-Git/git-remote-management)"
+  - "[git-tagging-and-releases](/08-Git/git-tagging-and-releases)"
 created: 2026-03-22
 updated: 2026-03-23
 status: stable
@@ -1362,11 +1362,11 @@ gh api repos/OWNER/REPO --template '{{.full_name}}: {{.stargazers_count}} stars'
 
 ## Related
 
-- [[git-daily-workflow]]
-- [[git-branching-and-merging]]
-- [[git-recovery-and-undo]]
-- [[pull-requests-and-code-review]]
-- [[git-common-errors]]
-- [[git-setup-and-config]]
-- [[git-remote-management]]
-- [[git-tagging-and-releases]]
+- [git-daily-workflow](/08-Git/git-daily-workflow)
+- [git-branching-and-merging](/08-Git/git-branching-and-merging)
+- [git-recovery-and-undo](/08-Git/git-recovery-and-undo)
+- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)
+- [git-common-errors](/08-Git/git-common-errors)
+- [git-setup-and-config](/08-Git/git-setup-and-config)
+- [git-remote-management](/08-Git/git-remote-management)
+- [git-tagging-and-releases](/08-Git/git-tagging-and-releases)

@@ -25,7 +25,7 @@ SQL Server's buffer pool is its primary data cache — it holds database pages (
 | **Buffer Cache Hit Ratio** | Percentage of page reads served from RAM vs. disk. Target: > 99%. |
 | **Memory clerk** | Internal component tracking memory allocations by type (buffer pool, plan cache, lock manager) |
 | **Memory grant** | RAM pre-allocated to a query for sort and hash operations before it can execute |
-| **max server memory** | Hard cap on how much RAM SQL Server can allocate. Must always be set — never leave at default (see [[server-configuration]] for the exact `sp_configure` commands). |
+| **max server memory** | Hard cap on how much RAM SQL Server can allocate. Must always be set — never leave at default (see [server-configuration](/04-SQL-Server/Administration/server-configuration) for the exact `sp_configure` commands). |
 
 ### Memory Sizing Rule
 
@@ -158,7 +158,7 @@ ORDER BY pages_kb DESC;
 | `CACHESTORE_SQLCP` | Plan cache (compiled query plans) | If > 20% of total, enable "optimize for ad hoc workloads" |
 | `MEMORYCLERK_SQLQUERYEXEC` | Memory grants (sort/hash operations) | If large, queries are doing big sorts — add indexes |
 | `MEMORYCLERK_SQLCLR` | CLR objects | Should be small unless using CLR assemblies |
-| `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for [[deadlock-detection-and-prevention|blocking]] |
+| `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for [blocking](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) |
 
 ## Pending Memory Grants
 
@@ -177,14 +177,14 @@ WHERE grant_time IS NULL;
 -- Bad: any rows = memory oversubscribed, queries sitting idle waiting for RAM
 ```
 
-When queries appear here, `RESOURCE_SEMAPHORE` appears in [[wait-stats-analysis|wait statistics]].
+When queries appear here, `RESOURCE_SEMAPHORE` appears in [wait statistics](/04-SQL-Server/Performance/wait-stats-analysis).
 
 #### RESOURCE_SEMAPHORE memory grant queue — causes and fixes
 
 | Cause | Fix |
 |-------|-----|
 | `max server memory` too low | Increase it |
-| MAXDOP too high — parallel queries each request memory grants | Reduce MAXDOP (see [[server-configuration]]) |
+| MAXDOP too high — parallel queries each request memory grants | Reduce MAXDOP (see [server-configuration](/04-SQL-Server/Administration/server-configuration)) |
 | Missing indexes causing large sort/hash operations | Add indexes to eliminate the sort |
 | Many concurrent queries all requesting memory simultaneously | Reduce query concurrency or add RAM |
 
@@ -211,7 +211,7 @@ DBCC DROPCLEANBUFFERS;
 
 ### Memory Pressure Diagnosis Flow
 
-When `RESOURCE_SEMAPHORE` is your top [[wait-stats-analysis|wait type]]:
+When `RESOURCE_SEMAPHORE` is your top [wait type](/04-SQL-Server/Performance/wait-stats-analysis):
 
 ```
 RESOURCE_SEMAPHORE is dominant
@@ -401,11 +401,11 @@ RECONFIGURE;
 
 ### Related
 
-- [[wait-stats-analysis]] — `PAGEIOLATCH_SH` and `RESOURCE_SEMAPHORE` are the wait types indicating buffer pool problems
-- [[query-plan-analysis]] — Cardinality estimation errors cause over-sized memory grants
-- [[server-configuration]] — `max server memory`, MAXDOP, and TempDB file configuration
-- [[index-maintenance]] — Fragmented indexes cause excessive page reads that evict good pages from the buffer pool
-- [[essential-dba-queries]] — Combined health dashboard queries
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — `PAGEIOLATCH_SH` and `RESOURCE_SEMAPHORE` are the wait types indicating buffer pool problems
+- [query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis) — Cardinality estimation errors cause over-sized memory grants
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — `max server memory`, MAXDOP, and TempDB file configuration
+- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — Fragmented indexes cause excessive page reads that evict good pages from the buffer pool
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Combined health dashboard queries
 
 ### References
 

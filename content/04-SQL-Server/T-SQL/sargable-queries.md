@@ -33,6 +33,15 @@ status: complete
 --   (CI collation matches regardless)
 ```
 
+> [!warning] Functions on Columns Kill Index Usage
+>
+> `WHERE YEAR(trade_date) = 2025` scans the entire table — SQL Server
+> cannot use the index on `trade_date` because the function transforms
+> every row before comparison. The sargable equivalent:
+> `WHERE trade_date >= '2025-01-01' AND trade_date < '2026-01-01'`.
+> Same result, index seek instead of scan. This applies to ALL functions:
+> `CAST()`, `CONVERT()`, `UPPER()`, `ISNULL()`, `DATEPART()`.
+
 ### SARGable vs Non-SARGable — Calculations and Implicit Conversions
 
 ```sql
@@ -209,7 +218,7 @@ cursor.executemany("INSERT INTO ...", rows)
 
 ### Related
 
-- [[index-types-and-strategy]] — index types that SARGable queries exploit
-- [[execution-plans]] — how to read execution plans to spot scans
-- [[performance-audit-playbook]] — structured audit process
-- [[wait-stats-analysis]] — diagnosing I/O pressure from non-SARGable queries
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — index types that SARGable queries exploit
+- [execution-plans](/04-SQL-Server/Performance/execution-plans) — how to read execution plans to spot scans
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured audit process
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — diagnosing I/O pressure from non-SARGable queries

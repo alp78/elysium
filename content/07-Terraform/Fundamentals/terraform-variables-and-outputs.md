@@ -7,10 +7,10 @@ aliases: [terraform variables, tfvars, terraform outputs, HCL variables, input v
 keywords: [terraform, variables, outputs, tfvars, terraform.tfvars, variable types, sensitive, default, locals, TF_VAR, output values, terraform output command]
 description: "How to define and use Terraform input variables (variables.tf) and output values (outputs.tf), including sensitive variables, defaults, and the locals vs variables distinction."
 related:
-  - "[[hcl-syntax-basics]]"
-  - "[[terraform-providers-and-backend]]"
-  - "[[terraform-plan-apply-destroy]]"
-  - "[[terraform-conditional-resources]]"
+  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
+  - "[terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend)"
+  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
+  - "[terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -226,11 +226,11 @@ terraform -chdir=infra output -json
 
 ## Related
 
-- [[terraform-providers-and-backend]] — how the backend and provider are configured
-- [[terraform-plan-apply-destroy]] — the workflow that uses these variables
-- [[terraform-conditional-resources]] — using variables with `count` to skip resources
-- [[terraform-iam-and-secrets]] — how `db_password` flows into Secret Manager
-- [[hcl-syntax-basics]] — HCL syntax fundamentals
+- [terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend) — how the backend and provider are configured
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — the workflow that uses these variables
+- [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) — using variables with `count` to skip resources
+- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — how `db_password` flows into Secret Manager
+- [hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL syntax fundamentals
 
 ## References
 

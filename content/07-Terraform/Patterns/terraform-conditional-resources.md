@@ -7,10 +7,10 @@ aliases: [terraform conditional, terraform count, terraform for_each, optional r
 keywords: [count, for_each, conditional resource creation, ternary operator, optional resources, "count = 0", "count = 1", conditional index notation, "resource[0]", compact, concat, terraform functions, dynamic blocks]
 description: "How Terraform uses count and for_each to conditionally create resources or create multiple instances, enabling optional integrations (like Datadog) and parameterized infrastructure."
 related:
-  - "[[terraform-variables-and-outputs]]"
-  - "[[terraform-resource-dependencies]]"
-  - "[[terraform-iam-and-secrets]]"
-  - "[[hcl-syntax-basics]]"
+  - "[terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)"
+  - "[terraform-resource-dependencies](/07-Terraform/Patterns/terraform-resource-dependencies)"
+  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
+  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -235,10 +235,10 @@ resource "google_project_iam_member" "datadog_monitoring" {
 
 ## Related
 
-- [[terraform-variables-and-outputs]] — the variables that drive `count` conditions
-- [[terraform-resource-dependencies]] — how Terraform resolves dependencies for conditional resources
-- [[terraform-iam-and-secrets]] — real-world use of conditional Datadog resources
-- [[terraform-networking]] — the conditional admin IP firewall rule
+- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — the variables that drive `count` conditions
+- [terraform-resource-dependencies](/07-Terraform/Patterns/terraform-resource-dependencies) — how Terraform resolves dependencies for conditional resources
+- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — real-world use of conditional Datadog resources
+- [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking) — the conditional admin IP firewall rule
 
 ## References
 

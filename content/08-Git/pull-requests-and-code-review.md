@@ -7,9 +7,9 @@ aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge P
 keywords: [pull request, PR, code review, gh pr create, gh pr merge, squash merge, rebase merge, draft PR, branch protection, auto-merge, force-with-lease, merge conflict, PR workflow, github cli, gh pr checkout]
 description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, and resolving 'not mergeable' errors."
 related:
-  - "[[git-daily-workflow]]"
-  - "[[git-branching-and-merging]]"
-  - "[[git-recovery-and-undo]]"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
+  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
   - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -297,9 +297,9 @@ gh pr merge 7 --squash
 
 ## Related
 
-- [[git-daily-workflow]] — the daily workflow that feeds into PRs
-- [[git-branching-and-merging]] — creating and managing branches
-- [[git-recovery-and-undo]] — stash and reflog for recovery
+- [git-daily-workflow](/08-Git/git-daily-workflow) — the daily workflow that feeds into PRs
+- [git-branching-and-merging](/08-Git/git-branching-and-merging) — creating and managing branches
+- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — stash and reflog for recovery
 - [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — the CI/CD that runs on PRs
 
 ## References

@@ -8,9 +8,9 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 related:
   - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
   - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
-  - "[[dbt-core-concepts]]"
-  - "[[dbt-ci-cd]]"
-  - "[[dbt-observability]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
+  - "[dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd)"
+  - "[dbt-observability](/11-dbt/Operations/dbt-observability)"
 ---
 
 # dbt: Airflow Integration
@@ -353,6 +353,6 @@ check_results = PythonOperator(
 
 - [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)
 - [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)
-- [[dbt-core-concepts]]
-- [[dbt-ci-cd]]
-- [[dbt-observability]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd)
+- [dbt-observability](/11-dbt/Operations/dbt-observability)

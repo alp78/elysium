@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell]
 aliases: [systemctl, journalctl, service management, systemd, daemon, OOM kill, service restart]
 keywords: [systemctl, journalctl, systemd, service, daemon, start service, stop service, restart service, enable on boot, service logs, OOM killer, out of memory, service status, mssql-server, datadog-agent, airflow, service failed, Set-Service, Start-Service]
 description: "Managing Linux systemd services and Windows services for production data engineering infrastructure. Covers start/stop/restart/enable, reading service logs with journalctl, diagnosing OOM kills, and the PowerShell equivalents."
-related: ["[[viewing-processes]]", "[[killing-processes]]", "[[system-resources]]", "[[reading-file-contents]]" ]
+related: ["[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[killing-processes](/01-Shell/Process-Management/killing-processes)", "[system-resources](/01-Shell/Process-Management/system-resources)", "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -129,7 +129,7 @@ Get-Service -Name "MSSQLSERVER" -DependentServices
 When running multiple services as containers, [docker-compose](/09-Docker/docker-compose) provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
 
 ## Related
-- [[viewing-processes]] — monitor resource usage of a running service
-- [[system-resources]] — detect OOM conditions before they kill services
-- [[killing-processes]] — `kill` as last resort when `systemctl stop` doesn't work
-- [[reading-file-contents]] — read log files when `journalctl` isn't enough
+- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — monitor resource usage of a running service
+- [system-resources](/01-Shell/Process-Management/system-resources) — detect OOM conditions before they kill services
+- [killing-processes](/01-Shell/Process-Management/killing-processes) — `kill` as last resort when `systemctl stop` doesn't work
+- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — read log files when `journalctl` isn't enough

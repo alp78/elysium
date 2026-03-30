@@ -168,8 +168,8 @@ sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 
 ## Related
 
-- [[datadog-sql-server-integration]] — Base integration config that hosts these queries
-- [[datadog-agent-sql-vm]] — Agent management and restart commands
-- [[datadog-dashboards]] — Dashboard widgets consuming these custom metrics
-- [[datadog-alerting]] — Deadlock alert monitor using `sqlserver.deadlocks.total`
+- [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) — Base integration config that hosts these queries
+- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — Agent management and restart commands
+- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets consuming these custom metrics
+- [datadog-alerting](/13-Observability/Datadog/datadog-alerting) — Deadlock alert monitor using `sqlserver.deadlocks.total`
 - [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Raw DMV queries for manual investigation

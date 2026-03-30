@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 keywords: [File, StreamReader, StreamWriter, JsonSerializer, System.Text.Json, Newtonsoft, CsvHelper, Path, Directory]
-description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [[09_py_fileio_serialization]] for the Python equivalent."
+description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[09_py_fileio_serialization]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

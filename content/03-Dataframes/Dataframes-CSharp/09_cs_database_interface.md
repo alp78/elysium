@@ -9,13 +9,13 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL
 keywords: [SQLContext, DuckDB, SQL Server, database, query, connection, ADO.NET, SQLAlchemy]
-description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [[09_py_database_interface]] for the Python equivalent."
+description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface) for the Python equivalent."
 related:
-  - "[[moc-dataframes]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[09_py_database_interface]]"
-  - "[[08_cs_visualization]]"
-  - "[[10_cs_testing_migration]]"
+  - "[09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface)"
+  - "[08_cs_visualization](/03-Dataframes/Dataframes-CSharp/08_cs_visualization)"
+  - "[10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

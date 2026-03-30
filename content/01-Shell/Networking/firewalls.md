@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell, gcp, security, networking]
 aliases: [ufw, iptables, firewall, GCP firewall, network security, defense in depth, Windows Firewall]
 keywords: [ufw, iptables, firewall, GCP firewall rules, VPC firewall, allow rule, deny rule, default deny, port 1433, SQL Server firewall, IAP firewall, defense in depth, VPC Service Controls, New-NetFirewallRule, Get-NetFirewallRule, network security]
 description: "Configuring Linux ufw, GCP VPC firewall rules, and Windows Firewall for secure database and infrastructure access. Covers the defense-in-depth model: VPC firewall + OS firewall + strong authentication + no public IP."
-related: ["[[connectivity-testing]]", "[[iap-tunneling]]", "[[socket-inspection]]", "[[environment-variables]]" ]
+related: ["[connectivity-testing](/01-Shell/Networking/connectivity-testing)", "[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[socket-inspection](/01-Shell/Networking/socket-inspection)", "[environment-variables](/01-Shell/Scripting/environment-variables)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -90,7 +90,7 @@ gcloud compute firewall-rules list \
 
 > [!tip] IAP firewall rule
 >
-> For [[iap-tunneling]] to work, you must have a GCP firewall rule allowing TCP port 22 from the IAP IP range `35.235.240.0/20`. Without this rule, `gcloud compute ssh` will time out even if the VM is running.
+> For [iap-tunneling](/01-Shell/Networking/iap-tunneling) to work, you must have a GCP firewall rule allowing TCP port 22 from the IAP IP range `35.235.240.0/20`. Without this rule, `gcloud compute ssh` will time out even if the VM is running.
 
 ### PowerShell — Windows Firewall with New-NetFirewallRule
 
@@ -122,7 +122,7 @@ Set-NetFirewallProfile -Profile Domain,Public,Private `
 ```
 
 ## Related
-- [[connectivity-testing]] — diagnose "connection timed out" (firewall) vs "connection refused" (no service)
-- [[iap-tunneling]] — access VMs without opening public ports at all
-- [[socket-inspection]] — verify which ports are actually listening before writing firewall rules
-- [[environment-variables]] — never hardcode credentials in firewall rule scripts
+- [connectivity-testing](/01-Shell/Networking/connectivity-testing) — diagnose "connection timed out" (firewall) vs "connection refused" (no service)
+- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — access VMs without opening public ports at all
+- [socket-inspection](/01-Shell/Networking/socket-inspection) — verify which ports are actually listening before writing firewall rules
+- [environment-variables](/01-Shell/Scripting/environment-variables) — never hardcode credentials in firewall rule scripts

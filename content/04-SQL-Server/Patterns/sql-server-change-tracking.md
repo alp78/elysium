@@ -302,7 +302,7 @@ FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
 >
 > CDC is not "set and forget." The log reader agent must be running, change tables grow unbounded without cleanup, and schema changes can break the capture instance.
 
-- **Log reader agent must be running:** CDC depends on SQL Server Agent (see [[sql-server-agent-jobs]] for Agent on Linux). If the agent stops, changes accumulate in the transaction log, potentially filling it
+- **Log reader agent must be running:** CDC depends on SQL Server Agent (see [sql-server-agent-jobs](/04-SQL-Server/Administration/sql-server-agent-jobs) for Agent on Linux). If the agent stops, changes accumulate in the transaction log, potentially filling it
 - **Cleanup:** CDC change tables grow until you configure retention: `EXEC sys.sp_cdc_change_job @job_type = 'cleanup', @retention = 4320;` (minutes)
 - **Schema changes break CDC:** adding or dropping a column requires disabling and re-enabling CDC on that table — the capture instance must match the current schema
 
@@ -488,4 +488,4 @@ The history table grows at least as fast as the rate of changes to the source ta
 > 4. Changed stocks: `UPDATE SET is_current = 0, valid_to = SYSUTCDATETIME()` → `INSERT` new version
 > 5. Filtered unique index `UX_silver_index_dim_current` enforces one active row per stock
 >
-> See [[silver-transforms]] for the full detect/close/insert implementation.
+> See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for the full detect/close/insert implementation.

@@ -61,10 +61,10 @@ SQL Server execution plans are read **right-to-left, bottom-to-top**. The rightm
 #### Reading the visual tree — operators, arrows, cost tooltips
 
 1. **Start at the far right.** These are the data access operators — where SQL Server touches tables/indexes. Look at their type:
-   - **Index Seek** (good) — B-tree navigation to specific rows, O(log n). Requires [[sargable-queries|SARGable predicates]] in the WHERE clause.
+   - **Index Seek** (good) — B-tree navigation to specific rows, O(log n). Requires [SARGable predicates](/04-SQL-Server/T-SQL/sargable-queries) in the WHERE clause.
    - **Index Scan** (check context) — reads all leaf pages of an index
    - **Table Scan** (usually bad) — full heap scan, reads every page
-   - **Key Lookup** (expensive if frequent) — bookmark lookup from NC index to [[index-types-and-strategy|clustered index]]. Fix by adding INCLUDE columns to the nonclustered index.
+   - **Key Lookup** (expensive if frequent) — bookmark lookup from NC index to [clustered index](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy). Fix by adding INCLUDE columns to the nonclustered index.
 
 2. **Follow the arrows left.** Data flows through intermediate operators:
    - **Hash Match** — builds a hash table for joins or aggregations
@@ -170,7 +170,7 @@ ORDER BY subtree_cost DESC;
 #### EstimateIO vs EstimateCPU — cost breakdown per operator
 
 Each operator's cost is split into I/O cost and CPU cost:
-- **High IO cost** → the operator is reading many pages from disk/buffer pool. Solution: add [[index-types-and-strategy|indexes]] to reduce pages read, or add RAM for better buffer pool hit ratio.
+- **High IO cost** → the operator is reading many pages from disk/buffer pool. Solution: add [indexes](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) to reduce pages read, or add RAM for better buffer pool hit ratio.
 - **High CPU cost** → the operator is doing heavy computation (sorting, hashing, string comparisons). Solution: reduce the number of rows reaching this operator, or simplify the expression.
 
 > [!warning] Cost Percentages Are Based on Estimates
@@ -305,7 +305,7 @@ OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 
 ## Wait Stats Inside Execution Plans
 
-SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. Instead of correlating server-wide [[wait-stats-analysis|wait stats]] with specific queries, you can see exactly what each query waited on.
+SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. Instead of correlating server-wide [wait stats](/04-SQL-Server/Performance/wait-stats-analysis) with specific queries, you can see exactly what each query waited on.
 
 #### SSMS WaitStats node — per-query wait stats in execution plans
 
@@ -368,7 +368,7 @@ ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 | `WRITELOG` | Query waited for transaction log flush to disk | Slow log disk, or too many individual COMMITs (batch them) |
 | `CXPACKET` / `CXCONSUMER` | Parallelism coordination waits | Usually harmless. If excessive: check for skewed thread distribution or lower MAXDOP |
 | `ASYNC_NETWORK_IO` | SQL Server produced rows faster than the client consumed them | Client (dashboard/pipeline) is slow processing results, or network latency |
-| `LCK_M_S` / `LCK_M_X` | Query was blocked by another session's lock | Contention — check for long-running transactions, consider [[merge-and-upsert|RCSI]] |
+| `LCK_M_S` / `LCK_M_X` | Query was blocked by another session's lock | Contention — check for long-running transactions, consider [RCSI](/04-SQL-Server/T-SQL/merge-and-upsert) |
 | `MEMORY_GRANT_QUEUE` | Query waited in the memory grant queue before it could start | Too many concurrent queries requesting sort/hash memory — reduce parallelism or add RAM |
 | `SOS_SCHEDULER_YIELD` | CPU was overloaded, query had to yield its time slice | CPU pressure — optimize the query or add vCPUs |
 
@@ -376,7 +376,7 @@ ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 
 Per-query waits tell you "this specific query waited on X." Server-wide waits (from `sys.dm_os_wait_stats`) tell you "the entire workload is bottlenecked on X." Use both:
 
-1. Check server-wide [[wait-stats-analysis|wait stats]] → identify the category (I/O? locks? CPU?)
+1. Check server-wide [wait stats](/04-SQL-Server/Performance/wait-stats-analysis) → identify the category (I/O? locks? CPU?)
 2. Find the specific queries contributing → per-query wait stats in execution plans
 3. Fix the worst offenders
 
@@ -399,7 +399,7 @@ Per-query waits tell you "this specific query waited on X." Server-wide waits (f
 
 ## Implicit Conversions — The Silent Performance Killer
 
-The most common silent performance killer in Python-to-SQL pipelines. Python's pyodbc sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents [[sargable-queries|index seeks]].
+The most common silent performance killer in Python-to-SQL pipelines. Python's pyodbc sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents [index seeks](/04-SQL-Server/T-SQL/sargable-queries).
 
 #### sys.dm_exec_query_plan PlanAffectingConvert — detect implicit conversions
 
@@ -433,7 +433,7 @@ cursor.executemany("INSERT INTO ...", rows)
 
 > [!info] Full SARGability Reference
 >
-> For the complete list of SARGable vs. non-SARGable patterns, the detection query, and the data pipeline quick-reference table, see [[sargable-queries]].
+> For the complete list of SARGable vs. non-SARGable patterns, the detection query, and the data pipeline quick-reference table, see [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries).
 
 ---
 
@@ -545,7 +545,7 @@ ON bronze.pulse_tickers (_index) INCLUDE (symbol, rank, activity_score, volume_s
 
 > [!info] Missing Index DMVs
 >
-> For the systematic missing index detection query using `sys.dm_db_missing_index_details`, see [[index-types-and-strategy#Missing Index DMV Queries]].
+> For the systematic missing index detection query using `sys.dm_db_missing_index_details`, see [index-types-and-strategy > Missing Index DMV Queries](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy#missing-index-dmv-queries).
 
 ---
 
@@ -618,8 +618,8 @@ UPDATE STATISTICS gold.index_performance WITH FULLSCAN, PERSIST_SAMPLE_PERCENT =
 
 ### Related
 
-- [[sargable-queries]] — predicate patterns that enable vs. prevent index seeks
-- [[wait-stats-analysis]] — server-wide wait stats to correlate with per-query plan waits
-- [[index-types-and-strategy]] — index types, missing index DMVs, and covering index strategy
-- [[storage-internals]] — buffer pool, B-tree mechanics that explain what plans show
-- [[performance-audit-playbook]] — structured audit using execution plans as the primary tool
+- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — predicate patterns that enable vs. prevent index seeks
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — server-wide wait stats to correlate with per-query plan waits
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — index types, missing index DMVs, and covering index strategy
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — buffer pool, B-tree mechanics that explain what plans show
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured audit using execution plans as the primary tool

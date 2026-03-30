@@ -7,10 +7,10 @@ aliases: [Terraform cheat sheet, tf cheat sheet, Terraform quick reference]
 keywords: [terraform, cheat sheet, quick reference, init, plan, apply, destroy, state, import, workspace, hcl]
 description: "Exhaustive CLI reference for Terraform — every command, flag, HCL function, and common pattern in one place."
 related:
-  - "[[terraform-plan-apply-destroy]]"
-  - "[[terraform-state-management]]"
-  - "[[hcl-syntax-basics]]"
-  - "[[terraform-variables-and-outputs]]"
+  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
+  - "[terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management)"
+  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
+  - "[terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)"
 created: 2026-03-22
 updated: 2026-03-23
 status: stable
@@ -287,7 +287,7 @@ terraform destroy -var-file=prod.tfvars -auto-approve
 
 State commands manipulate the Terraform state file directly. Use with care — mistakes here can orphan or duplicate resources.
 
-See [[terraform-state-management]] for narrative context.
+See [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) for narrative context.
 
 ### terraform state list
 
@@ -1437,7 +1437,7 @@ TF_IN_AUTOMATION=1 TF_INPUT=0 terraform apply -auto-approve
 
 ## Related
 
-- [[terraform-plan-apply-destroy]] — detailed workflow narrative
-- [[terraform-state-management]] — state backends, locking, and recovery
-- [[hcl-syntax-basics]] — HCL language fundamentals
-- [[terraform-variables-and-outputs]] — variable types, validation, sensitive values
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — detailed workflow narrative
+- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — state backends, locking, and recovery
+- [hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL language fundamentals
+- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — variable types, validation, sensitive values

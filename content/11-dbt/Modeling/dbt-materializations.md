@@ -6,9 +6,9 @@ status: stable
 updated: 2026-03-23
 description: "View table incremental ephemeral snapshot deep dive"
 related:
-  - "[[dbt-core-concepts]]"
-  - "[[dbt-mart-models]]"
-  - "[[dbt-intermediate-models]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
+  - "[dbt-mart-models](/11-dbt/Modeling/dbt-mart-models)"
+  - "[dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models)"
   - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
 ---
 
@@ -376,7 +376,7 @@ dbt run --select tag:incremental --full-refresh
 ---
 
 ## Related
-- [[dbt-core-concepts]]
-- [[dbt-mart-models]]
-- [[dbt-intermediate-models]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-mart-models](/11-dbt/Modeling/dbt-mart-models)
+- [dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models)
 - [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)

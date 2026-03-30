@@ -49,8 +49,8 @@ description: "DataOps principles and practices — the intersection of Agile, De
 related:
   - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
   - "[golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering)"
-  - "[[data-team-organization]]"
-  - "[[self-service-data-platform]]"
+  - "[data-team-organization](/15-DataOps/data-team-organization)"
+  - "[self-service-data-platform](/15-DataOps/self-service-data-platform)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -579,7 +579,7 @@ Run the improvements as a time-boxed project. Re-measure after 90 days. Repeat.
 
 - [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — the foundational engineering capabilities that DataOps practices build upon
 - [golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — principles that align with DataOps philosophy
-- [[data-team-organization]] — how to structure a team to execute DataOps practices effectively
-- [[self-service-data-platform]] — the platform-level manifestation of DataOps maturity
+- [data-team-organization](/15-DataOps/data-team-organization) — how to structure a team to execute DataOps practices effectively
+- [self-service-data-platform](/15-DataOps/self-service-data-platform) — the platform-level manifestation of DataOps maturity
 - [orchestration selection](/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) — choosing the right orchestration tool for your CI/CD pipelines
-- [[dataops-principles-and-practices|data quality]] — detailed look at shift-left testing tools and strategies
+- [data quality](/15-DataOps/dataops-principles-and-practices) — detailed look at shift-left testing tools and strategies

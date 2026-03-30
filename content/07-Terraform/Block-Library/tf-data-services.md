@@ -67,11 +67,11 @@ keywords:
   - GCP data services
 description: "Atomic Terraform block library for GCP data services — BigQuery datasets, tables, views, materialized views, UDFs, external tables, scheduled queries, reservations, Firestore databases, indexes, backup schedules, Dataflow batch and streaming jobs, Cloud SQL instances, log sinks, monitoring alert policies, and billing budgets. Every argument is commented inline."
 related:
-  - "[[terraform-iam-and-secrets]]"
-  - "[[terraform-networking]]"
-  - "[[terraform-cloud-run]]"
-  - "[[terraform-variables-and-outputs]]"
-  - "[[terraform-state-management]]"
+  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
+  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
+  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
+  - "[terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)"
+  - "[terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1698,8 +1698,8 @@ schema = jsonencode([
 
 ## Cross-References
 
-- IAM for pipeline service accounts — [[terraform-iam-and-secrets]]
-- VPC and private networking for Cloud SQL and Dataflow workers — [[terraform-networking]]
-- Cloud Run jobs that load data into BigQuery — [[terraform-cloud-run]]
-- Variable definitions for `var.region`, `var.project_id`, `var.environment` — [[terraform-variables-and-outputs]]
-- Managing BigQuery dataset state after manual schema changes — [[terraform-state-management]]
+- IAM for pipeline service accounts — [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)
+- VPC and private networking for Cloud SQL and Dataflow workers — [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)
+- Cloud Run jobs that load data into BigQuery — [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)
+- Variable definitions for `var.region`, `var.project_id`, `var.environment` — [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)
+- Managing BigQuery dataset state after manual schema changes — [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management)

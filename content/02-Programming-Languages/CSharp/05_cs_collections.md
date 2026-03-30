@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 keywords: [List, Dictionary, HashSet, Queue, Stack, IEnumerable, LINQ, array, SortedDictionary, ConcurrentDictionary]
-description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [[05_py_collections]] for the Python equivalent."
+description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [05_py_collections](/02-Programming-Languages/Python/05_py_collections) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[05_py_collections]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[05_py_collections](/02-Programming-Languages/Python/05_py_collections)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

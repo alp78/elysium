@@ -109,12 +109,12 @@ gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
 
 ## Related
 
-- [[pubsub-topics-and-subscriptions]] — Push subscriptions can trigger Cloud Run Services
-- [[pubsub-messaging]] — Cloud Run Services as push subscription endpoints
-- [[gcs-object-operations]] — Jobs typically read input from and write output to GCS
-- [[service-accounts-and-iam]] — `roles/run.invoker` to trigger jobs; SA attached to the job for GCS/BQ access
-- [[gcp-projects-and-apis]] — `run.googleapis.com` must be enabled
-- [[cloud-logging]] — Job logs are available in Cloud Logging by resource type `cloud_run_job`
+- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Push subscriptions can trigger Cloud Run Services
+- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Cloud Run Services as push subscription endpoints
+- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — Jobs typically read input from and write output to GCS
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/run.invoker` to trigger jobs; SA attached to the job for GCS/BQ access
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `run.googleapis.com` must be enabled
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Job logs are available in Cloud Logging by resource type `cloud_run_job`
 
 ## References
 

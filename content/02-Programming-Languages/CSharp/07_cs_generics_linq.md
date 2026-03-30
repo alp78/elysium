@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 keywords: [generics, LINQ, where, select, orderby, groupby, IEnumerable, IQueryable, type constraints, variance]
-description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [[07_py_generics_linq]] for the Python equivalent."
+description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [07_py_generics_linq](/02-Programming-Languages/Python/07_py_generics_linq) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[07_py_generics_linq]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[07_py_generics_linq](/02-Programming-Languages/Python/07_py_generics_linq)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -42,7 +42,7 @@ This page is the **conceptual framework** for GCP security. It explains the iden
 - **Service accounts** are for machines. They authenticate via key files, metadata server tokens, or Workload Identity Federation
 - **Rule:** production workloads always use service accounts, never user accounts. One SA per workload, not one SA for everything
 
-For SA creation and IAM binding commands, see [[service-accounts-and-iam#GCP Service Accounts — Machine Identities]]. For the Terraform pattern of one SA per workload, see [terraform-iam-and-secrets > Design Principle: One Service Account Per Workload](/07-Terraform/GCP-Resources/terraform-iam-and-secrets#design-principle-one-service-account-per-workload).
+For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Service Accounts — Machine Identities](/06-GCP/Security/service-accounts-and-iam#gcp-service-accounts--machine-identities). For the Terraform pattern of one SA per workload, see [terraform-iam-and-secrets > Design Principle: One Service Account Per Workload](/07-Terraform/GCP-Resources/terraform-iam-and-secrets#design-principle-one-service-account-per-workload).
 
 ### Credential Types — Short-Lived vs Long-Lived
 
@@ -96,7 +96,7 @@ For SA creation and IAM binding commands, see [[service-accounts-and-iam#GCP Ser
 > image layer, visible in logs): immediately delete the key in IAM, then
 > rotate every secret the SA had access to. Attackers actively scan public
 > repos for GCP key patterns. See
-> [[service-accounts-and-iam#Service Account Key Files — Local Development Only]]
+> [service-accounts-and-iam > Service Account Key Files — Local Development Only](/06-GCP/Security/service-accounts-and-iam#service-account-key-files--local-development-only)
 > for the deletion and rotation procedure.
 
 ### The OAuth2 Token Flow — What Actually Happens
@@ -133,8 +133,8 @@ sequenceDiagram
 | Layer | Question | Mechanism | Vault Reference |
 |-------|----------|-----------|-----------------|
 | **Authentication** | Who are you? | OAuth2 tokens, key files, WIF | [gcloud-authentication > How GCP Authentication Works](/06-GCP/Core/gcloud-authentication#how-gcp-authentication-works) |
-| **Authorization** | What can you do? | IAM roles and bindings | [[service-accounts-and-iam#IAM Bindings — Granting Roles to Service Accounts]] |
-| **Network control** | Where can data flow? | VPC-SC perimeters, firewalls | [[vpc-service-controls#The Data Exfiltration Threat Model]] |
+| **Authorization** | What can you do? | IAM roles and bindings | [service-accounts-and-iam > IAM Bindings — Granting Roles to Service Accounts](/06-GCP/Security/service-accounts-and-iam#iam-bindings--granting-roles-to-service-accounts) |
+| **Network control** | Where can data flow? | VPC-SC perimeters, firewalls | [vpc-service-controls > The Data Exfiltration Threat Model](/06-GCP/Security/vpc-service-controls#the-data-exfiltration-threat-model) |
 
 A service account with `roles/bigquery.dataViewer` (authorized) can still be blocked by VPC-SC if it tries to copy data out of a protected perimeter. IAM says "yes"; VPC-SC says "no". Both must agree.
 
@@ -174,7 +174,7 @@ For the gcloud reference, see [gcloud-authentication > The ADC Credential Search
 > If the VM was created with `--scopes=compute-ro`, the metadata server token only works for Compute Engine read operations — even if the attached SA has broader IAM roles. Use `--scopes=cloud-platform` (all APIs) unless you have a specific reason to restrict.
 
 - Python implementation: [21_py_security_operations > VM instance identity — metadata server credentials](/02-Programming-Languages/Python/21_py_security_operations#vm-instance-identity--metadata-server-credentials)
-- SA attachment to VM: [[service-accounts-and-iam#ADC and the GCE Metadata Server]]
+- SA attachment to VM: [service-accounts-and-iam > ADC and the GCE Metadata Server](/06-GCP/Security/service-accounts-and-iam#adc-and-the-gce-metadata-server)
 
 ### Workload Identity Federation (WIF) — keyless external identity
 
@@ -202,7 +202,7 @@ sequenceDiagram
 - **WIF vs key file:** key files are permanent liabilities; WIF tokens live for minutes. Always prefer WIF
 
 - Pool and provider creation: [20_py_security_setup > Workload Identity Federation](/02-Programming-Languages/Python/20_py_security_setup#workload-identity-federation)
-- GitHub Actions usage: [[secrets-management#GitHub Actions — Workload Identity Federation (Keyless)]]
+- GitHub Actions usage: [secrets-management > GitHub Actions — Workload Identity Federation (Keyless)](/06-GCP/Security/secrets-management#github-actions--workload-identity-federation-keyless)
 - Python OIDC flow: [21_py_security_operations > Workload Identity Federation — GitHub Actions OIDC flow](/02-Programming-Languages/Python/21_py_security_operations#workload-identity-federation--github-actions-oidc-flow)
 
 ### Service Account Impersonation — temporary privilege escalation
@@ -221,6 +221,17 @@ sequenceDiagram
 
 ### Service Account Key Files — last resort only
 
+> [!danger] Service Account Key Files
+>
+> Downloading a service account key is the single most common GCP
+> security violation. The key never expires (unless you set rotation),
+> cannot be audited for usage (you see the SA's actions, not who used
+> the key), and if committed to Git or leaked, grants permanent access
+> until manually revoked. Use Workload Identity Federation for external
+> workloads, attached service accounts for GCP workloads, and
+> `gcloud auth application-default login` for local development.
+> The key that doesn't exist can't be leaked.
+
 > [!danger] Key Files Never Expire
 >
 > A downloaded JSON key file grants full access to the service account's permissions with no expiration. If it leaks to a git repo, a log file, or a shared drive, the attacker has permanent access until someone manually deletes the key.
@@ -228,8 +239,8 @@ sequenceDiagram
 - **When justified:** local development against GCP APIs where `gcloud auth application-default login` isn't sufficient (rare — e.g., testing impersonation flows)
 - **The rule:** if you can use metadata server or WIF, you must. Key files are the absolute last resort
 
-- Key creation: [[service-accounts-and-iam#Service Account Key Files — Local Development Only]]
-- Key rotation procedure: [[secrets-management#Service Account Keys]]
+- Key creation: [service-accounts-and-iam > Service Account Key Files — Local Development Only](/06-GCP/Security/service-accounts-and-iam#service-account-key-files--local-development-only)
+- Key rotation procedure: [secrets-management > Service Account Keys](/06-GCP/Security/secrets-management#service-account-keys)
 - Python key file auth: [21_py_security_operations > google-auth Credentials.from_service_account_file — key file authentication](/02-Programming-Languages/Python/21_py_security_operations#google-auth-credentialsfromserviceaccountfile--key-file-authentication)
 - C# key file auth: [21_cs_security_operations > GoogleCredential.FromFile — service account key file authentication](/02-Programming-Languages/CSharp/21_cs_security_operations#googlecredentialfromfile--service-account-key-file-authentication)
 
@@ -292,7 +303,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | Network | Same VPC, private IPs are directly routable |
 | Credential source | SA_PASSWORD from Secret Manager → Airflow Connection |
 
-- Secret Manager in Airflow: [[secrets-management#Airflow Connections Backed by Secret Manager]]
+- Secret Manager in Airflow: [secrets-management > Airflow Connections Backed by Secret Manager](/06-GCP/Security/secrets-management#airflow-connections-backed-by-secret-manager)
 
 > [!warning] Common Mistake
 >
@@ -311,11 +322,11 @@ Every source→destination pair in the stack, with the complete trust chain, req
 - Python: [connecting-to-gcp-resources > google-cloud-bigquery Client — BigQuery queries (Python)](/01-Shell/Networking/connecting-to-gcp-resources#google-cloud-bigquery-client--bigquery-queries-python)
 - Python lab (with SA auth): [21_py_security_operations > google-cloud-bigquery Client — query with service account credentials](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-bigquery-client--query-with-service-account-credentials)
 - C# lab: [21_cs_security_operations > BigQueryClient — query with service account credentials](/02-Programming-Languages/CSharp/21_cs_security_operations#bigqueryclient--query-with-service-account-credentials)
-- VPC-SC restrictions: [[vpc-service-controls]]
+- VPC-SC restrictions: [vpc-service-controls](/06-GCP/Security/vpc-service-controls)
 
 > [!warning] Common Mistake
 >
-> Granting `roles/bigquery.admin` when the pipeline only reads data. Use `roles/bigquery.dataViewer` for read-only access. See [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]] for the minimum role set.
+> Granting `roles/bigquery.admin` when the pipeline only reads data. Use `roles/bigquery.dataViewer` for read-only access. See [service-accounts-and-iam > Minimum IAM Permission Set for a Data Pipeline](/06-GCP/Security/service-accounts-and-iam#minimum-iam-permission-set-for-a-data-pipeline) for the minimum role set.
 
 ### Python/C# → Firestore (serverless API)
 
@@ -328,7 +339,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 
 - Python lab: [21_py_security_operations > google-cloud-firestore Client — read documents with SA credentials](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-firestore-client--read-documents-with-sa-credentials)
 - C# lab: [21_cs_security_operations > FirestoreDb — read and write documents with SA credentials](/02-Programming-Languages/CSharp/21_cs_security_operations#firestoredb--read-and-write-documents-with-sa-credentials)
-- Firestore IAM vs security rules: [[firestore-data-model-and-operations]]
+- Firestore IAM vs security rules: [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)
 
 ### Python/C# → Cloud Storage (serverless API)
 
@@ -340,7 +351,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | Per-bucket IAM | Grant on specific buckets, not project-wide |
 | KMS-encrypted objects | CMEK or CSEK — transparent to readers with KMS access |
 
-- Minimum roles: [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]]
+- Minimum roles: [service-accounts-and-iam > Minimum IAM Permission Set for a Data Pipeline](/06-GCP/Security/service-accounts-and-iam#minimum-iam-permission-set-for-a-data-pipeline)
 - KMS encryption: [21_py_security_operations > google-cloud-kms encrypt — symmetric encryption of plaintext](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-kms-encrypt--symmetric-encryption-of-plaintext)
 
 ### Python/C# → Secret Manager (serverless API)
@@ -352,8 +363,8 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | IAM role | `roles/secretmanager.secretAccessor` (read secret values) |
 | Per-secret IAM | Bind accessor role on individual secrets, not project-wide |
 
-- IAM bindings: [[secrets-management#IAM for Secrets]]
-- Python code: [[secrets-management#Access from Python]]
+- IAM bindings: [secrets-management > IAM for Secrets](/06-GCP/Security/secrets-management#iam-for-secrets)
+- Python code: [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python)
 - Python lab: [21_py_security_operations > google-cloud-secret-manager access_secret_version — read secrets](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-secret-manager-accesssecretversion--read-secrets)
 
 ### Cloud Run → SQL Server (cross-service, same VPC)
@@ -366,7 +377,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | Network | Serverless VPC Access connector (or Direct VPC Egress) |
 | Credential source | SA password from Secret Manager, fetched at container startup |
 
-- Cloud Run configuration: [[cloud-run-jobs-vs-services]]
+- Cloud Run configuration: [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)
 
 > [!warning] Common Mistake
 >
@@ -383,7 +394,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | Key file | **None** — this is the entire point of WIF |
 
 - WIF pool setup: [20_py_security_setup > Workload Identity Federation](/02-Programming-Languages/Python/20_py_security_setup#workload-identity-federation)
-- GitHub Actions workflow: [[secrets-management#GitHub Actions — Workload Identity Federation (Keyless)]]
+- GitHub Actions workflow: [secrets-management > GitHub Actions — Workload Identity Federation (Keyless)](/06-GCP/Security/secrets-management#github-actions--workload-identity-federation-keyless)
 - Python OIDC flow: [21_py_security_operations > Workload Identity Federation — GitHub Actions OIDC flow](/02-Programming-Languages/Python/21_py_security_operations#workload-identity-federation--github-actions-oidc-flow)
 
 ### GitHub Actions → SQL Server (WIF + IAP)
@@ -491,7 +502,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 >
 > The pipeline SA reads/writes data. The dashboard SA reads gold tables only.
 > The CI SA deploys but doesn't read data. A compromised SA affects only its
-> own workload. See [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]].
+> own workload. See [service-accounts-and-iam > Minimum IAM Permission Set for a Data Pipeline](/06-GCP/Security/service-accounts-and-iam#minimum-iam-permission-set-for-a-data-pipeline).
 
 ---
 
@@ -526,7 +537,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 > `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` +
 > `roles/storage.objectAdmin` (on specific buckets) +
 > `roles/secretmanager.secretAccessor`. Nothing more. See
-> [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]]
+> [service-accounts-and-iam > Minimum IAM Permission Set for a Data Pipeline](/06-GCP/Security/service-accounts-and-iam#minimum-iam-permission-set-for-a-data-pipeline)
 > for the exact role list.
 
 ---
@@ -544,8 +555,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 >
 > Credentials live in GCP Secret Manager with per-secret IAM bindings.
 > Application code fetches them at startup — nothing on disk, nothing in git,
-> nothing in logs. See [[secrets-management#Access from Python]] for the
-> Python pattern and [[secrets-management#Airflow Connections Backed by Secret Manager]]
+> nothing in logs. See [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python) for the
+> Python pattern and [secrets-management > Airflow Connections Backed by Secret Manager](/06-GCP/Security/secrets-management#airflow-connections-backed-by-secret-manager)
 > for Airflow integration.
 
 ---
@@ -563,7 +574,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 >
 > VPC-SC restricts WHERE data can flow — even IAM-authorized requests are
 > blocked if they cross the perimeter boundary. Data stays inside the
-> project. See [[vpc-service-controls]] for perimeter setup and the
+> project. See [vpc-service-controls](/06-GCP/Security/vpc-service-controls) for perimeter setup and the
 > ingress/egress policy patterns.
 
 ---
@@ -582,7 +593,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 > Create new key → update Secret Manager version → update all consumers →
 > verify → disable old key → wait 24 hours → delete old key. Automate this
 > with a Cloud Scheduler job or a quarterly calendar reminder. See
-> [[secrets-management#Service Account Keys]] for the full rotation procedure.
+> [secrets-management > Service Account Keys](/06-GCP/Security/secrets-management#service-account-keys) for the full rotation procedure.
 
 ---
 

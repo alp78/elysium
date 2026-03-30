@@ -31,7 +31,7 @@ gcloud storage ls gs://data-pipeline-bucket/data/
 > [!danger] Recursive Delete Is Irreversible
 >
 > `gcloud storage rm -r` Is Irreversible Without Versioning.
-> `gcloud storage rm -r gs://bucket/prefix/` deletes all matching objects immediately with no confirmation prompt and no trash. If versioning is not enabled on the bucket, the data is permanently gone. Always enable versioning on buckets containing pipeline data or backups (see [[gcs-buckets-and-lifecycle]]). A single typo in the prefix can wipe an entire dataset.
+> `gcloud storage rm -r gs://bucket/prefix/` deletes all matching objects immediately with no confirmation prompt and no trash. If versioning is not enabled on the bucket, the data is permanently gone. Always enable versioning on buckets containing pipeline data or backups (see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)). A single typo in the prefix can wipe an entire dataset.
 
 ### Copying Files with gcloud storage cp
 
@@ -65,7 +65,7 @@ gcloud storage rsync -r -d ./local_data/ gs://data-pipeline-bucket/data/
 >
 > The `-d` (delete) flag on `gcloud storage rsync` removes GCS objects that don't exist locally. Always double-check:
 > 1. The source and destination are in the correct order
-> 2. Versioning is enabled on the bucket if you need recovery (see [[gcs-buckets-and-lifecycle]])
+> 2. Versioning is enabled on the bucket if you need recovery (see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle))
 > 3. The sync will delete only what you expect
 
 ### Moving and Deleting GCS Objects
@@ -97,7 +97,7 @@ Object metadata fields useful for data engineering:
 - `size` — file size in bytes
 - `md5Hash` — checksum for integrity verification
 - `contentType` — MIME type (`application/octet-stream` for Parquet, `text/csv` for CSV)
-- `storageClass` — current storage class (see [[gcs-buckets-and-lifecycle]])
+- `storageClass` — current storage class (see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle))
 - `timeCreated` — when the object was first uploaded
 - `updated` — last modification timestamp
 
@@ -132,10 +132,10 @@ bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bu
 
 ## Related
 
-- [[gcs-buckets-and-lifecycle]] — Creating buckets, storage classes, and lifecycle rules that govern these objects
-- [[data-loading-and-export]] — Loading GCS objects into BigQuery with `bq load`
-- [[cloud-run-jobs-vs-services]] — Cloud Run Jobs read/write GCS as their primary data interface
-- [[gcloud-output-formatting]] — Use `--format` with `gcloud storage ls` for scriptable listings
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Creating buckets, storage classes, and lifecycle rules that govern these objects
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Loading GCS objects into BigQuery with `bq load`
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Jobs read/write GCS as their primary data interface
+- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — Use `--format` with `gcloud storage ls` for scriptable listings
 
 ## References
 

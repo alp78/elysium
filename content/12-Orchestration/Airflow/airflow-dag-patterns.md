@@ -64,7 +64,7 @@ status: complete
 A reference for the most important Apache Airflow DAG authoring patterns used in production data engineering. This note covers how to express complex workflow logic in DAGs: dependencies, grouping, dynamic generation, branching, and scheduling strategies.
 
 > [!tip] Prerequisites
-> This note assumes familiarity with Airflow fundamentals. See [[airflow-core-concepts]] for DAG structure, Operators, Sensors, XComs, and the TaskFlow API before reading this reference.
+> This note assumes familiarity with Airflow fundamentals. See [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) for DAG structure, Operators, Sensors, XComs, and the TaskFlow API before reading this reference.
 
 ---
 
@@ -211,7 +211,7 @@ Dynamic DAG generation creates tasks programmatically — from a config file, da
 
 > [!warning] Keep DAG parsing fast
 >
-> DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [[airflow-troubleshooting]] for slow DAG parsing symptoms.
+> DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) for slow DAG parsing symptoms.
 
 ### Pattern 1: Dynamic Tasks from a Config List
 
@@ -525,6 +525,15 @@ incremental_load = PythonOperator(
     # if the first run ever fails. Hard to recover from without clearing tasks.
 )
 ```
+
+> [!warning] depends_on_past + max_active_runs Deadlock
+>
+> Setting `depends_on_past=True` with `max_active_runs > 1` creates a
+> potential deadlock: DAG run N's task B waits for DAG run N-1's task B
+> to succeed, but DAG run N-1 is still running (because `max_active_runs`
+> allows it). If task A in run N-1 is slow, task B in run N is blocked
+> indefinitely. Rule: if you use `depends_on_past=True`, set
+> `max_active_runs=1` to ensure sequential execution.
 
 > [!warning] depends_on_past pitfalls
 >
@@ -922,9 +931,9 @@ medallion_pipeline()
 
 ## Related Notes
 
-- [[airflow-core-concepts]] — DAG structure, Operators, Sensors, XComs, TaskFlow API
-- [[airflow-deployment]] — Docker Compose setup, Cloud Composer, CI/CD for DAGs
-- [[airflow-troubleshooting]] — Debugging dynamic DAGs, trigger rule issues, backfill problems
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — DAG structure, Operators, Sensors, XComs, TaskFlow API
+- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Docker Compose setup, Cloud Composer, CI/CD for DAGs
+- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging dynamic DAGs, trigger rule issues, backfill problems
 
 ## References
 

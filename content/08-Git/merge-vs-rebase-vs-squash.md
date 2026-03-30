@@ -7,9 +7,9 @@ aliases: [merge vs rebase, rebase vs squash, git merge strategies]
 keywords: [merge, rebase, squash, git, merge commit, fast-forward, history, linear, clean history, comparison]
 description: "Comparison of Git merge strategies — standard merge, rebase, and squash merge — with guidance on when to use each."
 related:
-  - "[[git-branching-and-merging]]"
-  - "[[pull-requests-and-code-review]]"
-  - "[[git-daily-workflow]]"
+  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
+  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

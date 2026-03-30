@@ -64,7 +64,7 @@ They don't have to match.
 
 ### Block Types
 
-The `variable` and `output` blocks below are covered in depth in [[terraform-variables-and-outputs]], which extends HCL syntax with parameterization, type constraints, and validation rules.
+The `variable` and `output` blocks below are covered in depth in [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs), which extends HCL syntax with parameterization, type constraints, and validation rules.
 
 The most common block types in Terraform:
 
@@ -89,10 +89,10 @@ The declarative approach means Terraform can determine whether a resource alread
 
 ## Related
 
-- [[terraform-providers-and-backend]] — Configuring where Terraform connects and stores state
-- [[terraform-variables-and-outputs]] — Parameterizing HCL with variables, locals, and outputs
-- [[terraform-plan-apply-destroy]] — The workflow that turns HCL into real infrastructure
-- [[terraform-state-management]] — How Terraform tracks what it has created
+- [terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend) — Configuring where Terraform connects and stores state
+- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — Parameterizing HCL with variables, locals, and outputs
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — The workflow that turns HCL into real infrastructure
+- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — How Terraform tracks what it has created
 
 ## References
 

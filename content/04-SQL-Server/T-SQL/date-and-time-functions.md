@@ -586,9 +586,9 @@ BACKUP_FILE="project_backup_$(date +%Y%m%d_%H%M%S).bak"
 
 ### Related
 
-- [[sargable-queries]] — date predicates on indexed columns: never wrap in CONVERT/CAST in WHERE clauses
-- [[merge-and-upsert]] — transaction patterns that use date range filtering for incremental loads
-- [[gold-transforms]] — SMA calculations using date-ordered window functions and `trade_date` ranges
-- [[silver-transforms]] — SCD Type 2 effective date handling (`effective_from`, `effective_to`)
-- [[bronze-layer-loading]] — `loaded_at` timestamps and idempotent reload by date range
-- [[performance-audit-playbook]] — statistics staleness queries that filter by date
+- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — date predicates on indexed columns: never wrap in CONVERT/CAST in WHERE clauses
+- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — transaction patterns that use date range filtering for incremental loads
+- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — SMA calculations using date-ordered window functions and `trade_date` ranges
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — SCD Type 2 effective date handling (`effective_from`, `effective_to`)
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — `loaded_at` timestamps and idempotent reload by date range
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — statistics staleness queries that filter by date

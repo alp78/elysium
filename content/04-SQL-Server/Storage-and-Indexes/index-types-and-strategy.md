@@ -838,9 +838,9 @@ ON dbo.gold_scores (symbol, date, composite_score, rank_overall, _index, sector)
 
 ### Related
 
-- [[storage-internals]] — B-tree page structure, page splits, and how indexes are stored
-- [[index-maintenance]] — dedicated maintenance procedures and scheduling
-- [[sargable-queries]] — writing predicates that enable index seeks instead of scans
-- [[execution-plans]] — reading execution plans to identify missing indexes and key lookups
-- [[performance-audit-playbook]] — structured audit incorporating index analysis
-- [[server-configuration]] — heap detection and statistics update after bulk loads
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — B-tree page structure, page splits, and how indexes are stored
+- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — dedicated maintenance procedures and scheduling
+- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — writing predicates that enable index seeks instead of scans
+- [execution-plans](/04-SQL-Server/Performance/execution-plans) — reading execution plans to identify missing indexes and key lookups
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured audit incorporating index analysis
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — heap detection and statistics update after bulk loads

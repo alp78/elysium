@@ -996,7 +996,7 @@ UPDATE/DELETE under Snapshot Isolation (RCSI):
 
 > [!tip] One tempdb File Per CPU Core
 >
-> Best practice: create one tempdb data file per logical CPU core (up to 8), all equally sized. This reduces **PFS/GAM/SGAM page contention** — a bottleneck where multiple sessions compete for allocation pages. See [[server-configuration]] for the configuration steps.
+> Best practice: create one tempdb data file per logical CPU core (up to 8), all equally sized. This reduces **PFS/GAM/SGAM page contention** — a bottleneck where multiple sessions compete for allocation pages. See [server-configuration](/04-SQL-Server/Administration/server-configuration) for the configuration steps.
 
 #### sys.dm_db_file_space_usage — monitor TempDB space by category
 
@@ -1338,9 +1338,9 @@ Python pipeline: pymssql executemany() → 50 rows for market_index, 2026-03-10
 
 ### Related
 
-- [[index-types-and-strategy]] — how clustered, nonclustered, covering, filtered, and columnstore indexes use these structures
-- [[index-maintenance]] — fragmentation, REORGANIZE vs REBUILD, fill factor
-- [[memory-and-buffer-pool]] — Page Life Expectancy, max server memory, and buffer pool pressure
-- [[blocking-and-locking]] — how the lock manager's compatibility matrix leads to blocking chains
-- [[merge-and-upsert]] — CRUD internals applied to the MERGE statement and RCSI version store
-- [[server-configuration]] — max server memory, RCSI, and TempDB file configuration
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — how clustered, nonclustered, covering, filtered, and columnstore indexes use these structures
+- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — fragmentation, REORGANIZE vs REBUILD, fill factor
+- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy, max server memory, and buffer pool pressure
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — how the lock manager's compatibility matrix leads to blocking chains
+- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — CRUD internals applied to the MERGE statement and RCSI version store
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — max server memory, RCSI, and TempDB file configuration

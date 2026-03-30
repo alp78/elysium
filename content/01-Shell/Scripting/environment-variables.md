@@ -119,7 +119,7 @@ unset SA_PASSWORD
 
 > [!info] ps aux credential leak
 >
-> Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [[container-lifecycle|container]] -- always use this mechanism for containerized workloads.
+> Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [container](/09-Docker/container-lifecycle) -- always use this mechanism for containerized workloads.
 
 ### PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars
 
@@ -172,9 +172,9 @@ For a declarative approach to managing variables and configuration across enviro
 
 ## Related
 
-- [[defensive-scripting]] — Using `set -u` to catch unset variable references
-- [[command-history]] — Preventing secrets from being saved to history
-- [[command-chaining]] — Operators that control execution flow
+- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Using `set -u` to catch unset variable references
+- [command-history](/01-Shell/Scripting/command-history) — Preventing secrets from being saved to history
+- [command-chaining](/01-Shell/Scripting/command-chaining) — Operators that control execution flow
 
 ## References
 

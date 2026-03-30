@@ -44,7 +44,7 @@ for row in data:
 
 **Why people do it:** it's the first pattern beginners learn; it works for 100 rows.
 
-**The fix:** batch with `fast_executemany`. See [[sql-server-loading-patterns]] for benchmarks.
+**The fix:** batch with `fast_executemany`. See [sql-server-loading-patterns](/04-SQL-Server/Patterns/sql-server-loading-patterns) for benchmarks.
 
 ```python
 # GOOD: batch insert (1.2s for 100K rows)
@@ -60,7 +60,7 @@ cursor.executemany("INSERT INTO bronze.signals (...) VALUES (?, ...)", rows)
 
 **Why people do it:** staging tables feel like "extra work" for small pipelines.
 
-**The fix:** always load to staging first, validate (row count, NULL rates, schema check), then promote. See [[sql-server-loading-patterns#Staging Table + Swap]] for the swap pattern.
+**The fix:** always load to staging first, validate (row count, NULL rates, schema check), then promote. See [sql-server-loading-patterns > Staging Table + Swap](/04-SQL-Server/Patterns/sql-server-loading-patterns#staging-table--swap) for the swap pattern.
 
 ### No Transaction Wrapper on Multi-Step Loads
 
@@ -89,7 +89,7 @@ COMMIT;
 
 **Why people do it:** bcp is the fastest loader and the truncation is invisible.
 
-**The fix:** validate data lengths before loading, or use `-e error_file` with `-m 0` (zero tolerance for errors). Always spot-check loaded data against source. See [[sql-server-loading-patterns#bcp Gotchas]].
+**The fix:** validate data lengths before loading, or use `-e error_file` with `-m 0` (zero tolerance for errors). Always spot-check loaded data against source. See [sql-server-loading-patterns > bcp Gotchas](/04-SQL-Server/Patterns/sql-server-loading-patterns#bcp-gotchas).
 
 ### IDENTITY as a Business Key — breaks on truncate and differs per environment
 
@@ -109,7 +109,7 @@ COMMIT;
 >
 > Tables created without specifying a schema land in `dbo`. Mixing raw, cleaned, and gold tables in `dbo` makes layer-specific permissions impossible and forces `raw_`, `stg_`, `dim_` prefixes.
 
-**The fix:** use schema-per-layer (`bronze`, `silver`, `gold`). See [[sql-server-schema-layering]].
+**The fix:** use schema-per-layer (`bronze`, `silver`, `gold`). See [sql-server-schema-layering](/04-SQL-Server/Patterns/sql-server-schema-layering).
 
 ### VARCHAR(MAX) for Everything — memory and performance waste
 
@@ -131,7 +131,7 @@ COMMIT;
 
 Keeping bronze, silver, and gold tables in the same schema with naming prefixes (`raw_signals`, `clean_signals`, `rpt_signals`) provides no security isolation and makes `GRANT` statements table-by-table instead of schema-level.
 
-**The fix:** one schema per layer. `GRANT SELECT ON SCHEMA::gold` covers all gold tables automatically. See [[sql-server-schema-layering#Cross-Schema Security]].
+**The fix:** one schema per layer. `GRANT SELECT ON SCHEMA::gold` covers all gold tables automatically. See [sql-server-schema-layering > Cross-Schema Security](/04-SQL-Server/Patterns/sql-server-schema-layering#cross-schema-security).
 
 ---
 
@@ -151,7 +151,7 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 >
 > `WHERE varchar_column = 123` forces SQL Server to convert every row's `varchar_column` to `INT` for comparison, preventing index seeks. The query plan shows a CONVERT_IMPLICIT warning.
 
-**The fix:** match types exactly. `WHERE varchar_column = '123'`. See [[sargable-queries]] for the full list of index-killing patterns.
+**The fix:** match types exactly. `WHERE varchar_column = '123'`. See [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) for the full list of index-killing patterns.
 
 ### NOLOCK as a "Performance Fix" — dirty reads in production
 
@@ -161,7 +161,7 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 **Why people do it:** it "fixes" blocking without changing the application.
 
-**The fix:** enable RCSI (`ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON`). Readers get a consistent snapshot without blocking writers. See [[blocking-and-locking]] for the RCSI setup.
+**The fix:** enable RCSI (`ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON`). Readers get a consistent snapshot without blocking writers. See [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) for the RCSI setup.
 
 ### Cursor-Based ETL — row-by-row processing in T-SQL
 
@@ -177,7 +177,7 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 >
 > `WHERE YEAR(signal_date) = 2025` applies `YEAR()` to every row, preventing an index seek on `signal_date`. The query scans the entire table.
 
-**The fix:** use range predicates. `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'`. See [[sargable-queries]] for more examples.
+**The fix:** use range predicates. `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'`. See [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) for more examples.
 
 ---
 
@@ -189,7 +189,7 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 >
 > `UPDATE dim_stock SET sector = 'New' WHERE symbol = 'ASML'` overwrites the old sector value. You can never answer "what sector was ASML in last quarter?"
 
-**The fix:** use SCD Type 2 (close old row, insert new row) or temporal tables. See [[sql-server-change-tracking]].
+**The fix:** use SCD Type 2 (close old row, insert new row) or temporal tables. See [sql-server-change-tracking](/04-SQL-Server/Patterns/sql-server-change-tracking).
 
 ### SCD2 Without Filtered Unique Index — duplicate current rows
 
@@ -197,7 +197,7 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 >
 > Without `CREATE UNIQUE INDEX ... WHERE is_current = 1`, a bug in the close/insert logic creates two rows with `is_current = 1` for the same key. JOINs return duplicates; dashboard shows wrong data.
 
-**The fix:** always create a filtered unique index on the active key columns. See [[sql-server-change-tracking#SCD2 Schema]].
+**The fix:** always create a filtered unique index on the active key columns. See [sql-server-change-tracking > SCD2 Schema](/04-SQL-Server/Patterns/sql-server-change-tracking#scd2-schema).
 
 ### Comparing NULLable Columns Without ISNULL — missed changes
 
@@ -234,7 +234,7 @@ WHERE old_sector IS DISTINCT FROM new_sector
 >
 > A transform that processes millions of rows in a single transaction can trigger lock escalation (>5,000 row locks → table lock), blocking every other query on the table — including dashboard reads.
 
-**The fix:** batch large transforms into chunks (e.g., 10K rows per transaction). Or schedule heavy transforms during off-hours. See [[blocking-and-locking]] for lock escalation thresholds.
+**The fix:** batch large transforms into chunks (e.g., 10K rows per transaction). Or schedule heavy transforms during off-hours. See [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) for lock escalation thresholds.
 
 ### MERGE Without Proper Locking Hints — race conditions
 
@@ -242,7 +242,7 @@ WHERE old_sector IS DISTINCT FROM new_sector
 >
 > Two concurrent MERGE statements can both evaluate `WHEN NOT MATCHED` for the same key and both INSERT — creating duplicates. MERGE does not take an exclusive lock on "not found" keys by default.
 
-**The fix:** add `WITH (HOLDLOCK)` on the target table, or serialize MERGE operations. See [[race-conditions]] for the full analysis.
+**The fix:** add `WITH (HOLDLOCK)` on the target table, or serialize MERGE operations. See [race-conditions](/04-SQL-Server/Concurrency/race-conditions) for the full analysis.
 
 ### No Retry Logic for Deadlocks — pipeline fails on transient errors
 
@@ -250,7 +250,7 @@ WHERE old_sector IS DISTINCT FROM new_sector
 >
 > In a concurrent system, deadlocks happen. SQL Server kills one transaction (victim) and continues the other. Without retry logic, the killed pipeline run fails permanently instead of retrying.
 
-**The fix:** catch error 1205 and retry with exponential backoff (3 attempts, 1s/2s/4s delay). See [[deadlock-detection-and-prevention]] for C# and Python retry patterns.
+**The fix:** catch error 1205 and retry with exponential backoff (3 attempts, 1s/2s/4s delay). See [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for C# and Python retry patterns.
 
 ---
 
@@ -262,13 +262,13 @@ WHERE old_sector IS DISTINCT FROM new_sector
 >
 > `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date)` without a clustered index on `(symbol, date)` forces a full sort. On a 100M-row table, the sort spills to TempDB disk.
 
-**The fix:** ensure the clustered index matches `PARTITION BY + ORDER BY`. See [[sql-server-incremental-transforms#Window Function Performance]].
+**The fix:** ensure the clustered index matches `PARTITION BY + ORDER BY`. See [sql-server-incremental-transforms > Window Function Performance](/04-SQL-Server/Patterns/sql-server-incremental-transforms#window-function-performance).
 
 ### Full-Table Aggregation That Could Be Incremental
 
 Recomputing gold tables from all of silver on every run is wasteful once the table exceeds ~1M rows. If only the last 7 days changed, only recompute the last 7 days.
 
-**The fix:** use watermark-based or partition-based incremental processing. See [[sql-server-incremental-transforms]].
+**The fix:** use watermark-based or partition-based incremental processing. See [sql-server-incremental-transforms](/04-SQL-Server/Patterns/sql-server-incremental-transforms).
 
 ### Missing Statistics on Filtered Indexes
 

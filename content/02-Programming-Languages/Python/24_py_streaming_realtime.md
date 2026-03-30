@@ -5,12 +5,12 @@ technology: [python, gcp]
 tags: [python, gcp, pipeline, streaming]
 aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 keywords: [streaming, real-time, WebSocket, SSE, server-sent events, Pub/Sub, Firestore listener, aiohttp, asyncio, latency, throughput, MFT, Transfer Service]
-description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [[24_cs_streaming_realtime]] for the C# equivalent."
+description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[24_cs_streaming_realtime]]"
-  - "[[23_py_data_ingestion]]"
-  - "[[12_py_asyncconcurrency]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime)"
+  - "[23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion)"
+  - "[12_py_asyncconcurrency](/02-Programming-Languages/Python/12_py_asyncconcurrency)"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete

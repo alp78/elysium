@@ -8,9 +8,9 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 related:
   - "[moc-observability](/13-Observability/moc-observability)"
   - "[datadog-dashboards](/13-Observability/Datadog/datadog-dashboards)"
-  - "[[dbt-packages]]"
-  - "[[dbt-airflow-integration]]"
-  - "[[dbt-ci-cd]]"
+  - "[dbt-packages](/11-dbt/Advanced/dbt-packages)"
+  - "[dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration)"
+  - "[dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd)"
 ---
 
 # dbt: Observability
@@ -369,6 +369,6 @@ resource "datadog_dashboard" "dbt_observability" {
 
 - [moc-observability](/13-Observability/moc-observability)
 - [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards)
-- [[dbt-packages]]
-- [[dbt-airflow-integration]]
-- [[dbt-ci-cd]]
+- [dbt-packages](/11-dbt/Advanced/dbt-packages)
+- [dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration)
+- [dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd)

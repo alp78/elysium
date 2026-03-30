@@ -610,6 +610,6 @@ Ingest raw data
 - [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)
 - [pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic)
 - [[eu-bmr-benchmark-regulation]]
-- [[dbt-testing-framework]]
-- [[dbt-core-concepts]]
-- [[dbt-data-contracts-implementation]]
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)

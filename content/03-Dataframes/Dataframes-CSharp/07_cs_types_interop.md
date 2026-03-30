@@ -9,13 +9,13 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion
 keywords: [categorical, Enum, Arrow, zero-copy, interop, type casting, schema, nested types, struct]
-description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [[07_py_types_interop]] for the Python equivalent."
+description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [07_py_types_interop](/03-Dataframes/Dataframes-Python/07_py_types_interop) for the Python equivalent."
 related:
-  - "[[moc-dataframes]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[07_py_types_interop]]"
-  - "[[06_cs_lazy_performance]]"
-  - "[[08_cs_visualization]]"
+  - "[07_py_types_interop](/03-Dataframes/Dataframes-Python/07_py_types_interop)"
+  - "[06_cs_lazy_performance](/03-Dataframes/Dataframes-CSharp/06_cs_lazy_performance)"
+  - "[08_cs_visualization](/03-Dataframes/Dataframes-CSharp/08_cs_visualization)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

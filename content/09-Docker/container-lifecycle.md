@@ -10,7 +10,7 @@ related:
   - "[docker-compose](/09-Docker/docker-compose)"
   - "[image-management](/09-Docker/image-management)"
   - "[docker-cheat-sheet](/09-Docker/docker-cheat-sheet)"
-  - "[[managing-services]]"
+  - "[managing-services](/01-Shell/Process-Management/managing-services)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -68,7 +68,7 @@ docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 
 #### docker run -v host:container — volume mounts for data persistence
 
-When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [Airflow containers](/12-Orchestration/Airflow/airflow-deployment), the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [[file-manipulation|file permission patterns]] used in shell administration.
+When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [Airflow containers](/12-Orchestration/Airflow/airflow-deployment), the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [file permission patterns](/01-Shell/File-Operations/file-manipulation) used in shell administration.
 
 ```bash
 # -v HOST_PATH:CONTAINER_PATH
@@ -337,7 +337,7 @@ docker ps --filter name=airflow -q | xargs docker restart
 
 ```bash
 # docker stop: sends SIGTERM, waits for the process to exit cleanly, then SIGKILL
-# This is the same signal sequence used by the kernel for regular processes (see [[killing-processes]])
+# This is the same signal sequence used by the kernel for regular processes (see [killing-processes](/01-Shell/Process-Management/killing-processes))
 # — gives the app time to flush buffers, close DB connections, finish in-flight requests
 docker stop airflow-scheduler         # default 10-second timeout
 
@@ -732,7 +732,7 @@ docker inspect <container> --format='{{json .Mounts}}' | python3 -m json.tool
 
 > [!tip] Decoding Exit Codes
 >
-> Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. These are the same [[killing-processes|Unix signals]] you send with `kill` on a regular process. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
+> Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. These are the same [Unix signals](/01-Shell/Process-Management/killing-processes) you send with `kill` on a regular process. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
 
 ```bash
 # Definitive OOM check — returns true or false
@@ -746,4 +746,4 @@ docker inspect <container> --format='{{.State.OOMKilled}}'
 - [docker-compose](/09-Docker/docker-compose) — Orchestrating multi-container stacks
 - [image-management](/09-Docker/image-management) — Building, tagging, and pushing images
 - [docker-cheat-sheet](/09-Docker/docker-cheat-sheet) — Quick reference for all Docker commands
-- [[managing-services]] — Managing long-running service containers
+- [managing-services](/01-Shell/Process-Management/managing-services) — Managing long-running service containers

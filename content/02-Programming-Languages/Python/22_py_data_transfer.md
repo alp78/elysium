@@ -5,12 +5,12 @@ technology: [python, gcp]
 tags: [python, gcp, data-transfer, benchmarks]
 aliases: [Data Transfer Python, GCS Transfer, BigQuery Load]
 keywords: [GCS, gsutil, gcloud storage, Cloud SQL, BigQuery, upload, download, transfer, SCP, SSH, parallel, compression, gzip, tar, benchmark, latency, throughput]
-description: "Python data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [[22_cs_data_transfer]] for the C# equivalent."
+description: "Python data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22_cs_data_transfer](/02-Programming-Languages/CSharp/22_cs_data_transfer) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[22_cs_data_transfer]]"
-  - "[[20_py_security_setup]]"
-  - "[[17_py_gcp]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[22_cs_data_transfer](/02-Programming-Languages/CSharp/22_cs_data_transfer)"
+  - "[20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup)"
+  - "[17_py_gcp](/02-Programming-Languages/Python/17_py_gcp)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

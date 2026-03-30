@@ -22,7 +22,7 @@ These are the non-negotiable configuration settings that every production SQL Se
 
 ### Set Max Server Memory
 
-SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills. See [[memory-and-buffer-pool]] for how the buffer pool uses the memory allocated here.
+SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills. See [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) for how the buffer pool uses the memory allocated here.
 
 **Rule:** `max server memory = Total RAM − 1 GB` (minimum). On a 2 GB VM: 768–1024 MB. On an 8 GB VM: 6144 MB.
 
@@ -89,7 +89,7 @@ ALTER DATABASE [analytics_db] SET RECOVERY FULL;
 -- to start the log chain. PITR is impossible without it.
 ```
 
-See [[backup-types-and-strategy]] for the full decision matrix.
+See [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) for the full decision matrix.
 
 ---
 
@@ -126,7 +126,7 @@ ORDER BY p.rows DESC;
 -- If ANY silver/gold table appears here, fix it immediately.
 ```
 
-See [[index-types-and-strategy]] for clustered index key selection.
+See [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for clustered index key selection.
 
 ---
 
@@ -322,7 +322,7 @@ net.ipv4.neigh.default.gc_thresh3 = 16384
 
 ### Related
 
-- [[memory-and-buffer-pool]] — how the buffer pool uses max server memory
-- [[backup-types-and-strategy]] — recovery model implications for backup strategy
-- [[blocking-and-locking]] — RCSI and its effect on lock contention
-- [[storage-internals]] — TempDB internals and WAL mechanics
+- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — how the buffer pool uses max server memory
+- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — recovery model implications for backup strategy
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — RCSI and its effect on lock contention
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — TempDB internals and WAL mechanics

@@ -23,13 +23,13 @@ description: "Five architectural principles — functional core/imperative shell
 related:
   - "[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline)"
   - "[25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)"
-  - "[[medallion-architecture]]"
-  - "[[idempotent-pipeline-design]]"
-  - "[[data-contracts]]"
-  - "[[data-quality-framework]]"
-  - "[[data-pipeline-testing-strategy]]"
-  - "[[error-handling-and-retry-patterns]]"
-  - "[[context-and-metadata-architecture]]"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
+  - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
+  - "[data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy)"
+  - "[error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns)"
+  - "[context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture)"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -49,7 +49,7 @@ Two reference implementations exist:
 > details (code, validation rules, SQL DDL) live in the paired notebooks. Every section
 > below links to the exact heading where the principle is built.
 
-This architecture sits on TOP of [[medallion-architecture]] (which defines the data layering) and [[idempotent-pipeline-design]] (which defines safe re-runs). This page defines how the pipeline CODE is structured.
+This architecture sits on TOP of [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (which defines the data layering) and [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) (which defines safe re-runs). This page defines how the pipeline CODE is structured.
 
 ---
 
@@ -179,7 +179,7 @@ flowchart TB
 | Strictness mode | `ConfigDict(strict=True)` — no coercion | Compile-time type safety + runtime validation |
 | Error output | `ValidationError` with field-level messages | `ValidationResult` with `Errors` collection |
 
-See [[data-contracts]] for the broader contract theory and [[context-and-metadata-architecture#Schema Drift Detection]] for schema evolution patterns.
+See [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the broader contract theory and [context-and-metadata-architecture > Schema Drift Detection](/14-Data-Architecture/Architectures/context-and-metadata-architecture#schema-drift-detection) for schema evolution patterns.
 
 ---
 
@@ -210,7 +210,7 @@ See [[data-contracts]] for the broader contract theory and [[context-and-metadat
 | Orchestrator | [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo) | [25_cs_functional_pipeline > DataTable — run Bronze data quality gate with RunQualityGate()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datatable--run-bronze-data-quality-gate-with-runqualitygate) |
 | Exception | [25_py_functional_pipeline > Python — define custom Exception subclass for quality gate failures](/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-custom-exception-subclass-for-quality-gate-failures) | [25_cs_functional_pipeline > Exception — define data quality gate failure exception](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#exception--define-data-quality-gate-failure-exception) |
 
-See [[data-quality-framework]] for the quality dimension taxonomy and [[data-pipeline-testing-strategy#Data quality assertions]] for where quality gates fit in the testing pyramid.
+See [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) for the quality dimension taxonomy and [data-pipeline-testing-strategy > Data quality assertions](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#data-quality-assertions) for where quality gates fit in the testing pyramid.
 
 > [!warning] Quality gates are not tests
 >
@@ -256,7 +256,7 @@ ORDER BY started_at;
 | Run context | [25_py_functional_pipeline > Pydantic — save run context to JSON with model_dump_json()](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--save-run-context-to-json-with-modeldumpjson) | [25_cs_functional_pipeline > JsonSerializer — save run context to JSON with Serialize()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#jsonserializer--save-run-context-to-json-with-serialize) |
 | Persistence | [25_py_functional_pipeline > SQL Server — define lineage persistence helper with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-lineage-persistence-helper-with-cursorexecute) | [25_cs_functional_pipeline > Dapper — define lineage persistence helper with Execute()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-lineage-persistence-helper-with-execute) |
 
-See [[context-and-metadata-architecture]] for the broader provenance theory including bi-temporal modeling and context propagation patterns.
+See [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) for the broader provenance theory including bi-temporal modeling and context propagation patterns.
 
 ---
 
@@ -293,7 +293,7 @@ See [[context-and-metadata-architecture]] for the broader provenance theory incl
 | Quarantine persistence | [25_py_functional_pipeline > SQL Server — define quarantine persistence helper with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-quarantine-persistence-helper-with-cursorexecute) | [25_cs_functional_pipeline > Dapper — define quarantine persistence helper with Execute()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-quarantine-persistence-helper-with-execute) |
 | Review quarantined rows | [25_py_functional_pipeline > Polars — review quarantined rows with read_database()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--review-quarantined-rows-with-readdatabase) | [25_cs_functional_pipeline > Dapper — review quarantined rows with QueryToTable()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--review-quarantined-rows-with-querytotable) |
 
-See [[error-handling-and-retry-patterns]] for broader error handling theory and [[data-quality-framework#Data Quality Quarantine Pattern]] for the quarantine pattern in the quality framework.
+See [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) for broader error handling theory and [data-quality-framework > Data Quality Quarantine Pattern](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#data-quality-quarantine-pattern) for the quarantine pattern in the quality framework.
 
 > [!danger] Never silently drop bad rows
 >
@@ -342,7 +342,7 @@ Records the trigger (`scheduled`, `manual`, `backfill`, `reprocess`), the `is_co
 
 ### TemporalContext — Bi-Temporal Markers
 
-Separates `as_of_date` (what date is this data FOR) from `knowledge_date` (when did we learn about it). Without it, a backfill loading 2024 data in 2026 looks like a normal 2026 run. See [[context-and-metadata-architecture#Temporal Context — As of When Is This Data True?]] for the broader theory.
+Separates `as_of_date` (what date is this data FOR) from `knowledge_date` (when did we learn about it). Without it, a backfill loading 2024 data in 2026 looks like a normal 2026 run. See [context-and-metadata-architecture > Temporal Context — As of When Is This Data True?](/14-Data-Architecture/Architectures/context-and-metadata-architecture#temporal-context--as-of-when-is-this-data-true) for the broader theory.
 
 ### StageContext — The Propagation Carrier
 
@@ -404,7 +404,7 @@ The pipeline exports a JSON Schema file per gold table, enriched with `x-column-
 | Contract export | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-data-contract-export-function-with-modeljsonschema) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-data-contract-export-function-with-jsonserializer) |
 | Contract inspection | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#json--inspect-exported-data-contract-with-jsonloads) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#json--inspect-exported-data-contract-with-jsonserializerdeserialize) |
 
-See [[data-contracts]] for the broader contract specification theory. See [ai-augmented-data-engineering > Self-Describing Data for AI Consumers](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering#self-describing-data-for-ai-consumers) for how AI agents consume these contracts in practice.
+See [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the broader contract specification theory. See [ai-augmented-data-engineering > Self-Describing Data for AI Consumers](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering#self-describing-data-for-ai-consumers) for how AI agents consume these contracts in practice.
 
 ---
 
@@ -470,12 +470,12 @@ See [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmente
 
 - [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Python reference implementation (Pydantic + Polars + tenacity)
 - [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# reference implementation (FluentValidation + LINQ + Polly)
-- [[medallion-architecture]] — Bronze/Silver/Gold data layering (this page builds on top of medallion)
-- [[idempotent-pipeline-design]] — MERGE upsert and safe re-run patterns
-- [[data-contracts]] — Contract specification, breaking vs non-breaking changes
-- [[data-quality-framework]] — Quality dimensions, medallion quality gates, quarantine pattern
-- [[data-pipeline-testing-strategy]] — Where quality gates fit in the testing pyramid
-- [[error-handling-and-retry-patterns]] — Retry strategies, circuit breaker, dead letter queue theory
-- [[context-and-metadata-architecture]] — The five types of pipeline context, bi-temporal modeling, schema evolution
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze/Silver/Gold data layering (this page builds on top of medallion)
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — MERGE upsert and safe re-run patterns
+- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification, breaking vs non-breaking changes
+- [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality dimensions, medallion quality gates, quarantine pattern
+- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Where quality gates fit in the testing pyramid
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Retry strategies, circuit breaker, dead letter queue theory
+- [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The five types of pipeline context, bi-temporal modeling, schema evolution
 - [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — AI agents as consumers of context-enriched data
-- [[data-modeling-patterns]] — SCD Type 2 pattern used in dim_symbol
+- [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) — SCD Type 2 pattern used in dim_symbol

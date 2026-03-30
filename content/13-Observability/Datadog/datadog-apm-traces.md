@@ -180,8 +180,8 @@ If you want to remove Datadog/ddtrace:
 
 ## Related Notes
 
-- [[datadog-architecture-overview]] — full observability architecture
-- [[datadog-agent-airflow-vm]] — the dd-agent that receives traces on port 8126
-- [[datadog-sql-server-logs]] — companion: logs from SQL Server errorlog
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — the dd-agent that receives traces on port 8126
+- [datadog-sql-server-logs](/13-Observability/Datadog/datadog-sql-server-logs) — companion: logs from SQL Server errorlog
 - the pipeline steps — what each pipeline step does
 - common pipeline errors — APM traces missing troubleshooting

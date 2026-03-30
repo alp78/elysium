@@ -57,7 +57,7 @@ The agents are lightweight additions to existing VMs:
 | data-pipeline-airflow (e2-medium, 4 GB) | Docker container | ~350 MB |
 | data-pipeline-sql (e2-small, 2 GB) | systemd package | ~250 MB |
 
-See [[datadog-agent-airflow-vm]] for the full memory budget on the Airflow VM (total ~1,650 MB out of 4 GB).
+See [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) for the full memory budget on the Airflow VM (total ~1,650 MB out of 4 GB).
 
 ---
 
@@ -106,7 +106,7 @@ If cost is a concern after the trial:
 
 ## Related
 
-- [[datadog-architecture-overview]] — Full observability topology
-- [[datadog-agent-airflow-vm]] — Memory budget on Airflow VM
-- [[datadog-agent-sql-vm]] — SQL VM agent management
-- [[datadog-troubleshooting]] — Disabling Datadog section
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Memory budget on Airflow VM
+- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent management
+- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — Disabling Datadog section

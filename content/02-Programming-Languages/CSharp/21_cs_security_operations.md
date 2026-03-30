@@ -5,12 +5,12 @@ technology: [csharp, dotnet, gcp]
 tags: [csharp, gcp, security, encryption, identity]
 aliases: [Security Operations CSharp, Encryption and Identity CSharp]
 keywords: [encryption, KMS, Secret Manager, certificates, service account, OAuth, ADC, IAM, Cloud SQL, SSL, envelope encryption, Polars.NET, Google.Cloud.SecretManager, Google.Cloud.Kms]
-description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [[20_py_security_setup]]. See [[21_py_security_operations]] for the Python equivalent."
+description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup). See [21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[21_py_security_operations]]"
-  - "[[20_py_security_setup]]"
-  - "[[17_cs_gcp]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations)"
+  - "[20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup)"
+  - "[17_cs_gcp](/02-Programming-Languages/CSharp/17_cs_gcp)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

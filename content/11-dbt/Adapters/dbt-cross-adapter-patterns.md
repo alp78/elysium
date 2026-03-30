@@ -6,9 +6,9 @@ status: stable
 updated: 2026-03-23
 description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing strategy, and a SQL Server to BigQuery migration guide."
 related:
-  - "[[dbt-sqlserver-adapter]]"
-  - "[[dbt-bigquery-adapter]]"
-  - "[[dbt-macros-and-jinja]]"
+  - "[dbt-sqlserver-adapter](/11-dbt/Adapters/dbt-sqlserver-adapter)"
+  - "[dbt-bigquery-adapter](/11-dbt/Adapters/dbt-bigquery-adapter)"
+  - "[dbt-macros-and-jinja](/11-dbt/Advanced/dbt-macros-and-jinja)"
 ---
 
 # dbt: Cross-Adapter Patterns
@@ -507,6 +507,6 @@ dbt run-operation compare_row_counts --args '{"models": ["mart_esg_scores", "mar
 
 ## Related
 
-- [[dbt-sqlserver-adapter]]
-- [[dbt-bigquery-adapter]]
-- [[dbt-macros-and-jinja]]
+- [dbt-sqlserver-adapter](/11-dbt/Adapters/dbt-sqlserver-adapter)
+- [dbt-bigquery-adapter](/11-dbt/Adapters/dbt-bigquery-adapter)
+- [dbt-macros-and-jinja](/11-dbt/Advanced/dbt-macros-and-jinja)

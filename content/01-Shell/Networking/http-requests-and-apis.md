@@ -6,7 +6,7 @@ tags: [api, shell, bash, linux, powershell]
 aliases: [curl, wget, HTTP request, REST API, Invoke-RestMethod, Invoke-WebRequest]
 keywords: [curl, wget, HTTP, REST API, GET request, POST request, JSON, bearer token, download file, retry, timeout, status code, timing breakdown, Invoke-RestMethod, Invoke-WebRequest, curl vs wget, connect-timeout, max-time, health check]
 description: "Making HTTP requests from the command line with curl and PowerShell's Invoke-RestMethod. Covers headers, JSON bodies, authentication, file downloads with retry, timing breakdown for latency diagnosis, and when to use curl vs wget vs Python requests."
-related: ["[[connectivity-testing]]", "[[firewalls]]", "[[iap-tunneling]]", "[[environment-variables]]" ]
+related: ["[connectivity-testing](/01-Shell/Networking/connectivity-testing)", "[firewalls](/01-Shell/Networking/firewalls)", "[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[environment-variables](/01-Shell/Scripting/environment-variables)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -153,9 +153,9 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv
 ```
 
 ## Related
-- [[connectivity-testing]] — test TCP reachability before HTTP calls
-- [[firewalls]] — when curl returns "connection timed out" or "connection refused"
-- [[environment-variables]] — store `$API_TOKEN` securely in environment variables
-- [[iap-tunneling]] — calling services behind IAP with identity tokens
+- [connectivity-testing](/01-Shell/Networking/connectivity-testing) — test TCP reachability before HTTP calls
+- [firewalls](/01-Shell/Networking/firewalls) — when curl returns "connection timed out" or "connection refused"
+- [environment-variables](/01-Shell/Scripting/environment-variables) — store `$API_TOKEN` securely in environment variables
+- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — calling services behind IAP with identity tokens
 
 For invoking HTTP endpoints deployed as managed services, see [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) which covers Cloud Run HTTP triggers and authentication.

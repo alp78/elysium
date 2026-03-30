@@ -14,7 +14,7 @@ status: complete
 
 # Prompt Architecture: Structural Layering, XML, JSON Schemas, and Chain of Thought
 
-A well-architected prompt is the single highest-leverage investment in getting consistent AI output. This note covers the 4-layer structural template (Role → Goal → Constraints → Format), the three modular formats (XML, JSON, paragraph), and how to choose among them. These patterns build on the axioms in [[prompt-foundations]] and inform the model-specific strategies in [[model-specific-prompting]].
+A well-architected prompt is the single highest-leverage investment in getting consistent AI output. This note covers the 4-layer structural template (Role → Goal → Constraints → Format), the three modular formats (XML, JSON, paragraph), and how to choose among them. These patterns build on the axioms in [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and inform the model-specific strategies in [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
 
 ---
 
@@ -75,7 +75,7 @@ The goal is the **single most important sentence** in your prompt. If the model 
 
 > [!warning] Buried goals produce poor output
 >
-> If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [[prompt-debugging#4.2 Intent vs Output Misalignment|intent vs. output misalignment]] for the failure mode this prevents.
+> If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [intent vs. output misalignment](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#42-intent-vs-output-misalignment) for the failure mode this prevents.
 
 ### Layer 3: Constraints — Defining the Negative Space
 
@@ -172,7 +172,7 @@ For each issue found:
 </constraints>
 ```
 
-**When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [[model-specific-prompting#Claude Anthropic|Claude-specific guidance]]).
+**When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [Claude-specific guidance](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting#claude-anthropic)).
 
 > [!warning] LLM JSON syntax errors
 >
@@ -233,7 +233,7 @@ a slightly delayed update than complex timezone-aware scheduling.
 | Plain paragraphs | Low | Highest | Creative, conversational, exploratory |
 
 > [!info] Format and Model Interaction
-> The right format also depends on the model. Claude handles XML best. GPT-4 handles markdown system/user separation well. Gemini works well with clearly-framed task statements. See [[model-specific-prompting]] for per-model format guidance.
+> The right format also depends on the model. Claude handles XML best. GPT-4 handles markdown system/user separation well. Gemini works well with clearly-framed task statements. See [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) for per-model format guidance.
 
 ---
 
@@ -294,7 +294,7 @@ Rewrite the prompt to produce the desired output.
 ```
 
 > [!warning] Meta-Prompting Limitations
-> The model evaluating its own prompt inherits its own blind spots. Use a different role for evaluation than for generation — if the generator was a "data engineer," make the evaluator a "prompt engineer" or "technical writer." See [[prompt-debugging#5.1 Workflows Loops and Multi-Agent Systems|evaluation agent pattern]] for the architectural solution.
+> The model evaluating its own prompt inherits its own blind spots. Use a different role for evaluation than for generation — if the generator was a "data engineer," make the evaluator a "prompt engineer" or "technical writer." See [evaluation agent pattern](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems) for the architectural solution.
 
 ---
 
@@ -321,10 +321,10 @@ Format:
 
 ## Related Notes
 
-- [[prompt-foundations]] — The three axioms and context hierarchy that underlie these architectural patterns
-- [[model-specific-prompting]] — Claude vs. GPT-4 vs. Gemini vs. Grok format preferences
-- [[applied-prompting]] — The 4-layer template applied to research, code, data extraction, and content tasks
-- [[prompt-debugging]] — Rebuilding broken prompts using phrasing, logic steps, and reinforcement
+- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that underlie these architectural patterns
+- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Claude vs. GPT-4 vs. Gemini vs. Grok format preferences
+- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — The 4-layer template applied to research, code, data extraction, and content tasks
+- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Rebuilding broken prompts using phrasing, logic steps, and reinforcement
 
 ## References
 

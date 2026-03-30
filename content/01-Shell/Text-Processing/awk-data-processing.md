@@ -7,8 +7,8 @@ aliases: [awk, gawk, mawk, field processing, column extraction, text transformat
 keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited]
 description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, aggregation, string functions, multi-file processing, advanced patterns, and PowerShell equivalents for every key technique."
 related:
-  - "[[reading-file-contents]]"
-  - "[[moc-shell]]"
+  - "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)"
+  - "[moc-shell](/01-Shell/moc-shell)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1182,5 +1182,5 @@ The filtering and aggregation patterns here (pattern-action rules, group-by with
 
 ## Related Notes
 
-- [[reading-file-contents]] — Reading files in shell (cat, head, tail, less)
-- [[moc-shell]] — Shell scripting section index
+- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — Reading files in shell (cat, head, tail, less)
+- [moc-shell](/01-Shell/moc-shell) — Shell scripting section index

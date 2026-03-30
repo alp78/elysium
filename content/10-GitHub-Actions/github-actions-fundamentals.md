@@ -44,8 +44,8 @@ keywords:
   - if conditional
 description: "GitHub Actions fundamentals — workflow anatomy, triggers, runners, jobs, steps, secrets, caching, artifacts, and concurrency."
 related:
-  - "[[github-actions-patterns]]"
-  - "[[github-actions-data-engineering]]"
+  - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
+  - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
   - "[git-daily-workflow](/08-Git/git-daily-workflow)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -1228,6 +1228,6 @@ jobs:
 
 ### See Also
 
-- [[github-actions-patterns]] — matrix builds, reusable workflows, deployment strategies
-- [[github-actions-data-engineering]] — data pipeline CI/CD, Workload Identity, dbt CI
+- [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) — matrix builds, reusable workflows, deployment strategies
+- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — data pipeline CI/CD, Workload Identity, dbt CI
 - [git-daily-workflow](/08-Git/git-daily-workflow) — branching strategy that pairs with these workflows

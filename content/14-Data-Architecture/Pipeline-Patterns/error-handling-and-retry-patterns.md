@@ -17,10 +17,10 @@ aliases:
   - "Error Handling Strategy"
 keywords: [error handling, retry, backoff, exponential backoff, jitter, circuit breaker, dead letter queue, DLQ, transient error, permanent error, partial failure, idempotent, alerting, SLA, retry budget, fail-fast, compensating action, quarantine]
 related:
-  - "[[idempotent-pipeline-design]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
   - "[defensive-scripting](/01-Shell/Scripting/defensive-scripting)"
   - "[deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention)"
-  - "[[rest-api-design-and-consumption]]"
+  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
   - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
   - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
   - "[sql-server-pipeline-anti-patterns](/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns)"
@@ -113,7 +113,7 @@ def retry_with_backoff(fn, max_attempts=3, base=1.0,
 > Define the set of retryable exceptions explicitly. For pyodbc: `pyodbc.OperationalError`, `pyodbc.InterfaceError`. For HTTP: status codes 429, 500, 502, 503, 504. For SQL Server deadlocks: error number 1205.
 
 Stack-specific implementations:
-- REST API backoff: [[rest-api-design-and-consumption#Exponential Backoff with Jitter]]
+- REST API backoff: [rest-api-design-and-consumption > Exponential Backoff with Jitter](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#exponential-backoff-with-jitter)
 - SQL Server deadlock retry (C#): [deadlock-detection-and-prevention > C# Dapper ExecuteWithRetry — centralized deadlock retry helper](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention#c-dapper-executewithretry--centralized-deadlock-retry-helper)
 - Python tenacity decorator: [gcp-pipeline-health-and-sla > Python — custom exponential backoff decorator](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#python--custom-exponential-backoff-decorator)
 - Airflow `retry_exponential_backoff=True`: [airflow-dag-patterns > Key Idempotency Settings](/12-Orchestration/Airflow/airflow-dag-patterns#key-idempotency-settings)
@@ -136,6 +136,19 @@ stateDiagram-v2
 - **CLOSED** — normal operation, requests pass through. Failures are counted.
 - **OPEN** — all requests immediately fail without calling the downstream service. A timer runs.
 - **HALF-OPEN** — one probe request is allowed. If it succeeds, move to CLOSED. If it fails, back to OPEN with extended cooldown.
+
+> [!info] Circuit Breaker States
+>
+> - **Closed** (normal): requests pass through. Failures are counted.
+> - **Open** (tripped): requests fail immediately without calling the
+>   dependency. A timeout starts.
+> - **Half-Open** (testing): after the timeout, one request is allowed
+>   through. If it succeeds → Closed. If it fails → Open again.
+>
+> In data pipelines, the circuit breaker protects against: a source API
+> that is down (stop retrying after N failures), a database that is
+> overloaded (stop writing, let it recover), or a downstream consumer
+> that is rejecting data (stop publishing until the consumer is healthy).
 
 #### Python — simple circuit breaker
 
@@ -167,7 +180,7 @@ class CircuitBreaker:
             raise
 ```
 
-- REST API circuit breaker: [[rest-api-design-and-consumption#Circuit Breaker Pattern]]
+- REST API circuit breaker: [rest-api-design-and-consumption > Circuit Breaker Pattern](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#circuit-breaker-pattern)
 - When to implement: any pipeline step that calls an external API or a service with outages
 
 ### Dead Letter Queue (DLQ) — don't drop, don't retry forever
@@ -181,7 +194,7 @@ class CircuitBreaker:
 | Pub/Sub | Dead letter topic | [pubsub-topics-and-subscriptions > Pub/Sub Dead Letter Topics](/06-GCP/Serverless/pubsub-topics-and-subscriptions#pubsub-dead-letter-topics) |
 | SQL Server pipeline | `quarantine` table (rejected rows) | [sql-server-pipeline-anti-patterns > Loading Directly to Production — no staging, no validation](/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#loading-directly-to-production--no-staging-no-validation) |
 | GCS pipeline | `gs://bucket/failed/` prefix | [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) |
-| REST API | DLQ table or file | [[rest-api-design-and-consumption#Dead Letter Queue]] |
+| REST API | DLQ table or file | [rest-api-design-and-consumption > Dead Letter Queue](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#dead-letter-queue) |
 
 > [!warning] DLQ Needs Monitoring
 >
@@ -212,7 +225,7 @@ Airflow implements this via trigger rules:
 - `one_failed` = compensating action branch: [airflow-dag-patterns > one_failed: Run if at least one upstream task failed (e.g., partial failure alert)](/12-Orchestration/Airflow/airflow-dag-patterns#onefailed-run-if-at-least-one-upstream-task-failed-eg-partial-failure-alert)
 - `none_failed_min_one_success` = safe downstream: [airflow-dag-patterns > none_failed_min_one_success: Run if no tasks failed AND at least one succeeded](/12-Orchestration/Airflow/airflow-dag-patterns#nonefailedminonesuccess-run-if-no-tasks-failed-and-at-least-one-succeeded)
 
-For SQL Server, idempotency ensures that a retry after partial failure doesn't corrupt data: [[idempotent-pipeline-design#Why Idempotent Pipeline Design Matters]].
+For SQL Server, idempotency ensures that a retry after partial failure doesn't corrupt data: [idempotent-pipeline-design > Why Idempotent Pipeline Design Matters](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design#why-idempotent-pipeline-design-matters).
 
 ---
 
@@ -233,7 +246,7 @@ For SQL Server, idempotency ensures that a retry after partial failure doesn't c
 | SQL Server (races) | Constraint violations, phantom inserts | Serialization, UPDLOCK | [race-conditions > Strategy 2: Atomic Operations (Combine Read + Write)](/04-SQL-Server/Concurrency/race-conditions#strategy-2-atomic-operations-combine-read--write) |
 | pyodbc | `pyodbc.OperationalError` | Application-level backoff | [sql-server-loading-patterns > fast_executemany Gotchas](/04-SQL-Server/Patterns/sql-server-loading-patterns#fastexecutemany-gotchas) |
 | BigQuery | Job FAILED, 503, quota exceeded | Built-in client library retry | [bigquery-problems > DML Quota Exceeded (20 Concurrent Mutations)](/06-GCP/BigQuery/bigquery-problems#dml-quota-exceeded-20-concurrent-mutations) |
-| REST APIs | HTTP 429/503 | Backoff with Retry-After header | [[rest-api-design-and-consumption#Rate Limiting and Backoff]] |
+| REST APIs | HTTP 429/503 | Backoff with Retry-After header | [rest-api-design-and-consumption > Rate Limiting and Backoff](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption#rate-limiting-and-backoff) |
 | Pub/Sub | nack + redelivery | Automatic redelivery with DLQ | [pubsub-topics-and-subscriptions > Pub/Sub Dead Letter Topics](/06-GCP/Serverless/pubsub-topics-and-subscriptions#pubsub-dead-letter-topics) |
 | Cloud Run | Container exit code != 0 | Task retry policy (configurable) | [cloud-run-jobs-vs-services > Cloud Run Jobs vs Services Comparison](/06-GCP/Serverless/cloud-run-jobs-vs-services#cloud-run-jobs-vs-services-comparison) |
 
@@ -322,7 +335,7 @@ Retrying a rate-limited API (HTTP 429) immediately sends another request that wi
 
 If a load inserts 5,000 rows, fails at row 5,001, and retries from the beginning, you get 5,000 duplicates. Every retried operation must be idempotent.
 
-**The fix:** use MERGE upsert, DELETE-INSERT, or UNIQUE constraints. See [[idempotent-pipeline-design]].
+**The fix:** use MERGE upsert, DELETE-INSERT, or UNIQUE constraints. See [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 ### Swallowing errors silently — invisible corruption
 

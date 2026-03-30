@@ -14,7 +14,7 @@ status: complete
 
 # Race Conditions
 
-A race condition occurs when two or more processes access shared data concurrently, and the final result depends on the timing of their execution. Unlike [[deadlock-detection-and-prevention|deadlocks]] (where processes get stuck), both processes complete — but the data ends up wrong.
+A race condition occurs when two or more processes access shared data concurrently, and the final result depends on the timing of their execution. Unlike [deadlocks](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) (where processes get stuck), both processes complete — but the data ends up wrong.
 
 ```
 Process A:  READ balance → 100     WRITE balance → 50  (100 - 50)
@@ -92,7 +92,7 @@ WHEN NOT MATCHED THEN
 
 > [!info] MERGE Reference
 >
-> For full MERGE syntax and all four load patterns (truncate-reload, read-then-insert/update, SCD Type 2, delete-and-insert), see [[merge-and-upsert]].
+> For full MERGE syntax and all four load patterns (truncate-reload, read-then-insert/update, SCD Type 2, delete-and-insert), see [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert).
 
 ### Pattern 3: Dirty Read (Reading Uncommitted Data)
 
@@ -352,7 +352,7 @@ DELETE FROM gold.index_performance WHERE _index = ? AND perf_date > ?
 
 All four dashboard repositories (`ScoresRepository`, `StockRepository`, `PulseRepository`, `IndexPerformanceRepository`) only execute SELECT queries. The dashboard never writes to the database, so it cannot participate in a race condition.
 
-The dashboard uses the `WithDeadlockRetryAsync` wrapper to handle the rare case where a SELECT is caught in a [[deadlock-detection-and-prevention|deadlock]] with a pipeline write.
+The dashboard uses the `WithDeadlockRetryAsync` wrapper to handle the rare case where a SELECT is caught in a [deadlock](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) with a pipeline write.
 
 ---
 
@@ -372,7 +372,7 @@ The data pipeline's primary defense is **serialization via Airflow** — `max_ac
 
 ### Related
 
-- [[deadlock-detection-and-prevention]] — the loudly-detected sibling of race conditions
-- [[blocking-and-locking]] — lock types, isolation levels, and blocking chains
-- [[merge-and-upsert]] — atomic MERGE patterns that eliminate check-then-insert races
+- [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — the loudly-detected sibling of race conditions
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — lock types, isolation levels, and blocking chains
+- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — atomic MERGE patterns that eliminate check-then-insert races
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — pipeline structure that explains the DAG serialization context

@@ -11,11 +11,11 @@ aliases:
 keywords: [with_columns, assign, apply, map_elements, when, then, otherwise, pipe, method chaining, expressions]
 description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
 related:
-  - "[[moc-dataframes]]"
-  - "[[03_cs_transforms_expressions]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
+  - "[03_cs_transforms_expressions](/03-Dataframes/Dataframes-CSharp/03_cs_transforms_expressions)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[02_py_explore_select_filter]]"
-  - "[[04_py_missing_strings_datetime]]"
+  - "[02_py_explore_select_filter](/03-Dataframes/Dataframes-Python/02_py_explore_select_filter)"
+  - "[04_py_missing_strings_datetime](/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

@@ -40,9 +40,9 @@ keywords:
   - hiring data engineers
 description: "How to build, organize, and scale data engineering teams — team topologies, role definitions, career ladders, RACI matrices, and collaboration models."
 related:
-  - "[[dataops-principles-and-practices]]"
-  - "[[self-service-data-platform]]"
-  - "[[leadership-and-collaboration]]"
+  - "[dataops-principles-and-practices](/15-DataOps/dataops-principles-and-practices)"
+  - "[self-service-data-platform](/15-DataOps/self-service-data-platform)"
+  - "[leadership-and-collaboration](/15-DataOps/leadership-and-collaboration)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -430,7 +430,7 @@ Establish practices: code review, CI/CD, on-call rotation, sprint process.
 
 ### Stage 3: Maturity (8+)
 
-Add: data architects, data scientists, data product managers. Consider moving to hub-and-spoke. Invest heavily in self-service so you can scale analyst capability without linear headcount growth. See [[self-service-data-platform]].
+Add: data architects, data scientists, data product managers. Consider moving to hub-and-spoke. Invest heavily in self-service so you can scale analyst capability without linear headcount growth. See [self-service-data-platform](/15-DataOps/self-service-data-platform).
 
 ### Hiring Anti-Patterns
 
@@ -514,7 +514,7 @@ Track these metrics to understand team health and improve continuously:
 
 ## Related Concepts
 
-- [[dataops-principles-and-practices]] — the practices this team structure exists to execute
-- [[self-service-data-platform]] — how to scale data capability without scaling headcount linearly
-- [[leadership-and-collaboration]] — broader principles of engineering leadership
+- [dataops-principles-and-practices](/15-DataOps/dataops-principles-and-practices) — the practices this team structure exists to execute
+- [self-service-data-platform](/15-DataOps/self-service-data-platform) — how to scale data capability without scaling headcount linearly
+- [leadership-and-collaboration](/15-DataOps/leadership-and-collaboration) — broader principles of engineering leadership
 - [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — the fully federated team model at large scale

@@ -7,18 +7,18 @@ aliases: [data lake, data swamp, landing zone, raw zone, curated zone, GCS data 
 keywords: [data lake, data swamp, schema-on-read, schema-on-write, object storage, landing zone, raw zone, cleansed zone, curated zone, zones, GCS, S3, ADLS, Azure Data Lake Storage, cloud storage, Hive partitioning, Hive-style, partition discovery, Parquet, Avro, ORC, CSV, JSON, file format, data catalog, data lineage, data governance, PII, access control, lifecycle policy, storage class, BigQuery external tables, Dataproc, ETL, ELT, medallion architecture, data lakehouse, Apache Iceberg, Delta Lake, open table formats, cost optimization, retention policy, naming convention, file organization, compaction, small files problem]
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."
 related:
-  - "[[data-warehouse-architecture]]"
+  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
   - "[gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
   - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
-  - "[[open-table-formats]]"
-  - "[[medallion-architecture]]"
-  - "[[serialization-formats]]"
+  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
   - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
   - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
-  - "[[idempotent-pipeline-design]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
   - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
-  - "[[dbt-transformation-layer]]"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -53,7 +53,7 @@ Understanding this distinction is the architectural foundation of the data lake 
 
 ## Zone Architecture
 
-The canonical data lake organizes storage into **zones** (also called layers or tiers), each with a defined quality level, access pattern, and governance contract. The zone concept maps directly to the [[medallion-architecture]] (Bronze = Landing/Raw, Silver = Cleansed, Gold = Curated).
+The canonical data lake organizes storage into **zones** (also called layers or tiers), each with a defined quality level, access pattern, and governance contract. The zone concept maps directly to the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (Bronze = Landing/Raw, Silver = Cleansed, Gold = Curated).
 
 ```
 Source Systems
@@ -228,13 +228,13 @@ df.coalesce(target_partitions).write \
 ```
 
 > [!tip] Incremental Loads and File Accumulation
-> Landing zones that receive incremental files will accumulate thousands of small files over time. Run a weekly compaction job that merges small Parquet files by partition into optimal-size consolidated files. [[open-table-formats]] (Apache Iceberg, Delta Lake) manage this automatically through their `OPTIMIZE` / `REWRITE DATA FILES` operations.
+> Landing zones that receive incremental files will accumulate thousands of small files over time. Run a weekly compaction job that merges small Parquet files by partition into optimal-size consolidated files. [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) (Apache Iceberg, Delta Lake) manage this automatically through their `OPTIMIZE` / `REWRITE DATA FILES` operations.
 
 ---
 
 ## Storage Formats: When to Use Each
 
-See [[serialization-formats]] for detailed encoding mechanics and compression codec comparison. This section covers the decision criteria specific to data lake storage.
+See [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for detailed encoding mechanics and compression codec comparison. This section covers the decision criteria specific to data lake storage.
 
 | Format | Schema embedded | Columnar | Splittable | Best use case in a lake |
 |---|---|---|---|---|
@@ -254,7 +254,7 @@ Curated zone:   Parquet (compressed, partitioned, clustered)
 ```
 
 > [!warning] Never Use CSV or JSON in the Curated Zone
-> CSV and JSON have no embedded schema, no columnar storage, and no compression interoperability. A 10 GB CSV file in the curated zone will be read end-to-end for every query. The same data as Parquet with Snappy compression is typically 2–5 GB and scanned 3–10x faster because query engines read only the relevant columns. See [[serialization-formats]] for the full format comparison.
+> CSV and JSON have no embedded schema, no columnar storage, and no compression interoperability. A 10 GB CSV file in the curated zone will be read end-to-end for every query. The same data as Parquet with Snappy compression is typically 2–5 GB and scanned 3–10x faster because query engines read only the relevant columns. See [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for the full format comparison.
 
 #### Parquet configuration for data lake
 
@@ -458,7 +458,7 @@ gs://org-data-lake-curated/     # analytics-ready, permanent, public (internal)
 
 **Symptom:** Re-running the pipeline for a date creates duplicate files or doubles row counts.
 
-**Fix:** Design every pipeline write as idempotent. For Parquet in GCS, the most reliable approach is to write to a temporary path and then atomically rename (or use the [[idempotent-pipeline-design]] TRUNCATE + RELOAD pattern):
+**Fix:** Design every pipeline write as idempotent. For Parquet in GCS, the most reliable approach is to write to a temporary path and then atomically rename (or use the [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) TRUNCATE + RELOAD pattern):
 
 ```python
 # Idempotent Parquet write: write to temp, rename to final
@@ -515,7 +515,7 @@ gcs_client.move_blobs(temp_path, final_path)
 | **Best for** | Exploration, ML, multi-format sources, cost-sensitive storage | Known query patterns, BI dashboards, governed reporting |
 
 > [!tip] Lake + Warehouse = Lakehouse
-> Modern architectures combine both: a data lake for low-cost raw storage, feeding a data warehouse or lakehouse layer for governed analytical queries. The [[open-table-formats]] (Apache Iceberg, Delta Lake) blur this boundary further — open table formats bring warehouse-grade ACID transactions and schema enforcement to object storage, creating the "lakehouse" architecture. The [[medallion-architecture]] is a practical implementation pattern that spans both.
+> Modern architectures combine both: a data lake for low-cost raw storage, feeding a data warehouse or lakehouse layer for governed analytical queries. The [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) (Apache Iceberg, Delta Lake) blur this boundary further — open table formats bring warehouse-grade ACID transactions and schema enforcement to object storage, creating the "lakehouse" architecture. The [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) is a practical implementation pattern that spans both.
 
 ---
 
@@ -731,15 +731,15 @@ Before treating a data lake zone as production-ready:
 
 ## Related Notes
 
-- [[data-warehouse-architecture]] — The structured analytical layer that the curated zone feeds
+- [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) — The structured analytical layer that the curated zone feeds
 - [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS bucket setup, storage classes, and lifecycle rule configuration
 - [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — GCS object CRUD, bulk operations, and gsutil patterns
-- [[open-table-formats]] — Apache Iceberg and Delta Lake: ACID transactions on data lake storage
-- [[medallion-architecture]] — The Bronze/Silver/Gold pattern implemented as a lake zone architecture
-- [[serialization-formats]] — Deep dive on Parquet, Avro, ORC, JSON, CSV mechanics and trade-offs
+- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Apache Iceberg and Delta Lake: ACID transactions on data lake storage
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The Bronze/Silver/Gold pattern implemented as a lake zone architecture
+- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Deep dive on Parquet, Avro, ORC, JSON, CSV mechanics and trade-offs
 - [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery cost controls when querying from GCS external tables
 - [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Creating and managing BigQuery external tables on GCS
-- [[idempotent-pipeline-design]] — Writing idempotent pipelines that safely re-run against lake zones
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Writing idempotent pipelines that safely re-run against lake zones
 - [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — GCP IAM for per-zone access control
-- [[dbt-transformation-layer]] — Standard tool for curated zone SQL transforms
-- [[five-pillars-of-data-engineering]] — Reliability, observability, and security principles for lake design
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Standard tool for curated zone SQL transforms
+- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — Reliability, observability, and security principles for lake design

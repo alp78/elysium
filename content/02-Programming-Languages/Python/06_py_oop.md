@@ -5,10 +5,10 @@ technology: [python]
 tags: [python]
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 keywords: [class, inheritance, polymorphism, encapsulation, property, dunder, dataclass, ABC, abstractmethod, super]
-description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [[06_cs_oop]] for the C# equivalent."
+description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [06_cs_oop](/02-Programming-Languages/CSharp/06_cs_oop) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[06_cs_oop]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[06_cs_oop](/02-Programming-Languages/CSharp/06_cs_oop)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

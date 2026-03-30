@@ -82,15 +82,15 @@ IAP authenticates you using your gcloud credentials and your IAM role (`roles/ia
 ### Prerequisites for IAP Access
 
 - `roles/iap.tunnelResourceAccessor` IAM role on the project or VM resource
-- `compute.googleapis.com` API enabled (see [[gcp-projects-and-apis]])
+- `compute.googleapis.com` API enabled (see [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis))
 - Firewall rule allowing IAP's IP range (`35.235.240.0/20`) on TCP port 22
 
 ## Related
 
-- [[vm-lifecycle]] — Starting and stopping the VMs you SSH into
-- [[disks-and-snapshots]] — Using serial console when SSH is unavailable
-- [[service-accounts-and-iam]] — IAM roles required for IAP tunnel access
-- [[vpc-service-controls]] — VPC-SC may restrict IAP access patterns
+- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — Starting and stopping the VMs you SSH into
+- [disks-and-snapshots](/06-GCP/Compute/disks-and-snapshots) — Using serial console when SSH is unavailable
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM roles required for IAP tunnel access
+- [vpc-service-controls](/06-GCP/Security/vpc-service-controls) — VPC-SC may restrict IAP access patterns
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Your gcloud credentials are used for IAP authentication
 
 ## References

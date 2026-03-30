@@ -6,7 +6,7 @@ tags: [git, github]
 aliases: [git remote, git fetch, upstream, force-with-lease, fork workflow, git remote -v, git fetch origin, git fetch prune, safe force push, origin remote]
 keywords: [git remote, remote repositories, git fetch, git push, fetch prune, force-with-lease, upstream, fork, origin, remote tracking, git remote add, git remote -v, prune deleted branches, safe push, overwrite remote branch, fork workflow, synchronize fork]
 description: "How to manage git remote connections — view, add, fetch, prune, and safely force-push to remote repositories including upstream fork synchronization."
-related: ["[[git-daily-workflow]]", "[[git-branching-and-merging]]", "[[pull-requests-and-code-review]]", "[[git-recovery-and-undo]]"]
+related: ["[git-daily-workflow](/08-Git/git-daily-workflow)", "[git-branching-and-merging](/08-Git/git-branching-and-merging)", "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)", "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -86,7 +86,7 @@ Fetch is always safe. It updates your remote-tracking branches (e.g., `origin/ma
 
 > [!info] Fetch vs Pull
 >
-> `git pull` = `git fetch` + `git merge` in one step. Prefer `git fetch` when you want to inspect changes first. Use `git pull` when you trust the incoming changes and want to integrate immediately. See [[git-daily-workflow]] for the full daily workflow.
+> `git pull` = `git fetch` + `git merge` in one step. Prefer `git fetch` when you want to inspect changes first. Use `git pull` when you trust the incoming changes and want to integrate immediately. See [git-daily-workflow](/08-Git/git-daily-workflow) for the full daily workflow.
 
 ## Pruning: Clean Up Deleted Remote Branches
 
@@ -123,7 +123,7 @@ This is the correct way to push a branch after rebasing. Rebasing rewrites commi
 > [!warning] Never Force-Push Shared Branches
 >
 > Never force-push to main or shared branches.
-> `git push --force` and `git push --force-with-lease` overwrite remote history. They are only safe on your own personal feature branches. **Never force-push to `main`, `master`, or any branch other people have checked out.** If `main` needs a commit removed, use `git revert` instead — see [[git-recovery-and-undo]].
+> `git push --force` and `git push --force-with-lease` overwrite remote history. They are only safe on your own personal feature branches. **Never force-push to `main`, `master`, or any branch other people have checked out.** If `main` needs a commit removed, use `git revert` instead — see [git-recovery-and-undo](/08-Git/git-recovery-and-undo).
 
 ### Difference Between --force and --force-with-lease
 
@@ -149,7 +149,7 @@ git rebase origin/main
 git push --force-with-lease origin feat/your-branch
 ```
 
-See [[git-branching-and-merging]] for the full rebase workflow and [[git-merge-conflicts]] for conflict resolution during rebase.
+See [git-branching-and-merging](/08-Git/git-branching-and-merging) for the full rebase workflow and [git-merge-conflicts](/08-Git/git-merge-conflicts) for conflict resolution during rebase.
 
 ### Quick Reference: Remote Commands
 
@@ -166,8 +166,8 @@ See [[git-branching-and-merging]] for the full rebase workflow and [[git-merge-c
 
 ## Related
 
-- [[git-daily-workflow]] — everyday fetch, pull, push cycle
-- [[git-branching-and-merging]] — rebase workflow that requires force-push
-- [[pull-requests-and-code-review]] — PRs and the fork contribution model
-- [[git-merge-conflicts]] — resolving conflicts during rebase before force-pushing
-- [[git-recovery-and-undo]] — `git revert` as the safe alternative to force-push on shared branches
+- [git-daily-workflow](/08-Git/git-daily-workflow) — everyday fetch, pull, push cycle
+- [git-branching-and-merging](/08-Git/git-branching-and-merging) — rebase workflow that requires force-push
+- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — PRs and the fork contribution model
+- [git-merge-conflicts](/08-Git/git-merge-conflicts) — resolving conflicts during rebase before force-pushing
+- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — `git revert` as the safe alternative to force-push on shared branches

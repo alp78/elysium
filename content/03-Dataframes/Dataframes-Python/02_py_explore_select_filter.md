@@ -11,11 +11,11 @@ aliases:
 keywords: [head, tail, describe, info, shape, dtypes, select, filter, isin, between, query, loc, iloc]
 description: "Pandas/Polars DataFrame reference 02/10 — Explore, Select & Filter (head/tail, describe, column selection, row filtering). Side-by-side executable examples with cell outputs."
 related:
-  - "[[moc-dataframes]]"
-  - "[[02_cs_explore_select_filter]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
+  - "[02_cs_explore_select_filter](/03-Dataframes/Dataframes-CSharp/02_cs_explore_select_filter)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[01_py_foundations_io]]"
-  - "[[03_py_transforms_expressions]]"
+  - "[01_py_foundations_io](/03-Dataframes/Dataframes-Python/01_py_foundations_io)"
+  - "[03_py_transforms_expressions](/03-Dataframes/Dataframes-Python/03_py_transforms_expressions)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

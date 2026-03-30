@@ -7,12 +7,12 @@ aliases: [monitoring strategy, what to monitor, observability matrix]
 keywords: [metrics, logs, traces, alerts, dashboards, freshness, data quality, SLA, dead man switch, on-call]
 description: "What to monitor for every component: metrics, logs, alerts, dashboards — the strategy layer above tool configuration."
 related:
-  - "[[moc-observability]]"
-  - "[[observability-deep-dive]]"
-  - "[[gcp-pipeline-health-and-sla]]"
-  - "[[gcp-cloud-monitoring-deep-dive]]"
-  - "[[datadog-alerting]]"
-  - "[[datadog-dashboards]]"
+  - "[moc-observability](/13-Observability/moc-observability)"
+  - "[observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive)"
+  - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
+  - "[gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)"
+  - "[datadog-alerting](/13-Observability/Datadog/datadog-alerting)"
+  - "[datadog-dashboards](/13-Observability/Datadog/datadog-dashboards)"
   - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-29
 updated: 2026-03-29
@@ -25,7 +25,7 @@ This page answers **what to monitor** for every component in the Elysium data pl
 
 ## The Three Pillars Applied to Data Pipelines
 
-The three pillars from [[observability-deep-dive#The Three Pillars (Metrics, Logs, Traces) Applied to Data Pipelines]] map directly to triage workflow:
+The three pillars from [observability-deep-dive > The Three Pillars (Metrics, Logs, Traces) Applied to Data Pipelines](/13-Observability/Monitoring/observability-deep-dive#the-three-pillars-metrics-logs-traces-applied-to-data-pipelines) map directly to triage workflow:
 
 - **Metrics** tell you *something is wrong* — a number crossed a threshold
 - **Logs** tell you *what is wrong* — the error message, the stack trace, the failed query
@@ -41,7 +41,7 @@ The three pillars from [[observability-deep-dive#The Three Pillars (Metrics, Log
 
 ### SQL Server
 
-Dashboard: **DBA Dashboard** | Config: [[datadog-sql-server-integration#Built-in SQL Server Metrics Collected by Datadog]], [[gcp-cloud-monitoring-deep-dive#Ops Agent: SQL Server Configuration]]
+Dashboard: **DBA Dashboard** | Config: [datadog-sql-server-integration > Built-in SQL Server Metrics Collected by Datadog](/13-Observability/Datadog/datadog-sql-server-integration#built-in-sql-server-metrics-collected-by-datadog), [gcp-cloud-monitoring-deep-dive > Ops Agent: SQL Server Configuration](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#ops-agent-sql-server-configuration)
 
 > [!note] Key Metrics
 >
@@ -72,7 +72,7 @@ Dashboard: **DBA Dashboard** | Config: [[datadog-sql-server-integration#Built-in
 
 ### Airflow
 
-Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Metrics Reference](/13-Observability/Datadog/datadog-airflow-observability#key-metrics-reference), [[datadog-dashboards#Airflow Orchestration Dashboard]]
+Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Metrics Reference](/13-Observability/Datadog/datadog-airflow-observability#key-metrics-reference), [datadog-dashboards > Airflow Orchestration Dashboard](/13-Observability/Datadog/datadog-dashboards#airflow-orchestration-dashboard)
 
 > [!note] Key Metrics
 >
@@ -100,7 +100,7 @@ Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Met
 
 ### BigQuery
 
-Dashboard: **Cost + Performance** | Config: [[gcp-cloud-monitoring-deep-dive#BigQuery]], [[gcp-cloud-monitoring-deep-dive#INFORMATION_SCHEMA Queries for Job-Level Monitoring]]
+Dashboard: **Cost + Performance** | Config: [gcp-cloud-monitoring-deep-dive > BigQuery](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#bigquery), [gcp-cloud-monitoring-deep-dive > INFORMATION_SCHEMA Queries for Job-Level Monitoring](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#informationschema-queries-for-job-level-monitoring)
 
 > [!note] Key Metrics
 >
@@ -125,7 +125,7 @@ Dashboard: **Cost + Performance** | Config: [[gcp-cloud-monitoring-deep-dive#Big
 
 ### Cloud Run
 
-Dashboard: **Service Health** | Config: [[gcp-cloud-monitoring-deep-dive#Built-in Metrics for Cloud Run Services]]
+Dashboard: **Service Health** | Config: [gcp-cloud-monitoring-deep-dive > Built-in Metrics for Cloud Run Services](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#built-in-metrics-for-cloud-run-services)
 
 > [!note] Key Metrics
 >
@@ -152,7 +152,7 @@ Dashboard: **Service Health** | Config: [[gcp-cloud-monitoring-deep-dive#Built-i
 
 ### Pub/Sub
 
-Dashboard: **Messaging Health** | Config: [[gcp-cloud-monitoring-deep-dive#Pub/Sub]]
+Dashboard: **Messaging Health** | Config: [gcp-cloud-monitoring-deep-dive > Pub/Sub](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#pubsub)
 
 > [!note] Key Metrics
 >
@@ -176,7 +176,7 @@ Dashboard: **Messaging Health** | Config: [[gcp-cloud-monitoring-deep-dive#Pub/S
 
 ### Cloud Storage (GCS)
 
-Dashboard: **Storage Dashboard** | Config: [[gcp-cloud-monitoring-deep-dive#Cloud Storage]]
+Dashboard: **Storage Dashboard** | Config: [gcp-cloud-monitoring-deep-dive > Cloud Storage](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#cloud-storage)
 
 > [!note] Key Metrics
 >
@@ -198,7 +198,7 @@ Dashboard: **Storage Dashboard** | Config: [[gcp-cloud-monitoring-deep-dive#Clou
 
 ### Firestore
 
-Dashboard: **Real-Time Store** | Config: [[gcp-cloud-monitoring-deep-dive#Firestore]]
+Dashboard: **Real-Time Store** | Config: [gcp-cloud-monitoring-deep-dive > Firestore](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#firestore)
 
 > [!note] Key Metrics
 >
@@ -220,7 +220,7 @@ Dashboard: **Real-Time Store** | Config: [[gcp-cloud-monitoring-deep-dive#Firest
 
 ### GCE VMs
 
-Dashboard: **VM Health** | Config: [[datadog-agent-sql-vm]], [[gcp-cloud-monitoring-deep-dive#Compute Engine VMs]]
+Dashboard: **VM Health** | Config: [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm), [gcp-cloud-monitoring-deep-dive > Compute Engine VMs](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#compute-engine-vms)
 
 > [!note] Key Metrics
 >
@@ -247,7 +247,7 @@ Dashboard: **VM Health** | Config: [[datadog-agent-sql-vm]], [[gcp-cloud-monitor
 
 ### The Data Pipeline
 
-Dashboard: **Data Quality** | Config: [[gcp-pipeline-health-and-sla#Data Freshness Monitoring]], [[datadog-custom-queries]]
+Dashboard: **Data Quality** | Config: [gcp-pipeline-health-and-sla > Data Freshness Monitoring](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#data-freshness-monitoring), [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries)
 
 > [!note] Key Metrics
 >
@@ -272,7 +272,7 @@ Dashboard: **Data Quality** | Config: [[gcp-pipeline-health-and-sla#Data Freshne
 
 > [!info] Severity Determines Response
 >
-> Every alert in [[datadog-alerting#Deadlock Alert Monitor]] and [[gcp-cloud-monitoring-deep-dive#Alerting Policies]] must map to exactly one of these levels.
+> Every alert in [datadog-alerting > Deadlock Alert Monitor](/13-Observability/Datadog/datadog-alerting#deadlock-alert-monitor) and [gcp-cloud-monitoring-deep-dive > Alerting Policies](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#alerting-policies) must map to exactly one of these levels.
 
 | Severity | Response Time | Notification Channel | Example Conditions |
 |---|---|---|---|
@@ -289,7 +289,7 @@ Dashboard: **Data Quality** | Config: [[gcp-pipeline-health-and-sla#Data Freshne
 
 > [!info] Five Platform Dashboards
 >
-> Each has a clear audience and refresh cadence. Implementation details live in [[datadog-dashboards#Pipeline Watch Dashboard]], [[datadog-dashboards#SQL Server DBA Dashboard]], and [[gcp-cloud-monitoring-deep-dive#Dashboards]].
+> Each has a clear audience and refresh cadence. Implementation details live in [datadog-dashboards > Pipeline Watch Dashboard](/13-Observability/Datadog/datadog-dashboards#pipeline-watch-dashboard), [datadog-dashboards > SQL Server DBA Dashboard](/13-Observability/Datadog/datadog-dashboards#sql-server-dba-dashboard), and [gcp-cloud-monitoring-deep-dive > Dashboards](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#dashboards).
 
 | Dashboard | Audience | Key Panels | Refresh | Tool |
 |---|---|---|---|---|
@@ -307,7 +307,7 @@ Dashboard: **Data Quality** | Config: [[gcp-pipeline-health-and-sla#Data Freshne
 
 > [!info] Datadog vs GCP Decision
 >
-> Full feature comparison lives at [[gcp-cloud-monitoring-deep-dive#Cloud Monitoring vs Datadog — Comprehensive Comparison Table]]. This table gives the short decision framework.
+> Full feature comparison lives at [gcp-cloud-monitoring-deep-dive > Cloud Monitoring vs Datadog — Comprehensive Comparison Table](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#cloud-monitoring-vs-datadog--comprehensive-comparison-table). This table gives the short decision framework.
 
 | Scenario | Use Datadog | Use GCP-Native | Rationale |
 |---|---|---|---|

@@ -7,9 +7,9 @@ aliases: [git reset, git revert, git reflog, git stash, undo commit, recover los
 keywords: [git reset, git revert, git reflog, git restore, git stash, reset --soft, reset --hard, reset --mixed, HEAD~1, reflog, recover, undo, cherry-pick, lost commit, detached HEAD, branch deleted, merge conflict abort]
 description: "Complete guide to undoing changes in Git — safe methods (restore, revert) and destructive methods (reset --hard), using reflog to recover lost commits, and stash for temporary shelving."
 related:
-  - "[[git-daily-workflow]]"
-  - "[[git-branching-and-merging]]"
-  - "[[pull-requests-and-code-review]]"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
+  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -305,10 +305,10 @@ Git plays "hot or cold" with your commits to find exactly where the bug was intr
 
 ## Related
 
-- [[git-daily-workflow]] — status, staging, committing, pushing
-- [[git-branching-and-merging]] — creating branches and merge strategies
-- [[pull-requests-and-code-review]] — PR merge conflicts and rebase workflows
-- [[git-history-and-inspection]] — log, blame, show for understanding what changed
+- [git-daily-workflow](/08-Git/git-daily-workflow) — status, staging, committing, pushing
+- [git-branching-and-merging](/08-Git/git-branching-and-merging) — creating branches and merge strategies
+- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — PR merge conflicts and rebase workflows
+- [git-history-and-inspection](/08-Git/git-history-and-inspection) — log, blame, show for understanding what changed
 
 ## References
 

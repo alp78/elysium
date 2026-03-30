@@ -134,7 +134,7 @@ EXEC sp_rename 'gold.signals_daily_old', 'signals_daily';  -- move old to stagin
 
 > [!tip] Partition SWITCH for Zero-Downtime
 >
-> `SWITCH` is a metadata-only operation — no data moves. Requires matching indexes, same filegroup, and a `CHECK` constraint on the staging table that matches the partition boundary. See [[partitioning-strategies]] for full `SWITCH` mechanics.
+> `SWITCH` is a metadata-only operation — no data moves. Requires matching indexes, same filegroup, and a `CHECK` constraint on the staging table that matches the partition boundary. See [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for full `SWITCH` mechanics.
 
 ```sql
 -- Staging table has CHECK constraint matching the target partition
@@ -376,7 +376,7 @@ If you use an overlap window (subtract N days from watermark) but the target tab
 
 ### Using IDENTITY as watermark on a truncate-reload table — broken contract
 
-`IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [[sql-server-pipeline-anti-patterns#IDENTITY as a Business Key]].
+`IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [sql-server-pipeline-anti-patterns > IDENTITY as a Business Key](/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#identity-as-a-business-key).
 
 ### No NULL handling on first run — pipeline crashes on empty table
 
@@ -427,7 +427,7 @@ When source data contains both new rows and updates to existing rows. Three appr
 
 > [!info] Upsert Strategy Decision
 >
-> Choose based on data volume and control requirements. For full MERGE syntax, see [[merge-and-upsert]]. For idempotency guarantees, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
+> Choose based on data volume and control requirements. For full MERGE syntax, see [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert). For idempotency guarantees, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 | Approach | Speed | Safety | Complexity | Best For |
 |----------|-------|--------|------------|----------|
@@ -437,7 +437,7 @@ When source data contains both new rows and updates to existing rows. Three appr
 
 **Choose DELETE + INSERT when:** the target table is small (<1M rows), the logic is simple (one partition key), and you want maximum readability. This is what the Medallion-Project bronze loaders use.
 
-**Choose MERGE when:** you need a single atomic statement that handles insert/update/delete in one pass, and you understand the locking gotchas (see [[merge-and-upsert]]). Best for medium-volume tables with a clear natural key.
+**Choose MERGE when:** you need a single atomic statement that handles insert/update/delete in one pass, and you understand the locking gotchas (see [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)). Best for medium-volume tables with a clear natural key.
 
 **Choose Staging + separate INSERT/UPDATE when:** the volume is large (>1M rows), you want to separate insert and update logic for debugging, or you need to validate before committing. Most production pipelines at scale land here.
 
@@ -512,7 +512,7 @@ conn.commit()
 > pyodbc sends Python `float('nan')` as the string `"nan"`, not `NULL`. Convert explicitly before loading: `None if math.isnan(v) else v`. Similarly, `numpy.int64` is not a native Python type — cast to `int()` before passing to pyodbc.
 
 - **Batch size:** 5,000-10,000 rows per `executemany` call is optimal. Too large = memory pressure on the driver; too small = round-trip overhead
-- **Column type matching:** Python `float` maps to SQL `FLOAT`; Python `str` to `NVARCHAR`. Mismatches cause implicit conversions — see [[sargable-queries]] for why this kills performance
+- **Column type matching:** Python `float` maps to SQL `FLOAT`; Python `str` to `NVARCHAR`. Mismatches cause implicit conversions — see [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) for why this kills performance
 - **None vs NULL:** `None` becomes SQL `NULL` — correct. But `numpy.nan` does not — convert first
 
 ---
@@ -782,7 +782,7 @@ When using MERGE or staging-based upsert, the join between staging and target be
 > conn.commit()
 > ```
 >
-> OHLCV uses an application-side merge: read existing keys into a dict, partition incoming rows into inserts vs updates, execute each batch separately. See [[bronze-layer-loading]] for the full implementation.
+> OHLCV uses an application-side merge: read existing keys into a dict, partition incoming rows into inserts vs updates, execute each batch separately. See [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full implementation.
 
 
 ## Related

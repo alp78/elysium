@@ -63,8 +63,8 @@ keywords:
 description: "Comprehensive Docker image management reference — Dockerfile instructions, building with cache and multi-stage patterns, tagging strategies, pushing to GCP Artifact Registry, inspecting layers and size, and cleaning up disk usage."
 related:
   - "[container-lifecycle](/09-Docker/container-lifecycle)"
-  - "[[docker-compose]]"
-  - "[[docker-cheat-sheet]]"
+  - "[docker-compose](/09-Docker/docker-compose)"
+  - "[docker-cheat-sheet](/09-Docker/docker-cheat-sheet)"
   - "[terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci)"
   - "[github-actions-workflows](/10-GitHub-Actions/github-actions-workflows)"
   - "[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
@@ -671,8 +671,8 @@ In CI/CD, steps 2-5 are handled by [GitHub Actions](/10-GitHub-Actions/github-ac
 ## Related
 
 - [container-lifecycle](/09-Docker/container-lifecycle) — Running containers from images (create, start, exec, logs, stop)
-- [[docker-compose]] — Multi-container orchestration with docker-compose.yml
-- [[docker-cheat-sheet]] — Quick reference for the most common Docker commands
+- [docker-compose](/09-Docker/docker-compose) — Multi-container orchestration with docker-compose.yml
+- [docker-cheat-sheet](/09-Docker/docker-cheat-sheet) — Quick reference for the most common Docker commands
 - [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) — CI/CD pipelines that build and push images automatically
 - [terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry Terraform configuration and Cloud Run job definitions
 - [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Where images are deployed and how cold start time relates to image size

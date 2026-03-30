@@ -100,10 +100,10 @@ gcloud compute instances get-serial-port-output data-pipeline-sql --zone=europe-
 
 ## Related
 
-- [[vm-lifecycle]] — Stop the VM before detaching/attaching disks after snapshot restore
-- [[vm-ssh-and-file-transfer]] — SSH is the primary access method; serial console is the fallback
-- [[gcs-buckets-and-lifecycle]] — GCS is the alternative storage layer for pipeline data (not OS disks)
-- [[cloud-logging]] — Check Cloud Logging alongside serial console output for boot diagnostics
+- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — Stop the VM before detaching/attaching disks after snapshot restore
+- [vm-ssh-and-file-transfer](/06-GCP/Compute/vm-ssh-and-file-transfer) — SSH is the primary access method; serial console is the fallback
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the alternative storage layer for pipeline data (not OS disks)
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Check Cloud Logging alongside serial console output for boot diagnostics
 
 ## References
 

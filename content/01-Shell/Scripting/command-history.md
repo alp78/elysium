@@ -142,9 +142,9 @@ Set-PSReadLineOption -PredictionViewStyle ListView
 
 ## Related
 
-- [[environment-variables]] — Preventing secrets from being stored in history
-- [[defensive-scripting]] — Writing scripts that don't need manual recall
-- [[command-chaining]] — Building complex command pipelines
+- [environment-variables](/01-Shell/Scripting/environment-variables) — Preventing secrets from being stored in history
+- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Writing scripts that don't need manual recall
+- [command-chaining](/01-Shell/Scripting/command-chaining) — Building complex command pipelines
 
 ## References
 

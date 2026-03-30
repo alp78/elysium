@@ -5,10 +5,10 @@ technology: [python]
 tags: [python]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 keywords: [list, dict, set, tuple, frozenset, deque, Counter, defaultdict, namedtuple, comprehension]
-description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [[05_cs_collections]] for the C# equivalent."
+description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [05_cs_collections](/02-Programming-Languages/CSharp/05_cs_collections) for the C# equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[05_cs_collections]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[05_cs_collections](/02-Programming-Languages/CSharp/05_cs_collections)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -6,8 +6,8 @@ status: stable
 updated: 2026-03-23
 description: "Schema tests dbt-utils dbt-expectations custom tests"
 related:
-  - "[[dbt-data-contracts-implementation]]"
-  - "[[dbt-project-structure]]"
+  - "[dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)"
+  - "[dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)"
   - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
   - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
 ---
@@ -568,8 +568,8 @@ models:
 ---
 
 ## Related
-- [[dbt-data-contracts-implementation]]
-- [[dbt-project-structure]]
+- [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
+- [dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)
 - [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)
 - [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)
 - [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How dbt tests fit into the full testing pyramid for data engineering

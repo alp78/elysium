@@ -14,7 +14,7 @@ related:
   - datadog-agent-airflow-vm
   - datadog-gcp-integration
   - essential-dba-queries
-  - "[[observability-strategy-matrix]]"
+  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -374,10 +374,10 @@ A custom dashboard definition is stored at `infra/datadog/airflow_dashboard.json
 
 ## Related
 
-- [[datadog-architecture-overview]] — Full observability topology
-- [[datadog-alerting]] — Monitors and alert configurations
-- [[datadog-custom-queries]] — Custom DMV metrics consumed by these dashboards
-- [[datadog-sql-server-integration]] — Built-in SQL Server metrics
-- [[datadog-agent-airflow-vm]] — StatsD source for Airflow metrics
-- [[datadog-gcp-integration]] — GCP Integration for Cloud Run metrics
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
+- [datadog-alerting](/13-Observability/Datadog/datadog-alerting) — Monitors and alert configurations
+- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — Custom DMV metrics consumed by these dashboards
+- [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) — Built-in SQL Server metrics
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow metrics
+- [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration) — GCP Integration for Cloud Run metrics
 - [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Manual DMV queries for deeper investigation

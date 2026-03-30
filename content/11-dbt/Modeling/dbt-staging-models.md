@@ -6,9 +6,9 @@ status: stable
 updated: 2026-03-23
 description: "Staging models 1:1 with source, source freshness"
 related:
-  - "[[dbt-intermediate-models]]"
-  - "[[dbt-project-structure]]"
-  - "[[dbt-core-concepts]]"
+  - "[dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models)"
+  - "[dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
   - "[bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading)"
 ---
 
@@ -459,7 +459,7 @@ where close_price > 0 and volume > 1000  -- this is analytical logic
 ---
 
 ## Related
-- [[dbt-intermediate-models]]
-- [[dbt-project-structure]]
-- [[dbt-core-concepts]]
+- [dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models)
+- [dbt-project-structure](/11-dbt/Foundations/dbt-project-structure)
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
 - [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading)

@@ -273,4 +273,4 @@ Without `_ingested_at` and `_source_file` in bronze tables, you cannot debug dat
 > - `gold.scores_daily`, `gold.scores_quarterly`, `gold.index_performance` — pre-computed analytics
 >
 > All tables include `_ingested_at DATETIME2 DEFAULT SYSUTCDATETIME()` as a metadata column.
-> See [[bronze-layer-loading]] for the full DDL.
+> See [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full DDL.

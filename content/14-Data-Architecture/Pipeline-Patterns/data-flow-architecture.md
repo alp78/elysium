@@ -27,10 +27,10 @@ description: "Complete data movement topology, transfer method selection, format
 related:
   - "[data-transfer](/01-Shell/File-Operations/data-transfer)"
   - "[compression](/01-Shell/File-Operations/compression)"
-  - "[[serialization-formats]]"
-  - "[[medallion-architecture]]"
-  - "[[idempotent-pipeline-design]]"
-  - "[[streaming-architecture]]"
+  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
   - "[data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)"
   - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
   - "[sql-server-loading-patterns](/04-SQL-Server/Patterns/sql-server-loading-patterns)"
@@ -103,8 +103,8 @@ graph TD
 |---|---|---|---|---|---|---|
 | API ingestion | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL INSERT | Daily (Airflow) | [bronze-layer-loading > Strategy 1: Truncate & Reload (Most Loaders)](/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-1-truncate--reload-most-loaders) |
 | OHLCV merge | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL MERGE | Daily (Airflow) | [bronze-layer-loading > Strategy 2: Merge (OHLCV Only)](/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-2-merge-ohlcv-only) |
-| Bronze → Silver | SQL Server bronze | SQL Server silver | Python transforms | In-database | Daily (Airflow) | [[medallion-architecture#Silver (Cleaned)]] |
-| Silver → Gold | SQL Server silver | SQL Server gold | Python transforms | In-database | Daily (Airflow) | [[medallion-architecture#Gold (Analytics)]] |
+| Bronze → Silver | SQL Server bronze | SQL Server silver | Python transforms | In-database | Daily (Airflow) | [medallion-architecture > Silver (Cleaned)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#silver-cleaned) |
+| Silver → Gold | SQL Server silver | SQL Server gold | Python transforms | In-database | Daily (Airflow) | [medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#gold-analytics) |
 | SQL → BigQuery | SQL Server gold | BigQuery | bcp → GCS → bq load | CSV/Parquet | Daily | See cross-database join below |
 | CDC streaming | SQL Server | Pub/Sub → BigQuery | CDC + Python | JSON events | Near-real-time | [sql-server-change-tracking > CDC → Pub/Sub — streaming changes to GCP](/04-SQL-Server/Patterns/sql-server-change-tracking#cdc--pubsub--streaming-changes-to-gcp) |
 | CDC to Firestore | SQL Server | Firestore | CDC + Python | JSON docs | Event-driven | [sql-server-change-tracking > CDC → Firestore — push dimension changes to real-time store](/04-SQL-Server/Patterns/sql-server-change-tracking#cdc--firestore--push-dimension-changes-to-real-time-store) |
@@ -138,7 +138,7 @@ graph TD
 
 ## Format Selection by Scenario
 
-When to use CSV vs JSON vs Parquet vs Avro. For the deep codec comparison with benchmarks, see [[serialization-formats]].
+When to use CSV vs JSON vs Parquet vs Avro. For the deep codec comparison with benchmarks, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
 
 | Scenario | Format | Compression | Why |
 |---|---|---|---|
@@ -203,7 +203,7 @@ graph LR
 
 ## Batch vs Streaming vs Micro-Batch
 
-For the full streaming architecture theory (Lambda, Kappa, event sourcing, windowing), see [[streaming-architecture]].
+For the full streaming architecture theory (Lambda, Kappa, event sourcing, windowing), see [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture).
 
 | Pattern | Latency | Tool in Stack | Use Case |
 |---|---|---|---|
@@ -245,7 +245,7 @@ graph TD
 > - Streaming is justified only when: (a) downstream consumers need sub-minute data,
 >   AND (b) the source supports change capture.
 >
-> See [[streaming-architecture#Streaming vs Batch Decision Matrix]] for the full
+> See [streaming-architecture > Streaming vs Batch Decision Matrix](/14-Data-Architecture/Architectures/streaming-architecture#streaming-vs-batch-decision-matrix) for the full
 > decision framework.
 
 ---
@@ -328,7 +328,7 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 > | **Uncompressed network transfers** | Wastes bandwidth, 3-10x slower | Always compress: `rsync -z`, `gzip`, `zstd` |
 > | **No intermediate storage** | If destination fails, restart from source | Stage in GCS first — replay without re-fetching |
 > | **Mixed push and pull for same flow** | CDC to Pub/Sub AND a batch pull = duplicates | Choose one: event-driven OR batch, not both |
-> | **No source-destination validation** | Row count mismatches go unnoticed | Compare `COUNT(*)` after every load — see [[idempotent-pipeline-design]] |
+> | **No source-destination validation** | Row count mismatches go unnoticed | Compare `COUNT(*)` after every load — see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) |
 > | **Loading directly to production** | No validation, no rollback | Always load to staging first — see [sql-server-loading-patterns > Loading Directly to Production — no staging, no validation](/04-SQL-Server/Patterns/sql-server-loading-patterns#loading-directly-to-production--no-staging-no-validation) |
 
 ---
@@ -337,10 +337,10 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 
 - [data-transfer](/01-Shell/File-Operations/data-transfer) — CLI tools for every transfer scenario (rsync, scp, bcp, gsutil)
 - [compression](/01-Shell/File-Operations/compression) — Algorithm selection for pipeline data
-- [[serialization-formats]] — Format comparison with benchmarks
-- [[medallion-architecture]] — Bronze → Silver → Gold layer design
-- [[idempotent-pipeline-design]] — Load patterns that are safe to re-run
-- [[streaming-architecture]] — Full streaming theory (Lambda, Kappa, CDC, windowing)
+- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Format comparison with benchmarks
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze → Silver → Gold layer design
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Load patterns that are safe to re-run
+- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — Full streaming theory (Lambda, Kappa, CDC, windowing)
 - [sql-server-loading-patterns](/04-SQL-Server/Patterns/sql-server-loading-patterns) — SQL Server bulk load methods and benchmarks
 - [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — BigQuery load and export operations
 - [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — GCS file operations and transfer optimization

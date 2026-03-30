@@ -5,10 +5,10 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
 keywords: [method, delegate, Func, Action, lambda, closure, extension method, IEnumerable, yield, nullable]
-description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and iterators. See [[04_py_functions]] for the Python equivalent."
+description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and iterators. See [04_py_functions](/02-Programming-Languages/Python/04_py_functions) for the Python equivalent."
 related:
-  - "[[moc-programming-languages]]"
-  - "[[04_py_functions]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
+  - "[04_py_functions](/02-Programming-Languages/Python/04_py_functions)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

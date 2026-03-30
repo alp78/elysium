@@ -14,7 +14,7 @@ status: complete
 
 # Prompt Debugging, Optimization, and System Design
 
-This note covers the diagnostic and system-level layer of prompt engineering: identifying why prompts fail, rebuilding them systematically, designing prompt workflows and multi-agent systems, managing memory across long conversations, and building a reusable prompt library. It also includes the full mastery checklist and quick reference card. For foundations, see [[prompt-foundations]]; for structural patterns, see [[prompt-architecture]].
+This note covers the diagnostic and system-level layer of prompt engineering: identifying why prompts fail, rebuilding them systematically, designing prompt workflows and multi-agent systems, managing memory across long conversations, and building a reusable prompt library. It also includes the full mastery checklist and quick reference card. For foundations, see [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations); for structural patterns, see [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
 
 ---
 
@@ -161,7 +161,7 @@ A robust prompt should produce acceptable output across multiple models. If it o
 
 If any dimension fails, the prompt needs tightening in that area — not model-specific tuning.
 
-For model-specific strengths and preferred formats, see [[model-specific-prompting]].
+For model-specific strengths and preferred formats, see [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
 
 ---
 
@@ -484,10 +484,10 @@ Format:
 
 ## Related Notes
 
-- [[prompt-foundations]] — The three axioms and context hierarchy that define why prompts fail
-- [[prompt-architecture]] — The 4-layer template in full structural detail
-- [[model-specific-prompting]] — Per-model strengths, quirks, and debugging adjustments
-- [[applied-prompting]] — Real-world before/after examples to practice against
+- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that define why prompts fail
+- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer template in full structural detail
+- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Per-model strengths, quirks, and debugging adjustments
+- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Real-world before/after examples to practice against
 
 ## References
 

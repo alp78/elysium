@@ -7,8 +7,8 @@ aliases: [SQL engineering, SQL performance, transactions, error handling, indexi
 keywords: [transactions, error handling, try catch, temp tables, table variables, dynamic sql, stored procedures, user defined functions, indexing, query hints, set statistics, execution plan, deadlock, isolation level, snapshot]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."
 related:
-  - "[[sql-fundamentals]]"
-  - "[[sql-advanced]]"
+  - "[sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals)"
+  - "[sql-advanced](/05-DB-Queries/SQL-Server/sql-advanced)"
   - "[wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis)"
   - "[index-maintenance](/04-SQL-Server/Performance/index-maintenance)"
 created: 2026-03-22

@@ -38,9 +38,9 @@ keywords:
   - gitconfig
 description: "Core Git concepts glossary, initial identity and global configuration commands, and repository creation and cloning variants including shallow clone for CI/CD."
 related:
-  - "[[git-daily-workflow]]"
-  - "[[git-branching-and-merging]]"
-  - "[[gitignore-patterns]]"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
+  - "[gitignore-patterns](/08-Git/gitignore-patterns)"
   - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -72,7 +72,7 @@ A movable pointer to a commit. Branches let you work on features without affecti
 
 *In plain English:* A parallel universe where you can experiment freely. If it works, you merge it back into reality.
 
-See [[git-branching-and-merging]] for full branch management commands.
+See [git-branching-and-merging](/08-Git/git-branching-and-merging) for full branch management commands.
 
 ### Git Remote
 A copy of the repository on a server (e.g., GitHub). Named `origin` by default.
@@ -109,7 +109,7 @@ A request to merge your branch into another branch, with a review interface.
 
 *In plain English:* Raising your hand and saying "I've finished this work, please review and merge it."
 
-See [[pull-requests-and-code-review]] for the full PR workflow.
+See [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) for the full PR workflow.
 
 ### Git SHA / Hash
 A 40-character hexadecimal string (often abbreviated to 7 chars) that uniquely identifies a commit.
@@ -337,11 +337,11 @@ pre-commit run gitleaks --all-files
 
 ## Related
 
-- [[git-daily-workflow]] — status, add, commit, push, pull commands for everyday work
-- [[git-branching-and-merging]] — creating, switching, merging, and deleting branches
-- [[gitignore-patterns]] — excluding files from Git tracking and Git LFS for large files
+- [git-daily-workflow](/08-Git/git-daily-workflow) — status, add, commit, push, pull commands for everyday work
+- [git-branching-and-merging](/08-Git/git-branching-and-merging) — creating, switching, merging, and deleting branches
+- [gitignore-patterns](/08-Git/gitignore-patterns) — excluding files from Git tracking and Git LFS for large files
 - [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines that use `git clone` and repository operations
-- [[pull-requests-and-code-review]] — the PR workflow built on top of branches and remotes
+- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — the PR workflow built on top of branches and remotes
 
 ## References
 

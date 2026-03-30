@@ -114,13 +114,13 @@ SQL Server **metrics** (connections, buffer pool, waits) are collected by the `s
 - Metrics: `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml`
 - Logs: `/etc/datadog-agent/conf.d/sqlserver.d/logs.yaml`
 
-Both must be configured separately. See [[datadog-agent-sql-vm]] for the metrics integration config and [[datadog-custom-queries]] for custom SQL queries.
+Both must be configured separately. See [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) for the metrics integration config and [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) for custom SQL queries.
 
 ---
 
 ## Related Notes
 
-- [[datadog-agent-sql-vm]] — full SQL VM agent setup including metrics integration
-- [[datadog-architecture-overview]] — observability architecture overview
-- [[datadog-custom-queries]] — custom SQL queries for connections and deadlocks
+- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — full SQL VM agent setup including metrics integration
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — observability architecture overview
+- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — custom SQL queries for connections and deadlocks
 - common pipeline errors — troubleshooting "no SQL Server logs in Log Explorer"

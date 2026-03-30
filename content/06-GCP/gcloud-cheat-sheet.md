@@ -8,17 +8,17 @@ keywords: [gcloud, cheat sheet, quick reference, compute, bigquery, cloud run, s
 description: "Exhaustive CLI reference for gcloud, bq, and gcloud storage — the one page a senior Data Engineer bookmarks for all GCP command-line work."
 related:
   - "[gcloud-authentication](/06-GCP/Core/gcloud-authentication)"
-  - "[[gcloud-configurations]]"
-  - "[[gcloud-output-formatting]]"
-  - "[[vm-lifecycle]]"
-  - "[[dataset-and-table-management]]"
-  - "[[querying-and-cost-optimization]]"
-  - "[[cloud-run-jobs-vs-services]]"
-  - "[[gcs-object-operations]]"
-  - "[[gcs-buckets-and-lifecycle]]"
-  - "[[service-accounts-and-iam]]"
-  - "[[pubsub-topics-and-subscriptions]]"
-  - "[[cloud-logging]]"
+  - "[gcloud-configurations](/06-GCP/Core/gcloud-configurations)"
+  - "[gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting)"
+  - "[vm-lifecycle](/06-GCP/Compute/vm-lifecycle)"
+  - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
+  - "[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
+  - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
+  - "[gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
+  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
+  - "[pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions)"
+  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
   - "[iap-tunneling](/01-Shell/Networking/iap-tunneling)"
 created: 2026-03-22
 updated: 2026-03-23
@@ -2291,15 +2291,15 @@ gcloud storage ls -l 'gs://fin-landing-bucket/**' \
 ## Related
 
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — OAuth2, ADC, SA keys, Workload Identity
-- [[gcloud-configurations]] — Named configurations and multi-project setup
-- [[gcloud-output-formatting]] — `--format`, `--filter`, `--flatten`, jq patterns
-- [[vm-lifecycle]] — VM create/start/stop/delete patterns and startup scripts
-- [[dataset-and-table-management]] — BigQuery dataset and table DDL operations
-- [[querying-and-cost-optimization]] — BQ cost control, dry runs, reservations
-- [[cloud-run-jobs-vs-services]] — When to use jobs vs services
-- [[gcs-object-operations]] — cp, rsync, lifecycle, retention
-- [[gcs-buckets-and-lifecycle]] — Bucket creation, IAM, lifecycle policies
-- [[service-accounts-and-iam]] — SA design, least-privilege, custom roles
-- [[pubsub-topics-and-subscriptions]] — Topic/subscription patterns, DLQ, push vs pull
-- [[cloud-logging]] — Log filter syntax, sinks, log-based metrics
+- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Named configurations and multi-project setup
+- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — `--format`, `--filter`, `--flatten`, jq patterns
+- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — VM create/start/stop/delete patterns and startup scripts
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery dataset and table DDL operations
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BQ cost control, dry runs, reservations
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — When to use jobs vs services
+- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — cp, rsync, lifecycle, retention
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Bucket creation, IAM, lifecycle policies
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — SA design, least-privilege, custom roles
+- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Topic/subscription patterns, DLQ, push vs pull
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Log filter syntax, sinks, log-based metrics
 - [iap-tunneling](/01-Shell/Networking/iap-tunneling) — IAP SSH and TCP tunnels for private VMs

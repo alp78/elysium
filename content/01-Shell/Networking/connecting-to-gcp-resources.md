@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell, sql-server, airflow, bigquery, gcp]
 aliases: [GCP connectivity, gcloud compute ssh, bq query, Cloud Run, Airflow IAP, Datadog agent, connection matrix]
 keywords: [GCP connectivity, gcloud compute ssh, gcloud compute scp, bq query, bigquery client, Cloud Run, Airflow webserver, Datadog agent, IAP tunnel, pymssql, pyodbc, sqlcmd, SSMS, Invoke-Sqlcmd, GCS, BigQuery API, connection matrix, service account, application default credentials]
 description: "Complete guide to connecting to every GCP resource type: SSH to Compute Engine VMs, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, and Datadog agent. Includes a connection quick reference matrix."
-related: ["[[iap-tunneling]]", "[[connectivity-testing]]", "[[firewalls]]", "[[socket-inspection]]" ]
+related: ["[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[connectivity-testing](/01-Shell/Networking/connectivity-testing)", "[firewalls](/01-Shell/Networking/firewalls)", "[socket-inspection](/01-Shell/Networking/socket-inspection)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -333,7 +333,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 
 ## Related
 - [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Security model behind these connections: trust chains, credential types, IAM requirements
-- [[iap-tunneling]] — deep dive into how IAP tunnels work and how to debug them
-- [[firewalls]] — firewall rules required for IAP (`35.235.240.0/20`)
-- [[socket-inspection]] — verify what's listening on the VM before connecting
-- [[data-transfer]] — moving files to/from GCE VMs and GCS
+- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — deep dive into how IAP tunnels work and how to debug them
+- [firewalls](/01-Shell/Networking/firewalls) — firewall rules required for IAP (`35.235.240.0/20`)
+- [socket-inspection](/01-Shell/Networking/socket-inspection) — verify what's listening on the VM before connecting
+- [data-transfer](/01-Shell/File-Operations/data-transfer) — moving files to/from GCE VMs and GCS

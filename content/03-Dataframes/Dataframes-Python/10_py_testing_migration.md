@@ -11,10 +11,10 @@ aliases:
 keywords: [pytest, assert_frame_equal, testing, validation, migration, pandas to polars, refactor]
 description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
 related:
-  - "[[moc-dataframes]]"
-  - "[[10_cs_testing_migration]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
+  - "[10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[09_py_database_interface]]"
+  - "[09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

@@ -56,13 +56,13 @@ keywords:
   ]
 description: "Reference guide for 25 common Git and GitHub error messages — what causes each error and the exact commands to fix it, covering push rejections, detached HEAD, SSH failures, merge conflicts, lock files, line endings, accidental commits, and more."
 related:
-  - "[[git-recovery-and-undo]]"
-  - "[[git-branching-and-merging]]"
-  - "[[git-daily-workflow]]"
-  - "[[git-history-and-inspection]]"
+  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
+  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[git-history-and-inspection](/08-Git/git-history-and-inspection)"
   - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
-  - "[[gitignore-patterns]]"
-  - "[[pull-requests-and-code-review]]"
+  - "[gitignore-patterns](/08-Git/gitignore-patterns)"
+  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -70,7 +70,7 @@ status: complete
 
 # Git Common Errors & How to Fix Them
 
-This note covers 25 common Git and GitHub error messages encountered in day-to-day data engineering work. Each entry explains why the error happens and provides the exact commands to resolve it. Related recovery techniques are in [[git-recovery-and-undo]]; branch and merge mechanics are in [[git-branching-and-merging]]. To practice diagnosing these errors in realistic scenarios, work through [[git-problems]].
+This note covers 25 common Git and GitHub error messages encountered in day-to-day data engineering work. Each entry explains why the error happens and provides the exact commands to resolve it. Related recovery techniques are in [git-recovery-and-undo](/08-Git/git-recovery-and-undo); branch and merge mechanics are in [git-branching-and-merging](/08-Git/git-branching-and-merging). To practice diagnosing these errors in realistic scenarios, work through [git-problems](/08-Git/git-problems).
 
 ---
 
@@ -124,7 +124,7 @@ git pull origin main
 
 ### "Merge conflict in filename.py"
 
-See [[git-branching-and-merging]] for full conflict resolution steps. Open the file, resolve the conflict markers, `git add` the resolved file, then `git commit`.
+See [git-branching-and-merging](/08-Git/git-branching-and-merging) for full conflict resolution steps. Open the file, resolve the conflict markers, `git add` the resolved file, then `git commit`.
 
 ---
 
@@ -169,7 +169,7 @@ git stash pop                     # bring changes back
 git commit -m "my message"        # commit on correct branch
 ```
 
-For example: if you committed to `main` instead of your feature branch, this sequence moves it over cleanly. See [[git-recovery-and-undo]] for more reset scenarios.
+For example: if you committed to `main` instead of your feature branch, this sequence moves it over cleanly. See [git-recovery-and-undo](/08-Git/git-recovery-and-undo) for more reset scenarios.
 
 ---
 
@@ -197,7 +197,7 @@ git revert HEAD && git push
 
 > [!tip] Revert vs Reset
 >
-> Use `git revert` when undoing pushed commits on shared branches. Use `git reset` only on commits that haven't been pushed yet. See [[git-recovery-and-undo]] for details.
+> Use `git revert` when undoing pushed commits on shared branches. Use `git reset` only on commits that haven't been pushed yet. See [git-recovery-and-undo](/08-Git/git-recovery-and-undo) for details.
 
 ---
 
@@ -224,7 +224,7 @@ Undo the commit, stop tracking the big file, and redo the commit without it.
 
 After `gh pr merge --squash`, `git branch -d` warns the branch isn't merged. This is normal — squash creates a new combined commit with a different SHA. The changes ARE on main, just as a different commit. Safe to use `git branch -d` anyway (the warning is cosmetic).
 
-See [[pull-requests-and-code-review]] for squash merge workflow details.
+See [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) for squash merge workflow details.
 
 ---
 
@@ -296,7 +296,7 @@ git checkout other-branch     # or git pull, git merge, etc.
 git stash pop                 # bring your changes back
 ```
 
-Unsaved changes are in the way. Shelve them, do the operation, bring them back. See [[git-daily-workflow]] for stash usage patterns.
+Unsaved changes are in the way. Shelve them, do the operation, bring them back. See [git-daily-workflow](/08-Git/git-daily-workflow) for stash usage patterns.
 
 ---
 
@@ -314,7 +314,7 @@ git config --global http.postBuffer 524288000
 
 > [!tip] Alternative for Large Files
 >
-> For truly large assets, consider [[gitignore-patterns]] to keep them out of the repo, or use Git LFS (Large File Storage) rather than increasing the buffer.
+> For truly large assets, consider [gitignore-patterns](/08-Git/gitignore-patterns) to keep them out of the repo, or use Git LFS (Large File Storage) rather than increasing the buffer.
 
 ---
 
@@ -398,7 +398,7 @@ git push --force-with-lease
 
 > [!warning] Never Force-Push to main
 >
-> Only force-push to your own feature branches. Never force-push to `main` or any shared branch. See [[git-branching-and-merging]] for branch protection rules.
+> Only force-push to your own feature branches. Never force-push to `main` or any shared branch. See [git-branching-and-merging](/08-Git/git-branching-and-merging) for branch protection rules.
 
 ---
 
@@ -599,7 +599,7 @@ git push
 >
 > This does NOT erase the files from Git history — they remain in previous commits. If you accidentally committed secrets (API keys, passwords), you need `git filter-branch` or [BFG Repo-Cleaner](https://rtyley.github.io/bfg-repo-cleaner/) to purge them from all history, then force-push.
 
-`.gitignore` only prevents **new** files from being tracked. Files already committed are still tracked even after adding them to `.gitignore`. The `git rm --cached` command tells Git to forget about them without deleting them from your disk. See [[gitignore-patterns]] for how to structure `.gitignore` correctly from the start.
+`.gitignore` only prevents **new** files from being tracked. Files already committed are still tracked even after adding them to `.gitignore`. The `git rm --cached` command tells Git to forget about them without deleting them from your disk. See [gitignore-patterns](/08-Git/gitignore-patterns) for how to structure `.gitignore` correctly from the start.
 
 ---
 
@@ -636,10 +636,10 @@ git push
 
 ## Related Notes
 
-- [[git-recovery-and-undo]] — Full undo and recovery reference (reset, revert, reflog, stash)
-- [[git-branching-and-merging]] — Branch creation, merging, and conflict resolution
-- [[git-daily-workflow]] — Everyday commit, push, and pull patterns
-- [[git-history-and-inspection]] — Inspecting logs, diff, and blame
+- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — Full undo and recovery reference (reset, revert, reflog, stash)
+- [git-branching-and-merging](/08-Git/git-branching-and-merging) — Branch creation, merging, and conflict resolution
+- [git-daily-workflow](/08-Git/git-daily-workflow) — Everyday commit, push, and pull patterns
+- [git-history-and-inspection](/08-Git/git-history-and-inspection) — Inspecting logs, diff, and blame
 - [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — CI/CD secrets, workflow triggers, and authentication
-- [[gitignore-patterns]] — Structuring `.gitignore` and stopping tracked files
-- [[pull-requests-and-code-review]] — PR workflow, squash merges, branch deletion
+- [gitignore-patterns](/08-Git/gitignore-patterns) — Structuring `.gitignore` and stopping tracked files
+- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — PR workflow, squash merges, branch deletion

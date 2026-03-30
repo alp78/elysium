@@ -203,9 +203,17 @@ To restore to a specific second in time, replay backups in this order:
 Full → Differential (optional, speeds up restore) → Log backups in sequence → STOPAT target timestamp
 ```
 
-See [[restore-and-recovery]] for the complete RESTORE commands, and backup restore drill for the quarterly validation drill that tests these backups end-to-end.
+See [restore-and-recovery](/04-SQL-Server/Administration/restore-and-recovery) for the complete RESTORE commands, and backup restore drill for the quarterly validation drill that tests these backups end-to-end.
 
 ---
+
+> [!danger] Untested Backups Are Not Backups
+>
+> A backup that has never been restored is a file that might contain
+> your data. You don't know until you try. Schedule quarterly RESTORE
+> tests to a separate database: verify the backup completes, the database
+> comes online, and a spot-check query returns expected data. A backup
+> strategy without a restore test strategy is wishful thinking.
 
 ### Production HA Backup Schedule
 
@@ -219,6 +227,6 @@ See [[restore-and-recovery]] for the complete RESTORE commands, and backup resto
 
 ### Related
 
-- [[restore-and-recovery]] — full restore, PITR, restore to new database
-- [[server-configuration]] — recovery model configuration with `mssql-conf`
+- [restore-and-recovery](/04-SQL-Server/Administration/restore-and-recovery) — full restore, PITR, restore to new database
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — recovery model configuration with `mssql-conf`
 - [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — using sqlcmd for backup scripting

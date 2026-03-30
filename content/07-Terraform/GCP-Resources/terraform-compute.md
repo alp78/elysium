@@ -7,9 +7,9 @@ aliases: [terraform GCE, terraform VM, google_compute_instance, Container-Optimi
 keywords: [google_compute_instance, GCE, virtual machine, startup script, machine type, e2-medium, pd-ssd, pd-balanced, Container-Optimized OS, COS, Ubuntu, OS Login, Shielded VM, boot disk, network interface, service account, ephemeral IP, no public IP]
 description: "Terraform configuration for GCE virtual machine instances: the Airflow VM (Container-Optimized OS, ephemeral public IP) and the SQL Server VM (Ubuntu, SSD, no public IP), with startup scripts, shielded instance config, and OS Login."
 related:
-  - "[[terraform-networking]]"
-  - "[[terraform-iam-and-secrets]]"
-  - "[[terraform-cloud-run]]"
+  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
+  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
+  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
   - "[SSH and scheduling](/12-Orchestration/Scheduling/linux-scheduling)"
 created: 2026-03-22
 updated: 2026-03-22
@@ -217,7 +217,7 @@ network_interface {
 }
 ```
 
-No `access_config` block means **no public IP at all**. The SQL VM is only reachable from within the VPC (port 1433 for queries, port 22 via IAP tunnel for SSH). Outbound internet access is provided by [[terraform-networking#Resource: Cloud NAT|Cloud NAT]] for package installation.
+No `access_config` block means **no public IP at all**. The SQL VM is only reachable from within the VPC (port 1433 for queries, port 22 via IAP tunnel for SSH). Outbound internet access is provided by [Cloud NAT](/07-Terraform/GCP-Resources/terraform-networking#resource-cloud-nat) for package installation.
 
 ### Metadata — Startup Script with Credentials
 
@@ -277,11 +277,11 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 ## Related
 
-- [[terraform-networking]] — the VPC and firewall rules these VMs attach to
-- [[terraform-iam-and-secrets]] — the service accounts assigned to these VMs
+- [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking) — the VPC and firewall rules these VMs attach to
+- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — the service accounts assigned to these VMs
 - [SSH and scheduling](/12-Orchestration/Scheduling/linux-scheduling) — how SSH tunneling via IAP works
 - [docker-compose](/09-Docker/docker-compose) — the Docker containers running on the Airflow VM
-- [[terraform-cloud-run]] — the Cloud Run resources that connect to the SQL VM's private IP
+- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — the Cloud Run resources that connect to the SQL VM's private IP
 
 ## References
 

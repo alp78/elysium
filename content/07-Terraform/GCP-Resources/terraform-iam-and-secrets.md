@@ -7,10 +7,10 @@ aliases: [terraform IAM, terraform service accounts, terraform Secret Manager, G
 keywords: [google_service_account, google_project_iam_member, google_secret_manager_secret, IAM bindings, service account, least privilege, secret manager, secret version, roles, secretAccessor, run.invoker, artifactregistry.writer, conditional resources, Datadog, count]
 description: "Terraform configuration for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. Covers the least-privilege pattern with one service account per workload, resource-level vs project-level bindings, and conditional Datadog resources."
 related:
-  - "[[terraform-compute]]"
-  - "[[terraform-cloud-run]]"
-  - "[[terraform-conditional-resources]]"
-  - "[[terraform-networking]]"
+  - "[terraform-compute](/07-Terraform/GCP-Resources/terraform-compute)"
+  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
+  - "[terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources)"
+  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -175,7 +175,7 @@ The Datadog service account gets three read-only roles:
 >
 > The Datadog integration can only observe — it cannot modify any resource. This is the correct least-privilege posture for a monitoring integration.
 
-See [[terraform-conditional-resources]] for the full pattern.
+See [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) for the full pattern.
 
 ---
 
@@ -312,10 +312,10 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 
 ## Related
 
-- [[terraform-compute]] — the VMs assigned service accounts
-- [[terraform-cloud-run]] — how secrets are injected into Cloud Run containers
-- [[terraform-conditional-resources]] — the `count` pattern for optional Datadog resources
-- [[terraform-registry-and-ci]] — the CI service account's primary use case
+- [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute) — the VMs assigned service accounts
+- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — how secrets are injected into Cloud Run containers
+- [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) — the `count` pattern for optional Datadog resources
+- [terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci) — the CI service account's primary use case
 
 ## References
 

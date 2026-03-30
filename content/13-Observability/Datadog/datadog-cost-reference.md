@@ -33,7 +33,7 @@ The agent itself is free — you pay for Datadog's SaaS based on host count and 
 
 ### What Drives Datadog Pricing
 
-**Host count:** The data platform has 2 monitored hosts (`data-pipeline-airflow` and `data-pipeline-sql`). Cloud Run jobs are ephemeral and don't count as hosts — their metrics come from the [[datadog-gcp-integration|GCP Integration]].
+**Host count:** The data platform has 2 monitored hosts (`data-pipeline-airflow` and `data-pipeline-sql`). Cloud Run jobs are ephemeral and don't count as hosts — their metrics come from the [GCP Integration](/13-Observability/Datadog/datadog-gcp-integration).
 
 **Log volume:** SQL Server only logs significant events (startups, errors, failed logins, backups) — not regular queries. Log volume is very low.
 
@@ -63,7 +63,7 @@ The Datadog EU 14-day trial is sufficient to:
 - Test APM traces and log collection
 - Evaluate whether the full subscription is worthwhile
 
-After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform apply` to cleanly disable everything. See [[datadog-troubleshooting]] for the full disabling procedure.
+After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform apply` to cleanly disable everything. See [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) for the full disabling procedure.
 
 ---
 
@@ -80,6 +80,6 @@ The Datadog subscription would roughly double the total infrastructure cost. Eva
 
 ## Related Notes
 
-- [[datadog-architecture-overview]] — full observability architecture
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
 - cost reference — GCP infrastructure cost reference
-- [[datadog-troubleshooting]] — how to disable Datadog if trial ends
+- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — how to disable Datadog if trial ends

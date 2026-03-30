@@ -6,7 +6,7 @@ tags: [testing, shell, bash, linux, powershell, gcp, networking]
 aliases: [netcat, nc, ping, traceroute, mtr, dig, DNS, port testing, TCP test, ss, connectivity]
 keywords: [netcat, nc, ping, traceroute, mtr, dig, DNS lookup, port testing, TCP test, ss, connectivity, connection refused, connection timed out, /dev/tcp, Test-NetConnection, Resolve-DnsName, network debugging, firewall, GCP firewall rules]
 description: "Systematic network connectivity debugging from DNS resolution through TCP port reachability to application-level authentication. Covers netcat, dig, traceroute, mtr, ss, and PowerShell Test-NetConnection."
-related: ["[[firewalls]]", "[[socket-inspection]]", "[[iap-tunneling]]", "[[http-requests-and-apis]]" ]
+related: ["[firewalls](/01-Shell/Networking/firewalls)", "[socket-inspection](/01-Shell/Networking/socket-inspection)", "[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[http-requests-and-apis](/01-Shell/Networking/http-requests-and-apis)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -120,7 +120,7 @@ mtr -c 10 hostname
 > `ss` is the modern replacement for `netstat`. Flags: `-t` = TCP, `-l` = listening,
 > `-n` = numeric (don't resolve names), `-p` = show process. Use this to verify that the
 > service you're trying to reach is actually listening on the expected port. For deeper
-> connection state analysis, see [[socket-inspection]].
+> connection state analysis, see [socket-inspection](/01-Shell/Networking/socket-inspection).
 
 ```bash
 ss -tlnp
@@ -229,7 +229,7 @@ Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
 For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](/04-SQL-Server/Performance/troubleshooting-flowcharts).
 
 ## Related
-- [[firewalls]] — when `nc` shows timeout (packet blocked, not refused)
-- [[socket-inspection]] — deeper analysis of connection states
-- [[iap-tunneling]] — connecting to VMs with no public IP
-- [[http-requests-and-apis]] — testing REST API connectivity with curl
+- [firewalls](/01-Shell/Networking/firewalls) — when `nc` shows timeout (packet blocked, not refused)
+- [socket-inspection](/01-Shell/Networking/socket-inspection) — deeper analysis of connection states
+- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — connecting to VMs with no public IP
+- [http-requests-and-apis](/01-Shell/Networking/http-requests-and-apis) — testing REST API connectivity with curl

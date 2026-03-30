@@ -22,7 +22,7 @@ status: complete
 Log collection for the data platform uses two separate mechanisms: **file tailing** for the SQL Server errorlog (on the SQL VM), and **Docker socket autodiscovery** for Airflow container logs (on the Airflow VM).
 
 > [!warning] Logs Require Separate Config
-> The Datadog Agent collects SQL Server metrics automatically via the [[datadog-sql-server-integration|SQL Server integration]], but **log collection requires a separate config file** (`logs.yaml`). Metrics and logs are configured independently.
+> The Datadog Agent collects SQL Server metrics automatically via the [SQL Server integration](/13-Observability/Datadog/datadog-sql-server-integration), but **log collection requires a separate config file** (`logs.yaml`). Metrics and logs are configured independently.
 
 ---
 
@@ -168,8 +168,8 @@ The `LOG_FORMAT=json` env var on the Cloud Run Job formats logs as JSON, which e
 
 ## Related
 
-- [[datadog-agent-sql-vm]] — SQL VM agent install and management
-- [[datadog-agent-airflow-vm]] — Airflow VM agent with Docker socket access
-- [[datadog-apm-traces]] — Log-to-trace correlation via `dd.trace_id`
-- [[datadog-troubleshooting]] — "No Logs in Datadog" section
+- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent install and management
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent with Docker socket access
+- [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) — Log-to-trace correlation via `dd.trace_id`
+- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — "No Logs in Datadog" section
 - [server-configuration](/04-SQL-Server/Administration/server-configuration) — SQL Server VM and errorlog location

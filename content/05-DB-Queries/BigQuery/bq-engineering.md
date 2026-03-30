@@ -7,8 +7,8 @@ aliases: [BigQuery engineering, BigQuery partitioning, BigQuery clustering, BigQ
 keywords: [partitioning, clustering, materialized views, dml, merge, information_schema, jobs, cost optimization, slot usage, scheduled queries, data transfer, external tables, biglake, authorized views, row-level security, column-level security]
 description: "BigQuery engineering patterns with executable examples — covers partitioning, clustering, DML, INFORMATION_SCHEMA, cost optimization, security, and materialized views."
 related:
-  - "[[bq-fundamentals]]"
-  - "[[bq-advanced]]"
+  - "[bq-fundamentals](/05-DB-Queries/BigQuery/bq-fundamentals)"
+  - "[bq-advanced](/05-DB-Queries/BigQuery/bq-advanced)"
   - "[gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing)"
   - "[gcp-cost-monitoring-and-budgets](/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets)"
 created: 2026-03-22

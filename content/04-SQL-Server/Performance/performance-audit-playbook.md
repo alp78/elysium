@@ -240,7 +240,7 @@ WHERE grant_time IS NULL;
 
 **Purpose:** This is the **single most important diagnostic**. Wait stats tell you exactly what SQL Server spends its time waiting on. Instead of guessing, you read what the engine itself is reporting as its bottleneck.
 
-See [[wait-stats-analysis]] for the full filtered wait stats query and the complete wait type interpretation table.
+See [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) for the full filtered wait stats query and the complete wait type interpretation table.
 
 ### Top Waits Query
 
@@ -422,13 +422,13 @@ ORDER BY qs.execution_count DESC;
 
 ### What to Do with a Bad Query
 
-1. **Get the [[execution-plans|execution plan]]:** Add `CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp` and inspect `qp.query_plan` in SSMS (click the XML to see the graphical plan)
+1. **Get the [execution plan](/04-SQL-Server/Performance/execution-plans):** Add `CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp` and inspect `qp.query_plan` in SSMS (click the XML to see the graphical plan)
 2. **Look for:** Table Scans, Clustered Index Scans (yellow = warnings), thick arrows (many rows flowing), Sort operators (expensive)
 3. **Common fixes:**
    - Table scan → add a covering index on the WHERE/JOIN columns
    - Key Lookup → add included columns to the existing index
    - Sort → add the ORDER BY columns to the index
-   - Implicit conversion warning → fix the data types to match (see [[sargable-queries]])
+   - Implicit conversion warning → fix the data types to match (see [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries))
 
 ---
 
@@ -579,7 +579,7 @@ ALTER DATABASE tempdb ADD FILE (NAME = 'tempdev4', FILENAME = '/var/opt/mssql/da
 
 > [!info] Full Deadlock Coverage
 >
-> For comprehensive deadlock detection, Extended Events setup, prevention patterns, and retry logic, see [[deadlock-detection-and-prevention]].
+> For comprehensive deadlock detection, Extended Events setup, prevention patterns, and retry logic, see [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention).
 
 ### Current Blocking Chains
 
@@ -728,7 +728,7 @@ ORDER BY qs.total_logical_reads DESC;
 - Python/ODBC sends all strings as `nvarchar` by default
 - Comparing `int` column with `varchar` parameter
 
-See [[sargable-queries#Implicit Conversions — The Silent Killer]] for the Python fix.
+See [sargable-queries > Implicit Conversions — The Silent Killer](/04-SQL-Server/T-SQL/sargable-queries#implicit-conversions--the-silent-killer) for the Python fix.
 
 ---
 
@@ -1049,9 +1049,9 @@ The DMVs (Dynamic Management Views) are SQL Server's internal telemetry. They ex
 
 ### Related
 
-- [[wait-stats-analysis]] — full wait type catalog and interpretation
-- [[execution-plans]] — reading plans to diagnose the queries found in Phase 5
-- [[index-types-and-strategy]] — index creation, maintenance, and strategy
-- [[deadlock-detection-and-prevention]] — Phase 8 deep-dive
-- [[storage-internals]] — buffer pool, log, and TempDB internals
-- [[sargable-queries]] — fixing implicit conversions found in Phase 9
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — full wait type catalog and interpretation
+- [execution-plans](/04-SQL-Server/Performance/execution-plans) — reading plans to diagnose the queries found in Phase 5
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — index creation, maintenance, and strategy
+- [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — Phase 8 deep-dive
+- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — buffer pool, log, and TempDB internals
+- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — fixing implicit conversions found in Phase 9

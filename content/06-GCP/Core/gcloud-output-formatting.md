@@ -121,9 +121,9 @@ gcloud compute instances list --impersonate-service-account=pipeline-sa@project.
 ## Related
 
 - [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — How authentication tokens work with formatted output
-- [[gcloud-configurations]] — Switching projects before running formatted queries
-- [[gcp-projects-and-apis]] — Listing projects and enabled APIs with formatted output
-- [[service-accounts-and-iam]] — Impersonating service accounts to test permissions
+- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Switching projects before running formatted queries
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — Listing projects and enabled APIs with formatted output
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — Impersonating service accounts to test permissions
 
 ## References
 

@@ -2371,10 +2371,10 @@ This is intentional — Airflow was designed for batch data pipelines where you 
 
 ## Related
 
-- [[airflow-core-concepts]] — DAG fundamentals, operators, connections
-- [[airflow-dag-patterns]] — Reusable DAG design patterns
-- [[airflow-deployment]] — Docker Compose setup and hardening
-- [[airflow-troubleshooting]] — Quick diagnostic reference
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — DAG fundamentals, operators, connections
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Reusable DAG design patterns
+- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Docker Compose setup and hardening
+- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Quick diagnostic reference
 
 ---
 

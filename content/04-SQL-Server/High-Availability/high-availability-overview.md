@@ -7,9 +7,9 @@ aliases: [AG, Always On AG, Always On Availability Groups, SQL Server HA, HADR, 
 keywords: [high availability, availability groups, always on, pacemaker, corosync, failover, RTO, RPO, SLA, synchronous commit, asynchronous commit, log shipping, FCI, failover cluster instance, hadr, endpoint, certificate, seeding, DMV, redo queue, log send queue, read-only routing, split-brain, STONITH, GCP ILB, internal load balancer, mssql-server-ha]
 description: "Complete guide to SQL Server 2022 High Availability on Linux GCP VMs: Always On Availability Groups setup with Pacemaker/Corosync, monitoring DMVs, failover operations, read-only routing, troubleshooting, and GCP-specific considerations including Internal Load Balancer configuration."
 related:
-  - "[[tde-encryption]]"
-  - "[[sql-server-authentication]]"
-  - "[[moc-sql-server]]"
+  - "[tde-encryption](/04-SQL-Server/Security/tde-encryption)"
+  - "[sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication)"
+  - "[moc-sql-server](/04-SQL-Server/moc-sql-server)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1064,6 +1064,6 @@ gcloud compute snapshots list \
 
 ### Related
 
-- [[tde-encryption]] — Transparent Data Encryption for data-at-rest protection of AG databases
-- [[sql-server-authentication]] — Service account hardening and SQL Server login security
-- [[moc-sql-server]] — SQL Server section index
+- [tde-encryption](/04-SQL-Server/Security/tde-encryption) — Transparent Data Encryption for data-at-rest protection of AG databases
+- [sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication) — Service account hardening and SQL Server login security
+- [moc-sql-server](/04-SQL-Server/moc-sql-server) — SQL Server section index

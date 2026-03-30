@@ -64,7 +64,7 @@ GRANT VIEW ANY DEFINITION TO dd_agent;
 > `VIEW SERVER STATE` grants access to DMVs like `sys.dm_exec_sessions`, `sys.dm_os_performance_counters`, and `sys.dm_os_wait_stats`. `VIEW ANY DEFINITION` allows reading object metadata. No write permissions are granted.
 
 #### Write the SQL Server integration config to
-`/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` — see [[datadog-sql-server-integration]] for the full config.
+`/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` — see [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) for the full config.
 
 ---
 
@@ -172,10 +172,10 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 ## Related
 
-- [[datadog-architecture-overview]] — Full observability topology
-- [[datadog-sql-server-integration]] — SQL Server integration config detail
-- [[datadog-custom-queries]] — Custom DMV metric queries
-- [[datadog-log-management]] — Errorlog collection configuration
-- [[datadog-troubleshooting]] — Common issues including missing agent after bootstrap
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
+- [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) — SQL Server integration config detail
+- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — Custom DMV metric queries
+- [datadog-log-management](/13-Observability/Datadog/datadog-log-management) — Errorlog collection configuration
+- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — Common issues including missing agent after bootstrap
 - [server-configuration](/04-SQL-Server/Administration/server-configuration) — SQL Server VM configuration reference
 - [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — DMV queries useful for debugging SQL Server health

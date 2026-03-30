@@ -7,8 +7,8 @@ aliases: [terraform Artifact Registry, terraform CI service account, docker regi
 keywords: [Artifact Registry, google_artifact_registry_repository, cleanup policies, Docker registry, image cleanup, keep-latest-5, delete-untagged, CI service account, GitHub Actions, data-pipeline-ci, image tags, docker push, registry path]
 description: "Terraform configuration for GCP Artifact Registry (Docker image storage with cleanup policies) and the CI/CD service account used by GitHub Actions to push images and deploy Cloud Run services."
 related:
-  - "[[terraform-iam-and-secrets]]"
-  - "[[terraform-cloud-run]]"
+  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
+  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
   - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
   - "[image-management](/09-Docker/image-management)"
 created: 2026-03-22
@@ -137,7 +137,7 @@ resource "google_service_account_iam_member" "ci_act_as_dashboard" {
 
 > [!info] Least Privilege Chain
 >
-> The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [[terraform-iam-and-secrets]] for the full IAM design.
+> The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) for the full IAM design.
 
 ---
 
@@ -184,8 +184,8 @@ For Docker image build and push operations, see [image-management](/09-Docker/im
 
 ## Related
 
-- [[terraform-iam-and-secrets]] — how the CI service account's permissions are structured
-- [[terraform-cloud-run]] — the Cloud Run services that pull images from this registry
+- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — how the CI service account's permissions are structured
+- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — the Cloud Run services that pull images from this registry
 - [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — the GitHub Actions workflows that use the CI service account
 - [image-management](/09-Docker/image-management) — docker tag, push, and build commands for the registry
 

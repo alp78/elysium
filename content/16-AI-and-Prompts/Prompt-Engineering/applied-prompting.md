@@ -14,7 +14,7 @@ status: complete
 
 # Applied Prompt Engineering: Research, Code Generation, Data Analysis, and Creative Workflows
 
-This note converts the foundational principles from [[prompt-foundations]] and the structural patterns from [[prompt-architecture]] into concrete, domain-specific prompt workflows. Every section includes a weak "before" prompt, an optimized "after" prompt, and an explanation of what changed and why. These are not templates — they are worked examples that demonstrate the reasoning behind each design choice.
+This note converts the foundational principles from [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and the structural patterns from [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) into concrete, domain-specific prompt workflows. Every section includes a weak "before" prompt, an optimized "after" prompt, and an explanation of what changed and why. These are not templates — they are worked examples that demonstrate the reasoning behind each design choice.
 
 ---
 
@@ -254,7 +254,7 @@ Three additional optimization patterns with the principle behind each.
 **Principle:** Constraints prevent the model from "helpfully" redesigning everything instead of reviewing what you asked.
 
 > [!tip] The Downstream Use Principle
-> All these optimization patterns share one meta-principle: telling the model what you'll do with the output shapes every subsequent decision. "I need this for a dashboard card" changes format. "This is for a technical blog post" changes tone and depth. "This feeds into a JSON parser" changes structure. Always include the downstream use. See [[prompt-foundations#1.3 Clarity Specificity and Intent Alignment|intent alignment]] for the theoretical grounding.
+> All these optimization patterns share one meta-principle: telling the model what you'll do with the output shapes every subsequent decision. "I need this for a dashboard card" changes format. "This is for a technical blog post" changes tone and depth. "This feeds into a JSON parser" changes structure. Always include the downstream use. See [intent alignment](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations#13-clarity-specificity-and-intent-alignment) for the theoretical grounding.
 
 ---
 
@@ -291,10 +291,10 @@ Before sending any applied prompt, verify:
 
 ## Related Notes
 
-- [[prompt-foundations]] — The axioms and intent alignment principles behind these examples
-- [[prompt-architecture]] — The 4-layer template used in the research and code prompts above
-- [[model-specific-prompting]] — How to adapt these prompts for Claude vs. GPT-4 vs. Gemini
-- [[prompt-debugging]] — When these patterns don't work and how to diagnose why
+- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The axioms and intent alignment principles behind these examples
+- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer template used in the research and code prompts above
+- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — How to adapt these prompts for Claude vs. GPT-4 vs. Gemini
+- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — When these patterns don't work and how to diagnose why
 
 ## References
 

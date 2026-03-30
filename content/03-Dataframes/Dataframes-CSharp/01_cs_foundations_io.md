@@ -9,12 +9,12 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - Series, DataFrames, types, CSV, Parquet
 keywords: [Series, DataFrame, Index, dtypes, read_csv, read_parquet, to_csv, to_parquet, Polars.NET, Microsoft.Data.Analysis]
-description: "Polars.NET / C# DataFrames reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Executable examples with cell outputs. See [[01_py_foundations_io]] for the Python equivalent."
+description: "Polars.NET / C# DataFrames reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Executable examples with cell outputs. See [01_py_foundations_io](/03-Dataframes/Dataframes-Python/01_py_foundations_io) for the Python equivalent."
 related:
-  - "[[moc-dataframes]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[01_py_foundations_io]]"
-  - "[[02_cs_explore_select_filter]]"
+  - "[01_py_foundations_io](/03-Dataframes/Dataframes-Python/01_py_foundations_io)"
+  - "[02_cs_explore_select_filter](/03-Dataframes/Dataframes-CSharp/02_cs_explore_select_filter)"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

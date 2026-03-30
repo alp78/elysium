@@ -7,9 +7,9 @@ aliases: [TDE, Transparent Data Encryption, database encryption, at-rest encrypt
 keywords: [transparent data encryption, TDE, database encryption key, DEK, database master key, DMK, service master key, SMK, certificate, AES_256, encryption at rest, Cloud KMS, KMS keyring, analytics-keyring, analytics-sql-tde, EKM, extensible key management, mdf, ldf, tempdb, GDPR, SOC 2, compliance, backup certificate, restore certificate, percent_complete, encryption_state, AES-NI, hardware acceleration]
 description: "Step-by-step guide to enabling Transparent Data Encryption (TDE) on SQL Server 2022 Linux with GCP Cloud KMS key protection. Covers the encryption key hierarchy, certificate-based TDE setup, critical certificate backup to GCS, disaster recovery restore procedure, and performance impact benchmarks."
 related:
-  - "[[high-availability-overview]]"
-  - "[[sql-server-authentication]]"
-  - "[[moc-sql-server]]"
+  - "[high-availability-overview](/04-SQL-Server/High-Availability/high-availability-overview)"
+  - "[sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication)"
+  - "[moc-sql-server](/04-SQL-Server/moc-sql-server)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -24,7 +24,7 @@ Transparent Data Encryption (TDE) encrypts SQL Server database files at rest —
 **What TDE Does**: Encrypts the physical database files (`.mdf` data files, `.ldf` log files, and tempdb) at rest on disk. Decryption happens automatically in the SQL Server buffer pool — applications see no difference. If someone steals a disk snapshot, copies a `.bak` file, or accesses the raw VM disk, the data is unreadable without the encryption key hierarchy.
 
 **What TDE Does NOT Do**:
-- Does NOT encrypt data in transit (use [[sql-server-authentication#TLS Configuration|TLS]] for that)
+- Does NOT encrypt data in transit (use [TLS](/04-SQL-Server/Security/sql-server-authentication#tls-configuration) for that)
 - Does NOT encrypt data in the buffer pool (memory is unencrypted)
 - Does NOT provide column-level encryption (use Always Encrypted for that)
 - Does NOT encrypt filestream or filetable data
@@ -346,7 +346,7 @@ Encrypted database backups carry the DEK inside the backup file, protected by th
 > [!important] Backup Chain Dependency
 > Always verify the TDE certificate is safely backed up to GCS **before** taking any database backups. A database backup without a certificate backup is unrestorable on any other server.
 
-For backup strategy in an [[high-availability-overview#Backup Strategy with AGs|Always On AG environment]], backups should run on the preferred secondary replica.
+For backup strategy in an [Always On AG environment](/04-SQL-Server/High-Availability/high-availability-overview#backup-strategy-with-ags), backups should run on the preferred secondary replica.
 
 ---
 
@@ -369,6 +369,6 @@ For backup strategy in an [[high-availability-overview#Backup Strategy with AGs|
 
 ### Related
 
-- [[high-availability-overview]] — AG backup strategy and how TDE interacts with Always On Availability Groups
-- [[sql-server-authentication]] — Service account hardening, login security, and TLS network encryption
-- [[moc-sql-server]] — SQL Server section index
+- [high-availability-overview](/04-SQL-Server/High-Availability/high-availability-overview) — AG backup strategy and how TDE interacts with Always On Availability Groups
+- [sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication) — Service account hardening, login security, and TLS network encryption
+- [moc-sql-server](/04-SQL-Server/moc-sql-server) — SQL Server section index

@@ -121,10 +121,10 @@ Run this weekly. Find the expensive queries and optimize them.
 
 ## Related
 
-- [[dataset-and-table-management]] — Partitioning and clustering are configured at table creation
-- [[data-loading-and-export]] — How data gets into BigQuery for querying
-- [[job-management]] — Monitoring query jobs, canceling runaway scans
-- [[gcp-projects-and-apis]] — `bigquery.googleapis.com` must be enabled
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Partitioning and clustering are configured at table creation
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — How data gets into BigQuery for querying
+- [job-management](/06-GCP/BigQuery/job-management) — Monitoring query jobs, canceling runaway scans
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled
 
 ## References
 

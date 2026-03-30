@@ -7,9 +7,9 @@ aliases: [.gitignore, gitignore, git ignore, exclude files, git rm --cached]
 keywords: [.gitignore, gitignore, patterns, exclude, secrets, .env, credentials, pyc, pycache, venv, node_modules, git rm --cached, BFG, filter-branch, stop tracking, git secrets, accidentally committed]
 description: "How to use .gitignore to exclude files from version control, patterns for Python data engineering projects, how to stop tracking already-committed files, and what to do if secrets were accidentally committed."
 related:
-  - "[[git-daily-workflow]]"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
   - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
-  - "[[pull-requests-and-code-review]]"
+  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -291,7 +291,7 @@ git lfs migrate import --include="*.parquet" --everything
 
 ## Related
 
-- [[git-daily-workflow]] — the daily workflow that benefits from a clean .gitignore
+- [git-daily-workflow](/08-Git/git-daily-workflow) — the daily workflow that benefits from a clean .gitignore
 - [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — CI secrets that must never be committed
 - [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — terraform.tfvars that must be gitignored
 

@@ -51,7 +51,7 @@ gcloud monitoring time-series list \
 > [!tip] Metrics for Right-Sizing
 >
 > Use Metrics for Right-Sizing Decisions.
-> Pull CPU utilization data before any VM resize decision. If the top 5 data points (peak values from the last 7 days) are all below 0.30 (30%), the VM is over-provisioned. The `sort -n | tail -5` pipeline extracts the highest recorded values, which represent true peak load. See [[vm-lifecycle]] for the full right-sizing workflow.
+> Pull CPU utilization data before any VM resize decision. If the top 5 data points (peak values from the last 7 days) are all below 0.30 (30%), the VM is over-provisioned. The `sort -n | tail -5` pipeline extracts the highest recorded values, which represent true peak load. See [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) for the full right-sizing workflow.
 
 ### Key Cloud Monitoring Metrics for Data Engineers
 
@@ -71,7 +71,7 @@ gcloud monitoring time-series list \
 | Signal type | Tool | Best for |
 |---|---|---|
 | Metrics (numeric, aggregated) | Cloud Monitoring | Trends, capacity planning, alerting thresholds, right-sizing |
-| Logs (text, events) | [[cloud-logging|Cloud Logging]] | Root cause analysis, debugging failures, finding specific errors |
+| Logs (text, events) | [Cloud Logging](/06-GCP/Logging/cloud-logging) | Root cause analysis, debugging failures, finding specific errors |
 
 Metrics tell you *how much* and *when* — they are aggregated numbers over time. Logs tell you *what happened* — they are discrete events with full context. Senior engineers use both together: metrics surface anomalies, logs explain them.
 
@@ -104,11 +104,11 @@ While `gcloud monitoring` CLI commands are used for ad-hoc queries, alerting pol
 
 ## Related
 
-- [[cloud-logging]] — Logs complement metrics for full observability; use both during incident response
-- [[vm-lifecycle]] — Metric-driven right-sizing decisions for Compute Engine VMs
-- [[cloud-run-jobs-vs-services]] — Monitor `run.googleapis.com/job/completed_task_attempt_count` for pipeline success rates
-- [[pubsub-messaging]] — `pubsub.googleapis.com/subscription/num_undelivered_messages` detects pipeline lag
-- [[dataset-and-table-management]] — BigQuery slot utilization metrics for capacity planning
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Logs complement metrics for full observability; use both during incident response
+- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — Metric-driven right-sizing decisions for Compute Engine VMs
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Monitor `run.googleapis.com/job/completed_task_attempt_count` for pipeline success rates
+- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — `pubsub.googleapis.com/subscription/num_undelivered_messages` detects pipeline lag
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery slot utilization metrics for capacity planning
 
 ## References
 

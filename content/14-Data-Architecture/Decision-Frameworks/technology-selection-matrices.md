@@ -7,25 +7,25 @@ aliases: [technology selection, decision matrix, when to use, build vs buy, lang
 keywords: [technology selection, decision matrix, language selection, build vs buy, trade-off analysis, Python vs bash, Python vs C#, SQL vs Python, SQL Server vs BigQuery, Airflow vs cron, Terraform vs gcloud, Cloud Run vs Compute Engine, Pub/Sub vs direct calls, GCS vs BigQuery, star schema vs flat, ETL vs ELT, Firestore vs Bigtable, Cloud SQL vs SQL Server, orchestration selection, compute selection, storage selection, database selection, API protocol selection, architecture selection, data model selection, infrastructure as code, cost comparison, latency comparison, scaling comparison, managed vs self-hosted, serverless vs VM, batch vs streaming, Docker vs bare metal, dbt vs custom SQL, Datadog vs Cloud Monitoring, CI/CD selection, testing strategy selection]
 description: "Comprehensive decision-matrix reference for data engineering technology selection — language choice (Python/Bash/PowerShell/C#/SQL), database selection (SQL Server/BigQuery/Cloud SQL/Firestore/Bigtable), GCP component selection (compute/messaging/storage), orchestration (Airflow/cron/Cloud Scheduler/Composer), infrastructure tooling (Terraform/gcloud/Console), data modeling, API protocols, architecture patterns, and build-vs-buy frameworks. Every decision backed by trade-off analysis with specific thresholds and decision rules."
 related:
-  - "[[moc-data-architecture]]"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[moc-data-architecture](/14-Data-Architecture/moc-data-architecture)"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
   - "[moc-terraform](/07-Terraform/moc-terraform)"
 
-  - "[[medallion-architecture]]"
-  - "[[data-warehouse-architecture]]"
-  - "[[data-lake-architecture]]"
-  - "[[lakehouse-architecture]]"
-  - "[[data-mesh-architecture]]"
-  - "[[streaming-architecture]]"
-  - "[[dimensional-modeling]]"
-  - "[[data-modeling-patterns]]"
-  - "[[api-protocols-comparison]]"
-  - "[[rest-api-design-and-consumption]]"
-  - "[[grpc-for-data-pipelines]]"
-  - "[[graphql-for-data-access]]"
-  - "[[idempotent-pipeline-design]]"
-  - "[[dbt-transformation-layer]]"
-  - "[[serialization-formats]]"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
+  - "[data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture)"
+  - "[lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture)"
+  - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
+  - "[dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
+  - "[data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns)"
+  - "[api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison)"
+  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
+  - "[grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines)"
+  - "[graphql-for-data-access](/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access)"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
+  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
   - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
   - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
   - "[airflow-deployment](/12-Orchestration/Airflow/airflow-deployment)"
@@ -58,7 +58,7 @@ Every technology decision in data engineering is a trade-off. There is no univer
 > [!tip] How to Use This Reference
 > Each section contains a **decision matrix** (comparison table), **decision rules** (concrete thresholds and if-then logic), and **callouts** for the non-obvious gotchas. Start with the matrix, apply the decision rule, then read the detailed comparison if the choice is ambiguous.
 
-For the principles that underpin every decision here, see [[five-pillars-of-data-engineering]].
+For the principles that underpin every decision here, see [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering).
 
 ---
 
@@ -207,7 +207,7 @@ This is the most frequent decision a data engineer makes. The answer is almost a
 >
 > The database engine has a query optimizer that has been refined over decades. It knows the data distribution, has indexes, can parallelize across cores, and operates directly on compressed columnar storage. Your Python code pulls data over a network, deserializes it, processes it in a single thread (GIL), and sends it back. The only exception is when the transform requires something SQL cannot do (API calls, ML, cross-database joins, complex regex).
 
-**dbt as the bridge:** [[dbt-transformation-layer]] lets you write SQL transforms but manage them with software engineering practices — version control, testing, documentation, dependency graphs. This gives you SQL's performance with Python-level engineering discipline.
+**dbt as the bridge:** [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) lets you write SQL transforms but manage them with software engineering practices — version control, testing, documentation, dependency graphs. This gives you SQL's performance with Python-level engineering discipline.
 
 #### When SQL wins (always prefer for these)
 
@@ -351,7 +351,7 @@ You need a second database when one database cannot serve two workloads without 
 | HTTP API endpoint | **Cloud Run Service** | Auto-scales, managed TLS, custom domains, 0 to N instances |
 | Schedule a triggered job | **Cloud Scheduler + Cloud Run** | Do not run a VM 24/7 for a job that runs 3 times per day. See [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) |
 | Heavy Spark/Hadoop processing | **Dataproc** | When you need distributed compute beyond a single container |
-| Stream processing | **Dataflow (Apache Beam)** | Managed, auto-scaling, exactly-once semantics. See [[streaming-architecture]] |
+| Stream processing | **Dataflow (Apache Beam)** | Managed, auto-scaling, exactly-once semantics. See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) |
 | Lightweight event-driven function | **Cloud Functions** | Cold start latency is acceptable, function completes in <9 min |
 | GPU workloads (ML training) | **Compute Engine + GPU** or **Vertex AI** | Cloud Run does not support GPUs |
 | Long-running batch (>1h) | **Compute Engine VM** (ephemeral) | Cloud Run Job max 1h; use preemptible VMs for cost savings |
@@ -414,7 +414,7 @@ Every piece of data lives somewhere. The question is where, and the answer depen
 | Raw file extracts (CSV, Excel) | **GCS** | Landing zone before transformation | Original format |
 | Transformed analytical data | **BigQuery** | Query engine optimized for analytics | Native tables |
 | Transactional operational data | **SQL Server** | ACID, low-latency reads, stored procs | Relational tables |
-| Pipeline intermediate artifacts | **GCS** | Temporary, disposable, cheap | Parquet (see [[serialization-formats]]) |
+| Pipeline intermediate artifacts | **GCS** | Temporary, disposable, cheap | Parquet (see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)) |
 | Large objects (images, PDFs, binaries) | **GCS** | Object storage, no size limits | Original format |
 | Archived historical data | **GCS** (Coldline/Archive) | $0.004/GB/mo, 90-day minimum | Parquet (compressed) |
 | ML training datasets | **GCS** → BigQuery | GCS for storage, BigQuery for feature queries | Parquet or TFRecord |
@@ -423,7 +423,7 @@ Every piece of data lives somewhere. The question is where, and the answer depen
 
 #### The Medallion Mapping
 
-How storage maps to the [[medallion-architecture]] layers:
+How storage maps to the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layers:
 
 | Layer | Primary Storage | Secondary | Purpose |
 |-------|----------------|-----------|---------|
@@ -432,7 +432,7 @@ How storage maps to the [[medallion-architecture]] layers:
 | **Gold** (business) | BigQuery or SQL Server | Firestore (for serving) | Business aggregations, KPIs, features |
 
 > [!important] The Single Source of Truth Rule
-> Each dataset has exactly one authoritative storage location. Other locations are copies, caches, or materializations. When copies drift from the source, the source wins. Document the authoritative location for every dataset in your catalog. See [[context-and-metadata-architecture]] for metadata patterns.
+> Each dataset has exactly one authoritative storage location. Other locations are copies, caches, or materializations. When copies drift from the source, the source wins. Document the authoritative location for every dataset in your catalog. See [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) for metadata patterns.
 
 ### Networking and Security Selection
 
@@ -517,7 +517,7 @@ When work is triggered by events rather than time:
 | Trigger | Mechanism | Use Case |
 |---------|-----------|----------|
 | File lands in GCS | GCS notification → Pub/Sub → Cloud Run | Process uploaded files on arrival |
-| Database row changes | CDC → Pub/Sub → consumer | Real-time replication. See [[streaming-architecture]] |
+| Database row changes | CDC → Pub/Sub → consumer | Real-time replication. See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) |
 | API webhook received | Cloud Run Service (HTTP endpoint) | SaaS integration (Stripe, GitHub, etc.) |
 | Airflow DAG completes | TriggerDagRunOperator or Pub/Sub | Chain DAGs across Airflow instances |
 | Manual trigger (ad hoc) | Airflow UI or REST API | Backfills, one-off reprocessing |
@@ -586,14 +586,14 @@ Quick decision table for choosing a data modeling approach. Each links to the de
 
 | Your Situation | Model | Key Characteristics | Detailed Reference |
 |----------------|-------|--------------------|--------------------|
-| Building a BI warehouse with known queries | **Star schema (Kimball)** | Fact + dimension tables, optimized for JOIN + GROUP BY | [[dimensional-modeling]] |
-| Enterprise with many source systems, need auditability | **Data Vault 2.0** | Hub-link-satellite, handles schema changes gracefully | [[data-modeling-patterns]] |
-| Fast dashboards from a single wide table | **One Big Table (OBT)** | Fully denormalized, no joins at query time | [[data-modeling-patterns]] |
-| Event analytics, audit trails, clickstream | **Activity schema** | Entity + activity + timestamp, append-only | [[data-modeling-patterns]] |
-| Market data, IoT sensor data, system metrics | **Time-series** | Timestamp-partitioned, append-heavy, range queries | [[data-modeling-patterns]] |
+| Building a BI warehouse with known queries | **Star schema (Kimball)** | Fact + dimension tables, optimized for JOIN + GROUP BY | [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) |
+| Enterprise with many source systems, need auditability | **Data Vault 2.0** | Hub-link-satellite, handles schema changes gracefully | [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) |
+| Fast dashboards from a single wide table | **One Big Table (OBT)** | Fully denormalized, no joins at query time | [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) |
+| Event analytics, audit trails, clickstream | **Activity schema** | Entity + activity + timestamp, append-only | [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) |
+| Market data, IoT sensor data, system metrics | **Time-series** | Timestamp-partitioned, append-heavy, range queries | [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) |
 | Application state, feature flags, user config | **Document (Firestore)** | Nested JSON-like structure, flexible schema | [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) |
-| Relationship analysis (fraud detection, social graphs) | **Graph** | Nodes + edges, optimized for traversal queries | [[data-modeling-patterns]] |
-| Multi-layer analytics pipeline | **Medallion (Bronze/Silver/Gold)** | Layered refinement from raw to business-ready | [[medallion-architecture]] |
+| Relationship analysis (fraud detection, social graphs) | **Graph** | Nodes + edges, optimized for traversal queries | [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) |
+| Multi-layer analytics pipeline | **Medallion (Bronze/Silver/Gold)** | Layered refinement from raw to business-ready | [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) |
 
 ### Model Selection Flowchart
 
@@ -632,12 +632,12 @@ Quick decision table for choosing an API protocol. Each links to the detailed no
 
 | Your Situation | Protocol | Latency | Throughput | Detailed Reference |
 |----------------|----------|---------|------------|-------------------|
-| Consuming external vendor APIs | **REST** | ~100-500ms | Moderate | [[rest-api-design-and-consumption]] |
-| High-throughput internal service communication | **gRPC** | ~1-10ms | Very high (streaming, binary) | [[grpc-for-data-pipelines]] |
-| Flexible data queries from multiple consumers | **GraphQL** | ~50-200ms | Moderate | [[graphql-for-data-access]] |
-| Real-time bidirectional data feed | **WebSocket** | ~1-5ms | High (persistent connection) | [[api-protocols-comparison]] |
-| Receiving push events from SaaS platforms | **Webhook** | N/A (push) | Depends on sender | [[api-protocols-comparison]] |
-| Batch data transfer between systems | **File-based (GCS)** | Minutes | Very high (bulk) | [[serialization-formats]] |
+| Consuming external vendor APIs | **REST** | ~100-500ms | Moderate | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
+| High-throughput internal service communication | **gRPC** | ~1-10ms | Very high (streaming, binary) | [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) |
+| Flexible data queries from multiple consumers | **GraphQL** | ~50-200ms | Moderate | [graphql-for-data-access](/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access) |
+| Real-time bidirectional data feed | **WebSocket** | ~1-5ms | High (persistent connection) | [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
+| Receiving push events from SaaS platforms | **Webhook** | N/A (push) | Depends on sender | [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
+| Batch data transfer between systems | **File-based (GCS)** | Minutes | Very high (bulk) | [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
 
 ### Protocol Decision Flowchart
 
@@ -662,7 +662,7 @@ Quick decision table for choosing an API protocol. Each links to the detailed no
 ```
 
 > [!note] REST Is the Default
-> When in doubt, use REST. It has the widest tooling support, the most documentation, and every engineer knows how to consume it. Only deviate to gRPC (for internal performance), GraphQL (for flexible querying), or WebSocket (for real-time bidirectional) when REST's limitations are specifically blocking you. See [[api-protocols-comparison]] for the full trade-off analysis.
+> When in doubt, use REST. It has the widest tooling support, the most documentation, and every engineer knows how to consume it. Only deviate to gRPC (for internal performance), GraphQL (for flexible querying), or WebSocket (for real-time bidirectional) when REST's limitations are specifically blocking you. See [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) for the full trade-off analysis.
 
 ---
 
@@ -674,12 +674,12 @@ Choosing the right data architecture is the highest-leverage decision in a data 
 
 | Your Situation | Architecture | Cost Profile | Complexity | Detailed Reference |
 |----------------|-------------|-------------|------------|-------------------|
-| Structured analytics, known query patterns | **Data Warehouse** | Medium (compute + storage) | Low-medium | [[data-warehouse-architecture]] |
-| Unstructured data, schema-on-read flexibility | **Data Lake** | Low (storage-heavy) | Medium | [[data-lake-architecture]] |
-| Both structured and unstructured, ACID needed | **Lakehouse** | Medium | Medium-high | [[lakehouse-architecture]] |
-| Multiple teams, domain-driven data ownership | **Data Mesh** | High (organizational overhead) | High | [[data-mesh-architecture]] |
-| Sub-second latency, event-driven processing | **Streaming** | High (always-on compute) | High | [[streaming-architecture]] |
-| Standard pipeline layering (raw → clean → business) | **Medallion** | Depends on storage choice | Low | [[medallion-architecture]] |
+| Structured analytics, known query patterns | **Data Warehouse** | Medium (compute + storage) | Low-medium | [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) |
+| Unstructured data, schema-on-read flexibility | **Data Lake** | Low (storage-heavy) | Medium | [data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture) |
+| Both structured and unstructured, ACID needed | **Lakehouse** | Medium | Medium-high | [lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture) |
+| Multiple teams, domain-driven data ownership | **Data Mesh** | High (organizational overhead) | High | [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) |
+| Sub-second latency, event-driven processing | **Streaming** | High (always-on compute) | High | [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) |
+| Standard pipeline layering (raw → clean → business) | **Medallion** | Depends on storage choice | Low | [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) |
 
 ### Architecture Decision Flowchart
 
@@ -704,7 +704,7 @@ Choosing the right data architecture is the highest-leverage decision in a data 
 ```
 
 > [!important] The Medallion Architecture Is Not an Alternative
-> Medallion (Bronze/Silver/Gold) is a **layering pattern**, not a competing architecture. You can apply Medallion inside a Data Warehouse, a Data Lake, or a Lakehouse. It defines how data flows through refinement stages. Every architecture in this table benefits from Medallion layering. See [[medallion-architecture]] for the layer definitions.
+> Medallion (Bronze/Silver/Gold) is a **layering pattern**, not a competing architecture. You can apply Medallion inside a Data Warehouse, a Data Lake, or a Lakehouse. It defines how data flows through refinement stages. Every architecture in this table benefits from Medallion layering. See [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) for the layer definitions.
 
 ### Architecture Combinations (Real-World)
 
@@ -781,7 +781,7 @@ Many decisions are not pure build or pure buy. The "semi-build" pattern uses a m
 > 1. Using open standards (SQL, Parquet, OpenTelemetry) where possible
 > 2. Keeping raw data in a format you control (GCS + Parquet, not only in the vendor's proprietary format)
 > 3. Abstracting vendor-specific APIs behind your own interfaces
-> See [[serialization-formats]] for portable data format choices.
+> See [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for portable data format choices.
 
 ---
 
@@ -816,8 +816,8 @@ Many decisions are not pure build or pure buy. The "semi-build" pattern uses a m
 | Airflow DAGs | **Git push → sync to DAGs folder** | DAGs are Python files; deploy = copy to the right directory. See [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) |
 | Cloud Run services/jobs | **GitHub Actions → `gcloud run deploy`** | Build Docker image, push to Artifact Registry, deploy. See [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) |
 | Terraform infrastructure | **GitHub Actions → `terraform plan/apply`** | Plan on PR, apply on merge to main |
-| SQL Server schema changes | **Migration scripts (sequential, idempotent)** | Version-controlled .sql files. See [[migration-idempotency-backfills]] |
-| dbt models | **GitHub Actions → `dbt build`** | Test and deploy SQL transforms. See [[dbt-transformation-layer]] |
+| SQL Server schema changes | **Migration scripts (sequential, idempotent)** | Version-controlled .sql files. See [migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
+| dbt models | **GitHub Actions → `dbt build`** | Test and deploy SQL transforms. See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
 | Python packages | **GitHub Actions → build + publish** | pip-installable packages for shared libraries |
 | Docker images | **GitHub Actions → build + push to Artifact Registry** | See [image-management](/09-Docker/image-management) for image patterns |
 
@@ -916,15 +916,15 @@ When data moves between systems, the format matters for performance, compatibili
 
 | Scenario | Format | Why | Detailed Reference |
 |----------|--------|-----|-------------------|
-| Data warehouse staging (analytics) | **Parquet** | Columnar, compressed, partition-friendly | [[serialization-formats]] |
-| API responses | **JSON** | Universal, human-readable, every language parses it | [[rest-api-design-and-consumption]] |
-| High-throughput service communication | **Protocol Buffers** | Binary, schema-enforced, smallest wire size | [[grpc-for-data-pipelines]] |
+| Data warehouse staging (analytics) | **Parquet** | Columnar, compressed, partition-friendly | [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
+| API responses | **JSON** | Universal, human-readable, every language parses it | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
+| High-throughput service communication | **Protocol Buffers** | Binary, schema-enforced, smallest wire size | [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) |
 | Configuration files | **YAML** or **JSON** | Human-readable, widely supported | — |
 | Log data (append-heavy) | **NDJSON** (newline-delimited JSON) | One record per line, streamable, grep-friendly | — |
 | Small CSV exchanges | **CSV** | Universal, Excel-compatible | data formats and serialization |
 | Large dataset archival | **Parquet + Snappy compression** | Best compression-to-read-speed ratio | parquet files |
 | ML training data | **Parquet** or **TFRecord** | Parquet for tabular, TFRecord for TensorFlow | — |
-| Schema evolution required | **Avro** or **Parquet** | Both support schema evolution | [[serialization-formats]] |
+| Schema evolution required | **Avro** or **Parquet** | Both support schema evolution | [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
 
 > [!note] The Parquet Default
 > When moving data between pipeline stages, default to Parquet. It is columnar (efficient for analytical queries), compressed (cheap to store), self-describing (schema embedded), and supported by every major tool (BigQuery, Spark, pandas, Polars, dbt). The only exceptions are when you need human readability (use JSON) or streaming (use NDJSON). See parquet files for detailed usage patterns.
@@ -959,7 +959,7 @@ For rapid lookup when you just need the answer:
 | Task | Answer | Note Reference |
 |------|--------|---------------|
 | ...transform data in a database | SQL | [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals) |
-| ...call an API and load results | Python | [[rest-api-design-and-consumption]] |
+| ...call an API and load results | Python | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
 | ...schedule a daily job | Cloud Scheduler + Cloud Run Job | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) |
 | ...orchestrate 10+ dependent jobs | Airflow | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) |
 | ...provision a VM | Terraform | [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute) |
@@ -971,45 +971,45 @@ For rapid lookup when you just need the answer:
 | ...monitor SQL Server | Datadog | [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) |
 | ...version-control infrastructure | Terraform + Git | [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) |
 | ...containerize a Python pipeline | Docker | [container-lifecycle](/09-Docker/container-lifecycle) |
-| ...test data quality | dbt tests | [[dbt-transformation-layer]] |
+| ...test data quality | dbt tests | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
 | ...parse a log file quickly | Bash (grep/awk) | [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching) |
 | ...manage SQL Server backups | T-SQL + PowerShell | [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) |
 | ...set up CI/CD for a pipeline | GitHub Actions | [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) |
 | ...encrypt data at rest | TDE (SQL Server) or GCS encryption | [tde-encryption](/04-SQL-Server/Security/tde-encryption) |
 | ...manage service accounts | Terraform + IAM | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) |
 | ...explore a new GCP service | Console (UI), then translate to Terraform | [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) |
-| ...handle schema migrations | Idempotent SQL scripts | [[migration-idempotency-backfills]] |
-| ...choose a data format for transfer | Parquet | [[serialization-formats]] |
+| ...handle schema migrations | Idempotent SQL scripts | [migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
+| ...choose a data format for transfer | Parquet | [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
 | ...set up Airflow on a VM | Docker Compose | [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) |
 | ...connect Python to SQL Server | pyodbc or SQLAlchemy | database connections |
 | ...optimize BigQuery costs | Partitioning + clustering + avoid SELECT * | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) |
 | ...debug slow SQL Server queries | Wait stats + execution plans | [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) |
-| ...design a data model for BI | Star schema (Kimball) | [[dimensional-modeling]] |
+| ...design a data model for BI | Star schema (Kimball) | [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) |
 | ...audit who has access to what | IAM policy review | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) |
 | ...set up alerting for pipeline failures | Datadog monitors or Cloud Alerting | [datadog-alerting](/13-Observability/Datadog/datadog-alerting) |
-| ...process streaming data | Dataflow (Apache Beam) | [[streaming-architecture]] |
+| ...process streaming data | Dataflow (Apache Beam) | [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) |
 
 ---
 
 ## Related Notes
 
 #### Architecture and modeling
-- [[moc-data-architecture]] — full section index
-- [[five-pillars-of-data-engineering]] — the principles behind every decision
+- [moc-data-architecture](/14-Data-Architecture/moc-data-architecture) — full section index
+- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — the principles behind every decision
 - [moc-terraform](/07-Terraform/moc-terraform) — Terraform and IaC overview
 
 #### Comparison references
 
-- [[api-protocols-comparison]] — REST vs gRPC vs GraphQL vs WebSocket
+- [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) — REST vs gRPC vs GraphQL vs WebSocket
 
 #### Implementation details
 - [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) / [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) / [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — orchestration
 - [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — serverless compute patterns
 - [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) / [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) — IaC
-- [[dbt-transformation-layer]] — SQL transform management
-- [[idempotent-pipeline-design]] — pipeline reliability patterns
-- [[medallion-architecture]] — Bronze/Silver/Gold layering
-- [[serialization-formats]] — data format selection
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — SQL transform management
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline reliability patterns
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze/Silver/Gold layering
+- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — data format selection
 - database connections — connecting Python and C# to databases
 - [container-lifecycle](/09-Docker/container-lifecycle) / [docker-compose](/09-Docker/docker-compose) — containerization
 - [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) — CI/CD patterns

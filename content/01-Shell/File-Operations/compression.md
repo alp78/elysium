@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell]
 aliases: [gzip, zstd, tar, compress, decompress, archive, zip, snappy]
 keywords: [gzip, zstd, tar, compression, decompress, archive, zip, snappy, compress data, tar.gz, tar.zst, gz, compression algorithm, compression level, pipeline compression strategy, 7zip, GZipStream, Compress-Archive]
 description: "Compression tools and strategies for data engineering: gzip for compatibility, zstd for performance, tar for directory archiving. Includes a compression strategy matrix for pipeline intermediate files, archives, Parquet, and database backups."
-related: ["[[file-manipulation]]", "[[data-transfer]]", "[[navigation-and-listing]]", "[[finding-files]]" ]
+related: ["[file-manipulation](/01-Shell/File-Operations/file-manipulation)", "[data-transfer](/01-Shell/File-Operations/data-transfer)", "[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing)", "[finding-files](/01-Shell/File-Operations/finding-files)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -210,7 +210,7 @@ When exporting data from BigQuery, the `bq extract --compression` flag accepts g
 
 ## Related
 - [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — format and compression selection by pipeline scenario
-- [[file-manipulation]] — moving and copying the resulting archives
-- [[data-transfer]] — compression during rsync transfers (`-z` flag)
-- [[navigation-and-listing]] — checking disk usage before and after compression
-- [[finding-files]] — finding old archives to clean up
+- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — moving and copying the resulting archives
+- [data-transfer](/01-Shell/File-Operations/data-transfer) — compression during rsync transfers (`-z` flag)
+- [navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — checking disk usage before and after compression
+- [finding-files](/01-Shell/File-Operations/finding-files) — finding old archives to clean up

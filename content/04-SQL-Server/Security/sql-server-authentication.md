@@ -737,7 +737,7 @@ ORDER BY event_time DESC;
 |-------|-----------------|
 | sa login is disabled | `ALTER LOGIN sa DISABLE;` |
 | No orphaned users | `DROP USER <orphaned_user>;` |
-| TDE cert expiry > 180 days | Rotate certificate (see [[tde-encryption]]) |
+| TDE cert expiry > 180 days | Rotate certificate (see [tde-encryption](/04-SQL-Server/Security/tde-encryption)) |
 | Password last set > 90 days | `ALTER LOGIN x WITH PASSWORD = '...' MUST_CHANGE` |
 | Unexpected sysadmin members | `ALTER SERVER ROLE sysadmin DROP MEMBER <login>` |
 | Unencrypted connections found | Verify `forceencryption = 1` in mssql.conf, restart |
@@ -745,10 +745,10 @@ ORDER BY event_time DESC;
 
 ### Related
 
-- [[tde-encryption]] — Encryption at rest for database files
-- [[server-configuration]] — OS-level and SQL Server configuration settings
-- [[high-availability-overview]] — Certificate-based authentication for AG endpoints
-- [[essential-dba-queries]] — DMV queries for monitoring connections and sessions
+- [tde-encryption](/04-SQL-Server/Security/tde-encryption) — Encryption at rest for database files
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — OS-level and SQL Server configuration settings
+- [high-availability-overview](/04-SQL-Server/High-Availability/high-availability-overview) — Certificate-based authentication for AG endpoints
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for monitoring connections and sessions
 
 ### References
 

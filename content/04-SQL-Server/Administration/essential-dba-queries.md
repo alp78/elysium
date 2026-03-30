@@ -490,7 +490,7 @@ ORDER BY p.rows DESC;
 
 > [!warning] Heaps Are Dangerous
 >
-> A table without a clustered index forces every query into a full table scan. In silver and gold layers, every table must have a clustered index. See [[index-types-and-strategy]] for the correct clustered key selection.
+> A table without a clustered index forces every query into a full table scan. In silver and gold layers, every table must have a clustered index. See [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the correct clustered key selection.
 
 ---
 
@@ -535,9 +535,9 @@ LEFT JOIN (
 ### Related
 
 - [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — running these queries from the command line
-- [[wait-stats-analysis]] — deep dive into wait type interpretation
-- [[blocking-and-locking]] — understanding blocking chains and lock types
-- [[performance-audit-playbook]] — interpreting disk I/O latency metrics and full structured audit
-- [[memory-and-buffer-pool]] — Page Life Expectancy and buffer pool health
+- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — deep dive into wait type interpretation
+- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — understanding blocking chains and lock types
+- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — interpreting disk I/O latency metrics and full structured audit
+- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy and buffer pool health
 - [[sql-server-disk-full]] — runbook for disk capacity incidents
-- [[index-types-and-strategy]] — clustered key selection and index design
+- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — clustered key selection and index design

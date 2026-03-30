@@ -8,9 +8,9 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 related:
   - "[gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog)"
   - "[[eu-bmr-benchmark-regulation]]"
-  - "[[dbt-core-concepts]]"
-  - "[[dbt-observability]]"
-  - "[[dbt-testing-framework]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
+  - "[dbt-observability](/11-dbt/Operations/dbt-observability)"
+  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
 ---
 
 # dbt: Documentation and Lineage
@@ -364,6 +364,6 @@ The `meta` fields appear in the dbt docs browser and can be exported to the data
 
 - [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog)
 - [[eu-bmr-benchmark-regulation]]
-- [[dbt-core-concepts]]
-- [[dbt-observability]]
-- [[dbt-testing-framework]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-observability](/11-dbt/Operations/dbt-observability)
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)

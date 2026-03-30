@@ -8,8 +8,8 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 related:
   - "[moc-gcp](/06-GCP/moc-gcp)"
   - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[[dbt-performance-tuning]]"
-  - "[[dbt-cross-adapter-patterns]]"
+  - "[dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)"
+  - "[dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns)"
 ---
 
 # dbt: BigQuery Adapter
@@ -387,7 +387,7 @@ GROUP BY isin, score_date, esg_components
 ```
 
 > [!note] STRUCT/ARRAY limitations
-> Nested types work well for analytical queries but are not compatible with `dbt-sqlserver`. Any model using STRUCT/ARRAY must live in a BigQuery-specific folder or be guarded by `target.type` checks. See [[dbt-cross-adapter-patterns]] for the dispatch pattern.
+> Nested types work well for analytical queries but are not compatible with `dbt-sqlserver`. Any model using STRUCT/ARRAY must live in a BigQuery-specific folder or be guarded by `target.type` checks. See [dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns) for the dispatch pattern.
 
 ### BigQuery SQL — MERGE DML (manual)
 
@@ -518,5 +518,5 @@ Then define in `sources.yml` and run `dbt run-operation stage_external_sources`.
 
 - [moc-gcp](/06-GCP/moc-gcp)
 - [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)
-- [[dbt-performance-tuning]]
-- [[dbt-cross-adapter-patterns]]
+- [dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)
+- [dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns)

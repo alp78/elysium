@@ -58,7 +58,7 @@ description: >
   block is self-contained and heavily commented for copy-paste use in data
   engineering infrastructure.
 related:
-  - "[[moc-terraform]]"
+  - "[moc-terraform](/07-Terraform/moc-terraform)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

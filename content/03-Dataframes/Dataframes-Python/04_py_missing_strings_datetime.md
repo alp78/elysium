@@ -11,11 +11,11 @@ aliases:
 keywords: [NaN, fillna, fill_null, dropna, str accessor, dt accessor, timezone, timedelta]
 description: "Pandas/Polars DataFrame reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Side-by-side executable examples with cell outputs."
 related:
-  - "[[moc-dataframes]]"
-  - "[[04_cs_missing_strings_datetime]]"
+  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
+  - "[04_cs_missing_strings_datetime](/03-Dataframes/Dataframes-CSharp/04_cs_missing_strings_datetime)"
   - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[[03_py_transforms_expressions]]"
-  - "[[05_py_aggregation_reshaping]]"
+  - "[03_py_transforms_expressions](/03-Dataframes/Dataframes-Python/03_py_transforms_expressions)"
+  - "[05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

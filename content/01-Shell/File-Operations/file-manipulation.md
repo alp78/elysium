@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell]
 aliases: [cp, mv, rm, chmod, chown, mkdir, file permissions, safe delete, file ownership]
 keywords: [cp, mv, rm, chmod, chown, mkdir, rsync, file copy, file move, delete, permissions, ownership, octal permissions, safe delete, trash, archive mode, disk usage, docker permissions, airflow uid]
 description: "Safe file copying, moving, and deletion patterns for production environments. Covers rsync archive mode, chmod octal notation, chown for Docker/Airflow containers, and the safe delete pattern using a trash directory."
-related: ["[[navigation-and-listing]]", "[[finding-files]]", "[[compression]]", "[[brace-expansion-and-globbing]]", "[[data-transfer]]" ]
+related: ["[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing)", "[finding-files](/01-Shell/File-Operations/finding-files)", "[compression](/01-Shell/File-Operations/compression)", "[brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing)", "[data-transfer](/01-Shell/File-Operations/data-transfer)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -130,7 +130,7 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 
 > [!tip] Prerequisites
 >
-> Before writing delete logic in scripts, enable [[defensive-scripting|set -euo pipefail]] -- `set -u` prevents the catastrophic `rm -rf $UNDEFINED` expansion, and `trap EXIT` ensures cleanup runs even on error.
+> Before writing delete logic in scripts, enable [set -euo pipefail](/01-Shell/Scripting/defensive-scripting) -- `set -u` prevents the catastrophic `rm -rf $UNDEFINED` expansion, and `trap EXIT` ensures cleanup runs even on error.
 
 > [!warning] Never rm -rf directly in scripts
 >
@@ -149,7 +149,7 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 >
 > `-p` creates parent directories as needed and suppresses "already exists"
 > errors — making it idempotent (safe to run repeatedly). Combined with
-> [[brace-expansion-and-globbing|brace expansion]], a single command creates an entire
+> [brace expansion](/01-Shell/Scripting/brace-expansion-and-globbing), a single command creates an entire
 > [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) directory tree.
 
 ```bash
@@ -203,7 +203,7 @@ chown -R 50000:0 /home/airflow/dags/
 > ```bash
 > chown -R 50000:0 /opt/airflow/dags/
 > ```
-> The UID 50000 is Airflow's default container user. Verify with `docker inspect` if using a custom image. For the full [[container-lifecycle]] including bind mounts and volume management, see the Docker section.
+> The UID 50000 is Airflow's default container user. Verify with `docker inspect` if using a custom image. For the full [container-lifecycle](/09-Docker/container-lifecycle) including bind mounts and volume management, see the Docker section.
 
 #### du -sh — check directory size before copying or deleting
 
@@ -212,7 +212,7 @@ chown -R 50000:0 /home/airflow/dags/
 > Always check the size of what you're about to copy or delete. `-s` gives a
 > summary total, `-h` makes it human-readable. For a full disk investigation workflow
 > including `du` vs `df` discrepancies and inode exhaustion, see
-> [[navigation-and-listing]].
+> [navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing).
 
 ```bash
 du -sh /var/opt/mssql/data/
@@ -289,8 +289,8 @@ New-Item -ItemType Directory -Path "C:\data\pipeline\bronze" -Force
 ```
 
 ## Related
-- [[navigation-and-listing]] — check what's there before moving it
-- [[brace-expansion-and-globbing]] — create directory trees with brace expansion
-- [[compression]] — compress before transferring large directories
-- [[data-transfer]] — rsync for remote file transfers with resume support
-- [[defensive-scripting]] — `set -euo pipefail` prevents silent failures in delete scripts
+- [navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — check what's there before moving it
+- [brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing) — create directory trees with brace expansion
+- [compression](/01-Shell/File-Operations/compression) — compress before transferring large directories
+- [data-transfer](/01-Shell/File-Operations/data-transfer) — rsync for remote file transfers with resume support
+- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — `set -euo pipefail` prevents silent failures in delete scripts

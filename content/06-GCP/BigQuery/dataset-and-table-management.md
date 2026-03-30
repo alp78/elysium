@@ -78,11 +78,11 @@ bq mk --table --time_partitioning_field=date --time_partitioning_type=DAY \
 > [!tip] Partition and Cluster by Default
 >
 > Partitioning + Clustering is the Default Best Practice.
-> For any time-series data in BigQuery, partition by the date/timestamp column and cluster by the most common filter columns (e.g., `symbol`, `index`). This combination reduces scanned bytes by 90%+ for typical analytical queries compared to unpartitioned tables. See [[querying-and-cost-optimization]] for the full cost impact.
+> For any time-series data in BigQuery, partition by the date/timestamp column and cluster by the most common filter columns (e.g., `symbol`, `index`). This combination reduces scanned bytes by 90%+ for typical analytical queries compared to unpartitioned tables. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for the full cost impact.
 
 ### Deleting BigQuery Tables and Datasets
 
-The `-f` flag forces deletion without a confirmation prompt. Table deletion is not reversible unless you use time travel (see [[data-loading-and-export]]). The `-r` flag enables recursive deletion, removing all tables within the dataset first.
+The `-f` flag forces deletion without a confirmation prompt. Table deletion is not reversible unless you use time travel (see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)). The `-r` flag enables recursive deletion, removing all tables within the dataset first.
 
 ```bash
 # Delete a table
@@ -109,11 +109,11 @@ bq rm -r -f my_dataset
 
 ## Related
 
-- [[querying-and-cost-optimization]] — Cost impact of partitioning and clustering on query scans
-- [[data-loading-and-export]] — Loading data into tables and exporting to GCS
-- [[job-management]] — Monitoring and canceling BQ jobs
-- [[gcp-projects-and-apis]] — `bigquery.googleapis.com` must be enabled before any `bq` command works
-- [[service-accounts-and-iam]] — `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` required
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Cost impact of partitioning and clustering on query scans
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Loading data into tables and exporting to GCS
+- [job-management](/06-GCP/BigQuery/job-management) — Monitoring and canceling BQ jobs
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled before any `bq` command works
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` required
 
 ## References
 

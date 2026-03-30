@@ -6,7 +6,7 @@ tags: [shell, bash, linux, powershell]
 aliases: [cat, head, tail, tail -f, grep large files, log analysis, less, reading files]
 keywords: [cat, head, tail, tail -f, grep, awk, less, log file, incident response, reading files, follow log, large file, line count, wc -l, extract time window, ripgrep, rg, Select-String]
 description: "Commands for reading file contents from quick config checks to deep log file analysis during incidents. Covers tail -f for real-time log following, grep performance flags, and PowerShell Select-String."
-related: ["[[navigation-and-listing]]", "[[finding-files]]", "[[viewing-processes]]", "[[viewing-processes]]" ]
+related: ["[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing)", "[finding-files](/01-Shell/File-Operations/finding-files)", "[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[viewing-processes](/01-Shell/Process-Management/viewing-processes)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -138,7 +138,7 @@ Get-Content filename -Wait -Tail 10
 >
 > Returns `MatchInfo` objects with `LineNumber`, `Line`, and `Filename` properties.
 > `-Context 3` shows 3 lines before and after each match. For the full `Select-String`
-> reference, see [[grep-and-pattern-matching]].
+> reference, see [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching).
 
 ```powershell
 Select-String -Path "C:\logs\*.log" -Pattern "ERROR" -Context 3
@@ -146,7 +146,7 @@ Select-String -Path "C:\logs\*.log" -Pattern "ERROR" -Context 3
 ```
 
 ## Related
-- [[navigation-and-listing]] — find the right file before reading it
-- [[finding-files]] — search for files by name, size, or modification time
-- [[viewing-processes]] — pair log reading with process inspection during incidents
-- [[connectivity-testing]] — network layer to check when logs show connection errors
+- [navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — find the right file before reading it
+- [finding-files](/01-Shell/File-Operations/finding-files) — search for files by name, size, or modification time
+- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — pair log reading with process inspection during incidents
+- [connectivity-testing](/01-Shell/Networking/connectivity-testing) — network layer to check when logs show connection errors

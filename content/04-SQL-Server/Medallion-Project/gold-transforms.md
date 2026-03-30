@@ -16,15 +16,15 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [[moc-sql-server#Patterns]]
+> patterns and alternative approaches, see the [moc-sql-server > Patterns](/04-SQL-Server/moc-sql-server#patterns)
 > section. For the architectural theory behind bronze/silver/gold layering,
 > see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Gold Transforms
 
-The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [[silver-transforms|silver]] and write to gold tables. In dbt, the equivalent role is served by [mart models](/11-dbt/Modeling/dbt-mart-models) that expose business-ready datasets.
+The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [silver](/04-SQL-Server/Medallion-Project/silver-transforms) and write to gold tables. In dbt, the equivalent role is served by [mart models](/11-dbt/Modeling/dbt-mart-models) that expose business-ready datasets.
 
-**Pipeline flow:** [[silver-transforms|Silver]] → Python + pandas → Gold tables → Blazor dashboard
+**Pipeline flow:** [Silver](/04-SQL-Server/Medallion-Project/silver-transforms) → Python + pandas → Gold tables → Blazor dashboard
 
 > [!info] Gold Layer Role
 >
@@ -841,8 +841,8 @@ Then re-run the pipeline to rebuild: `gcloud run jobs execute analytics-pipeline
 
 ### Related Notes
 
-- [[silver-transforms]] — upstream: cleaned data that feeds all gold transforms
-- [[bronze-layer-loading]] — raw data layer
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — upstream: cleaned data that feeds all gold transforms
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — raw data layer
 - [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
 - the pipeline steps — pipeline steps 14–16 drive gold transforms
 - common pipeline errors — troubleshooting stuck index_performance and stale scores

@@ -101,11 +101,11 @@ gcloud pubsub subscriptions update pipeline-sub \
 
 ## Related
 
-- [[pubsub-messaging]] — Publishing messages to topics and consuming from subscriptions
-- [[cloud-run-jobs-vs-services]] — Cloud Run Services are common push subscription endpoints
-- [[gcp-projects-and-apis]] — `pubsub.googleapis.com` must be enabled
-- [[service-accounts-and-iam]] — `roles/pubsub.publisher` and `roles/pubsub.subscriber` roles
-- [[cloud-logging]] — Pub/Sub delivery failures appear in Cloud Logging
+- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Publishing messages to topics and consuming from subscriptions
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services are common push subscription endpoints
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `pubsub.googleapis.com` must be enabled
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/pubsub.publisher` and `roles/pubsub.subscriber` roles
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Pub/Sub delivery failures appear in Cloud Logging
 
 ## References
 

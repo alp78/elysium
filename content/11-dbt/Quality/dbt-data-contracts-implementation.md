@@ -6,9 +6,9 @@ status: stable
 updated: 2026-03-23
 description: "Model contracts, access levels, versioning, and breaking-change detection for financial data pipelines"
 related:
-  - "[[dbt-testing-framework]]"
+  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
   - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
-  - "[[dbt-core-concepts]]"
+  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
 ---
 
 # dbt: Data Contracts Implementation
@@ -475,8 +475,8 @@ dbt will print a deprecation warning for any `ref(..., v=1)` call after `2026-06
 
 ## Related
 
-- [[dbt-testing-framework]]
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)
 - [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)
-- [[dbt-core-concepts]]
-- [[dbt-macros-and-jinja]]
-- [[dbt-packages]]
+- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-macros-and-jinja](/11-dbt/Advanced/dbt-macros-and-jinja)
+- [dbt-packages](/11-dbt/Advanced/dbt-packages)

@@ -7,10 +7,10 @@ aliases: [terraform modules, terraform module composition, multi-environment ter
 keywords: [terraform modules, module composition, multi-environment, dev staging prod, module source, module variables, module outputs, terraform workspaces, DRY infrastructure, environment promotion, reusable modules]
 description: "How to use Terraform modules to create reusable, composable infrastructure for multiple environments (dev, staging, prod), avoiding copy-paste between configurations."
 related:
-  - "[[terraform-variables-and-outputs]]"
-  - "[[terraform-plan-apply-destroy]]"
-  - "[[terraform-resource-dependencies]]"
-  - "[[hcl-syntax-basics]]"
+  - "[terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)"
+  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
+  - "[terraform-resource-dependencies](/07-Terraform/Patterns/terraform-resource-dependencies)"
+  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -273,10 +273,10 @@ terraform state mv google_bigquery_dataset.bronze module.dev.google_bigquery_dat
 
 ## Related
 
-- [[terraform-variables-and-outputs]] — module inputs and outputs use the same variable system
-- [[terraform-plan-apply-destroy]] — the workflow for applying multi-environment configs
-- [[terraform-state-management]] — each environment should have its own state
-- [[terraform-resource-dependencies]] — dependencies within and across modules
+- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — module inputs and outputs use the same variable system
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — the workflow for applying multi-environment configs
+- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — each environment should have its own state
+- [terraform-resource-dependencies](/07-Terraform/Patterns/terraform-resource-dependencies) — dependencies within and across modules
 
 ## References
 

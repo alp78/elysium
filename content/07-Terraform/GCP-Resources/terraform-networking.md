@@ -7,11 +7,11 @@ aliases: [terraform VPC, terraform networking, GCP VPC terraform, firewall rules
 keywords: [VPC, subnet, Cloud NAT, firewall, IAP, Identity-Aware Proxy, google_compute_network, google_compute_subnetwork, google_compute_router_nat, google_compute_firewall, CIDR, ingress, egress, network topology, private IP]
 description: "Terraform configuration for GCP networking: VPC, subnet, Cloud Router, Cloud NAT, and firewall rules for SQL Server, Airflow UI, APM, IAP SSH, and deny-all ingress."
 related:
-  - "[[terraform-compute]]"
-  - "[[terraform-iam-and-secrets]]"
-  - "[[terraform-cloud-run]]"
-  - "[[hcl-syntax-basics]]"
-  - "[[terraform-providers-and-backend]]"
+  - "[terraform-compute](/07-Terraform/GCP-Resources/terraform-compute)"
+  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
+  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
+  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
+  - "[terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -310,10 +310,10 @@ gcloud compute routers nats list --router=data-pipeline-router --region=europe-w
 
 ## Related
 
-- [[terraform-compute]] — the VMs that attach to this network
-- [[terraform-cloud-run]] — Cloud Run direct VPC egress using this subnet
-- [[terraform-iam-and-secrets]] — service accounts used by the VMs
-- [[terraform-conditional-resources]] — the conditional admin_ip firewall rule
+- [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute) — the VMs that attach to this network
+- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — Cloud Run direct VPC egress using this subnet
+- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts used by the VMs
+- [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) — the conditional admin_ip firewall rule
 
 ## References
 

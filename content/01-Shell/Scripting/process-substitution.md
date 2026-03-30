@@ -98,10 +98,10 @@ grep "ASML" <<< "ASML SAP SIE"
 
 ## Related
 
-- [[io-redirection]] — Basic redirection operators
-- [[command-chaining]] — Connecting commands with pipes
-- [[brace-expansion-and-globbing]] — Another argument generation technique
-- [[defensive-scripting]] — Using these patterns in production scripts
+- [io-redirection](/01-Shell/Scripting/io-redirection) — Basic redirection operators
+- [command-chaining](/01-Shell/Scripting/command-chaining) — Connecting commands with pipes
+- [brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing) — Another argument generation technique
+- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Using these patterns in production scripts
 
 ## References
 

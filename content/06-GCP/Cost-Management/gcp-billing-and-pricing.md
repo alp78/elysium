@@ -69,18 +69,18 @@ keywords:
   - long-term storage
 description: Definitive reference on how every GCP data engineering service is billed — pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and gcloud/BigQuery commands for ongoing cost analysis and optimization.
 related:
-  - "[[moc-gcp]]"
-  - "[[querying-and-cost-optimization]]"
-  - "[[dataset-and-table-management]]"
-  - "[[vm-lifecycle]]"
-  - "[[disks-and-snapshots]]"
-  - "[[cloud-run-jobs-vs-services]]"
-  - "[[pubsub-messaging]]"
-  - "[[gcs-buckets-and-lifecycle]]"
-  - "[[firestore-data-model-and-operations]]"
-  - "[[cloud-logging]]"
-  - "[[gcp-projects-and-apis]]"
-  - "[[service-accounts-and-iam]]"
+  - "[moc-gcp](/06-GCP/moc-gcp)"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
+  - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
+  - "[vm-lifecycle](/06-GCP/Compute/vm-lifecycle)"
+  - "[disks-and-snapshots](/06-GCP/Compute/disks-and-snapshots)"
+  - "[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
+  - "[pubsub-messaging](/06-GCP/Serverless/pubsub-messaging)"
+  - "[gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
+  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
+  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
+  - "[gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis)"
+  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
 created: 2026-03-22
 updated: 2026-03-29
 status: complete
@@ -585,7 +585,7 @@ GROUP BY 1, 2;
 -- Queries hitting this view only scan the MV, not the underlying table
 ```
 
-See [[querying-and-cost-optimization]] for full BigQuery optimization patterns.
+See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for full BigQuery optimization patterns.
 
 ---
 
@@ -661,7 +661,7 @@ gcloud run deploy SERVICE_NAME \
   --memory=512Mi
 ```
 
-See [[cloud-run-jobs-vs-services]] for architecture guidance.
+See [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) for architecture guidance.
 
 ---
 
@@ -717,7 +717,7 @@ gcloud pubsub subscriptions modify-config SUBSCRIPTION_ID \
   --message-retention-duration=1d
 ```
 
-See [[pubsub-messaging]] and [[pubsub-topics-and-subscriptions]] for operational patterns.
+See [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) and [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) for operational patterns.
 
 ---
 
@@ -811,7 +811,7 @@ gsutil ls -L gs://BUCKET_NAME/** | grep -E "Storage class|Content-Length"
 gsutil ls -l gs://BUCKET_NAME/** | awk '$1 > 1073741824 {print $0}' | sort -rn
 ```
 
-See [[gcs-buckets-and-lifecycle]] and [[gcs-object-operations]] for operational patterns.
+See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) and [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) for operational patterns.
 
 ---
 
@@ -872,7 +872,7 @@ gcloud monitoring read \
 gcloud firestore databases describe --project=PROJECT_ID
 ```
 
-See [[firestore-data-model-and-operations]] and [[real-time-nosql-pipelines]] for design patterns.
+See [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) and [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) for design patterns.
 
 ---
 
@@ -1077,7 +1077,7 @@ gcloud logging sinks create long-term-logs-sink \
   --project=PROJECT_ID
 ```
 
-See [[cloud-logging]] for logging infrastructure patterns.
+See [cloud-logging](/06-GCP/Logging/cloud-logging) for logging infrastructure patterns.
 
 ---
 
@@ -1420,16 +1420,16 @@ ORDER BY ts.size_bytes DESC
 
 ## Related Notes
 
-- [[moc-gcp]] — GCP section overview and navigation
-- [[querying-and-cost-optimization]] — BigQuery query optimization techniques
-- [[dataset-and-table-management]] — Partitioning and clustering setup
-- [[data-loading-and-export]] — Batch loading (free) vs streaming inserts (paid)
-- [[vm-lifecycle]] — VM states, stop vs delete cost implications
-- [[disks-and-snapshots]] — Disk types and snapshot pricing
-- [[cloud-run-jobs-vs-services]] — When to use jobs vs services for cost efficiency
-- [[pubsub-messaging]] — Pub/Sub patterns and message size impact
-- [[gcs-buckets-and-lifecycle]] — Lifecycle policies for storage cost reduction
-- [[firestore-data-model-and-operations]] — Operation count optimization
-- [[cloud-logging]] — Log exclusion and volume reduction
-- [[gcp-projects-and-apis]] — Project structure and billing linkage
-- [[service-accounts-and-iam]] — IAM for billing account access
+- [moc-gcp](/06-GCP/moc-gcp) — GCP section overview and navigation
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery query optimization techniques
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Partitioning and clustering setup
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Batch loading (free) vs streaming inserts (paid)
+- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — VM states, stop vs delete cost implications
+- [disks-and-snapshots](/06-GCP/Compute/disks-and-snapshots) — Disk types and snapshot pricing
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — When to use jobs vs services for cost efficiency
+- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Pub/Sub patterns and message size impact
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Lifecycle policies for storage cost reduction
+- [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) — Operation count optimization
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Log exclusion and volume reduction
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — Project structure and billing linkage
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM for billing account access
